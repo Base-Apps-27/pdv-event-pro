@@ -122,12 +122,11 @@ export default function Teams() {
   };
 
   const teamTypeColors = {
-    WorshipBand: "bg-purple-900 bg-opacity-30 text-purple-400 border-purple-700",
-    Projection: "bg-blue-900 bg-opacity-30 text-blue-400 border-blue-700",
-    Sound: "bg-green-900 bg-opacity-30 text-green-400 border-green-700",
+    Production: "bg-blue-900 bg-opacity-30 text-blue-400 border-blue-700",
+    Ministry: "bg-purple-900 bg-opacity-30 text-purple-400 border-purple-700",
+    Hospitality: "bg-orange-900 bg-opacity-30 text-orange-400 border-orange-700",
     Translation: "bg-yellow-900 bg-opacity-30 text-yellow-400 border-yellow-700",
     Photography: "bg-pink-900 bg-opacity-30 text-pink-400 border-pink-700",
-    Ushers: "bg-orange-900 bg-opacity-30 text-orange-400 border-orange-700",
     Kids: "bg-cyan-900 bg-opacity-30 text-cyan-400 border-cyan-700",
     Other: "bg-slate-800 text-slate-400 border-slate-700"
   };
@@ -215,6 +214,7 @@ export default function Teams() {
                 name="name" 
                 defaultValue={editingTeam?.name}
                 required 
+                placeholder="Equipo de Proyección"
                 className="bg-pdv-charcoal border-slate-700 text-white"
               />
             </div>
@@ -226,14 +226,13 @@ export default function Teams() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="WorshipBand">Worship Band</SelectItem>
-                  <SelectItem value="Projection">Proyección</SelectItem>
-                  <SelectItem value="Sound">Sonido</SelectItem>
-                  <SelectItem value="Translation">Traducción</SelectItem>
-                  <SelectItem value="Photography">Fotografía</SelectItem>
-                  <SelectItem value="Ushers">Ujieres</SelectItem>
-                  <SelectItem value="Kids">Niños</SelectItem>
-                  <SelectItem value="Other">Otro</SelectItem>
+                  <SelectItem value="Production">Production</SelectItem>
+                  <SelectItem value="Ministry">Ministry</SelectItem>
+                  <SelectItem value="Hospitality">Hospitality</SelectItem>
+                  <SelectItem value="Translation">Translation</SelectItem>
+                  <SelectItem value="Photography">Photography</SelectItem>
+                  <SelectItem value="Kids">Kids</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
