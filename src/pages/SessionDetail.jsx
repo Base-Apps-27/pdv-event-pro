@@ -6,8 +6,8 @@ import { createPageUrl } from "@/utils";
 import { ArrowLeft, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import SegmentList from "../components/session/SegmentList";
-import SegmentForm from "../components/session/SegmentForm";
+import SegmentList from "../components/session/SegmentList.jsx";
+import SegmentForm from "../components/session/SegmentForm.jsx";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function SessionDetail() {
