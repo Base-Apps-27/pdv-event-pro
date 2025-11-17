@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight } from "lucide-react";
+import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function SessionManager({ eventId, sessions, segments }) {
   const [showDialog, setShowDialog] = useState(false);
@@ -56,6 +58,16 @@ export default function SessionManager({ eventId, sessions, segments }) {
       location: formData.get('location'),
       notes: formData.get('notes'),
       order: editingSession?.order || sessions.length + 1,
+      admin_team: formData.get('admin_team'),
+      coordinators: formData.get('coordinators'),
+      sound_team: formData.get('sound_team'),
+      tech_team: formData.get('tech_team'),
+      ushers_lead: formData.get('ushers_lead'),
+      translation_team: formData.get('translation_team'),
+      hospitality_team: formData.get('hospitality_team'),
+      photography_team: formData.get('photography_team'),
+      worship_leader: formData.get('worship_leader'),
+      session_color: formData.get('session_color'),
     };
 
     if (editingSession) {
@@ -67,6 +79,16 @@ export default function SessionManager({ eventId, sessions, segments }) {
 
   const getSegmentCount = (sessionId) => {
     return segments.filter(seg => seg.session_id === sessionId).length;
+  };
+
+  const sessionColors = {
+    green: "bg-green-50 border-green-200",
+    blue: "bg-blue-50 border-blue-200",
+    pink: "bg-pink-50 border-pink-200",
+    orange: "bg-orange-50 border-orange-200",
+    yellow: "bg-yellow-50 border-yellow-200",
+    purple: "bg-purple-50 border-purple-200",
+    red: "bg-red-50 border-red-200"
   };
 
   return (
@@ -92,7 +114,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
       ) : (
         <div className="grid gap-4">
           {sessions.map((session) => (
-            <Card key={session.id} className="hover:shadow-md transition-shadow">
+            <Card key={session.id} className={`hover:shadow-md transition-shadow border-l-4 ${sessionColors[session.session_color || 'blue']}`}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -111,6 +133,12 @@ export default function SessionManager({ eventId, sessions, segments }) {
                         </div>
                       )}
                     </div>
+                    {session.coordinators && (
+                      <div className="flex items-center gap-2 mt-2 text-sm text-slate-600">
+                        <Users className="w-4 h-4" />
+                        <span>{session.coordinators}</span>
+                      </div>
+                    )}
                   </div>
                   <Badge variant="outline" className="ml-4">
                     {getSegmentCount(session.id)} segmentos
@@ -155,84 +183,205 @@ export default function SessionManager({ eventId, sessions, segments }) {
       )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingSession ? 'Editar Sesión' : 'Nueva Sesión'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nombre de la Sesión *</Label>
-              <Input 
-                id="name" 
-                name="name" 
-                defaultValue={editingSession?.name}
-                required 
-                placeholder="Sábado Noche"
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <Tabs defaultValue="basic">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="basic">Información Básica</TabsTrigger>
+                <TabsTrigger value="team">Equipo y Personal</TabsTrigger>
+              </TabsList>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="date">Fecha</Label>
-                <Input 
-                  id="date" 
-                  name="date" 
-                  type="date"
-                  defaultValue={editingSession?.date}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="location">Ubicación</Label>
-                <Input 
-                  id="location" 
-                  name="location" 
-                  defaultValue={editingSession?.location}
-                  placeholder="Salón principal"
-                />
-              </div>
-            </div>
+              <TabsContent value="basic" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nombre de la Sesión *</Label>
+                  <Input 
+                    id="name" 
+                    name="name" 
+                    defaultValue={editingSession?.name}
+                    required 
+                    placeholder="Viernes PM / Sábado AM"
+                  />
+                </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="planned_start_time">Hora Inicio</Label>
-                <Input 
-                  id="planned_start_time" 
-                  name="planned_start_time" 
-                  type="time"
-                  defaultValue={editingSession?.planned_start_time}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="planned_end_time">Hora Fin</Label>
-                <Input 
-                  id="planned_end_time" 
-                  name="planned_end_time" 
-                  type="time"
-                  defaultValue={editingSession?.planned_end_time}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="default_stage_call_offset_min">Llamado Escenario (min)</Label>
-                <Input 
-                  id="default_stage_call_offset_min" 
-                  name="default_stage_call_offset_min" 
-                  type="number"
-                  defaultValue={editingSession?.default_stage_call_offset_min || 15}
-                />
-              </div>
-            </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Fecha</Label>
+                    <Input 
+                      id="date" 
+                      name="date" 
+                      type="date"
+                      defaultValue={editingSession?.date}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Ubicación</Label>
+                    <Input 
+                      id="location" 
+                      name="location" 
+                      defaultValue={editingSession?.location}
+                      placeholder="Santuario / Salón principal"
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notas</Label>
-              <Textarea 
-                id="notes" 
-                name="notes" 
-                defaultValue={editingSession?.notes}
-                rows={3}
-              />
-            </div>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="planned_start_time">Hora Inicio</Label>
+                    <Input 
+                      id="planned_start_time" 
+                      name="planned_start_time" 
+                      type="time"
+                      defaultValue={editingSession?.planned_start_time}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="planned_end_time">Hora Fin</Label>
+                    <Input 
+                      id="planned_end_time" 
+                      name="planned_end_time" 
+                      type="time"
+                      defaultValue={editingSession?.planned_end_time}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="default_stage_call_offset_min">Llamado Escenario (min)</Label>
+                    <Input 
+                      id="default_stage_call_offset_min" 
+                      name="default_stage_call_offset_min" 
+                      type="number"
+                      defaultValue={editingSession?.default_stage_call_offset_min || 15}
+                    />
+                  </div>
+                </div>
 
-            <div className="flex justify-end gap-3 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="session_color">Color de Sesión</Label>
+                  <Select name="session_color" defaultValue={editingSession?.session_color || "blue"}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="green">Verde</SelectItem>
+                      <SelectItem value="blue">Azul</SelectItem>
+                      <SelectItem value="pink">Rosa</SelectItem>
+                      <SelectItem value="orange">Naranja</SelectItem>
+                      <SelectItem value="yellow">Amarillo</SelectItem>
+                      <SelectItem value="purple">Morado</SelectItem>
+                      <SelectItem value="red">Rojo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notas</Label>
+                  <Textarea 
+                    id="notes" 
+                    name="notes" 
+                    defaultValue={editingSession?.notes}
+                    rows={3}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="team" className="space-y-4 mt-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="admin_team">Administración</Label>
+                    <Input 
+                      id="admin_team" 
+                      name="admin_team" 
+                      defaultValue={editingSession?.admin_team}
+                      placeholder="Isabel Gómez / Yassiel Santos"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="coordinators">Coordinadores</Label>
+                    <Input 
+                      id="coordinators" 
+                      name="coordinators" 
+                      defaultValue={editingSession?.coordinators}
+                      placeholder="Rita R. & Indiana"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="sound_team">Equipo de Sonido</Label>
+                    <Input 
+                      id="sound_team" 
+                      name="sound_team" 
+                      defaultValue={editingSession?.sound_team}
+                      placeholder="P. Randy G."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="tech_team">Equipo Técnico</Label>
+                    <Input 
+                      id="tech_team" 
+                      name="tech_team" 
+                      defaultValue={editingSession?.tech_team}
+                      placeholder="Rick & Danny"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="ushers_lead">Ujier Encargado</Label>
+                    <Input 
+                      id="ushers_lead" 
+                      name="ushers_lead" 
+                      defaultValue={editingSession?.ushers_lead}
+                      placeholder="Emilio & Magda H."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="translation_team">Equipo de Traducción</Label>
+                    <Input 
+                      id="translation_team" 
+                      name="translation_team" 
+                      defaultValue={editingSession?.translation_team}
+                      placeholder="Jeremy Mateo"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="hospitality_team">Equipo de Hospitalidad</Label>
+                    <Input 
+                      id="hospitality_team" 
+                      name="hospitality_team" 
+                      defaultValue={editingSession?.hospitality_team}
+                      placeholder="Mercedes G. & Verla"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="photography_team">Fotografía</Label>
+                    <Input 
+                      id="photography_team" 
+                      name="photography_team" 
+                      defaultValue={editingSession?.photography_team}
+                      placeholder="Jeremy M."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="worship_leader">Líder de Alabanza</Label>
+                    <Input 
+                      id="worship_leader" 
+                      name="worship_leader" 
+                      defaultValue={editingSession?.worship_leader}
+                      placeholder="Anthony Estrella"
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
