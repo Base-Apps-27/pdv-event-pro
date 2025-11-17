@@ -7,6 +7,7 @@ import ProjectionView from './pages/ProjectionView';
 import SoundView from './pages/SoundView';
 import UshersView from './pages/UshersView';
 import Templates from './pages/Templates';
+import DetailedProgram from './pages/DetailedProgram';
 import __Layout from './Layout.jsx';
 
 
@@ -20,6 +21,7 @@ export const PAGES = {
     "SoundView": SoundView,
     "UshersView": UshersView,
     "Templates": Templates,
+    "DetailedProgram": DetailedProgram,
 }
 
 export const pagesConfig = {
