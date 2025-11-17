@@ -8,6 +8,9 @@ import SoundView from './pages/SoundView';
 import UshersView from './pages/UshersView';
 import Templates from './pages/Templates';
 import DetailedProgram from './pages/DetailedProgram';
+import People from './pages/People';
+import Rooms from './pages/Rooms';
+import Teams from './pages/Teams';
 import __Layout from './Layout.jsx';
 
 
@@ -22,6 +25,9 @@ export const PAGES = {
     "UshersView": UshersView,
     "Templates": Templates,
     "DetailedProgram": DetailedProgram,
+    "People": People,
+    "Rooms": Rooms,
+    "Teams": Teams,
 }
 
 export const pagesConfig = {

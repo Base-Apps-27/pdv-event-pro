@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, List, Projector, Volume2, Users, Settings, LayoutDashboard, FileText } from "lucide-react";
+import { Calendar, List, Projector, Volume2, Users as UsersIcon, Settings, LayoutDashboard, FileText, MapPin, User, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -28,6 +28,21 @@ const navigationItems = [
     icon: Calendar,
   },
   {
+    title: "Personas",
+    url: createPageUrl("People"),
+    icon: User,
+  },
+  {
+    title: "Equipos",
+    url: createPageUrl("Teams"),
+    icon: Users,
+  },
+  {
+    title: "Salas",
+    url: createPageUrl("Rooms"),
+    icon: MapPin,
+  },
+  {
     title: "Programa Detallado",
     url: createPageUrl("DetailedProgram"),
     icon: FileText,
@@ -50,7 +65,7 @@ const navigationItems = [
   {
     title: "Vista Ujieres",
     url: createPageUrl("UshersView"),
-    icon: Users,
+    icon: UsersIcon,
   },
   {
     title: "Plantillas",
