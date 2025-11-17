@@ -94,10 +94,10 @@ export default function Events() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Eventos</h1>
-          <p className="text-slate-600 mt-1">Gestiona congresos y eventos especiales</p>
+          <h1 className="text-3xl font-bold text-gray-900 uppercase">Eventos</h1>
+          <p className="text-gray-600 mt-1">Gestiona congresos y eventos especiales</p>
         </div>
-        <Button onClick={() => { setEditingEvent(null); setShowDialog(true); }} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={() => { setEditingEvent(null); setShowDialog(true); }} className="gradient-pdv text-white hover:opacity-90 font-bold uppercase">
           <Plus className="w-4 h-4 mr-2" />
           Nuevo Evento
         </Button>
@@ -105,39 +105,39 @@ export default function Events() {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event) => (
-          <Card key={event.id} className="hover:shadow-lg transition-shadow">
+          <Card key={event.id} className="hover:shadow-lg transition-shadow bg-white border-gray-200">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-lg mb-2">{event.name}</CardTitle>
+                  <CardTitle className="text-lg mb-2 text-gray-900">{event.name}</CardTitle>
                   <Badge className={`${statusColors[event.status]} border text-xs`}>
                     {statusLabels[event.status]}
                   </Badge>
                 </div>
-                <div className="text-2xl font-bold text-slate-400">{event.year}</div>
+                <div className="text-2xl font-bold text-gray-300">{event.year}</div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {event.theme && (
-                  <p className="text-sm text-slate-600 italic">"{event.theme}"</p>
+                  <p className="text-sm text-pdv-green font-semibold italic">"{event.theme}"</p>
                 )}
                 
-                <div className="flex items-center gap-2 text-sm text-slate-500">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                   <MapPin className="w-4 h-4" />
                   <span>{event.location || "Sin ubicación"}</span>
                 </div>
 
                 {event.start_date && (
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Calendar className="w-4 h-4" />
                     <span>{event.start_date} {event.end_date && `- ${event.end_date}`}</span>
                   </div>
                 )}
 
-                <div className="pt-3 border-t border-slate-100 flex gap-2">
+                <div className="pt-3 border-t border-gray-200 flex gap-2">
                   <Link to={createPageUrl(`EventDetail?id=${event.id}`)} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full">
+                    <Button variant="outline" size="sm" className="w-full border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white">
                       Ver Detalles
                     </Button>
                   </Link>
@@ -163,9 +163,9 @@ export default function Events() {
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
           <DialogHeader>
-            <DialogTitle>{editingEvent ? 'Editar Evento' : 'Nuevo Evento'}</DialogTitle>
+            <DialogTitle className="text-gray-900">{editingEvent ? 'Editar Evento' : 'Nuevo Evento'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
@@ -263,7 +263,7 @@ export default function Events() {
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+              <Button type="submit" className="gradient-pdv text-white font-bold uppercase">
                 {editingEvent ? 'Guardar' : 'Crear'}
               </Button>
             </div>

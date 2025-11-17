@@ -67,8 +67,8 @@ export default function People() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Personas</h1>
-          <p className="text-slate-400 mt-1">Gestiona el directorio de personas</p>
+          <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-tight">Personas</h1>
+          <p className="text-gray-600 mt-1">Gestiona el directorio de personas</p>
         </div>
         <Button onClick={() => { setEditingPerson(null); setShowDialog(true); }} className="gradient-pdv text-white font-bold uppercase">
           <Plus className="w-4 h-4 mr-2" />
@@ -78,38 +78,38 @@ export default function People() {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {people.map((person) => (
-          <Card key={person.id} className="bg-pdv-card border-slate-800">
+          <Card key={person.id} className="bg-white border-gray-200">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-pdv-teal bg-opacity-20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-pdv-teal bg-opacity-10 flex items-center justify-center">
                     <User className="w-5 h-5 text-pdv-teal" />
                   </div>
-                  <CardTitle className="text-lg text-white">{person.name}</CardTitle>
+                  <CardTitle className="text-lg text-gray-900">{person.name}</CardTitle>
                 </div>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="icon" onClick={() => { setEditingPerson(person); setShowDialog(true); }}>
-                    <Edit className="w-4 h-4 text-slate-400" />
+                    <Edit className="w-4 h-4 text-gray-600" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => {
                     if (confirm('¿Eliminar esta persona?')) {
                       deleteMutation.mutate(person.id);
                     }
                   }}>
-                    <Trash2 className="w-4 h-4 text-red-400" />
+                    <Trash2 className="w-4 h-4 text-red-500" />
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {person.email && (
-                <div className="flex items-center gap-2 text-sm text-slate-400">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Mail className="w-4 h-4" />
                   <span>{person.email}</span>
                 </div>
               )}
               {person.phone && (
-                <div className="flex items-center gap-2 text-sm text-slate-400">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Phone className="w-4 h-4" />
                   <span>{person.phone}</span>
                 </div>
@@ -129,67 +129,62 @@ export default function People() {
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="bg-pdv-card border-slate-700">
+        <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle className="text-white">{editingPerson ? 'Editar Persona' : 'Nueva Persona'}</DialogTitle>
+            <DialogTitle className="text-gray-900">{editingPerson ? 'Editar Persona' : 'Nueva Persona'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-slate-300">Nombre Completo *</Label>
+              <Label htmlFor="name">Nombre Completo *</Label>
               <Input 
                 id="name" 
                 name="name" 
                 defaultValue={editingPerson?.name}
                 required 
-                className="bg-pdv-charcoal border-slate-700 text-white"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-300">Email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input 
                 id="email" 
                 name="email" 
                 type="email"
                 defaultValue={editingPerson?.email}
-                className="bg-pdv-charcoal border-slate-700 text-white"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-slate-300">Teléfono</Label>
+              <Label htmlFor="phone">Teléfono</Label>
               <Input 
                 id="phone" 
                 name="phone" 
                 defaultValue={editingPerson?.phone}
-                className="bg-pdv-charcoal border-slate-700 text-white"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="default_roles" className="text-slate-300">Roles (separados por comas)</Label>
+              <Label htmlFor="default_roles">Roles (separados por comas)</Label>
               <Input 
                 id="default_roles" 
                 name="default_roles" 
                 defaultValue={editingPerson?.default_roles}
                 placeholder="Speaker, WorshipLeader, MC"
-                className="bg-pdv-charcoal border-slate-700 text-white"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes" className="text-slate-300">Notas</Label>
+              <Label htmlFor="notes">Notas</Label>
               <Textarea 
                 id="notes" 
                 name="notes" 
                 defaultValue={editingPerson?.notes}
                 rows={3}
-                className="bg-pdv-charcoal border-slate-700 text-white"
               />
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowDialog(false)} className="border-slate-700 text-slate-300">
+              <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
               <Button type="submit" className="gradient-pdv text-white font-bold uppercase">

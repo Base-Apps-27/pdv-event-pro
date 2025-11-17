@@ -69,8 +69,8 @@ export default function Rooms() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Salas</h1>
-          <p className="text-slate-400 mt-1">Gestiona salas y sus capacidades técnicas</p>
+          <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-tight">Salas</h1>
+          <p className="text-gray-600 mt-1">Gestiona salas y sus capacidades técnicas</p>
         </div>
         <Button onClick={() => { setEditingRoom(null); setShowDialog(true); }} className="gradient-pdv text-white font-bold uppercase">
           <Plus className="w-4 h-4 mr-2" />
@@ -80,35 +80,35 @@ export default function Rooms() {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {rooms.map((room) => (
-          <Card key={room.id} className="bg-pdv-card border-slate-800">
+          <Card key={room.id} className="bg-white border-gray-200">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded bg-pdv-green bg-opacity-20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded bg-pdv-green bg-opacity-10 flex items-center justify-center">
                     <MapPin className="w-5 h-5 text-pdv-green" />
                   </div>
-                  <CardTitle className="text-lg text-white">{room.name}</CardTitle>
+                  <CardTitle className="text-lg text-gray-900">{room.name}</CardTitle>
                 </div>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="icon" onClick={() => { setEditingRoom(room); setShowDialog(true); }}>
-                    <Edit className="w-4 h-4 text-slate-400" />
+                    <Edit className="w-4 h-4 text-gray-600" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => {
                     if (confirm('¿Eliminar esta sala?')) {
                       deleteMutation.mutate(room.id);
                     }
                   }}>
-                    <Trash2 className="w-4 h-4 text-red-400" />
+                    <Trash2 className="w-4 h-4 text-red-500" />
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {room.location_description && (
-                <p className="text-sm text-slate-400">{room.location_description}</p>
+                <p className="text-sm text-gray-600">{room.location_description}</p>
               )}
               {room.capacity && (
-                <p className="text-sm text-slate-400">Capacidad: {room.capacity} personas</p>
+                <p className="text-sm text-gray-600">Capacidad: {room.capacity} personas</p>
               )}
               <div className="flex gap-2 mt-3">
                 {room.has_projection && (
@@ -136,52 +136,49 @@ export default function Rooms() {
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="bg-pdv-card border-slate-700">
+        <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle className="text-white">{editingRoom ? 'Editar Sala' : 'Nueva Sala'}</DialogTitle>
+            <DialogTitle className="text-gray-900">{editingRoom ? 'Editar Sala' : 'Nueva Sala'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-slate-300">Nombre *</Label>
+              <Label htmlFor="name">Nombre *</Label>
               <Input 
                 id="name" 
                 name="name" 
                 defaultValue={editingRoom?.name}
                 required 
-                className="bg-pdv-charcoal border-slate-700 text-white"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location_description" className="text-slate-300">Descripción de ubicación</Label>
+              <Label htmlFor="location_description">Descripción de ubicación</Label>
               <Input 
                 id="location_description" 
                 name="location_description" 
                 defaultValue={editingRoom?.location_description}
-                className="bg-pdv-charcoal border-slate-700 text-white"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="capacity" className="text-slate-300">Capacidad</Label>
+              <Label htmlFor="capacity">Capacidad</Label>
               <Input 
                 id="capacity" 
                 name="capacity" 
                 type="number"
                 defaultValue={editingRoom?.capacity}
-                className="bg-pdv-charcoal border-slate-700 text-white"
               />
             </div>
 
             <div className="space-y-3">
-              <Label className="text-slate-300">Capacidades Técnicas</Label>
+              <Label>Capacidades Técnicas</Label>
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="has_projection" 
                   name="has_projection"
                   defaultChecked={editingRoom?.has_projection ?? true}
                 />
-                <label htmlFor="has_projection" className="text-sm text-slate-300">Proyección</label>
+                <label htmlFor="has_projection" className="text-sm">Proyección</label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox 
@@ -189,7 +186,7 @@ export default function Rooms() {
                   name="has_sound_system"
                   defaultChecked={editingRoom?.has_sound_system ?? true}
                 />
-                <label htmlFor="has_sound_system" className="text-sm text-slate-300">Sistema de sonido</label>
+                <label htmlFor="has_sound_system" className="text-sm">Sistema de sonido</label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox 
@@ -197,23 +194,22 @@ export default function Rooms() {
                   name="has_translation_feed"
                   defaultChecked={editingRoom?.has_translation_feed ?? false}
                 />
-                <label htmlFor="has_translation_feed" className="text-sm text-slate-300">Feed de traducción</label>
+                <label htmlFor="has_translation_feed" className="text-sm">Feed de traducción</label>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes" className="text-slate-300">Notas</Label>
+              <Label htmlFor="notes">Notas</Label>
               <Textarea 
                 id="notes" 
                 name="notes" 
                 defaultValue={editingRoom?.notes}
                 rows={3}
-                className="bg-pdv-charcoal border-slate-700 text-white"
               />
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowDialog(false)} className="border-slate-700 text-slate-300">
+              <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
               <Button type="submit" className="gradient-pdv text-white font-bold uppercase">

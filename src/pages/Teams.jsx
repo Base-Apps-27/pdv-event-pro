@@ -122,21 +122,21 @@ export default function Teams() {
   };
 
   const teamTypeColors = {
-    Production: "bg-blue-900 bg-opacity-30 text-blue-400 border-blue-700",
-    Ministry: "bg-purple-900 bg-opacity-30 text-purple-400 border-purple-700",
-    Hospitality: "bg-orange-900 bg-opacity-30 text-orange-400 border-orange-700",
-    Translation: "bg-yellow-900 bg-opacity-30 text-yellow-400 border-yellow-700",
-    Photography: "bg-pink-900 bg-opacity-30 text-pink-400 border-pink-700",
-    Kids: "bg-cyan-900 bg-opacity-30 text-cyan-400 border-cyan-700",
-    Other: "bg-slate-800 text-slate-400 border-slate-700"
+    Production: "bg-blue-100 text-blue-800 border-blue-200",
+    Ministry: "bg-purple-100 text-purple-800 border-purple-200",
+    Hospitality: "bg-orange-100 text-orange-800 border-orange-200",
+    Translation: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    Photography: "bg-pink-100 text-pink-800 border-pink-200",
+    Kids: "bg-cyan-100 text-cyan-800 border-cyan-200",
+    Other: "bg-gray-100 text-gray-800 border-gray-200"
   };
 
   return (
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Equipos</h1>
-          <p className="text-slate-400 mt-1">Gestiona equipos y sus miembros</p>
+          <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-tight">Equipos</h1>
+          <p className="text-gray-600 mt-1">Gestiona equipos y sus miembros</p>
         </div>
         <Button onClick={() => { setEditingTeam(null); setSelectedMembers([]); setShowDialog(true); }} className="gradient-pdv text-white font-bold uppercase">
           <Plus className="w-4 h-4 mr-2" />
@@ -150,25 +150,25 @@ export default function Teams() {
           const leader = people.find(p => p.id === team.leader_id);
           
           return (
-            <Card key={team.id} className="bg-pdv-card border-slate-800">
+            <Card key={team.id} className="bg-white border-gray-200">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-lg text-white mb-2">{team.name}</CardTitle>
+                    <CardTitle className="text-lg text-gray-900 mb-2">{team.name}</CardTitle>
                     <Badge className={`${teamTypeColors[team.type]} border text-xs font-bold uppercase`}>
                       {team.type}
                     </Badge>
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" onClick={() => openEditDialog(team)}>
-                      <Edit className="w-4 h-4 text-slate-400" />
+                      <Edit className="w-4 h-4 text-gray-600" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => {
                       if (confirm('¿Eliminar este equipo?')) {
                         deleteMutation.mutate(team.id);
                       }
                     }}>
-                      <Trash2 className="w-4 h-4 text-red-400" />
+                      <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
                   </div>
                 </div>
@@ -177,19 +177,19 @@ export default function Teams() {
                 {leader && (
                   <div className="text-sm">
                     <span className="text-pdv-green font-semibold">Líder:</span>
-                    <span className="text-slate-300 ml-2">{leader.name}</span>
+                    <span className="text-gray-700 ml-2">{leader.name}</span>
                   </div>
                 )}
                 <div className="text-sm">
-                  <span className="text-slate-500">Miembros: {members.length}</span>
+                  <span className="text-gray-600">Miembros: {members.length}</span>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {members.slice(0, 5).map((member) => (
-                      <Badge key={member.id} variant="outline" className="text-xs border-slate-700 text-slate-400">
+                      <Badge key={member.id} variant="outline" className="text-xs border-gray-300 text-gray-700">
                         {member.name}
                       </Badge>
                     ))}
                     {members.length > 5 && (
-                      <Badge variant="outline" className="text-xs border-slate-700 text-slate-400">
+                      <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
                         +{members.length - 5} más
                       </Badge>
                     )}
@@ -202,27 +202,26 @@ export default function Teams() {
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="bg-pdv-card border-slate-700 max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-white border-gray-200 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-white">{editingTeam ? 'Editar Equipo' : 'Nuevo Equipo'}</DialogTitle>
+            <DialogTitle className="text-gray-900">{editingTeam ? 'Editar Equipo' : 'Nuevo Equipo'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-slate-300">Nombre del Equipo *</Label>
+              <Label htmlFor="name">Nombre del Equipo *</Label>
               <Input 
                 id="name" 
                 name="name" 
                 defaultValue={editingTeam?.name}
                 required 
                 placeholder="Equipo de Proyección"
-                className="bg-pdv-charcoal border-slate-700 text-white"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="type" className="text-slate-300">Tipo *</Label>
+              <Label htmlFor="type">Tipo *</Label>
               <Select name="type" defaultValue={editingTeam?.type || 'Other'}>
-                <SelectTrigger className="bg-pdv-charcoal border-slate-700 text-white">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -238,9 +237,9 @@ export default function Teams() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="leader_id" className="text-slate-300">Líder</Label>
+              <Label htmlFor="leader_id">Líder</Label>
               <Select name="leader_id" defaultValue={editingTeam?.leader_id || ''}>
-                <SelectTrigger className="bg-pdv-charcoal border-slate-700 text-white">
+                <SelectTrigger>
                   <SelectValue placeholder="Seleccionar líder..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -253,11 +252,11 @@ export default function Teams() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">Miembros del Equipo</Label>
-              <div className="border border-slate-700 rounded p-3 bg-pdv-charcoal max-h-48 overflow-y-auto">
+              <Label>Miembros del Equipo</Label>
+              <div className="border border-gray-300 rounded p-3 bg-gray-50 max-h-48 overflow-y-auto">
                 {people.map((person) => (
-                  <div key={person.id} className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
-                    <span className="text-sm text-slate-300">{person.name}</span>
+                  <div key={person.id} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
+                    <span className="text-sm text-gray-700">{person.name}</span>
                     <Button
                       type="button"
                       size="sm"
@@ -269,29 +268,28 @@ export default function Teams() {
                           setSelectedMembers([...selectedMembers, person.id]);
                         }
                       }}
-                      className={selectedMembers.includes(person.id) ? "bg-pdv-green hover:bg-pdv-teal" : "border-slate-700 text-slate-400"}
+                      className={selectedMembers.includes(person.id) ? "bg-pdv-green hover:bg-pdv-teal text-white" : ""}
                     >
                       {selectedMembers.includes(person.id) ? <X className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
                     </Button>
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-500 mt-1">{selectedMembers.length} miembro(s) seleccionado(s)</p>
+              <p className="text-xs text-gray-600 mt-1">{selectedMembers.length} miembro(s) seleccionado(s)</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes" className="text-slate-300">Notas</Label>
+              <Label htmlFor="notes">Notas</Label>
               <Textarea 
                 id="notes" 
                 name="notes" 
                 defaultValue={editingTeam?.notes}
                 rows={3}
-                className="bg-pdv-charcoal border-slate-700 text-white"
               />
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowDialog(false)} className="border-slate-700 text-slate-300">
+              <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
               <Button type="submit" className="gradient-pdv text-white font-bold uppercase">
