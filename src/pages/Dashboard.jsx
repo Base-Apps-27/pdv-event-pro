@@ -40,29 +40,29 @@ export default function Dashboard() {
 
   const statusColors = {
     planning: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    confirmed: "bg-green-100 text-green-800 border-green-200",
-    in_progress: "bg-blue-100 text-blue-800 border-blue-200",
+    confirmed: "bg-pdv-green bg-opacity-20 text-pdv-teal border-pdv-green",
+    in_progress: "bg-pdv-teal bg-opacity-20 text-pdv-teal border-pdv-teal",
     completed: "bg-gray-100 text-gray-800 border-gray-200",
     archived: "bg-slate-100 text-slate-600 border-slate-200"
   };
 
   const statusLabels = {
-    planning: "Planificación",
-    confirmed: "Confirmado",
-    in_progress: "En Progreso",
-    completed: "Completado",
-    archived: "Archivado"
+    planning: "PLANIFICACIÓN",
+    confirmed: "CONFIRMADO",
+    in_progress: "EN PROGRESO",
+    completed: "COMPLETADO",
+    archived: "ARCHIVADO"
   };
 
   return (
     <div className="p-6 md:p-8 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-slate-600 mt-1">Gestión de eventos y programación</p>
+          <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight text-slate-900">DASHBOARD</h1>
+          <p className="text-slate-600 mt-2 font-medium">Gestión de eventos y programación</p>
         </div>
         <Link to={createPageUrl("Events")}>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button className="gradient-pdv text-white hover:opacity-90 transition-opacity font-bold uppercase tracking-wide">
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Evento
           </Button>
@@ -70,62 +70,65 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-white/90 text-sm font-medium">Total Eventos</CardTitle>
+        <Card className="relative overflow-hidden border-none shadow-md">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-pdv-teal opacity-10 rounded-full transform translate-x-8 -translate-y-8" />
+          <CardHeader className="relative">
+            <CardTitle className="text-sm font-bold uppercase text-slate-500 tracking-wider">Total Eventos</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{events.length}</div>
-            <p className="text-blue-100 text-sm mt-1">{upcomingEvents.length} activos</p>
+          <CardContent className="relative">
+            <div className="text-5xl font-bold text-pdv-teal">{events.length}</div>
+            <p className="text-slate-600 text-sm mt-1 font-medium">{upcomingEvents.length} activos</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-none shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-white/90 text-sm font-medium">Total Sesiones</CardTitle>
+        <Card className="relative overflow-hidden border-none shadow-md">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-pdv-green opacity-10 rounded-full transform translate-x-8 -translate-y-8" />
+          <CardHeader className="relative">
+            <CardTitle className="text-sm font-bold uppercase text-slate-500 tracking-wider">Total Sesiones</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{sessions.length}</div>
-            <p className="text-indigo-100 text-sm mt-1">En todos los eventos</p>
+          <CardContent className="relative">
+            <div className="text-5xl font-bold text-pdv-green">{sessions.length}</div>
+            <p className="text-slate-600 text-sm mt-1 font-medium">En todos los eventos</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-white/90 text-sm font-medium">Total Segmentos</CardTitle>
+        <Card className="relative overflow-hidden border-none shadow-md">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-pdv-yellow opacity-10 rounded-full transform translate-x-8 -translate-y-8" />
+          <CardHeader className="relative">
+            <CardTitle className="text-sm font-bold uppercase text-slate-500 tracking-wider">Total Segmentos</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{segments.length}</div>
-            <p className="text-purple-100 text-sm mt-1">Programados</p>
+          <CardContent className="relative">
+            <div className="text-5xl font-bold" style={{color: '#D7DF23'}}>{segments.length}</div>
+            <p className="text-slate-600 text-sm mt-1 font-medium">Programados</p>
           </CardContent>
         </Card>
       </div>
 
       {recentEvent && (
-        <Card className="border-2 border-blue-200 shadow-md">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+        <Card className="border-l-4 border-pdv-teal shadow-md">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-white">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xl">Evento Próximo</CardTitle>
-              <Badge className="bg-blue-600 text-white">Destacado</Badge>
+              <CardTitle className="text-2xl font-bold uppercase tracking-tight">Evento Próximo</CardTitle>
+              <Badge className="gradient-pdv text-white font-bold uppercase">Destacado</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
               <div>
-                <h3 className="text-2xl font-bold text-slate-900">{recentEvent.name}</h3>
+                <h3 className="text-3xl font-bold text-slate-900 uppercase tracking-tight">{recentEvent.name}</h3>
                 {recentEvent.theme && (
-                  <p className="text-lg text-slate-600 mt-1 italic">"{recentEvent.theme}"</p>
+                  <p className="text-xl text-pdv-teal mt-2 font-semibold italic">"{recentEvent.theme}"</p>
                 )}
               </div>
               
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-blue-600" />
+                  <div className="w-12 h-12 rounded bg-pdv-teal bg-opacity-10 flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-pdv-teal" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Fechas</p>
-                    <p className="font-medium text-slate-900">
+                    <p className="text-xs font-bold uppercase text-slate-500 tracking-wider">Fechas</p>
+                    <p className="font-semibold text-slate-900">
                       {recentEvent.start_date && format(new Date(recentEvent.start_date), "d MMM", { locale: es })}
                       {recentEvent.end_date && ` - ${format(new Date(recentEvent.end_date), "d MMM yyyy", { locale: es })}`}
                     </p>
@@ -133,29 +136,29 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-green-600" />
+                  <div className="w-12 h-12 rounded bg-pdv-green bg-opacity-10 flex items-center justify-center">
+                    <MapPin className="w-6 h-6 text-pdv-green" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Ubicación</p>
-                    <p className="font-medium text-slate-900">{recentEvent.location || "Por definir"}</p>
+                    <p className="text-xs font-bold uppercase text-slate-500 tracking-wider">Ubicación</p>
+                    <p className="font-semibold text-slate-900">{recentEvent.location || "Por definir"}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-purple-600" />
+                  <div className="w-12 h-12 rounded bg-pdv-yellow bg-opacity-10 flex items-center justify-center">
+                    <FileText className="w-6 h-6" style={{color: '#D7DF23'}} />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Sesiones</p>
-                    <p className="font-medium text-slate-900">{getSessionCount(recentEvent.id)} programadas</p>
+                    <p className="text-xs font-bold uppercase text-slate-500 tracking-wider">Sesiones</p>
+                    <p className="font-semibold text-slate-900">{getSessionCount(recentEvent.id)} programadas</p>
                   </div>
                 </div>
               </div>
 
               <div className="flex gap-3 pt-4">
                 <Link to={createPageUrl(`EventDetail?id=${recentEvent.id}`)} className="flex-1">
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white font-bold uppercase">
                     Ver Detalles
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
@@ -167,10 +170,10 @@ export default function Dashboard() {
       )}
 
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-slate-900">Todos los Eventos</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-3xl font-bold text-slate-900 uppercase tracking-tight">Todos los Eventos</h2>
           <Link to={createPageUrl("Events")}>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="text-pdv-teal hover:text-pdv-green font-bold uppercase">
               Ver todos
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -180,30 +183,30 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event) => (
             <Link key={event.id} to={createPageUrl(`EventDetail?id=${event.id}`)}>
-              <Card className="hover:shadow-lg transition-shadow duration-200 h-full cursor-pointer">
+              <Card className="hover:shadow-lg transition-shadow duration-200 h-full cursor-pointer border-none">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg mb-2">{event.name}</CardTitle>
-                      <Badge className={`${statusColors[event.status]} border text-xs`}>
+                      <CardTitle className="text-lg mb-3 font-bold uppercase tracking-tight">{event.name}</CardTitle>
+                      <Badge className={`${statusColors[event.status]} border text-xs font-bold uppercase`}>
                         {statusLabels[event.status]}
                       </Badge>
                     </div>
-                    <div className="text-2xl font-bold text-slate-400">{event.year}</div>
+                    <div className="text-3xl font-bold text-slate-300">{event.year}</div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {event.theme && (
-                      <p className="text-sm text-slate-600 italic line-clamp-2">"{event.theme}"</p>
+                      <p className="text-sm text-pdv-teal font-semibold italic line-clamp-2">"{event.theme}"</p>
                     )}
                     
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <MapPin className="w-4 h-4" />
-                      <span>{event.location || "Sin ubicación"}</span>
+                      <span className="font-medium">{event.location || "Sin ubicación"}</span>
                     </div>
 
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-sm">
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-sm font-semibold">
                       <span className="text-slate-600">{getSessionCount(event.id)} sesiones</span>
                       <span className="text-slate-600">{getSegmentCount(event.id)} segmentos</span>
                     </div>
@@ -216,10 +219,10 @@ export default function Dashboard() {
           {events.length === 0 && !isLoading && (
             <Card className="col-span-full p-12 text-center border-dashed border-2">
               <Calendar className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">No hay eventos</h3>
+              <h3 className="text-lg font-bold uppercase text-slate-900 mb-2">No hay eventos</h3>
               <p className="text-slate-500 mb-4">Comienza creando tu primer evento</p>
               <Link to={createPageUrl("Events")}>
-                <Button>
+                <Button className="gradient-pdv text-white font-bold uppercase">
                   <Plus className="w-4 h-4 mr-2" />
                   Crear Evento
                 </Button>
