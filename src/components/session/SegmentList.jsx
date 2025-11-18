@@ -1,6 +1,7 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,35 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
       queryClient.invalidateQueries(['segments', sessionId]);
     },
   });
+
+  const reorderMutation = useMutation({
+    mutationFn: async ({ segmentId, newOrder }) => {
+      return base44.entities.Segment.update(segmentId, { order: newOrder });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['segments', sessionId]);
+    },
+  });
+
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
+    
+    const sourceIndex = result.source.index;
+    const destIndex = result.destination.index;
+    
+    if (sourceIndex === destIndex) return;
+
+    const reorderedSegments = Array.from(segments);
+    const [movedSegment] = reorderedSegments.splice(sourceIndex, 1);
+    reorderedSegments.splice(destIndex, 0, movedSegment);
+
+    const updates = reorderedSegments.map((seg, index) => ({
+      segmentId: seg.id,
+      newOrder: index + 1
+    }));
+
+    await Promise.all(updates.map(update => reorderMutation.mutateAsync(update)));
+  };
 
   const getSegmentActions = (segmentId) => {
     return allActions.filter(action => action.segment_id === segmentId);
@@ -44,35 +74,44 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-slate-50">
-            <TableHead className="w-12">#</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Título / Responsable</TableHead>
-            <TableHead className="w-32">Contenido</TableHead>
-            <TableHead className="w-20 text-center">Notas</TableHead>
-            <TableHead className="w-24">Inicio</TableHead>
-            <TableHead className="w-20">Dur.</TableHead>
-            <TableHead className="w-24">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {segments.map((segment) => {
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50">
+              <TableHead className="w-12">#</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Título / Responsable</TableHead>
+              <TableHead className="w-32">Contenido</TableHead>
+              <TableHead className="w-20 text-center">Notas</TableHead>
+              <TableHead className="w-24">Inicio</TableHead>
+              <TableHead className="w-20">Dur.</TableHead>
+              <TableHead className="w-24">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <Droppable droppableId="segments">
+            {(provided) => (
+              <TableBody ref={provided.innerRef} {...provided.droppableProps}>
+                {segments.map((segment, index) => {
             const actionCount = getSegmentActions(segment.id).length;
             const hasProjectionNotes = !!segment.projection_notes;
             const hasSoundNotes = !!segment.sound_notes;
             const hasUshersNotes = !!segment.ushers_notes;
 
             return (
-              <TableRow key={segment.id} className="hover:bg-slate-50">
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <GripVertical className="w-4 h-4 text-slate-400" />
-                    <span className="font-medium">{segment.order}</span>
-                  </div>
-                </TableCell>
+              <Draggable key={segment.id} draggableId={segment.id} index={index}>
+                {(provided, snapshot) => (
+                  <TableRow 
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    className={`hover:bg-slate-50 ${snapshot.isDragging ? 'bg-blue-50' : ''}`}
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-2" {...provided.dragHandleProps}>
+                        <GripVertical className="w-4 h-4 text-slate-400 cursor-grab active:cursor-grabbing" />
+                        <span className="font-medium">{segment.order}</span>
+                      </div>
+                    </TableCell>
                 <TableCell>
                   <Badge className={`${colorSchemes[segment.color_code || 'default']} border text-xs whitespace-nowrap`}>
                     {segment.segment_type}
@@ -151,11 +190,17 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
                     </Button>
                   </div>
                 </TableCell>
-              </TableRow>
+                  </TableRow>
+                )}
+              </Draggable>
             );
           })}
-        </TableBody>
-      </Table>
-    </div>
+          {provided.placeholder}
+              </TableBody>
+            )}
+          </Droppable>
+        </Table>
+      </div>
+    </DragDropContext>
   );
 }
