@@ -260,7 +260,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="stage_call_offset_min">Llamado (min antes)</Label>
+          <Label htmlFor="stage_call_offset_min">Llegada de Equipos (min antes)</Label>
           <Input 
             id="stage_call_offset_min" 
             type="number"

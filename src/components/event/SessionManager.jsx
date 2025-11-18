@@ -265,7 +265,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="default_stage_call_offset_min">Llamado Escenario (min)</Label>
+                    <Label htmlFor="default_stage_call_offset_min">Llegada de Equipos (min antes)</Label>
                     <Input 
                       id="default_stage_call_offset_min" 
                       name="default_stage_call_offset_min" 

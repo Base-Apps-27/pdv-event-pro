@@ -69,7 +69,7 @@ export default function Reports() {
                     {session.location && ` • ${session.location}`}
                     {session.default_stage_call_offset_min && (
                       <span className="ml-2 text-blue-600 font-semibold">
-                        • Llamado: {session.default_stage_call_offset_min} min antes
+                        • Llegada de los Equipos: {session.default_stage_call_offset_min} min antes
                       </span>
                     )}
                   </div>
