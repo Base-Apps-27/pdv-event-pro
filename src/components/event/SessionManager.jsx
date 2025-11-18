@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users } from "lucide-react";
+import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,10 +13,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import SegmentList from "../session/SegmentList";
+import SegmentFormTwoColumn from "../session/SegmentFormTwoColumn";
 
 export default function SessionManager({ eventId, sessions, segments }) {
   const [showDialog, setShowDialog] = useState(false);
   const [editingSession, setEditingSession] = useState(null);
+  const [expandedSessionId, setExpandedSessionId] = useState(null);
+  const [showSegmentForm, setShowSegmentForm] = useState(false);
+  const [editingSegment, setEditingSegment] = useState(null);
   const [formData, setFormData] = useState({});
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -94,6 +99,36 @@ export default function SessionManager({ eventId, sessions, segments }) {
     return segments.filter(seg => seg.session_id === sessionId).length;
   };
 
+  const getSessionSegments = (sessionId) => {
+    return segments.filter(seg => seg.session_id === sessionId).sort((a, b) => (a.order || 0) - (b.order || 0));
+  };
+
+  const { data: templates = [] } = useQuery({
+    queryKey: ['templates'],
+    queryFn: () => base44.entities.SegmentTemplate.list(),
+  });
+
+  const toggleSession = (sessionId) => {
+    setExpandedSessionId(expandedSessionId === sessionId ? null : sessionId);
+  };
+
+  const handleEditSegment = (segment, sessionId) => {
+    setEditingSegment(segment);
+    setExpandedSessionId(sessionId);
+    setShowSegmentForm(true);
+  };
+
+  const handleCloseSegmentForm = () => {
+    setShowSegmentForm(false);
+    setEditingSegment(null);
+  };
+
+  const handleAddSegment = (sessionId) => {
+    setExpandedSessionId(sessionId);
+    setEditingSegment(null);
+    setShowSegmentForm(true);
+  };
+
   const sessionColors = {
     green: "bg-green-50 border-green-200",
     blue: "bg-blue-50 border-blue-200",
@@ -126,124 +161,166 @@ export default function SessionManager({ eventId, sessions, segments }) {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {sessions.map((session) => (
-            <Card key={session.id} className={`hover:shadow-md transition-shadow border-l-4 ${sessionColors[session.session_color || 'blue']}`}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <CardTitle className="text-xl mb-3">{session.name}</CardTitle>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                      {session.date && (
-                        <div>
-                          <span className="text-slate-500 text-xs">Fecha</span>
-                          <div className="font-medium flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {session.date}
-                          </div>
-                        </div>
-                      )}
-                      {session.planned_start_time && (
-                        <div>
-                          <span className="text-slate-500 text-xs">Inicio</span>
-                          <div className="font-medium flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {session.planned_start_time}
-                          </div>
-                        </div>
-                      )}
-                      {session.planned_end_time && (
-                        <div>
-                          <span className="text-slate-500 text-xs">Fin</span>
-                          <div className="font-medium">{session.planned_end_time}</div>
-                        </div>
-                      )}
-                      {session.location && (
-                        <div>
-                          <span className="text-slate-500 text-xs">Ubicación</span>
-                          <div className="font-medium truncate">{session.location}</div>
-                        </div>
-                      )}
-                    </div>
+          {sessions.map((session) => {
+            const isExpanded = expandedSessionId === session.id;
+            const sessionSegments = getSessionSegments(session.id);
 
-                    {session.default_stage_call_offset_min && (
-                      <div className="mt-2 text-sm">
-                        <span className="text-blue-600 font-semibold">
-                          Llegada de Equipos: {session.default_stage_call_offset_min} min antes
-                        </span>
+            return (
+              <Card key={session.id} className={`hover:shadow-md transition-shadow border-l-4 ${sessionColors[session.session_color || 'blue']}`}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <CardTitle className="text-xl mb-3">{session.name}</CardTitle>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        {session.date && (
+                          <div>
+                            <span className="text-slate-500 text-xs">Fecha</span>
+                            <div className="font-medium flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {session.date}
+                            </div>
+                          </div>
+                        )}
+                        {session.planned_start_time && (
+                          <div>
+                            <span className="text-slate-500 text-xs">Inicio</span>
+                            <div className="font-medium flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {session.planned_start_time}
+                            </div>
+                          </div>
+                        )}
+                        {session.planned_end_time && (
+                          <div>
+                            <span className="text-slate-500 text-xs">Fin</span>
+                            <div className="font-medium">{session.planned_end_time}</div>
+                          </div>
+                        )}
+                        {session.location && (
+                          <div>
+                            <span className="text-slate-500 text-xs">Ubicación</span>
+                            <div className="font-medium truncate">{session.location}</div>
+                          </div>
+                        )}
                       </div>
-                    )}
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-xs">
-                      {session.admin_team && (
-                        <div className="bg-orange-50 px-2 py-1 rounded border border-orange-200">
-                          <span className="font-bold text-orange-700">ADMIN:</span>
-                          <span className="text-slate-700 ml-1">{session.admin_team}</span>
+                      {session.default_stage_call_offset_min && (
+                        <div className="mt-2 text-sm">
+                          <span className="text-blue-600 font-semibold">
+                            Llegada de Equipos: {session.default_stage_call_offset_min} min antes
+                          </span>
                         </div>
                       )}
-                      {session.sound_team && (
-                        <div className="bg-red-50 px-2 py-1 rounded border border-red-200">
-                          <span className="font-bold text-red-700">SONIDO:</span>
-                          <span className="text-slate-700 ml-1">{session.sound_team}</span>
-                        </div>
-                      )}
-                      {session.tech_team && (
-                        <div className="bg-purple-50 px-2 py-1 rounded border border-purple-200">
-                          <span className="font-bold text-purple-700">TÉCNICO:</span>
-                          <span className="text-slate-700 ml-1">{session.tech_team}</span>
-                        </div>
-                      )}
-                      {session.ushers_team && (
-                        <div className="bg-green-50 px-2 py-1 rounded border border-green-200">
-                          <span className="font-bold text-green-700">UJIERES:</span>
-                          <span className="text-slate-700 ml-1">{session.ushers_team}</span>
-                        </div>
-                      )}
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-xs">
+                        {session.admin_team && (
+                          <div className="bg-orange-50 px-2 py-1 rounded border border-orange-200">
+                            <span className="font-bold text-orange-700">ADMIN:</span>
+                            <span className="text-slate-700 ml-1">{session.admin_team}</span>
+                          </div>
+                        )}
+                        {session.sound_team && (
+                          <div className="bg-red-50 px-2 py-1 rounded border border-red-200">
+                            <span className="font-bold text-red-700">SONIDO:</span>
+                            <span className="text-slate-700 ml-1">{session.sound_team}</span>
+                          </div>
+                        )}
+                        {session.tech_team && (
+                          <div className="bg-purple-50 px-2 py-1 rounded border border-purple-200">
+                            <span className="font-bold text-purple-700">TÉCNICO:</span>
+                            <span className="text-slate-700 ml-1">{session.tech_team}</span>
+                          </div>
+                        )}
+                        {session.ushers_team && (
+                          <div className="bg-green-50 px-2 py-1 rounded border border-green-200">
+                            <span className="font-bold text-green-700">UJIERES:</span>
+                            <span className="text-slate-700 ml-1">{session.ushers_team}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    
+                    <Badge variant="outline" className="text-base px-3 py-1 whitespace-nowrap">
+                      {getSegmentCount(session.id)} segmentos
+                    </Badge>
                   </div>
-                  
-                  <Badge variant="outline" className="text-base px-3 py-1 whitespace-nowrap">
-                    {getSegmentCount(session.id)} segmentos
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate(createPageUrl(`SessionDetail?id=${session.id}`))}
-                    className="flex-1"
-                  >
-                    <List className="w-4 h-4 mr-2" />
-                    Ver Segmentos
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => openDialog(session)}
-                  >
-                    <Edit className="w-4 h-4 mr-1" />
-                    Editar
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      if (confirm('¿Eliminar esta sesión y todos sus segmentos?')) {
-                        deleteMutation.mutate(session.id);
-                      }
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardHeader>
+                <CardContent className="pt-0 space-y-3">
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => toggleSession(session.id)}
+                      className="flex-1"
+                    >
+                      <List className="w-4 h-4 mr-2" />
+                      Ver Segmentos
+                      {isExpanded ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => openDialog(session)}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Editar
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        if (confirm('¿Eliminar esta sesión y todos sus segmentos?')) {
+                          deleteMutation.mutate(session.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="border-t pt-3 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-semibold text-slate-900">Segmentos del Programa</h3>
+                        <Button 
+                          size="sm"
+                          onClick={() => handleAddSegment(session.id)}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Nuevo Segmento
+                        </Button>
+                      </div>
+                      
+                      <SegmentList 
+                        segments={sessionSegments}
+                        sessionId={session.id}
+                        onEdit={(segment) => handleEditSegment(segment, session.id)}
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
+
+      <Dialog open={showSegmentForm} onOpenChange={setShowSegmentForm}>
+        <DialogContent className="max-w-6xl h-[90vh] p-0">
+          <DialogHeader className="px-6 pt-6 pb-0">
+            <DialogTitle>{editingSegment ? 'Editar Segmento' : 'Nuevo Segmento'}</DialogTitle>
+          </DialogHeader>
+          <SegmentFormTwoColumn 
+            session={sessions.find(s => s.id === expandedSessionId)}
+            segment={editingSegment}
+            templates={templates}
+            onClose={handleCloseSegmentForm}
+            sessionId={expandedSessionId}
+          />
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
