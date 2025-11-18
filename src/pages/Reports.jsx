@@ -327,107 +327,129 @@ export default function Reports() {
   );
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 uppercase">Informes de Eventos</h1>
-          <p className="text-gray-600 mt-1">Visualiza y exporta reportes de eventos</p>
-        </div>
-        <Button 
-          onClick={handlePrint}
-          disabled={!selectedEventId}
-          className="gradient-pdv text-white font-bold uppercase"
-        >
-          <Printer className="w-4 h-4 mr-2" />
-          Imprimir/Exportar
-        </Button>
-      </div>
-
-      <Card className="bg-white border-gray-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-gray-900">
-            <Filter className="w-5 h-5" />
-            Seleccionar Evento
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-            <SelectTrigger className="w-full max-w-md">
-              <SelectValue placeholder="Selecciona un evento..." />
-            </SelectTrigger>
-            <SelectContent>
-              {events.map((event) => (
-                <SelectItem key={event.id} value={event.id}>
-                  {event.name} - {event.year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
-      {selectedEventId && selectedEvent && (
-        <div className="bg-white p-8 rounded-lg shadow-sm">
-          <div className="text-center mb-8 border-b-2 border-gray-200 pb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedEvent.name}</h1>
-            {selectedEvent.theme && (
-              <p className="text-xl text-pdv-green italic">"{selectedEvent.theme}"</p>
-            )}
+    <>
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-report, #printable-report * {
+            visibility: visible;
+          }
+          #printable-report {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `}</style>
+      
+      <div className="p-6 md:p-8 space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 uppercase">Informes de Eventos</h1>
+            <p className="text-gray-600 mt-1">Visualiza y exporta reportes de eventos</p>
           </div>
-
-          <Tabs value={activeReport} onValueChange={setActiveReport} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-6">
-              <TabsTrigger value="detailed" className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                Detallado
-              </TabsTrigger>
-              <TabsTrigger value="general" className="flex items-center gap-2">
-                <List className="w-4 h-4" />
-                General
-              </TabsTrigger>
-              <TabsTrigger value="projection" className="flex items-center gap-2">
-                <Projector className="w-4 h-4" />
-                Proyección
-              </TabsTrigger>
-              <TabsTrigger value="sound" className="flex items-center gap-2">
-                <Volume2 className="w-4 h-4" />
-                Sonido
-              </TabsTrigger>
-              <TabsTrigger value="ushers" className="flex items-center gap-2">
-                <UsersIcon className="w-4 h-4" />
-                Ujieres
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="detailed">
-              {renderDetailedProgram()}
-            </TabsContent>
-
-            <TabsContent value="general">
-              {renderGeneralProgram()}
-            </TabsContent>
-
-            <TabsContent value="projection">
-              {renderProjectionView()}
-            </TabsContent>
-
-            <TabsContent value="sound">
-              {renderSoundView()}
-            </TabsContent>
-
-            <TabsContent value="ushers">
-              {renderUshersView()}
-            </TabsContent>
-          </Tabs>
+          <Button 
+            onClick={handlePrint}
+            disabled={!selectedEventId}
+            className="gradient-pdv text-white font-bold uppercase"
+          >
+            <Printer className="w-4 h-4 mr-2" />
+            Imprimir/Exportar
+          </Button>
         </div>
-      )}
 
-      {!selectedEventId && (
-        <Card className="p-12 text-center border-dashed border-2 bg-white border-gray-300">
-          <Filter className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">Selecciona un evento para ver los informes disponibles</p>
+        <Card className="bg-white border-gray-200 no-print">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-gray-900">
+              <Filter className="w-5 h-5" />
+              Seleccionar Evento
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+              <SelectTrigger className="w-full max-w-md">
+                <SelectValue placeholder="Selecciona un evento..." />
+              </SelectTrigger>
+              <SelectContent>
+                {events.map((event) => (
+                  <SelectItem key={event.id} value={event.id}>
+                    {event.name} - {event.year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
         </Card>
-      )}
-    </div>
+
+        {selectedEventId && selectedEvent && (
+          <div id="printable-report" className="bg-white p-8 rounded-lg shadow-sm">
+            <div className="text-center mb-8 border-b-2 border-gray-200 pb-6">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedEvent.name}</h1>
+              {selectedEvent.theme && (
+                <p className="text-xl text-pdv-green italic">"{selectedEvent.theme}"</p>
+              )}
+            </div>
+
+            <Tabs value={activeReport} onValueChange={setActiveReport} className="w-full">
+              <TabsList className="grid w-full grid-cols-5 mb-6 no-print">
+                <TabsTrigger value="detailed" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Detallado
+                </TabsTrigger>
+                <TabsTrigger value="general" className="flex items-center gap-2">
+                  <List className="w-4 h-4" />
+                  General
+                </TabsTrigger>
+                <TabsTrigger value="projection" className="flex items-center gap-2">
+                  <Projector className="w-4 h-4" />
+                  Proyección
+                </TabsTrigger>
+                <TabsTrigger value="sound" className="flex items-center gap-2">
+                  <Volume2 className="w-4 h-4" />
+                  Sonido
+                </TabsTrigger>
+                <TabsTrigger value="ushers" className="flex items-center gap-2">
+                  <UsersIcon className="w-4 h-4" />
+                  Ujieres
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="detailed">
+                {renderDetailedProgram()}
+              </TabsContent>
+
+              <TabsContent value="general">
+                {renderGeneralProgram()}
+              </TabsContent>
+
+              <TabsContent value="projection">
+                {renderProjectionView()}
+              </TabsContent>
+
+              <TabsContent value="sound">
+                {renderSoundView()}
+              </TabsContent>
+
+              <TabsContent value="ushers">
+                {renderUshersView()}
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+
+        {!selectedEventId && (
+          <Card className="p-12 text-center border-dashed border-2 bg-white border-gray-300">
+            <Filter className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">Selecciona un evento para ver los informes disponibles</p>
+          </Card>
+        )}
+      </div>
+    </>
   );
 }
