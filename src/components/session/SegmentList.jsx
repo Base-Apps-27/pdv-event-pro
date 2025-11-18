@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, GripVertical, Music, MessageSquare, Languages, ListOrdered, Circle } from "lucide-react";
+import { formatTimeToEST } from "@/utils/timeFormat";
 
 export default function SegmentList({ segments, sessionId, onEdit }) {
   const queryClient = useQueryClient();
@@ -126,9 +127,9 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
                   </div>
                 </TableCell>
                 <TableCell className="font-mono text-sm">
-                  <div>{segment.start_time || "-"}</div>
+                  <div>{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
                   {segment.stage_call_time && (
-                    <div className="text-xs text-blue-600">↓ {segment.stage_call_time}</div>
+                    <div className="text-xs text-blue-600">↓ {formatTimeToEST(segment.stage_call_time)}</div>
                   )}
                 </TableCell>
                 <TableCell className="text-sm">{segment.duration_min ? `${segment.duration_min}m` : "-"}</TableCell>

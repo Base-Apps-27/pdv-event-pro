@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SegmentList from "../session/SegmentList";
 import SegmentFormTwoColumn from "../session/SegmentFormTwoColumn";
+import { formatTimeToEST } from "@/utils/timeFormat";
 
 export default function SessionManager({ eventId, sessions, segments }) {
   const [showDialog, setShowDialog] = useState(false);
@@ -187,14 +188,14 @@ export default function SessionManager({ eventId, sessions, segments }) {
                             <span className="text-slate-500 text-xs">Inicio</span>
                             <div className="font-medium flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              {session.planned_start_time}
+                              {formatTimeToEST(session.planned_start_time)}
                             </div>
                           </div>
                         )}
                         {session.planned_end_time && (
                           <div>
                             <span className="text-slate-500 text-xs">Fin</span>
-                            <div className="font-medium">{session.planned_end_time}</div>
+                            <div className="font-medium">{formatTimeToEST(session.planned_end_time)}</div>
                           </div>
                         )}
                         {session.location && (

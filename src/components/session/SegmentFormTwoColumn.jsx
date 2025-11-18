@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { formatTimeToEST } from "@/utils/timeFormat";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -460,7 +461,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     <div className="mt-3 text-sm text-slate-600">
                       <div className="flex justify-between">
                         <span>Fin estimado:</span>
-                        <span className="font-mono font-medium">{times.end_time}</span>
+                        <span className="font-mono font-medium">{formatTimeToEST(times.end_time)}</span>
                       </div>
                     </div>
                   )}
@@ -498,7 +499,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     {times.stage_call_time && (
                       <div className="text-sm text-blue-600 font-medium">
                         <Clock className="w-3 h-3 inline mr-1" />
-                        Llamado: {times.stage_call_time}
+                        Llamado: {formatTimeToEST(times.stage_call_time)}
                       </div>
                     )}
                   </div>

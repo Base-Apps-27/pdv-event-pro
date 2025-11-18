@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { formatTimeToEST } from "@/utils/timeFormat";
 
 export default function Reports() {
   const [selectedEventId, setSelectedEventId] = useState("");
@@ -87,7 +88,7 @@ export default function Reports() {
                     {session.name}
                   </h2>
                   <div className="text-lg text-gray-700">
-                    {session.date} • {session.planned_start_time || "Por definir"}
+                    {session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}
                     {session.location && ` • ${session.location}`}
                     {session.default_stage_call_offset_min && (
                       <span className="ml-2 text-blue-600 font-semibold">
@@ -140,7 +141,7 @@ export default function Reports() {
                   {segments.map((segment, idx) => (
                     <tr key={segment.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                       <td className="p-3 text-pdv-green font-bold text-center text-lg border-r border-gray-200">
-                        {segment.start_time || "-"}
+                        {segment.start_time ? formatTimeToEST(segment.start_time) : "-"}
                       </td>
                       <td className="p-3 border-r border-gray-200">
                         <div className="space-y-2">
@@ -289,7 +290,7 @@ export default function Reports() {
               <tbody>
                 {segments.map((segment, idx) => (
                   <tr key={segment.id} className={`border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time || "-"}</td>
+                    <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</td>
                     <td className="p-3 font-semibold text-gray-900">{segment.title}</td>
                     <td className="p-3 text-gray-700">{segment.presenter || "-"}</td>
                     <td className="p-3 text-gray-700">{segment.duration_min ? `${segment.duration_min} min` : "-"}</td>
@@ -313,7 +314,7 @@ export default function Reports() {
           <div key={session.id}>
             <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg mb-4 border border-purple-200">
               <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
-              <p className="text-gray-700">{session.date} • {session.planned_start_time || "Por definir"}</p>
+              <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
 
             <table className="w-full border-collapse">
@@ -327,7 +328,7 @@ export default function Reports() {
               <tbody>
                 {segments.map((segment, idx) => (
                   <tr key={segment.id} className={`border-b border-gray-200 ${segment.projection_notes ? "bg-yellow-50" : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time || "-"}</td>
+                    <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</td>
                     <td className="p-3 font-semibold text-gray-900">{segment.title}</td>
                     <td className="p-3 text-sm text-gray-700">
                       {segment.projection_notes || <span className="italic text-gray-400">Sin notas específicas</span>}
@@ -352,7 +353,7 @@ export default function Reports() {
           <div key={session.id}>
             <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-lg mb-4 border border-red-200">
               <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
-              <p className="text-gray-700">{session.date} • {session.planned_start_time || "Por definir"}</p>
+              <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
 
             <table className="w-full border-collapse">
@@ -367,7 +368,7 @@ export default function Reports() {
               <tbody>
                 {segments.map((segment, idx) => (
                   <tr key={segment.id} className={`border-b border-gray-200 ${segment.sound_notes ? "bg-yellow-50" : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time || "-"}</td>
+                    <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</td>
                     <td className="p-3 font-semibold text-gray-900">{segment.title}</td>
                     <td className="p-3 text-gray-700">{segment.presenter || "-"}</td>
                     <td className="p-3 text-sm text-gray-700">
@@ -393,7 +394,7 @@ export default function Reports() {
           <div key={session.id}>
             <div className="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-lg mb-4 border border-green-200">
               <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
-              <p className="text-gray-700">{session.date} • {session.planned_start_time || "Por definir"}</p>
+              <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
 
             <table className="w-full border-collapse">
@@ -407,7 +408,7 @@ export default function Reports() {
               <tbody>
                 {segments.map((segment, idx) => (
                   <tr key={segment.id} className={`border-b border-gray-200 ${segment.ushers_notes ? "bg-yellow-50" : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time || "-"}</td>
+                    <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</td>
                     <td className="p-3 font-semibold text-gray-900">{segment.title}</td>
                     <td className="p-3 text-sm text-gray-700">
                       {segment.ushers_notes || <span className="italic text-gray-400">Sin notas específicas</span>}
