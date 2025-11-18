@@ -64,7 +64,7 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
                 </Badge>
               </TableCell>
               <TableCell className="font-medium">{segment.title}</TableCell>
-              <TableCell className="text-slate-600">{segment.speaker_or_team || "-"}</TableCell>
+              <TableCell className="text-slate-600">{segment.presenter || "-"}</TableCell>
               <TableCell className="font-mono text-sm">{segment.start_time || "-"}</TableCell>
               <TableCell>{segment.duration_min ? `${segment.duration_min} min` : "-"}</TableCell>
               <TableCell className="font-mono text-sm">{segment.end_time || "-"}</TableCell>
