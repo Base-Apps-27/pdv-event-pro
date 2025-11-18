@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SegmentList from "../session/SegmentList";
 import SegmentFormTwoColumn from "../session/SegmentFormTwoColumn";
-import { formatTimeToEST } from "@/utils/timeFormat";
+import { formatTimeToEST } from "../utils/timeFormat";
 
 export default function SessionManager({ eventId, sessions, segments }) {
   const [showDialog, setShowDialog] = useState(false);

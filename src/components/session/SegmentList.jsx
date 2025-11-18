@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, GripVertical, Music, MessageSquare, Languages, ListOrdered, Circle } from "lucide-react";
-import { formatTimeToEST } from "@/utils/timeFormat";
+import { formatTimeToEST } from "../utils/timeFormat";
 
 export default function SegmentList({ segments, sessionId, onEdit }) {
   const queryClient = useQueryClient();

@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, Clock } from "lucide-react";
-import { formatTimeToEST } from "@/utils/timeFormat";
+import { formatTimeToEST } from "../utils/timeFormat";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
