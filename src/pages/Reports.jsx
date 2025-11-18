@@ -275,7 +275,7 @@ export default function Reports() {
           <div key={session.id}>
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg mb-4 border border-blue-200">
               <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
-              <p className="text-gray-700">{session.date} • {session.planned_start_time || "Por definir"}</p>
+              <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
 
             <table className="w-full border-collapse">
