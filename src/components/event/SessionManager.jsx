@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function SessionManager({ eventId, sessions, segments }) {
   const [showDialog, setShowDialog] = useState(false);
   const [editingSession, setEditingSession] = useState(null);
+  const [formData, setFormData] = useState({});
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -45,29 +46,37 @@ export default function SessionManager({ eventId, sessions, segments }) {
     },
   });
 
+  const openDialog = (session = null) => {
+    setEditingSession(session);
+    setFormData({
+      name: session?.name || '',
+      date: session?.date || '',
+      planned_start_time: session?.planned_start_time || '',
+      planned_end_time: session?.planned_end_time || '',
+      default_stage_call_offset_min: session?.default_stage_call_offset_min || 15,
+      location: session?.location || '',
+      notes: session?.notes || '',
+      admin_team: session?.admin_team || '',
+      coordinators: session?.coordinators || '',
+      sound_team: session?.sound_team || '',
+      tech_team: session?.tech_team || '',
+      ushers_team: session?.ushers_team || '',
+      translation_team: session?.translation_team || '',
+      hospitality_team: session?.hospitality_team || '',
+      photography_team: session?.photography_team || '',
+      worship_leader: session?.worship_leader || '',
+      session_color: session?.session_color || 'blue',
+    });
+    setShowDialog(true);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
     const data = {
       event_id: eventId,
-      name: formData.get('name'),
-      date: formData.get('date'),
-      planned_start_time: formData.get('planned_start_time'),
-      planned_end_time: formData.get('planned_end_time'),
-      default_stage_call_offset_min: parseInt(formData.get('default_stage_call_offset_min') || 15),
-      location: formData.get('location'),
-      notes: formData.get('notes'),
+      ...formData,
+      default_stage_call_offset_min: parseInt(formData.default_stage_call_offset_min || 15),
       order: editingSession?.order || sessions.length + 1,
-      admin_team: formData.get('admin_team'),
-      coordinators: formData.get('coordinators'),
-      sound_team: formData.get('sound_team'),
-      tech_team: formData.get('tech_team'),
-      ushers_team: formData.get('ushers_team'),
-      translation_team: formData.get('translation_team'),
-      hospitality_team: formData.get('hospitality_team'),
-      photography_team: formData.get('photography_team'),
-      worship_leader: formData.get('worship_leader'),
-      session_color: formData.get('session_color'),
     };
 
     if (editingSession) {
@@ -75,6 +84,10 @@ export default function SessionManager({ eventId, sessions, segments }) {
     } else {
       createMutation.mutate(data);
     }
+  };
+
+  const updateFormField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const getSegmentCount = (sessionId) => {
@@ -95,7 +108,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-slate-900">Sesiones del Evento</h2>
-        <Button onClick={() => { setEditingSession(null); setShowDialog(true); }} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={() => openDialog()} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" />
           Nueva Sesión
         </Button>
@@ -106,7 +119,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
           <Calendar className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-900 mb-2">No hay sesiones</h3>
           <p className="text-slate-500 mb-4">Comienza agregando la primera sesión del evento</p>
-          <Button onClick={() => setShowDialog(true)}>
+          <Button onClick={() => openDialog()}>
             <Plus className="w-4 h-4 mr-2" />
             Crear Primera Sesión
           </Button>
@@ -160,7 +173,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => { setEditingSession(session); setShowDialog(true); }}
+                    onClick={() => openDialog(session)}
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -200,7 +213,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                   <Input 
                     id="name" 
                     name="name" 
-                    defaultValue={editingSession?.name}
+                    value={formData.name}
+                    onChange={(e) => updateFormField('name', e.target.value)}
                     required 
                     placeholder="Viernes PM / Sábado AM"
                   />
@@ -213,7 +227,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                       id="date" 
                       name="date" 
                       type="date"
-                      defaultValue={editingSession?.date}
+                      value={formData.date}
+                      onChange={(e) => updateFormField('date', e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -221,7 +236,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     <Input 
                       id="location" 
                       name="location" 
-                      defaultValue={editingSession?.location}
+                      value={formData.location}
+                      onChange={(e) => updateFormField('location', e.target.value)}
                       placeholder="Santuario / Salón principal"
                     />
                   </div>
@@ -234,7 +250,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                       id="planned_start_time" 
                       name="planned_start_time" 
                       type="time"
-                      defaultValue={editingSession?.planned_start_time}
+                      value={formData.planned_start_time}
+                      onChange={(e) => updateFormField('planned_start_time', e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -243,7 +260,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                       id="planned_end_time" 
                       name="planned_end_time" 
                       type="time"
-                      defaultValue={editingSession?.planned_end_time}
+                      value={formData.planned_end_time}
+                      onChange={(e) => updateFormField('planned_end_time', e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -252,14 +270,15 @@ export default function SessionManager({ eventId, sessions, segments }) {
                       id="default_stage_call_offset_min" 
                       name="default_stage_call_offset_min" 
                       type="number"
-                      defaultValue={editingSession?.default_stage_call_offset_min || 15}
+                      value={formData.default_stage_call_offset_min}
+                      onChange={(e) => updateFormField('default_stage_call_offset_min', e.target.value)}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="session_color">Color de Sesión</Label>
-                  <Select name="session_color" defaultValue={editingSession?.session_color || "blue"}>
+                  <Select name="session_color" value={formData.session_color} onValueChange={(value) => updateFormField('session_color', value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -280,7 +299,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                   <Textarea 
                     id="notes" 
                     name="notes" 
-                    defaultValue={editingSession?.notes}
+                    value={formData.notes}
+                    onChange={(e) => updateFormField('notes', e.target.value)}
                     rows={3}
                   />
                 </div>
@@ -302,7 +322,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     <Input 
                       id="admin_team" 
                       name="admin_team" 
-                      defaultValue={editingSession?.admin_team}
+                      value={formData.admin_team}
+                      onChange={(e) => updateFormField('admin_team', e.target.value)}
                       placeholder="Isabel Gómez / Yassiel Santos"
                     />
                   </div>
@@ -312,7 +333,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     <Input 
                       id="coordinators" 
                       name="coordinators" 
-                      defaultValue={editingSession?.coordinators}
+                      value={formData.coordinators}
+                      onChange={(e) => updateFormField('coordinators', e.target.value)}
                       placeholder="Rita R. & Indiana"
                     />
                   </div>
@@ -322,7 +344,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     <Input 
                       id="sound_team" 
                       name="sound_team" 
-                      defaultValue={editingSession?.sound_team}
+                      value={formData.sound_team}
+                      onChange={(e) => updateFormField('sound_team', e.target.value)}
                       placeholder="P. Randy G."
                     />
                   </div>
@@ -332,7 +355,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     <Input 
                       id="tech_team" 
                       name="tech_team" 
-                      defaultValue={editingSession?.tech_team}
+                      value={formData.tech_team}
+                      onChange={(e) => updateFormField('tech_team', e.target.value)}
                       placeholder="Rick & Danny"
                     />
                   </div>
@@ -342,7 +366,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     <Input 
                       id="ushers_team" 
                       name="ushers_team" 
-                      defaultValue={editingSession?.ushers_team}
+                      value={formData.ushers_team}
+                      onChange={(e) => updateFormField('ushers_team', e.target.value)}
                       placeholder="Emilio & Magda H."
                     />
                   </div>
@@ -352,7 +377,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     <Input 
                       id="translation_team" 
                       name="translation_team" 
-                      defaultValue={editingSession?.translation_team}
+                      value={formData.translation_team}
+                      onChange={(e) => updateFormField('translation_team', e.target.value)}
                       placeholder="Jeremy Mateo"
                     />
                   </div>
@@ -362,7 +388,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     <Input 
                       id="hospitality_team" 
                       name="hospitality_team" 
-                      defaultValue={editingSession?.hospitality_team}
+                      value={formData.hospitality_team}
+                      onChange={(e) => updateFormField('hospitality_team', e.target.value)}
                       placeholder="Mercedes G. & Verla"
                     />
                   </div>
@@ -372,7 +399,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     <Input 
                       id="photography_team" 
                       name="photography_team" 
-                      defaultValue={editingSession?.photography_team}
+                      value={formData.photography_team}
+                      onChange={(e) => updateFormField('photography_team', e.target.value)}
                       placeholder="Jeremy M."
                     />
                   </div>
@@ -382,7 +410,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     <Input 
                       id="worship_leader" 
                       name="worship_leader" 
-                      defaultValue={editingSession?.worship_leader}
+                      value={formData.worship_leader}
+                      onChange={(e) => updateFormField('worship_leader', e.target.value)}
                       placeholder="Anthony Estrella"
                     />
                   </div>
