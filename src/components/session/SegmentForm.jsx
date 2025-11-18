@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Save, X, FileText, Plus, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -26,9 +27,28 @@ const COLOR_CODES = [
   { value: "default", label: "Predeterminado" }
 ];
 
+const DEPARTMENTS = [
+  "Admin",
+  "MC",
+  "Sound",
+  "Projection",
+  "Hospitality",
+  "Ujieres",
+  "Kids",
+  "Other"
+];
+
 export default function SegmentForm({ session, segment, templates, onClose, sessionId }) {
   const queryClient = useQueryClient();
   const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [showActions, setShowActions] = useState(false);
+  const [editingAction, setEditingAction] = useState(null);
+  const [actionForm, setActionForm] = useState({
+    label: "",
+    department: "Other",
+    time_hint: "",
+    details: ""
+  });
   const [formData, setFormData] = useState({
     title: segment?.title || "",
     segment_type: segment?.segment_type || "Plenaria",
@@ -127,6 +147,37 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     },
   });
 
+  const { data: actions = [] } = useQuery({
+    queryKey: ['segmentActions', segment?.id],
+    queryFn: () => segment?.id ? base44.entities.SegmentAction.filter({ segment_id: segment.id }, 'order') : [],
+    enabled: !!segment?.id,
+  });
+
+  const createActionMutation = useMutation({
+    mutationFn: (data) => base44.entities.SegmentAction.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['segmentActions', segment?.id]);
+      setActionForm({ label: "", department: "Other", time_hint: "", details: "" });
+      setEditingAction(null);
+    },
+  });
+
+  const updateActionMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.SegmentAction.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['segmentActions', segment?.id]);
+      setActionForm({ label: "", department: "Other", time_hint: "", details: "" });
+      setEditingAction(null);
+    },
+  });
+
+  const deleteActionMutation = useMutation({
+    mutationFn: (id) => base44.entities.SegmentAction.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['segmentActions', segment?.id]);
+    },
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -155,6 +206,37 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
   const isTechOnly = formData.segment_type === "TechOnly";
   const isVideoType = formData.segment_type === "Video";
   const needsPresenter = !isBreakType && !isTechOnly;
+
+  const handleAddAction = () => {
+    if (!actionForm.label || !segment?.id) return;
+
+    const data = {
+      segment_id: segment.id,
+      order: editingAction ? editingAction.order : actions.length + 1,
+      ...actionForm
+    };
+
+    if (editingAction) {
+      updateActionMutation.mutate({ id: editingAction.id, data });
+    } else {
+      createActionMutation.mutate(data);
+    }
+  };
+
+  const handleEditAction = (action) => {
+    setEditingAction(action);
+    setActionForm({
+      label: action.label,
+      department: action.department,
+      time_hint: action.time_hint || "",
+      details: action.details || ""
+    });
+  };
+
+  const handleCancelAction = () => {
+    setEditingAction(null);
+    setActionForm({ label: "", department: "Other", time_hint: "", details: "" });
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -474,6 +556,141 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
           />
         </div>
       </div>
+
+      <Separator />
+
+      {segment && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900">Acciones dentro del segmento (opcional)</h3>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowActions(!showActions)}
+            >
+              {showActions ? <ChevronUp className="w-4 h-4 mr-2" /> : <ChevronDown className="w-4 h-4 mr-2" />}
+              {showActions ? "Ocultar" : "Mostrar"}
+            </Button>
+          </div>
+
+          {showActions && (
+            <div className="space-y-4">
+              {actions.length > 0 && (
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="p-2 text-left font-medium w-12">#</th>
+                        <th className="p-2 text-left font-medium">Etiqueta</th>
+                        <th className="p-2 text-left font-medium">Departamento</th>
+                        <th className="p-2 text-left font-medium">Pista</th>
+                        <th className="p-2 text-left font-medium w-20">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {actions.map((action) => (
+                        <tr key={action.id} className="border-b hover:bg-gray-50">
+                          <td className="p-2 text-gray-600">{action.order}</td>
+                          <td className="p-2 font-medium">{action.label}</td>
+                          <td className="p-2">
+                            <Badge variant="outline">{action.department}</Badge>
+                          </td>
+                          <td className="p-2 text-gray-600 text-xs">{action.time_hint || "-"}</td>
+                          <td className="p-2">
+                            <div className="flex gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditAction(action)}
+                              >
+                                <FileText className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteActionMutation.mutate(action.id)}
+                              >
+                                <Trash2 className="w-3 h-3 text-red-500" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <Card className="p-4 bg-gray-50">
+                <h4 className="font-medium text-sm mb-3">{editingAction ? "Editar Acción" : "Nueva Acción"}</h4>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Etiqueta *</Label>
+                    <Input
+                      value={actionForm.label}
+                      onChange={(e) => setActionForm({...actionForm, label: e.target.value})}
+                      placeholder="Video 1, MC Intro..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Departamento *</Label>
+                    <Select
+                      value={actionForm.department}
+                      onValueChange={(value) => setActionForm({...actionForm, department: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DEPARTMENTS.map((dept) => (
+                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Pista de tiempo</Label>
+                    <Input
+                      value={actionForm.time_hint}
+                      onChange={(e) => setActionForm({...actionForm, time_hint: e.target.value})}
+                      placeholder="start at 0:00, lower at 2:06..."
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Detalles</Label>
+                    <Textarea
+                      value={actionForm.details}
+                      onChange={(e) => setActionForm({...actionForm, details: e.target.value})}
+                      rows={2}
+                      placeholder="Descripción de la acción..."
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-3">
+                  {editingAction && (
+                    <Button type="button" variant="outline" size="sm" onClick={handleCancelAction}>
+                      Cancelar
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleAddAction}
+                    disabled={!actionForm.label}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    {editingAction ? "Actualizar" : "Añadir"}
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
+        </div>
+      )}
 
       <Separator />
 

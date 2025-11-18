@@ -27,6 +27,11 @@ export default function Reports() {
     queryFn: () => base44.entities.Segment.list(),
   });
 
+  const { data: allActions = [] } = useQuery({
+    queryKey: ['segmentActions'],
+    queryFn: () => base44.entities.SegmentAction.list(),
+  });
+
   const selectedEvent = events.find(e => e.id === selectedEventId);
   const eventSessions = sessions.filter(s => s.event_id === selectedEventId).sort((a, b) => (a.order || 0) - (b.order || 0));
   
@@ -48,6 +53,23 @@ export default function Reports() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const getSegmentActions = (segmentId) => {
+    return allActions
+      .filter(action => action.segment_id === segmentId)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  };
+
+  const departmentColors = {
+    Admin: "bg-orange-50 border-orange-200 text-orange-700",
+    MC: "bg-blue-50 border-blue-200 text-blue-700",
+    Sound: "bg-red-50 border-red-200 text-red-700",
+    Projection: "bg-purple-50 border-purple-200 text-purple-700",
+    Hospitality: "bg-pink-50 border-pink-200 text-pink-700",
+    Ujieres: "bg-green-50 border-green-200 text-green-700",
+    Kids: "bg-yellow-50 border-yellow-200 text-yellow-700",
+    Other: "bg-gray-50 border-gray-200 text-gray-700"
   };
 
   const renderDetailedProgram = () => (
@@ -188,6 +210,39 @@ export default function Reports() {
                             <div className="mt-2 text-xs bg-purple-50 p-2 rounded border border-purple-200">
                               <span className="text-purple-700 font-bold uppercase">SONIDO:</span>
                               <span className="text-gray-700 ml-2">{segment.sound_notes}</span>
+                            </div>
+                          )}
+
+                          {getSegmentActions(segment.id).length > 0 && (
+                            <div className="mt-3 text-xs">
+                              <div className="font-bold uppercase text-gray-900 mb-2">ACCIONES:</div>
+                              <div className="space-y-1">
+                                {getSegmentActions(segment.id).map((action, actionIdx) => (
+                                  <div
+                                    key={action.id}
+                                    className={`p-2 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
+                                  >
+                                    <div className="flex items-start gap-2">
+                                      <span className="font-bold">{actionIdx + 1}.</span>
+                                      <div className="flex-1">
+                                        <div className="font-semibold">
+                                          [{action.department}] {action.label}
+                                        </div>
+                                        {action.time_hint && (
+                                          <div className="text-xs italic mt-0.5">
+                                            Pista: {action.time_hint}
+                                          </div>
+                                        )}
+                                        {action.details && (
+                                          <div className="mt-1">
+                                            {action.details}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           )}
                         </div>
