@@ -62,7 +62,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
       coordinators: formData.get('coordinators'),
       sound_team: formData.get('sound_team'),
       tech_team: formData.get('tech_team'),
-      ushers_lead: formData.get('ushers_lead'),
+      ushers_team: formData.get('ushers_team'),
       translation_team: formData.get('translation_team'),
       hospitality_team: formData.get('hospitality_team'),
       photography_team: formData.get('photography_team'),
@@ -329,11 +329,11 @@ export default function SessionManager({ eventId, sessions, segments }) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="ushers_lead">Ujier Encargado</Label>
+                    <Label htmlFor="ushers_team">Equipo de Ujieres</Label>
                     <Input 
-                      id="ushers_lead" 
-                      name="ushers_lead" 
-                      defaultValue={editingSession?.ushers_lead}
+                      id="ushers_team" 
+                      name="ushers_team" 
+                      defaultValue={editingSession?.ushers_team}
                       placeholder="Emilio & Magda H."
                     />
                   </div>
