@@ -284,6 +284,15 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     rows={3}
                   />
                 </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+                  <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                    {editingSession ? 'Guardar' : 'Crear'}
+                  </Button>
+                </div>
               </TabsContent>
 
               <TabsContent value="team" className="space-y-4 mt-4">
@@ -378,17 +387,17 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     />
                   </div>
                 </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+                  <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                    {editingSession ? 'Guardar' : 'Crear'}
+                  </Button>
+                </div>
               </TabsContent>
             </Tabs>
-
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                {editingSession ? 'Guardar' : 'Crear'}
-              </Button>
-            </div>
           </form>
         </DialogContent>
       </Dialog>
