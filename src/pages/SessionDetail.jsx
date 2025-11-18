@@ -7,8 +7,9 @@ import { ArrowLeft, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SegmentList from "../components/session/SegmentList.jsx";
-import SegmentForm from "../components/session/SegmentForm.jsx";
+import SegmentFormTwoColumn from "../components/session/SegmentFormTwoColumn.jsx";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function SessionDetail() {
   const navigate = useNavigate();
@@ -120,23 +121,28 @@ export default function SessionDetail() {
           </div>
         </CardHeader>
         <CardContent>
-          {showForm ? (
-            <SegmentForm 
-              session={session}
-              segment={editingSegment}
-              templates={templates}
-              onClose={handleFormClose}
-              sessionId={sessionId}
-            />
-          ) : (
-            <SegmentList 
-              segments={segments}
-              sessionId={sessionId}
-              onEdit={handleEdit}
-            />
-          )}
+          <SegmentList 
+            segments={segments}
+            sessionId={sessionId}
+            onEdit={handleEdit}
+          />
         </CardContent>
       </Card>
+
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-6xl h-[90vh] p-0">
+          <DialogHeader className="px-6 pt-6 pb-0">
+            <DialogTitle>{editingSegment ? 'Editar Segmento' : 'Nuevo Segmento'}</DialogTitle>
+          </DialogHeader>
+          <SegmentFormTwoColumn 
+            session={session}
+            segment={editingSegment}
+            templates={templates}
+            onClose={handleFormClose}
+            sessionId={sessionId}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

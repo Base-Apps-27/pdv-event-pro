@@ -128,37 +128,86 @@ export default function SessionManager({ eventId, sessions, segments }) {
         <div className="grid gap-4">
           {sessions.map((session) => (
             <Card key={session.id} className={`hover:shadow-md transition-shadow border-l-4 ${sessionColors[session.session_color || 'blue']}`}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <CardTitle className="text-lg">{session.name}</CardTitle>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-slate-600">
+                    <CardTitle className="text-xl mb-3">{session.name}</CardTitle>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                       {session.date && (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          {session.date}
+                        <div>
+                          <span className="text-slate-500 text-xs">Fecha</span>
+                          <div className="font-medium flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {session.date}
+                          </div>
                         </div>
                       )}
                       {session.planned_start_time && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {session.planned_start_time}
+                        <div>
+                          <span className="text-slate-500 text-xs">Inicio</span>
+                          <div className="font-medium flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {session.planned_start_time}
+                          </div>
+                        </div>
+                      )}
+                      {session.planned_end_time && (
+                        <div>
+                          <span className="text-slate-500 text-xs">Fin</span>
+                          <div className="font-medium">{session.planned_end_time}</div>
+                        </div>
+                      )}
+                      {session.location && (
+                        <div>
+                          <span className="text-slate-500 text-xs">Ubicación</span>
+                          <div className="font-medium truncate">{session.location}</div>
                         </div>
                       )}
                     </div>
-                    {session.coordinators && (
-                      <div className="flex items-center gap-2 mt-2 text-sm text-slate-600">
-                        <Users className="w-4 h-4" />
-                        <span>{session.coordinators}</span>
+
+                    {session.default_stage_call_offset_min && (
+                      <div className="mt-2 text-sm">
+                        <span className="text-blue-600 font-semibold">
+                          Llegada de Equipos: {session.default_stage_call_offset_min} min antes
+                        </span>
                       </div>
                     )}
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-xs">
+                      {session.admin_team && (
+                        <div className="bg-orange-50 px-2 py-1 rounded border border-orange-200">
+                          <span className="font-bold text-orange-700">ADMIN:</span>
+                          <span className="text-slate-700 ml-1">{session.admin_team}</span>
+                        </div>
+                      )}
+                      {session.sound_team && (
+                        <div className="bg-red-50 px-2 py-1 rounded border border-red-200">
+                          <span className="font-bold text-red-700">SONIDO:</span>
+                          <span className="text-slate-700 ml-1">{session.sound_team}</span>
+                        </div>
+                      )}
+                      {session.tech_team && (
+                        <div className="bg-purple-50 px-2 py-1 rounded border border-purple-200">
+                          <span className="font-bold text-purple-700">TÉCNICO:</span>
+                          <span className="text-slate-700 ml-1">{session.tech_team}</span>
+                        </div>
+                      )}
+                      {session.ushers_team && (
+                        <div className="bg-green-50 px-2 py-1 rounded border border-green-200">
+                          <span className="font-bold text-green-700">UJIERES:</span>
+                          <span className="text-slate-700 ml-1">{session.ushers_team}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <Badge variant="outline" className="ml-4">
+                  
+                  <Badge variant="outline" className="text-base px-3 py-1 whitespace-nowrap">
                     {getSegmentCount(session.id)} segmentos
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 <div className="flex gap-2">
                   <Button 
                     variant="outline" 
@@ -175,7 +224,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     size="sm"
                     onClick={() => openDialog(session)}
                   >
-                    <Edit className="w-4 h-4" />
+                    <Edit className="w-4 h-4 mr-1" />
+                    Editar
                   </Button>
                   <Button 
                     variant="outline" 
