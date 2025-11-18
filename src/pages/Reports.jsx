@@ -128,9 +128,49 @@ export default function Reports() {
                             </Badge>
                           )}
 
-                          {segment.speaker_or_team && (
+                          {segment.presenter && (
                             <div className="text-blue-600 font-semibold">
-                              {segment.speaker_or_team}
+                              {segment.presenter}
+                            </div>
+                          )}
+
+                          {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
+                            <div className="mt-2 text-xs bg-green-50 p-2 rounded border border-green-200">
+                              <span className="text-green-700 font-bold uppercase">CANCIONES:</span>
+                              <div className="mt-1 space-y-1">
+                                {[...Array(segment.number_of_songs)].map((_, idx) => {
+                                  const songNum = idx + 1;
+                                  const title = segment[`song_${songNum}_title`];
+                                  const lead = segment[`song_${songNum}_lead`];
+                                  if (!title) return null;
+                                  return (
+                                    <div key={songNum} className="text-gray-700">
+                                      {songNum}. {title} {lead && `(${lead})`}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {segment.segment_type === "Plenaria" && segment.message_title && (
+                            <div className="mt-2 text-xs bg-blue-50 p-2 rounded border border-blue-200">
+                              <span className="text-blue-700 font-bold uppercase">MENSAJE:</span>
+                              <span className="text-gray-700 ml-2">{segment.message_title}</span>
+                            </div>
+                          )}
+
+                          {segment.segment_type === "Plenaria" && segment.scripture_references && (
+                            <div className="mt-2 text-xs bg-amber-50 p-2 rounded border border-amber-200">
+                              <span className="text-amber-700 font-bold uppercase">ESCRITURAS:</span>
+                              <span className="text-gray-700 ml-2">{segment.scripture_references}</span>
+                            </div>
+                          )}
+
+                          {segment.requires_translation && segment.translator_name && (
+                            <div className="mt-2 text-xs bg-purple-50 p-2 rounded border border-purple-200">
+                              <span className="text-purple-700 font-bold uppercase">TRADUCTOR:</span>
+                              <span className="text-gray-700 ml-2">{segment.translator_name}</span>
                             </div>
                           )}
 
@@ -195,7 +235,7 @@ export default function Reports() {
                   <tr key={segment.id} className={`border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                     <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time || "-"}</td>
                     <td className="p-3 font-semibold text-gray-900">{segment.title}</td>
-                    <td className="p-3 text-gray-700">{segment.speaker_or_team || "-"}</td>
+                    <td className="p-3 text-gray-700">{segment.presenter || "-"}</td>
                     <td className="p-3 text-gray-700">{segment.duration_min ? `${segment.duration_min} min` : "-"}</td>
                   </tr>
                 ))}
@@ -273,7 +313,7 @@ export default function Reports() {
                   <tr key={segment.id} className={`border-b border-gray-200 ${segment.sound_notes ? "bg-yellow-50" : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                     <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time || "-"}</td>
                     <td className="p-3 font-semibold text-gray-900">{segment.title}</td>
-                    <td className="p-3 text-gray-700">{segment.speaker_or_team || "-"}</td>
+                    <td className="p-3 text-gray-700">{segment.presenter || "-"}</td>
                     <td className="p-3 text-sm text-gray-700">
                       {segment.sound_notes || <span className="italic text-gray-400">Sin notas específicas</span>}
                     </td>

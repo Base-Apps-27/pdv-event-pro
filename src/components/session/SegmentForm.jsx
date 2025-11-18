@@ -9,11 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Save, X, FileText } from "lucide-react";
+import { Save, X, FileText, Plus, Trash2 } from "lucide-react";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
-  "Anuncio", "Dinámica", "Break", "TechOnly", "Oración", "Especial", "Cierre"
+  "Anuncio", "Dinámica", "Break", "TechOnly", "Oración", 
+  "Especial", "Cierre", "MC", "Ministración", "Receso", "Almuerzo", "Artes"
 ];
 
 const COLOR_CODES = [
@@ -31,7 +32,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
   const [formData, setFormData] = useState({
     title: segment?.title || "",
     segment_type: segment?.segment_type || "Plenaria",
-    speaker_or_team: segment?.speaker_or_team || "",
+    presenter: segment?.presenter || "",
     description_details: segment?.description_details || "",
     start_time: segment?.start_time || "",
     duration_min: segment?.duration_min || 30,
@@ -39,13 +40,32 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     projection_notes: segment?.projection_notes || "",
     sound_notes: segment?.sound_notes || "",
     ushers_notes: segment?.ushers_notes || "",
+    translation_notes: segment?.translation_notes || "",
     other_notes: segment?.other_notes || "",
     show_in_general: segment?.show_in_general ?? true,
     show_in_projection: segment?.show_in_projection ?? true,
     show_in_sound: segment?.show_in_sound ?? true,
     show_in_ushers: segment?.show_in_ushers ?? true,
     color_code: segment?.color_code || "default",
-    order: segment?.order || 1
+    order: segment?.order || 1,
+    message_title: segment?.message_title || "",
+    scripture_references: segment?.scripture_references || "",
+    number_of_songs: segment?.number_of_songs || 3,
+    song_1_title: segment?.song_1_title || "",
+    song_1_lead: segment?.song_1_lead || "",
+    song_2_title: segment?.song_2_title || "",
+    song_2_lead: segment?.song_2_lead || "",
+    song_3_title: segment?.song_3_title || "",
+    song_3_lead: segment?.song_3_lead || "",
+    song_4_title: segment?.song_4_title || "",
+    song_4_lead: segment?.song_4_lead || "",
+    song_5_title: segment?.song_5_title || "",
+    song_5_lead: segment?.song_5_lead || "",
+    song_6_title: segment?.song_6_title || "",
+    song_6_lead: segment?.song_6_lead || "",
+    requires_translation: segment?.requires_translation || false,
+    translator_name: segment?.translator_name || "",
+    major_break: segment?.major_break || false,
   });
 
   const calculateTimes = (startTime, durationMin, offsetMin) => {
@@ -129,6 +149,13 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     }
   };
 
+  const isWorshipType = formData.segment_type === "Alabanza";
+  const isPlenariaType = formData.segment_type === "Plenaria";
+  const isBreakType = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
+  const isTechOnly = formData.segment_type === "TechOnly";
+  const isVideoType = formData.segment_type === "Video";
+  const needsPresenter = !isBreakType && !isTechOnly;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {!segment && templates.length > 0 && (
@@ -184,26 +211,32 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="speaker_or_team">Responsable / Equipo</Label>
-        <Input 
-          id="speaker_or_team" 
-          value={formData.speaker_or_team}
-          onChange={(e) => setFormData({...formData, speaker_or_team: e.target.value})}
-          placeholder="Pastor Juan Pérez / Equipo de Alabanza"
-        />
-      </div>
+      {needsPresenter && (
+        <div className="space-y-2">
+          <Label htmlFor="presenter">
+            {isWorshipType ? "Líder de Alabanza" : isPlenariaType ? "Predicador" : "Presentador"}
+          </Label>
+          <Input 
+            id="presenter" 
+            value={formData.presenter}
+            onChange={(e) => setFormData({...formData, presenter: e.target.value})}
+            placeholder="Nombre de la persona"
+          />
+        </div>
+      )}
 
-      <div className="space-y-2">
-        <Label htmlFor="description_details">Detalles / Descripción</Label>
-        <Textarea 
-          id="description_details" 
-          value={formData.description_details}
-          onChange={(e) => setFormData({...formData, description_details: e.target.value})}
-          rows={3}
-          placeholder="Descripción completa para el programa general"
-        />
-      </div>
+      {!isTechOnly && (
+        <div className="space-y-2">
+          <Label htmlFor="description_details">Descripción</Label>
+          <Textarea 
+            id="description_details" 
+            value={formData.description_details}
+            onChange={(e) => setFormData({...formData, description_details: e.target.value})}
+            rows={2}
+            placeholder="Detalles adicionales"
+          />
+        </div>
+      )}
 
       <div className="grid md:grid-cols-4 gap-4">
         <div className="space-y-2">
@@ -254,43 +287,182 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
         </div>
       </div>
 
+      {isPlenariaType && (
+        <>
+          <Separator />
+          <div className="space-y-4">
+            <h3 className="font-semibold text-slate-900">Detalles de Plenaria</h3>
+            
+            <div className="space-y-2">
+              <Label htmlFor="message_title">Título del Mensaje</Label>
+              <Input 
+                id="message_title" 
+                value={formData.message_title}
+                onChange={(e) => setFormData({...formData, message_title: e.target.value})}
+                placeholder="Conquistando nuevas alturas"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="scripture_references">Referencias Bíblicas</Label>
+              <Input 
+                id="scripture_references" 
+                value={formData.scripture_references}
+                onChange={(e) => setFormData({...formData, scripture_references: e.target.value})}
+                placeholder="Juan 3:16, Romanos 8:28"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="requires_translation"
+                checked={formData.requires_translation}
+                onCheckedChange={(checked) => setFormData({...formData, requires_translation: checked})}
+              />
+              <label htmlFor="requires_translation" className="text-sm cursor-pointer">
+                Requiere traducción
+              </label>
+            </div>
+
+            {formData.requires_translation && (
+              <div className="space-y-2">
+                <Label htmlFor="translator_name">Traductor</Label>
+                <Input 
+                  id="translator_name" 
+                  value={formData.translator_name}
+                  onChange={(e) => setFormData({...formData, translator_name: e.target.value})}
+                  placeholder="Nombre del traductor"
+                />
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {isWorshipType && (
+        <>
+          <Separator />
+          <div className="space-y-4">
+            <h3 className="font-semibold text-slate-900">Canciones del Set</h3>
+            
+            <div className="space-y-2">
+              <Label htmlFor="number_of_songs">Número de Canciones (1-6)</Label>
+              <Input 
+                id="number_of_songs" 
+                type="number"
+                min="1"
+                max="6"
+                value={formData.number_of_songs}
+                onChange={(e) => setFormData({...formData, number_of_songs: parseInt(e.target.value) || 1})}
+              />
+            </div>
+
+            {[...Array(formData.number_of_songs || 0)].map((_, idx) => {
+              const songNum = idx + 1;
+              return (
+                <Card key={songNum} className="p-4 bg-gray-50">
+                  <h4 className="font-medium text-sm text-gray-700 mb-3">Canción {songNum}</h4>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor={`song_${songNum}_title`}>Título</Label>
+                      <Input 
+                        id={`song_${songNum}_title`}
+                        value={formData[`song_${songNum}_title`]}
+                        onChange={(e) => setFormData({...formData, [`song_${songNum}_title`]: e.target.value})}
+                        placeholder="Nombre de la canción"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`song_${songNum}_lead`}>Vocalista Principal</Label>
+                      <Input 
+                        id={`song_${songNum}_lead`}
+                        value={formData[`song_${songNum}_lead`]}
+                        onChange={(e) => setFormData({...formData, [`song_${songNum}_lead`]: e.target.value})}
+                        placeholder="Nombre del vocalista"
+                      />
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {isBreakType && (
+        <>
+          <Separator />
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="major_break"
+                checked={formData.major_break}
+                onCheckedChange={(checked) => setFormData({...formData, major_break: checked})}
+              />
+              <label htmlFor="major_break" className="text-sm cursor-pointer">
+                Receso Mayor (Almuerzo/Cena)
+              </label>
+            </div>
+          </div>
+        </>
+      )}
+
       <Separator />
 
       <div className="space-y-4">
         <h3 className="font-semibold text-slate-900">Notas para Equipos</h3>
         
-        <div className="space-y-2">
-          <Label htmlFor="projection_notes">Notas Proyección</Label>
-          <Textarea 
-            id="projection_notes" 
-            value={formData.projection_notes}
-            onChange={(e) => setFormData({...formData, projection_notes: e.target.value})}
-            rows={2}
-            placeholder="Slides, videos, efectos..."
-          />
-        </div>
+        {!isBreakType && (
+          <div className="space-y-2">
+            <Label htmlFor="projection_notes">Notas Proyección</Label>
+            <Textarea 
+              id="projection_notes" 
+              value={formData.projection_notes}
+              onChange={(e) => setFormData({...formData, projection_notes: e.target.value})}
+              rows={2}
+              placeholder="Slides, videos, efectos..."
+            />
+          </div>
+        )}
 
-        <div className="space-y-2">
-          <Label htmlFor="sound_notes">Notas Sonido</Label>
-          <Textarea 
-            id="sound_notes" 
-            value={formData.sound_notes}
-            onChange={(e) => setFormData({...formData, sound_notes: e.target.value})}
-            rows={2}
-            placeholder="Micrófonos, pistas, cues..."
-          />
-        </div>
+        {!isBreakType && (
+          <div className="space-y-2">
+            <Label htmlFor="sound_notes">Notas Sonido</Label>
+            <Textarea 
+              id="sound_notes" 
+              value={formData.sound_notes}
+              onChange={(e) => setFormData({...formData, sound_notes: e.target.value})}
+              rows={2}
+              placeholder="Micrófonos, pistas, cues..."
+            />
+          </div>
+        )}
 
-        <div className="space-y-2">
-          <Label htmlFor="ushers_notes">Notas Ujieres</Label>
-          <Textarea 
-            id="ushers_notes" 
-            value={formData.ushers_notes}
-            onChange={(e) => setFormData({...formData, ushers_notes: e.target.value})}
-            rows={2}
-            placeholder="Instrucciones para ujieres..."
-          />
-        </div>
+        {!isBreakType && !isTechOnly && (
+          <div className="space-y-2">
+            <Label htmlFor="ushers_notes">Notas Ujieres</Label>
+            <Textarea 
+              id="ushers_notes" 
+              value={formData.ushers_notes}
+              onChange={(e) => setFormData({...formData, ushers_notes: e.target.value})}
+              rows={2}
+              placeholder="Instrucciones para ujieres..."
+            />
+          </div>
+        )}
+
+        {formData.requires_translation && (
+          <div className="space-y-2">
+            <Label htmlFor="translation_notes">Notas Traducción</Label>
+            <Textarea 
+              id="translation_notes" 
+              value={formData.translation_notes}
+              onChange={(e) => setFormData({...formData, translation_notes: e.target.value})}
+              rows={2}
+              placeholder="Instrucciones para el traductor..."
+            />
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="other_notes">Otras Notas</Label>
@@ -306,7 +478,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
       <Separator />
 
       <div className="space-y-3">
-        <h3 className="font-semibold text-slate-900">Visibilidad en Vistas</h3>
+        <h3 className="font-semibold text-slate-900">Visibilidad en Reportes</h3>
         <div className="grid md:grid-cols-2 gap-3">
           <div className="flex items-center space-x-2">
             <Checkbox 
