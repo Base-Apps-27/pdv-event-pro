@@ -67,6 +67,11 @@ export default function Reports() {
                   <div className="text-lg text-gray-700">
                     {session.date} • {session.planned_start_time || "Por definir"}
                     {session.location && ` • ${session.location}`}
+                    {session.default_stage_call_offset_min && (
+                      <span className="ml-2 text-blue-600 font-semibold">
+                        • Llamado: {session.default_stage_call_offset_min} min antes
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -106,7 +111,6 @@ export default function Reports() {
                     <th className="p-3 text-gray-900 font-bold uppercase w-24 text-center">Hora</th>
                     <th className="p-3 text-gray-900 font-bold uppercase">Detalles</th>
                     <th className="p-3 text-gray-900 font-bold uppercase w-24 text-center">Duración</th>
-                    <th className="p-3 text-gray-900 font-bold uppercase w-28 text-center">Llamado</th>
                     <th className="p-3 text-gray-900 font-bold uppercase w-64">Proyección</th>
                   </tr>
                 </thead>
@@ -191,16 +195,13 @@ export default function Reports() {
                       <td className="p-3 text-center text-pdv-green font-bold border-r border-gray-200">
                         {segment.duration_min ? `${segment.duration_min} min` : "-"}
                       </td>
-                      <td className="p-3 text-center text-blue-600 font-mono font-semibold border-r border-gray-200">
-                        {segment.stage_call_time || "-"}
-                      </td>
                       <td className="p-3 text-gray-600 text-xs border-gray-200">
                         {segment.projection_notes || "-"}
                       </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </tr>
+                      ))}
+                      </tbody>
+                      </table>
             </div>
           </div>
         );
