@@ -5,7 +5,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, GripVertical, Music, MessageSquare, Languages, ListOrdered, Circle, Users } from "lucide-react";
+import { Edit, Trash2, GripVertical, Music, MessageSquare, Languages, ListOrdered, Circle, Users, AlertTriangle } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 export default function SegmentList({ segments, sessionId, onEdit }) {
@@ -114,6 +114,45 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
     default: "bg-slate-100 text-slate-700 border-slate-200"
   };
 
+  const checkTimingIssues = (segment, index) => {
+    const issues = [];
+    
+    if (!segment.start_time || !segment.end_time) return issues;
+    
+    // Check if out of order with previous segment
+    if (index > 0) {
+      const prevSegment = segments[index - 1];
+      if (prevSegment.end_time && segment.start_time < prevSegment.end_time) {
+        issues.push({
+          type: 'out-of-order',
+          message: `Inicia antes del fin del segmento anterior (${formatTimeToEST(prevSegment.end_time)})`
+        });
+      }
+    }
+    
+    // Check overlaps with all other segments
+    segments.forEach((otherSegment, otherIndex) => {
+      if (otherIndex === index || !otherSegment.start_time || !otherSegment.end_time) return;
+      
+      const segStart = segment.start_time;
+      const segEnd = segment.end_time;
+      const otherStart = otherSegment.start_time;
+      const otherEnd = otherSegment.end_time;
+      
+      // Check for overlap
+      if ((segStart >= otherStart && segStart < otherEnd) ||
+          (segEnd > otherStart && segEnd <= otherEnd) ||
+          (segStart <= otherStart && segEnd >= otherEnd)) {
+        issues.push({
+          type: 'overlap',
+          message: `Se solapa con "${otherSegment.title}" (${formatTimeToEST(otherStart)} - ${formatTimeToEST(otherEnd)})`
+        });
+      }
+    });
+    
+    return issues;
+  };
+
   if (segments.length === 0) {
     return (
       <div className="text-center py-12">
@@ -147,6 +186,7 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
             const hasProjectionNotes = !!segment.projection_notes;
             const hasSoundNotes = !!segment.sound_notes;
             const hasUshersNotes = !!segment.ushers_notes;
+            const timingIssues = checkTimingIssues(segment, index);
 
             return (
               <Draggable key={segment.id} draggableId={segment.id} index={index}>
@@ -235,9 +275,25 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
                   </div>
                 </TableCell>
                 <TableCell className="font-mono text-sm">
-                  <div>{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
-                  {segment.stage_call_time && (
-                    <div className="text-xs text-blue-600">↓ {formatTimeToEST(segment.stage_call_time)}</div>
+                  <div className="flex items-center gap-1">
+                    {timingIssues.length > 0 && (
+                      <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" title={timingIssues.map(i => i.message).join('\n')} />
+                    )}
+                    <div>
+                      <div>{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
+                      {segment.stage_call_time && (
+                        <div className="text-xs text-blue-600">↓ {formatTimeToEST(segment.stage_call_time)}</div>
+                      )}
+                    </div>
+                  </div>
+                  {timingIssues.length > 0 && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {timingIssues.map((issue, idx) => (
+                        <div key={idx} className="truncate" title={issue.message}>
+                          {issue.type === 'overlap' ? '⚠️ Solapa' : '⚠️ Fuera de orden'}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </TableCell>
                 <TableCell className="text-sm">{segment.duration_min ? `${segment.duration_min}m` : "-"}</TableCell>
