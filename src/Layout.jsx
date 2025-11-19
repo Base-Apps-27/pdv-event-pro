@@ -17,17 +17,17 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+      <header className="bg-white border-b-4 border-pdv-green shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 gradient-pdv rounded flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-pdv-charcoal rounded flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-pdv-green" />
               </div>
               <div>
                 <h2 className="font-bold text-gray-900 text-lg uppercase tracking-tight">EventoPro</h2>
-                <p className="text-xs text-pdv-green font-medium">Palabras de Vida</p>
+                <p className="text-xs text-pdv-teal font-medium">Palabras de Vida</p>
               </div>
             </div>
 
@@ -37,8 +37,8 @@ export default function Layout({ children }) {
                 to={createPageUrl("Dashboard")}
                 className={`flex items-center gap-2 px-4 py-2 rounded font-semibold uppercase text-sm tracking-wide transition-colors ${
                   isActive(createPageUrl("Dashboard"))
-                    ? "bg-pdv-teal text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-pdv-green text-white"
+                    : "text-gray-700 hover:bg-pdv-green hover:bg-opacity-10"
                 }`}
               >
                 <LayoutDashboard className="w-4 h-4" />
@@ -51,8 +51,8 @@ export default function Layout({ children }) {
                   isActive(createPageUrl("EventDetail")) || 
                   isActive(createPageUrl("SessionDetail")) ||
                   isActive(createPageUrl("Reports"))
-                    ? "bg-pdv-teal text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-pdv-green text-white"
+                    : "text-gray-700 hover:bg-pdv-green hover:bg-opacity-10"
                 }`}>
                   <Calendar className="w-4 h-4" />
                   Eventos
@@ -78,8 +78,8 @@ export default function Layout({ children }) {
                   isActive(createPageUrl("Teams")) || 
                   isActive(createPageUrl("Rooms")) ||
                   isActive(createPageUrl("Templates"))
-                    ? "bg-pdv-teal text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-pdv-green text-white"
+                    : "text-gray-700 hover:bg-pdv-green hover:bg-opacity-10"
                 }`}>
                   <Settings className="w-4 h-4" />
                   Configuración
@@ -127,8 +127,8 @@ export default function Layout({ children }) {
                   to={createPageUrl("Dashboard")}
                   className={`block px-4 py-2 rounded font-semibold uppercase text-sm ${
                     isActive(createPageUrl("Dashboard"))
-                      ? "bg-pdv-teal text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-pdv-green text-white"
+                      : "text-gray-700 hover:bg-pdv-green hover:bg-opacity-10"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
