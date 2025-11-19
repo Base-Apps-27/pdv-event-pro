@@ -211,35 +211,28 @@ export default function Reports() {
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                 {segment.breakout_rooms.map((room, roomIdx) => (
                                   <div key={roomIdx} className="bg-white p-2 rounded border border-gray-200">
-                                    <div className="flex flex-wrap gap-1 mb-1">
-                                      {room.room_id && (
-                                        <Badge variant="outline" className="text-[9px] bg-blue-50">
-                                          {getRoomName(room.room_id)}
-                                        </Badge>
-                                      )}
-                                      {room.requires_translation && (
-                                        <Badge variant="outline" className="text-[9px] bg-purple-50 border-purple-300">
-                                          TRAD
-                                        </Badge>
-                                      )}
-                                    </div>
+                                    {room.room_id && (
+                                      <Badge variant="outline" className="text-[9px] bg-blue-50 mb-1">
+                                        {getRoomName(room.room_id)}
+                                      </Badge>
+                                    )}
                                     <div className="font-bold text-xs text-gray-900 mb-1">{room.topic || `Sala ${roomIdx + 1}`}</div>
                                     {room.speaker_or_panel && (
                                       <div className="text-blue-600 font-semibold text-[10px] mb-1">{room.speaker_or_panel}</div>
                                     )}
-                                    {(room.general_notes || room.other_notes || (room.requires_translation && room.translator_name)) && (
+                                    {room.requires_translation && (
+                                      <div className="flex items-center gap-1 text-[10px] text-purple-700 mb-1">
+                                        <Languages className="w-3 h-3" />
+                                        {room.translation_mode === "InPerson" && <Mic className="w-3 h-3" />}
+                                        {room.translator_name && <span>{room.translator_name}</span>}
+                                      </div>
+                                    )}
+                                    {(room.general_notes || room.other_notes) && (
                                       <div className="mt-1 text-[9px] space-y-0.5">
                                         {room.general_notes && (
                                           <div className="bg-purple-50 px-1 rounded">
                                             <span className="font-bold text-purple-700">PROD:</span>
                                             <span className="ml-1">{room.general_notes}</span>
-                                          </div>
-                                        )}
-                                        {room.requires_translation && room.translator_name && (
-                                          <div className="bg-blue-50 px-1 rounded">
-                                            <span className="font-bold text-blue-700">TRAD:</span>
-                                            <span className="ml-1">{room.translator_name}</span>
-                                            {room.translation_mode === "RemoteBooth" && <span className="italic"> (Remoto)</span>}
                                           </div>
                                         )}
                                         {room.other_notes && (
