@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List } from "lucide-react";
+import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Languages, UserCheck, Mic, Utensils } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -187,6 +187,17 @@ export default function Reports() {
                           {segment.duration_min && (
                             <div className="text-[9px] text-gray-600 mt-0.5">({segment.duration_min}m)</div>
                           )}
+                          <div className="flex gap-1 mt-2">
+                            {segment.requires_translation && segment.translation_mode === "InPerson" && (
+                              <UserCheck className="w-3 h-3 text-purple-600" title="Traducción en Persona" />
+                            )}
+                            {segment.requires_translation && segment.translation_mode === "RemoteBooth" && (
+                              <Languages className="w-3 h-3 text-purple-600" title="Traducción Remota" />
+                            )}
+                            {segment.major_break && (
+                              <Utensils className="w-3 h-3 text-orange-600" title="Receso Mayor" />
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="p-2 border-r border-gray-200">
