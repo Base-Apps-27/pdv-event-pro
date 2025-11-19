@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import SegmentList from "../session/SegmentList";
 import SegmentFormTwoColumn from "../session/SegmentFormTwoColumn";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
@@ -362,14 +362,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
           <DialogHeader>
             <DialogTitle>{editingSession ? 'Editar Sesión' : 'Nueva Sesión'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <Tabs defaultValue="basic">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="basic">Información Básica</TabsTrigger>
-                <TabsTrigger value="team">Equipo y Personal</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="basic" className="space-y-4 mt-4">
+          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nombre de la Sesión *</Label>
                   <Input 
@@ -467,17 +460,9 @@ export default function SessionManager({ eventId, sessions, segments }) {
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t mt-6">
-                  <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                    {editingSession ? 'Guardar' : 'Crear'}
-                  </Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="team" className="space-y-4 mt-4">
+              <Separator className="my-6" />
+              
+              <h3 className="font-bold text-lg mb-4">Equipo y Personal</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="admin_team">Administración</Label>
@@ -579,16 +564,14 @@ export default function SessionManager({ eventId, sessions, segments }) {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t mt-6">
-                  <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                    {editingSession ? 'Guardar' : 'Crear'}
-                  </Button>
-                </div>
-              </TabsContent>
-            </Tabs>
+              <div className="flex justify-end gap-3 pt-6 border-t mt-6">
+                <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                  {editingSession ? 'Guardar Cambios' : 'Crear Sesión'}
+                </Button>
+              </div>
           </form>
         </DialogContent>
       </Dialog>

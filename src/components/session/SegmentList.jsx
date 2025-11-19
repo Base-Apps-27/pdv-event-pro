@@ -121,7 +121,13 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
                   <div>
                     <div className="font-semibold text-slate-900">{segment.title}</div>
                     {segment.presenter && (
-                      <div className="text-sm text-slate-600 mt-0.5">{segment.presenter}</div>
+                      <div className="text-xs text-slate-600 mt-0.5">
+                        {segment.segment_type === "Alabanza" ? "Líder: " : segment.segment_type === "Plenaria" ? "Predicador: " : ""}
+                        {segment.presenter}
+                      </div>
+                    )}
+                    {segment.segment_type === "Plenaria" && segment.message_title && (
+                      <div className="text-xs text-blue-600 mt-0.5 italic">{segment.message_title}</div>
                     )}
                   </div>
                 </TableCell>
