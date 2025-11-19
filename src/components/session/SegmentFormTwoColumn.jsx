@@ -467,9 +467,9 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
             </div>
 
             {segment && (
-            <div id="acciones">
-            <h3 className="font-bold text-lg mb-4 text-slate-900">Acciones del Segmento</h3>
-            <div className="space-y-4">
+              <div id="acciones">
+                <h3 className="font-bold text-lg mb-4 text-slate-900">Acciones del Segmento</h3>
+                <div className="space-y-4">
               {actions.length > 0 && (
                 <div className="space-y-2">
                   {actions.map((action) => (
@@ -566,8 +566,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     {editingAction ? "Actualizar Acción" : "Añadir Acción"}
                   </Button>
                 </div>
+                </div>
               </div>
-            </div>
             )}
           </div>
 
