@@ -62,12 +62,26 @@ export default function SessionManager({ eventId, sessions, segments }) {
         const segment = sessionSegments[i];
         const previousSegment = i > 0 ? sessionSegments[i - 1] : null;
 
+        let newStartTime = segment.start_time;
         if (previousSegment && previousSegment.end_time) {
-          await base44.entities.Segment.update(segment.id, {
-            ...segment,
-            start_time: previousSegment.end_time
-          });
+          newStartTime = previousSegment.end_time;
         }
+
+        // Calculate new end time based on duration
+        let newEndTime = segment.end_time;
+        if (newStartTime && segment.duration_min) {
+          const [hours, minutes] = newStartTime.split(':').map(Number);
+          const startMinutes = hours * 60 + minutes;
+          const endMinutes = startMinutes + segment.duration_min;
+          const endHours = Math.floor(endMinutes / 60) % 24;
+          const endMins = endMinutes % 60;
+          newEndTime = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
+        }
+
+        await base44.entities.Segment.update(segment.id, {
+          start_time: newStartTime,
+          end_time: newEndTime
+        });
       }
     },
     onSuccess: () => {
