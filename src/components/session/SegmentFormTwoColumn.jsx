@@ -568,9 +568,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 </div>
               </div>
             </div>
-            </div>
-            )}
-              </div>
             )}
           </div>
 
