@@ -80,97 +80,97 @@ export default function Reports() {
         if (segments.length === 0) return null;
 
         return (
-          <div key={session.id} className={`border-2 border-gray-200 rounded-lg overflow-hidden ${sessionColorClasses[session.session_color] || ''}`}>
-            <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-6 border-b border-gray-200">
-              <div className="flex justify-between items-start">
+          <div key={session.id} className={`print-session border-2 border-gray-200 rounded-lg overflow-hidden ${sessionColorClasses[session.session_color] || ''}`}>
+            <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-2 border-b border-gray-200">
+              <div className="flex justify-between items-center gap-4">
                 <div className="flex-1">
-                  <h2 className="text-3xl font-bold text-gray-900 uppercase tracking-tight mb-3">
+                  <h2 className="text-xl font-bold text-gray-900 uppercase tracking-tight mb-1">
                     {session.name}
                   </h2>
-                  <div className="text-lg text-gray-700">
+                  <div className="text-sm text-gray-700">
                     {session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}
                     {session.location && ` • ${session.location}`}
                     {session.default_stage_call_offset_min && (
                       <span className="ml-2 text-blue-600 font-semibold">
-                        • Llegada de los Equipos: {session.default_stage_call_offset_min} min antes
+                        • Llegada: {session.default_stage_call_offset_min} min antes
                       </span>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mt-6 text-sm">
+              <div className="grid grid-cols-4 gap-2 mt-2 text-xs">
                 {session.admin_team && (
-                  <div className="bg-white bg-opacity-50 p-3 rounded border border-gray-200">
-                    <span className="text-orange-600 font-bold uppercase">ADMIN:</span>
-                    <span className="text-gray-800 ml-2">{session.admin_team}</span>
+                  <div className="bg-white bg-opacity-50 p-1 rounded border border-gray-200">
+                    <span className="text-orange-600 font-bold">ADMIN:</span>
+                    <span className="text-gray-800 ml-1">{session.admin_team}</span>
                   </div>
                 )}
                 {session.sound_team && (
-                  <div className="bg-white bg-opacity-50 p-3 rounded border border-gray-200">
-                    <span className="text-red-600 font-bold uppercase">SONIDO:</span>
-                    <span className="text-gray-800 ml-2">{session.sound_team}</span>
+                  <div className="bg-white bg-opacity-50 p-1 rounded border border-gray-200">
+                    <span className="text-red-600 font-bold">SONIDO:</span>
+                    <span className="text-gray-800 ml-1">{session.sound_team}</span>
                   </div>
                 )}
                 {session.tech_team && (
-                  <div className="bg-white bg-opacity-50 p-3 rounded border border-gray-200">
-                    <span className="text-purple-600 font-bold uppercase">TÉCNICO:</span>
-                    <span className="text-gray-800 ml-2">{session.tech_team}</span>
+                  <div className="bg-white bg-opacity-50 p-1 rounded border border-gray-200">
+                    <span className="text-purple-600 font-bold">TÉCNICO:</span>
+                    <span className="text-gray-800 ml-1">{session.tech_team}</span>
                   </div>
                 )}
-                {session.ushers_lead && (
-                  <div className="bg-white bg-opacity-50 p-3 rounded border border-gray-200">
-                    <span className="text-blue-600 font-bold uppercase">UJIER:</span>
-                    <span className="text-gray-800 ml-2">{session.ushers_lead}</span>
+                {session.ushers_team && (
+                  <div className="bg-white bg-opacity-50 p-1 rounded border border-gray-200">
+                    <span className="text-blue-600 font-bold">UJIER:</span>
+                    <span className="text-gray-800 ml-1">{session.ushers_team}</span>
                   </div>
                 )}
               </div>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-100 border-b-2 border-gray-200">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-100 border-b border-gray-300">
                   <tr>
-                    <th className="p-3 text-gray-900 font-bold uppercase w-20 text-center">Hora</th>
-                    <th className="p-3 text-gray-900 font-bold uppercase w-20 text-center">Duración</th>
-                    <th className="p-3 text-gray-900 font-bold uppercase">Detalles</th>
-                    <th className="p-3 text-gray-900 font-bold uppercase w-40">Proyección</th>
-                    <th className="p-3 text-gray-900 font-bold uppercase w-40">Sonido</th>
-                    <th className="p-3 text-gray-900 font-bold uppercase w-40">Ujieres</th>
-                    <th className="p-3 text-gray-900 font-bold uppercase w-40">Traducción</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-16 text-center text-xs">Hora</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-14 text-center text-xs">Dur.</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase text-xs">Detalles</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-32 text-xs">Proyección</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-32 text-xs">Sonido</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-32 text-xs">Ujieres</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-32 text-xs">Traducción</th>
                   </tr>
                 </thead>
                 <tbody>
                   {segments.map((segment, idx) => (
                     <tr key={segment.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="p-3 text-pdv-green font-bold text-center border-r border-gray-200">
+                      <td className="p-1 text-pdv-green font-bold text-center border-r border-gray-200 text-xs">
                         {segment.start_time ? formatTimeToEST(segment.start_time) : "-"}
                       </td>
-                      <td className="p-3 text-center text-pdv-green font-bold border-r border-gray-200">
-                        {segment.duration_min ? `${segment.duration_min} min` : "-"}
+                      <td className="p-1 text-center text-pdv-green font-bold border-r border-gray-200 text-xs">
+                        {segment.duration_min || "-"}
                       </td>
-                      <td className="p-3 border-r border-gray-200">
-                        <div className="space-y-2">
-                          <div className="text-gray-900 font-bold text-base uppercase">
+                      <td className="p-1 border-r border-gray-200">
+                        <div className="space-y-1">
+                          <div className="text-gray-900 font-bold text-xs uppercase">
                             {segment.title}
                           </div>
                           
                           {segment.segment_type && (
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline" className="text-[10px] px-1 py-0">
                               {segment.segment_type}
                             </Badge>
                           )}
 
                           {segment.presenter && (
-                            <div className="text-blue-600 font-semibold">
+                            <div className="text-blue-600 font-semibold text-xs">
                               {segment.presenter}
                             </div>
                           )}
 
                           {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
-                            <div className="mt-2 text-xs bg-green-50 p-2 rounded border border-green-200">
-                              <span className="text-green-700 font-bold uppercase">CANCIONES:</span>
-                              <div className="mt-1 space-y-1">
+                            <div className="mt-1 text-[10px] bg-green-50 p-1 rounded border border-green-200">
+                              <span className="text-green-700 font-bold">CANCIONES:</span>
+                              <div className="mt-0.5">
                                 {[...Array(segment.number_of_songs)].map((_, idx) => {
                                   const songNum = idx + 1;
                                   const title = segment[`song_${songNum}_title`];
@@ -187,47 +187,47 @@ export default function Reports() {
                           )}
 
                           {segment.segment_type === "Plenaria" && segment.message_title && (
-                            <div className="mt-2 text-xs bg-blue-50 p-2 rounded border border-blue-200">
-                              <span className="text-blue-700 font-bold uppercase">MENSAJE:</span>
-                              <span className="text-gray-700 ml-2">{segment.message_title}</span>
+                            <div className="mt-1 text-[10px] bg-blue-50 p-1 rounded border border-blue-200">
+                              <span className="text-blue-700 font-bold">MENSAJE:</span>
+                              <span className="text-gray-700 ml-1">{segment.message_title}</span>
                             </div>
                           )}
 
                           {segment.segment_type === "Plenaria" && segment.scripture_references && (
-                            <div className="mt-2 text-xs bg-amber-50 p-2 rounded border border-amber-200">
-                              <span className="text-amber-700 font-bold uppercase">ESCRITURAS:</span>
-                              <span className="text-gray-700 ml-2">{segment.scripture_references}</span>
+                            <div className="mt-1 text-[10px] bg-amber-50 p-1 rounded border border-amber-200">
+                              <span className="text-amber-700 font-bold">ESCRITURAS:</span>
+                              <span className="text-gray-700 ml-1">{segment.scripture_references}</span>
                             </div>
                           )}
 
                           {segment.description_details && (
-                            <div className="text-gray-600 text-sm mt-2">
+                            <div className="text-gray-600 text-[10px] mt-1">
                               {segment.description_details}
                             </div>
                           )}
 
                           {getSegmentActions(segment.id).length > 0 && (
-                            <div className="mt-3 text-xs">
-                              <div className="font-bold uppercase text-gray-900 mb-2">ACCIONES:</div>
-                              <div className="space-y-1">
+                            <div className="mt-1 text-[10px]">
+                              <div className="font-bold uppercase text-gray-900 mb-1">ACCIONES:</div>
+                              <div className="space-y-0.5">
                                 {getSegmentActions(segment.id).map((action, actionIdx) => (
                                   <div
                                     key={action.id}
-                                    className={`p-2 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
+                                    className={`p-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
                                   >
-                                    <div className="flex items-start gap-2">
+                                    <div className="flex items-start gap-1">
                                       <span className="font-bold">{actionIdx + 1}.</span>
                                       <div className="flex-1">
                                         <div className="font-semibold">
                                           [{action.department}] {action.label}
                                         </div>
                                         {action.time_hint && (
-                                          <div className="text-xs italic mt-0.5">
-                                            Pista: {action.time_hint}
+                                          <div className="italic">
+                                            {action.time_hint}
                                           </div>
                                         )}
                                         {action.details && (
-                                          <div className="mt-1">
+                                          <div>
                                             {action.details}
                                           </div>
                                         )}
@@ -240,21 +240,21 @@ export default function Reports() {
                           )}
                         </div>
                       </td>
-                      <td className="p-3 text-gray-600 text-xs border-r border-gray-200">
+                      <td className="p-1 text-gray-600 text-[10px] border-r border-gray-200">
                         {segment.projection_notes || "-"}
                       </td>
-                      <td className="p-3 text-gray-600 text-xs border-r border-gray-200">
+                      <td className="p-1 text-gray-600 text-[10px] border-r border-gray-200">
                         {segment.sound_notes || "-"}
                       </td>
-                      <td className="p-3 text-gray-600 text-xs border-r border-gray-200">
+                      <td className="p-1 text-gray-600 text-[10px] border-r border-gray-200">
                         {segment.ushers_notes || "-"}
                       </td>
-                      <td className="p-3 text-gray-600 text-xs border-gray-200">
+                      <td className="p-1 text-gray-600 text-[10px] border-gray-200">
                         {segment.requires_translation && segment.translator_name ? (
                           <div>
                             <div className="font-semibold">{segment.translator_name}</div>
                             {segment.translation_mode === "RemoteBooth" && (
-                              <div className="text-xs text-gray-500 italic">Cabina Remota</div>
+                              <div className="text-[10px] text-gray-500 italic">Remoto</div>
                             )}
                           </div>
                         ) : segment.requires_translation ? (
@@ -263,7 +263,7 @@ export default function Reports() {
                           "-"
                         )}
                         {segment.translation_notes && (
-                          <div className="mt-1 text-xs">{segment.translation_notes}</div>
+                          <div className="mt-0.5 text-[10px]">{segment.translation_notes}</div>
                         )}
                       </td>
                       </tr>
@@ -439,6 +439,10 @@ export default function Reports() {
     <>
       <style>{`
         @media print {
+          @page {
+            size: landscape;
+            margin: 0.5cm;
+          }
           body * {
             visibility: hidden;
           }
@@ -450,9 +454,17 @@ export default function Reports() {
             left: 0;
             top: 0;
             width: 100%;
+            padding: 0;
           }
           .no-print {
             display: none !important;
+          }
+          .print-session {
+            page-break-after: always;
+            page-break-inside: avoid;
+          }
+          .print-session:last-child {
+            page-break-after: auto;
           }
         }
       `}</style>
@@ -497,11 +509,11 @@ export default function Reports() {
         </Card>
 
         {selectedEventId && selectedEvent && (
-          <div id="printable-report" className="bg-white p-8 rounded-lg shadow-sm">
-            <div className="text-center mb-8 border-b-2 border-gray-200 pb-6">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedEvent.name}</h1>
+          <div id="printable-report" className="bg-white p-4 rounded-lg shadow-sm">
+            <div className="text-center mb-3 border-b border-gray-300 pb-2">
+              <h1 className="text-xl font-bold text-gray-900 mb-1">{selectedEvent.name}</h1>
               {selectedEvent.theme && (
-                <p className="text-xl text-pdv-green italic">"{selectedEvent.theme}"</p>
+                <p className="text-sm text-pdv-green italic">"{selectedEvent.theme}"</p>
               )}
             </div>
 
