@@ -457,10 +457,10 @@ export default function SessionManager({ eventId, sessions, segments }) {
             <DialogTitle>{editingSession ? 'Editar Sesión' : 'Nueva Sesión'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-            <div className="space-y-6 overflow-y-auto flex-1 px-1">
+            <div className="space-y-6 overflow-y-auto flex-1 px-6 py-4">
             <div>
               <h3 className="font-bold text-lg mb-4 text-slate-900">Información Básica</h3>
-              <div className="space-y-4">
+              <div className="space-y-4 max-w-full">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nombre de la Sesión *</Label>
                   <Input 
@@ -596,7 +596,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
               
             <div>
               <h3 className="font-bold text-lg mb-4 text-slate-900">Equipo y Personal</h3>
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-4 max-w-full">
                 <div className="space-y-2">
                   <Label htmlFor="admin_team">Administración</Label>
                     <Input 
@@ -699,7 +699,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
             </div>
 
             </div>
-            <div className="flex justify-end gap-3 pt-4 border-t mt-4 shrink-0">
+            <div className="flex justify-end gap-3 pt-4 border-t shrink-0 px-6 pb-4">
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
