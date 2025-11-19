@@ -131,22 +131,31 @@ export default function Reports() {
               <table className="w-full text-xs">
                 <thead className="bg-gray-100 border-b border-gray-300">
                   <tr>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-16 text-center text-xs">Hora</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-14 text-center text-xs">Dur.</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-10 text-xs">
+                      <div className="transform -rotate-90 whitespace-nowrap" style={{writingMode: 'vertical-rl', textOrientation: 'mixed'}}>
+                        HORA
+                      </div>
+                    </th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-12 text-center text-xs">Dur.</th>
                     <th className="p-1 text-gray-900 font-bold uppercase text-xs">Detalles</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-32 text-xs">Proyección</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-32 text-xs">Sonido</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-32 text-xs">Ujieres</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-32 text-xs">Traducción</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-48 text-xs">Notas de Equipos</th>
                   </tr>
                 </thead>
                 <tbody>
                   {segments.map((segment, idx) => (
                     <tr key={segment.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="p-1 text-pdv-green font-bold text-center border-r border-gray-200 text-xs">
-                        {segment.start_time ? formatTimeToEST(segment.start_time) : "-"}
+                      <td className="p-1 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
+                        <div className="flex flex-col items-center gap-0.5">
+                          <div>{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
+                          {segment.end_time && (
+                            <div className="text-gray-500">↓</div>
+                          )}
+                          {segment.end_time && (
+                            <div>{formatTimeToEST(segment.end_time)}</div>
+                          )}
+                        </div>
                       </td>
-                      <td className="p-1 text-center text-pdv-green font-bold border-r border-gray-200 text-xs">
+                      <td className="p-1 text-center text-pdv-green font-bold border-r border-gray-200 text-xs align-top">
                         {segment.duration_min || "-"}
                       </td>
                       <td className="p-1 border-r border-gray-200">
@@ -240,31 +249,44 @@ export default function Reports() {
                           )}
                         </div>
                       </td>
-                      <td className="p-1 text-gray-600 text-[10px] border-r border-gray-200">
-                        {segment.projection_notes || "-"}
-                      </td>
-                      <td className="p-1 text-gray-600 text-[10px] border-r border-gray-200">
-                        {segment.sound_notes || "-"}
-                      </td>
-                      <td className="p-1 text-gray-600 text-[10px] border-r border-gray-200">
-                        {segment.ushers_notes || "-"}
-                      </td>
-                      <td className="p-1 text-gray-600 text-[10px] border-gray-200">
-                        {segment.requires_translation && segment.translator_name ? (
-                          <div>
-                            <div className="font-semibold">{segment.translator_name}</div>
-                            {segment.translation_mode === "RemoteBooth" && (
-                              <div className="text-[10px] text-gray-500 italic">Remoto</div>
-                            )}
-                          </div>
-                        ) : segment.requires_translation ? (
-                          <span className="text-gray-500 italic">Sí</span>
-                        ) : (
-                          "-"
-                        )}
-                        {segment.translation_notes && (
-                          <div className="mt-0.5 text-[10px]">{segment.translation_notes}</div>
-                        )}
+                      <td className="p-1 text-gray-600 text-[10px] align-top">
+                        <div className="space-y-1">
+                          {segment.projection_notes && (
+                            <div className="bg-purple-50 px-1 py-0.5 rounded border border-purple-200">
+                              <span className="font-bold text-purple-700">PROYECCIÓN:</span>
+                              <span className="ml-1">{segment.projection_notes}</span>
+                            </div>
+                          )}
+                          {segment.sound_notes && (
+                            <div className="bg-red-50 px-1 py-0.5 rounded border border-red-200">
+                              <span className="font-bold text-red-700">SONIDO:</span>
+                              <span className="ml-1">{segment.sound_notes}</span>
+                            </div>
+                          )}
+                          {segment.ushers_notes && (
+                            <div className="bg-green-50 px-1 py-0.5 rounded border border-green-200">
+                              <span className="font-bold text-green-700">UJIERES:</span>
+                              <span className="ml-1">{segment.ushers_notes}</span>
+                            </div>
+                          )}
+                          {segment.requires_translation && (
+                            <div className="bg-blue-50 px-1 py-0.5 rounded border border-blue-200">
+                              <span className="font-bold text-blue-700">TRADUCCIÓN:</span>
+                              {segment.translator_name && (
+                                <span className="ml-1">{segment.translator_name}</span>
+                              )}
+                              {segment.translation_mode === "RemoteBooth" && (
+                                <span className="ml-1 italic">(Remoto)</span>
+                              )}
+                              {segment.translation_notes && (
+                                <span className="ml-1">- {segment.translation_notes}</span>
+                              )}
+                            </div>
+                          )}
+                          {!segment.projection_notes && !segment.sound_notes && !segment.ushers_notes && !segment.requires_translation && (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </div>
                       </td>
                       </tr>
                       ))}
