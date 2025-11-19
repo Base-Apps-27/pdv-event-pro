@@ -80,15 +80,82 @@ export default function SessionDetail() {
 
   return (
     <div className="p-6 md:p-8 space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 mb-4">
         <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-4 h-4" />
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-3xl font-bold text-slate-900">{session.name}</h1>
           <p className="text-slate-600">{session.date} • {session.planned_start_time || "Sin hora"}</p>
         </div>
       </div>
+
+      {/* Session Team Information */}
+      {(session.admin_team || session.coordinators || session.worship_leader || session.sound_team || session.tech_team || session.ushers_team || session.translation_team || session.hospitality_team || session.photography_team) && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Equipo y Personal</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+              {session.admin_team && (
+                <div className="bg-orange-50 px-3 py-2 rounded border border-orange-200">
+                  <span className="font-bold text-orange-700 block text-xs mb-1">ADMINISTRACIÓN</span>
+                  <span className="text-slate-800">{session.admin_team}</span>
+                </div>
+              )}
+              {session.coordinators && (
+                <div className="bg-blue-50 px-3 py-2 rounded border border-blue-200">
+                  <span className="font-bold text-blue-700 block text-xs mb-1">COORDINADORES</span>
+                  <span className="text-slate-800">{session.coordinators}</span>
+                </div>
+              )}
+              {session.worship_leader && (
+                <div className="bg-purple-50 px-3 py-2 rounded border border-purple-200">
+                  <span className="font-bold text-purple-700 block text-xs mb-1">LÍDER DE ALABANZA</span>
+                  <span className="text-slate-800">{session.worship_leader}</span>
+                </div>
+              )}
+              {session.sound_team && (
+                <div className="bg-red-50 px-3 py-2 rounded border border-red-200">
+                  <span className="font-bold text-red-700 block text-xs mb-1">SONIDO</span>
+                  <span className="text-slate-800">{session.sound_team}</span>
+                </div>
+              )}
+              {session.tech_team && (
+                <div className="bg-indigo-50 px-3 py-2 rounded border border-indigo-200">
+                  <span className="font-bold text-indigo-700 block text-xs mb-1">TÉCNICO</span>
+                  <span className="text-slate-800">{session.tech_team}</span>
+                </div>
+              )}
+              {session.ushers_team && (
+                <div className="bg-green-50 px-3 py-2 rounded border border-green-200">
+                  <span className="font-bold text-green-700 block text-xs mb-1">UJIERES</span>
+                  <span className="text-slate-800">{session.ushers_team}</span>
+                </div>
+              )}
+              {session.translation_team && (
+                <div className="bg-pink-50 px-3 py-2 rounded border border-pink-200">
+                  <span className="font-bold text-pink-700 block text-xs mb-1">TRADUCCIÓN</span>
+                  <span className="text-slate-800">{session.translation_team}</span>
+                </div>
+              )}
+              {session.hospitality_team && (
+                <div className="bg-yellow-50 px-3 py-2 rounded border border-yellow-200">
+                  <span className="font-bold text-yellow-700 block text-xs mb-1">HOSPITALIDAD</span>
+                  <span className="text-slate-800">{session.hospitality_team}</span>
+                </div>
+              )}
+              {session.photography_team && (
+                <div className="bg-slate-50 px-3 py-2 rounded border border-slate-200">
+                  <span className="font-bold text-slate-700 block text-xs mb-1">FOTOGRAFÍA</span>
+                  <span className="text-slate-800">{session.photography_team}</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {segments.length > 0 && segments[0].start_time && (
         <Alert>
