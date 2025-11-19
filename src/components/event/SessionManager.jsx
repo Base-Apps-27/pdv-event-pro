@@ -112,6 +112,32 @@ export default function SessionManager({ eventId, sessions, segments }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validate session times don't overlap with other sessions on the same day
+    if (formData.date && formData.planned_start_time && formData.planned_end_time) {
+      const sameDaySessions = sessions.filter(s => 
+        s.date === formData.date && 
+        s.id !== editingSession?.id &&
+        s.planned_start_time && 
+        s.planned_end_time
+      );
+      
+      for (const existingSession of sameDaySessions) {
+        const newStart = formData.planned_start_time;
+        const newEnd = formData.planned_end_time;
+        const existingStart = existingSession.planned_start_time;
+        const existingEnd = existingSession.planned_end_time;
+        
+        // Check for overlap
+        if ((newStart >= existingStart && newStart < existingEnd) ||
+            (newEnd > existingStart && newEnd <= existingEnd) ||
+            (newStart <= existingStart && newEnd >= existingEnd)) {
+          alert(`La sesión se solapa con "${existingSession.name}" (${formatTimeToEST(existingStart)} - ${formatTimeToEST(existingEnd)}). Por favor ajusta los horarios.`);
+          return;
+        }
+      }
+    }
+    
     const data = {
       event_id: eventId,
       ...formData,

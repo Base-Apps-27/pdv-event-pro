@@ -44,11 +44,11 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   });
   const [breakoutRooms, setBreakoutRooms] = useState(segment?.breakout_rooms || []);
   
-  // Fetch segments to calculate suggested start time
+  // Fetch segments to calculate suggested start time and validate overlaps
   const { data: allSegments = [] } = useQuery({
     queryKey: ['segments', sessionId],
     queryFn: () => base44.entities.Segment.filter({ session_id: sessionId }, 'order'),
-    enabled: !!sessionId && !segment,
+    enabled: !!sessionId,
   });
   
   // Calculate suggested start time for new segments
@@ -223,6 +223,28 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate segment times don't overlap with other segments in the same session
+    if (formData.start_time && times.end_time && allSegments) {
+      const otherSegments = allSegments.filter(s => s.id !== segment?.id);
+      
+      for (const existingSegment of otherSegments) {
+        if (existingSegment.start_time && existingSegment.end_time) {
+          const newStart = formData.start_time;
+          const newEnd = times.end_time;
+          const existingStart = existingSegment.start_time;
+          const existingEnd = existingSegment.end_time;
+          
+          // Check for overlap
+          if ((newStart >= existingStart && newStart < existingEnd) ||
+              (newEnd > existingStart && newEnd <= existingEnd) ||
+              (newStart <= existingStart && newEnd >= existingEnd)) {
+            alert(`El segmento se solapa con "${existingSegment.title}" (${formatTimeToEST(existingStart)} - ${formatTimeToEST(existingEnd)}). Por favor ajusta los horarios.`);
+            return;
+          }
+        }
+      }
+    }
 
     const data = {
       session_id: sessionId,
