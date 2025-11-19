@@ -43,6 +43,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     time_hint: "",
     details: ""
   });
+  const [isBreakout, setIsBreakout] = useState(!!segment?.breakout_group_id);
+  const [breakoutGroupId, setBreakoutGroupId] = useState(segment?.breakout_group_id || "");
   const [formData, setFormData] = useState({
     title: segment?.title || "",
     segment_type: segment?.segment_type || "Plenaria",
@@ -80,6 +82,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     translation_mode: segment?.translation_mode || "InPerson",
     translator_name: segment?.translator_name || "",
     major_break: segment?.major_break || false,
+    room_id: segment?.room_id || "",
   });
 
   const calculateTimes = (startTime, durationMin) => {
@@ -174,6 +177,11 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     },
   });
 
+  const { data: rooms = [] } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: () => base44.entities.Room.list(),
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -181,6 +189,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       session_id: sessionId,
       ...formData,
       ...times,
+      breakout_group_id: isBreakout ? (breakoutGroupId || `breakout_${Date.now()}`) : null,
     };
 
     if (segment) {
@@ -354,6 +363,50 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     />
                   </div>
                 )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="room_id">Sala</Label>
+                  <Select 
+                    value={formData.room_id}
+                    onValueChange={(value) => setFormData({...formData, room_id: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar sala..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {rooms.map((room) => (
+                        <SelectItem key={room.id} value={room.id}>{room.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Card className="p-3 bg-amber-50 border-amber-200">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Checkbox 
+                      id="is_breakout"
+                      checked={isBreakout}
+                      onCheckedChange={(checked) => setIsBreakout(checked)}
+                    />
+                    <label htmlFor="is_breakout" className="text-sm font-semibold cursor-pointer">
+                      Parte de Sesión Paralela (Breakout)
+                    </label>
+                  </div>
+                  {isBreakout && (
+                    <div className="space-y-2 mt-2">
+                      <Label className="text-xs">ID de Grupo (opcional)</Label>
+                      <Input 
+                        value={breakoutGroupId}
+                        onChange={(e) => setBreakoutGroupId(e.target.value)}
+                        placeholder="ej. Talleres Bloque 1"
+                        className="h-8 text-sm"
+                      />
+                      <p className="text-[10px] text-gray-600">
+                        Deja vacío para generar automáticamente. Usa el mismo ID para vincular segmentos paralelos.
+                      </p>
+                    </div>
+                  )}
+                </Card>
 
               </div>
             </div>
