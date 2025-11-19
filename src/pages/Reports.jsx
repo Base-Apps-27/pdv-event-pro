@@ -132,8 +132,8 @@ export default function Reports() {
                 <thead className="bg-gray-100 border-b border-gray-300">
                   <tr>
                     <th className="p-1 text-gray-900 font-bold uppercase w-12 text-center text-xs">Tiempo</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase text-xs">Detalles</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-48 text-xs">Notas de Equipos</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-1/2">Detalles</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase text-xs">Notas de Equipos</th>
                   </tr>
                 </thead>
                 <tbody>
