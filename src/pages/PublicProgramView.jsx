@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter } from "lucide-react";
@@ -10,7 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { formatTimeToEST } from "../components/utils/timeFormat";
 
 export default function PublicProgramView() {
-  const [selectedEventId, setSelectedEventId] = useState("");
+  const urlParams = new URLSearchParams(window.location.search);
+  const preloadedEventId = urlParams.get('eventId') || "";
+  
+  const [selectedEventId, setSelectedEventId] = useState(preloadedEventId);
   const [selectedSessionId, setSelectedSessionId] = useState("all");
   const [showDetails, setShowDetails] = useState(false);
   const [expandedSegments, setExpandedSegments] = useState({});
@@ -20,6 +23,12 @@ export default function PublicProgramView() {
     ushers: false,
     translation: false
   });
+
+  useEffect(() => {
+    if (preloadedEventId) {
+      setSelectedEventId(preloadedEventId);
+    }
+  }, [preloadedEventId]);
 
   const { data: allEvents = [] } = useQuery({
     queryKey: ['events'],

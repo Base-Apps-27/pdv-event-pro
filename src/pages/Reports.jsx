@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Languages, UserCheck, Mic, Utensils } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Languages, UserCheck, Mic, Utensils, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -680,14 +682,27 @@ export default function Reports() {
             <h1 className="text-3xl font-bold text-gray-900 uppercase">Informes de Eventos</h1>
             <p className="text-gray-600 mt-1">Visualiza y exporta reportes de eventos</p>
           </div>
-          <Button 
-            onClick={handlePrint}
-            disabled={!selectedEventId}
-            className="gradient-pdv text-white font-bold uppercase"
-          >
-            <Printer className="w-4 h-4 mr-2" />
-            Imprimir/Exportar
-          </Button>
+          <div className="flex gap-3">
+            {selectedEventId && (
+              <Link to={createPageUrl("PublicProgramView") + `?eventId=${selectedEventId}`}>
+                <Button 
+                  variant="outline"
+                  className="font-bold uppercase"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Vista Pública
+                </Button>
+              </Link>
+            )}
+            <Button 
+              onClick={handlePrint}
+              disabled={!selectedEventId}
+              className="gradient-pdv text-white font-bold uppercase"
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Imprimir/Exportar
+            </Button>
+          </div>
         </div>
 
         <Card className="bg-white border-gray-200 no-print">
