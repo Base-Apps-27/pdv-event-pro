@@ -457,6 +457,112 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     </div>
                   )}
                 </div>
+
+                {segment && (
+                  <Card className="p-3 bg-slate-50 border-slate-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-semibold">Acciones ({actions.length})</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowActions(!showActions)}
+                        className="h-7"
+                      >
+                        {showActions ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </Button>
+                    </div>
+
+                    {showActions && (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {actions.map((action) => (
+                          <div key={action.id} className="bg-white p-2 rounded border text-xs">
+                            <div className="flex justify-between items-start mb-1">
+                              <Badge variant="outline" className="text-xs">{action.department}</Badge>
+                              <div className="flex gap-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditAction(action)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <FileText className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteActionMutation.mutate(action.id)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Trash2 className="w-3 h-3 text-red-500" />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="font-medium">{action.label}</div>
+                            {action.time_hint && <div className="text-slate-500 italic mt-0.5">{action.time_hint}</div>}
+                            {action.details && <div className="text-slate-600 mt-1">{action.details}</div>}
+                          </div>
+                        ))}
+
+                        <div className="space-y-2 pt-2 border-t">
+                          <Input
+                            value={actionForm.label}
+                            onChange={(e) => setActionForm({...actionForm, label: e.target.value})}
+                            placeholder="Etiqueta"
+                            className="h-8 text-sm"
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <Select
+                              value={actionForm.department}
+                              onValueChange={(value) => setActionForm({...actionForm, department: value})}
+                            >
+                              <SelectTrigger className="h-8 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {DEPARTMENTS.map((dept) => (
+                                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Input
+                              value={actionForm.time_hint}
+                              onChange={(e) => setActionForm({...actionForm, time_hint: e.target.value})}
+                              placeholder="Pista"
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                          <Textarea
+                            value={actionForm.details}
+                            onChange={(e) => setActionForm({...actionForm, details: e.target.value})}
+                            rows={2}
+                            placeholder="Detalles..."
+                            className="text-sm"
+                          />
+                          <div className="flex gap-2">
+                            {editingAction && (
+                              <Button type="button" variant="outline" size="sm" onClick={handleCancelAction} className="flex-1 h-8">
+                                Cancelar
+                              </Button>
+                            )}
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleAddAction}
+                              disabled={!actionForm.label}
+                              className="flex-1 h-8 bg-green-600 hover:bg-green-700"
+                            >
+                              <Plus className="w-3 h-3 mr-1" />
+                              {editingAction ? "Actualizar" : "Añadir"}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                )}
               </div>
             </div>
           </div>
@@ -647,151 +753,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
             </div>
           </div>
         </div>
-
-        {segment && (
-          <div className="px-6 pb-6">
-            <Card className="p-4 bg-slate-50 border-slate-200">
-              <div className="flex items-center justify-between mb-3">
-                <Label className="text-base font-semibold">Acciones dentro del segmento ({actions.length})</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowActions(!showActions)}
-                >
-                  {showActions ? (
-                    <>
-                      <ChevronUp className="w-4 h-4 mr-2" />
-                      Ocultar
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="w-4 h-4 mr-2" />
-                      Expandir
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {showActions && (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {actions.length > 0 && (
-                    <div className="space-y-2">
-                      {actions.map((action) => (
-                        <div key={action.id} className="bg-white p-3 rounded border">
-                          <div className="flex justify-between items-start mb-2">
-                            <Badge variant="outline">{action.department}</Badge>
-                            <div className="flex gap-1">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditAction(action)}
-                                className="h-7 w-7 p-0"
-                              >
-                                <FileText className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => deleteActionMutation.mutate(action.id)}
-                                className="h-7 w-7 p-0"
-                              >
-                                <Trash2 className="w-4 h-4 text-red-500" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="font-medium text-sm">{action.label}</div>
-                          {action.time_hint && (
-                            <div className="text-xs text-slate-500 italic mt-1">
-                              Pista: {action.time_hint}
-                            </div>
-                          )}
-                          {action.details && (
-                            <div className="text-sm text-slate-700 mt-2">
-                              {action.details}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="space-y-3 pt-3 border-t">
-                    <h4 className="font-medium text-sm">
-                      {editingAction ? "Editar Acción" : "Nueva Acción"}
-                    </h4>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-xs">Etiqueta *</Label>
-                      <Input
-                        value={actionForm.label}
-                        onChange={(e) => setActionForm({...actionForm, label: e.target.value})}
-                        placeholder="Video 1, MC Intro..."
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <Label className="text-xs">Departamento *</Label>
-                        <Select
-                          value={actionForm.department}
-                          onValueChange={(value) => setActionForm({...actionForm, department: value})}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {DEPARTMENTS.map((dept) => (
-                              <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-xs">Pista de Tiempo</Label>
-                        <Input
-                          value={actionForm.time_hint}
-                          onChange={(e) => setActionForm({...actionForm, time_hint: e.target.value})}
-                          placeholder="start at 0:00..."
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Detalles</Label>
-                      <Textarea
-                        value={actionForm.details}
-                        onChange={(e) => setActionForm({...actionForm, details: e.target.value})}
-                        rows={3}
-                        placeholder="Descripción completa de la acción..."
-                      />
-                    </div>
-
-                    <div className="flex gap-2">
-                      {editingAction && (
-                        <Button type="button" variant="outline" onClick={handleCancelAction} className="flex-1">
-                          Cancelar
-                        </Button>
-                      )}
-                      <Button
-                        type="button"
-                        onClick={handleAddAction}
-                        disabled={!actionForm.label}
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        {editingAction ? "Actualizar" : "Añadir Acción"}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </Card>
-          </div>
-        )}
       </div>
 
       <div className="border-t bg-slate-50 p-4 flex justify-end gap-3 sticky bottom-0">
