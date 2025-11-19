@@ -234,59 +234,14 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     setActionForm({ label: "", department: "Other", time_hint: "", details: "" });
   };
 
-  const scrollToSection = (sectionId) => {
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const colorCodeLabels = {
-    worship: "Adoración",
-    preach: "Predicación",
-    break: "Descanso",
-    tech: "Técnico",
-    special: "Especial",
-    default: "Predeterminado"
-  };
-
   return (
     <form onSubmit={handleSubmit} className="flex flex-col">
-      {/* Sticky Summary Header */}
-      <div className="sticky top-0 z-10 bg-white border-b shadow-sm px-6 py-3">
-        <div className="flex items-center justify-between gap-4 mb-2">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-lg truncate">{formData.title || "Nuevo Segmento"}</h3>
-            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 mt-1">
-              <Badge variant="outline" className="text-xs">{formData.segment_type}</Badge>
-              {formData.presenter && <span>• {formData.presenter}</span>}
-              {formData.start_time && <span>• {formatTimeToEST(formData.start_time)}</span>}
-              {times.end_time && <span>→ {formatTimeToEST(times.end_time)}</span>}
-              {formData.duration_min && <span>({formData.duration_min}m)</span>}
-              {formData.requires_translation && <Badge className="bg-purple-100 text-purple-800 text-xs">TRAD</Badge>}
-              <span>• {colorCodeLabels[formData.color_code]}</span>
-            </div>
-          </div>
-          {times.stage_call_time && (
-            <div className="text-xs text-blue-600 font-semibold whitespace-nowrap">
-              Llegada: {formatTimeToEST(times.stage_call_time)}
-            </div>
-          )}
-        </div>
-
-        {/* Anchor Navigation */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          <button type="button" onClick={() => scrollToSection('basico')} className="text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Básico</button>
-          <button type="button" onClick={() => scrollToSection('contenido')} className="text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Contenido</button>
-          {segment && <button type="button" onClick={() => scrollToSection('acciones')} className="text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Acciones</button>}
-          <button type="button" onClick={() => scrollToSection('notas')} className="text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Notas</button>
-          <button type="button" onClick={() => scrollToSection('otros')} className="text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Otros</button>
-        </div>
-      </div>
-
       <div>
         <div className="grid md:grid-cols-2 gap-6 p-6">
           {/* LEFT COLUMN - Content */}
           <div className="space-y-6">
-            <div id="basico">
-              <h3 className="font-bold text-lg mb-4 text-slate-900">Información Básica</h3>
+            <div>
+              <h3 className="font-bold text-lg mb-4 text-slate-900">Contenido del Momento</h3>
 
               {!segment && templates.length > 0 && (
                 <Card className="p-3 bg-blue-50 border-blue-200 mb-4">
@@ -367,12 +322,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   </div>
                 )}
 
-              </div>
-            </div>
-
-            <div id="contenido">
-              <h3 className="font-bold text-lg mb-4 text-slate-900">Contenido Específico</h3>
-              <div className="space-y-4">
                 {isWorshipType && (
                   <div className="space-y-3 bg-purple-50 p-4 rounded border border-purple-200">
                     <div className="flex items-center justify-between">
@@ -463,117 +412,165 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     </label>
                   </div>
                 )}
-              </div>
-            </div>
 
-            {segment && (
-              <div id="acciones">
-                <h3 className="font-bold text-lg mb-4 text-slate-900">Acciones del Segmento</h3>
-                <div className="space-y-4">
-              {actions.length > 0 && (
-                <div className="space-y-2">
-                  {actions.map((action) => (
-                    <div key={action.id} className="bg-white p-3 rounded border text-sm">
-                      <div className="flex justify-between items-start mb-1">
-                        <Badge variant="outline" className="text-xs">{action.department}</Badge>
-                        <div className="flex gap-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditAction(action)}
-                            className="h-7 w-7 p-0"
-                          >
-                            <FileText className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteActionMutation.mutate(action.id)}
-                            className="h-7 w-7 p-0"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
+                <div className="space-y-3 bg-purple-50 p-4 rounded border border-purple-200">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="requires_translation"
+                      checked={formData.requires_translation}
+                      onCheckedChange={(checked) => setFormData({...formData, requires_translation: checked})}
+                    />
+                    <label htmlFor="requires_translation" className="text-sm cursor-pointer font-medium">
+                      Requiere traducción
+                    </label>
+                  </div>
+
+                  {formData.requires_translation && (
+                    <div className="space-y-3 ml-6">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Modo de Traducción</Label>
+                        <Select
+                          value={formData.translation_mode}
+                          onValueChange={(value) => setFormData({...formData, translation_mode: value})}
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="InPerson">En Persona (en escenario)</SelectItem>
+                            <SelectItem value="RemoteBooth">Cabina Remota</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {formData.translation_mode === "InPerson" && (
+                        <div className="space-y-2">
+                          <Label className="text-xs">Traductor</Label>
+                          <Input 
+                            value={formData.translator_name}
+                            onChange={(e) => setFormData({...formData, translator_name: e.target.value})}
+                            placeholder="Nombre del traductor"
+                            className="h-9"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {segment && (
+                  <Card className="p-3 bg-slate-50 border-slate-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-semibold">Acciones ({actions.length})</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowActions(!showActions)}
+                        className="h-7"
+                      >
+                        {showActions ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </Button>
+                    </div>
+
+                    {showActions && (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {actions.map((action) => (
+                          <div key={action.id} className="bg-white p-2 rounded border text-xs">
+                            <div className="flex justify-between items-start mb-1">
+                              <Badge variant="outline" className="text-xs">{action.department}</Badge>
+                              <div className="flex gap-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditAction(action)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <FileText className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteActionMutation.mutate(action.id)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Trash2 className="w-3 h-3 text-red-500" />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="font-medium">{action.label}</div>
+                            {action.time_hint && <div className="text-slate-500 italic mt-0.5">{action.time_hint}</div>}
+                            {action.details && <div className="text-slate-600 mt-1">{action.details}</div>}
+                          </div>
+                        ))}
+
+                        <div className="space-y-2 pt-2 border-t">
+                          <Input
+                            value={actionForm.label}
+                            onChange={(e) => setActionForm({...actionForm, label: e.target.value})}
+                            placeholder="Etiqueta"
+                            className="h-8 text-sm"
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <Select
+                              value={actionForm.department}
+                              onValueChange={(value) => setActionForm({...actionForm, department: value})}
+                            >
+                              <SelectTrigger className="h-8 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {DEPARTMENTS.map((dept) => (
+                                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Input
+                              value={actionForm.time_hint}
+                              onChange={(e) => setActionForm({...actionForm, time_hint: e.target.value})}
+                              placeholder="Pista"
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                          <Textarea
+                            value={actionForm.details}
+                            onChange={(e) => setActionForm({...actionForm, details: e.target.value})}
+                            rows={2}
+                            placeholder="Detalles..."
+                            className="text-sm"
+                          />
+                          <div className="flex gap-2">
+                            {editingAction && (
+                              <Button type="button" variant="outline" size="sm" onClick={handleCancelAction} className="flex-1 h-8">
+                                Cancelar
+                              </Button>
+                            )}
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleAddAction}
+                              disabled={!actionForm.label}
+                              className="flex-1 h-8 bg-green-600 hover:bg-green-700"
+                            >
+                              <Plus className="w-3 h-3 mr-1" />
+                              {editingAction ? "Actualizar" : "Añadir"}
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      <div className="font-medium">{action.label}</div>
-                      {action.time_hint && <div className="text-slate-500 italic text-xs mt-0.5">{action.time_hint}</div>}
-                      {action.details && <div className="text-slate-600 text-xs mt-1">{action.details}</div>}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="space-y-3 pt-3 border-t">
-                <Label className="text-sm font-semibold">Añadir Nueva Acción</Label>
-                <Input
-                  value={actionForm.label}
-                  onChange={(e) => setActionForm({...actionForm, label: e.target.value})}
-                  placeholder="Etiqueta de la acción"
-                  className="h-9"
-                />
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Departamento</Label>
-                    <Select
-                      value={actionForm.department}
-                      onValueChange={(value) => setActionForm({...actionForm, department: value})}
-                    >
-                      <SelectTrigger className="h-9">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DEPARTMENTS.map((dept) => (
-                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Pista de Tiempo</Label>
-                    <Input
-                      value={actionForm.time_hint}
-                      onChange={(e) => setActionForm({...actionForm, time_hint: e.target.value})}
-                      placeholder="ej. at 2:30"
-                      className="h-9"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Detalles</Label>
-                  <Textarea
-                    value={actionForm.details}
-                    onChange={(e) => setActionForm({...actionForm, details: e.target.value})}
-                    rows={2}
-                    placeholder="Descripción completa de la acción..."
-                  />
-                </div>
-                <div className="flex gap-2">
-                  {editingAction && (
-                    <Button type="button" variant="outline" size="sm" onClick={handleCancelAction} className="flex-1">
-                      Cancelar
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleAddAction}
-                    disabled={!actionForm.label}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    {editingAction ? "Actualizar Acción" : "Añadir Acción"}
-                  </Button>
-                </div>
-                </div>
+                    )}
+                  </Card>
+                )}
               </div>
-            )}
+            </div>
           </div>
 
+          {/* RIGHT COLUMN - Execution */}
           <div className="space-y-6">
             <div>
-              <h3 className="font-bold text-lg mb-4 text-slate-900">Timing & Ejecución</h3>
+              <h3 className="font-bold text-lg mb-4 text-slate-900">Detalles de Ejecución</h3>
 
               <div className="space-y-4">
                 <Card className="p-4 bg-blue-50 border-blue-200">
@@ -647,54 +644,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   </div>
                 </Card>
 
-                {/* Translation Block */}
-                <Card className="p-4 bg-purple-50 border-purple-200">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <Checkbox 
-                      id="requires_translation"
-                      checked={formData.requires_translation}
-                      onCheckedChange={(checked) => setFormData({...formData, requires_translation: checked})}
-                    />
-                    <label htmlFor="requires_translation" className="font-semibold cursor-pointer">
-                      Requiere Traducción
-                    </label>
-                  </div>
-
-                  {formData.requires_translation && (
-                    <div className="space-y-3">
-                      <div className="space-y-2">
-                        <Label className="text-xs">Modo</Label>
-                        <Select
-                          value={formData.translation_mode}
-                          onValueChange={(value) => setFormData({...formData, translation_mode: value})}
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="InPerson">En Persona</SelectItem>
-                            <SelectItem value="RemoteBooth">Cabina Remota</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {formData.translation_mode === "InPerson" && (
-                        <div className="space-y-2">
-                          <Label className="text-xs">Traductor</Label>
-                          <Input 
-                            value={formData.translator_name}
-                            onChange={(e) => setFormData({...formData, translator_name: e.target.value})}
-                            placeholder="Nombre"
-                            className="h-9"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </Card>
-
-                <div id="notas" className="space-y-3">
-                  <Label className="font-semibold text-base">Notas para Equipos</Label>
+                <div className="space-y-3">
+                  <Label className="font-semibold">Notas para Equipos</Label>
                   
                   {!isBreakType && (
                     <>
@@ -759,8 +710,10 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   </div>
                 </div>
 
-                <div id="otros" className="space-y-2">
-                  <Label className="text-sm font-semibold">Opciones de Visibilidad</Label>
+
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Visibilidad</Label>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="flex items-center space-x-2">
                       <Checkbox 
