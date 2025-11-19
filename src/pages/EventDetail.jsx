@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SessionManager from "../components/event/SessionManager";
 import EventInfo from "../components/event/EventInfo";
+import EventCalendar from "../components/event/EventCalendar";
 
 export default function EventDetail() {
   const navigate = useNavigate();
@@ -39,6 +40,16 @@ export default function EventDetail() {
     enabled: sessions.length > 0,
   });
 
+  const { data: allSessions = [] } = useQuery({
+    queryKey: ['allSessions'],
+    queryFn: () => base44.entities.Session.list(),
+  });
+
+  const { data: allSegments = [] } = useQuery({
+    queryKey: ['allSegments'],
+    queryFn: () => base44.entities.Segment.list(),
+  });
+
   if (!event) {
     return (
       <div className="p-8 text-center">
@@ -60,9 +71,10 @@ export default function EventDetail() {
       </div>
 
       <Tabs defaultValue="sessions" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
           <TabsTrigger value="info">Información</TabsTrigger>
           <TabsTrigger value="sessions">Sesiones</TabsTrigger>
+          <TabsTrigger value="calendar">Calendario</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="mt-6">
@@ -74,6 +86,15 @@ export default function EventDetail() {
             eventId={eventId} 
             sessions={sessions} 
             segments={segments}
+          />
+        </TabsContent>
+
+        <TabsContent value="calendar" className="mt-6">
+          <EventCalendar 
+            eventId={eventId}
+            sessions={sessions}
+            allSessions={allSessions}
+            segments={allSegments}
           />
         </TabsContent>
       </Tabs>
