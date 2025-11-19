@@ -8,15 +8,35 @@
 @layer base {
   :root {
     /* Palabras de Vida Brand Colors */
-    --pdv-charcoal: #1A1A1A;
-    --pdv-teal: #1F8A70;
-    --pdv-green: #8DC63F;
-    --pdv-lime: #BDC63F;
-    --pdv-yellow: #D7DF23;
+    --brand-charcoal: #1A1A1A;
+    --brand-teal: #1F8A70;
+    --brand-green: #8DC63F;
+    --brand-lime: #BDC63F;
+    --brand-yellow: #D7DF23;
     
-    /* Gradient */
-    --pdv-gradient: linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D7DF23 100%);
+    /* Light mode backgrounds and text */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F8F9FA;
+    --text-primary: #111827;
+    --text-secondary: #374151;
+    --text-tertiary: #6B7280;
+    --border-color: #D1D5DB;
     
+    /* Sidebar */
+    --sidebar-bg: #1A1A1A;
+    --sidebar-text: #FFFFFF;
+    --sidebar-text-muted: rgba(255, 255, 255, 0.7);
+    
+    /* Card styles */
+    --card-bg: #FFFFFF;
+    --card-border: #E5E7EB;
+    
+    /* Input styles */
+    --input-bg: #FFFFFF;
+    --input-border: #D1D5DB;
+    --input-text: #111827;
+    
+    /* Shadcn compatibility */
     --background: 0 0% 98%;
     --foreground: 0 0% 10%;
     --card: 0 0% 100%;
@@ -61,65 +81,73 @@
   }
 }
 
-/* Custom gradient backgrounds */
+/* Brand gradient classes */
+.brand-gradient,
 .gradient-pdv {
-  background: linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D7DF23 100%);
+  background: linear-gradient(90deg, var(--brand-teal) 0%, var(--brand-green) 50%, var(--brand-yellow) 100%);
+}
+
+.brand-gradient-text {
+  background: linear-gradient(90deg, var(--brand-teal) 0%, var(--brand-green) 50%, var(--brand-yellow) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .gradient-pdv-vertical {
-  background: linear-gradient(180deg, #1F8A70 0%, #8DC63F 50%, #D7DF23 100%);
+  background: linear-gradient(180deg, var(--brand-teal) 0%, var(--brand-green) 50%, var(--brand-yellow) 100%);
 }
 
 .bg-pdv-charcoal {
-  background-color: #1A1A1A;
+  background-color: var(--brand-charcoal);
 }
 
 .bg-pdv-dark {
-  background-color: #F5F5F5;
+  background-color: var(--bg-secondary);
 }
 
 .bg-pdv-card {
-  background-color: #FFFFFF;
+  background-color: var(--card-bg);
 }
 
 .bg-pdv-teal {
-  background-color: #1F8A70;
+  background-color: var(--brand-teal);
 }
 
 .bg-pdv-green {
-  background-color: #8DC63F;
+  background-color: var(--brand-green);
 }
 
 .bg-pdv-yellow {
-  background-color: #D7DF23;
+  background-color: var(--brand-yellow);
 }
 
 .bg-pdv-lime {
-  background-color: #BDC63F;
+  background-color: var(--brand-lime);
 }
 
 .text-pdv-teal {
-  color: #1F8A70;
+  color: var(--brand-teal);
 }
 
 .text-pdv-green {
-  color: #8DC63F;
+  color: var(--brand-green);
 }
 
 .text-pdv-yellow {
-  color: #D7DF23;
+  color: var(--brand-yellow);
 }
 
 .text-pdv-lime {
-  color: #BDC63F;
+  color: var(--brand-lime);
 }
 
 .border-pdv-teal {
-  border-color: #1F8A70;
+  border-color: var(--brand-teal);
 }
 
 .border-pdv-green {
-  border-color: #8DC63F;
+  border-color: var(--brand-green);
 }
 
 /* Button hover effects - 15% brightness lift */

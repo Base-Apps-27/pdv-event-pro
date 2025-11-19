@@ -56,17 +56,20 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 md:p-8 space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight text-gray-900">DASHBOARD</h1>
-          <p className="text-gray-600 mt-2 font-medium">Gestión de eventos y programación</p>
+      {/* Hero Header with Brand Gradient */}
+      <div className="brand-gradient rounded-2xl p-8 text-white shadow-lg">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight">BIENVENIDO</h1>
+            <p className="mt-2 font-medium text-white text-opacity-90">Gestiona tus eventos y programación desde aquí</p>
+          </div>
+          <Link to={createPageUrl("Events")}>
+            <Button className="bg-white text-pdv-teal hover:bg-opacity-90 transition-opacity font-bold uppercase tracking-wide">
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo Evento
+            </Button>
+          </Link>
         </div>
-        <Link to={createPageUrl("Events")}>
-          <Button className="gradient-pdv text-white hover:opacity-90 transition-opacity font-bold uppercase tracking-wide">
-            <Plus className="w-4 h-4 mr-2" />
-            Nuevo Evento
-          </Button>
-        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
