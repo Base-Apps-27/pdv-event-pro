@@ -133,7 +133,6 @@ export default function Reports() {
                   <tr>
                     <th className="p-1 text-gray-900 font-bold uppercase w-12 text-center text-xs">Tiempo</th>
                     <th className="p-1 text-gray-900 font-bold uppercase text-xs">Detalles</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-40 text-xs">Acciones</th>
                     <th className="p-1 text-gray-900 font-bold uppercase w-48 text-xs">Notas de Equipos</th>
                   </tr>
                 </thead>
@@ -155,95 +154,99 @@ export default function Reports() {
                         </div>
                       </td>
                       <td className="p-2 border-r border-gray-200">
-                        <div className="space-y-1">
-                          <div className="text-gray-900 font-bold text-xs uppercase">
-                            {segment.title}
-                          </div>
-                          
-                          {segment.segment_type && (
-                            <Badge variant="outline" className="text-[10px] px-1 py-0">
-                              {segment.segment_type}
-                            </Badge>
-                          )}
-
-                          {segment.presenter && (
-                            <div className="text-blue-600 font-semibold text-xs">
-                              {segment.presenter}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <div className="text-gray-900 font-bold text-xs uppercase">
+                              {segment.title}
                             </div>
-                          )}
+                            
+                            {segment.segment_type && (
+                              <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                {segment.segment_type}
+                              </Badge>
+                            )}
 
-                          {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
-                            <div className="mt-1 text-[10px] bg-green-50 p-1 rounded border border-green-200">
-                              <span className="text-green-700 font-bold">CANCIONES:</span>
-                              <div className="mt-0.5">
-                                {[...Array(segment.number_of_songs)].map((_, idx) => {
-                                  const songNum = idx + 1;
-                                  const title = segment[`song_${songNum}_title`];
-                                  const lead = segment[`song_${songNum}_lead`];
-                                  if (!title) return null;
-                                  return (
-                                    <div key={songNum} className="text-gray-700">
-                                      {songNum}. {title} {lead && `(${lead})`}
-                                    </div>
-                                  );
-                                })}
+                            {segment.presenter && (
+                              <div className="text-blue-600 font-semibold text-xs">
+                                {segment.presenter}
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                          {segment.segment_type === "Plenaria" && segment.message_title && (
-                            <div className="mt-1 text-[10px] bg-blue-50 p-1 rounded border border-blue-200">
-                              <span className="text-blue-700 font-bold">MENSAJE:</span>
-                              <span className="text-gray-700 ml-1">{segment.message_title}</span>
-                            </div>
-                          )}
-
-                          {segment.segment_type === "Plenaria" && segment.scripture_references && (
-                            <div className="mt-1 text-[10px] bg-amber-50 p-1 rounded border border-amber-200">
-                              <span className="text-amber-700 font-bold">ESCRITURAS:</span>
-                              <span className="text-gray-700 ml-1">{segment.scripture_references}</span>
-                            </div>
-                          )}
-
-                          {segment.description_details && (
-                            <div className="text-gray-600 text-[10px] mt-1">
-                              {segment.description_details}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-2 border-r border-gray-200 align-top">
-                        {getSegmentActions(segment.id).length > 0 ? (
-                          <div className="text-[10px] space-y-0.5">
-                            {getSegmentActions(segment.id).map((action, actionIdx) => (
-                              <div
-                                key={action.id}
-                                className={`p-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
-                              >
-                                <div className="flex items-start gap-1">
-                                  <span className="font-bold">{actionIdx + 1}.</span>
-                                  <div className="flex-1">
-                                    <div className="font-semibold">
-                                      [{action.department}] {action.label}
-                                    </div>
-                                    {action.time_hint && (
-                                      <div className="italic">
-                                        {action.time_hint}
+                            {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
+                              <div className="mt-1 text-[10px] bg-green-50 p-1 rounded border border-green-200">
+                                <span className="text-green-700 font-bold">CANCIONES:</span>
+                                <div className="mt-0.5">
+                                  {[...Array(segment.number_of_songs)].map((_, idx) => {
+                                    const songNum = idx + 1;
+                                    const title = segment[`song_${songNum}_title`];
+                                    const lead = segment[`song_${songNum}_lead`];
+                                    if (!title) return null;
+                                    return (
+                                      <div key={songNum} className="text-gray-700">
+                                        {songNum}. {title} {lead && `(${lead})`}
                                       </div>
-                                    )}
-                                    {action.details && (
-                                      <div>
-                                        {action.details}
-                                      </div>
-                                    )}
-                                  </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
-                            ))}
+                            )}
+
+                            {segment.segment_type === "Plenaria" && segment.message_title && (
+                              <div className="mt-1 text-[10px] bg-blue-50 p-1 rounded border border-blue-200">
+                                <span className="text-blue-700 font-bold">MENSAJE:</span>
+                                <span className="text-gray-700 ml-1">{segment.message_title}</span>
+                              </div>
+                            )}
+
+                            {segment.segment_type === "Plenaria" && segment.scripture_references && (
+                              <div className="mt-1 text-[10px] bg-amber-50 p-1 rounded border border-amber-200">
+                                <span className="text-amber-700 font-bold">ESCRITURAS:</span>
+                                <span className="text-gray-700 ml-1">{segment.scripture_references}</span>
+                              </div>
+                            )}
+
+                            {segment.description_details && (
+                              <div className="text-gray-600 text-[10px] mt-1">
+                                {segment.description_details}
+                              </div>
+                            )}
                           </div>
-                        ) : (
-                          <span className="text-gray-400 text-[10px]">-</span>
-                        )}
+
+                          <div className="border-l border-gray-200 pl-2">
+                            {getSegmentActions(segment.id).length > 0 ? (
+                              <div className="text-[10px] space-y-0.5">
+                                <div className="font-bold uppercase text-gray-900 mb-1">ACCIONES:</div>
+                                {getSegmentActions(segment.id).map((action, actionIdx) => (
+                                  <div
+                                    key={action.id}
+                                    className={`p-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
+                                  >
+                                    <div className="flex items-start gap-1">
+                                      <span className="font-bold">{actionIdx + 1}.</span>
+                                      <div className="flex-1">
+                                        <div className="font-semibold">
+                                          [{action.department}] {action.label}
+                                        </div>
+                                        {action.time_hint && (
+                                          <div className="italic">
+                                            {action.time_hint}
+                                          </div>
+                                        )}
+                                        {action.details && (
+                                          <div>
+                                            {action.details}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-[10px]">-</span>
+                            )}
+                          </div>
+                        </div>
                       </td>
                       <td className="p-2 text-gray-600 text-[10px] align-top">
                         <div className="space-y-1">
