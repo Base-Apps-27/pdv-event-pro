@@ -35,7 +35,6 @@ const DEPARTMENTS = [
 export default function SegmentFormTwoColumn({ session, segment, templates, onClose, sessionId }) {
   const queryClient = useQueryClient();
   const [selectedTemplate, setSelectedTemplate] = useState("");
-  const [showActions, setShowActions] = useState(false);
   const [editingAction, setEditingAction] = useState(null);
   const [actionForm, setActionForm] = useState({
     label: "",
