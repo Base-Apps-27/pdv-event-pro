@@ -42,41 +42,6 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
     },
   });
 
-  const recalculateTimesMutation = useMutation({
-    mutationFn: async (reorderedSegments) => {
-      // Recalculate times based on new order
-      for (let i = 0; i < reorderedSegments.length; i++) {
-        const segment = reorderedSegments[i];
-        const previousSegment = i > 0 ? reorderedSegments[i - 1] : null;
-
-        let newStartTime = segment.start_time;
-        if (previousSegment && previousSegment.end_time) {
-          newStartTime = previousSegment.end_time;
-        }
-
-        // Calculate new end time
-        let newEndTime = segment.end_time;
-        if (newStartTime && segment.duration_min) {
-          const [hours, minutes] = newStartTime.split(':').map(Number);
-          const startMinutes = hours * 60 + minutes;
-          const endMinutes = startMinutes + segment.duration_min;
-          const endHours = Math.floor(endMinutes / 60) % 24;
-          const endMins = endMinutes % 60;
-          newEndTime = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
-        }
-
-        await base44.entities.Segment.update(segment.id, {
-          ...segment,
-          start_time: newStartTime,
-          end_time: newEndTime
-        });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['segments', sessionId]);
-    },
-  });
-
   const handleDragEnd = async (result) => {
     if (!result.destination) return;
     
@@ -89,16 +54,13 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
     const [movedSegment] = reorderedSegments.splice(sourceIndex, 1);
     reorderedSegments.splice(destIndex, 0, movedSegment);
 
-    // Update orders
+    // Update orders only - don't recalculate times
     const updates = reorderedSegments.map((seg, index) => ({
       segmentId: seg.id,
       newOrder: index + 1
     }));
 
     await Promise.all(updates.map(update => reorderMutation.mutateAsync(update)));
-    
-    // Recalculate times after reordering
-    await recalculateTimesMutation.mutateAsync(reorderedSegments);
   };
 
   const getSegmentActions = (segmentId) => {
