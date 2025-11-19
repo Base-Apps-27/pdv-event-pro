@@ -499,9 +499,9 @@ export default function SessionManager({ eventId, sessions, segments }) {
               
             <div>
               <h3 className="font-bold text-lg mb-4 text-slate-900">Equipo y Personal</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="admin_team">Administración</Label>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admin_team">Administración</Label>
                     <Input 
                       id="admin_team" 
                       name="admin_team" 
