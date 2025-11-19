@@ -1,19 +1,27 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Languages, UserCheck, Mic, Utensils, ExternalLink } from "lucide-react";
+import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Languages, UserCheck, Mic, Utensils, ExternalLink, Share2, Copy, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { formatTimeToEST } from "../components/utils/timeFormat";
 
 export default function Reports() {
+  const navigate = useNavigate();
   const [selectedEventId, setSelectedEventId] = useState("");
   const [activeReport, setActiveReport] = useState("detailed");
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const { data: events = [] } = useQuery({
     queryKey: ['events'],
@@ -56,6 +64,26 @@ export default function Reports() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const getPublicViewUrl = () => {
+    const baseUrl = window.location.origin;
+    const pagePath = createPageUrl("PublicProgramView");
+    return `${baseUrl}${pagePath}?eventId=${selectedEventId}`;
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getPublicViewUrl());
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleOpenPublicView = () => {
+    navigate(createPageUrl("PublicProgramView") + `?eventId=${selectedEventId}`);
   };
 
   const getSegmentActions = (segmentId) => {
@@ -684,15 +712,36 @@ export default function Reports() {
           </div>
           <div className="flex gap-3">
             {selectedEventId && (
-              <Link to={createPageUrl("PublicProgramView") + `?eventId=${selectedEventId}`}>
-                <Button 
-                  variant="outline"
-                  className="font-bold uppercase"
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Vista Pública
-                </Button>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline"
+                    className="font-bold uppercase"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Vista Pública
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleOpenPublicView}>
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Abrir Vista Pública
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleCopyLink}>
+                    {copySuccess ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2 text-green-600" />
+                        ¡Copiado!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copiar Enlace
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             <Button 
               onClick={handlePrint}
