@@ -128,10 +128,10 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
                     <Badge className={`${colorSchemes[segment.color_code || 'default']} border text-xs whitespace-nowrap`}>
                       {segment.segment_type}
                     </Badge>
-                    {segment.breakout_group_id && (
+                    {segment.segment_type === "Breakout" && segment.breakout_rooms && (
                       <Badge variant="outline" className="text-xs gap-1 bg-amber-50 border-amber-300">
                         <Users className="w-3 h-3" />
-                        Breakout
+                        {segment.breakout_rooms.length} salas
                       </Badge>
                     )}
                   </div>

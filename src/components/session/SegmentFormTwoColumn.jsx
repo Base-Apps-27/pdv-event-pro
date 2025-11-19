@@ -16,7 +16,7 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
   "Anuncio", "Dinámica", "Break", "TechOnly", "Oración", 
-  "Especial", "Cierre", "MC", "Ministración", "Receso", "Almuerzo", "Artes"
+  "Especial", "Cierre", "MC", "Ministración", "Receso", "Almuerzo", "Artes", "Breakout"
 ];
 
 const COLOR_CODES = [
@@ -43,8 +43,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     time_hint: "",
     details: ""
   });
-  const [isBreakout, setIsBreakout] = useState(!!segment?.breakout_group_id);
-  const [breakoutGroupId, setBreakoutGroupId] = useState(segment?.breakout_group_id || "");
+  const [breakoutRooms, setBreakoutRooms] = useState(segment?.breakout_rooms || []);
   const [formData, setFormData] = useState({
     title: segment?.title || "",
     segment_type: segment?.segment_type || "Plenaria",
@@ -182,48 +181,15 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     queryFn: () => base44.entities.Room.list(),
   });
 
-  const { data: allSegments = [] } = useQuery({
-    queryKey: ['segments'],
-    queryFn: () => base44.entities.Segment.list(),
-  });
-
-  // Find other segments in the same breakout group to lock timing
-  const breakoutSiblings = segment?.breakout_group_id 
-    ? allSegments.filter(s => s.breakout_group_id === segment.breakout_group_id && s.id !== segment.id)
-    : [];
-
-  const isTimingLocked = isBreakout && breakoutGroupId && breakoutSiblings.length > 0;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const generatedGroupId = breakoutGroupId || `breakout_${Date.now()}`;
     const data = {
       session_id: sessionId,
       ...formData,
       ...times,
-      breakout_group_id: isBreakout ? generatedGroupId : null,
+      breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : null,
     };
-
-    // If this is part of a breakout group, update all siblings with same timing
-    if (isBreakout && breakoutGroupId) {
-      const siblingSegments = allSegments.filter(
-        s => s.breakout_group_id === breakoutGroupId && s.id !== segment?.id
-      );
-
-      if (siblingSegments.length > 0) {
-        // Update all siblings with the new timing
-        await Promise.all(
-          siblingSegments.map(sibling =>
-            base44.entities.Segment.update(sibling.id, {
-              start_time: formData.start_time,
-              duration_min: formData.duration_min,
-              end_time: times.end_time,
-            })
-          )
-        );
-      }
-    }
 
     if (segment) {
       updateMutation.mutate({ id: segment.id, data });
@@ -232,11 +198,32 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     }
   };
 
+  const addBreakoutRoom = () => {
+    setBreakoutRooms([...breakoutRooms, {
+      room_id: "",
+      speaker_or_panel: "",
+      topic: "",
+      general_notes: "",
+      other_notes: ""
+    }]);
+  };
+
+  const removeBreakoutRoom = (index) => {
+    setBreakoutRooms(breakoutRooms.filter((_, i) => i !== index));
+  };
+
+  const updateBreakoutRoom = (index, field, value) => {
+    const updated = [...breakoutRooms];
+    updated[index] = { ...updated[index], [field]: value };
+    setBreakoutRooms(updated);
+  };
+
   const isWorshipType = formData.segment_type === "Alabanza";
   const isPlenariaType = formData.segment_type === "Plenaria";
   const isBreakType = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
   const isTechOnly = formData.segment_type === "TechOnly";
-  const needsPresenter = !isBreakType && !isTechOnly;
+  const isBreakoutType = formData.segment_type === "Breakout";
+  const needsPresenter = !isBreakType && !isTechOnly && !isBreakoutType;
 
   const handleAddAction = () => {
     if (!actionForm.label || !segment?.id) return;
@@ -397,59 +384,24 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="room_id">Sala</Label>
-                  <Select 
-                    value={formData.room_id}
-                    onValueChange={(value) => setFormData({...formData, room_id: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar sala..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {rooms.map((room) => (
-                        <SelectItem key={room.id} value={room.id}>{room.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Card className="p-3 bg-amber-50 border-amber-200">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Checkbox 
-                      id="is_breakout"
-                      checked={isBreakout}
-                      onCheckedChange={(checked) => {
-                        setIsBreakout(checked);
-                        if (!checked) {
-                          setBreakoutGroupId("");
-                        }
-                      }}
-                    />
-                    <label htmlFor="is_breakout" className="text-sm font-semibold cursor-pointer">
-                      Parte de Sesión Paralela (Breakout)
-                    </label>
+                {!isBreakoutType && (
+                  <div className="space-y-2">
+                    <Label htmlFor="room_id">Sala</Label>
+                    <Select 
+                      value={formData.room_id}
+                      onValueChange={(value) => setFormData({...formData, room_id: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar sala..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {rooms.map((room) => (
+                          <SelectItem key={room.id} value={room.id}>{room.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  {isBreakout && (
-                    <div className="space-y-2 mt-2">
-                      <Label className="text-xs">ID de Grupo</Label>
-                      <Input 
-                        value={breakoutGroupId}
-                        onChange={(e) => setBreakoutGroupId(e.target.value)}
-                        placeholder="ej. Talleres Bloque 1"
-                        className="h-8 text-sm"
-                      />
-                      <p className="text-[10px] text-gray-600">
-                        Para crear múltiples sesiones paralelas: crea el primer segmento y copia su ID de grupo, luego crea los demás segmentos con el mismo ID. Todos compartirán la misma hora de inicio y duración.
-                      </p>
-                      {segment?.breakout_group_id && (
-                        <div className="bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
-                          <span className="font-bold">ID Actual:</span> {segment.breakout_group_id}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </Card>
+                )}
 
               </div>
             </div>
@@ -457,6 +409,104 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
             <div id="contenido">
               <h3 className="font-bold text-lg mb-4 text-slate-900">Contenido Específico</h3>
               <div className="space-y-4">
+                {isBreakoutType && (
+                  <div className="space-y-3 bg-amber-50 p-4 rounded border border-amber-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="font-semibold">Salas Paralelas</Label>
+                      <Button 
+                        type="button"
+                        size="sm" 
+                        onClick={addBreakoutRoom}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Añadir Sala
+                      </Button>
+                    </div>
+
+                    {breakoutRooms.length === 0 && (
+                      <p className="text-sm text-gray-600 text-center py-4">
+                        No hay salas definidas. Añade al menos una sala para el breakout.
+                      </p>
+                    )}
+
+                    {breakoutRooms.map((room, index) => (
+                      <Card key={index} className="p-3 bg-white border-gray-300">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="outline">Sala {index + 1}</Badge>
+                          <Button 
+                            type="button"
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => removeBreakoutRoom(index)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Sala</Label>
+                            <Select 
+                              value={room.room_id}
+                              onValueChange={(value) => updateBreakoutRoom(index, 'room_id', value)}
+                            >
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="Seleccionar..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {rooms.map((r) => (
+                                  <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-xs">Tema/Tópico</Label>
+                            <Input 
+                              value={room.topic}
+                              onChange={(e) => updateBreakoutRoom(index, 'topic', e.target.value)}
+                              placeholder="Nombre del taller o tópico"
+                              className="h-8 text-sm"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-xs">Presentador(es) / Panel</Label>
+                            <Input 
+                              value={room.speaker_or_panel}
+                              onChange={(e) => updateBreakoutRoom(index, 'speaker_or_panel', e.target.value)}
+                              placeholder="Nombres"
+                              className="h-8 text-sm"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-xs">Notas de Producción</Label>
+                            <Input 
+                              value={room.general_notes}
+                              onChange={(e) => updateBreakoutRoom(index, 'general_notes', e.target.value)}
+                              placeholder="Instrucciones generales para producción"
+                              className="h-8 text-sm"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-xs">Otras Notas</Label>
+                            <Input 
+                              value={room.other_notes}
+                              onChange={(e) => updateBreakoutRoom(index, 'other_notes', e.target.value)}
+                              placeholder="Instrucciones adicionales"
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
                 {isWorshipType && (
                   <div className="space-y-3 bg-purple-50 p-4 rounded border border-purple-200">
                     <div className="flex items-center justify-between">
@@ -663,11 +713,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
               <div className="space-y-4">
                 <Card className="p-4 bg-blue-50 border-blue-200">
                   <Label className="font-semibold mb-3 block">Horarios</Label>
-                  {isTimingLocked && (
-                    <div className="bg-amber-100 border border-amber-300 p-2 rounded mb-3 text-xs">
-                      <strong>⚠️ Tiempos bloqueados:</strong> Este segmento es parte de un grupo breakout. Los cambios de horario se aplicarán a todas las sesiones paralelas.
-                    </div>
-                  )}
                   <div className="space-y-3">
                     <div className="space-y-2">
                       <Label className="text-xs">Inicio</Label>
@@ -748,7 +793,15 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 <div id="notas" className="space-y-3">
                   <Label className="font-semibold text-base">Notas para Equipos</Label>
                   
-                  {!isBreakType && (
+                  {isBreakoutType && (
+                    <div className="bg-amber-50 border border-amber-200 p-3 rounded text-sm">
+                      <p className="text-gray-700">
+                        Para segmentos de tipo Breakout, las notas se definen individualmente para cada sala en la sección de "Contenido Específico".
+                      </p>
+                    </div>
+                  )}
+
+                  {!isBreakType && !isBreakoutType && (
                     <>
                       <div className="space-y-1">
                         <Label className="text-xs text-purple-700">Proyección</Label>
@@ -774,7 +827,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     </>
                   )}
 
-                  {!isBreakType && !isTechOnly && (
+                  {!isBreakType && !isTechOnly && !isBreakoutType && (
                     <div className="space-y-1">
                       <Label className="text-xs text-green-700">Ujieres</Label>
                       <Textarea 

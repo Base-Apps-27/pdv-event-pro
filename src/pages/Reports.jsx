@@ -83,44 +83,13 @@ export default function Reports() {
     return room ? room.name : "";
   };
 
-  const groupBreakoutSegments = (segments) => {
-    const grouped = [];
-    const processedIds = new Set();
 
-    segments.forEach(segment => {
-      if (processedIds.has(segment.id)) return;
-
-      if (segment.breakout_group_id) {
-        const breakoutGroup = segments.filter(
-          s => s.breakout_group_id === segment.breakout_group_id && 
-               s.start_time === segment.start_time
-        );
-        grouped.push({
-          isBreakout: true,
-          segments: breakoutGroup,
-          start_time: segment.start_time,
-          end_time: segment.end_time,
-          duration_min: segment.duration_min,
-        });
-        breakoutGroup.forEach(s => processedIds.add(s.id));
-      } else {
-        grouped.push({
-          isBreakout: false,
-          segment: segment
-        });
-        processedIds.add(segment.id);
-      }
-    });
-
-    return grouped;
-  };
 
   const renderDetailedProgram = () => (
     <div className="space-y-6">
       {eventSessions.map((session) => {
         const segments = getSessionSegments(session.id);
         if (segments.length === 0) return null;
-        const groupedSegments = groupBreakoutSegments(segments);
 
         return (
           <div key={session.id} className={`print-session border-2 border-gray-200 rounded-lg overflow-hidden ${sessionColorClasses[session.session_color] || ''}`}>
@@ -216,58 +185,57 @@ export default function Reports() {
                   </tr>
                 </thead>
                 <tbody>
-                  {groupedSegments.map((item, idx) => {
-                    if (item.isBreakout) {
+                  {segments.map((segment, idx) => {
+                    if (segment.segment_type === "Breakout" && segment.breakout_rooms) {
                       return (
-                        <tr key={`breakout-${idx}`} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
+                        <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
                           <td className="p-2 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
                             <div className="flex flex-col items-center leading-tight">
-                              <div className="whitespace-nowrap">{item.start_time ? formatTimeToEST(item.start_time) : "-"}</div>
-                              {item.end_time && (
+                              <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
+                              {segment.end_time && (
                                 <>
                                   <div className="text-gray-400 text-[8px]">↓</div>
-                                  <div className="whitespace-nowrap">{formatTimeToEST(item.end_time)}</div>
+                                  <div className="whitespace-nowrap">{formatTimeToEST(segment.end_time)}</div>
                                 </>
                               )}
-                              {item.duration_min && (
-                                <div className="text-[9px] text-gray-600 mt-0.5">({item.duration_min}m)</div>
+                              {segment.duration_min && (
+                                <div className="text-[9px] text-gray-600 mt-0.5">({segment.duration_min}m)</div>
                               )}
                             </div>
                           </td>
                           <td className="p-2 border-r border-gray-200" colSpan="2">
                             <div className="bg-amber-50 border border-amber-300 rounded p-2">
                               <div className="text-amber-900 font-bold text-xs uppercase mb-2">
-                                SESIONES PARALELAS / BREAKOUT
+                                {segment.title} - SESIONES PARALELAS
                               </div>
                               <div className="grid grid-cols-1 gap-2">
-                                {item.segments.map((seg, segIdx) => (
-                                  <div key={seg.id} className="bg-white p-2 rounded border border-gray-200">
+                                {segment.breakout_rooms.map((room, roomIdx) => (
+                                  <div key={roomIdx} className="bg-white p-2 rounded border border-gray-200">
                                     <div className="flex justify-between items-start mb-1">
-                                      <div className="font-bold text-xs text-gray-900">{seg.title}</div>
-                                      {seg.room_id && (
+                                      <div>
+                                        <div className="font-bold text-xs text-gray-900">{room.topic || `Sala ${roomIdx + 1}`}</div>
+                                        {room.speaker_or_panel && (
+                                          <div className="text-blue-600 font-semibold text-[10px]">{room.speaker_or_panel}</div>
+                                        )}
+                                      </div>
+                                      {room.room_id && (
                                         <Badge variant="outline" className="text-[9px] bg-blue-50">
-                                          {getRoomName(seg.room_id)}
+                                          {getRoomName(room.room_id)}
                                         </Badge>
                                       )}
                                     </div>
-                                    {seg.presenter && (
-                                      <div className="text-blue-600 font-semibold text-[10px]">{seg.presenter}</div>
-                                    )}
-                                    {seg.description_details && (
-                                      <div className="text-gray-600 text-[10px] mt-1">{seg.description_details}</div>
-                                    )}
-                                    {(seg.projection_notes || seg.sound_notes || seg.ushers_notes) && (
+                                    {(room.general_notes || room.other_notes) && (
                                       <div className="mt-1 text-[9px] space-y-0.5">
-                                        {seg.projection_notes && (
+                                        {room.general_notes && (
                                           <div className="bg-purple-50 px-1 rounded">
-                                            <span className="font-bold text-purple-700">PROYECCIÓN:</span>
-                                            <span className="ml-1">{seg.projection_notes}</span>
+                                            <span className="font-bold text-purple-700">PRODUCCIÓN:</span>
+                                            <span className="ml-1">{room.general_notes}</span>
                                           </div>
                                         )}
-                                        {seg.sound_notes && (
-                                          <div className="bg-red-50 px-1 rounded">
-                                            <span className="font-bold text-red-700">SONIDO:</span>
-                                            <span className="ml-1">{seg.sound_notes}</span>
+                                        {room.other_notes && (
+                                          <div className="bg-gray-50 px-1 rounded">
+                                            <span className="font-bold text-gray-700">OTRAS:</span>
+                                            <span className="ml-1">{room.other_notes}</span>
                                           </div>
                                         )}
                                       </div>
@@ -281,7 +249,6 @@ export default function Reports() {
                       );
                     }
 
-                    const segment = item.segment;
                     return (
                       <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
                       <td className="p-2 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
