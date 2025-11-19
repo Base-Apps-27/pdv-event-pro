@@ -70,7 +70,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="relative overflow-hidden bg-white border-gray-200 shadow-md">
+        <Card className="relative overflow-hidden bg-white border-l-4 border-pdv-teal shadow-md">
           <div className="absolute top-0 right-0 w-32 h-32 bg-pdv-teal opacity-10 rounded-full transform translate-x-8 -translate-y-8" />
           <CardHeader className="relative">
             <CardTitle className="text-sm font-bold uppercase text-gray-600 tracking-wider">Total Eventos</CardTitle>
@@ -81,7 +81,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-white border-gray-200 shadow-md">
+        <Card className="relative overflow-hidden bg-white border-l-4 border-pdv-green shadow-md">
           <div className="absolute top-0 right-0 w-32 h-32 bg-pdv-green opacity-10 rounded-full transform translate-x-8 -translate-y-8" />
           <CardHeader className="relative">
             <CardTitle className="text-sm font-bold uppercase text-gray-600 tracking-wider">Total Sesiones</CardTitle>
@@ -92,13 +92,13 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-white border-gray-200 shadow-md">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-pdv-yellow opacity-10 rounded-full transform translate-x-8 -translate-y-8" />
+        <Card className="relative overflow-hidden bg-white border-l-4 border-pdv-lime shadow-md">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-pdv-lime opacity-10 rounded-full transform translate-x-8 -translate-y-8" />
           <CardHeader className="relative">
             <CardTitle className="text-sm font-bold uppercase text-gray-600 tracking-wider">Total Segmentos</CardTitle>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-5xl font-bold text-gray-900">{segments.length}</div>
+            <div className="text-5xl font-bold text-pdv-lime">{segments.length}</div>
             <p className="text-gray-600 text-sm mt-1 font-medium">Programados</p>
           </CardContent>
         </Card>
@@ -183,7 +183,7 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event) => (
             <Link key={event.id} to={createPageUrl(`EventDetail?id=${event.id}`)}>
-              <Card className="hover:shadow-lg hover:border-pdv-teal transition-all duration-200 h-full cursor-pointer bg-white border-gray-200">
+              <Card className="hover:shadow-lg hover:border-pdv-green transition-all duration-200 h-full cursor-pointer bg-white border-gray-200 border-l-4 hover:border-l-pdv-green">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
