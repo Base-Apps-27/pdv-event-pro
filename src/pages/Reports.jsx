@@ -552,7 +552,7 @@ export default function Reports() {
             overflow: visible !important;
           }
         }
-      `}
+      `}</style>
       
       <div className="p-6 md:p-8 space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
