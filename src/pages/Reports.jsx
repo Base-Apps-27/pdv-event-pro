@@ -208,27 +208,23 @@ export default function Reports() {
                               <div className="text-amber-900 font-bold text-xs uppercase mb-2">
                                 {segment.title} - SESIONES PARALELAS
                               </div>
-                              <div className="grid grid-cols-1 gap-2">
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                 {segment.breakout_rooms.map((room, roomIdx) => (
                                   <div key={roomIdx} className="bg-white p-2 rounded border border-gray-200">
-                                    <div className="flex justify-between items-start mb-1">
-                                      <div>
-                                        <div className="font-bold text-xs text-gray-900">{room.topic || `Sala ${roomIdx + 1}`}</div>
-                                        {room.speaker_or_panel && (
-                                          <div className="text-blue-600 font-semibold text-[10px]">{room.speaker_or_panel}</div>
-                                        )}
-                                      </div>
-                                      {room.room_id && (
-                                        <Badge variant="outline" className="text-[9px] bg-blue-50">
-                                          {getRoomName(room.room_id)}
-                                        </Badge>
-                                      )}
-                                    </div>
+                                    {room.room_id && (
+                                      <Badge variant="outline" className="text-[9px] bg-blue-50 mb-1">
+                                        {getRoomName(room.room_id)}
+                                      </Badge>
+                                    )}
+                                    <div className="font-bold text-xs text-gray-900 mb-1">{room.topic || `Sala ${roomIdx + 1}`}</div>
+                                    {room.speaker_or_panel && (
+                                      <div className="text-blue-600 font-semibold text-[10px] mb-1">{room.speaker_or_panel}</div>
+                                    )}
                                     {(room.general_notes || room.other_notes) && (
                                       <div className="mt-1 text-[9px] space-y-0.5">
                                         {room.general_notes && (
                                           <div className="bg-purple-50 px-1 rounded">
-                                            <span className="font-bold text-purple-700">PRODUCCIÓN:</span>
+                                            <span className="font-bold text-purple-700">PROD:</span>
                                             <span className="ml-1">{room.general_notes}</span>
                                           </div>
                                         )}
