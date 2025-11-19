@@ -77,10 +77,21 @@ export default function SessionManager({ eventId, sessions, segments }) {
 
   const openDialog = (session = null) => {
     setEditingSession(session);
+    
+    // Calculate suggested start time for new sessions based on previous session
+    let suggestedStartTime = '';
+    if (!session && sessions.length > 0) {
+      const sortedSessions = [...sessions].sort((a, b) => (a.order || 0) - (b.order || 0));
+      const lastSession = sortedSessions[sortedSessions.length - 1];
+      if (lastSession.planned_end_time) {
+        suggestedStartTime = lastSession.planned_end_time;
+      }
+    }
+    
     setFormData({
       name: session?.name || '',
       date: session?.date || '',
-      planned_start_time: session?.planned_start_time || '',
+      planned_start_time: session?.planned_start_time || suggestedStartTime,
       planned_end_time: session?.planned_end_time || '',
       default_stage_call_offset_min: session?.default_stage_call_offset_min || 15,
       location: session?.location || '',

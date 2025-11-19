@@ -43,12 +43,30 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     details: ""
   });
   const [breakoutRooms, setBreakoutRooms] = useState(segment?.breakout_rooms || []);
+  
+  // Fetch segments to calculate suggested start time
+  const { data: allSegments = [] } = useQuery({
+    queryKey: ['segments', sessionId],
+    queryFn: () => base44.entities.Segment.filter({ session_id: sessionId }, 'order'),
+    enabled: !!sessionId && !segment,
+  });
+  
+  // Calculate suggested start time for new segments
+  const getSuggestedStartTime = () => {
+    if (segment) return segment.start_time || "";
+    if (allSegments.length === 0) return session?.planned_start_time || "";
+    
+    const sortedSegments = [...allSegments].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const lastSegment = sortedSegments[sortedSegments.length - 1];
+    return lastSegment.end_time || lastSegment.start_time || "";
+  };
+  
   const [formData, setFormData] = useState({
     title: segment?.title || "",
     segment_type: segment?.segment_type || "Plenaria",
     presenter: segment?.presenter || "",
     description_details: segment?.description_details || "",
-    start_time: segment?.start_time || "",
+    start_time: segment?.start_time || getSuggestedStartTime(),
     duration_min: segment?.duration_min || 30,
     projection_notes: segment?.projection_notes || "",
     sound_notes: segment?.sound_notes || "",
