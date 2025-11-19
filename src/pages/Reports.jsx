@@ -189,7 +189,10 @@ export default function Reports() {
                           )}
                           <div className="flex gap-1 mt-2">
                             {segment.requires_translation && segment.translation_mode === "InPerson" && (
-                              <UserCheck className="w-3 h-3 text-purple-600" title="Traducción en Persona" />
+                              <>
+                                <Languages className="w-3 h-3 text-purple-600" title="Traducción en Persona" />
+                                <Mic className="w-3 h-3 text-purple-600" title="En Persona" />
+                              </>
                             )}
                             {segment.requires_translation && segment.translation_mode === "RemoteBooth" && (
                               <Languages className="w-3 h-3 text-purple-600" title="Traducción Remota" />
