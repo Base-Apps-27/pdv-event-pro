@@ -571,7 +571,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
             )}
           </div>
 
-          {/* RIGHT COLUMN - Execution */}
           <div className="space-y-6">
             <div>
               <h3 className="font-bold text-lg mb-4 text-slate-900">Timing & Ejecución</h3>
