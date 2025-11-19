@@ -153,7 +153,7 @@ export default function Reports() {
                           )}
                         </div>
                       </td>
-                      <td className="p-1 border-r border-gray-200">
+                      <td className="p-2 border-r border-gray-200">
                         <div className="space-y-1">
                           <div className="text-gray-900 font-bold text-xs uppercase">
                             {segment.title}
