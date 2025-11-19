@@ -204,7 +204,10 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       speaker_or_panel: "",
       topic: "",
       general_notes: "",
-      other_notes: ""
+      other_notes: "",
+      requires_translation: false,
+      translation_mode: "InPerson",
+      translator_name: ""
     }]);
   };
 
@@ -501,6 +504,51 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                               className="h-8 text-sm"
                             />
                           </div>
+
+                          <div className="border-t border-gray-200 pt-2 mt-2">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <Checkbox 
+                                id={`requires_translation_${index}`}
+                                checked={room.requires_translation}
+                                onCheckedChange={(checked) => updateBreakoutRoom(index, 'requires_translation', checked)}
+                              />
+                              <label htmlFor={`requires_translation_${index}`} className="text-xs font-semibold cursor-pointer">
+                                Requiere Traducción
+                              </label>
+                            </div>
+
+                            {room.requires_translation && (
+                              <div className="space-y-2">
+                                <div className="space-y-1">
+                                  <Label className="text-xs">Modo</Label>
+                                  <Select
+                                    value={room.translation_mode}
+                                    onValueChange={(value) => updateBreakoutRoom(index, 'translation_mode', value)}
+                                  >
+                                    <SelectTrigger className="h-8">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="InPerson">En Persona</SelectItem>
+                                      <SelectItem value="RemoteBooth">Cabina Remota</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                {room.translation_mode === "InPerson" && (
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Traductor</Label>
+                                    <Input 
+                                      value={room.translator_name}
+                                      onChange={(e) => updateBreakoutRoom(index, 'translator_name', e.target.value)}
+                                      placeholder="Nombre"
+                                      className="h-8 text-sm"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </Card>
                     ))}
@@ -744,51 +792,52 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   )}
                 </Card>
 
-                {/* Translation Block */}
-                <Card className="p-4 bg-purple-50 border-purple-200">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <Checkbox 
-                      id="requires_translation"
-                      checked={formData.requires_translation}
-                      onCheckedChange={(checked) => setFormData({...formData, requires_translation: checked})}
-                    />
-                    <label htmlFor="requires_translation" className="font-semibold cursor-pointer">
-                      Requiere Traducción
-                    </label>
-                  </div>
-
-                  {formData.requires_translation && (
-                    <div className="space-y-3">
-                      <div className="space-y-2">
-                        <Label className="text-xs">Modo</Label>
-                        <Select
-                          value={formData.translation_mode}
-                          onValueChange={(value) => setFormData({...formData, translation_mode: value})}
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="InPerson">En Persona</SelectItem>
-                            <SelectItem value="RemoteBooth">Cabina Remota</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {formData.translation_mode === "InPerson" && (
-                        <div className="space-y-2">
-                          <Label className="text-xs">Traductor</Label>
-                          <Input 
-                            value={formData.translator_name}
-                            onChange={(e) => setFormData({...formData, translator_name: e.target.value})}
-                            placeholder="Nombre"
-                            className="h-9"
-                          />
-                        </div>
-                      )}
+                {!isBreakoutType && (
+                  <Card className="p-4 bg-purple-50 border-purple-200">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Checkbox 
+                        id="requires_translation"
+                        checked={formData.requires_translation}
+                        onCheckedChange={(checked) => setFormData({...formData, requires_translation: checked})}
+                      />
+                      <label htmlFor="requires_translation" className="font-semibold cursor-pointer">
+                        Requiere Traducción
+                      </label>
                     </div>
-                  )}
-                </Card>
+
+                    {formData.requires_translation && (
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Modo</Label>
+                          <Select
+                            value={formData.translation_mode}
+                            onValueChange={(value) => setFormData({...formData, translation_mode: value})}
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="InPerson">En Persona</SelectItem>
+                              <SelectItem value="RemoteBooth">Cabina Remota</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {formData.translation_mode === "InPerson" && (
+                          <div className="space-y-2">
+                            <Label className="text-xs">Traductor</Label>
+                            <Input 
+                              value={formData.translator_name}
+                              onChange={(e) => setFormData({...formData, translator_name: e.target.value})}
+                              placeholder="Nombre"
+                              className="h-9"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                )}
 
                 <div id="notas" className="space-y-3">
                   <Label className="font-semibold text-base">Notas para Equipos</Label>
@@ -840,7 +889,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     </div>
                   )}
 
-                  {formData.requires_translation && (
+                  {formData.requires_translation && !isBreakoutType && (
                     <div className="space-y-1">
                       <Label className="text-xs text-purple-700">Traducción</Label>
                       <Textarea 
@@ -853,15 +902,17 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     </div>
                   )}
 
-                  <div className="space-y-1">
-                    <Label className="text-xs text-gray-700">Otras Notas</Label>
-                    <Textarea 
-                      value={formData.other_notes}
-                      onChange={(e) => setFormData({...formData, other_notes: e.target.value})}
-                      rows={2}
-                      className="text-sm"
-                    />
-                  </div>
+                  {!isBreakoutType && (
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-700">Otras Notas</Label>
+                      <Textarea 
+                        value={formData.other_notes}
+                        onChange={(e) => setFormData({...formData, other_notes: e.target.value})}
+                        rows={2}
+                        className="text-sm"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div id="otros" className="space-y-2">
