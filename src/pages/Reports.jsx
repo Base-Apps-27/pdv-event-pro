@@ -131,17 +131,23 @@ export default function Reports() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-100 border-b-2 border-gray-200">
                   <tr>
-                    <th className="p-3 text-gray-900 font-bold uppercase w-24 text-center">Hora</th>
+                    <th className="p-3 text-gray-900 font-bold uppercase w-20 text-center">Hora</th>
+                    <th className="p-3 text-gray-900 font-bold uppercase w-20 text-center">Duración</th>
                     <th className="p-3 text-gray-900 font-bold uppercase">Detalles</th>
-                    <th className="p-3 text-gray-900 font-bold uppercase w-24 text-center">Duración</th>
-                    <th className="p-3 text-gray-900 font-bold uppercase w-64">Proyección</th>
+                    <th className="p-3 text-gray-900 font-bold uppercase w-40">Proyección</th>
+                    <th className="p-3 text-gray-900 font-bold uppercase w-40">Sonido</th>
+                    <th className="p-3 text-gray-900 font-bold uppercase w-40">Ujieres</th>
+                    <th className="p-3 text-gray-900 font-bold uppercase w-40">Traducción</th>
                   </tr>
                 </thead>
                 <tbody>
                   {segments.map((segment, idx) => (
                     <tr key={segment.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="p-3 text-pdv-green font-bold text-center text-lg border-r border-gray-200">
+                      <td className="p-3 text-pdv-green font-bold text-center border-r border-gray-200">
                         {segment.start_time ? formatTimeToEST(segment.start_time) : "-"}
+                      </td>
+                      <td className="p-3 text-center text-pdv-green font-bold border-r border-gray-200">
+                        {segment.duration_min ? `${segment.duration_min} min` : "-"}
                       </td>
                       <td className="p-3 border-r border-gray-200">
                         <div className="space-y-2">
@@ -194,23 +200,9 @@ export default function Reports() {
                             </div>
                           )}
 
-                          {segment.requires_translation && segment.translator_name && (
-                            <div className="mt-2 text-xs bg-purple-50 p-2 rounded border border-purple-200">
-                              <span className="text-purple-700 font-bold uppercase">TRADUCTOR:</span>
-                              <span className="text-gray-700 ml-2">{segment.translator_name}</span>
-                            </div>
-                          )}
-
                           {segment.description_details && (
                             <div className="text-gray-600 text-sm mt-2">
                               {segment.description_details}
-                            </div>
-                          )}
-
-                          {segment.sound_notes && (
-                            <div className="mt-2 text-xs bg-purple-50 p-2 rounded border border-purple-200">
-                              <span className="text-purple-700 font-bold uppercase">SONIDO:</span>
-                              <span className="text-gray-700 ml-2">{segment.sound_notes}</span>
                             </div>
                           )}
 
@@ -248,11 +240,31 @@ export default function Reports() {
                           )}
                         </div>
                       </td>
-                      <td className="p-3 text-center text-pdv-green font-bold border-r border-gray-200">
-                        {segment.duration_min ? `${segment.duration_min} min` : "-"}
+                      <td className="p-3 text-gray-600 text-xs border-r border-gray-200">
+                        {segment.projection_notes || "-"}
+                      </td>
+                      <td className="p-3 text-gray-600 text-xs border-r border-gray-200">
+                        {segment.sound_notes || "-"}
+                      </td>
+                      <td className="p-3 text-gray-600 text-xs border-r border-gray-200">
+                        {segment.ushers_notes || "-"}
                       </td>
                       <td className="p-3 text-gray-600 text-xs border-gray-200">
-                        {segment.projection_notes || "-"}
+                        {segment.requires_translation && segment.translator_name ? (
+                          <div>
+                            <div className="font-semibold">{segment.translator_name}</div>
+                            {segment.translation_mode === "RemoteBooth" && (
+                              <div className="text-xs text-gray-500 italic">Cabina Remota</div>
+                            )}
+                          </div>
+                        ) : segment.requires_translation ? (
+                          <span className="text-gray-500 italic">Sí</span>
+                        ) : (
+                          "-"
+                        )}
+                        {segment.translation_notes && (
+                          <div className="mt-1 text-xs">{segment.translation_notes}</div>
+                        )}
                       </td>
                       </tr>
                       ))}
