@@ -244,7 +244,7 @@ export default function Reports() {
                           )}
                         </div>
                       </td>
-                      <td className="p-1 text-gray-600 text-[10px] align-top">
+                      <td className="p-2 text-gray-600 text-[10px] align-top">
                         <div className="space-y-1">
                           {segment.projection_notes && (
                             <div className="bg-purple-50 px-1 py-0.5 rounded border border-purple-200">
