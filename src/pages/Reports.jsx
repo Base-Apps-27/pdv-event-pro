@@ -210,40 +210,40 @@ export default function Reports() {
                               {segment.description_details}
                             </div>
                           )}
-
-                          {getSegmentActions(segment.id).length > 0 && (
-                            <div className="mt-1 text-[10px]">
-                              <div className="font-bold uppercase text-gray-900 mb-1">ACCIONES:</div>
-                              <div className="space-y-0.5">
-                                {getSegmentActions(segment.id).map((action, actionIdx) => (
-                                  <div
-                                    key={action.id}
-                                    className={`p-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
-                                  >
-                                    <div className="flex items-start gap-1">
-                                      <span className="font-bold">{actionIdx + 1}.</span>
-                                      <div className="flex-1">
-                                        <div className="font-semibold">
-                                          [{action.department}] {action.label}
-                                        </div>
-                                        {action.time_hint && (
-                                          <div className="italic">
-                                            {action.time_hint}
-                                          </div>
-                                        )}
-                                        {action.details && (
-                                          <div>
-                                            {action.details}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </div>
+                      </td>
+                      <td className="p-2 border-r border-gray-200 align-top">
+                        {getSegmentActions(segment.id).length > 0 ? (
+                          <div className="text-[10px] space-y-0.5">
+                            {getSegmentActions(segment.id).map((action, actionIdx) => (
+                              <div
+                                key={action.id}
+                                className={`p-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
+                              >
+                                <div className="flex items-start gap-1">
+                                  <span className="font-bold">{actionIdx + 1}.</span>
+                                  <div className="flex-1">
+                                    <div className="font-semibold">
+                                      [{action.department}] {action.label}
+                                    </div>
+                                    {action.time_hint && (
+                                      <div className="italic">
+                                        {action.time_hint}
+                                      </div>
+                                    )}
+                                    {action.details && (
+                                      <div>
+                                        {action.details}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-[10px]">-</span>
+                        )}
                       </td>
                       <td className="p-2 text-gray-600 text-[10px] align-top">
                         <div className="space-y-1">
