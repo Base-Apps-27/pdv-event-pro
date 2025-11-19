@@ -470,102 +470,103 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
               <div id="acciones">
                 <h3 className="font-bold text-lg mb-4 text-slate-900">Acciones del Segmento</h3>
                 <div className="space-y-4">
-              {actions.length > 0 && (
-                <div className="space-y-2">
-                  {actions.map((action) => (
-                    <div key={action.id} className="bg-white p-3 rounded border text-sm">
-                      <div className="flex justify-between items-start mb-1">
-                        <Badge variant="outline" className="text-xs">{action.department}</Badge>
-                        <div className="flex gap-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditAction(action)}
-                            className="h-7 w-7 p-0"
-                          >
-                            <FileText className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteActionMutation.mutate(action.id)}
-                            className="h-7 w-7 p-0"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
+                  {actions.length > 0 && (
+                    <div className="space-y-2">
+                      {actions.map((action) => (
+                        <div key={action.id} className="bg-white p-3 rounded border text-sm">
+                          <div className="flex justify-between items-start mb-1">
+                            <Badge variant="outline" className="text-xs">{action.department}</Badge>
+                            <div className="flex gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditAction(action)}
+                                className="h-7 w-7 p-0"
+                              >
+                                <FileText className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteActionMutation.mutate(action.id)}
+                                className="h-7 w-7 p-0"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="font-medium">{action.label}</div>
+                          {action.time_hint && <div className="text-slate-500 italic text-xs mt-0.5">{action.time_hint}</div>}
+                          {action.details && <div className="text-slate-600 text-xs mt-1">{action.details}</div>}
                         </div>
-                      </div>
-                      <div className="font-medium">{action.label}</div>
-                      {action.time_hint && <div className="text-slate-500 italic text-xs mt-0.5">{action.time_hint}</div>}
-                      {action.details && <div className="text-slate-600 text-xs mt-1">{action.details}</div>}
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  )}
 
-              <div className="space-y-3 pt-3 border-t">
-                <Label className="text-sm font-semibold">Añadir Nueva Acción</Label>
-                <Input
-                  value={actionForm.label}
-                  onChange={(e) => setActionForm({...actionForm, label: e.target.value})}
-                  placeholder="Etiqueta de la acción"
-                  className="h-9"
-                />
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Departamento</Label>
-                    <Select
-                      value={actionForm.department}
-                      onValueChange={(value) => setActionForm({...actionForm, department: value})}
-                    >
-                      <SelectTrigger className="h-9">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DEPARTMENTS.map((dept) => (
-                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Pista de Tiempo</Label>
+                  <div className="space-y-3 pt-3 border-t">
+                    <Label className="text-sm font-semibold">Añadir Nueva Acción</Label>
                     <Input
-                      value={actionForm.time_hint}
-                      onChange={(e) => setActionForm({...actionForm, time_hint: e.target.value})}
-                      placeholder="ej. at 2:30"
+                      value={actionForm.label}
+                      onChange={(e) => setActionForm({...actionForm, label: e.target.value})}
+                      placeholder="Etiqueta de la acción"
                       className="h-9"
                     />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Departamento</Label>
+                        <Select
+                          value={actionForm.department}
+                          onValueChange={(value) => setActionForm({...actionForm, department: value})}
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DEPARTMENTS.map((dept) => (
+                              <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Pista de Tiempo</Label>
+                        <Input
+                          value={actionForm.time_hint}
+                          onChange={(e) => setActionForm({...actionForm, time_hint: e.target.value})}
+                          placeholder="ej. at 2:30"
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Detalles</Label>
+                      <Textarea
+                        value={actionForm.details}
+                        onChange={(e) => setActionForm({...actionForm, details: e.target.value})}
+                        rows={2}
+                        placeholder="Descripción completa de la acción..."
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      {editingAction && (
+                        <Button type="button" variant="outline" size="sm" onClick={handleCancelAction} className="flex-1">
+                          Cancelar
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleAddAction}
+                        disabled={!actionForm.label}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        {editingAction ? "Actualizar Acción" : "Añadir Acción"}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Detalles</Label>
-                  <Textarea
-                    value={actionForm.details}
-                    onChange={(e) => setActionForm({...actionForm, details: e.target.value})}
-                    rows={2}
-                    placeholder="Descripción completa de la acción..."
-                  />
-                </div>
-                <div className="flex gap-2">
-                  {editingAction && (
-                    <Button type="button" variant="outline" size="sm" onClick={handleCancelAction} className="flex-1">
-                      Cancelar
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleAddAction}
-                    disabled={!actionForm.label}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    {editingAction ? "Actualizar Acción" : "Añadir Acción"}
-                  </Button>
-                </div>
                 </div>
               </div>
             )}
