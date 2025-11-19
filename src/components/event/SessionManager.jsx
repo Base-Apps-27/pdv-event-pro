@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -49,6 +49,29 @@ export default function SessionManager({ eventId, sessions, segments }) {
     mutationFn: (id) => base44.entities.Session.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries(['sessions', eventId]);
+    },
+  });
+
+  const recalculateTimesMutation = useMutation({
+    mutationFn: async (sessionId) => {
+      const sessionSegments = segments
+        .filter(seg => seg.session_id === sessionId)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      for (let i = 0; i < sessionSegments.length; i++) {
+        const segment = sessionSegments[i];
+        const previousSegment = i > 0 ? sessionSegments[i - 1] : null;
+
+        if (previousSegment && previousSegment.end_time) {
+          await base44.entities.Segment.update(segment.id, {
+            ...segment,
+            start_time: previousSegment.end_time
+          });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['segments']);
     },
   });
 
@@ -258,6 +281,15 @@ export default function SessionManager({ eventId, sessions, segments }) {
                       <List className="w-4 h-4 mr-2" />
                       Ver Segmentos
                       {isExpanded ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => recalculateTimesMutation.mutate(session.id)}
+                      disabled={recalculateTimesMutation.isPending}
+                      title="Recalcular horarios"
+                    >
+                      <RefreshCw className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="outline" 
