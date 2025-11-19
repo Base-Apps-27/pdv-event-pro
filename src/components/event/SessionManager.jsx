@@ -452,11 +452,12 @@ export default function SessionManager({ eventId, sessions, segments }) {
       </Dialog>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="shrink-0">
             <DialogTitle>{editingSession ? 'Editar Sesión' : 'Nueva Sesión'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+            <div className="space-y-6 overflow-y-auto flex-1 px-1">
             <div>
               <h3 className="font-bold text-lg mb-4 text-slate-900">Información Básica</h3>
               <div className="space-y-4">
@@ -697,14 +698,15 @@ export default function SessionManager({ eventId, sessions, segments }) {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-6 border-t mt-6">
-                <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                  {editingSession ? 'Guardar Cambios' : 'Crear Sesión'}
-                </Button>
-              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t mt-4 shrink-0">
+              <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                {editingSession ? 'Guardar Cambios' : 'Crear Sesión'}
+              </Button>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
