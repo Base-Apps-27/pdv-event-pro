@@ -7,6 +7,7 @@ import People from './pages/People';
 import Rooms from './pages/Rooms';
 import Teams from './pages/Teams';
 import Reports from './pages/Reports';
+import PublicProgramView from './pages/PublicProgramView';
 import __Layout from './Layout.jsx';
 
 
@@ -20,6 +21,7 @@ export const PAGES = {
     "Rooms": Rooms,
     "Teams": Teams,
     "Reports": Reports,
+    "PublicProgramView": PublicProgramView,
 }
 
 export const pagesConfig = {
