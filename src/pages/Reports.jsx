@@ -532,24 +532,47 @@ export default function Reports() {
           }
           .print-session {
             page-break-after: always;
-            page-break-inside: avoid;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+            page-break-inside: auto;
+            transform-origin: top left;
           }
           .print-session:last-child {
             page-break-after: auto;
           }
           .print-session table {
-            font-size: 0.65rem;
+            font-size: 0.5rem !important;
             width: 100%;
           }
           .print-session td, .print-session th {
-            padding: 0.15rem !important;
-            line-height: 1.2;
+            padding: 0.1rem !important;
+            line-height: 1.1 !important;
           }
           .print-session .overflow-x-auto {
             overflow: visible !important;
+          }
+          .print-session .text-xl {
+            font-size: 0.875rem !important;
+          }
+          .print-session .text-sm {
+            font-size: 0.625rem !important;
+          }
+          .print-session .text-xs {
+            font-size: 0.5rem !important;
+          }
+          .print-session .text-\[10px\] {
+            font-size: 0.45rem !important;
+          }
+          .print-session .p-2 {
+            padding: 0.15rem !important;
+          }
+          .print-session .p-1 {
+            padding: 0.1rem !important;
+          }
+          .print-session .gap-1, .print-session .gap-2 {
+            gap: 0.15rem !important;
+          }
+          .print-session .mt-1, .print-session .mb-1 {
+            margin-top: 0.15rem !important;
+            margin-bottom: 0.15rem !important;
           }
         }
       `}</style>
