@@ -8,6 +8,7 @@ import Rooms from './pages/Rooms';
 import Teams from './pages/Teams';
 import Reports from './pages/Reports';
 import PublicProgramView from './pages/PublicProgramView';
+import Calendar from './pages/Calendar';
 import __Layout from './Layout.jsx';
 
 
@@ -22,6 +23,7 @@ export const PAGES = {
     "Teams": Teams,
     "Reports": Reports,
     "PublicProgramView": PublicProgramView,
+    "Calendar": Calendar,
 }
 
 export const pagesConfig = {

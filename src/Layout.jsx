@@ -60,6 +60,18 @@ export default function Layout({ children }) {
           </Link>
 
           <Link
+            to={createPageUrl("Calendar")}
+            className={`flex items-center gap-3 px-3 py-2 rounded font-semibold text-sm transition-colors ${
+              isActive(createPageUrl("Calendar"))
+                ? "bg-pdv-green text-white"
+                : "text-gray-300 hover:bg-gray-800"
+            }`}
+          >
+            <Calendar className="w-4 h-4" />
+            Calendario
+          </Link>
+
+          <Link
             to={createPageUrl("Reports")}
             className={`flex items-center gap-3 px-3 py-2 rounded font-semibold text-sm transition-colors ${
               isActive(createPageUrl("Reports"))
@@ -171,6 +183,13 @@ export default function Layout({ children }) {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Gestión de Eventos
+                  </Link>
+                  <Link
+                    to={createPageUrl("Calendar")}
+                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Calendario
                   </Link>
                   <Link
                     to={createPageUrl("Reports")}
