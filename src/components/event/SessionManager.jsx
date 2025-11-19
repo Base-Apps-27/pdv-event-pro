@@ -58,9 +58,11 @@ export default function SessionManager({ eventId, sessions, segments }) {
         .filter(seg => seg.session_id === sessionId)
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 
+      // Calculate all new times first using the newly calculated values
+      const updatedSegments = [];
       for (let i = 0; i < sessionSegments.length; i++) {
         const segment = sessionSegments[i];
-        const previousSegment = i > 0 ? sessionSegments[i - 1] : null;
+        const previousSegment = i > 0 ? updatedSegments[i - 1] : null;
 
         let newStartTime = segment.start_time;
         if (previousSegment && previousSegment.end_time) {
@@ -78,11 +80,22 @@ export default function SessionManager({ eventId, sessions, segments }) {
           newEndTime = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
         }
 
-        await base44.entities.Segment.update(segment.id, {
+        updatedSegments.push({
+          id: segment.id,
           start_time: newStartTime,
           end_time: newEndTime
         });
       }
+
+      // Update all segments at once
+      await Promise.all(
+        updatedSegments.map(seg => 
+          base44.entities.Segment.update(seg.id, {
+            start_time: seg.start_time,
+            end_time: seg.end_time
+          })
+        )
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['segments']);
