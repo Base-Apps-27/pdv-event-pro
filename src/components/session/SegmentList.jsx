@@ -130,25 +130,26 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
       }
     }
     
-    // Check overlaps with all other segments
-    segments.forEach((otherSegment, otherIndex) => {
-      if (otherIndex === index || !otherSegment.start_time || !otherSegment.end_time) return;
+    // Check overlaps only with previous segments (not future ones)
+    for (let i = 0; i < index; i++) {
+      const prevSegment = segments[i];
+      if (!prevSegment.start_time || !prevSegment.end_time) continue;
       
       const segStart = segment.start_time;
       const segEnd = segment.end_time;
-      const otherStart = otherSegment.start_time;
-      const otherEnd = otherSegment.end_time;
+      const prevStart = prevSegment.start_time;
+      const prevEnd = prevSegment.end_time;
       
-      // Check for overlap
-      if ((segStart >= otherStart && segStart < otherEnd) ||
-          (segEnd > otherStart && segEnd <= otherEnd) ||
-          (segStart <= otherStart && segEnd >= otherEnd)) {
+      // Check for overlap with previous segment
+      if ((segStart >= prevStart && segStart < prevEnd) ||
+          (segEnd > prevStart && segEnd <= prevEnd) ||
+          (segStart <= prevStart && segEnd >= prevEnd)) {
         issues.push({
           type: 'overlap',
-          message: `Se solapa con "${otherSegment.title}" (${formatTimeToEST(otherStart)} - ${formatTimeToEST(otherEnd)})`
+          message: `Se solapa con "${prevSegment.title}" (${formatTimeToEST(prevStart)} - ${formatTimeToEST(prevEnd)})`
         });
       }
-    });
+    }
     
     return issues;
   };
