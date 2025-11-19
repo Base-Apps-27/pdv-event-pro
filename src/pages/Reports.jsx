@@ -217,8 +217,15 @@ export default function Reports() {
                                       </Badge>
                                     )}
                                     <div className="font-bold text-xs text-gray-900 mb-1">{room.topic || `Sala ${roomIdx + 1}`}</div>
-                                    {room.speaker_or_panel && (
-                                      <div className="text-blue-600 font-semibold text-[10px] mb-1">{room.speaker_or_panel}</div>
+                                    {room.hosts && (
+                                      <div className="text-indigo-600 font-semibold text-[10px] mb-0.5">
+                                        <span className="font-bold">Anfitrión:</span> {room.hosts}
+                                      </div>
+                                    )}
+                                    {room.speakers && (
+                                      <div className="text-blue-600 font-semibold text-[10px] mb-1">
+                                        <span className="font-bold">Presentador:</span> {room.speakers}
+                                      </div>
                                     )}
                                     {room.requires_translation && (
                                       <div className="flex items-center gap-1 text-[10px] text-purple-700 mb-1">

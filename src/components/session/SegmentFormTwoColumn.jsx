@@ -201,7 +201,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const addBreakoutRoom = () => {
     setBreakoutRooms([...breakoutRooms, {
       room_id: "",
-      speaker_or_panel: "",
+      hosts: "",
+      speakers: "",
       topic: "",
       general_notes: "",
       other_notes: "",
@@ -476,11 +477,21 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-xs">Presentador(es) / Panel</Label>
+                            <Label className="text-xs">Anfitrión(es) / Moderador(es)</Label>
                             <Input 
-                              value={room.speaker_or_panel}
-                              onChange={(e) => updateBreakoutRoom(index, 'speaker_or_panel', e.target.value)}
-                              placeholder="Nombres"
+                              value={room.hosts}
+                              onChange={(e) => updateBreakoutRoom(index, 'hosts', e.target.value)}
+                              placeholder="Nombres de los anfitriones"
+                              className="h-8 text-sm"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-xs">Presentador(es) / Panelistas</Label>
+                            <Input 
+                              value={room.speakers}
+                              onChange={(e) => updateBreakoutRoom(index, 'speakers', e.target.value)}
+                              placeholder="Nombres de los presentadores"
                               className="h-8 text-sm"
                             />
                           </div>
