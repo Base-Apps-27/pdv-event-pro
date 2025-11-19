@@ -99,30 +99,30 @@ export default function Reports() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-2 mt-2 text-xs">
+              <div className="flex flex-wrap gap-1 mt-1 text-[10px]">
                 {session.admin_team && (
-                  <div className="bg-white bg-opacity-50 p-1 rounded border border-gray-200">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-orange-600 font-bold">ADMIN:</span>
                     <span className="text-gray-800 ml-1">{session.admin_team}</span>
-                  </div>
+                  </span>
                 )}
                 {session.sound_team && (
-                  <div className="bg-white bg-opacity-50 p-1 rounded border border-gray-200">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-red-600 font-bold">SONIDO:</span>
                     <span className="text-gray-800 ml-1">{session.sound_team}</span>
-                  </div>
+                  </span>
                 )}
                 {session.tech_team && (
-                  <div className="bg-white bg-opacity-50 p-1 rounded border border-gray-200">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-purple-600 font-bold">TÉCNICO:</span>
                     <span className="text-gray-800 ml-1">{session.tech_team}</span>
-                  </div>
+                  </span>
                 )}
                 {session.ushers_team && (
-                  <div className="bg-white bg-opacity-50 p-1 rounded border border-gray-200">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-blue-600 font-bold">UJIER:</span>
                     <span className="text-gray-800 ml-1">{session.ushers_team}</span>
-                  </div>
+                  </span>
                 )}
               </div>
             </div>
