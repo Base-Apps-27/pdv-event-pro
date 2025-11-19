@@ -533,12 +533,26 @@ export default function Reports() {
           .print-session {
             page-break-after: always;
             page-break-inside: avoid;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
           }
           .print-session:last-child {
             page-break-after: auto;
           }
+          .print-session table {
+            font-size: 0.65rem;
+            width: 100%;
+          }
+          .print-session td, .print-session th {
+            padding: 0.15rem !important;
+            line-height: 1.2;
+          }
+          .print-session .overflow-x-auto {
+            overflow: visible !important;
+          }
         }
-      `}</style>
+      `}
       
       <div className="p-6 md:p-8 space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
