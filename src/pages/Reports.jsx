@@ -131,12 +131,7 @@ export default function Reports() {
               <table className="w-full text-xs">
                 <thead className="bg-gray-100 border-b border-gray-300">
                   <tr>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-10 text-xs">
-                      <div className="transform -rotate-90 whitespace-nowrap" style={{writingMode: 'vertical-rl', textOrientation: 'mixed'}}>
-                        HORA
-                      </div>
-                    </th>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-12 text-center text-xs">Dur.</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-12 text-center text-xs">Tiempo</th>
                     <th className="p-1 text-gray-900 font-bold uppercase text-xs">Detalles</th>
                     <th className="p-1 text-gray-900 font-bold uppercase w-48 text-xs">Notas de Equipos</th>
                   </tr>
@@ -145,18 +140,18 @@ export default function Reports() {
                   {segments.map((segment, idx) => (
                     <tr key={segment.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                       <td className="p-1 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
-                        <div className="flex flex-col items-center gap-0.5">
-                          <div>{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
+                        <div className="flex flex-col items-center leading-tight">
+                          <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
                           {segment.end_time && (
-                            <div className="text-gray-500">↓</div>
+                            <>
+                              <div className="text-gray-400 text-[8px]">↓</div>
+                              <div className="whitespace-nowrap">{formatTimeToEST(segment.end_time)}</div>
+                            </>
                           )}
-                          {segment.end_time && (
-                            <div>{formatTimeToEST(segment.end_time)}</div>
+                          {segment.duration_min && (
+                            <div className="text-[9px] text-gray-600 mt-0.5">({segment.duration_min}m)</div>
                           )}
                         </div>
-                      </td>
-                      <td className="p-1 text-center text-pdv-green font-bold border-r border-gray-200 text-xs align-top">
-                        {segment.duration_min || "-"}
                       </td>
                       <td className="p-1 border-r border-gray-200">
                         <div className="space-y-1">
