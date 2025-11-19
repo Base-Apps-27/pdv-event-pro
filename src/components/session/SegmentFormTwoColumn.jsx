@@ -235,8 +235,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   };
 
   return (
-    <form onSubmit={handleSubmit} className="h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto">
+    <form onSubmit={handleSubmit} className="flex flex-col">
+      <div>
         <div className="grid md:grid-cols-2 gap-6 p-6">
           {/* LEFT COLUMN - Content */}
           <div className="space-y-6">
@@ -794,7 +794,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
         )}
       </div>
 
-      <div className="border-t bg-slate-50 p-4 flex justify-end gap-3">
+      <div className="border-t bg-slate-50 p-4 flex justify-end gap-3 sticky bottom-0">
         <Button type="button" variant="outline" onClick={onClose}>
           <X className="w-4 h-4 mr-2" />
           Cancelar
