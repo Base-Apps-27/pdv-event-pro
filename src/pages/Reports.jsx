@@ -138,8 +138,8 @@ export default function Reports() {
                 </thead>
                 <tbody>
                   {segments.map((segment, idx) => (
-                    <tr key={segment.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="p-1 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
+                    <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
+                      <td className="p-2 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
                         <div className="flex flex-col items-center leading-tight">
                           <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
                           {segment.end_time && (
