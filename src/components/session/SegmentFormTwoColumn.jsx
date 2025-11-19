@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 const SEGMENT_TYPES = [
@@ -37,7 +37,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [showActions, setShowActions] = useState(false);
   const [editingAction, setEditingAction] = useState(null);
-  const [overrideCallTime, setOverrideCallTime] = useState(!!segment?.stage_call_offset_min);
   const [actionForm, setActionForm] = useState({
     label: "",
     department: "Other",
@@ -51,7 +50,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     description_details: segment?.description_details || "",
     start_time: segment?.start_time || "",
     duration_min: segment?.duration_min || 30,
-    stage_call_offset_min: segment?.stage_call_offset_min || session?.default_stage_call_offset_min || 15,
     projection_notes: segment?.projection_notes || "",
     sound_notes: segment?.sound_notes || "",
     ushers_notes: segment?.ushers_notes || "",
@@ -84,13 +82,12 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     major_break: segment?.major_break || false,
   });
 
-  const calculateTimes = (startTime, durationMin, offsetMin) => {
-    if (!startTime || !durationMin) return { end_time: "", stage_call_time: "" };
+  const calculateTimes = (startTime, durationMin) => {
+    if (!startTime || !durationMin) return { end_time: "" };
     
     const [hours, minutes] = startTime.split(':').map(Number);
     const startMinutes = hours * 60 + minutes;
     const endMinutes = startMinutes + durationMin;
-    const stageCallMinutes = startMinutes - offsetMin;
 
     const formatTime = (totalMinutes) => {
       const h = Math.floor(totalMinutes / 60) % 24;
@@ -99,15 +96,13 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     };
 
     return {
-      end_time: formatTime(endMinutes),
-      stage_call_time: formatTime(stageCallMinutes)
+      end_time: formatTime(endMinutes)
     };
   };
 
   const times = calculateTimes(
     formData.start_time,
-    formData.duration_min,
-    overrideCallTime ? formData.stage_call_offset_min : session?.default_stage_call_offset_min || 15
+    formData.duration_min
   );
 
   useEffect(() => {
@@ -119,7 +114,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
           title: template.default_title || prev.title,
           segment_type: template.segment_type,
           duration_min: template.default_duration_min || prev.duration_min,
-          stage_call_offset_min: template.default_stage_call_offset_min || prev.stage_call_offset_min,
           projection_notes: template.default_projection_notes || "",
           sound_notes: template.default_sound_notes || "",
           ushers_notes: template.default_ushers_notes || "",
@@ -187,7 +181,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       session_id: sessionId,
       ...formData,
       ...times,
-      stage_call_offset_min: overrideCallTime ? formData.stage_call_offset_min : null,
     };
 
     if (segment) {
@@ -264,11 +257,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
               <span>• {colorCodeLabels[formData.color_code]}</span>
             </div>
           </div>
-          {times.stage_call_time && (
-            <div className="text-xs text-blue-600 font-semibold whitespace-nowrap">
-              Llegada: {formatTimeToEST(times.stage_call_time)}
-            </div>
-          )}
         </div>
 
         {/* Anchor Navigation */}
@@ -608,44 +596,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                       </div>
                     </div>
                   )}
-
-                  <Separator className="my-3" />
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs">Llegada de Equipos</Label>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setOverrideCallTime(!overrideCallTime)}
-                        className="h-7 text-xs"
-                      >
-                        {overrideCallTime ? "Usar predeterminado" : "Personalizar"}
-                      </Button>
-                    </div>
-
-                    {overrideCallTime ? (
-                      <Input 
-                        type="number"
-                        value={formData.stage_call_offset_min}
-                        onChange={(e) => setFormData({...formData, stage_call_offset_min: parseInt(e.target.value)})}
-                        className="h-9"
-                        placeholder="min antes"
-                      />
-                    ) : (
-                      <div className="text-sm bg-white p-2 rounded border">
-                        Predeterminado: {session?.default_stage_call_offset_min || 15} min antes
-                      </div>
-                    )}
-
-                    {times.stage_call_time && (
-                      <div className="text-sm text-blue-600 font-medium">
-                        <Clock className="w-3 h-3 inline mr-1" />
-                        Llamado: {formatTimeToEST(times.stage_call_time)}
-                      </div>
-                    )}
-                  </div>
                 </Card>
 
                 {/* Translation Block */}
