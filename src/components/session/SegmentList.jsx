@@ -5,7 +5,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, GripVertical, Music, MessageSquare, Languages, ListOrdered, Circle } from "lucide-react";
+import { Edit, Trash2, GripVertical, Music, MessageSquare, Languages, ListOrdered, Circle, Users } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 export default function SegmentList({ segments, sessionId, onEdit }) {
@@ -15,6 +15,16 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
     queryKey: ['segmentActions'],
     queryFn: () => base44.entities.SegmentAction.list(),
   });
+
+  const { data: rooms = [] } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: () => base44.entities.Room.list(),
+  });
+
+  const getRoomName = (roomId) => {
+    const room = rooms.find(r => r.id === roomId);
+    return room ? room.name : "";
+  };
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Segment.delete(id),
@@ -83,6 +93,7 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
               <TableHead>Tipo</TableHead>
               <TableHead>Título / Responsable</TableHead>
               <TableHead className="w-32">Contenido</TableHead>
+              <TableHead className="w-24">Sala</TableHead>
               <TableHead className="w-20 text-center">Notas</TableHead>
               <TableHead className="w-24">Inicio</TableHead>
               <TableHead className="w-20">Dur.</TableHead>
@@ -113,15 +124,29 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
                       </div>
                     </TableCell>
                 <TableCell>
-                  <Badge className={`${colorSchemes[segment.color_code || 'default']} border text-xs whitespace-nowrap`}>
-                    {segment.segment_type}
-                  </Badge>
+                  <div className="flex flex-col gap-1">
+                    <Badge className={`${colorSchemes[segment.color_code || 'default']} border text-xs whitespace-nowrap`}>
+                      {segment.segment_type}
+                    </Badge>
+                    {segment.breakout_group_id && (
+                      <Badge variant="outline" className="text-xs gap-1 bg-amber-50 border-amber-300">
+                        <Users className="w-3 h-3" />
+                        Breakout
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div>
                     <div className="font-semibold text-slate-900">{segment.title}</div>
                     {segment.presenter && (
-                      <div className="text-sm text-slate-600 mt-0.5">{segment.presenter}</div>
+                      <div className="text-xs text-slate-600 mt-0.5">
+                        {segment.segment_type === "Alabanza" ? "Líder: " : segment.segment_type === "Plenaria" ? "Predicador: " : ""}
+                        {segment.presenter}
+                      </div>
+                    )}
+                    {segment.segment_type === "Plenaria" && segment.message_title && (
+                      <div className="text-xs text-blue-600 mt-0.5 italic">{segment.message_title}</div>
                     )}
                   </div>
                 </TableCell>
@@ -150,6 +175,11 @@ export default function SegmentList({ segments, sessionId, onEdit }) {
                         {actionCount}
                       </Badge>
                     )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-xs text-slate-600">
+                    {segment.room_id ? getRoomName(segment.room_id) : "-"}
                   </div>
                 </TableCell>
                 <TableCell>

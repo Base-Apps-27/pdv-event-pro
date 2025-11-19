@@ -182,15 +182,48 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     queryFn: () => base44.entities.Room.list(),
   });
 
-  const handleSubmit = (e) => {
+  const { data: allSegments = [] } = useQuery({
+    queryKey: ['segments'],
+    queryFn: () => base44.entities.Segment.list(),
+  });
+
+  // Find other segments in the same breakout group to lock timing
+  const breakoutSiblings = segment?.breakout_group_id 
+    ? allSegments.filter(s => s.breakout_group_id === segment.breakout_group_id && s.id !== segment.id)
+    : [];
+
+  const isTimingLocked = isBreakout && breakoutGroupId && breakoutSiblings.length > 0;
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const generatedGroupId = breakoutGroupId || `breakout_${Date.now()}`;
     const data = {
       session_id: sessionId,
       ...formData,
       ...times,
-      breakout_group_id: isBreakout ? (breakoutGroupId || `breakout_${Date.now()}`) : null,
+      breakout_group_id: isBreakout ? generatedGroupId : null,
     };
+
+    // If this is part of a breakout group, update all siblings with same timing
+    if (isBreakout && breakoutGroupId) {
+      const siblingSegments = allSegments.filter(
+        s => s.breakout_group_id === breakoutGroupId && s.id !== segment?.id
+      );
+
+      if (siblingSegments.length > 0) {
+        // Update all siblings with the new timing
+        await Promise.all(
+          siblingSegments.map(sibling =>
+            base44.entities.Segment.update(sibling.id, {
+              start_time: formData.start_time,
+              duration_min: formData.duration_min,
+              end_time: times.end_time,
+            })
+          )
+        );
+      }
+    }
 
     if (segment) {
       updateMutation.mutate({ id: segment.id, data });
@@ -386,7 +419,12 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     <Checkbox 
                       id="is_breakout"
                       checked={isBreakout}
-                      onCheckedChange={(checked) => setIsBreakout(checked)}
+                      onCheckedChange={(checked) => {
+                        setIsBreakout(checked);
+                        if (!checked) {
+                          setBreakoutGroupId("");
+                        }
+                      }}
                     />
                     <label htmlFor="is_breakout" className="text-sm font-semibold cursor-pointer">
                       Parte de Sesión Paralela (Breakout)
@@ -394,7 +432,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   </div>
                   {isBreakout && (
                     <div className="space-y-2 mt-2">
-                      <Label className="text-xs">ID de Grupo (opcional)</Label>
+                      <Label className="text-xs">ID de Grupo</Label>
                       <Input 
                         value={breakoutGroupId}
                         onChange={(e) => setBreakoutGroupId(e.target.value)}
@@ -402,8 +440,13 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                         className="h-8 text-sm"
                       />
                       <p className="text-[10px] text-gray-600">
-                        Deja vacío para generar automáticamente. Usa el mismo ID para vincular segmentos paralelos.
+                        Para crear múltiples sesiones paralelas: crea el primer segmento y copia su ID de grupo, luego crea los demás segmentos con el mismo ID. Todos compartirán la misma hora de inicio y duración.
                       </p>
+                      {segment?.breakout_group_id && (
+                        <div className="bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
+                          <span className="font-bold">ID Actual:</span> {segment.breakout_group_id}
+                        </div>
+                      )}
                     </div>
                   )}
                 </Card>
@@ -620,6 +663,11 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
               <div className="space-y-4">
                 <Card className="p-4 bg-blue-50 border-blue-200">
                   <Label className="font-semibold mb-3 block">Horarios</Label>
+                  {isTimingLocked && (
+                    <div className="bg-amber-100 border border-amber-300 p-2 rounded mb-3 text-xs">
+                      <strong>⚠️ Tiempos bloqueados:</strong> Este segmento es parte de un grupo breakout. Los cambios de horario se aplicarán a todas las sesiones paralelas.
+                    </div>
+                  )}
                   <div className="space-y-3">
                     <div className="space-y-2">
                       <Label className="text-xs">Inicio</Label>
