@@ -133,7 +133,11 @@ export default function Reports() {
                   <tr>
                     <th className="p-1 text-gray-900 font-bold uppercase w-16 text-center text-xs">Hora</th>
                     <th className="p-1 text-gray-900 font-bold uppercase w-14 text-center text-xs">Dur.</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase text-xs">Detalles & Notas de Equipos</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase text-xs">Detalles</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-32 text-xs">Proyección</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-32 text-xs">Sonido</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-32 text-xs">Ujieres</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-32 text-xs">Traducción</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -145,7 +149,7 @@ export default function Reports() {
                       <td className="p-1 text-center text-pdv-green font-bold border-r border-gray-200 text-xs">
                         {segment.duration_min || "-"}
                       </td>
-                      <td className="p-1">
+                      <td className="p-1 border-r border-gray-200">
                         <div className="space-y-1">
                           <div className="text-gray-900 font-bold text-xs uppercase">
                             {segment.title}
@@ -234,46 +238,33 @@ export default function Reports() {
                               </div>
                             </div>
                           )}
-
-                          {(segment.projection_notes || segment.sound_notes || segment.ushers_notes || segment.translation_notes || segment.requires_translation) && (
-                            <div className="mt-2 pt-2 border-t border-gray-200">
-                              <div className="flex flex-wrap gap-2 text-[10px]">
-                                {segment.projection_notes && (
-                                  <div className="flex-1 min-w-[200px] bg-purple-50 p-1 rounded border border-purple-200">
-                                    <span className="text-purple-700 font-bold">PROYECCIÓN:</span>
-                                    <span className="text-gray-700 ml-1">{segment.projection_notes}</span>
-                                  </div>
-                                )}
-                                {segment.sound_notes && (
-                                  <div className="flex-1 min-w-[200px] bg-red-50 p-1 rounded border border-red-200">
-                                    <span className="text-red-700 font-bold">SONIDO:</span>
-                                    <span className="text-gray-700 ml-1">{segment.sound_notes}</span>
-                                  </div>
-                                )}
-                                {segment.ushers_notes && (
-                                  <div className="flex-1 min-w-[200px] bg-blue-50 p-1 rounded border border-blue-200">
-                                    <span className="text-blue-700 font-bold">UJIERES:</span>
-                                    <span className="text-gray-700 ml-1">{segment.ushers_notes}</span>
-                                  </div>
-                                )}
-                                {(segment.requires_translation || segment.translation_notes) && (
-                                  <div className="flex-1 min-w-[200px] bg-indigo-50 p-1 rounded border border-indigo-200">
-                                    <span className="text-indigo-700 font-bold">TRADUCCIÓN:</span>
-                                    {segment.translator_name && (
-                                      <span className="text-gray-700 ml-1">{segment.translator_name}</span>
-                                    )}
-                                    {segment.translation_mode === "RemoteBooth" && (
-                                      <span className="text-gray-500 italic ml-1">(Remoto)</span>
-                                    )}
-                                    {segment.translation_notes && (
-                                      <span className="text-gray-700 ml-1">- {segment.translation_notes}</span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
                         </div>
+                      </td>
+                      <td className="p-1 text-gray-600 text-[10px] border-r border-gray-200">
+                        {segment.projection_notes || "-"}
+                      </td>
+                      <td className="p-1 text-gray-600 text-[10px] border-r border-gray-200">
+                        {segment.sound_notes || "-"}
+                      </td>
+                      <td className="p-1 text-gray-600 text-[10px] border-r border-gray-200">
+                        {segment.ushers_notes || "-"}
+                      </td>
+                      <td className="p-1 text-gray-600 text-[10px] border-gray-200">
+                        {segment.requires_translation && segment.translator_name ? (
+                          <div>
+                            <div className="font-semibold">{segment.translator_name}</div>
+                            {segment.translation_mode === "RemoteBooth" && (
+                              <div className="text-[10px] text-gray-500 italic">Remoto</div>
+                            )}
+                          </div>
+                        ) : segment.requires_translation ? (
+                          <span className="text-gray-500 italic">Sí</span>
+                        ) : (
+                          "-"
+                        )}
+                        {segment.translation_notes && (
+                          <div className="mt-0.5 text-[10px]">{segment.translation_notes}</div>
+                        )}
                       </td>
                       </tr>
                       ))}
