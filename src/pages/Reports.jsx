@@ -618,10 +618,10 @@ export default function Reports() {
 
         {selectedEventId && selectedEvent && (
           <div id="printable-report" className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="text-center mb-3 border-b border-gray-300 pb-2">
-              <h1 className="text-xl font-bold text-gray-900 mb-1">{selectedEvent.name}</h1>
+            <div className="text-left mb-1 border-b border-gray-300 pb-1">
+              <h1 className="text-xs font-bold text-gray-900 mb-0">{selectedEvent.name}</h1>
               {selectedEvent.theme && (
-                <p className="text-sm text-pdv-green italic">"{selectedEvent.theme}"</p>
+                <p className="text-[7px] text-pdv-green italic">"{selectedEvent.theme}"</p>
               )}
             </div>
 
