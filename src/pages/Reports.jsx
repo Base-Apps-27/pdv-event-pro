@@ -338,6 +338,15 @@ export default function Reports() {
                               </div>
                             )}
 
+                            {segment.has_video && (
+                              <div className="mt-1 text-[10px] bg-blue-50 p-1 rounded border border-blue-200">
+                                <span className="text-blue-700 font-bold">VIDEO:</span>
+                                <span className="text-gray-700 ml-1">{segment.video_name}</span>
+                                {segment.video_location && <span className="text-gray-600 ml-1">({segment.video_location})</span>}
+                                {segment.video_length_sec && <span className="text-gray-600 ml-1">- {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}</span>}
+                              </div>
+                            )}
+
                             {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
                               <div className="mt-1 text-[10px] bg-green-50 p-1 rounded border border-green-200">
                                 <span className="text-green-700 font-bold">CANCIONES:</span>
@@ -368,6 +377,41 @@ export default function Reports() {
                               <div className="mt-1 text-[10px] bg-amber-50 p-1 rounded border border-amber-200">
                                 <span className="text-amber-700 font-bold">ESCRITURAS:</span>
                                 <span className="text-gray-700 ml-1">{segment.scripture_references}</span>
+                              </div>
+                            )}
+
+                            {segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0 && (
+                              <div className="mt-1 text-[10px] bg-pink-50 p-1 rounded border border-pink-200">
+                                <span className="text-pink-700 font-bold">ARTES:</span>
+                                <span className="text-gray-700 ml-1">{segment.art_types.map(t => t === "DANCE" ? "Danza" : t === "DRAMA" ? "Drama" : t === "VIDEO" ? "Video" : "Otro").join(", ")}</span>
+
+                                {segment.art_types.includes("DRAMA") && (
+                                  <div className="mt-0.5 pl-2 border-l-2 border-pink-300">
+                                    {segment.drama_handheld_mics > 0 && <div>Mics mano: {segment.drama_handheld_mics}</div>}
+                                    {segment.drama_headset_mics > 0 && <div>Mics diadema: {segment.drama_headset_mics}</div>}
+                                    {segment.drama_start_cue && <div>Inicio: {segment.drama_start_cue}</div>}
+                                    {segment.drama_end_cue && <div>Cierre: {segment.drama_end_cue}</div>}
+                                    {segment.drama_has_song && segment.drama_song_title && (
+                                      <div>Canción: {segment.drama_song_title}</div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {segment.art_types.includes("DANCE") && (
+                                  <div className="mt-0.5 pl-2 border-l-2 border-pink-300">
+                                    {segment.dance_has_song && segment.dance_song_title && (
+                                      <div>Música: {segment.dance_song_title}</div>
+                                    )}
+                                    {segment.dance_handheld_mics > 0 && <div>Mics mano: {segment.dance_handheld_mics}</div>}
+                                    {segment.dance_headset_mics > 0 && <div>Mics diadema: {segment.dance_headset_mics}</div>}
+                                  </div>
+                                )}
+
+                                {segment.art_types.includes("OTHER") && segment.art_other_description && (
+                                  <div className="mt-0.5 text-gray-600">
+                                    {segment.art_other_description}
+                                  </div>
+                                )}
                               </div>
                             )}
 
