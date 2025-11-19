@@ -100,6 +100,24 @@ export default function Reports() {
               </div>
 
               <div className="flex flex-wrap gap-1 mt-1 text-[10px]">
+                {session.presenter && (
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
+                    <span className="text-blue-700 font-bold">PRESENTADOR:</span>
+                    <span className="text-gray-800 ml-1">{session.presenter}</span>
+                  </span>
+                )}
+                {session.worship_leader && (
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
+                    <span className="text-green-600 font-bold">ALABANZA:</span>
+                    <span className="text-gray-800 ml-1">{session.worship_leader}</span>
+                  </span>
+                )}
+                {session.coordinators && (
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
+                    <span className="text-indigo-600 font-bold">COORDINADORES:</span>
+                    <span className="text-gray-800 ml-1">{session.coordinators}</span>
+                  </span>
+                )}
                 {session.admin_team && (
                   <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-orange-600 font-bold">ADMIN:</span>
@@ -122,6 +140,24 @@ export default function Reports() {
                   <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-blue-600 font-bold">UJIER:</span>
                     <span className="text-gray-800 ml-1">{session.ushers_team}</span>
+                  </span>
+                )}
+                {session.translation_team && (
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
+                    <span className="text-purple-700 font-bold">TRADUCCIÓN:</span>
+                    <span className="text-gray-800 ml-1">{session.translation_team}</span>
+                  </span>
+                )}
+                {session.hospitality_team && (
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
+                    <span className="text-pink-600 font-bold">HOSPITALIDAD:</span>
+                    <span className="text-gray-800 ml-1">{session.hospitality_team}</span>
+                  </span>
+                )}
+                {session.photography_team && (
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
+                    <span className="text-teal-600 font-bold">FOTOGRAFÍA:</span>
+                    <span className="text-gray-800 ml-1">{session.photography_team}</span>
                   </span>
                 )}
               </div>
