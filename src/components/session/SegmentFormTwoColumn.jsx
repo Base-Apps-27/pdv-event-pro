@@ -82,6 +82,29 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     translator_name: segment?.translator_name || "",
     major_break: segment?.major_break || false,
     room_id: segment?.room_id || "",
+    has_video: segment?.has_video || false,
+    video_name: segment?.video_name || "",
+    video_location: segment?.video_location || "",
+    video_owner: segment?.video_owner || "",
+    video_length_sec: segment?.video_length_sec || 0,
+    art_types: segment?.art_types || [],
+    drama_handheld_mics: segment?.drama_handheld_mics || 0,
+    drama_headset_mics: segment?.drama_headset_mics || 0,
+    drama_start_cue: segment?.drama_start_cue || "",
+    drama_end_cue: segment?.drama_end_cue || "",
+    drama_has_song: segment?.drama_has_song || false,
+    drama_song_title: segment?.drama_song_title || "",
+    drama_song_source: segment?.drama_song_source || "",
+    drama_song_owner: segment?.drama_song_owner || "",
+    dance_has_song: segment?.dance_has_song || false,
+    dance_song_title: segment?.dance_song_title || "",
+    dance_song_source: segment?.dance_song_source || "",
+    dance_song_owner: segment?.dance_song_owner || "",
+    dance_handheld_mics: segment?.dance_handheld_mics || 0,
+    dance_headset_mics: segment?.dance_headset_mics || 0,
+    dance_start_cue: segment?.dance_start_cue || "",
+    dance_end_cue: segment?.dance_end_cue || "",
+    art_other_description: segment?.art_other_description || "",
   });
 
   const calculateTimes = (startTime, durationMin) => {
@@ -227,7 +250,37 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const isBreakType = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
   const isTechOnly = formData.segment_type === "TechOnly";
   const isBreakoutType = formData.segment_type === "Breakout";
+  const isVideoType = formData.segment_type === "Video";
+  const isArtesType = formData.segment_type === "Artes";
+  const isMcLedType = ["Bienvenida", "Ofrenda", "Anuncio", "Dinámica", "Oración", "Especial", "Cierre", "MC", "Ministración"].includes(formData.segment_type);
+  
   const needsPresenter = !isBreakType && !isTechOnly && !isBreakoutType;
+  const showDescription = !isTechOnly && !isVideoType;
+  const showTranslation = !isBreakType && !isBreakoutType;
+  const showUshersNotes = !isBreakType && !isTechOnly && !isBreakoutType;
+  const showProjectionNotes = !isBreakType && !isBreakoutType;
+  const showSoundNotes = !isBreakType && !isBreakoutType;
+  const showOtherNotes = !isBreakoutType;
+  const showActions = !isBreakType;
+  
+  const hasDrama = formData.art_types?.includes("DANCE");
+  const hasDance = formData.art_types?.includes("DANCE");
+  const hasArtVideo = formData.art_types?.includes("VIDEO");
+  const hasOtherArt = formData.art_types?.includes("OTHER");
+
+  const getPresenterLabel = () => {
+    if (isPlenariaType) return "Predicador";
+    if (isWorshipType) return "Líder de Alabanza";
+    if (isArtesType) return "Grupo / Director";
+    return "Presentador";
+  };
+
+  // Auto-lock has_video for Video type
+  React.useEffect(() => {
+    if (isVideoType && !formData.has_video) {
+      setFormData(prev => ({ ...prev, has_video: true }));
+    }
+  }, [isVideoType]);
 
   const handleAddAction = () => {
     if (!actionForm.label || !segment?.id) return;
@@ -376,9 +429,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
                 {needsPresenter && (
                   <div className="space-y-2">
-                    <Label htmlFor="presenter">
-                      {isWorshipType ? "Líder de Alabanza" : isPlenariaType ? "Predicador" : "Presentador"}
-                    </Label>
+                    <Label htmlFor="presenter">{getPresenterLabel()}</Label>
                     <Input 
                       id="presenter" 
                       value={formData.presenter}
@@ -413,6 +464,76 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
             <div id="contenido">
               <h3 className="font-bold text-lg mb-4 text-slate-900">Contenido Específico</h3>
               <div className="space-y-4">
+                {formData.has_video && (
+                  <div className="space-y-3 bg-blue-50 p-4 rounded border border-blue-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="font-semibold">Video</Label>
+                      {!isVideoType && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setFormData({...formData, has_video: false})}
+                          className="text-red-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Nombre del Video *</Label>
+                      <Input 
+                        value={formData.video_name}
+                        onChange={(e) => setFormData({...formData, video_name: e.target.value})}
+                        placeholder="Video de Apertura"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Ubicación</Label>
+                      <Input 
+                        value={formData.video_location}
+                        onChange={(e) => setFormData({...formData, video_location: e.target.value})}
+                        placeholder="ProPresenter > Videos > Opening.mp4"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Propietario</Label>
+                        <Input 
+                          value={formData.video_owner}
+                          onChange={(e) => setFormData({...formData, video_owner: e.target.value})}
+                          placeholder="PDV Media"
+                          className="text-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Duración (seg)</Label>
+                        <Input 
+                          type="number"
+                          value={formData.video_length_sec}
+                          onChange={(e) => setFormData({...formData, video_length_sec: parseInt(e.target.value) || 0})}
+                          placeholder="120"
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {!formData.has_video && !isVideoType && !isBreakType && !isTechOnly && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFormData({...formData, has_video: true})}
+                    className="w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Añadir Video
+                  </Button>
+                )}
                 {isBreakoutType && (
                   <div className="space-y-3 bg-amber-50 p-4 rounded border border-amber-200">
                     <div className="flex items-center justify-between mb-2">
@@ -659,7 +780,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
               </div>
             </div>
 
-            {segment && (
+            {segment && showActions && (
               <div id="acciones">
                 <h3 className="font-bold text-lg mb-4 text-slate-900">Acciones del Segmento</h3>
                 <div className="space-y-4">
@@ -803,7 +924,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   )}
                 </Card>
 
-                {!isBreakoutType && (
+                {showTranslation && (
                   <Card className="p-4 bg-purple-50 border-purple-200">
                     <div className="flex items-center space-x-2 mb-3">
                       <Checkbox 
