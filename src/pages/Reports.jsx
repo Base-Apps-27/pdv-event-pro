@@ -574,6 +574,16 @@ export default function Reports() {
             margin-top: 0.15rem !important;
             margin-bottom: 0.15rem !important;
           }
+          .print-header {
+            margin-bottom: 0.25rem !important;
+            padding-bottom: 0.25rem !important;
+          }
+          .print-header h1 {
+            font-size: 0.625rem !important;
+          }
+          .print-header p {
+            font-size: 0.5rem !important;
+          }
         }
       `}</style>
       
