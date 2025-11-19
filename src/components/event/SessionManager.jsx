@@ -447,13 +447,14 @@ export default function SessionManager({ eventId, sessions, segments }) {
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="date">Fecha</Label>
+                    <Label htmlFor="date">Fecha *</Label>
                     <Input 
                       id="date" 
                       name="date" 
                       type="date"
                       value={formData.date}
                       onChange={(e) => updateFormField('date', e.target.value)}
+                      required
                     />
                   </div>
                   <div className="space-y-2">
