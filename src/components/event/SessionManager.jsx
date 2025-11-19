@@ -470,24 +470,55 @@ export default function SessionManager({ eventId, sessions, segments }) {
 
                 <div className="grid md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="planned_start_time">Hora Inicio</Label>
+                    <Label htmlFor="planned_start_time">Hora Inicio *</Label>
                     <Input 
                       id="planned_start_time" 
                       name="planned_start_time" 
                       type="time"
                       value={formData.planned_start_time}
                       onChange={(e) => updateFormField('planned_start_time', e.target.value)}
+                      min={(() => {
+                        if (!formData.date || editingSession) return undefined;
+                        const sameDaySessions = sessions.filter(s => 
+                          s.date === formData.date && 
+                          s.planned_end_time
+                        ).sort((a, b) => (a.planned_end_time || '').localeCompare(b.planned_end_time || ''));
+                        const lastSession = sameDaySessions[sameDaySessions.length - 1];
+                        return lastSession?.planned_end_time;
+                      })()}
+                      required
                     />
+                    {formData.date && !editingSession && (() => {
+                      const sameDaySessions = sessions.filter(s => 
+                        s.date === formData.date && 
+                        s.planned_end_time
+                      ).sort((a, b) => (a.planned_end_time || '').localeCompare(b.planned_end_time || ''));
+                      const lastSession = sameDaySessions[sameDaySessions.length - 1];
+                      if (lastSession) {
+                        return (
+                          <p className="text-xs text-blue-600 mt-1">
+                            Debe ser después de {formatTimeToEST(lastSession.planned_end_time)} (fin de "{lastSession.name}")
+                          </p>
+                        );
+                      }
+                    })()}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="planned_end_time">Hora Fin</Label>
+                    <Label htmlFor="planned_end_time">Hora Fin *</Label>
                     <Input 
                       id="planned_end_time" 
                       name="planned_end_time" 
                       type="time"
                       value={formData.planned_end_time}
                       onChange={(e) => updateFormField('planned_end_time', e.target.value)}
+                      min={formData.planned_start_time}
+                      required
                     />
+                    {formData.planned_start_time && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        Debe ser después de {formatTimeToEST(formData.planned_start_time)}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="default_stage_call_offset_min">Llegada de Equipos (min antes)</Label>

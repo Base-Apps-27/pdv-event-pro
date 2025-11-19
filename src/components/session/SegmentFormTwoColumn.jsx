@@ -931,34 +931,60 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
               <div className="space-y-4">
                 <Card className="p-4 bg-blue-50 border-blue-200">
-                  <Label className="font-semibold mb-3 block">Horarios</Label>
+                  <Label className="font-semibold mb-3 block">Horarios *</Label>
                   <div className="space-y-3">
                     <div className="space-y-2">
-                      <Label className="text-xs">Inicio</Label>
+                      <Label className="text-xs">Inicio *</Label>
                       <Input 
                         type="time"
                         value={formData.start_time}
                         onChange={(e) => setFormData({...formData, start_time: e.target.value})}
                         className="h-9"
+                        min={(() => {
+                          if (segment || !allSegments || allSegments.length === 0) return undefined;
+                          const sortedSegments = [...allSegments].sort((a, b) => (a.order || 0) - (b.order || 0));
+                          const lastSegment = sortedSegments[sortedSegments.length - 1];
+                          return lastSegment?.end_time;
+                        })()}
+                        required
                       />
+                      {!segment && allSegments && allSegments.length > 0 && (() => {
+                        const sortedSegments = [...allSegments].sort((a, b) => (a.order || 0) - (b.order || 0));
+                        const lastSegment = sortedSegments[sortedSegments.length - 1];
+                        if (lastSegment?.end_time) {
+                          return (
+                            <p className="text-xs text-blue-600">
+                              Debe ser después de {formatTimeToEST(lastSegment.end_time)} (fin de "{lastSegment.title}")
+                            </p>
+                          );
+                        }
+                      })()}
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs">Duración (min)</Label>
+                      <Label className="text-xs">Duración (min) *</Label>
                       <Input 
                         type="number"
                         value={formData.duration_min}
                         onChange={(e) => setFormData({...formData, duration_min: parseInt(e.target.value)})}
                         className="h-9"
+                        min="1"
+                        required
                       />
                     </div>
                   </div>
 
                   {times.end_time && (
-                    <div className="mt-3 text-sm text-slate-600">
+                    <div className="mt-3 text-sm text-slate-600 border-t border-blue-300 pt-2">
                       <div className="flex justify-between">
                         <span>Fin estimado:</span>
-                        <span className="font-mono font-medium">{formatTimeToEST(times.end_time)}</span>
+                        <span className="font-mono font-medium text-blue-700">{formatTimeToEST(times.end_time)}</span>
                       </div>
+                    </div>
+                  )}
+
+                  {allSegments && allSegments.length > 0 && (
+                    <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                      ⚠️ Los segmentos no deben solaparse dentro de la sesión
                     </div>
                   )}
                 </Card>
