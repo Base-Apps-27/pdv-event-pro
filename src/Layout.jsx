@@ -73,30 +73,6 @@ export default function Layout({ children }) {
 
           <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-6 mb-2">Management & Setup</div>
           <Link
-            to={createPageUrl("People")}
-            className={`flex items-center gap-3 px-3 py-2 rounded font-semibold text-sm transition-colors ${
-              isActive(createPageUrl("People"))
-                ? "bg-pdv-green text-white"
-                : "text-gray-300 hover:bg-gray-800"
-            }`}
-          >
-            <Settings className="w-4 h-4" />
-            Personas
-          </Link>
-
-          <Link
-            to={createPageUrl("Teams")}
-            className={`flex items-center gap-3 px-3 py-2 rounded font-semibold text-sm transition-colors ${
-              isActive(createPageUrl("Teams"))
-                ? "bg-pdv-green text-white"
-                : "text-gray-300 hover:bg-gray-800"
-            }`}
-          >
-            <Settings className="w-4 h-4" />
-            Equipos
-          </Link>
-
-          <Link
             to={createPageUrl("Rooms")}
             className={`flex items-center gap-3 px-3 py-2 rounded font-semibold text-sm transition-colors ${
               isActive(createPageUrl("Rooms"))
@@ -181,20 +157,6 @@ export default function Layout({ children }) {
                   </Link>
 
                   <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">Configuración</div>
-                  <Link
-                    to={createPageUrl("People")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Personas
-                  </Link>
-                  <Link
-                    to={createPageUrl("Teams")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Equipos
-                  </Link>
                   <Link
                     to={createPageUrl("Rooms")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
