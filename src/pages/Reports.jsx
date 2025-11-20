@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Languages, UserCheck, Mic, Utensils, ExternalLink, Share2, Copy, Check } from "lucide-react";
+import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Languages, UserCheck, Mic, Utensils, ExternalLink, Share2, Copy, Check, Music, Sliders } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -41,6 +41,26 @@ export default function Reports() {
   const { data: allActions = [] } = useQuery({
     queryKey: ['segmentActions'],
     queryFn: () => base44.entities.SegmentAction.list(),
+  });
+
+  const { data: allPreSessionDetails = [] } = useQuery({
+    queryKey: ['preSessionDetails'],
+    queryFn: () => base44.entities.PreSessionDetails.list(),
+  });
+
+  const { data: allHospitalityTasks = [] } = useQuery({
+    queryKey: ['hospitalityTasks'],
+    queryFn: () => base44.entities.HospitalityTask.list(),
+  });
+
+  const { data: allMusicProfiles = [] } = useQuery({
+    queryKey: ['musicProfiles'],
+    queryFn: () => base44.entities.MusicProfile.list(),
+  });
+
+  const { data: allSlidePacks = [] } = useQuery({
+    queryKey: ['slidePacks'],
+    queryFn: () => base44.entities.SlidePack.list(),
   });
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
@@ -100,6 +120,8 @@ export default function Reports() {
     Hospitality: "bg-pink-50 border-pink-200 text-pink-700",
     Ujieres: "bg-green-50 border-green-200 text-green-700",
     Kids: "bg-yellow-50 border-yellow-200 text-yellow-700",
+    Coordinador: "bg-orange-50 border-orange-200 text-orange-700",
+    "Stage & Decor": "bg-purple-50 border-purple-200 text-purple-700",
     Other: "bg-gray-50 border-gray-200 text-gray-700"
   };
 
@@ -111,6 +133,16 @@ export default function Reports() {
   const getRoomName = (roomId) => {
     const room = rooms.find(r => r.id === roomId);
     return room ? room.name : "";
+  };
+
+  const getMusicProfileName = (profileId) => {
+    const profile = allMusicProfiles.find(mp => mp.id === profileId);
+    return profile ? profile.name : "";
+  };
+
+  const getSlidePackName = (packId) => {
+    const pack = allSlidePacks.find(sp => sp.id === packId);
+    return pack ? pack.name : "";
   };
 
 
@@ -203,6 +235,30 @@ export default function Reports() {
                   </span>
                 )}
               </div>
+
+              {allPreSessionDetails.filter(psd => psd.session_id === session.id).map(psd => (
+                <div key={psd.id} className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
+                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Pre-Sesión (Segmento 0)</div>
+                  {psd.music_profile_id && (
+                    <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música Ambiente: {getMusicProfileName(psd.music_profile_id)}</div>
+                  )}
+                  {psd.slide_pack_id && (
+                    <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Loop Proyección: {getSlidePackName(psd.slide_pack_id)}</div>
+                  )}
+                  {psd.registration_desk_open_time && (
+                    <div>Registro abre: {formatTimeToEST(psd.registration_desk_open_time)}</div>
+                  )}
+                  {psd.library_open_time && (
+                    <div>Librería abre: {formatTimeToEST(psd.library_open_time)}</div>
+                  )}
+                  {psd.facility_notes && (
+                    <div>Notas Instalaciones: {psd.facility_notes}</div>
+                  )}
+                  {psd.general_notes && (
+                    <div>Notas Generales: {psd.general_notes}</div>
+                  )}
+                </div>
+              ))}
             </div>
 
             <div className="overflow-x-auto">
@@ -478,6 +534,12 @@ export default function Reports() {
                               <span className="ml-1">{segment.ushers_notes}</span>
                             </div>
                           )}
+                          {segment.stage_decor_notes && (
+                            <div className="bg-purple-50 px-1 py-0.5 rounded border border-purple-200">
+                              <span className="font-bold text-purple-700">STAGE & DECOR:</span>
+                              <span className="ml-1">{segment.stage_decor_notes}</span>
+                            </div>
+                          )}
                           {segment.requires_translation && (
                             <div className="bg-blue-50 px-1 py-0.5 rounded border border-blue-200">
                               <span className="font-bold text-blue-700">TRADUCCIÓN:</span>
@@ -492,7 +554,7 @@ export default function Reports() {
                               )}
                             </div>
                           )}
-                          {!segment.projection_notes && !segment.sound_notes && !segment.ushers_notes && !segment.requires_translation && (
+                          {!segment.projection_notes && !segment.sound_notes && !segment.ushers_notes && !segment.requires_translation && !segment.stage_decor_notes && (
                             <span className="text-gray-400">-</span>
                           )}
                         </div>
@@ -618,6 +680,47 @@ export default function Reports() {
                     <td className="p-3 text-sm text-gray-700">
                       {segment.sound_notes || <span className="italic text-gray-400">Sin notas específicas</span>}
                     </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const renderHospitalityView = () => (
+    <div className="space-y-6">
+      {eventSessions.map((session) => {
+        const hospitalityTasksForSession = allHospitalityTasks.filter(task => task.session_id === session.id).sort((a, b) => (a.order || 0) - (b.order || 0));
+        if (hospitalityTasksForSession.length === 0) return null;
+
+        return (
+          <div key={session.id}>
+            <div className="bg-gradient-to-r from-pink-50 to-rose-50 p-4 rounded-lg mb-4 border border-pink-200">
+              <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
+              <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
+            </div>
+
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-pink-50 border-b-2 border-pink-200">
+                  <th className="p-3 text-left font-bold text-gray-900 w-24">Tiempo</th>
+                  <th className="p-3 text-left font-bold text-gray-900">Categoría</th>
+                  <th className="p-3 text-left font-bold text-gray-900">Descripción</th>
+                  <th className="p-3 text-left font-bold text-gray-900">Ubicación</th>
+                  <th className="p-3 text-left font-bold text-gray-900">Notas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {hospitalityTasksForSession.map((task, idx) => (
+                  <tr key={task.id} className={`border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                    <td className="p-3 font-mono font-medium text-gray-900">{task.time_hint || "-"}</td>
+                    <td className="p-3 text-gray-700">{task.category}</td>
+                    <td className="p-3 text-gray-700">{task.description}</td>
+                    <td className="p-3 text-gray-700">{task.location_notes || "-"}</td>
+                    <td className="p-3 text-gray-700">{task.notes || "-"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -831,7 +934,7 @@ export default function Reports() {
             </div>
 
             <Tabs value={activeReport} onValueChange={setActiveReport} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 mb-6 no-print">
+              <TabsList className="grid w-full grid-cols-6 mb-6 no-print">
                 <TabsTrigger value="detailed" className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   Detallado
@@ -851,6 +954,10 @@ export default function Reports() {
                 <TabsTrigger value="ushers" className="flex items-center gap-2">
                   <UsersIcon className="w-4 h-4" />
                   Ujieres
+                </TabsTrigger>
+                <TabsTrigger value="hospitality" className="flex items-center gap-2">
+                  <Utensils className="w-4 h-4" />
+                  Hospitalidad
                 </TabsTrigger>
               </TabsList>
 
@@ -872,6 +979,10 @@ export default function Reports() {
 
               <TabsContent value="ushers">
                 {renderUshersView()}
+              </TabsContent>
+
+              <TabsContent value="hospitality">
+                {renderHospitalityView()}
               </TabsContent>
             </Tabs>
           </div>

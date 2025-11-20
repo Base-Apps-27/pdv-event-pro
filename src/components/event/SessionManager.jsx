@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users, ChevronDown, ChevronUp, RefreshCw, Utensils, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import SegmentList from "../session/SegmentList";
 import SegmentFormTwoColumn from "../session/SegmentFormTwoColumn";
+import PreSessionDetailsForm from "../session/PreSessionDetailsForm";
+import HospitalityTasksModal from "../session/HospitalityTasksModal";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 export default function SessionManager({ eventId, sessions, segments }) {
@@ -23,6 +25,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
   const [expandedSessionId, setExpandedSessionId] = useState(null);
   const [showSegmentForm, setShowSegmentForm] = useState(false);
   const [editingSegment, setEditingSegment] = useState(null);
+  const [showPreSessionDetailsDialog, setShowPreSessionDetailsDialog] = useState(false);
+  const [showHospitalityTasksModal, setShowHospitalityTasksModal] = useState(false);
   const [formData, setFormData] = useState({});
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -194,6 +198,12 @@ export default function SessionManager({ eventId, sessions, segments }) {
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
     queryFn: () => base44.entities.SegmentTemplate.list(),
+  });
+
+  const { data: preSessionDetails = [] } = useQuery({
+    queryKey: ['preSessionDetails', expandedSessionId],
+    queryFn: () => base44.entities.PreSessionDetails.filter({ session_id: expandedSessionId }),
+    enabled: !!expandedSessionId,
   });
 
   const toggleSession = (sessionId) => {
@@ -388,6 +398,22 @@ export default function SessionManager({ eventId, sessions, segments }) {
                     <Button 
                       variant="outline" 
                       size="sm"
+                      onClick={() => setShowPreSessionDetailsDialog(true)}
+                      title="Detalles Pre-Sesión"
+                    >
+                      <Info className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowHospitalityTasksModal(true)}
+                      title="Tareas de Hospitalidad"
+                    >
+                      <Utensils className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
                       onClick={() => openDialog(session)}
                     >
                       <Edit className="w-4 h-4 mr-1" />
@@ -450,6 +476,27 @@ export default function SessionManager({ eventId, sessions, segments }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showPreSessionDetailsDialog} onOpenChange={setShowPreSessionDetailsDialog}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="shrink-0">
+            <DialogTitle>Detalles Pre-Sesión (Segmento 0)</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto">
+            <PreSessionDetailsForm
+              sessionId={expandedSessionId}
+              preSessionDetails={preSessionDetails.length > 0 ? preSessionDetails[0] : null}
+              onClose={() => setShowPreSessionDetailsDialog(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <HospitalityTasksModal 
+        sessionId={expandedSessionId} 
+        isOpen={showHospitalityTasksModal} 
+        onClose={() => setShowHospitalityTasksModal(false)}
+      />
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
