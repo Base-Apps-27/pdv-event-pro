@@ -73,6 +73,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     sound_notes: segment?.sound_notes || "",
     ushers_notes: segment?.ushers_notes || "",
     translation_notes: segment?.translation_notes || "",
+    stage_decor_notes: segment?.stage_decor_notes || "",
     other_notes: segment?.other_notes || "",
     show_in_general: segment?.show_in_general ?? true,
     show_in_projection: segment?.show_in_projection ?? true,
@@ -1104,6 +1105,19 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                         onChange={(e) => setFormData({...formData, translation_notes: e.target.value})}
                         rows={2}
                         placeholder="Instrucciones para traductor..."
+                        className="text-sm"
+                      />
+                    </div>
+                  )}
+
+                  {!isBreakType && !isBreakoutType && (
+                    <div className="space-y-1">
+                      <Label className="text-xs text-amber-700">Stage & Decor</Label>
+                      <Textarea 
+                        value={formData.stage_decor_notes}
+                        onChange={(e) => setFormData({...formData, stage_decor_notes: e.target.value})}
+                        rows={2}
+                        placeholder="Mover mesas, preparar escenario..."
                         className="text-sm"
                       />
                     </div>
