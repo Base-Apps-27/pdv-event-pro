@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users, ChevronDown, ChevronUp, RefreshCw, Utensils, Info } from "lucide-react";
+import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users, ChevronDown, ChevronUp, RefreshCw, Utensils } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -394,14 +394,6 @@ export default function SessionManager({ eventId, sessions, segments }) {
                       title="Recalcular horarios"
                     >
                       <RefreshCw className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setShowPreSessionDetailsDialog(true)}
-                      title="Detalles Pre-Sesión"
-                    >
-                      <Info className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="outline" 

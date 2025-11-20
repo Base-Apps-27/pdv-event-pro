@@ -124,14 +124,6 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
 
   const preSession = preSessionDetails.length > 0 ? preSessionDetails[0] : null;
 
-  if (segments.length === 0 && !preSession) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-slate-500">No hay segmentos. Agrega el primero para comenzar.</p>
-      </div>
-    );
-  }
-
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="overflow-x-auto">
@@ -152,56 +144,58 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
           <Droppable droppableId="segments">
             {(provided) => (
               <TableBody ref={provided.innerRef} {...provided.droppableProps}>
-                {preSession && (
-                  <TableRow className="bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-blue-700">0</span>
+                <TableRow className={`${preSession ? 'bg-blue-50 hover:bg-blue-100' : 'bg-gray-50 hover:bg-gray-100'} border-l-4 ${preSession ? 'border-blue-500' : 'border-gray-300'}`}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-bold ${preSession ? 'text-blue-700' : 'text-gray-400'}`}>0</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={`${preSession ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-600 border-gray-200'} border text-xs whitespace-nowrap`}>
+                      Pre-Sesión
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className={`font-semibold ${preSession ? 'text-slate-900' : 'text-gray-400'}`}>
+                        {preSession ? 'Preparación Pre-Sesión' : 'Pre-Sesión (vacío)'}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-blue-100 text-blue-800 border-blue-200 border text-xs whitespace-nowrap">
-                        Pre-Sesión
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-semibold text-slate-900">Preparación Pre-Sesión</div>
+                      {preSession && (
                         <div className="text-xs text-slate-600 mt-0.5">
                           {preSession.music_profile_id && `Música: ${preSession.music_profile_id}`}
                           {preSession.music_profile_id && preSession.slide_pack_id && " • "}
                           {preSession.slide_pack_id && `Slides: ${preSession.slide_pack_id}`}
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {preSession && (preSession.registration_desk_open_time || preSession.library_open_time) && (
                       <div className="flex flex-wrap gap-1 text-xs text-slate-600">
-                        {(preSession.registration_desk_open_time || preSession.library_open_time) && (
-                          <span>Horarios apertura</span>
-                        )}
+                        <span>Horarios apertura</span>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-xs text-slate-600">-</span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1 justify-center">
-                        {(preSession.facility_notes || preSession.general_notes) && (
-                          <Circle className="w-2 h-2 fill-blue-500 text-blue-500" title="Notas disponibles" />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-600">
-                      {preSession.registration_desk_open_time && formatTimeToEST(preSession.registration_desk_open_time)}
-                    </TableCell>
-                    <TableCell className="text-sm">-</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => onEditPreSession && onEditPreSession()}>
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                )}
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs text-slate-600">-</span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 justify-center">
+                      {preSession && (preSession.facility_notes || preSession.general_notes) && (
+                        <Circle className="w-2 h-2 fill-blue-500 text-blue-500" title="Notas disponibles" />
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-slate-600">
+                    {preSession?.registration_desk_open_time ? formatTimeToEST(preSession.registration_desk_open_time) : '-'}
+                  </TableCell>
+                  <TableCell className="text-sm">-</TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm" onClick={() => onEditPreSession && onEditPreSession()}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
                 {segments.map((segment, index) => {
             const actionCount = getSegmentActions(segment.id).length;
             const hasProjectionNotes = !!segment.projection_notes;
