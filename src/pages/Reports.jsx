@@ -800,6 +800,9 @@ export default function Reports() {
             size: letter landscape;
             margin: 0.5cm;
           }
+          body {
+            zoom: 0.78;
+          }
           body * {
             visibility: hidden;
           }
