@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Languages, UserCheck, Mic, Utensils, ExternalLink, Share2, Copy, Check, Music, Sliders } from "lucide-react";
+import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Languages, UserCheck, Mic, Utensils, ExternalLink, Share2, Copy, Check, Music, Sliders, Settings, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +24,21 @@ export default function Reports() {
   const [selectedEventId, setSelectedEventId] = useState("");
   const [activeReport, setActiveReport] = useState("detailed");
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showPrintSettings, setShowPrintSettings] = useState(false);
+  
+  const [printSettings, setPrintSettings] = useState(() => {
+    const saved = localStorage.getItem('reportPrintSettings');
+    return saved ? JSON.parse(saved) : {
+      fontScale: 100,
+      paddingScale: 100,
+      marginScale: 100,
+      lineHeight: 100,
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem('reportPrintSettings', JSON.stringify(printSettings));
+  }, [printSettings]);
 
   const { data: events = [] } = useQuery({
     queryKey: ['events'],
@@ -795,8 +812,8 @@ export default function Reports() {
       <style>{`
         @media print {
           @page {
-            size: landscape;
-            margin: 0.5cm;
+            size: letter landscape;
+            margin: ${printSettings.marginScale * 0.5 / 100}cm;
           }
           body * {
             visibility: hidden;
@@ -823,50 +840,50 @@ export default function Reports() {
             page-break-after: auto;
           }
           .print-session table {
-            font-size: 0.5rem !important;
+            font-size: ${printSettings.fontScale * 0.5 / 100}rem !important;
             width: 100%;
           }
           .print-session td, .print-session th {
-            padding: 0.1rem !important;
-            line-height: 1.1 !important;
+            padding: ${printSettings.paddingScale * 0.1 / 100}rem !important;
+            line-height: ${printSettings.lineHeight * 1.1 / 100} !important;
           }
           .print-session .overflow-x-auto {
             overflow: visible !important;
           }
           .print-session .text-xl {
-            font-size: 0.875rem !important;
+            font-size: ${printSettings.fontScale * 0.875 / 100}rem !important;
           }
           .print-session .text-sm {
-            font-size: 0.625rem !important;
+            font-size: ${printSettings.fontScale * 0.625 / 100}rem !important;
           }
           .print-session .text-xs {
-            font-size: 0.5rem !important;
+            font-size: ${printSettings.fontScale * 0.5 / 100}rem !important;
           }
           .print-session .text-\[10px\] {
-            font-size: 0.45rem !important;
+            font-size: ${printSettings.fontScale * 0.45 / 100}rem !important;
           }
           .print-session .p-2 {
-            padding: 0.15rem !important;
+            padding: ${printSettings.paddingScale * 0.15 / 100}rem !important;
           }
           .print-session .p-1 {
-            padding: 0.1rem !important;
+            padding: ${printSettings.paddingScale * 0.1 / 100}rem !important;
           }
           .print-session .gap-1, .print-session .gap-2 {
-            gap: 0.15rem !important;
+            gap: ${printSettings.paddingScale * 0.15 / 100}rem !important;
           }
           .print-session .mt-1, .print-session .mb-1 {
-            margin-top: 0.15rem !important;
-            margin-bottom: 0.15rem !important;
+            margin-top: ${printSettings.paddingScale * 0.15 / 100}rem !important;
+            margin-bottom: ${printSettings.paddingScale * 0.15 / 100}rem !important;
           }
           .print-header {
-            margin-bottom: 0.25rem !important;
-            padding-bottom: 0.25rem !important;
+            margin-bottom: ${printSettings.paddingScale * 0.25 / 100}rem !important;
+            padding-bottom: ${printSettings.paddingScale * 0.25 / 100}rem !important;
           }
           .print-header h1 {
-            font-size: 0.625rem !important;
+            font-size: ${printSettings.fontScale * 0.625 / 100}rem !important;
           }
           .print-header p {
-            font-size: 0.5rem !important;
+            font-size: ${printSettings.fontScale * 0.5 / 100}rem !important;
           }
         }
       `}</style>
@@ -878,6 +895,15 @@ export default function Reports() {
             <p className="text-gray-600 mt-1">Visualiza y exporta reportes de eventos</p>
           </div>
           <div className="flex gap-3">
+            <Button 
+              variant="outline"
+              onClick={() => setShowPrintSettings(!showPrintSettings)}
+              className="font-bold uppercase"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Ajustar Impresión
+              {showPrintSettings ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
+            </Button>
             {selectedEventId && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -920,6 +946,93 @@ export default function Reports() {
             </Button>
           </div>
         </div>
+
+        {showPrintSettings && (
+          <Card className="bg-blue-50 border-blue-200 no-print">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900">
+                <Settings className="w-5 h-5" />
+                Configuración de Impresión (8.5" x 11" Horizontal)
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">Ajusta estos valores para optimizar el espacio en la página impresa</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Label>Tamaño de Fuente</Label>
+                    <span className="text-sm font-medium text-gray-700">{printSettings.fontScale}%</span>
+                  </div>
+                  <Slider 
+                    value={[printSettings.fontScale]}
+                    onValueChange={(value) => setPrintSettings({...printSettings, fontScale: value[0]})}
+                    min={50}
+                    max={150}
+                    step={5}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Label>Espaciado Interno</Label>
+                    <span className="text-sm font-medium text-gray-700">{printSettings.paddingScale}%</span>
+                  </div>
+                  <Slider 
+                    value={[printSettings.paddingScale]}
+                    onValueChange={(value) => setPrintSettings({...printSettings, paddingScale: value[0]})}
+                    min={50}
+                    max={150}
+                    step={5}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Label>Márgenes de Página</Label>
+                    <span className="text-sm font-medium text-gray-700">{printSettings.marginScale}%</span>
+                  </div>
+                  <Slider 
+                    value={[printSettings.marginScale]}
+                    onValueChange={(value) => setPrintSettings({...printSettings, marginScale: value[0]})}
+                    min={50}
+                    max={150}
+                    step={5}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Label>Altura de Línea</Label>
+                    <span className="text-sm font-medium text-gray-700">{printSettings.lineHeight}%</span>
+                  </div>
+                  <Slider 
+                    value={[printSettings.lineHeight]}
+                    onValueChange={(value) => setPrintSettings({...printSettings, lineHeight: value[0]})}
+                    min={80}
+                    max={150}
+                    step={5}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button 
+                  variant="outline"
+                  onClick={() => setPrintSettings({ fontScale: 100, paddingScale: 100, marginScale: 100, lineHeight: 100 })}
+                >
+                  Restablecer
+                </Button>
+                <Button 
+                  onClick={handlePrint}
+                  className="gradient-pdv text-white"
+                >
+                  <Printer className="w-4 h-4 mr-2" />
+                  Vista Previa de Impresión
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="bg-white border-gray-200 no-print">
           <CardHeader>
