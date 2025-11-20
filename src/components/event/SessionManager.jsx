@@ -450,6 +450,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
                         segments={sessionSegments}
                         sessionId={session.id}
                         onEdit={(segment) => handleEditSegment(segment, session.id)}
+                        onEditPreSession={() => setShowPreSessionDetailsDialog(true)}
                       />
                     </div>
                   )}
