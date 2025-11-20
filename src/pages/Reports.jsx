@@ -178,64 +178,64 @@ export default function Reports() {
                   </div>
               </div>
 
-              <div className="flex flex-wrap gap-1 mt-1 text-[10px]">
+              <div className="grid grid-cols-4 gap-x-2 gap-y-0.5 mt-1 text-[10px]">
                 {session.presenter && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-blue-700 font-bold">PRESENTADOR:</span>
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                    <span className="text-blue-700 font-bold">PRES:</span>
                     <span className="text-gray-800 ml-1">{session.presenter}</span>
                   </span>
                 )}
                 {session.worship_leader && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-green-600 font-bold">ALABANZA:</span>
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                    <span className="text-green-600 font-bold">ALAB:</span>
                     <span className="text-gray-800 ml-1">{session.worship_leader}</span>
                   </span>
                 )}
                 {session.coordinators && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-indigo-600 font-bold">COORDINADORES:</span>
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                    <span className="text-indigo-600 font-bold">COORD:</span>
                     <span className="text-gray-800 ml-1">{session.coordinators}</span>
                   </span>
                 )}
                 {session.admin_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
                     <span className="text-orange-600 font-bold">ADMIN:</span>
                     <span className="text-gray-800 ml-1">{session.admin_team}</span>
                   </span>
                 )}
                 {session.sound_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
                     <span className="text-red-600 font-bold">SONIDO:</span>
                     <span className="text-gray-800 ml-1">{session.sound_team}</span>
                   </span>
                 )}
                 {session.tech_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-purple-600 font-bold">TÉCNICO:</span>
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                    <span className="text-purple-600 font-bold">TÉC:</span>
                     <span className="text-gray-800 ml-1">{session.tech_team}</span>
                   </span>
                 )}
                 {session.ushers_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
                     <span className="text-blue-600 font-bold">UJIER:</span>
                     <span className="text-gray-800 ml-1">{session.ushers_team}</span>
                   </span>
                 )}
                 {session.translation_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-purple-700 font-bold">TRADUCCIÓN:</span>
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                    <span className="text-purple-700 font-bold">TRAD:</span>
                     <span className="text-gray-800 ml-1">{session.translation_team}</span>
                   </span>
                 )}
                 {session.hospitality_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-pink-600 font-bold">HOSPITALIDAD:</span>
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                    <span className="text-pink-600 font-bold">HOSP:</span>
                     <span className="text-gray-800 ml-1">{session.hospitality_team}</span>
                   </span>
                 )}
                 {session.photography_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-teal-600 font-bold">FOTOGRAFÍA:</span>
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                    <span className="text-teal-600 font-bold">FOTO:</span>
                     <span className="text-gray-800 ml-1">{session.photography_team}</span>
                   </span>
                 )}
@@ -244,24 +244,26 @@ export default function Reports() {
               {allPreSessionDetails.filter(psd => psd.session_id === session.id).map(psd => (
                 <div key={psd.id} className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
                   <div className="font-bold text-blue-700 uppercase mb-1">Detalles Pre-Sesión (Segmento 0)</div>
-                  {psd.music_profile_id && (
-                    <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música Ambiente: {psd.music_profile_id}</div>
-                  )}
-                  {psd.slide_pack_id && (
-                    <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Loop Proyección: {psd.slide_pack_id}</div>
-                  )}
-                  {psd.registration_desk_open_time && (
-                    <div>Registro abre: {formatTimeToEST(psd.registration_desk_open_time)}</div>
-                  )}
-                  {psd.library_open_time && (
-                    <div>Librería abre: {formatTimeToEST(psd.library_open_time)}</div>
-                  )}
-                  {psd.facility_notes && (
-                    <div>Notas Instalaciones: {psd.facility_notes}</div>
-                  )}
-                  {psd.general_notes && (
-                    <div>Notas Generales: {psd.general_notes}</div>
-                  )}
+                  <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
+                    {psd.music_profile_id && (
+                      <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
+                    )}
+                    {psd.slide_pack_id && (
+                      <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Slides: {psd.slide_pack_id}</div>
+                    )}
+                    {psd.registration_desk_open_time && (
+                      <div><span className="font-semibold">Registro:</span> {formatTimeToEST(psd.registration_desk_open_time)}</div>
+                    )}
+                    {psd.library_open_time && (
+                      <div><span className="font-semibold">Librería:</span> {formatTimeToEST(psd.library_open_time)}</div>
+                    )}
+                    {psd.facility_notes && (
+                      <div className="col-span-2"><span className="font-semibold">Instalaciones:</span> {psd.facility_notes}</div>
+                    )}
+                    {psd.general_notes && (
+                      <div className="col-span-2"><span className="font-semibold">General:</span> {psd.general_notes}</div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
