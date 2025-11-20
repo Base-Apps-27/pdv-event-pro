@@ -262,7 +262,7 @@ export default function Reports() {
                   {segments.map((segment, idx) => {
                     if (segment.segment_type === "Breakout" && segment.breakout_rooms) {
                       return (
-                        <>
+                        <React.Fragment key={segment.id}>
                         {segment.prep_instructions && (
                           <tr key={`${segment.id}-prep`} className="bg-amber-100 border-t-2 border-amber-400">
                             <td colSpan="3" className="p-2">
@@ -345,12 +345,12 @@ export default function Reports() {
                             </div>
                           </td>
                         </tr>
-                        </>
+                        </React.Fragment>
                       );
                     }
 
                     return (
-                      <>
+                      <React.Fragment key={segment.id}>
                       {segment.prep_instructions && (
                         <tr key={`${segment.id}-prep`} className="bg-amber-100 border-t-2 border-amber-400">
                           <td colSpan="3" className="p-2">
@@ -579,7 +579,7 @@ export default function Reports() {
                         </div>
                       </td>
                     </tr>
-                    </>
+                    </React.Fragment>
                     );
                   })}
                 </tbody>
