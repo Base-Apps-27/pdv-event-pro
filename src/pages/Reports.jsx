@@ -345,10 +345,26 @@ export default function Reports() {
                             </div>
                           </td>
                         </tr>
+                        </>
                       );
                     }
 
                     return (
+                      <>
+                      {segment.prep_instructions && (
+                        <tr key={`${segment.id}-prep`} className="bg-amber-100 border-t-2 border-amber-400">
+                          <td colSpan="3" className="p-2">
+                            <div className="flex items-start gap-2">
+                              <div className="bg-amber-500 text-white px-2 py-1 rounded font-bold text-[10px] uppercase whitespace-nowrap">
+                                ⚠ PREPARACIÓN
+                              </div>
+                              <div className="text-amber-900 font-semibold text-[10px] flex-1">
+                                {segment.prep_instructions}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                       <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
                       <td className="p-2 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
                         <div className="flex flex-col items-center leading-tight">
@@ -563,6 +579,7 @@ export default function Reports() {
                         </div>
                       </td>
                     </tr>
+                    </>
                     );
                   })}
                 </tbody>
