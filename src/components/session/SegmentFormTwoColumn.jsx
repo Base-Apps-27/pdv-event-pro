@@ -30,7 +30,7 @@ const COLOR_CODES = [
 ];
 
 const DEPARTMENTS = [
-  "Admin", "MC", "Sound", "Projection", "Hospitality", "Ujieres", "Kids", "Other"
+  "Admin", "MC", "Sound", "Projection", "Hospitality", "Ujieres", "Kids", "Coordinador", "Stage & Decor", "Other"
 ];
 
 export default function SegmentFormTwoColumn({ session, segment, templates, onClose, sessionId }) {
