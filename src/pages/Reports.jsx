@@ -133,16 +133,22 @@ export default function Reports() {
     <div className="space-y-6">
       {eventSessions.map((session) => {
         const segments = getSessionSegments(session.id);
+        const hasHospitalityTasks = allHospitalityTasks.some(task => task.session_id === session.id);
         if (segments.length === 0) return null;
 
         return (
           <div key={session.id} className={`print-session border-2 border-gray-200 rounded-lg overflow-hidden ${sessionColorClasses[session.session_color] || ''}`}>
             <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-2 border-b border-gray-200">
               <div className="flex justify-between items-center gap-4">
-                <div className="flex-1">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
                   <h2 className="text-xl font-bold text-gray-900 uppercase tracking-tight mb-1">
                     {session.name}
                   </h2>
+                  {hasHospitalityTasks && (
+                    <Utensils className="w-5 h-5 text-pink-600" title="Tiene instrucciones de hospitalidad" />
+                  )}
+                </div>
                   <div className="text-sm text-gray-700">
                     {session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}
                     {session.location && ` • ${session.location}`}
@@ -152,7 +158,7 @@ export default function Reports() {
                       </span>
                     )}
                   </div>
-                </div>
+                  </div>
               </div>
 
               <div className="flex flex-wrap gap-1 mt-1 text-[10px]">
