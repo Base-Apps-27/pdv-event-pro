@@ -464,6 +464,13 @@ export default function Reports() {
                                 {segment.description_details}
                               </div>
                             )}
+
+                            {segment.prep_instructions && (
+                              <div className="mt-1 text-[10px] bg-amber-50 p-1 rounded border border-amber-200">
+                                <span className="text-amber-700 font-bold">PREPARACIÓN:</span>
+                                <span className="text-gray-700 ml-1">{segment.prep_instructions}</span>
+                              </div>
+                            )}
                           </div>
 
                           <div className="border-l border-gray-200 pl-2">

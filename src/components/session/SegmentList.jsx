@@ -138,6 +138,7 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
               <TableHead className="w-20 text-center">Notas</TableHead>
               <TableHead className="w-24">Inicio</TableHead>
               <TableHead className="w-20">Dur.</TableHead>
+              <TableHead className="w-12">Prep</TableHead>
               <TableHead className="w-24">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -312,6 +313,11 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                   )}
                 </TableCell>
                 <TableCell className="text-sm">{segment.duration_min ? `${segment.duration_min}m` : "-"}</TableCell>
+                <TableCell className="text-center">
+                {segment.prep_instructions && (
+                  <Circle className="w-2 h-2 fill-amber-500 text-amber-500 mx-auto" title={segment.prep_instructions} />
+                )}
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="sm" onClick={() => onEdit(segment)}>
