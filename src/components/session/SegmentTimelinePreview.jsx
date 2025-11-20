@@ -26,7 +26,7 @@ export default function SegmentTimelinePreview({ segments, currentSegmentId }) {
   }
 
   return (
-    <div className="sticky top-24 z-10 bg-white/95 backdrop-blur-sm border border-gray-200 rounded p-3">
+    <div className="sticky top-36 z-10 bg-white/95 backdrop-blur-sm border border-gray-200 rounded p-3">
       <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Timeline</h4>
       <div className="space-y-1">
         {displayedSegments.map((item, idx) => (
