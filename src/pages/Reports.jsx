@@ -414,8 +414,8 @@ export default function Reports() {
                         </div>
                       </td>
                       <td className="p-2 border-r border-gray-200">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
+                        <div className={getSegmentActions(segment.id).length > 0 ? "grid grid-cols-2 gap-2" : ""}>
+                          <div className={getSegmentActions(segment.id).length > 0 ? "space-y-1" : "grid grid-cols-2 gap-x-4 gap-y-1"}>
                             <div className="text-gray-900 font-bold text-xs uppercase">
                               {segment.title}
                             </div>
@@ -516,8 +516,8 @@ export default function Reports() {
                             )}
                           </div>
 
+                          {getSegmentActions(segment.id).length > 0 && (
                           <div className="border-l border-gray-200 pl-2">
-                            {getSegmentActions(segment.id).length > 0 ? (
                               <div className="text-[10px] space-y-0.5">
                                 <div className="font-bold uppercase text-gray-900 mb-1">ACCIONES:</div>
                                 {getSegmentActions(segment.id).map((action, actionIdx) => (
@@ -546,10 +546,8 @@ export default function Reports() {
                                   </div>
                                 ))}
                               </div>
-                            ) : (
-                              <span className="text-gray-400 text-[10px]">-</span>
-                            )}
                           </div>
+                          )}
                         </div>
                       </td>
                       <td className="p-2 text-gray-600 text-[10px] align-top">
