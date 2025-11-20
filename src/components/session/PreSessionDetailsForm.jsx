@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { Save, X } from "lucide-react";
 
 export default function PreSessionDetailsForm({ sessionId, preSessionDetails, onClose }) {
@@ -17,16 +17,6 @@ export default function PreSessionDetailsForm({ sessionId, preSessionDetails, on
     library_open_time: preSessionDetails?.library_open_time || "",
     facility_notes: preSessionDetails?.facility_notes || "",
     general_notes: preSessionDetails?.general_notes || "",
-  });
-
-  const { data: musicProfiles = [] } = useQuery({
-    queryKey: ['musicProfiles'],
-    queryFn: () => base44.entities.MusicProfile.list(),
-  });
-
-  const { data: slidePacks = [] } = useQuery({
-    queryKey: ['slidePacks'],
-    queryFn: () => base44.entities.SlidePack.list(),
   });
 
   const createMutation = useMutation({

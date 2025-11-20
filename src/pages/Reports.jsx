@@ -53,16 +53,6 @@ export default function Reports() {
     queryFn: () => base44.entities.HospitalityTask.list(),
   });
 
-  const { data: allMusicProfiles = [] } = useQuery({
-    queryKey: ['musicProfiles'],
-    queryFn: () => base44.entities.MusicProfile.list(),
-  });
-
-  const { data: allSlidePacks = [] } = useQuery({
-    queryKey: ['slidePacks'],
-    queryFn: () => base44.entities.SlidePack.list(),
-  });
-
   const selectedEvent = events.find(e => e.id === selectedEventId);
   const eventSessions = sessions.filter(s => s.event_id === selectedEventId).sort((a, b) => (a.order || 0) - (b.order || 0));
   
@@ -135,15 +125,7 @@ export default function Reports() {
     return room ? room.name : "";
   };
 
-  const getMusicProfileName = (profileId) => {
-    const profile = allMusicProfiles.find(mp => mp.id === profileId);
-    return profile ? profile.name : "";
-  };
 
-  const getSlidePackName = (packId) => {
-    const pack = allSlidePacks.find(sp => sp.id === packId);
-    return pack ? pack.name : "";
-  };
 
 
 
@@ -240,10 +222,10 @@ export default function Reports() {
                 <div key={psd.id} className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
                   <div className="font-bold text-blue-700 uppercase mb-1">Detalles Pre-Sesión (Segmento 0)</div>
                   {psd.music_profile_id && (
-                    <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música Ambiente: {getMusicProfileName(psd.music_profile_id)}</div>
+                    <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música Ambiente: {psd.music_profile_id}</div>
                   )}
                   {psd.slide_pack_id && (
-                    <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Loop Proyección: {getSlidePackName(psd.slide_pack_id)}</div>
+                    <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Loop Proyección: {psd.slide_pack_id}</div>
                   )}
                   {psd.registration_desk_open_time && (
                     <div>Registro abre: {formatTimeToEST(psd.registration_desk_open_time)}</div>
