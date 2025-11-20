@@ -10,8 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
+import SegmentTimelinePreview from "./SegmentTimelinePreview";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -386,11 +387,12 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
         {/* Anchor Navigation */}
         <div className="flex gap-2 overflow-x-auto pb-1">
-          <button type="button" onClick={() => scrollToSection('basico')} className="text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Básico</button>
-          <button type="button" onClick={() => scrollToSection('contenido')} className="text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Contenido</button>
-          {segment && <button type="button" onClick={() => scrollToSection('acciones')} className="text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Acciones</button>}
-          <button type="button" onClick={() => scrollToSection('notas')} className="text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Notas</button>
-          <button type="button" onClick={() => scrollToSection('otros')} className="text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Otros</button>
+          <button type="button" onClick={() => scrollToSection('basico')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Básico</button>
+          <button type="button" onClick={() => scrollToSection('contenido')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Contenido</button>
+          {segment && <button type="button" onClick={() => scrollToSection('acciones')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Acciones</button>}
+          <button type="button" onClick={() => scrollToSection('notas')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Notas</button>
+          <button type="button" onClick={() => scrollToSection('otros')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Otros</button>
+          {segment && <button type="button" onClick={() => scrollToSection('timeline')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap flex items-center gap-1"><ScrollText className="w-3 h-3"/>Timeline</button>}
         </div>
       </div>
 
@@ -926,6 +928,14 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
           </div>
 
           <div className="space-y-6">
+
+            {/* Segment Timeline Preview */}
+            {segment && (
+              <div id="timeline">
+                <SegmentTimelinePreview segments={allSegments} currentSegmentId={segment.id} />
+              </div>
+            )}
+
             <div>
               <h3 className="font-bold text-lg mb-4 text-slate-900">Timing & Ejecución</h3>
 
