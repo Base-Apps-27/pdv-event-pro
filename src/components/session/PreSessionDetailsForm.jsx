@@ -53,42 +53,22 @@ export default function PreSessionDetailsForm({ sessionId, preSessionDetails, on
     <form onSubmit={handleSubmit} className="space-y-4 p-4">
       <div className="space-y-2">
         <Label htmlFor="music_profile_id">Música de Ambiente</Label>
-        <Select
+        <Input
+          id="music_profile_id"
           value={formData.music_profile_id}
-          onValueChange={(value) => setFormData({ ...formData, music_profile_id: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Seleccionar perfil de música..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={null}>Ninguno</SelectItem>
-            {musicProfiles.map((profile) => (
-              <SelectItem key={profile.id} value={profile.id}>
-                {profile.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(e) => setFormData({ ...formData, music_profile_id: e.target.value })}
+          placeholder="Ej: Pre-service worship mix ES/EN low volume"
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="slide_pack_id">Loop de Proyección</Label>
-        <Select
+        <Input
+          id="slide_pack_id"
           value={formData.slide_pack_id}
-          onValueChange={(value) => setFormData({ ...formData, slide_pack_id: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Seleccionar paquete de slides..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={null}>Ninguno</SelectItem>
-            {slidePacks.map((pack) => (
-              <SelectItem key={pack.id} value={pack.id}>
-                {pack.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(e) => setFormData({ ...formData, slide_pack_id: e.target.value })}
+          placeholder="Ej: Pre-service loop Generales 2025"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
