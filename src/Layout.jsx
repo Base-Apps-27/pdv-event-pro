@@ -12,7 +12,7 @@ import {
 export default function Layout({ children }) {
   // Hardcoded brand colors for reliable gradient rendering
   const gradientStyle = {
-    background: 'linear-gradient(90deg, #0d9488 0%, #16a34a 50%, #ca8a04 100%)', // Teal-600 -> Green-600 -> Yellow-600
+    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', // Brand Teal -> Brand Green -> Brand Lime
   };
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
