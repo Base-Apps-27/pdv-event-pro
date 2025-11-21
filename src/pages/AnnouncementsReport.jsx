@@ -145,7 +145,7 @@ export default function AnnouncementsReport() {
                       </div>
                       <CardTitle className="text-xl font-bold text-pdv-teal">
                         {item.announcement_title || item.title}
-                      </Badge>
+                      </CardTitle>
                     </div>
                     {item.announcement_tone && (
                       <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-200 border-indigo-200">
