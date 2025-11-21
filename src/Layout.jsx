@@ -145,7 +145,6 @@ export default function Layout({ children }) {
                         : "text-gray-700 hover:bg-gray-100"
                     }`}
                     style={isActive(createPageUrl("Dashboard")) ? gradientStyle : {}}
-                    }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Dashboard
