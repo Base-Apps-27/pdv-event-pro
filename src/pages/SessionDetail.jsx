@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SegmentList from "../components/session/SegmentList.jsx";
 import SegmentFormTwoColumn from "../components/session/SegmentFormTwoColumn.jsx";
+import PreSessionDetailsForm from "../components/session/PreSessionDetailsForm.jsx";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -18,6 +19,7 @@ export default function SessionDetail() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingSegment, setEditingSegment] = useState(null);
+  const [showPreSessionDetailsDialog, setShowPreSessionDetailsDialog] = useState(false);
 
   const { data: session } = useQuery({
     queryKey: ['session', sessionId],
@@ -34,6 +36,12 @@ export default function SessionDetail() {
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
     queryFn: () => base44.entities.SegmentTemplate.list(),
+  });
+
+  const { data: preSessionDetails = [] } = useQuery({
+    queryKey: ['preSessionDetails', sessionId],
+    queryFn: () => base44.entities.PreSessionDetails.filter({ session_id: sessionId }),
+    enabled: !!sessionId,
   });
 
   const recalculateTimesMutation = useMutation({
@@ -192,6 +200,7 @@ export default function SessionDetail() {
             segments={segments}
             sessionId={sessionId}
             onEdit={handleEdit}
+            onEditPreSession={() => setShowPreSessionDetailsDialog(true)}
           />
         </CardContent>
       </Card>
@@ -208,6 +217,21 @@ export default function SessionDetail() {
             onClose={handleFormClose}
             sessionId={sessionId}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPreSessionDetailsDialog} onOpenChange={setShowPreSessionDetailsDialog}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="shrink-0 border-b border-gray-100 p-6 pb-4">
+            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">Detalles Pre-Sesión</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto">
+            <PreSessionDetailsForm
+              sessionId={sessionId}
+              preSessionDetails={preSessionDetails.length > 0 ? preSessionDetails[0] : null}
+              onClose={() => setShowPreSessionDetailsDialog(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

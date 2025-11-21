@@ -8,7 +8,7 @@ export default function DeleteEventDialog({ open, onOpenChange, onConfirm, event
   const [confirmationText, setConfirmationText] = useState("");
 
   const handleConfirm = () => {
-    if (confirmationText === "Delete") {
+    if (confirmationText === "ELIMINAR") {
       onConfirm();
       setConfirmationText("");
     }
@@ -32,12 +32,12 @@ export default function DeleteEventDialog({ open, onOpenChange, onConfirm, event
         
         <div className="py-4 space-y-3">
           <p className="text-sm text-gray-600">
-            Para confirmar, por favor escribe la palabra <span className="font-bold select-all">Delete</span> a continuación:
+            Para confirmar, por favor escribe la palabra <span className="font-bold select-all">ELIMINAR</span> a continuación:
           </p>
           <Input 
             value={confirmationText}
             onChange={(e) => setConfirmationText(e.target.value)}
-            placeholder="Delete"
+            placeholder="ELIMINAR"
             className="border-red-300 focus-visible:ring-red-500"
           />
         </div>
@@ -49,7 +49,7 @@ export default function DeleteEventDialog({ open, onOpenChange, onConfirm, event
           <Button 
             variant="destructive" 
             onClick={handleConfirm}
-            disabled={confirmationText !== "Delete"}
+            disabled={confirmationText !== "ELIMINAR"}
             className="bg-red-600 hover:bg-red-700 font-bold uppercase"
           >
             Eliminar Evento
