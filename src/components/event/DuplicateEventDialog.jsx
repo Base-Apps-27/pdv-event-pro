@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Copy, Loader2 } from "lucide-react";
+import { createFieldOrigins } from "@/components/utils/fieldOrigins";
 
 export default function DuplicateEventDialog({ event, open, onOpenChange, mode = "duplicate" }) {
   const queryClient = useQueryClient();
@@ -44,6 +45,7 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
       try {
         // 1. Create New Event
         setProgress("Creando nuevo evento...");
+        const originType = isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual');
         const eventData = {
           ...event,
           id: undefined, // Clear ID to create new
@@ -55,7 +57,8 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
           start_date: newStartDate || null,
           end_date: null, // Clear end date as it might not match duration
           status: isTemplateMode ? "template" : "planning",
-          origin: isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual')
+          origin: originType,
+          field_origins: createFieldOrigins(event, originType)
         };
         
         const newEvent = await base44.entities.Event.create(eventData);
@@ -82,7 +85,8 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
             created_by: undefined,
             event_id: newEvent.id,
             date: null, // Clear date to force user to set it
-            origin: isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual')
+            origin: originType,
+            field_origins: createFieldOrigins(session, originType)
           };
           
           const newSession = await base44.entities.Session.create(sessionData);
@@ -97,7 +101,8 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
             updated_date: undefined,
             created_by: undefined,
             session_id: newSession.id,
-            origin: isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual')
+            origin: originType,
+            field_origins: createFieldOrigins(detail, originType)
           });
           }
 
@@ -111,7 +116,8 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
             updated_date: undefined,
             created_by: undefined,
             session_id: newSession.id,
-            origin: isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual')
+            origin: originType,
+            field_origins: createFieldOrigins(task, originType)
           });
           }
 
@@ -125,7 +131,8 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
               updated_date: undefined,
               created_by: undefined,
               session_id: newSession.id,
-              origin: isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual')
+              origin: originType,
+              field_origins: createFieldOrigins(segment, originType)
             });
 
             // 3d. Duplicate Segment Actions
@@ -138,7 +145,8 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
                 updated_date: undefined,
                 created_by: undefined,
                 segment_id: newSegment.id,
-                origin: isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual')
+                origin: originType,
+                field_origins: createFieldOrigins(action, originType)
               });
             }
           }

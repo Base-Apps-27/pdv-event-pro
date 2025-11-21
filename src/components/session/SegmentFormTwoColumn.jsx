@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import SegmentTimelinePreview from "./SegmentTimelinePreview";
+import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -127,6 +128,15 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     art_other_description: segment?.art_other_description || "",
   });
 
+  const [fieldOrigins, setFieldOrigins] = useState(segment?.field_origins || {});
+
+  const updateField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (fieldOrigins[field] && fieldOrigins[field] !== 'manual') {
+      setFieldOrigins(prev => ({ ...prev, [field]: 'manual' }));
+    }
+  };
+
   const calculateTimes = (startTime, durationMin) => {
     if (!startTime || !durationMin) return { end_time: "" };
     
@@ -167,6 +177,18 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
           show_in_projection: template.show_in_projection ?? true,
           show_in_sound: template.show_in_sound ?? true,
           show_in_ushers: template.show_in_ushers ?? true,
+        }));
+
+        // Mark fields from template
+        setFieldOrigins(prev => ({
+          ...prev,
+          title: template.default_title ? 'template' : prev.title,
+          segment_type: 'template',
+          duration_min: template.default_duration_min ? 'template' : prev.duration_min,
+          projection_notes: template.default_projection_notes ? 'template' : 'manual',
+          sound_notes: template.default_sound_notes ? 'template' : 'manual',
+          ushers_notes: template.default_ushers_notes ? 'template' : 'manual',
+          color_code: template.default_color_code ? 'template' : 'manual',
         }));
       }
     }
@@ -254,6 +276,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       ...formData,
       ...times,
       breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : null,
+      field_origins: fieldOrigins,
     };
 
     if (segment) {
@@ -430,13 +453,16 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Título *</Label>
-                  <Input 
-                    id="title" 
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    required 
-                    placeholder="PLENARIA #1: Conquistando"
-                  />
+                  <div className="relative">
+                    <Input 
+                      id="title" 
+                      value={formData.title}
+                      onChange={(e) => updateField('title', e.target.value)}
+                      required 
+                      placeholder="PLENARIA #1: Conquistando"
+                    />
+                    <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'title')} />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -444,7 +470,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     <Label htmlFor="segment_type">Tipo *</Label>
                     <Select 
                       value={formData.segment_type}
-                      onValueChange={(value) => setFormData({...formData, segment_type: value})}
+                      onValueChange={(value) => updateField('segment_type', value)}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -477,12 +503,15 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 {needsPresenter && (
                   <div className="space-y-2">
                     <Label htmlFor="presenter">{getPresenterLabel()}</Label>
-                    <Input 
-                      id="presenter" 
-                      value={formData.presenter}
-                      onChange={(e) => setFormData({...formData, presenter: e.target.value})}
-                      placeholder="Nombre"
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="presenter" 
+                        value={formData.presenter}
+                        onChange={(e) => updateField('presenter', e.target.value)}
+                        placeholder="Nombre"
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'presenter')} />
+                    </div>
                   </div>
                 )}
 
@@ -806,25 +835,31 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 {!isTechOnly && (
                   <div className="space-y-2">
                     <Label htmlFor="description_details">Descripción</Label>
-                    <Textarea 
-                      id="description_details" 
-                      value={formData.description_details}
-                      onChange={(e) => setFormData({...formData, description_details: e.target.value})}
-                      rows={3}
-                      placeholder="Detalles adicionales"
-                    />
+                    <div className="relative">
+                      <Textarea 
+                        id="description_details" 
+                        value={formData.description_details}
+                        onChange={(e) => updateField('description_details', e.target.value)}
+                        rows={3}
+                        placeholder="Detalles adicionales"
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'description_details')} />
+                    </div>
                   </div>
                 )}
 
                 <div className="space-y-2">
                   <Label htmlFor="prep_instructions">Instrucciones de Preparación</Label>
-                  <Textarea 
-                    id="prep_instructions" 
-                    value={formData.prep_instructions}
-                    onChange={(e) => setFormData({...formData, prep_instructions: e.target.value})}
-                    rows={2}
-                    placeholder="Configuración previa, chequeos necesarios..."
-                  />
+                  <div className="relative">
+                    <Textarea 
+                      id="prep_instructions" 
+                      value={formData.prep_instructions}
+                      onChange={(e) => updateField('prep_instructions', e.target.value)}
+                      rows={2}
+                      placeholder="Configuración previa, chequeos necesarios..."
+                    />
+                    <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'prep_instructions')} />
+                  </div>
                 </div>
 
                 {isBreakType && (
@@ -1092,24 +1127,30 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     <>
                       <div className="space-y-1">
                         <Label className="text-xs text-purple-700">Proyección</Label>
-                        <Textarea 
-                          value={formData.projection_notes}
-                          onChange={(e) => setFormData({...formData, projection_notes: e.target.value})}
-                          rows={2}
-                          placeholder="Slides, videos..."
-                          className="text-sm"
-                        />
+                        <div className="relative">
+                          <Textarea 
+                            value={formData.projection_notes}
+                            onChange={(e) => updateField('projection_notes', e.target.value)}
+                            rows={2}
+                            placeholder="Slides, videos..."
+                            className="text-sm"
+                          />
+                          <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'projection_notes')} />
+                        </div>
                       </div>
 
                       <div className="space-y-1">
                         <Label className="text-xs text-red-700">Sonido</Label>
-                        <Textarea 
-                          value={formData.sound_notes}
-                          onChange={(e) => setFormData({...formData, sound_notes: e.target.value})}
-                          rows={2}
-                          placeholder="Micrófonos, cues..."
-                          className="text-sm"
-                        />
+                        <div className="relative">
+                          <Textarea 
+                            value={formData.sound_notes}
+                            onChange={(e) => updateField('sound_notes', e.target.value)}
+                            rows={2}
+                            placeholder="Micrófonos, cues..."
+                            className="text-sm"
+                          />
+                          <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'sound_notes')} />
+                        </div>
                       </div>
                     </>
                   )}
@@ -1117,13 +1158,16 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   {!isBreakType && !isTechOnly && !isBreakoutType && (
                     <div className="space-y-1">
                       <Label className="text-xs text-green-700">Ujieres</Label>
-                      <Textarea 
-                        value={formData.ushers_notes}
-                        onChange={(e) => setFormData({...formData, ushers_notes: e.target.value})}
-                        rows={2}
-                        placeholder="Instrucciones..."
-                        className="text-sm"
-                      />
+                      <div className="relative">
+                        <Textarea 
+                          value={formData.ushers_notes}
+                          onChange={(e) => updateField('ushers_notes', e.target.value)}
+                          rows={2}
+                          placeholder="Instrucciones..."
+                          className="text-sm"
+                        />
+                        <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'ushers_notes')} />
+                      </div>
                     </div>
                   )}
 
@@ -1143,25 +1187,31 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   {!isBreakType && !isBreakoutType && (
                     <div className="space-y-1">
                       <Label className="text-xs text-amber-700">Stage & Decor</Label>
-                      <Textarea 
-                        value={formData.stage_decor_notes}
-                        onChange={(e) => setFormData({...formData, stage_decor_notes: e.target.value})}
-                        rows={2}
-                        placeholder="Mover mesas, preparar escenario..."
-                        className="text-sm"
-                      />
+                      <div className="relative">
+                        <Textarea 
+                          value={formData.stage_decor_notes}
+                          onChange={(e) => updateField('stage_decor_notes', e.target.value)}
+                          rows={2}
+                          placeholder="Mover mesas, preparar escenario..."
+                          className="text-sm"
+                        />
+                        <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'stage_decor_notes')} />
+                      </div>
                     </div>
                   )}
 
                   {!isBreakoutType && (
                     <div className="space-y-1">
                       <Label className="text-xs text-gray-700">Otras Notas</Label>
-                      <Textarea 
-                        value={formData.other_notes}
-                        onChange={(e) => setFormData({...formData, other_notes: e.target.value})}
-                        rows={2}
-                        className="text-sm"
-                      />
+                      <div className="relative">
+                        <Textarea 
+                          value={formData.other_notes}
+                          onChange={(e) => updateField('other_notes', e.target.value)}
+                          rows={2}
+                          className="text-sm"
+                        />
+                        <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'other_notes')} />
+                      </div>
                     </div>
                   )}
                 </div>

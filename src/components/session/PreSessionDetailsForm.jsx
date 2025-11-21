@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Save, X } from "lucide-react";
+import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 
 export default function PreSessionDetailsForm({ sessionId, preSessionDetails, onClose }) {
   const queryClient = useQueryClient();
@@ -18,6 +19,15 @@ export default function PreSessionDetailsForm({ sessionId, preSessionDetails, on
     facility_notes: preSessionDetails?.facility_notes || "",
     general_notes: preSessionDetails?.general_notes || "",
   });
+
+  const [fieldOrigins, setFieldOrigins] = useState(preSessionDetails?.field_origins || {});
+
+  const updateField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (fieldOrigins[field] && fieldOrigins[field] !== 'manual') {
+      setFieldOrigins(prev => ({ ...prev, [field]: 'manual' }));
+    }
+  };
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.PreSessionDetails.create(data),
@@ -40,6 +50,7 @@ export default function PreSessionDetailsForm({ sessionId, preSessionDetails, on
     const dataToSubmit = {
       session_id: sessionId,
       ...formData,
+      field_origins: fieldOrigins,
     };
 
     if (preSessionDetails) {
@@ -53,22 +64,28 @@ export default function PreSessionDetailsForm({ sessionId, preSessionDetails, on
     <form onSubmit={handleSubmit} className="space-y-4 p-4">
       <div className="space-y-2">
         <Label htmlFor="music_profile_id">Música de Ambiente</Label>
-        <Input
-          id="music_profile_id"
-          value={formData.music_profile_id}
-          onChange={(e) => setFormData({ ...formData, music_profile_id: e.target.value })}
-          placeholder="Ej: Pre-service worship mix ES/EN low volume"
-        />
+        <div className="relative">
+          <Input
+            id="music_profile_id"
+            value={formData.music_profile_id}
+            onChange={(e) => updateField('music_profile_id', e.target.value)}
+            placeholder="Ej: Pre-service worship mix ES/EN low volume"
+          />
+          <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'music_profile_id')} />
+        </div>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="slide_pack_id">Loop de Proyección</Label>
-        <Input
-          id="slide_pack_id"
-          value={formData.slide_pack_id}
-          onChange={(e) => setFormData({ ...formData, slide_pack_id: e.target.value })}
-          placeholder="Ej: Pre-service loop Generales 2025"
-        />
+        <div className="relative">
+          <Input
+            id="slide_pack_id"
+            value={formData.slide_pack_id}
+            onChange={(e) => updateField('slide_pack_id', e.target.value)}
+            placeholder="Ej: Pre-service loop Generales 2025"
+          />
+          <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'slide_pack_id')} />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -94,24 +111,30 @@ export default function PreSessionDetailsForm({ sessionId, preSessionDetails, on
 
       <div className="space-y-2">
         <Label htmlFor="facility_notes">Notas de Instalaciones</Label>
-        <Textarea
-          id="facility_notes"
-          value={formData.facility_notes}
-          onChange={(e) => setFormData({ ...formData, facility_notes: e.target.value })}
-          rows={3}
-          placeholder="Notas sobre apertura de puertas, zonas específicas..."
-        />
+        <div className="relative">
+          <Textarea
+            id="facility_notes"
+            value={formData.facility_notes}
+            onChange={(e) => updateField('facility_notes', e.target.value)}
+            rows={3}
+            placeholder="Notas sobre apertura de puertas, zonas específicas..."
+          />
+          <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'facility_notes')} />
+        </div>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="general_notes">Notas Generales</Label>
-        <Textarea
-          id="general_notes"
-          value={formData.general_notes}
-          onChange={(e) => setFormData({ ...formData, general_notes: e.target.value })}
-          rows={3}
-          placeholder="Cualquier otra instrucción importante pre-sesión..."
-        />
+        <div className="relative">
+          <Textarea
+            id="general_notes"
+            value={formData.general_notes}
+            onChange={(e) => updateField('general_notes', e.target.value)}
+            rows={3}
+            placeholder="Cualquier otra instrucción importante pre-sesión..."
+          />
+          <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'general_notes')} />
+        </div>
       </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t">
