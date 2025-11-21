@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Utensils } from "lucide-react";
+import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 
 const HOSPITALITY_CATEGORIES = [
   "Breakfast", "Lunch", "Dinner", "Snacks", "Setup", "Cleanup", "Other"
@@ -23,6 +24,14 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
     location_notes: "",
     notes: "",
   });
+  const [fieldOrigins, setFieldOrigins] = useState({});
+
+  const updateField = (field, value) => {
+    setTaskForm(prev => ({ ...prev, [field]: value }));
+    if (fieldOrigins[field] && fieldOrigins[field] !== 'manual') {
+      setFieldOrigins(prev => ({ ...prev, [field]: 'manual' }));
+    }
+  };
 
   const { data: hospitalityTasks = [], isLoading } = useQuery({
     queryKey: ['hospitalityTasks', sessionId],
@@ -69,25 +78,27 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
 
   const handleEditTask = (task) => {
     setEditingTask(task);
+    setFieldOrigins(task.field_origins || {});
     setTaskForm({
-      category: task.category,
-      time_hint: task.time_hint || "",
-      description: task.description,
-      location_notes: task.location_notes || "",
-      notes: task.notes || "",
+    category: task.category,
+    time_hint: task.time_hint || "",
+    description: task.description,
+    location_notes: task.location_notes || "",
+    notes: task.notes || "",
     });
-  };
+    };
 
-  const handleCancelEdit = () => {
+    const handleCancelEdit = () => {
     setEditingTask(null);
+    setFieldOrigins({});
     setTaskForm({
-      category: "Other",
-      time_hint: "",
-      description: "",
-      location_notes: "",
-      notes: "",
+    category: "Other",
+    time_hint: "",
+    description: "",
+    location_notes: "",
+    notes: "",
     });
-  };
+    };
 
   const handleSubmitTask = (e) => {
     e.preventDefault();
@@ -95,6 +106,7 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
       session_id: sessionId,
       order: editingTask ? editingTask.order : hospitalityTasks.length + 1,
       ...taskForm,
+      field_origins: fieldOrigins,
     };
 
     if (editingTask) {
@@ -152,10 +164,11 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
             <form onSubmit={handleSubmitTask} className="space-y-3">
               <div className="space-y-2">
                 <Label htmlFor="category">Categoría</Label>
-                <Select
-                  value={taskForm.category}
-                  onValueChange={(value) => setTaskForm({ ...taskForm, category: value })}
-                >
+                <div className="relative">
+                  <Select
+                    value={taskForm.category}
+                    onValueChange={(value) => updateField('category', value)}
+                  >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -165,49 +178,63 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
                     ))}
                   </SelectContent>
                 </Select>
+                <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'category')} />
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="description">Descripción *</Label>
-                <Input
-                  id="description"
-                  value={taskForm.description}
-                  onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-                  required
-                  placeholder="Ej: Preparar desayuno para staff"
-                />
+                <div className="relative">
+                  <Input
+                    id="description"
+                    value={taskForm.description}
+                    onChange={(e) => updateField('description', e.target.value)}
+                    required
+                    placeholder="Ej: Preparar desayuno para staff"
+                  />
+                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'description')} />
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="time_hint">Hora/Pista de Tiempo</Label>
-                <Input
-                  id="time_hint"
-                  value={taskForm.time_hint}
-                  onChange={(e) => setTaskForm({ ...taskForm, time_hint: e.target.value })}
-                  placeholder="Ej: 7:30 AM, al final de la sesión"
-                />
+                <div className="relative">
+                  <Input
+                    id="time_hint"
+                    value={taskForm.time_hint}
+                    onChange={(e) => updateField('time_hint', e.target.value)}
+                    placeholder="Ej: 7:30 AM, al final de la sesión"
+                  />
+                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'time_hint')} />
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="location_notes">Notas de Ubicación</Label>
-                <Textarea
-                  id="location_notes"
-                  value={taskForm.location_notes}
-                  onChange={(e) => setTaskForm({ ...taskForm, location_notes: e.target.value })}
-                  rows={2}
-                  placeholder="Ej: Sala A comidas calientes, Sala B café"
-                />
+                <div className="relative">
+                  <Textarea
+                    id="location_notes"
+                    value={taskForm.location_notes}
+                    onChange={(e) => updateField('location_notes', e.target.value)}
+                    rows={2}
+                    placeholder="Ej: Sala A comidas calientes, Sala B café"
+                  />
+                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'location_notes')} />
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="notes">Notas Adicionales</Label>
-                <Textarea
-                  id="notes"
-                  value={taskForm.notes}
-                  onChange={(e) => setTaskForm({ ...taskForm, notes: e.target.value })}
-                  rows={2}
-                  placeholder="Cualquier nota extra para el equipo..."
-                />
+                <div className="relative">
+                  <Textarea
+                    id="notes"
+                    value={taskForm.notes}
+                    onChange={(e) => updateField('notes', e.target.value)}
+                    rows={2}
+                    placeholder="Cualquier nota extra para el equipo..."
+                  />
+                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'notes')} />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2">

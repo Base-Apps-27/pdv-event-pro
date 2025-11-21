@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users, ChevronDown, ChevronUp, RefreshCw, Utensils, Bookmark, Copy } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -29,6 +30,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
   const [showPreSessionDetailsDialog, setShowPreSessionDetailsDialog] = useState(false);
   const [showHospitalityTasksModal, setShowHospitalityTasksModal] = useState(false);
   const [formData, setFormData] = useState({});
+  const [fieldOrigins, setFieldOrigins] = useState({});
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -109,6 +111,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
 
   const openDialog = (session = null) => {
     setEditingSession(session);
+    setFieldOrigins(session?.field_origins || {});
     
     // Calculate suggested start time for new sessions based on previous session
     let suggestedStartTime = '';
@@ -175,6 +178,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
       ...formData,
       default_stage_call_offset_min: parseInt(formData.default_stage_call_offset_min || 15),
       order: editingSession?.order || sessions.length + 1,
+      field_origins: fieldOrigins,
     };
 
     if (editingSession) {
@@ -186,6 +190,9 @@ export default function SessionManager({ eventId, sessions, segments }) {
 
   const updateFormField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (fieldOrigins[field] && fieldOrigins[field] !== 'manual') {
+      setFieldOrigins(prev => ({ ...prev, [field]: 'manual' }));
+    }
   };
 
   const getSegmentCount = (sessionId) => {
@@ -536,60 +543,72 @@ export default function SessionManager({ eventId, sessions, segments }) {
               <div className="space-y-4 max-w-full">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nombre de la Sesión *</Label>
-                  <Input 
-                    id="name" 
-                    name="name" 
-                    value={formData.name}
-                    onChange={(e) => updateFormField('name', e.target.value)}
-                    required 
-                    placeholder="Viernes PM / Sábado AM"
-                  />
+                  <div className="relative">
+                    <Input 
+                      id="name" 
+                      name="name" 
+                      value={formData.name}
+                      onChange={(e) => updateFormField('name', e.target.value)}
+                      required 
+                      placeholder="Viernes PM / Sábado AM"
+                    />
+                    <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'name')} />
+                  </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="date">Fecha *</Label>
-                    <Input 
-                      id="date" 
-                      name="date" 
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) => updateFormField('date', e.target.value)}
-                      required
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="date" 
+                        name="date" 
+                        type="date"
+                        value={formData.date}
+                        onChange={(e) => updateFormField('date', e.target.value)}
+                        required
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'date')} />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="location">Ubicación</Label>
-                    <Input 
-                      id="location" 
-                      name="location" 
-                      value={formData.location}
-                      onChange={(e) => updateFormField('location', e.target.value)}
-                      placeholder="Santuario / Salón principal"
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="location" 
+                        name="location" 
+                        value={formData.location}
+                        onChange={(e) => updateFormField('location', e.target.value)}
+                        placeholder="Santuario / Salón principal"
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'location')} />
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="planned_start_time">Hora Inicio *</Label>
-                    <Input 
-                      id="planned_start_time" 
-                      name="planned_start_time" 
-                      type="time"
-                      value={formData.planned_start_time}
-                      onChange={(e) => updateFormField('planned_start_time', e.target.value)}
-                      min={(() => {
-                        if (!formData.date || editingSession) return undefined;
-                        const sameDaySessions = sessions.filter(s => 
-                          s.date === formData.date && 
-                          s.planned_end_time
-                        ).sort((a, b) => (a.planned_end_time || '').localeCompare(b.planned_end_time || ''));
-                        const lastSession = sameDaySessions[sameDaySessions.length - 1];
-                        return lastSession?.planned_end_time;
-                      })()}
-                      required
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="planned_start_time" 
+                        name="planned_start_time" 
+                        type="time"
+                        value={formData.planned_start_time}
+                        onChange={(e) => updateFormField('planned_start_time', e.target.value)}
+                        min={(() => {
+                          if (!formData.date || editingSession) return undefined;
+                          const sameDaySessions = sessions.filter(s => 
+                            s.date === formData.date && 
+                            s.planned_end_time
+                          ).sort((a, b) => (a.planned_end_time || '').localeCompare(b.planned_end_time || ''));
+                          const lastSession = sameDaySessions[sameDaySessions.length - 1];
+                          return lastSession?.planned_end_time;
+                        })()}
+                        required
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'planned_start_time')} />
+                    </div>
                     {formData.date && !editingSession && (() => {
                       const sameDaySessions = sessions.filter(s => 
                         s.date === formData.date && 
@@ -607,15 +626,18 @@ export default function SessionManager({ eventId, sessions, segments }) {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="planned_end_time">Hora Fin *</Label>
-                    <Input 
-                      id="planned_end_time" 
-                      name="planned_end_time" 
-                      type="time"
-                      value={formData.planned_end_time}
-                      onChange={(e) => updateFormField('planned_end_time', e.target.value)}
-                      min={formData.planned_start_time}
-                      required
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="planned_end_time" 
+                        name="planned_end_time" 
+                        type="time"
+                        value={formData.planned_end_time}
+                        onChange={(e) => updateFormField('planned_end_time', e.target.value)}
+                        min={formData.planned_start_time}
+                        required
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'planned_end_time')} />
+                    </div>
                     {formData.planned_start_time && (
                       <p className="text-xs text-slate-500 mt-1">
                         Debe ser después de {formatTimeToEST(formData.planned_start_time)}
@@ -624,23 +646,27 @@ export default function SessionManager({ eventId, sessions, segments }) {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="default_stage_call_offset_min">Citación de Equipos (min antes)</Label>
-                    <Input 
-                      id="default_stage_call_offset_min" 
-                      name="default_stage_call_offset_min" 
-                      type="number"
-                      value={formData.default_stage_call_offset_min}
-                      onChange={(e) => updateFormField('default_stage_call_offset_min', e.target.value)}
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="default_stage_call_offset_min" 
+                        name="default_stage_call_offset_min" 
+                        type="number"
+                        value={formData.default_stage_call_offset_min}
+                        onChange={(e) => updateFormField('default_stage_call_offset_min', e.target.value)}
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'default_stage_call_offset_min')} />
+                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="session_color">Color de Sesión</Label>
-                  <Select name="session_color" value={formData.session_color} onValueChange={(value) => updateFormField('session_color', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
+                  <div className="relative">
+                    <Select name="session_color" value={formData.session_color} onValueChange={(value) => updateFormField('session_color', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
                       <SelectItem value="green">Verde</SelectItem>
                       <SelectItem value="blue">Azul</SelectItem>
                       <SelectItem value="pink">Rosa</SelectItem>
@@ -650,17 +676,22 @@ export default function SessionManager({ eventId, sessions, segments }) {
                       <SelectItem value="red">Rojo</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'session_color')} />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notas</Label>
-                  <Textarea 
-                    id="notes" 
-                    name="notes" 
-                    value={formData.notes}
-                    onChange={(e) => updateFormField('notes', e.target.value)}
-                    rows={3}
-                  />
+                  <div className="relative">
+                    <Textarea 
+                      id="notes" 
+                      name="notes" 
+                      value={formData.notes}
+                      onChange={(e) => updateFormField('notes', e.target.value)}
+                      rows={3}
+                    />
+                    <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'notes')} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -672,101 +703,128 @@ export default function SessionManager({ eventId, sessions, segments }) {
               <div className="grid md:grid-cols-2 gap-4 max-w-full">
                 <div className="space-y-2">
                   <Label htmlFor="admin_team">Administración</Label>
-                    <Input 
-                      id="admin_team" 
-                      name="admin_team" 
-                      value={formData.admin_team}
-                      onChange={(e) => updateFormField('admin_team', e.target.value)}
-                      placeholder="Isabel Gómez / Yassiel Santos"
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="admin_team" 
+                        name="admin_team" 
+                        value={formData.admin_team}
+                        onChange={(e) => updateFormField('admin_team', e.target.value)}
+                        placeholder="Isabel Gómez / Yassiel Santos"
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'admin_team')} />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="coordinators">Coordinadores</Label>
-                    <Input 
-                      id="coordinators" 
-                      name="coordinators" 
-                      value={formData.coordinators}
-                      onChange={(e) => updateFormField('coordinators', e.target.value)}
-                      placeholder="Rita R. & Indiana"
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="coordinators" 
+                        name="coordinators" 
+                        value={formData.coordinators}
+                        onChange={(e) => updateFormField('coordinators', e.target.value)}
+                        placeholder="Rita R. & Indiana"
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'coordinators')} />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="sound_team">Equipo de Sonido</Label>
-                    <Input 
-                      id="sound_team" 
-                      name="sound_team" 
-                      value={formData.sound_team}
-                      onChange={(e) => updateFormField('sound_team', e.target.value)}
-                      placeholder="P. Randy G."
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="sound_team" 
+                        name="sound_team" 
+                        value={formData.sound_team}
+                        onChange={(e) => updateFormField('sound_team', e.target.value)}
+                        placeholder="P. Randy G."
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'sound_team')} />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="tech_team">Equipo Técnico</Label>
-                    <Input 
-                      id="tech_team" 
-                      name="tech_team" 
-                      value={formData.tech_team}
-                      onChange={(e) => updateFormField('tech_team', e.target.value)}
-                      placeholder="Rick & Danny"
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="tech_team" 
+                        name="tech_team" 
+                        value={formData.tech_team}
+                        onChange={(e) => updateFormField('tech_team', e.target.value)}
+                        placeholder="Rick & Danny"
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'tech_team')} />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="ushers_team">Equipo de Ujieres</Label>
-                    <Input 
-                      id="ushers_team" 
-                      name="ushers_team" 
-                      value={formData.ushers_team}
-                      onChange={(e) => updateFormField('ushers_team', e.target.value)}
-                      placeholder="Emilio & Magda H."
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="ushers_team" 
+                        name="ushers_team" 
+                        value={formData.ushers_team}
+                        onChange={(e) => updateFormField('ushers_team', e.target.value)}
+                        placeholder="Emilio & Magda H."
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'ushers_team')} />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="translation_team">Equipo de Traducción</Label>
-                    <Input 
-                      id="translation_team" 
-                      name="translation_team" 
-                      value={formData.translation_team}
-                      onChange={(e) => updateFormField('translation_team', e.target.value)}
-                      placeholder="Jeremy Mateo"
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="translation_team" 
+                        name="translation_team" 
+                        value={formData.translation_team}
+                        onChange={(e) => updateFormField('translation_team', e.target.value)}
+                        placeholder="Jeremy Mateo"
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'translation_team')} />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="hospitality_team">Equipo de Hospitalidad</Label>
-                    <Input 
-                      id="hospitality_team" 
-                      name="hospitality_team" 
-                      value={formData.hospitality_team}
-                      onChange={(e) => updateFormField('hospitality_team', e.target.value)}
-                      placeholder="Mercedes G. & Verla"
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="hospitality_team" 
+                        name="hospitality_team" 
+                        value={formData.hospitality_team}
+                        onChange={(e) => updateFormField('hospitality_team', e.target.value)}
+                        placeholder="Mercedes G. & Verla"
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'hospitality_team')} />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="photography_team">Fotografía</Label>
-                    <Input 
-                      id="photography_team" 
-                      name="photography_team" 
-                      value={formData.photography_team}
-                      onChange={(e) => updateFormField('photography_team', e.target.value)}
-                      placeholder="Jeremy M."
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="photography_team" 
+                        name="photography_team" 
+                        value={formData.photography_team}
+                        onChange={(e) => updateFormField('photography_team', e.target.value)}
+                        placeholder="Jeremy M."
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'photography_team')} />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="worship_leader">Líder de Alabanza</Label>
-                    <Input 
-                      id="worship_leader" 
-                      name="worship_leader" 
-                      value={formData.worship_leader}
-                      onChange={(e) => updateFormField('worship_leader', e.target.value)}
-                      placeholder="Anthony Estrella"
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="worship_leader" 
+                        name="worship_leader" 
+                        value={formData.worship_leader}
+                        onChange={(e) => updateFormField('worship_leader', e.target.value)}
+                        placeholder="Anthony Estrella"
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'worship_leader')} />
+                    </div>
                   </div>
               </div>
             </div>

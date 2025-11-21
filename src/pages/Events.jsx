@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Plus, Calendar, MapPin, Edit, Trash2, Copy, Save } from "lucide-react";
+import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,8 @@ export default function Events() {
   const [eventToTemplate, setEventToTemplate] = useState(null);
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [fieldOrigins, setFieldOrigins] = useState({});
   const queryClient = useQueryClient();
 
   const { data: allEvents = [], isLoading } = useQuery({
@@ -69,19 +72,19 @@ export default function Events() {
     }
   };
 
+  const updateFormField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (fieldOrigins[field] && fieldOrigins[field] !== 'manual') {
+      setFieldOrigins(prev => ({ ...prev, [field]: 'manual' }));
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
     const data = {
-      name: formData.get('name'),
-      theme: formData.get('theme'),
-      year: parseInt(formData.get('year')),
-      location: formData.get('location'),
-      start_date: formData.get('start_date'),
-      end_date: formData.get('end_date'),
-      description: formData.get('description'),
-      status: formData.get('status'),
-      print_color: formData.get('print_color'),
+      ...formData,
+      year: parseInt(formData.year),
+      field_origins: fieldOrigins,
     };
 
     if (editingEvent) {
@@ -93,6 +96,18 @@ export default function Events() {
 
   const openEditDialog = (event) => {
     setEditingEvent(event);
+    setFieldOrigins(event?.field_origins || {});
+    setFormData({
+      name: event?.name || '',
+      theme: event?.theme || '',
+      year: event?.year || new Date().getFullYear(),
+      location: event?.location || '',
+      start_date: event?.start_date || '',
+      end_date: event?.end_date || '',
+      description: event?.description || '',
+      status: event?.status || 'planning',
+      print_color: event?.print_color || 'blue',
+    });
     setShowDialog(true);
   };
 
@@ -128,7 +143,7 @@ export default function Events() {
             <Copy className="w-4 h-4 mr-2" />
             Desde Plantilla
           </Button>
-          <Button onClick={() => { setEditingEvent(null); setShowDialog(true); }} className="text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6" style={gradientStyle}>
+          <Button onClick={() => openEditDialog(null)} className="text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6" style={gradientStyle}>
             <Plus className="w-5 h-5 mr-2" />
             Nuevo Evento
           </Button>
@@ -216,113 +231,147 @@ export default function Events() {
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nombre del Evento *</Label>
-                <Input 
-                  id="name" 
-                  name="name" 
-                  defaultValue={editingEvent?.name}
-                  required 
-                  placeholder="Congreso 2025"
-                />
+                <div className="relative">
+                  <Input 
+                    id="name" 
+                    name="name" 
+                    value={formData.name}
+                    onChange={(e) => updateFormField('name', e.target.value)}
+                    required 
+                    placeholder="Congreso 2025"
+                  />
+                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'name')} />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="year">Año *</Label>
-                <Input 
-                  id="year" 
-                  name="year" 
-                  type="number"
-                  defaultValue={editingEvent?.year || new Date().getFullYear()}
-                  required 
-                />
+                <div className="relative">
+                  <Input 
+                    id="year" 
+                    name="year" 
+                    type="number"
+                    value={formData.year}
+                    onChange={(e) => updateFormField('year', e.target.value)}
+                    required 
+                  />
+                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'year')} />
+                </div>
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="theme">Tema/Lema</Label>
-              <Input 
-                id="theme" 
-                name="theme" 
-                defaultValue={editingEvent?.theme}
-                placeholder="Conquistando nuevas alturas"
-              />
+              <div className="relative">
+                <Input 
+                  id="theme" 
+                  name="theme" 
+                  value={formData.theme}
+                  onChange={(e) => updateFormField('theme', e.target.value)}
+                  placeholder="Conquistando nuevas alturas"
+                />
+                <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'theme')} />
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="location">Ubicación</Label>
-              <Input 
-                id="location" 
-                name="location" 
-                defaultValue={editingEvent?.location}
-                placeholder="Centro de Convenciones"
-              />
+              <div className="relative">
+                <Input 
+                  id="location" 
+                  name="location" 
+                  value={formData.location}
+                  onChange={(e) => updateFormField('location', e.target.value)}
+                  placeholder="Centro de Convenciones"
+                />
+                <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'location')} />
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start_date">Fecha Inicio</Label>
-                <Input 
-                  id="start_date" 
-                  name="start_date" 
-                  type="date"
-                  defaultValue={editingEvent?.start_date}
-                />
+                <div className="relative">
+                  <Input 
+                    id="start_date" 
+                    name="start_date" 
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => updateFormField('start_date', e.target.value)}
+                  />
+                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'start_date')} />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="end_date">Fecha Fin</Label>
-                <Input 
-                  id="end_date" 
-                  name="end_date" 
-                  type="date"
-                  defaultValue={editingEvent?.end_date}
-                />
+                <div className="relative">
+                  <Input 
+                    id="end_date" 
+                    name="end_date" 
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) => updateFormField('end_date', e.target.value)}
+                  />
+                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'end_date')} />
+                </div>
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="status">Estado</Label>
-                <Select name="status" defaultValue={editingEvent?.status || 'planning'}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="planning">En Planificación</SelectItem>
-                    <SelectItem value="confirmed">Confirmado</SelectItem>
-                    <SelectItem value="in_progress">En Curso</SelectItem>
-                    <SelectItem value="completed">Completado</SelectItem>
-                    <SelectItem value="archived">Archivado</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Select name="status" value={formData.status} onValueChange={(value) => updateFormField('status', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="planning">En Planificación</SelectItem>
+                      <SelectItem value="confirmed">Confirmado</SelectItem>
+                      <SelectItem value="in_progress">En Curso</SelectItem>
+                      <SelectItem value="completed">Completado</SelectItem>
+                      <SelectItem value="archived">Archivado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'status')} />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="print_color">Color de Impresión</Label>
-                <Select name="print_color" defaultValue={editingEvent?.print_color || 'blue'}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="blue">Azul</SelectItem>
-                    <SelectItem value="green">Verde</SelectItem>
-                    <SelectItem value="pink">Rosa</SelectItem>
-                    <SelectItem value="orange">Naranja</SelectItem>
-                    <SelectItem value="yellow">Amarillo</SelectItem>
-                    <SelectItem value="purple">Morado</SelectItem>
-                    <SelectItem value="red">Rojo</SelectItem>
-                    <SelectItem value="teal">Turquesa</SelectItem>
-                    <SelectItem value="charcoal">Carbón</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Select name="print_color" value={formData.print_color} onValueChange={(value) => updateFormField('print_color', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="blue">Azul</SelectItem>
+                      <SelectItem value="green">Verde</SelectItem>
+                      <SelectItem value="pink">Rosa</SelectItem>
+                      <SelectItem value="orange">Naranja</SelectItem>
+                      <SelectItem value="yellow">Amarillo</SelectItem>
+                      <SelectItem value="purple">Morado</SelectItem>
+                      <SelectItem value="red">Rojo</SelectItem>
+                      <SelectItem value="teal">Turquesa</SelectItem>
+                      <SelectItem value="charcoal">Carbón</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'print_color')} />
+                </div>
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="description">Descripción</Label>
-              <Textarea 
-                id="description" 
-                name="description" 
-                defaultValue={editingEvent?.description}
-                rows={3}
-                placeholder="Descripción general del evento"
-              />
+              <div className="relative">
+                <Textarea 
+                  id="description" 
+                  name="description" 
+                  value={formData.description}
+                  onChange={(e) => updateFormField('description', e.target.value)}
+                  rows={3}
+                  placeholder="Descripción general del evento"
+                />
+                <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'description')} />
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
