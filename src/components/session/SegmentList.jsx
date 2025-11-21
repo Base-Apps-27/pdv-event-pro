@@ -5,7 +5,8 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, GripVertical, Music, MessageSquare, Languages, ListOrdered, Circle, Users, AlertTriangle } from "lucide-react";
+import { Edit, Trash2, GripVertical, Music, MessageSquare, Languages, ListOrdered, Circle, Users, AlertTriangle, Bookmark, Copy } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 export default function SegmentList({ segments, sessionId, onEdit, onEditPreSession }) {
@@ -158,8 +159,23 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className={`font-semibold ${preSession ? 'text-slate-900' : 'text-gray-400'}`}>
+                      <div className={`font-semibold ${preSession ? 'text-slate-900' : 'text-gray-400'} flex items-center gap-2`}>
                         {preSession ? 'Preparación Pre-Sesión' : 'Pre-Sesión (vacío)'}
+                        {preSession?.origin === 'template' && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge variant="outline" className="h-5 px-1 bg-blue-50 text-blue-600 border-blue-200 text-[10px]">
+                                  <Bookmark className="w-3 h-3 mr-1" />
+                                  Plantilla
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Detalles desde plantilla</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </div>
                       {preSession && (
                         <div className="text-xs text-slate-600 mt-0.5">
@@ -233,7 +249,39 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                 </TableCell>
                 <TableCell>
                   <div>
-                    <div className="font-semibold text-slate-900">{segment.title}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="font-semibold text-slate-900">{segment.title}</div>
+                      {segment.origin === 'template' && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge variant="outline" className="h-5 px-1 bg-blue-50 text-blue-600 border-blue-200 text-[10px]">
+                                <Bookmark className="w-3 h-3 mr-1" />
+                                Plantilla
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Desde plantilla</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      {segment.origin === 'duplicate' && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge variant="outline" className="h-5 px-1 bg-amber-50 text-amber-600 border-amber-200 text-[10px]">
+                                <Copy className="w-3 h-3 mr-1" />
+                                Copia
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Duplicado</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
                     {segment.presenter && (
                       <div className="text-xs text-slate-600 mt-0.5">
                         {segment.segment_type === "Alabanza" ? "Líder: " : segment.segment_type === "Plenaria" ? "Predicador: " : ""}

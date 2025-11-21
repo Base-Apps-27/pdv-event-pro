@@ -54,7 +54,8 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
           year: parseInt(newYear),
           start_date: newStartDate || null,
           end_date: null, // Clear end date as it might not match duration
-          status: isTemplateMode ? "template" : "planning"
+          status: isTemplateMode ? "template" : "planning",
+          origin: isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual')
         };
         
         const newEvent = await base44.entities.Event.create(eventData);
@@ -89,27 +90,29 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
           // 3a. Duplicate PreSessionDetails
           const preSessionDetails = await base44.entities.PreSessionDetails.filter({ session_id: session.id });
           for (const detail of preSessionDetails) {
-            await base44.entities.PreSessionDetails.create({
-              ...detail,
-              id: undefined,
-              created_date: undefined,
-              updated_date: undefined,
-              created_by: undefined,
-              session_id: newSession.id
-            });
+          await base44.entities.PreSessionDetails.create({
+            ...detail,
+            id: undefined,
+            created_date: undefined,
+            updated_date: undefined,
+            created_by: undefined,
+            session_id: newSession.id,
+            origin: isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual')
+          });
           }
 
           // 3b. Duplicate HospitalityTasks
           const hospitalityTasks = await base44.entities.HospitalityTask.filter({ session_id: session.id });
           for (const task of hospitalityTasks) {
-            await base44.entities.HospitalityTask.create({
-              ...task,
-              id: undefined,
-              created_date: undefined,
-              updated_date: undefined,
-              created_by: undefined,
-              session_id: newSession.id
-            });
+          await base44.entities.HospitalityTask.create({
+            ...task,
+            id: undefined,
+            created_date: undefined,
+            updated_date: undefined,
+            created_by: undefined,
+            session_id: newSession.id,
+            origin: isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual')
+          });
           }
 
           // 3c. Duplicate Segments
@@ -134,7 +137,8 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
                 created_date: undefined,
                 updated_date: undefined,
                 created_by: undefined,
-                segment_id: newSegment.id
+                segment_id: newSegment.id,
+                origin: isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual')
               });
             }
           }

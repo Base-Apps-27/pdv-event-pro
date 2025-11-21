@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users, ChevronDown, ChevronUp, RefreshCw, Utensils } from "lucide-react";
+import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users, ChevronDown, ChevronUp, RefreshCw, Utensils, Bookmark, Copy } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -268,7 +269,39 @@ export default function SessionManager({ eventId, sessions, segments }) {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <CardTitle className="text-xl mb-3">{session.name}</CardTitle>
+                      <div className="flex items-center gap-2 mb-3">
+                        <CardTitle className="text-xl">{session.name}</CardTitle>
+                        {session.origin === 'template' && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge variant="outline" className="h-5 px-1 bg-blue-50 text-blue-600 border-blue-200 text-[10px]">
+                                  <Bookmark className="w-3 h-3 mr-1" />
+                                  Plantilla
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Esta sesión proviene de una plantilla</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        {session.origin === 'duplicate' && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge variant="outline" className="h-5 px-1 bg-amber-50 text-amber-600 border-amber-200 text-[10px]">
+                                  <Copy className="w-3 h-3 mr-1" />
+                                  Copia
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Esta sesión es una copia duplicada</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                         {session.date && (

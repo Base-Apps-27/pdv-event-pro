@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,6 +71,36 @@ export default function EventDetail() {
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 uppercase font-['Bebas_Neue'] tracking-tight">{event.name}</h1>
               <Badge variant="outline" className="text-xs uppercase tracking-wider border-gray-300 text-gray-500">{event.year}</Badge>
+              {event.origin === 'template' && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge variant="outline" className="h-6 px-2 bg-blue-50 text-blue-600 border-blue-200 text-xs">
+                        <Bookmark className="w-3 h-3 mr-1" />
+                        Plantilla
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Este evento fue creado desde una plantilla</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {event.origin === 'duplicate' && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge variant="outline" className="h-6 px-2 bg-amber-50 text-amber-600 border-amber-200 text-xs">
+                        <Copy className="w-3 h-3 mr-1" />
+                        Copia
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Este evento es una copia duplicada</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
             {event.theme && <p className="text-xl text-pdv-teal font-medium italic">"{event.theme}"</p>}
           </div>
