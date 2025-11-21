@@ -88,7 +88,7 @@
 }
 
 .sidebar-active-gradient {
-  background: linear-gradient(90deg, var(--brand-green) 0%, var(--brand-yellow) 100%);
+  background: linear-gradient(90deg, var(--brand-teal) 0%, var(--brand-green) 50%, var(--brand-yellow) 100%);
 }
 
 .brand-gradient-text {

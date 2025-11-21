@@ -18,7 +18,7 @@ export default function Layout({ children }) {
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Dark Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-pdv-charcoal text-white fixed h-full font-sans">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-black text-white fixed h-full font-sans">
         <div className="p-6 mb-2">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 sidebar-active-gradient rounded-lg flex items-center justify-center shadow-lg">
