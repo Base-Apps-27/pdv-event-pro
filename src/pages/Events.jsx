@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DeleteEventDialog from "@/components/event/DeleteEventDialog";
+import DuplicateEventDialog from "@/components/event/DuplicateEventDialog";
 
 export default function Events() {
   const gradientStyle = {
@@ -21,6 +22,7 @@ export default function Events() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [eventToDelete, setEventToDelete] = useState(null);
+  const [eventToDuplicate, setEventToDuplicate] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: events = [], isLoading } = useQuery({
@@ -158,6 +160,14 @@ export default function Events() {
                   </Link>
                   <Button variant="outline" size="sm" onClick={() => openEditDialog(event)}>
                     <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setEventToDuplicate(event)}
+                    title="Duplicar evento"
+                  >
+                    <Copy className="w-4 h-4 text-blue-500" />
                   </Button>
                   <Button 
                     variant="outline" 
@@ -308,6 +318,12 @@ export default function Events() {
         onOpenChange={(open) => !open && setEventToDelete(null)}
         onConfirm={() => deleteMutation.mutate(eventToDelete.id)}
         eventName={eventToDelete?.name}
+      />
+
+      <DuplicateEventDialog
+        open={!!eventToDuplicate}
+        onOpenChange={(open) => !open && setEventToDuplicate(null)}
+        event={eventToDuplicate}
       />
     </div>
   );
