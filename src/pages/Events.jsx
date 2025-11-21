@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Plus, Calendar, MapPin, Edit, Trash2, Copy } from "lucide-react";
+import { Plus, Calendar, MapPin, Edit, Trash2, Copy, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,12 +23,15 @@ export default function Events() {
   const [editingEvent, setEditingEvent] = useState(null);
   const [eventToDelete, setEventToDelete] = useState(null);
   const [eventToDuplicate, setEventToDuplicate] = useState(null);
+  const [eventToTemplate, setEventToTemplate] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: events = [], isLoading } = useQuery({
+  const { data: allEvents = [], isLoading } = useQuery({
     queryKey: ['events'],
     queryFn: () => base44.entities.Event.list('-year'),
   });
+
+  const events = allEvents.filter(e => e.status !== 'template');
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Event.create(data),
@@ -168,6 +171,14 @@ export default function Events() {
                     title="Duplicar evento"
                   >
                     <Copy className="w-4 h-4 text-blue-500" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setEventToTemplate(event)}
+                    title="Guardar como plantilla"
+                  >
+                    <Save className="w-4 h-4 text-amber-600" />
                   </Button>
                   <Button 
                     variant="outline" 
@@ -324,6 +335,14 @@ export default function Events() {
         open={!!eventToDuplicate}
         onOpenChange={(open) => !open && setEventToDuplicate(null)}
         event={eventToDuplicate}
+        mode="duplicate"
+      />
+
+      <DuplicateEventDialog
+        open={!!eventToTemplate}
+        onOpenChange={(open) => !open && setEventToTemplate(null)}
+        event={eventToTemplate}
+        mode="template"
       />
     </div>
   );

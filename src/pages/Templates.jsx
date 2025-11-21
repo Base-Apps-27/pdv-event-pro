@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, FileText, Copy } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Copy, Calendar, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DuplicateEventDialog from "@/components/event/DuplicateEventDialog";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -29,17 +31,30 @@ const COLOR_CODES = [
 export default function Templates() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [templateToUse, setTemplateToUse] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: templates = [] } = useQuery({
-    queryKey: ['templates'],
+  const { data: segmentTemplates = [] } = useQuery({
+    queryKey: ['segmentTemplates'],
     queryFn: () => base44.entities.SegmentTemplate.list(),
+  });
+
+  const { data: eventTemplates = [] } = useQuery({
+    queryKey: ['eventTemplates'],
+    queryFn: () => base44.entities.Event.filter({ status: 'template' }),
+  });
+
+  const deleteEventTemplateMutation = useMutation({
+    mutationFn: (id) => base44.entities.Event.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['eventTemplates']);
+    },
   });
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.SegmentTemplate.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['templates']);
+      queryClient.invalidateQueries(['segmentTemplates']);
       setShowDialog(false);
       setEditingTemplate(null);
     },
@@ -48,7 +63,7 @@ export default function Templates() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.SegmentTemplate.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['templates']);
+      queryClient.invalidateQueries(['segmentTemplates']);
       setShowDialog(false);
       setEditingTemplate(null);
     },
@@ -57,7 +72,7 @@ export default function Templates() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.SegmentTemplate.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['templates']);
+      queryClient.invalidateQueries(['segmentTemplates']);
     },
   });
 
@@ -101,90 +116,180 @@ export default function Templates() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Plantillas de Segmentos</h1>
-          <p className="text-slate-600 mt-1">Crea plantillas reutilizables para agilizar la programación</p>
+          <h1 className="text-3xl font-bold text-slate-900">Gestor de Plantillas</h1>
+          <p className="text-slate-600 mt-1">Administra plantillas de eventos y segmentos</p>
         </div>
-        <Button onClick={() => { setEditingTemplate(null); setShowDialog(true); }} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Plantilla
-        </Button>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates.map((template) => (
-          <Card key={template.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-lg mb-2">{template.name}</CardTitle>
-                  <div className="flex gap-2">
-                    <Badge className={`${colorSchemes[template.default_color_code || 'default']} border text-xs`}>
-                      {template.segment_type}
-                    </Badge>
-                  </div>
-                </div>
-                <FileText className="w-5 h-5 text-slate-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {template.default_title && (
-                  <div>
-                    <p className="text-xs text-slate-500">Título predeterminado</p>
-                    <p className="text-sm font-medium text-slate-900">{template.default_title}</p>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-xs text-slate-500">Duración</p>
-                    <p className="font-medium">{template.default_duration_min} min</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Llamado</p>
-                    <p className="font-medium">{template.default_stage_call_offset_min} min antes</p>
-                  </div>
-                </div>
+      <Tabs defaultValue="events">
+        <TabsList className="mb-6">
+          <TabsTrigger value="events" className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Plantillas de Eventos
+          </TabsTrigger>
+          <TabsTrigger value="segments" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Plantillas de Segmentos
+          </TabsTrigger>
+        </TabsList>
 
-                <div className="pt-3 border-t border-slate-100 flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => { setEditingTemplate(template); setShowDialog(true); }}
-                    className="flex-1"
-                  >
-                    <Edit className="w-4 h-4 mr-1" />
-                    Editar
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      if (confirm('¿Eliminar esta plantilla?')) {
-                        deleteMutation.mutate(template.id);
-                      }
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <TabsContent value="events">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {eventTemplates.map((template) => (
+              <Card key={template.id} className="hover:shadow-lg transition-shadow bg-white border-t-4 border-t-blue-500">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg mb-2">{template.name}</CardTitle>
+                      {template.theme && (
+                        <p className="text-sm text-slate-500 italic">"{template.theme}"</p>
+                      )}
+                    </div>
+                    <Calendar className="w-5 h-5 text-blue-500" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="text-sm text-slate-600">
+                      Esta plantilla incluye toda la estructura de sesiones, segmentos y notas del evento original.
+                    </div>
 
-        {templates.length === 0 && (
-          <Card className="col-span-full p-12 text-center border-dashed border-2">
-            <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">No hay plantillas</h3>
-            <p className="text-slate-500 mb-4">Crea tu primera plantilla para agilizar la creación de segmentos</p>
-            <Button onClick={() => setShowDialog(true)}>
+                    <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                      <Button 
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                        onClick={() => setTemplateToUse(template)}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Crear Evento
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          if (confirm('¿Eliminar esta plantilla de evento? Esta acción no se puede deshacer.')) {
+                            deleteEventTemplateMutation.mutate(template.id);
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Eliminar Plantilla
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {eventTemplates.length === 0 && (
+              <Card className="col-span-full p-12 text-center border-dashed border-2 bg-slate-50">
+                <Calendar className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-slate-900 mb-2">No hay plantillas de eventos</h3>
+                <p className="text-slate-500 mb-4">
+                  Puedes guardar cualquier evento existente como plantilla desde la página de Eventos.
+                </p>
+                <Button variant="outline" asChild>
+                  <a href="/Events">
+                    Ir a Eventos <ArrowRight className="w-4 h-4 ml-2" />
+                  </a>
+                </Button>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="segments">
+          <div className="flex justify-end mb-4">
+            <Button onClick={() => { setEditingTemplate(null); setShowDialog(true); }} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="w-4 h-4 mr-2" />
-              Crear Plantilla
+              Nueva Plantilla de Segmento
             </Button>
-          </Card>
-        )}
-      </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {segmentTemplates.map((template) => (
+              <Card key={template.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg mb-2">{template.name}</CardTitle>
+                      <div className="flex gap-2">
+                        <Badge className={`${colorSchemes[template.default_color_code || 'default']} border text-xs`}>
+                          {template.segment_type}
+                        </Badge>
+                      </div>
+                    </div>
+                    <FileText className="w-5 h-5 text-slate-400" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {template.default_title && (
+                      <div>
+                        <p className="text-xs text-slate-500">Título predeterminado</p>
+                        <p className="text-sm font-medium text-slate-900">{template.default_title}</p>
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-xs text-slate-500">Duración</p>
+                        <p className="font-medium">{template.default_duration_min} min</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Llamado</p>
+                        <p className="font-medium">{template.default_stage_call_offset_min} min antes</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100 flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => { setEditingTemplate(template); setShowDialog(true); }}
+                        className="flex-1"
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        Editar
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          if (confirm('¿Eliminar esta plantilla?')) {
+                            deleteMutation.mutate(template.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {segmentTemplates.length === 0 && (
+              <Card className="col-span-full p-12 text-center border-dashed border-2">
+                <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-slate-900 mb-2">No hay plantillas de segmentos</h3>
+                <p className="text-slate-500 mb-4">Crea tu primera plantilla para agilizar la creación de segmentos</p>
+                <Button onClick={() => setShowDialog(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Crear Plantilla
+                </Button>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      <DuplicateEventDialog
+        open={!!templateToUse}
+        onOpenChange={(open) => !open && setTemplateToUse(null)}
+        event={templateToUse}
+        mode="from_template"
+      />
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">

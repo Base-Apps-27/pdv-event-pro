@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Copy, Loader2 } from "lucide-react";
 
-export default function DuplicateEventDialog({ event, open, onOpenChange }) {
+export default function DuplicateEventDialog({ event, open, onOpenChange, mode = "duplicate" }) {
   const queryClient = useQueryClient();
   const [newName, setNewName] = useState("");
   const [newYear, setNewYear] = useState("");
@@ -15,15 +15,28 @@ export default function DuplicateEventDialog({ event, open, onOpenChange }) {
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [progress, setProgress] = useState("");
 
+  const isTemplateMode = mode === "template";
+  const isFromTemplateMode = mode === "from_template";
+
   // Reset form when event changes
   React.useEffect(() => {
     if (event && open) {
-      setNewName(`${event.name} (Copia)`);
-      setNewYear(event.year);
-      setNewStartDate("");
+      if (isTemplateMode) {
+        setNewName(`Plantilla: ${event.name}`);
+        setNewYear(new Date().getFullYear()); // Templates usually don't have a specific year, but we need one for the schema. Default to current.
+        setNewStartDate("");
+      } else if (isFromTemplateMode) {
+        setNewName(event.name.replace("Plantilla: ", ""));
+        setNewYear(new Date().getFullYear());
+        setNewStartDate("");
+      } else {
+        setNewName(`${event.name} (Copia)`);
+        setNewYear(event.year);
+        setNewStartDate("");
+      }
       setProgress("");
     }
-  }, [event, open]);
+  }, [event, open, mode]);
 
   const duplicateEventMutation = useMutation({
     mutationFn: async () => {
@@ -41,7 +54,7 @@ export default function DuplicateEventDialog({ event, open, onOpenChange }) {
           year: parseInt(newYear),
           start_date: newStartDate || null,
           end_date: null, // Clear end date as it might not match duration
-          status: "planning"
+          status: isTemplateMode ? "template" : "planning"
         };
         
         const newEvent = await base44.entities.Event.create(eventData);
@@ -154,21 +167,23 @@ export default function DuplicateEventDialog({ event, open, onOpenChange }) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">
             <Copy className="w-6 h-6 text-blue-600" />
-            Duplicar Evento
+            {isTemplateMode ? "Guardar como Plantilla" : isFromTemplateMode ? "Crear desde Plantilla" : "Duplicar Evento"}
           </DialogTitle>
           <DialogDescription>
-            Esto creará una copia completa del evento, incluyendo sesiones, segmentos y notas.
+            {isTemplateMode 
+              ? "Esto guardará el evento como una plantilla reutilizable en la sección de Plantillas."
+              : "Esto creará una copia completa del evento, incluyendo sesiones, segmentos y notas."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="newName">Nuevo Nombre</Label>
+            <Label htmlFor="newName">Nombre</Label>
             <Input
               id="newName"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="Nombre del evento"
+              placeholder="Nombre"
               disabled={isDuplicating}
             />
           </div>
@@ -184,16 +199,18 @@ export default function DuplicateEventDialog({ event, open, onOpenChange }) {
                 disabled={isDuplicating}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="newStartDate">Nueva Fecha Inicio</Label>
-              <Input
-                id="newStartDate"
-                type="date"
-                value={newStartDate}
-                onChange={(e) => setNewStartDate(e.target.value)}
-                disabled={isDuplicating}
-              />
-            </div>
+            {!isTemplateMode && (
+              <div className="grid gap-2">
+                <Label htmlFor="newStartDate">Fecha Inicio</Label>
+                <Input
+                  id="newStartDate"
+                  type="date"
+                  value={newStartDate}
+                  onChange={(e) => setNewStartDate(e.target.value)}
+                  disabled={isDuplicating}
+                />
+              </div>
+            )}
           </div>
           
           {isDuplicating && (
@@ -213,7 +230,7 @@ export default function DuplicateEventDialog({ event, open, onOpenChange }) {
             disabled={!newName || !newYear || isDuplicating}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            {isDuplicating ? "Duplicando..." : "Duplicar Evento"}
+            {isDuplicating ? (isTemplateMode ? "Guardando..." : "Creando...") : (isTemplateMode ? "Guardar Plantilla" : "Crear Evento")}
           </Button>
         </DialogFooter>
       </DialogContent>
