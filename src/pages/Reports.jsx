@@ -145,6 +145,7 @@ export default function Reports() {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-bold text-gray-900 uppercase tracking-tight mb-1">
+                    <span className="hidden print:inline mr-2 text-gray-500">{selectedEvent.name} —</span>
                     {session.name}
                   </h2>
                   {hasHospitalityTasks && (
@@ -800,9 +801,6 @@ export default function Reports() {
             size: letter landscape;
             margin: 0.5cm;
           }
-          body {
-            zoom: 0.78;
-          }
           body * {
             visibility: hidden;
           }
@@ -867,25 +865,7 @@ export default function Reports() {
           .print-session .mb-4 {
             margin-bottom: 0.5rem !important;
           }
-          .print-page-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 50px;
-            background: white;
-            z-index: 1000;
-            border-bottom: 2px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 0 !important;
-          }
 
-          .print-header-spacer {
-            height: 60px;
-            display: block;
-          }
         }
       `}</style>
       
@@ -966,16 +946,7 @@ export default function Reports() {
 
         {selectedEventId && selectedEvent && (
           <div id="printable-report" className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="print-page-header hidden print:flex flex-col justify-center">
-              <div>
-                <h1 className="text-lg font-bold text-gray-900 inline">{selectedEvent.name}</h1>
-                {selectedEvent.theme && (
-                  <p className="text-sm text-pdv-green italic inline ml-2">"{selectedEvent.theme}"</p>
-                )}
-              </div>
-            </div>
-            {/* Spacer for the fixed header in print mode */}
-            <div className="hidden print:block print-header-spacer"></div>
+
 
             {/* Standard header for screen view */}
             <div className="text-center mb-3 border-b border-gray-300 pb-2 print:hidden">
