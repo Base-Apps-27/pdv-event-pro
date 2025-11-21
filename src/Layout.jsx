@@ -10,6 +10,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Layout({ children }) {
+  // Hardcoded brand colors for reliable gradient rendering
+  const gradientStyle = {
+    background: 'linear-gradient(90deg, #0d9488 0%, #16a34a 50%, #ca8a04 100%)', // Teal-600 -> Green-600 -> Yellow-600
+  };
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -21,7 +25,7 @@ export default function Layout({ children }) {
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-black text-white fixed h-full font-sans">
         <div className="p-6 mb-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime rounded-lg flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg" style={gradientStyle}>
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -37,9 +41,10 @@ export default function Layout({ children }) {
             to={createPageUrl("Dashboard")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Dashboard"))
-                ? "bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime text-white shadow-md"
+                ? "text-white shadow-md"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
+            style={isActive(createPageUrl("Dashboard")) ? gradientStyle : {}}
           >
             <LayoutDashboard className="w-5 h-5" />
             Dashboard
@@ -51,9 +56,10 @@ export default function Layout({ children }) {
               isActive(createPageUrl("Events")) || 
               isActive(createPageUrl("EventDetail")) || 
               isActive(createPageUrl("SessionDetail"))
-                ? "bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime text-white shadow-md"
+                ? "text-white shadow-md"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
+            style={isActive(createPageUrl("Events")) || isActive(createPageUrl("EventDetail")) || isActive(createPageUrl("SessionDetail")) ? gradientStyle : {}}
           >
             <Calendar className="w-5 h-5" />
             Eventos
@@ -63,9 +69,10 @@ export default function Layout({ children }) {
             to={createPageUrl("Reports")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Reports"))
-                ? "bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime text-white shadow-md"
+                ? "text-white shadow-md"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
+            style={isActive(createPageUrl("Reports")) ? gradientStyle : {}}
           >
             <FileText className="w-5 h-5" />
             Informes
@@ -76,9 +83,10 @@ export default function Layout({ children }) {
             to={createPageUrl("Rooms")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Rooms"))
-                ? "bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime text-white shadow-md"
+                ? "text-white shadow-md"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
+            style={isActive(createPageUrl("Rooms")) ? gradientStyle : {}}
           >
             <MapPin className="w-5 h-5" />
             Salas
@@ -88,9 +96,10 @@ export default function Layout({ children }) {
             to={createPageUrl("Templates")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Templates"))
-                ? "bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime text-white shadow-md"
+                ? "text-white shadow-md"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
+            style={isActive(createPageUrl("Templates")) ? gradientStyle : {}}
           >
             <Copy className="w-5 h-5" />
             Plantillas
@@ -106,7 +115,7 @@ export default function Layout({ children }) {
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={gradientStyle}>
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -132,8 +141,10 @@ export default function Layout({ children }) {
                     to={createPageUrl("Dashboard")}
                     className={`block px-4 py-2 rounded font-semibold uppercase text-sm ${
                       isActive(createPageUrl("Dashboard"))
-                        ? "bg-pdv-green text-white"
-                        : "text-gray-700 hover:bg-pdv-green hover:bg-opacity-10"
+                        ? "text-white"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                    style={isActive(createPageUrl("Dashboard")) ? gradientStyle : {}}
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
