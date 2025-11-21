@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DeleteEventDialog from "@/components/event/DeleteEventDialog";
 import DuplicateEventDialog from "@/components/event/DuplicateEventDialog";
+import TemplateSelectorDialog from "@/components/event/TemplateSelectorDialog";
 
 export default function Events() {
   const gradientStyle = {
@@ -24,6 +25,8 @@ export default function Events() {
   const [eventToDelete, setEventToDelete] = useState(null);
   const [eventToDuplicate, setEventToDuplicate] = useState(null);
   const [eventToTemplate, setEventToTemplate] = useState(null);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: allEvents = [], isLoading } = useQuery({
@@ -116,11 +119,21 @@ export default function Events() {
           <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">Eventos</h1>
           <p className="text-gray-500 mt-1 font-medium">Gestiona tus congresos y actividades especiales</p>
         </div>
-        <Button onClick={() => { setEditingEvent(null); setShowDialog(true); }} className="text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6" style={gradientStyle}>
-          <Plus className="w-5 h-5 mr-2" />
-          Nuevo Evento
-        </Button>
-      </div>
+        <div className="flex gap-3">
+          <Button 
+            onClick={() => setShowTemplateSelector(true)} 
+            variant="outline"
+            className="shadow-sm hover:shadow-md transition-all font-bold uppercase px-4 border-gray-300 text-gray-600 hover:text-blue-600 hover:border-blue-300"
+          >
+            <Copy className="w-4 h-4 mr-2" />
+            Desde Plantilla
+          </Button>
+          <Button onClick={() => { setEditingEvent(null); setShowDialog(true); }} className="text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6" style={gradientStyle}>
+            <Plus className="w-5 h-5 mr-2" />
+            Nuevo Evento
+          </Button>
+        </div>
+        </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event) => (
@@ -343,6 +356,22 @@ export default function Events() {
         onOpenChange={(open) => !open && setEventToTemplate(null)}
         event={eventToTemplate}
         mode="template"
+      />
+
+      <TemplateSelectorDialog
+        open={showTemplateSelector}
+        onOpenChange={setShowTemplateSelector}
+        onSelect={(template) => {
+          setShowTemplateSelector(false);
+          setSelectedTemplate(template);
+        }}
+      />
+
+      <DuplicateEventDialog
+        open={!!selectedTemplate}
+        onOpenChange={(open) => !open && setSelectedTemplate(null)}
+        event={selectedTemplate}
+        mode="from_template"
       />
     </div>
   );
