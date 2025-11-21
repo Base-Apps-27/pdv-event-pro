@@ -11,6 +11,9 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function Dashboard() {
+  const gradientStyle = {
+    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+  };
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['events'],
     queryFn: () => base44.entities.Event.list('-year'),
@@ -63,7 +66,7 @@ export default function Dashboard() {
   return (
     <div className="p-6 md:p-8 space-y-8">
       {/* Hero Header with Brand Gradient */}
-      <div className="brand-gradient rounded-2xl p-10 text-[#1A1A1A] shadow-lg relative overflow-hidden">
+      <div className="rounded-2xl p-10 text-[#1A1A1A] shadow-lg relative overflow-hidden" style={gradientStyle}>
          {/* Decorative circle for texture */}
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-white opacity-20 rounded-full blur-3xl"></div>
         
@@ -138,7 +141,7 @@ export default function Dashboard() {
           <CardHeader className="bg-gradient-to-r from-gray-50 to-transparent border-b border-gray-200">
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl font-bold uppercase tracking-tight text-gray-900">Próximo Evento</CardTitle>
-              <Badge className="gradient-pdv text-white font-bold uppercase border-none">Destacado</Badge>
+              <Badge className="text-white font-bold uppercase border-none" style={gradientStyle}>Destacado</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-6">
@@ -251,7 +254,7 @@ export default function Dashboard() {
               <h3 className="text-lg font-bold uppercase text-gray-900 mb-2">No hay eventos</h3>
               <p className="text-gray-600 mb-4">Comienza creando tu primer evento</p>
               <Link to={createPageUrl("Events")}>
-                <Button className="gradient-pdv text-white font-bold uppercase">
+                <Button className="text-white font-bold uppercase" style={gradientStyle}>
                   <Plus className="w-4 h-4 mr-2" />
                   Crear Evento
                 </Button>

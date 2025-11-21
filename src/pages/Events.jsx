@@ -15,6 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import DeleteEventDialog from "@/components/event/DeleteEventDialog";
 
 export default function Events() {
+  const gradientStyle = {
+    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+  };
   const [showDialog, setShowDialog] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [eventToDelete, setEventToDelete] = useState(null);
@@ -108,7 +111,7 @@ export default function Events() {
           <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">Eventos</h1>
           <p className="text-gray-500 mt-1 font-medium">Gestiona tus congresos y actividades especiales</p>
         </div>
-        <Button onClick={() => { setEditingEvent(null); setShowDialog(true); }} className="gradient-pdv text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6">
+        <Button onClick={() => { setEditingEvent(null); setShowDialog(true); }} className="text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6" style={gradientStyle}>
           <Plus className="w-5 h-5 mr-2" />
           Nuevo Evento
         </Button>
@@ -292,7 +295,7 @@ export default function Events() {
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="gradient-pdv text-white font-bold uppercase">
+              <Button type="submit" className="text-white font-bold uppercase" style={gradientStyle}>
                 {editingEvent ? 'Guardar' : 'Crear'}
               </Button>
             </div>
