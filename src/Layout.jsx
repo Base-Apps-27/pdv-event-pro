@@ -21,7 +21,7 @@ export default function Layout({ children }) {
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-black text-white fixed h-full font-sans">
         <div className="p-6 mb-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sidebar-active-gradient rounded-lg flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime rounded-lg flex items-center justify-center shadow-lg">
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -37,7 +37,7 @@ export default function Layout({ children }) {
             to={createPageUrl("Dashboard")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Dashboard"))
-                ? "sidebar-active-gradient text-white shadow-md"
+                ? "bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime text-white shadow-md"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
           >
@@ -51,7 +51,7 @@ export default function Layout({ children }) {
               isActive(createPageUrl("Events")) || 
               isActive(createPageUrl("EventDetail")) || 
               isActive(createPageUrl("SessionDetail"))
-                ? "sidebar-active-gradient text-white shadow-md"
+                ? "bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime text-white shadow-md"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
           >
@@ -63,7 +63,7 @@ export default function Layout({ children }) {
             to={createPageUrl("Reports")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Reports"))
-                ? "sidebar-active-gradient text-white shadow-md"
+                ? "bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime text-white shadow-md"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
           >
@@ -76,7 +76,7 @@ export default function Layout({ children }) {
             to={createPageUrl("Rooms")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Rooms"))
-                ? "sidebar-active-gradient text-white shadow-md"
+                ? "bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime text-white shadow-md"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
           >
@@ -88,7 +88,7 @@ export default function Layout({ children }) {
             to={createPageUrl("Templates")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Templates"))
-                ? "sidebar-active-gradient text-white shadow-md"
+                ? "bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime text-white shadow-md"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
           >
@@ -106,7 +106,7 @@ export default function Layout({ children }) {
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 sidebar-active-gradient rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-lime rounded-lg flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
                 <div>
