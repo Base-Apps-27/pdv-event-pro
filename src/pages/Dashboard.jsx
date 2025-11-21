@@ -137,7 +137,7 @@ export default function Dashboard() {
         <Card className="border-l-4 border-pdv-green bg-white shadow-md">
           <CardHeader className="bg-gradient-to-r from-gray-50 to-transparent border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-bold uppercase tracking-tight text-gray-900">Evento Próximo</CardTitle>
+              <CardTitle className="text-2xl font-bold uppercase tracking-tight text-gray-900">Próximo Evento</CardTitle>
               <Badge className="gradient-pdv text-white font-bold uppercase border-none">Destacado</Badge>
             </div>
           </CardHeader>
