@@ -80,10 +80,8 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
             updated_date: undefined,
             created_by: undefined,
             event_id: newEvent.id,
-            // Clear specific dates/times if needed, but keeping them relative might be useful? 
-            // For now, we'll keep the times but date might be wrong if we shifted duplicate. 
-            // User can adjust dates later.
-            date: null // Clear date to force user to set it
+            date: null, // Clear date to force user to set it
+            origin: isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual')
           };
           
           const newSession = await base44.entities.Session.create(sessionData);
@@ -123,7 +121,8 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
               created_date: undefined,
               updated_date: undefined,
               created_by: undefined,
-              session_id: newSession.id
+              session_id: newSession.id,
+              origin: isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual')
             });
 
             // 3d. Duplicate Segment Actions
