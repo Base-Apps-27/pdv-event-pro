@@ -26,7 +26,13 @@ export default function Dashboard() {
     queryFn: () => base44.entities.Segment.list(),
   });
 
-  const upcomingEvents = events.filter(e => e.status !== 'completed' && e.status !== 'archived');
+  const upcomingEvents = events
+    .filter(e => e.status !== 'completed' && e.status !== 'archived')
+    .sort((a, b) => {
+      if (!a.start_date) return 1;
+      if (!b.start_date) return -1;
+      return new Date(a.start_date) - new Date(b.start_date);
+    });
   const recentEvent = upcomingEvents[0];
 
   const getSessionCount = (eventId) => {
