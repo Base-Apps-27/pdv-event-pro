@@ -119,7 +119,7 @@ export default function PreSessionDetailsForm({ sessionId, preSessionDetails, on
           <X className="w-4 h-4 mr-2" />
           Cancelar
         </Button>
-        <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+        <Button type="submit" className="gradient-pdv text-white font-bold uppercase">
           <Save className="w-4 h-4 mr-2" />
           {preSessionDetails ? 'Guardar Cambios' : 'Crear Detalles Pre-Sesión'}
         </Button>

@@ -138,7 +138,7 @@ export default function Rooms() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle className="text-gray-900">{editingRoom ? 'Editar Sala' : 'Nueva Sala'}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingRoom ? 'Editar Sala' : 'Nueva Sala'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">

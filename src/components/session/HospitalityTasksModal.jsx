@@ -108,8 +108,10 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Utensils className="w-5 h-5" />
+          <DialogTitle className="flex items-center gap-2 text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">
+            <div className="p-2 bg-pdv-pink/10 rounded-lg">
+              <Utensils className="w-5 h-5 text-pdv-pink" />
+            </div>
             Tareas de Hospitalidad
           </DialogTitle>
         </DialogHeader>
@@ -214,7 +216,7 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
                     Cancelar Edición
                   </Button>
                 )}
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                <Button type="submit" className="gradient-pdv text-white font-bold uppercase">
                   <Plus className="w-4 h-4 mr-2" />
                   {editingTask ? 'Guardar Cambios' : 'Añadir Tarea'}
                 </Button>

@@ -455,8 +455,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
 
       <Dialog open={showSegmentForm} onOpenChange={setShowSegmentForm}>
         <DialogContent className="max-w-6xl max-h-[95vh] p-0 flex flex-col overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-3 shrink-0">
-            <DialogTitle>{editingSegment ? 'Editar Segmento' : 'Nuevo Segmento'}</DialogTitle>
+          <DialogHeader className="px-6 pt-6 pb-3 shrink-0 border-b border-gray-100">
+            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingSegment ? 'Editar Segmento' : 'Nuevo Segmento'}</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto">
             <SegmentFormTwoColumn 
@@ -472,8 +472,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
 
       <Dialog open={showPreSessionDetailsDialog} onOpenChange={setShowPreSessionDetailsDialog}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader className="shrink-0">
-            <DialogTitle>Detalles Pre-Sesión (Segmento 0)</DialogTitle>
+          <DialogHeader className="shrink-0 border-b border-gray-100 p-6 pb-4">
+            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">Detalles Pre-Sesión</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto">
             <PreSessionDetailsForm
@@ -493,8 +493,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader className="shrink-0">
-            <DialogTitle>{editingSession ? 'Editar Sesión' : 'Nueva Sesión'}</DialogTitle>
+          <DialogHeader className="shrink-0 border-b border-gray-100 p-6 pb-4">
+            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingSession ? 'Editar Sesión' : 'Nueva Sesión'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
             <div className="space-y-6 overflow-y-auto flex-1 px-6 py-4">
@@ -743,7 +743,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+              <Button type="submit" className="gradient-pdv text-white font-bold uppercase">
                 {editingSession ? 'Guardar Cambios' : 'Crear Sesión'}
               </Button>
             </div>
