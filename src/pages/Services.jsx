@@ -1,0 +1,282 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Plus, Calendar, MapPin, Edit, Trash2, Clock, Layers } from "lucide-react";
+import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+export default function Services() {
+  const gradientStyle = {
+    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+  };
+  const [showDialog, setShowDialog] = useState(false);
+  const [editingService, setEditingService] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [fieldOrigins, setFieldOrigins] = useState({});
+  const queryClient = useQueryClient();
+
+  const { data: services = [], isLoading } = useQuery({
+    queryKey: ['services'],
+    queryFn: () => base44.entities.Service.list(),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data) => base44.entities.Service.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['services']);
+      setShowDialog(false);
+      setEditingService(null);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Service.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['services']);
+      setShowDialog(false);
+      setEditingService(null);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.Service.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['services']);
+    },
+  });
+
+  const handleDeleteClick = (service) => {
+    if (window.confirm(`¿Estás seguro de que deseas eliminar el servicio "${service.name}"?`)) {
+      deleteMutation.mutate(service.id);
+    }
+  };
+
+  const updateFormField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (fieldOrigins[field] && fieldOrigins[field] !== 'manual') {
+      setFieldOrigins(prev => ({ ...prev, [field]: 'manual' }));
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const data = {
+      ...formData,
+      field_origins: fieldOrigins,
+    };
+
+    if (editingService) {
+      updateMutation.mutate({ id: editingService.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const openEditDialog = (service) => {
+    setEditingService(service);
+    setFieldOrigins(service?.field_origins || {});
+    setFormData({
+      name: service?.name || '',
+      day_of_week: service?.day_of_week || 'Sunday',
+      time: service?.time || '',
+      location: service?.location || '',
+      description: service?.description || '',
+      status: service?.status || 'active',
+    });
+    setShowDialog(true);
+  };
+
+  const dayLabels = {
+    Sunday: "Domingo",
+    Monday: "Lunes",
+    Tuesday: "Martes",
+    Wednesday: "Miércoles",
+    Thursday: "Jueves",
+    Friday: "Viernes",
+    Saturday: "Sábado"
+  };
+
+  return (
+    <div className="p-6 md:p-8 space-y-8">
+      <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-gray-200 pb-6">
+        <div>
+          <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">Servicios Semanales</h1>
+          <p className="text-gray-500 mt-1 font-medium">Gestiona tus reuniones recurrentes y liturgias</p>
+        </div>
+        <div>
+          <Button onClick={() => openEditDialog(null)} className="text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6" style={gradientStyle}>
+            <Plus className="w-5 h-5 mr-2" />
+            Nuevo Servicio
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {services.map((service) => (
+          <Card key={service.id} className="group hover:shadow-xl transition-all duration-300 bg-white border-none shadow-md overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-pdv-teal" />
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle className="text-xl mb-2 font-bold uppercase text-gray-900 group-hover:text-pdv-teal transition-colors">{service.name}</CardTitle>
+                  <Badge variant="secondary" className="font-bold uppercase tracking-wider text-[10px]">
+                    {dayLabels[service.day_of_week]}
+                  </Badge>
+                </div>
+                {service.time && (
+                  <div className="flex items-center gap-1 text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded text-sm">
+                    <Clock className="w-4 h-4" />
+                    {service.time}
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <MapPin className="w-4 h-4" />
+                  <span>{service.location || "Sin ubicación"}</span>
+                </div>
+                
+                {service.description && (
+                  <p className="text-sm text-gray-500 line-clamp-2">{service.description}</p>
+                )}
+
+                <div className="pt-3 border-t border-gray-200 flex gap-2">
+                  <Link to={createPageUrl(`ServiceDetail?id=${service.id}`)} className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white">
+                      <Layers className="w-4 h-4 mr-2" />
+                      Gestionar
+                    </Button>
+                  </Link>
+                  <Button variant="outline" size="sm" onClick={() => openEditDialog(service)}>
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDeleteClick(service)}
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-lg bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingService ? 'Editar Servicio' : 'Nuevo Servicio'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nombre del Servicio *</Label>
+              <div className="relative">
+                <Input 
+                  id="name" 
+                  value={formData.name}
+                  onChange={(e) => updateFormField('name', e.target.value)}
+                  required 
+                  placeholder="Servicio Dominical AM"
+                />
+                <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'name')} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="day_of_week">Día *</Label>
+                <Select value={formData.day_of_week} onValueChange={(value) => updateFormField('day_of_week', value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Sunday">Domingo</SelectItem>
+                    <SelectItem value="Monday">Lunes</SelectItem>
+                    <SelectItem value="Tuesday">Martes</SelectItem>
+                    <SelectItem value="Wednesday">Miércoles</SelectItem>
+                    <SelectItem value="Thursday">Jueves</SelectItem>
+                    <SelectItem value="Friday">Viernes</SelectItem>
+                    <SelectItem value="Saturday">Sábado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="time">Hora Default</Label>
+                <div className="relative">
+                  <Input 
+                    id="time" 
+                    type="time"
+                    value={formData.time}
+                    onChange={(e) => updateFormField('time', e.target.value)}
+                  />
+                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'time')} />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location">Ubicación Default</Label>
+              <div className="relative">
+                <Input 
+                  id="location" 
+                  value={formData.location}
+                  onChange={(e) => updateFormField('location', e.target.value)}
+                  placeholder="Santuario Principal"
+                />
+                <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'location')} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Descripción</Label>
+              <div className="relative">
+                <Textarea 
+                  id="description" 
+                  value={formData.description}
+                  onChange={(e) => updateFormField('description', e.target.value)}
+                  rows={3}
+                />
+                <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'description')} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status">Estado</Label>
+              <Select value={formData.status} onValueChange={(value) => updateFormField('status', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Activo</SelectItem>
+                  <SelectItem value="archived">Archivado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="text-white font-bold uppercase" style={gradientStyle}>
+                {editingService ? 'Guardar' : 'Crear'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

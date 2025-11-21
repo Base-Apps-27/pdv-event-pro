@@ -21,7 +21,7 @@ import PreSessionDetailsForm from "../session/PreSessionDetailsForm";
 import HospitalityTasksModal from "../session/HospitalityTasksModal";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
-export default function SessionManager({ eventId, sessions, segments }) {
+export default function SessionManager({ eventId, serviceId, sessions, segments }) {
   const [showDialog, setShowDialog] = useState(false);
   const [editingSession, setEditingSession] = useState(null);
   const [expandedSessionId, setExpandedSessionId] = useState(null);
@@ -37,7 +37,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Session.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['sessions', eventId]);
+      queryClient.invalidateQueries(['sessions', eventId || serviceId]);
       setShowDialog(false);
       setEditingSession(null);
     },
@@ -46,7 +46,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Session.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['sessions', eventId]);
+      queryClient.invalidateQueries(['sessions', eventId || serviceId]);
       setShowDialog(false);
       setEditingSession(null);
     },
@@ -55,7 +55,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Session.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['sessions', eventId]);
+      queryClient.invalidateQueries(['sessions', eventId || serviceId]);
     },
   });
 
@@ -174,7 +174,8 @@ export default function SessionManager({ eventId, sessions, segments }) {
     }
     
     const data = {
-      event_id: eventId,
+      ...(eventId ? { event_id: eventId } : {}),
+      ...(serviceId ? { service_id: serviceId } : {}),
       ...formData,
       default_stage_call_offset_min: parseInt(formData.default_stage_call_offset_min || 15),
       order: editingSession?.order || sessions.length + 1,

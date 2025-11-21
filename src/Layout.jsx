@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy } from "lucide-react";
+import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Megaphone } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,15 +54,28 @@ export default function Layout({ children }) {
             to={createPageUrl("Events")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Events")) || 
-              isActive(createPageUrl("EventDetail")) || 
-              isActive(createPageUrl("SessionDetail"))
+              isActive(createPageUrl("EventDetail"))
                 ? "text-white shadow-md"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
-            style={isActive(createPageUrl("Events")) || isActive(createPageUrl("EventDetail")) || isActive(createPageUrl("SessionDetail")) ? gradientStyle : {}}
+            style={isActive(createPageUrl("Events")) || isActive(createPageUrl("EventDetail")) ? gradientStyle : {}}
           >
             <Calendar className="w-5 h-5" />
             Eventos
+          </Link>
+
+          <Link
+            to={createPageUrl("Services")}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+              isActive(createPageUrl("Services")) || 
+              isActive(createPageUrl("ServiceDetail"))
+                ? "text-white shadow-md"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
+            }`}
+            style={isActive(createPageUrl("Services")) || isActive(createPageUrl("ServiceDetail")) ? gradientStyle : {}}
+          >
+            <Clock className="w-5 h-5" />
+            Servicios
           </Link>
 
           <Link
@@ -76,6 +89,19 @@ export default function Layout({ children }) {
           >
             <FileText className="w-5 h-5" />
             Informes
+          </Link>
+
+          <Link
+            to={createPageUrl("AnnouncementsReport")}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+              isActive(createPageUrl("AnnouncementsReport"))
+                ? "text-white shadow-md"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
+            }`}
+            style={isActive(createPageUrl("AnnouncementsReport")) ? gradientStyle : {}}
+          >
+            <Megaphone className="w-5 h-5" />
+            Anuncios
           </Link>
 
           <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-8 mb-3 pl-3">Gestión y Configuración</div>

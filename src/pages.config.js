@@ -6,6 +6,9 @@ import Templates from './pages/Templates';
 import Rooms from './pages/Rooms';
 import Reports from './pages/Reports';
 import PublicProgramView from './pages/PublicProgramView';
+import Services from './pages/Services';
+import ServiceDetail from './pages/ServiceDetail';
+import AnnouncementsReport from './pages/AnnouncementsReport';
 import __Layout from './Layout.jsx';
 
 
@@ -18,6 +21,9 @@ export const PAGES = {
     "Rooms": Rooms,
     "Reports": Reports,
     "PublicProgramView": PublicProgramView,
+    "Services": Services,
+    "ServiceDetail": ServiceDetail,
+    "AnnouncementsReport": AnnouncementsReport,
 }
 
 export const pagesConfig = {

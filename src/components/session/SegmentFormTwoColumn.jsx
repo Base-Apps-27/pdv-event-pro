@@ -126,6 +126,10 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     dance_start_cue: segment?.dance_start_cue || "",
     dance_end_cue: segment?.dance_end_cue || "",
     art_other_description: segment?.art_other_description || "",
+    announcement_title: segment?.announcement_title || "",
+    announcement_description: segment?.announcement_description || "",
+    announcement_date: segment?.announcement_date || "",
+    announcement_tone: segment?.announcement_tone || "",
   });
 
   const [fieldOrigins, setFieldOrigins] = useState(segment?.field_origins || {});
@@ -318,6 +322,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const isVideoType = formData.segment_type === "Video";
   const isArtesType = formData.segment_type === "Artes";
   const isMcLedType = ["Bienvenida", "Ofrenda", "Anuncio", "Dinámica", "Oración", "Especial", "Cierre", "MC", "Ministración"].includes(formData.segment_type);
+  const isAnnouncementType = formData.segment_type === "Anuncio";
   
   const needsPresenter = !isBreakType && !isTechOnly && !isBreakoutType;
   const showDescription = !isTechOnly && !isVideoType;
@@ -544,6 +549,77 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 <h3 className="font-bold text-lg text-slate-900">Contenido Específico</h3>
               </div>
               <div className="p-4 space-y-4">
+                {isAnnouncementType && (
+                  <div className="space-y-3 bg-indigo-50 p-4 rounded border border-indigo-200 mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Megaphone className="w-5 h-5 text-indigo-600" />
+                      <h4 className="font-bold text-indigo-800">Detalles del Anuncio</h4>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Título del Anuncio</Label>
+                      <div className="relative">
+                        <Input 
+                          value={formData.announcement_title}
+                          onChange={(e) => updateField('announcement_title', e.target.value)}
+                          placeholder="Ej. Retiro de Jóvenes"
+                          className="bg-white"
+                        />
+                        <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'announcement_title')} />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Script / Descripción Detallada</Label>
+                      <div className="relative">
+                        <Textarea 
+                          value={formData.announcement_description}
+                          onChange={(e) => updateField('announcement_description', e.target.value)}
+                          rows={4}
+                          placeholder="Escribir aquí lo que se debe decir o los puntos clave..."
+                          className="bg-white"
+                        />
+                        <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'announcement_description')} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Fecha Relevante (Opcional)</Label>
+                        <div className="relative">
+                          <Input 
+                            type="date"
+                            value={formData.announcement_date}
+                            onChange={(e) => updateField('announcement_date', e.target.value)}
+                            className="bg-white"
+                          />
+                          <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'announcement_date')} />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Tono de Comunicación</Label>
+                        <div className="relative">
+                          <Select 
+                            value={formData.announcement_tone}
+                            onValueChange={(value) => updateField('announcement_tone', value)}
+                          >
+                            <SelectTrigger className="bg-white">
+                              <SelectValue placeholder="Seleccionar..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Energetic">Energético / Animado</SelectItem>
+                              <SelectItem value="Serious">Serio / Solemne</SelectItem>
+                              <SelectItem value="Informative">Informativo / Claro</SelectItem>
+                              <SelectItem value="Casual">Casual / Relajado</SelectItem>
+                              <SelectItem value="Urgent">Urgente / Importante</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'announcement_tone')} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {formData.has_video && (
                   <div className="space-y-3 bg-blue-50 p-4 rounded border border-blue-200">
                     <div className="flex items-center justify-between mb-2">
