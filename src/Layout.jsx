@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X } from "lucide-react";
+import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,81 +18,81 @@ export default function Layout({ children }) {
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Dark Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-pdv-charcoal text-white fixed h-full">
-        <div className="p-4 border-b border-gray-700">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-pdv-charcoal text-white fixed h-full font-sans">
+        <div className="p-6 mb-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 brand-gradient rounded flex items-center justify-center">
+            <div className="w-10 h-10 sidebar-active-gradient rounded-lg flex items-center justify-center shadow-lg">
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="font-bold text-white text-base uppercase tracking-tight">EventoPro</h2>
-              <p className="text-xs text-gray-400 font-medium">Palabras de Vida</p>
+              <h2 className="font-bold text-white text-xl uppercase leading-none font-['Bebas_Neue'] tracking-wide">PALABRAS DE VIDA</h2>
+              <p className="text-[10px] text-pdv-green font-medium tracking-wider mt-1">¡ATRÉVETE A CAMBIAR!</p>
             </div>
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
-          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Core Operations</div>
+        <nav className="flex-1 px-4 space-y-1">
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 mt-2 pl-3">Core Operations</div>
           <Link
             to={createPageUrl("Dashboard")}
-            className={`flex items-center gap-3 px-3 py-2 rounded font-semibold text-sm transition-colors ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Dashboard"))
-                ? "bg-pdv-green text-white"
-                : "text-gray-300 hover:bg-gray-800"
+                ? "sidebar-active-gradient text-white shadow-md"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
           >
-            <LayoutDashboard className="w-4 h-4" />
+            <LayoutDashboard className="w-5 h-5" />
             Dashboard
           </Link>
 
           <Link
             to={createPageUrl("Events")}
-            className={`flex items-center gap-3 px-3 py-2 rounded font-semibold text-sm transition-colors ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Events")) || 
               isActive(createPageUrl("EventDetail")) || 
               isActive(createPageUrl("SessionDetail"))
-                ? "bg-pdv-green text-white"
-                : "text-gray-300 hover:bg-gray-800"
+                ? "sidebar-active-gradient text-white shadow-md"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
           >
-            <Calendar className="w-4 h-4" />
+            <Calendar className="w-5 h-5" />
             Eventos
           </Link>
 
           <Link
             to={createPageUrl("Reports")}
-            className={`flex items-center gap-3 px-3 py-2 rounded font-semibold text-sm transition-colors ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Reports"))
-                ? "bg-pdv-green text-white"
-                : "text-gray-300 hover:bg-gray-800"
+                ? "sidebar-active-gradient text-white shadow-md"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
           >
-            <Settings className="w-4 h-4" />
+            <FileText className="w-5 h-5" />
             Informes
           </Link>
 
-          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-6 mb-2">Management & Setup</div>
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-8 mb-3 pl-3">Management & Setup</div>
           <Link
             to={createPageUrl("Rooms")}
-            className={`flex items-center gap-3 px-3 py-2 rounded font-semibold text-sm transition-colors ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Rooms"))
-                ? "bg-pdv-green text-white"
-                : "text-gray-300 hover:bg-gray-800"
+                ? "sidebar-active-gradient text-white shadow-md"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
           >
-            <Settings className="w-4 h-4" />
+            <MapPin className="w-5 h-5" />
             Salas
           </Link>
 
           <Link
             to={createPageUrl("Templates")}
-            className={`flex items-center gap-3 px-3 py-2 rounded font-semibold text-sm transition-colors ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
               isActive(createPageUrl("Templates"))
-                ? "bg-pdv-green text-white"
-                : "text-gray-300 hover:bg-gray-800"
+                ? "sidebar-active-gradient text-white shadow-md"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
             }`}
           >
-            <Settings className="w-4 h-4" />
+            <Copy className="w-5 h-5" />
             Plantillas
           </Link>
         </nav>
@@ -106,12 +106,12 @@ export default function Layout({ children }) {
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 brand-gradient rounded flex items-center justify-center">
+                <div className="w-10 h-10 sidebar-active-gradient rounded-lg flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-gray-900 text-base uppercase tracking-tight">EventoPro</h2>
-                  <p className="text-xs text-pdv-teal font-medium">Palabras de Vida</p>
+                  <h2 className="font-bold text-gray-900 text-xl uppercase leading-none font-['Bebas_Neue'] tracking-wide">PALABRAS DE VIDA</h2>
+                  <p className="text-[10px] text-pdv-teal font-bold tracking-wider mt-0.5">¡ATRÉVETE A CAMBIAR!</p>
                 </div>
               </div>
 
