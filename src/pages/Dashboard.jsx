@@ -56,9 +56,9 @@ export default function Dashboard() {
   };
 
   const statusLabels = {
-    planning: "PLANIFICACIÓN",
+    planning: "EN PLANIFICACIÓN",
     confirmed: "CONFIRMADO",
-    in_progress: "EN PROGRESO",
+    in_progress: "EN CURSO",
     completed: "COMPLETADO",
     archived: "ARCHIVADO"
   };

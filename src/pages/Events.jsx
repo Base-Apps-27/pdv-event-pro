@@ -97,9 +97,9 @@ export default function Events() {
   };
 
   const statusLabels = {
-    planning: "Planificación",
+    planning: "En Planificación",
     confirmed: "Confirmado",
-    in_progress: "En Progreso",
+    in_progress: "En Curso",
     completed: "Completado",
     archived: "Archivado"
   };
@@ -251,9 +251,9 @@ export default function Events() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="planning">Planificación</SelectItem>
+                    <SelectItem value="planning">En Planificación</SelectItem>
                     <SelectItem value="confirmed">Confirmado</SelectItem>
-                    <SelectItem value="in_progress">En Progreso</SelectItem>
+                    <SelectItem value="in_progress">En Curso</SelectItem>
                     <SelectItem value="completed">Completado</SelectItem>
                     <SelectItem value="archived">Archivado</SelectItem>
                   </SelectContent>
