@@ -306,7 +306,7 @@ export default function SessionManager({ eventId, sessions, segments }) {
                       {session.default_stage_call_offset_min && (
                         <div className="mt-2 text-sm">
                           <span className="text-blue-600 font-semibold">
-                            Llegada de Equipos: {session.default_stage_call_offset_min} min antes
+                            Citación de Equipos: {session.default_stage_call_offset_min} min antes
                           </span>
                         </div>
                       )}
