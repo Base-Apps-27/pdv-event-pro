@@ -102,30 +102,31 @@ export default function Events() {
   };
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="p-6 md:p-8 space-y-8">
+      <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-gray-200 pb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 uppercase">Eventos</h1>
-          <p className="text-gray-600 mt-1">Gestiona congresos y eventos especiales</p>
+          <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">Eventos</h1>
+          <p className="text-gray-500 mt-1 font-medium">Gestiona tus congresos y actividades especiales</p>
         </div>
-        <Button onClick={() => { setEditingEvent(null); setShowDialog(true); }} className="gradient-pdv text-white hover:opacity-90 font-bold uppercase">
-          <Plus className="w-4 h-4 mr-2" />
+        <Button onClick={() => { setEditingEvent(null); setShowDialog(true); }} className="gradient-pdv text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6">
+          <Plus className="w-5 h-5 mr-2" />
           Nuevo Evento
         </Button>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event) => (
-          <Card key={event.id} className="hover:shadow-lg transition-shadow bg-white border-gray-200">
-            <CardHeader>
+          <Card key={event.id} className="group hover:shadow-xl transition-all duration-300 bg-white border-none shadow-md overflow-hidden relative">
+            <div className={`absolute top-0 left-0 w-full h-1.5 ${statusColors[event.status].replace('bg-', 'bg-').replace('text-', '').split(' ')[0]}`} />
+            <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-lg mb-2 text-gray-900">{event.name}</CardTitle>
-                  <Badge className={`${statusColors[event.status]} border text-xs`}>
+                  <CardTitle className="text-xl mb-2 font-bold uppercase text-gray-900 group-hover:text-pdv-teal transition-colors">{event.name}</CardTitle>
+                  <Badge className={`${statusColors[event.status]} border-none font-bold uppercase tracking-wider text-[10px]`}>
                     {statusLabels[event.status]}
                   </Badge>
                 </div>
-                <div className="text-2xl font-bold text-gray-300">{event.year}</div>
+                <div className="text-4xl font-bold text-gray-100 font-['Bebas_Neue'] select-none">{event.year}</div>
               </div>
             </CardHeader>
             <CardContent>

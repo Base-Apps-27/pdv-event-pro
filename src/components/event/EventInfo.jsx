@@ -23,11 +23,14 @@ export default function EventInfo({ event }) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Información del Evento</CardTitle>
+    <Card className="border-none shadow-md overflow-hidden">
+      <CardHeader className="bg-gray-50 border-b border-gray-100">
+        <CardTitle className="text-gray-900 uppercase tracking-wide flex items-center gap-2">
+            <div className="w-2 h-6 bg-pdv-green rounded-full" />
+            Información del Evento
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <p className="text-sm text-slate-500 mb-1">Estado</p>

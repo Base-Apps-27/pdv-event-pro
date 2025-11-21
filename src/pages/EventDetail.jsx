@@ -59,14 +59,20 @@ export default function EventDetail() {
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" onClick={() => navigate(createPageUrl("Events"))}>
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">{event.name}</h1>
-          {event.theme && <p className="text-slate-600 italic">"{event.theme}"</p>}
+    <div className="p-6 md:p-8 space-y-8">
+      {/* Header Section with subtle gradient background */}
+      <div className="bg-gradient-to-r from-gray-50 to-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex items-start gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(createPageUrl("Events"))} className="hover:bg-gray-100 rounded-full">
+            <ArrowLeft className="w-6 h-6 text-gray-500" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 uppercase font-['Bebas_Neue'] tracking-tight">{event.name}</h1>
+              <Badge variant="outline" className="text-xs uppercase tracking-wider border-gray-300 text-gray-500">{event.year}</Badge>
+            </div>
+            {event.theme && <p className="text-xl text-pdv-teal font-medium italic">"{event.theme}"</p>}
+          </div>
         </div>
       </div>
 

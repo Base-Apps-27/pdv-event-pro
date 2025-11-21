@@ -78,36 +78,51 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="relative overflow-hidden bg-white border-l-4 border-pdv-teal shadow-md">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-pdv-teal opacity-10 rounded-full transform translate-x-8 -translate-y-8" />
-          <CardHeader className="relative">
-            <CardTitle className="text-sm font-bold uppercase text-gray-600 tracking-wider">Total Eventos</CardTitle>
+        <Card className="relative overflow-hidden bg-gradient-to-br from-white to-teal-50 border-none shadow-md hover:shadow-lg transition-all">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-pdv-teal opacity-20 rounded-bl-full" />
+          <CardHeader className="relative pb-2">
+            <CardTitle className="text-sm font-bold uppercase text-pdv-teal tracking-wider flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-pdv-teal" />
+              Total Eventos
+            </CardTitle>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-5xl font-bold text-pdv-teal">{events.length}</div>
-            <p className="text-gray-600 text-sm mt-1 font-medium">{upcomingEvents.length} activos</p>
+            <div className="text-6xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-tight">{events.length}</div>
+            <div className="flex items-center mt-2">
+              <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-200 border-none">{upcomingEvents.length} activos</Badge>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-white border-l-4 border-pdv-green shadow-md">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-pdv-green opacity-10 rounded-full transform translate-x-8 -translate-y-8" />
-          <CardHeader className="relative">
-            <CardTitle className="text-sm font-bold uppercase text-gray-600 tracking-wider">Total Sesiones</CardTitle>
+        <Card className="relative overflow-hidden bg-gradient-to-br from-white to-green-50 border-none shadow-md hover:shadow-lg transition-all">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-pdv-green opacity-20 rounded-bl-full" />
+          <CardHeader className="relative pb-2">
+            <CardTitle className="text-sm font-bold uppercase text-pdv-green tracking-wider flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-pdv-green" />
+              Total Sesiones
+            </CardTitle>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-5xl font-bold text-pdv-green">{sessions.length}</div>
-            <p className="text-gray-600 text-sm mt-1 font-medium">En todos los eventos</p>
+            <div className="text-6xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-tight">{sessions.length}</div>
+            <div className="flex items-center mt-2">
+               <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-none">En todos los eventos</Badge>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-white border-l-4 border-pdv-lime shadow-md">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-pdv-lime opacity-10 rounded-full transform translate-x-8 -translate-y-8" />
-          <CardHeader className="relative">
-            <CardTitle className="text-sm font-bold uppercase text-gray-600 tracking-wider">Total Segmentos</CardTitle>
+        <Card className="relative overflow-hidden bg-gradient-to-br from-white to-lime-50 border-none shadow-md hover:shadow-lg transition-all">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-pdv-lime opacity-20 rounded-bl-full" />
+          <CardHeader className="relative pb-2">
+            <CardTitle className="text-sm font-bold uppercase text-pdv-lime tracking-wider flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-pdv-lime" />
+              Total Segmentos
+            </CardTitle>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-5xl font-bold text-pdv-lime">{segments.length}</div>
-            <p className="text-gray-600 text-sm mt-1 font-medium">Programados</p>
+            <div className="text-6xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-tight">{segments.length}</div>
+            <div className="flex items-center mt-2">
+              <Badge className="bg-lime-100 text-lime-800 hover:bg-lime-200 border-none">Programados</Badge>
+            </div>
           </CardContent>
         </Card>
       </div>
