@@ -1214,6 +1214,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
           </div>
         </div>
       </div>
+      </div>
 
       <div className="border-t bg-slate-50 p-4 flex justify-end gap-3 sticky bottom-0">
         <Button type="button" variant="outline" onClick={onClose}>
