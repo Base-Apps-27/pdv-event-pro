@@ -618,7 +618,7 @@ export default function Reports() {
         if (segments.length === 0) return null;
 
         return (
-          <div key={session.id}>
+          <div key={session.id} className="print-session">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg mb-4 border border-blue-200">
               <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
@@ -657,7 +657,7 @@ export default function Reports() {
         if (segments.length === 0) return null;
 
         return (
-          <div key={session.id}>
+          <div key={session.id} className="print-session">
             <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg mb-4 border border-purple-200">
               <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
@@ -696,7 +696,7 @@ export default function Reports() {
         if (segments.length === 0) return null;
 
         return (
-          <div key={session.id}>
+          <div key={session.id} className="print-session">
             <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-lg mb-4 border border-red-200">
               <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
@@ -737,7 +737,7 @@ export default function Reports() {
         if (hospitalityTasksForSession.length === 0) return null;
 
         return (
-          <div key={session.id}>
+          <div key={session.id} className="print-session">
             <div className="bg-gradient-to-r from-pink-50 to-rose-50 p-4 rounded-lg mb-4 border border-pink-200">
               <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
@@ -778,7 +778,7 @@ export default function Reports() {
         if (segments.length === 0) return null;
 
         return (
-          <div key={session.id}>
+          <div key={session.id} className="print-session">
             <div className="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-lg mb-4 border border-green-200">
               <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
