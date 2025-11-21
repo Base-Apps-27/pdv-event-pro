@@ -15,9 +15,9 @@ export default function EventInfo({ event }) {
   };
 
   const statusLabels = {
-    planning: "Planificación",
+    planning: "En Planificación",
     confirmed: "Confirmado",
-    in_progress: "En Progreso",
+    in_progress: "En Curso",
     completed: "Completado",
     archived: "Archivado"
   };
