@@ -21,11 +21,11 @@ export default function DeleteEventDialog({ open, onOpenChange, onConfirm, event
     }}>
       <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-red-600">
-            <AlertTriangle className="w-5 h-5" />
-            Eliminar Evento Permanentemente
+          <DialogTitle className="flex items-center gap-2 text-2xl font-bold text-red-600 font-['Bebas_Neue'] tracking-wide uppercase">
+            <AlertTriangle className="w-6 h-6" />
+            Eliminar Evento
           </DialogTitle>
-          <DialogDescription className="pt-2">
+          <DialogDescription className="pt-2 font-medium">
             Esta acción no se puede deshacer. Esto eliminará permanentemente el evento <span className="font-bold text-gray-900">{eventName}</span> y todas sus sesiones, segmentos y datos asociados.
           </DialogDescription>
         </DialogHeader>
@@ -50,7 +50,7 @@ export default function DeleteEventDialog({ open, onOpenChange, onConfirm, event
             variant="destructive" 
             onClick={handleConfirm}
             disabled={confirmationText !== "Delete"}
-            className="bg-red-600 hover:bg-red-700"
+            className="bg-red-600 hover:bg-red-700 font-bold uppercase"
           >
             Eliminar Evento
           </Button>

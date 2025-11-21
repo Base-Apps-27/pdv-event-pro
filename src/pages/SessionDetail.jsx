@@ -198,8 +198,8 @@ export default function SessionDetail() {
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-6xl h-[90vh] p-0">
-          <DialogHeader className="px-6 pt-6 pb-0">
-            <DialogTitle>{editingSegment ? 'Editar Segmento' : 'Nuevo Segmento'}</DialogTitle>
+          <DialogHeader className="px-6 pt-6 pb-3 shrink-0 border-b border-gray-100">
+            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingSegment ? 'Editar Segmento' : 'Nuevo Segmento'}</DialogTitle>
           </DialogHeader>
           <SegmentFormTwoColumn 
             session={session}
