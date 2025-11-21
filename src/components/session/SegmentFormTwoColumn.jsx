@@ -1168,6 +1168,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
                 </div>
                 </div>
+              </div>
 
                 <div id="otros" className="bg-white rounded-lg border border-l-4 border-l-slate-500 border-slate-200 shadow-sm overflow-hidden mt-6">
                   <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
@@ -1210,9 +1211,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
           </div>
         </div>
       </div>
