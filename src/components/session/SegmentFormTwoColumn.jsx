@@ -402,9 +402,13 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
         <div className="grid md:grid-cols-2 gap-6 p-6">
           {/* LEFT COLUMN - Content */}
           <div className="space-y-6">
-            <div id="basico">
-              <h3 className="font-bold text-lg mb-4 text-slate-900">Información Básica</h3>
-
+            <div id="basico" className="bg-white rounded-lg border border-l-4 border-l-pdv-teal border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-pdv-teal"></div>
+                <h3 className="font-bold text-lg text-slate-900">Información Básica</h3>
+              </div>
+              
+              <div className="p-4">
               {!segment && templates.length > 0 && (
                 <Card className="p-3 bg-blue-50 border-blue-200 mb-4">
                   <Label htmlFor="template" className="text-sm">Usar Plantilla</Label>
@@ -502,11 +506,15 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 )}
 
               </div>
+              </div>
             </div>
 
-            <div id="contenido">
-              <h3 className="font-bold text-lg mb-4 text-slate-900">Contenido Específico</h3>
-              <div className="space-y-4">
+            <div id="contenido" className="bg-white rounded-lg border border-l-4 border-l-pdv-blue border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-pdv-blue"></div>
+                <h3 className="font-bold text-lg text-slate-900">Contenido Específico</h3>
+              </div>
+              <div className="p-4 space-y-4">
                 {formData.has_video && (
                   <div className="space-y-3 bg-blue-50 p-4 rounded border border-blue-200">
                     <div className="flex items-center justify-between mb-2">
@@ -835,9 +843,12 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
             </div>
 
             {segment && showActions && (
-              <div id="acciones">
-                <h3 className="font-bold text-lg mb-4 text-slate-900">Acciones del Segmento</h3>
-                <div className="space-y-4">
+              <div id="acciones" className="bg-white rounded-lg border border-l-4 border-l-pdv-green border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-pdv-green"></div>
+                  <h3 className="font-bold text-lg text-slate-900">Acciones del Segmento</h3>
+                </div>
+                <div className="p-4 space-y-4">
                   {actions.length > 0 && (
                     <div className="space-y-2">
                       {actions.map((action) => (
@@ -944,15 +955,18 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
             {/* Segment Timeline Preview */}
             {segment && (
-              <div id="timeline">
+              <div id="timeline" className="bg-white rounded-lg border border-slate-200 shadow-sm p-4">
                 <SegmentTimelinePreview segments={allSegments} currentSegmentId={segment.id} />
               </div>
             )}
 
-            <div>
-              <h3 className="font-bold text-lg mb-4 text-slate-900">Timing & Ejecución</h3>
+            <div className="bg-white rounded-lg border border-l-4 border-l-pdv-orange border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-pdv-orange"></div>
+                <h3 className="font-bold text-lg text-slate-900">Timing & Ejecución</h3>
+              </div>
 
-              <div className="space-y-4">
+              <div className="p-4 space-y-4">
                 <Card className="p-4 bg-blue-50 border-blue-200">
                   <Label className="font-semibold mb-3 block">Horarios *</Label>
                   <div className="space-y-3">
@@ -1059,9 +1073,13 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   </Card>
                 )}
 
-                <div id="notas" className="space-y-3">
-                  <Label className="font-semibold text-base">Notas para Equipos</Label>
+                <div id="notas" className="bg-white rounded-lg border border-l-4 border-l-purple-500 border-slate-200 shadow-sm overflow-hidden mt-6">
+                  <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                    <h3 className="font-bold text-lg text-slate-900">Notas para Equipos</h3>
+                  </div>
                   
+                  <div className="p-4 space-y-3">
                   {isBreakoutType && (
                     <div className="bg-amber-50 border border-amber-200 p-3 rounded text-sm">
                       <p className="text-gray-700">
@@ -1148,8 +1166,15 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   )}
                 </div>
 
-                <div id="otros" className="space-y-2">
-                  <Label className="text-sm font-semibold">Opciones de Visibilidad</Label>
+                </div>
+                </div>
+
+                <div id="otros" className="bg-white rounded-lg border border-l-4 border-l-slate-500 border-slate-200 shadow-sm overflow-hidden mt-6">
+                  <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-slate-500"></div>
+                    <h3 className="font-bold text-lg text-slate-900">Opciones de Visibilidad</h3>
+                  </div>
+                  <div className="p-4 space-y-2">
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="flex items-center space-x-2">
                       <Checkbox 
@@ -1187,6 +1212,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
