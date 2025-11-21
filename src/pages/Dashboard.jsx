@@ -57,15 +57,20 @@ export default function Dashboard() {
   return (
     <div className="p-6 md:p-8 space-y-8">
       {/* Hero Header with Brand Gradient */}
-      <div className="brand-gradient rounded-2xl p-8 text-white shadow-lg">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="brand-gradient rounded-2xl p-10 text-white shadow-lg relative overflow-hidden">
+         {/* Decorative circle for texture */}
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6">
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight">BIENVENIDO</h1>
-            <p className="mt-2 font-medium text-white text-opacity-90">Gestiona tus eventos y programación desde aquí</p>
+            <h1 className="text-6xl md:text-8xl font-bold uppercase tracking-tighter leading-none font-['Bebas_Neue'] mb-2">BIENVENIDO</h1>
+            <p className="text-xl md:text-2xl font-medium text-white text-opacity-90 max-w-2xl">
+              Aquí está lo que sucede con tus eventos hoy.
+            </p>
           </div>
           <Link to={createPageUrl("Events")}>
-            <Button className="bg-white text-pdv-teal hover:bg-opacity-90 transition-opacity font-bold uppercase tracking-wide">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button size="lg" className="bg-white text-pdv-teal hover:bg-gray-100 font-bold uppercase tracking-wide h-12 px-6 shadow-lg transition-transform hover:scale-105">
+              <Plus className="w-5 h-5 mr-2" />
               Nuevo Evento
             </Button>
           </Link>
