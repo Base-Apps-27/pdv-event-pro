@@ -12,10 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import DeleteEventDialog from "@/components/event/DeleteEventDialog";
 
 export default function Events() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
+  const [eventToDelete, setEventToDelete] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: events = [], isLoading } = useQuery({
@@ -45,8 +47,16 @@ export default function Events() {
     mutationFn: (id) => base44.entities.Event.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries(['events']);
+      setEventToDelete(null);
     },
   });
+
+  const handleDeleteClick = (event) => {
+    // First confirmation: Browser alert
+    if (window.confirm("¿Estás seguro de que deseas iniciar el proceso de eliminación? Se requerirá una confirmación adicional.")) {
+      setEventToDelete(event);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -148,11 +158,7 @@ export default function Events() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => {
-                      if (confirm('¿Eliminar este evento?')) {
-                        deleteMutation.mutate(event.id);
-                      }
-                    }}
+                    onClick={() => handleDeleteClick(event)}
                   >
                     <Trash2 className="w-4 h-4 text-red-500" />
                   </Button>
@@ -292,6 +298,13 @@ export default function Events() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <DeleteEventDialog 
+        open={!!eventToDelete} 
+        onOpenChange={(open) => !open && setEventToDelete(null)}
+        onConfirm={() => deleteMutation.mutate(eventToDelete.id)}
+        eventName={eventToDelete?.name}
+      />
     </div>
   );
 }
