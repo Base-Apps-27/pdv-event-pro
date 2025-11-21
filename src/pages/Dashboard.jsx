@@ -72,9 +72,9 @@ export default function Dashboard() {
         
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6">
           <div>
-            <h1 className="text-6xl md:text-8xl font-bold uppercase tracking-tighter leading-none font-['Bebas_Neue'] mb-2 text-[#1A1A1A]">BIENVENIDO</h1>
-            <p className="text-xl md:text-2xl font-medium text-[#1A1A1A] text-opacity-90 max-w-2xl">
-              Aquí está lo que sucede con tus eventos hoy.
+            <h1 className="text-6xl md:text-8xl font-bold uppercase tracking-tighter leading-none font-['Bebas_Neue'] mb-2 text-white">BIENVENIDA</h1>
+            <p className="text-xl md:text-2xl font-medium text-white text-opacity-90 max-w-2xl">
+              Aquí tienes un resumen de tus eventos para el día de hoy.
             </p>
           </div>
           <Link to={createPageUrl("Events")}>
