@@ -254,7 +254,7 @@ export default function Templates() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="default_stage_call_offset_min">Llamado Escenario (min antes)</Label>
+                <Label htmlFor="default_stage_call_offset_min">Citación (min antes)</Label>
                 <Input 
                   id="default_stage_call_offset_min" 
                   name="default_stage_call_offset_min" 

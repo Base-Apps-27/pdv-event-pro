@@ -793,7 +793,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Referencias Bíblicas</Label>
+                      <Label>Citas Bíblicas</Label>
                       <Input 
                         value={formData.scripture_references}
                         onChange={(e) => setFormData({...formData, scripture_references: e.target.value})}
@@ -910,7 +910,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                         </Select>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">Pista de Tiempo</Label>
+                        <Label className="text-xs">Referencia de Tiempo</Label>
                         <Input
                           value={actionForm.time_hint}
                           onChange={(e) => setActionForm({...actionForm, time_hint: e.target.value})}
@@ -963,7 +963,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
             <div className="bg-white rounded-lg border border-l-4 border-l-pdv-orange border-slate-200 shadow-sm overflow-hidden">
               <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-pdv-orange"></div>
-                <h3 className="font-bold text-lg text-slate-900">Timing & Ejecución</h3>
+                <h3 className="font-bold text-lg text-slate-900">Tiempos y Ejecución</h3>
               </div>
 
               <div className="p-4 space-y-4">
@@ -1076,7 +1076,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 <div id="notas" className="bg-white rounded-lg border border-l-4 border-l-purple-500 border-slate-200 shadow-sm overflow-hidden mt-6">
                   <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                    <h3 className="font-bold text-lg text-slate-900">Notas para Equipos</h3>
+                    <h3 className="font-bold text-lg text-slate-900">Notas por Equipo</h3>
                   </div>
                   
                   <div className="p-4 space-y-3">

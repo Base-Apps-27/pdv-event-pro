@@ -246,7 +246,7 @@ export default function Reports() {
 
               {allPreSessionDetails.filter(psd => psd.session_id === session.id).map(psd => (
                 <div key={psd.id} className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
-                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Pre-Sesión (Segmento 0)</div>
+                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Previos (Segmento 0)</div>
                   <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
                     {psd.music_profile_id && (
                       <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
@@ -275,9 +275,9 @@ export default function Reports() {
               <table className="w-full text-xs">
                 <thead className="bg-gray-100 border-b border-gray-300">
                   <tr>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-12 text-center text-xs">Tiempo</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-12 text-center text-xs">Hora</th>
                     <th className="p-1 text-gray-900 font-bold uppercase text-xs w-3/5">Detalles</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-2/5">Notas de Equipos</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-2/5">Notas por Equipo</th>
                   </tr>
                 </thead>
                 <tbody>

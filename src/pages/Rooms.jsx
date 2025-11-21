@@ -70,7 +70,7 @@ export default function Rooms() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-tight">Salas</h1>
-          <p className="text-gray-600 mt-1">Gestiona salas y sus capacidades técnicas</p>
+          <p className="text-gray-600 mt-1">Administra las salas y sus capacidades técnicas</p>
         </div>
         <Button onClick={() => { setEditingRoom(null); setShowDialog(true); }} className="gradient-pdv text-white font-bold uppercase">
           <Plus className="w-4 h-4 mr-2" />
@@ -194,7 +194,7 @@ export default function Rooms() {
                   name="has_translation_feed"
                   defaultChecked={editingRoom?.has_translation_feed ?? false}
                 />
-                <label htmlFor="has_translation_feed" className="text-sm">Feed de traducción</label>
+                <label htmlFor="has_translation_feed" className="text-sm">Señal de traducción</label>
               </div>
             </div>
 

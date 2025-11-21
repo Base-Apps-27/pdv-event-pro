@@ -36,7 +36,7 @@ export default function Layout({ children }) {
         </div>
 
         <nav className="flex-1 px-4 space-y-1">
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 mt-2 pl-3">Core Operations</div>
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 mt-2 pl-3">Operaciones Principales</div>
           <Link
             to={createPageUrl("Dashboard")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -47,7 +47,7 @@ export default function Layout({ children }) {
             style={isActive(createPageUrl("Dashboard")) ? gradientStyle : {}}
           >
             <LayoutDashboard className="w-5 h-5" />
-            Dashboard
+            Inicio
           </Link>
 
           <Link
@@ -78,7 +78,7 @@ export default function Layout({ children }) {
             Informes
           </Link>
 
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-8 mb-3 pl-3">Management & Setup</div>
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-8 mb-3 pl-3">Gestión y Configuración</div>
           <Link
             to={createPageUrl("Rooms")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -147,7 +147,7 @@ export default function Layout({ children }) {
                     style={isActive(createPageUrl("Dashboard")) ? gradientStyle : {}}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Dashboard
+                    Inicio
                   </Link>
 
                   <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase">Eventos</div>
