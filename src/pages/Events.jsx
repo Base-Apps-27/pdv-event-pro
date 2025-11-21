@@ -60,6 +60,7 @@ export default function Events() {
       end_date: formData.get('end_date'),
       description: formData.get('description'),
       status: formData.get('status'),
+      print_color: formData.get('print_color'),
     };
 
     if (editingEvent) {
@@ -232,20 +233,41 @@ export default function Events() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="status">Estado</Label>
-              <Select name="status" defaultValue={editingEvent?.status || 'planning'}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="planning">Planificación</SelectItem>
-                  <SelectItem value="confirmed">Confirmado</SelectItem>
-                  <SelectItem value="in_progress">En Progreso</SelectItem>
-                  <SelectItem value="completed">Completado</SelectItem>
-                  <SelectItem value="archived">Archivado</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="status">Estado</Label>
+                <Select name="status" defaultValue={editingEvent?.status || 'planning'}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="planning">Planificación</SelectItem>
+                    <SelectItem value="confirmed">Confirmado</SelectItem>
+                    <SelectItem value="in_progress">En Progreso</SelectItem>
+                    <SelectItem value="completed">Completado</SelectItem>
+                    <SelectItem value="archived">Archivado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="print_color">Color de Impresión</Label>
+                <Select name="print_color" defaultValue={editingEvent?.print_color || 'blue'}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="blue">Azul</SelectItem>
+                    <SelectItem value="green">Verde</SelectItem>
+                    <SelectItem value="pink">Rosa</SelectItem>
+                    <SelectItem value="orange">Naranja</SelectItem>
+                    <SelectItem value="yellow">Amarillo</SelectItem>
+                    <SelectItem value="purple">Morado</SelectItem>
+                    <SelectItem value="red">Rojo</SelectItem>
+                    <SelectItem value="teal">Turquesa</SelectItem>
+                    <SelectItem value="charcoal">Carbón</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-2">

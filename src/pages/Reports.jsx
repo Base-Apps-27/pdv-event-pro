@@ -74,6 +74,18 @@ export default function Reports() {
     red: 'border-l-8 border-red-500',
   };
 
+  const eventColorClasses = {
+    green: 'border-t-8 border-pdv-green',
+    blue: 'border-t-8 border-blue-500',
+    pink: 'border-t-8 border-pink-500',
+    orange: 'border-t-8 border-orange-500',
+    yellow: 'border-t-8 border-yellow-400',
+    purple: 'border-t-8 border-purple-500',
+    red: 'border-t-8 border-red-500',
+    teal: 'border-t-8 border-teal-600',
+    charcoal: 'border-t-8 border-gray-800',
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -138,8 +150,13 @@ export default function Reports() {
         const hasHospitalityTasks = allHospitalityTasks.some(task => task.session_id === session.id);
         if (segments.length === 0) return null;
 
+        // If event has a print_color, use it for top border. Otherwise fallback to session color (left border) or default
+        const borderClass = selectedEvent?.print_color 
+          ? `${eventColorClasses[selectedEvent.print_color] || 'border-t-8 border-blue-500'} border-l-2 border-r-2 border-b-2` 
+          : `${sessionColorClasses[session.session_color] || ''} border-2`;
+
         return (
-          <div key={session.id} className={`print-session border-2 border-gray-200 rounded-lg overflow-hidden ${sessionColorClasses[session.session_color] || ''}`}>
+          <div key={session.id} className={`print-session border-gray-200 rounded-lg overflow-hidden ${borderClass}`}>
             <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-2 border-b border-gray-200">
               <div className="flex justify-between items-center gap-4">
               <div className="flex-1">
