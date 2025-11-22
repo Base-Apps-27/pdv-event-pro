@@ -176,20 +176,34 @@ export default function Layout({ children }) {
                     Inicio
                   </Link>
 
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase">Eventos</div>
+                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">Operaciones</div>
                   <Link
                     to={createPageUrl("Events")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Gestión de Eventos
+                    Eventos
+                  </Link>
+                  <Link
+                    to={createPageUrl("Services")}
+                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Servicios
                   </Link>
                   <Link
                     to={createPageUrl("Reports")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Informes de Eventos
+                    Informes
+                  </Link>
+                  <Link
+                    to={createPageUrl("AnnouncementsReport")}
+                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Anuncios
                   </Link>
 
                   <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">Configuración</div>
