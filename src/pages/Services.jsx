@@ -157,12 +157,7 @@ export default function Services() {
           <p className="text-gray-500 mt-1 font-medium">Gestiona tus reuniones recurrentes y liturgias</p>
         </div>
         <div>
-          <Link to={createPageUrl("ServiceBlueprints")}>
-            <Button variant="outline" className="mr-3 font-bold uppercase border-gray-300 text-gray-600 hover:border-pdv-teal hover:text-pdv-teal">
-              <Layers className="w-5 h-5 mr-2" />
-              Plantillas
-            </Button>
-          </Link>
+
           <Button onClick={() => openEditDialog(null)} className="text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6" style={gradientStyle}>
             <Plus className="w-5 h-5 mr-2" />
             Nuevo Servicio
