@@ -1,208 +1,237 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import { Calendar, Printer, Share2, FileText, Search, Filter, Megaphone, Info, ArrowRight } from "lucide-react";
+import { Calendar, Printer, Megaphone, Plus, Edit, Trash2, Tag, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function AnnouncementsReport() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterTone, setFilterTone] = useState("all");
+  const [showDialog, setShowDialog] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [formData, setFormData] = useState({});
+  const queryClient = useQueryClient();
 
-  const { data: announcements = [], isLoading } = useQuery({
-    queryKey: ['announcements'],
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ['announcements-unified'],
     queryFn: async () => {
-      // Fetch all segments of type 'Anuncio'
-      const segments = await base44.entities.Segment.filter({ segment_type: 'Anuncio' });
+      // 1. Fetch Dynamic Announcement Items
+      const dynamicItems = await base44.entities.AnnouncementItem.filter({ is_active: true });
       
-      // Enrich with session info to get dates/context
-      const sessions = await base44.entities.Session.list();
-      const sessionMap = sessions.reduce((acc, session) => {
-        acc[session.id] = session;
-        return acc;
-      }, {});
+      // 2. Fetch Event Promos
+      const events = await base44.entities.Event.filter({ promote_in_announcements: true });
+      
+      // 3. Fetch Segment Anuncios (Legacy/Specific)
+      const segments = await base44.entities.Segment.filter({ segment_type: 'Anuncio' });
+      const sessions = await base44.entities.Session.list(); // Need sessions for dates
+      const sessionMap = sessions.reduce((acc, s) => ({...acc, [s.id]: s}), {});
 
-      // Enrich with service/event info
-      const events = await base44.entities.Event.list();
-      const services = await base44.entities.Service.list();
-      const eventMap = events.reduce((acc, e) => ({...acc, [e.id]: e}), {});
-      const serviceMap = services.reduce((acc, s) => ({...acc, [s.id]: s}), {});
+      // Normalize
+      const unified = [];
 
-      return segments.map(segment => {
-        const session = sessionMap[segment.session_id];
-        let contextName = "Desconocido";
-        let date = "";
+      // Add Dynamic Items
+      dynamicItems.forEach(item => {
+        unified.push({
+            id: item.id,
+            type: 'Dynamic',
+            title: item.title,
+            description: item.content,
+            date_display: item.start_date && item.end_date ? `${format(new Date(item.start_date), 'd MMM')} - ${format(new Date(item.end_date), 'd MMM')}` : 'Siempre activo',
+            priority: item.priority || 10,
+            source: item,
+            presenter: item.presenter,
+            tags: item.category
+        });
+      });
 
-        if (session) {
-          date = session.date;
-          if (session.event_id && eventMap[session.event_id]) {
-            contextName = eventMap[session.event_id].name;
-          } else if (session.service_id && serviceMap[session.service_id]) {
-            contextName = serviceMap[session.service_id].name;
-          } else {
-            contextName = session.name;
-          }
+      // Add Event Promos
+      events.forEach(evt => {
+        unified.push({
+            id: evt.id,
+            type: 'EventPromo',
+            title: evt.name,
+            description: evt.announcement_blurb || evt.description,
+            date_display: evt.start_date ? format(new Date(evt.start_date), 'd MMM yyyy', {locale: es}) : '',
+            priority: 5, // Events usually high priority
+            source: evt,
+            presenter: '', // Usually determined by service
+            tags: 'Evento'
+        });
+      });
+
+      // Add Segment Anuncios (Only future or recent ones)
+      const today = new Date();
+      today.setDate(today.getDate() - 7); // Show from last week onwards
+
+      segments.forEach(seg => {
+        const session = sessionMap[seg.session_id];
+        if (session && new Date(session.date) >= today) {
+            unified.push({
+                id: seg.id,
+                type: 'Segment',
+                title: seg.announcement_title || seg.title,
+                description: seg.announcement_description || seg.description_details,
+                date_display: format(new Date(session.date), 'd MMM yyyy', {locale: es}),
+                priority: 1, // Specific segment is immediate priority
+                source: seg,
+                presenter: seg.presenter,
+                tags: 'En Programa'
+            });
         }
+      });
 
-        return {
-          ...segment,
-          session_date: date,
-          context_name: contextName,
-          session_name: session?.name
-        };
-      }).sort((a, b) => new Date(b.session_date || 0) - new Date(a.session_date || 0));
+      return unified.sort((a, b) => a.priority - b.priority);
     }
   });
 
-  const filteredAnnouncements = announcements.filter(item => {
-    const matchesSearch = 
-      (item.title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (item.announcement_title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (item.announcement_description?.toLowerCase() || "").includes(searchTerm.toLowerCase());
-    
-    const matchesTone = filterTone === "all" || item.announcement_tone === filterTone;
-
-    return matchesSearch && matchesTone;
+  // CRUD for AnnouncementItem
+  const createMutation = useMutation({
+    mutationFn: (data) => base44.entities.AnnouncementItem.create(data),
+    onSuccess: () => { queryClient.invalidateQueries(['announcements-unified']); setShowDialog(false); }
   });
 
-  const handlePrint = () => {
-    window.print();
+  const updateMutation = useMutation({
+    mutationFn: ({id, data}) => base44.entities.AnnouncementItem.update(id, data),
+    onSuccess: () => { queryClient.invalidateQueries(['announcements-unified']); setShowDialog(false); }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.AnnouncementItem.update(id, { is_active: false }), // Soft delete
+    onSuccess: () => { queryClient.invalidateQueries(['announcements-unified']); }
+  });
+
+  const openDialog = (item = null) => {
+      if (item && item.type !== 'Dynamic') return; // Can only edit Dynamic items here
+      setEditingItem(item?.source || null);
+      setFormData(item?.source || {
+          title: '', content: '', priority: 10, category: 'General',
+          start_date: new Date().toISOString().split('T')[0],
+          end_date: '',
+          is_active: true
+      });
+      setShowDialog(true);
   };
 
-  const uniqueTones = [...new Set(announcements.map(a => a.announcement_tone).filter(Boolean))];
+  const handleSubmit = (e) => {
+      e.preventDefault();
+      const data = { ...formData, priority: parseInt(formData.priority) };
+      if (editingItem) {
+          updateMutation.mutate({ id: editingItem.id, data });
+      } else {
+          createMutation.mutate(data);
+      }
+  };
 
   return (
-    <div className="p-6 md:p-8 space-y-6 print:p-0">
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-gray-200 pb-6 print:hidden">
+    <div className="p-6 md:p-8 space-y-6">
+      <div className="flex justify-between items-end border-b pb-6">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">
-            Reporte de Anuncios
-          </h1>
-          <p className="text-gray-500 mt-1">Historial y planificación de anuncios para servicios y eventos</p>
+          <h1 className="text-4xl font-bold uppercase font-['Bebas_Neue']">Gestión de Anuncios</h1>
+          <p className="text-gray-500">Vista unificada de anuncios dinámicos, eventos y segmentos</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="w-4 h-4 mr-2" />
-            Imprimir
-          </Button>
+            <Button onClick={() => openDialog()} className="bg-pdv-teal text-white">
+                <Plus className="w-4 h-4 mr-2" /> Nuevo Anuncio
+            </Button>
+            <Button variant="outline" onClick={() => window.print()}>
+                <Printer className="w-4 h-4 mr-2" /> Imprimir Reporte
+            </Button>
         </div>
       </div>
 
-      {/* Filters - Hide on print */}
-      <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200 print:hidden">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            placeholder="Buscar anuncios..."
-            className="pl-9"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="w-full md:w-48">
-          <Select value={filterTone} onValueChange={setFilterTone}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por Tono" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los Tonos</SelectItem>
-              {uniqueTones.map(tone => (
-                <SelectItem key={tone} value={tone}>{tone}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Report Content */}
-      <div className="space-y-8 print:space-y-6">
-        {filteredAnnouncements.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-            <Megaphone className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-            <p>No se encontraron anuncios con los filtros actuales.</p>
-          </div>
-        ) : (
-          <div className="grid gap-6 print:block print:gap-0">
-            {filteredAnnouncements.map((item) => (
-              <Card key={item.id} className="break-inside-avoid print:mb-6 print:shadow-none print:border-gray-300">
-                <CardHeader className="pb-3 bg-gray-50/50 border-b border-gray-100 print:bg-transparent print:border-gray-300">
-                  <div className="flex justify-between items-start">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 print:block">
+        {items.map((item) => (
+            <Card key={`${item.type}-${item.id}`} className="break-inside-avoid print:mb-4 print:shadow-none print:border-black">
+                <CardHeader className="pb-2 flex flex-row justify-between items-start">
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className="bg-white">
-                          {item.context_name}
-                        </Badge>
-                        <span className="text-xs text-gray-500 font-medium">
-                          {item.session_date && format(new Date(item.session_date), "EEEE d 'de' MMMM, yyyy", { locale: es })}
-                        </span>
-                      </div>
-                      <CardTitle className="text-xl font-bold text-pdv-teal">
-                        {item.announcement_title || item.title}
-                      </CardTitle>
-                    </div>
-                    {item.announcement_tone && (
-                      <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-200 border-indigo-200">
-                        Tono: {item.announcement_tone}
-                      </Badge>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-4 grid md:grid-cols-3 gap-6">
-                  <div className="md:col-span-2 space-y-4">
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-900 uppercase mb-1">Script / Descripción</h4>
-                      <div className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed p-3 bg-gray-50 rounded border border-gray-100 print:bg-transparent print:border-none print:p-0">
-                        {item.announcement_description || item.description_details || "Sin descripción detallada."}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4 border-l pl-6 border-gray-100 print:border-gray-300">
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Presentador</h4>
-                      <p className="font-medium text-sm">{item.presenter || "Sin asignar"}</p>
-                    </div>
-                    
-                    {item.announcement_date && (
-                      <div>
-                        <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Fecha Relevante</h4>
-                        <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
-                          <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                          {format(new Date(item.announcement_date), "d MMM yyyy", { locale: es })}
+                        <div className="flex gap-2 mb-2">
+                            <Badge variant={item.type === 'Dynamic' ? 'default' : 'secondary'}>{item.type === 'Segment' ? 'En Programa' : (item.type === 'EventPromo' ? 'Evento' : item.tags)}</Badge>
+                            {item.date_display && <span className="text-xs text-gray-500 self-center">{item.date_display}</span>}
                         </div>
-                      </div>
+                        <CardTitle className="text-lg font-bold">{item.title}</CardTitle>
+                    </div>
+                    {item.type === 'Dynamic' && (
+                        <div className="flex gap-1 print:hidden">
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => openDialog(item)}>
+                                <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500" onClick={() => deleteMutation.mutate(item.id)}>
+                                <Trash2 className="w-3 h-3" />
+                            </Button>
+                        </div>
                     )}
-
-                    {item.video_name && (
-                      <div>
-                         <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Recurso Visual</h4>
-                         <div className="flex items-center gap-1 text-sm text-blue-600">
-                           <FileText className="w-3.5 h-3.5" />
-                           {item.video_name}
-                         </div>
-                      </div>
-                    )}
-
-                    {item.projection_notes && (
-                      <div>
-                        <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Notas de Pantalla</h4>
-                        <p className="text-xs text-gray-600 italic">{item.projection_notes}</p>
-                      </div>
-                    )}
-                  </div>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{item.description}</p>
+                    {item.presenter && <p className="text-xs text-gray-500 mt-2 font-semibold">Presenta: {item.presenter}</p>}
                 </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+            </Card>
+        ))}
       </div>
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>{editingItem ? 'Editar Anuncio' : 'Nuevo Anuncio'}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                      <Label>Título</Label>
+                      <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
+                  </div>
+                  <div className="space-y-2">
+                      <Label>Contenido</Label>
+                      <Textarea value={formData.content} onChange={e => setFormData({...formData, content: e.target.value})} rows={4} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                          <Label>Fecha Inicio</Label>
+                          <Input type="date" value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} />
+                      </div>
+                      <div className="space-y-2">
+                          <Label>Fecha Fin</Label>
+                          <Input type="date" value={formData.end_date} onChange={e => setFormData({...formData, end_date: e.target.value})} />
+                      </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                          <Label>Prioridad (1 = Alta)</Label>
+                          <Input type="number" value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})} />
+                      </div>
+                      <div className="space-y-2">
+                          <Label>Categoría</Label>
+                          <Select value={formData.category} onValueChange={v => setFormData({...formData, category: v})}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                  <SelectItem value="General">General</SelectItem>
+                                  <SelectItem value="Event">Evento</SelectItem>
+                                  <SelectItem value="Ministry">Ministerio</SelectItem>
+                                  <SelectItem value="Urgent">Urgente</SelectItem>
+                              </SelectContent>
+                          </Select>
+                      </div>
+                  </div>
+                  <div className="space-y-2">
+                      <Label>Presentador (Opcional)</Label>
+                      <Input value={formData.presenter} onChange={e => setFormData({...formData, presenter: e.target.value})} />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-4">
+                      <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
+                      <Button type="submit">Guardar</Button>
+                  </div>
+              </form>
+          </DialogContent>
+      </Dialog>
     </div>
   );
 }
