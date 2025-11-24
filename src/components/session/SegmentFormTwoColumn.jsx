@@ -498,7 +498,19 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                       </SelectTrigger>
                       <SelectContent>
                         {COLOR_CODES.map((color) => (
-                          <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>
+                          <SelectItem key={color.value} value={color.value}>
+                            <div className="flex items-center gap-2">
+                              <div className={`w-3 h-3 rounded-full ${
+                                color.value === 'worship' ? 'bg-purple-500' :
+                                color.value === 'preach' ? 'bg-orange-500' :
+                                color.value === 'break' ? 'bg-gray-400' :
+                                color.value === 'tech' ? 'bg-blue-500' :
+                                color.value === 'special' ? 'bg-pink-500' :
+                                'bg-slate-300'
+                              }`} />
+                              {color.label}
+                            </div>
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

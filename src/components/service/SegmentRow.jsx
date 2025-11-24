@@ -25,13 +25,27 @@ export default function SegmentRow({ segment, onUpdate, onEditDetails }) {
     }
   };
 
-  const typeColors = {
-    Alabanza: "bg-blue-100 text-blue-800",
-    Plenaria: "bg-purple-100 text-purple-800",
-    Anuncio: "bg-yellow-100 text-yellow-800",
-    Video: "bg-red-100 text-red-800",
-    default: "bg-gray-100 text-gray-800"
+  const colorSchemes = {
+    worship: "bg-purple-100 text-purple-800",
+    preach: "bg-orange-100 text-orange-800",
+    break: "bg-gray-100 text-gray-800",
+    tech: "bg-blue-100 text-blue-800",
+    special: "bg-pink-100 text-pink-800",
+    default: "bg-slate-100 text-slate-800"
   };
+
+  // Fallback to type-based colors if color_code is default or missing
+  const typeFallback = {
+    Alabanza: "worship",
+    Plenaria: "preach",
+    Break: "break",
+    TechOnly: "tech",
+    Especial: "special"
+  };
+
+  const effectiveColor = segment.color_code !== 'default' && segment.color_code 
+    ? segment.color_code 
+    : (typeFallback[segment.segment_type] || 'default');
 
   return (
     <div className="grid grid-cols-12 gap-2 items-center p-2 hover:bg-gray-50 border-b text-sm group">
@@ -44,7 +58,7 @@ export default function SegmentRow({ segment, onUpdate, onEditDetails }) {
       {/* Title & Type */}
       <div className="col-span-3">
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className={`px-1 py-0 text-[10px] uppercase ${typeColors[segment.segment_type] || typeColors.default}`}>
+          <Badge variant="secondary" className={`px-1 py-0 text-[10px] uppercase ${colorSchemes[effectiveColor] || colorSchemes.default}`}>
             {segment.segment_type?.substring(0, 3)}
           </Badge>
           <span className="font-medium truncate" title={segment.title}>{segment.title}</span>
