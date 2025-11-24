@@ -29,8 +29,52 @@ export default function Services() {
     queryFn: () => base44.entities.Service.list(),
   });
 
+  // Filter out blueprints
+  const displayServices = services.filter(s => s.status !== 'blueprint');
+
+  // Fetch blueprints for the selector
+  const { data: blueprints = [] } = useQuery({
+    queryKey: ['service-blueprints'],
+    queryFn: () => base44.entities.Service.filter({ status: 'blueprint' }),
+  });
+
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Service.create(data),
+    mutationFn: async (data) => {
+      // 1. Create the service
+      const newService = await base44.entities.Service.create(data);
+
+      // 2. If blueprint selected, clone sessions and segments
+      if (data.blueprint_id) {
+        // Fetch blueprint sessions
+        const bpSessions = await base44.entities.Session.filter({ service_id: data.blueprint_id });
+        
+        for (const bpSession of bpSessions) {
+          // Create Session clone
+          const newSession = await base44.entities.Session.create({
+            ...bpSession,
+            id: undefined, // Clear ID
+            service_id: newService.id,
+            origin: 'duplicate', // Mark as duplicate/template based
+            date: data.date_hint || "", // If we had a date picker for the specific service date
+          });
+
+          // Fetch blueprint segments for this session
+          const bpSegments = await base44.entities.Segment.filter({ session_id: bpSession.id });
+          
+          // Clone Segments
+          for (const bpSeg of bpSegments) {
+             await base44.entities.Segment.create({
+               ...bpSeg,
+               id: undefined,
+               session_id: newSession.id,
+               service_id: undefined, // Ensure it links to session
+               origin: 'duplicate'
+             });
+          }
+        }
+      }
+      return newService;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['services']);
       setShowDialog(false);
@@ -121,7 +165,7 @@ export default function Services() {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {services.map((service) => (
+        {displayServices.map((service) => (
           <Card key={service.id} className="group hover:shadow-xl transition-all duration-300 bg-white border-none shadow-md overflow-hidden relative">
             <div className="absolute top-0 left-0 w-full h-1.5 bg-pdv-teal" />
             <CardHeader className="pb-2">
@@ -181,6 +225,36 @@ export default function Services() {
             <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingService ? 'Editar Servicio' : 'Nuevo Servicio'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Blueprint Selector (Only for new services) */}
+            {!editingService && (
+                <div className="space-y-2">
+                    <Label>Usar Plantilla (Blueprint)</Label>
+                    <Select 
+                        onValueChange={(val) => {
+                            const bp = blueprints.find(b => b.id === val);
+                            if(bp) {
+                                setFormData({
+                                    ...formData,
+                                    name: bp.name, // Pre-fill name
+                                    day_of_week: bp.day_of_week,
+                                    time: bp.time,
+                                    location: bp.location,
+                                    description: bp.description,
+                                    blueprint_id: bp.id
+                                });
+                            }
+                        }}
+                    >
+                        <SelectTrigger><SelectValue placeholder="Seleccionar Plantilla..." /></SelectTrigger>
+                        <SelectContent>
+                            {blueprints.map(bp => (
+                                <SelectItem key={bp.id} value={bp.id}>{bp.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="name">Nombre del Servicio *</Label>
               <div className="relative">
