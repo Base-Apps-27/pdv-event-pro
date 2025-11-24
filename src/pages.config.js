@@ -9,6 +9,7 @@ import PublicProgramView from './pages/PublicProgramView';
 import Services from './pages/Services';
 import ServiceDetail from './pages/ServiceDetail';
 import AnnouncementsReport from './pages/AnnouncementsReport';
+import ServiceBlueprints from './pages/ServiceBlueprints';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +25,7 @@ export const PAGES = {
     "Services": Services,
     "ServiceDetail": ServiceDetail,
     "AnnouncementsReport": AnnouncementsReport,
+    "ServiceBlueprints": ServiceBlueprints,
 }
 
 export const pagesConfig = {
