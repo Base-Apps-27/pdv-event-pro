@@ -21,14 +21,22 @@ const SEGMENT_TYPES = [
   "Especial", "Cierre", "MC", "Ministración", "Receso", "Almuerzo", "Artes", "Breakout"
 ];
 
-const COLOR_CODES = [
-  { value: "worship", label: "Adoración" },
-  { value: "preach", label: "Predicación" },
-  { value: "break", label: "Descanso" },
-  { value: "tech", label: "Técnico" },
-  { value: "special", label: "Especial" },
-  { value: "default", label: "Predeterminado" }
-];
+const TYPE_TO_COLOR = {
+  "Alabanza": "worship",
+  "Plenaria": "preach",
+  "Break": "break",
+  "Receso": "break",
+  "Almuerzo": "break",
+  "TechOnly": "tech",
+  "Video": "tech",
+  "Especial": "special",
+  "Artes": "special",
+  "Ministración": "special",
+};
+
+const getColorForType = (type) => {
+  return TYPE_TO_COLOR[type] || "default";
+};
 
 const DEPARTMENTS = [
   "Admin", "MC", "Sound", "Projection", "Hospitality", "Ujieres", "Kids", "Coordinador", "Stage & Decor", "Other"
@@ -471,11 +479,15 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
+                  <div className="col-span-2 space-y-2">
                     <Label htmlFor="segment_type">Tipo *</Label>
                     <Select 
                       value={formData.segment_type}
-                      onValueChange={(value) => updateField('segment_type', value)}
+                      onValueChange={(value) => {
+                        updateField('segment_type', value);
+                        // Auto-update color based on type
+                        setFormData(prev => ({ ...prev, segment_type: value, color_code: getColorForType(value) }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -483,34 +495,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                       <SelectContent>
                         {SEGMENT_TYPES.map((type) => (
                           <SelectItem key={type} value={type}>{type}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="color_code">Color</Label>
-                    <Select 
-                      value={formData.color_code}
-                      onValueChange={(value) => setFormData({...formData, color_code: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {COLOR_CODES.map((color) => (
-                          <SelectItem key={color.value} value={color.value}>
-                            <div className="flex items-center gap-2">
-                              <div className={`w-3 h-3 rounded-full ${
-                                color.value === 'worship' ? 'bg-purple-500' :
-                                color.value === 'preach' ? 'bg-orange-500' :
-                                color.value === 'break' ? 'bg-gray-400' :
-                                color.value === 'tech' ? 'bg-blue-500' :
-                                color.value === 'special' ? 'bg-pink-500' :
-                                'bg-slate-300'
-                              }`} />
-                              {color.label}
-                            </div>
-                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
