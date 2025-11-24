@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DuplicateEventDialog from "@/components/event/DuplicateEventDialog";
+import ServiceTemplatesTab from "@/components/templates/ServiceTemplatesTab";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -123,6 +124,10 @@ export default function Templates() {
 
       <Tabs defaultValue="events">
         <TabsList className="mb-6">
+          <TabsTrigger value="services" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Blueprints (Servicios)
+          </TabsTrigger>
           <TabsTrigger value="events" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Plantillas de Eventos
@@ -132,6 +137,10 @@ export default function Templates() {
             Plantillas de Segmentos
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="services">
+          <ServiceTemplatesTab />
+        </TabsContent>
 
         <TabsContent value="events">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
