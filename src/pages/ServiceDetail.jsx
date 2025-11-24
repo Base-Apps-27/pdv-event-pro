@@ -7,6 +7,7 @@ import { ArrowLeft, MapPin, Clock, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import SessionManager from "../components/event/SessionManager";
+import ServiceBuilder from "../components/service/ServiceBuilder";
 
 export default function ServiceDetail() {
   const navigate = useNavigate();
@@ -90,11 +91,15 @@ export default function ServiceDetail() {
       </div>
 
       <div className="space-y-6">
-        <SessionManager 
-          serviceId={serviceId} 
-          sessions={sessions} 
-          segments={segments}
-        />
+        {service.status === 'blueprint' ? (
+            <SessionManager 
+            serviceId={serviceId} 
+            sessions={sessions} 
+            segments={segments}
+            />
+        ) : (
+            <ServiceBuilder serviceId={serviceId} />
+        )}
       </div>
     </div>
   );
