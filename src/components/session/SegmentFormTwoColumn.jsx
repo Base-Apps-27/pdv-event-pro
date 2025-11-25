@@ -10,10 +10,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell } from "lucide-react";
+import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell, ListChecks } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import SegmentTimelinePreview from "./SegmentTimelinePreview";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
+import AnnouncementSeriesManager from "../announcements/AnnouncementSeriesManager";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -53,7 +54,14 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     details: ""
   });
   const [breakoutRooms, setBreakoutRooms] = useState(segment?.breakout_rooms || []);
+  const [showSeriesManager, setShowSeriesManager] = useState(false);
   
+  // Fetch announcement series for selection
+  const { data: announcementSeries = [] } = useQuery({
+    queryKey: ['announcementSeries'],
+    queryFn: () => base44.entities.AnnouncementSeries.list(),
+  });
+
   // Fetch segments to calculate suggested start time and validate overlaps
   const { data: allSegments = [] } = useQuery({
     queryKey: ['segments', sessionId],
@@ -138,6 +146,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     announcement_description: segment?.announcement_description || "",
     announcement_date: segment?.announcement_date || "",
     announcement_tone: segment?.announcement_tone || "",
+    announcement_series_id: segment?.announcement_series_id || "",
   });
 
   const [fieldOrigins, setFieldOrigins] = useState(segment?.field_origins || {});
@@ -547,72 +556,68 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
               <div className="p-4 space-y-4">
                 {isAnnouncementType && (
                   <div className="space-y-3 bg-indigo-50 p-4 rounded border border-indigo-200 mb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Bell className="w-5 h-5 text-indigo-600" />
-                      <h4 className="font-bold text-indigo-800">Detalles del Anuncio</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-indigo-600" />
+                        <h4 className="font-bold text-indigo-800">Serie de Anuncios</h4>
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setShowSeriesManager(true)}
+                        className="bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50"
+                      >
+                        <ListChecks className="w-4 h-4 mr-2" />
+                        Gestionar Series
+                      </Button>
                     </div>
                     
                     <div className="space-y-2">
-                      <Label>Título del Anuncio</Label>
+                      <Label>Seleccionar Serie de Anuncios</Label>
                       <div className="relative">
-                        <Input 
-                          value={formData.announcement_title}
-                          onChange={(e) => updateField('announcement_title', e.target.value)}
-                          placeholder="Ej. Retiro de Jóvenes"
-                          className="bg-white"
-                        />
-                        <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'announcement_title')} />
+                        <Select 
+                          value={formData.announcement_series_id}
+                          onValueChange={(value) => updateField('announcement_series_id', value)}
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Seleccionar configuración..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {announcementSeries.map(series => (
+                              <SelectItem key={series.id} value={series.id}>{series.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
+                      <p className="text-xs text-indigo-700 mt-1">
+                        Esta serie determina qué anuncios fijos y eventos dinámicos se mostrarán.
+                      </p>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Script / Descripción Detallada</Label>
-                      <div className="relative">
-                        <Textarea 
-                          value={formData.announcement_description}
-                          onChange={(e) => updateField('announcement_description', e.target.value)}
-                          rows={4}
-                          placeholder="Escribir aquí lo que se debe decir o los puntos clave..."
-                          className="bg-white"
-                        />
-                        <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'announcement_description')} />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Fecha Relevante (Opcional)</Label>
-                        <div className="relative">
-                          <Input 
-                            type="date"
-                            value={formData.announcement_date}
-                            onChange={(e) => updateField('announcement_date', e.target.value)}
-                            className="bg-white"
-                          />
-                          <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'announcement_date')} />
+                    {/* Legacy Fields / Manual Overrides (Collapsible or simplified?) */}
+                    {/* Keeping them accessible but secondary if manual override is needed */}
+                    <div className="mt-4 pt-4 border-t border-indigo-200">
+                        <Label className="text-xs font-bold text-indigo-800 uppercase mb-2 block">Overrides Manuales (Opcional)</Label>
+                        <div className="space-y-2">
+                            <Label className="text-xs">Título Alternativo (Sobreescribe nombre de serie)</Label>
+                            <Input 
+                                value={formData.announcement_title}
+                                onChange={(e) => updateField('announcement_title', e.target.value)}
+                                placeholder="Dejar vacío para usar nombre de serie"
+                                className="bg-white h-8 text-sm"
+                            />
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Tono de Comunicación</Label>
-                        <div className="relative">
-                          <Select 
-                            value={formData.announcement_tone}
-                            onValueChange={(value) => updateField('announcement_tone', value)}
-                          >
-                            <SelectTrigger className="bg-white">
-                              <SelectValue placeholder="Seleccionar..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Energetic">Energético / Animado</SelectItem>
-                              <SelectItem value="Serious">Serio / Solemne</SelectItem>
-                              <SelectItem value="Informative">Informativo / Claro</SelectItem>
-                              <SelectItem value="Casual">Casual / Relajado</SelectItem>
-                              <SelectItem value="Urgent">Urgente / Importante</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'announcement_tone')} />
+                         <div className="space-y-2 mt-2">
+                            <Label className="text-xs">Notas Adicionales</Label>
+                            <Textarea 
+                                value={formData.announcement_description}
+                                onChange={(e) => updateField('announcement_description', e.target.value)}
+                                rows={2}
+                                placeholder="Notas extra específicas para este servicio..."
+                                className="bg-white text-sm"
+                            />
                         </div>
-                      </div>
                     </div>
                   </div>
                 )}
@@ -1348,6 +1353,16 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
           {segment ? 'Guardar' : 'Crear'}
         </Button>
       </div>
+
+      {/* Series Manager Modal */}
+      {showSeriesManager && (
+        <AnnouncementSeriesManager 
+            isOpen={showSeriesManager} 
+            onClose={() => setShowSeriesManager(false)}
+            initialSeriesId={formData.announcement_series_id || "new"}
+            onSelect={(seriesId) => updateField('announcement_series_id', seriesId)}
+        />
+      )}
     </form>
   );
 }
