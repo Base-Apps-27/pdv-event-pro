@@ -164,6 +164,7 @@ export default function Services() {
     } else {
       if (formData.blueprint_id) {
         // If using a blueprint, open configuration modal first
+        setServiceToApplyBlueprint(null); // Ensure we are not applying to an existing service
         setNewServiceDraftData(data);
         setSelectedBlueprintToConfigure(formData.blueprint_id);
         setShowDialog(false);
@@ -416,7 +417,10 @@ export default function Services() {
       {showBlueprintConfigDialog && (
         <BlueprintConfigurationModal
           isOpen={showBlueprintConfigDialog}
-          onClose={() => setShowBlueprintConfigDialog(false)}
+          onClose={() => {
+            setShowBlueprintConfigDialog(false);
+            setServiceToApplyBlueprint(null);
+          }}
           blueprintId={selectedBlueprintToConfigure}
           initialServiceData={serviceToApplyBlueprint ? serviceToApplyBlueprint : newServiceDraftData}
           onSave={(data) => {
@@ -436,7 +440,6 @@ export default function Services() {
 
       <Dialog open={showBlueprintSelector} onOpenChange={(open) => {
         setShowBlueprintSelector(open);
-        if (!open) setServiceToApplyBlueprint(null);
       }}>
         <DialogContent>
           <DialogHeader>

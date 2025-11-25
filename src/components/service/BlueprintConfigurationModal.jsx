@@ -43,51 +43,58 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
   });
 
   useEffect(() => {
-    if (blueprintSessions.length > 0 && allBlueprintSegments.length > 0) {
-      const sessionIds = blueprintSessions.map(s => s.id);
-      const relevantSegments = allBlueprintSegments.filter(s => sessionIds.includes(s.session_id));
-      
-      // Sort segments by order
-      relevantSegments.sort((a, b) => (a.order || 0) - (b.order || 0));
+    const hasSessions = blueprintSessions.length > 0;
+    // We consider loaded if requests are done.
+    // If sessions exist, we proceed to map them even if segments are empty.
+    
+    if (blueprintId && isOpen && !isLoadingSessions && !isLoadingSegments) {
+      if (hasSessions) {
+        const sessionIds = blueprintSessions.map(s => s.id);
+        const relevantSegments = allBlueprintSegments.length > 0 
+            ? allBlueprintSegments.filter(s => sessionIds.includes(s.session_id))
+            : [];
+        
+        // Sort segments by order
+        relevantSegments.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-      const data = blueprintSessions.map(session => {
-        const segmentsInSession = relevantSegments.filter(s => s.session_id === session.id);
-        return {
-          sessionId: session.id,
-          sessionName: session.name,
-          segments: segmentsInSession.map(segment => ({
-            segmentId: segment.id,
-            title: segment.title,
-            segment_type: segment.segment_type,
-            color_code: segment.color_code,
-            // Initialize override fields with empty or existing values if any (though templates usually have placeholders)
-            presenter: segment.presenter || "",
-            message_title: segment.message_title || "",
-            scripture_references: segment.scripture_references || "",
-            number_of_songs: segment.number_of_songs || 0,
-            // Initialize song fields
-            song_1_title: segment.song_1_title || "",
-            song_1_lead: segment.song_1_lead || "",
-            song_2_title: segment.song_2_title || "",
-            song_2_lead: segment.song_2_lead || "",
-            song_3_title: segment.song_3_title || "",
-            song_3_lead: segment.song_3_lead || "",
-            song_4_title: segment.song_4_title || "",
-            song_4_lead: segment.song_4_lead || "",
-            song_5_title: segment.song_5_title || "",
-            song_5_lead: segment.song_5_lead || "",
-            song_6_title: segment.song_6_title || "",
-            song_6_lead: segment.song_6_lead || "",
-            announcement_title: segment.announcement_title || "",
-            announcement_description: segment.announcement_description || "",
-            announcement_date: segment.announcement_date || "",
-          })),
-        };
-      });
-      setSessionSegmentData(data);
+        const data = blueprintSessions.map(session => {
+          const segmentsInSession = relevantSegments.filter(s => s.session_id === session.id);
+          return {
+            sessionId: session.id,
+            sessionName: session.name,
+            segments: segmentsInSession.map(segment => ({
+              segmentId: segment.id,
+              title: segment.title,
+              segment_type: segment.segment_type,
+              color_code: segment.color_code,
+              presenter: segment.presenter || "",
+              message_title: segment.message_title || "",
+              scripture_references: segment.scripture_references || "",
+              number_of_songs: segment.number_of_songs || 0,
+              song_1_title: segment.song_1_title || "",
+              song_1_lead: segment.song_1_lead || "",
+              song_2_title: segment.song_2_title || "",
+              song_2_lead: segment.song_2_lead || "",
+              song_3_title: segment.song_3_title || "",
+              song_3_lead: segment.song_3_lead || "",
+              song_4_title: segment.song_4_title || "",
+              song_4_lead: segment.song_4_lead || "",
+              song_5_title: segment.song_5_title || "",
+              song_5_lead: segment.song_5_lead || "",
+              song_6_title: segment.song_6_title || "",
+              song_6_lead: segment.song_6_lead || "",
+              announcement_title: segment.announcement_title || "",
+              announcement_description: segment.announcement_description || "",
+              announcement_date: segment.announcement_date || "",
+            })),
+          };
+        });
+        setSessionSegmentData(data);
+      } else {
+        // No sessions found
+        setSessionSegmentData([]);
+      }
       setLoadingBlueprintDetails(false);
-    } else if (blueprintId && isOpen && !isLoadingSessions && !isLoadingSegments && blueprintSessions.length === 0) {
-        setLoadingBlueprintDetails(false);
     }
   }, [blueprintSessions, allBlueprintSegments, blueprintId, isOpen, isLoadingSessions, isLoadingSegments]);
 
