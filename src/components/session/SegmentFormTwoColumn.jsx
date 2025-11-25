@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText } from "lucide-react";
+import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import SegmentTimelinePreview from "./SegmentTimelinePreview";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
@@ -548,7 +548,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 {isAnnouncementType && (
                   <div className="space-y-3 bg-indigo-50 p-4 rounded border border-indigo-200 mb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Megaphone className="w-5 h-5 text-indigo-600" />
+                      <Bell className="w-5 h-5 text-indigo-600" />
                       <h4 className="font-bold text-indigo-800">Detalles del Anuncio</h4>
                     </div>
                     
