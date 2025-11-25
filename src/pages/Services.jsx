@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Plus, Calendar, MapPin, Edit, Trash2, Clock, Layers, Loader2 } from "lucide-react";
+import { Plus, Calendar, MapPin, Edit, Trash2, Clock, Layers, Loader2, Wand2 } from "lucide-react";
 import BlueprintConfigurationModal from "../components/service/BlueprintConfigurationModal";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +26,8 @@ export default function Services() {
   const [showBlueprintConfigDialog, setShowBlueprintConfigDialog] = useState(false);
   const [selectedBlueprintToConfigure, setSelectedBlueprintToConfigure] = useState(null);
   const [newServiceDraftData, setNewServiceDraftData] = useState({});
+  const [serviceToApplyBlueprint, setServiceToApplyBlueprint] = useState(null);
+  const [showBlueprintSelector, setShowBlueprintSelector] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: services = [], isLoading } = useQuery({
@@ -42,6 +44,49 @@ export default function Services() {
     queryFn: () => base44.entities.Service.filter({ status: 'blueprint' }),
   });
 
+  // Helper function for cloning blueprint content
+  const applyBlueprintToService = async (serviceId, blueprintId, blueprintSessionSegmentData) => {
+      const bpSessions = await base44.entities.Session.filter({ service_id: blueprintId }, 'order');
+      
+      for (const bpSession of bpSessions) {
+        // Create Session clone
+        const newSession = await base44.entities.Session.create({
+          ...bpSession,
+          id: undefined, // Clear ID
+          service_id: serviceId,
+          origin: 'duplicate', // Mark as duplicate/template based
+          date: "", // Reset date for new service
+        });
+
+        // Find overrides for this session
+        const sessionOverrides = blueprintSessionSegmentData?.find(s => s.sessionId === bpSession.id);
+
+        // Fetch blueprint segments for this session
+        const bpSegments = await base44.entities.Segment.filter({ session_id: bpSession.id });
+        
+        // Clone Segments
+        for (const bpSeg of bpSegments) {
+           // Find overrides for this segment
+           const segmentOverrides = sessionOverrides?.segments?.find(seg => seg.segmentId === bpSeg.id);
+           const overrides = segmentOverrides || {};
+           
+           // Remove internal IDs from overrides
+           delete overrides.segmentId;
+           delete overrides.segment_type; // Keep original type just in case
+           delete overrides.color_code; // Keep original color
+
+           await base44.entities.Segment.create({
+             ...bpSeg,
+             ...overrides,
+             id: undefined,
+             session_id: newSession.id,
+             service_id: undefined, // Ensure it links to session
+             origin: 'duplicate'
+           });
+        }
+      }
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const { blueprint_id, blueprintSessionSegmentData, ...serviceData } = data;
@@ -51,46 +96,7 @@ export default function Services() {
 
       // 2. If blueprint selected, clone sessions and segments
       if (blueprint_id) {
-        // Fetch blueprint sessions
-        const bpSessions = await base44.entities.Session.filter({ service_id: blueprint_id }, 'order');
-        
-        for (const bpSession of bpSessions) {
-          // Create Session clone
-          const newSession = await base44.entities.Session.create({
-            ...bpSession,
-            id: undefined, // Clear ID
-            service_id: newService.id,
-            origin: 'duplicate', // Mark as duplicate/template based
-            date: "", // Reset date for new service
-          });
-
-          // Find overrides for this session
-          const sessionOverrides = blueprintSessionSegmentData?.find(s => s.sessionId === bpSession.id);
-
-          // Fetch blueprint segments for this session
-          const bpSegments = await base44.entities.Segment.filter({ session_id: bpSession.id });
-          
-          // Clone Segments
-          for (const bpSeg of bpSegments) {
-             // Find overrides for this segment
-             const segmentOverrides = sessionOverrides?.segments?.find(seg => seg.segmentId === bpSeg.id);
-             const overrides = segmentOverrides || {};
-             
-             // Remove internal IDs from overrides
-             delete overrides.segmentId;
-             delete overrides.segment_type; // Keep original type just in case
-             delete overrides.color_code; // Keep original color
-
-             await base44.entities.Segment.create({
-               ...bpSeg,
-               ...overrides,
-               id: undefined,
-               session_id: newSession.id,
-               service_id: undefined, // Ensure it links to session
-               origin: 'duplicate'
-             });
-          }
-        }
+        await applyBlueprintToService(newService.id, blueprint_id, blueprintSessionSegmentData);
       }
       return newService;
     },
@@ -101,6 +107,19 @@ export default function Services() {
       setEditingService(null);
       setNewServiceDraftData({});
       setSelectedBlueprintToConfigure(null);
+    },
+  });
+
+  const applyBlueprintMutation = useMutation({
+    mutationFn: async ({ serviceId, blueprintId, blueprintSessionSegmentData }) => {
+      await applyBlueprintToService(serviceId, blueprintId, blueprintSessionSegmentData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['services']);
+      setShowBlueprintConfigDialog(false);
+      setServiceToApplyBlueprint(null);
+      setSelectedBlueprintToConfigure(null);
+      setNewServiceDraftData({});
     },
   });
 
@@ -235,6 +254,17 @@ export default function Services() {
                   </Link>
                   <Button variant="outline" size="sm" onClick={() => openEditDialog(service)}>
                     <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    title="Aplicar Plantilla"
+                    onClick={() => {
+                      setServiceToApplyBlueprint(service);
+                      setShowBlueprintSelector(true);
+                    }}
+                  >
+                    <Wand2 className="w-4 h-4 text-pdv-teal" />
                   </Button>
                   <Button 
                     variant="outline" 
@@ -388,11 +418,54 @@ export default function Services() {
           isOpen={showBlueprintConfigDialog}
           onClose={() => setShowBlueprintConfigDialog(false)}
           blueprintId={selectedBlueprintToConfigure}
-          initialServiceData={newServiceDraftData}
-          onSave={(data) => createMutation.mutate(data)}
-          isSaving={createMutation.isLoading}
+          initialServiceData={serviceToApplyBlueprint ? serviceToApplyBlueprint : newServiceDraftData}
+          onSave={(data) => {
+            if (serviceToApplyBlueprint) {
+              applyBlueprintMutation.mutate({
+                serviceId: serviceToApplyBlueprint.id,
+                blueprintId: selectedBlueprintToConfigure,
+                blueprintSessionSegmentData: data.blueprintSessionSegmentData
+              });
+            } else {
+              createMutation.mutate(data);
+            }
+          }}
+          isSaving={createMutation.isLoading || applyBlueprintMutation.isLoading}
         />
       )}
+
+      <Dialog open={showBlueprintSelector} onOpenChange={(open) => {
+        setShowBlueprintSelector(open);
+        if (!open) setServiceToApplyBlueprint(null);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Seleccionar Plantilla</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Elige una plantilla para aplicar a "{serviceToApplyBlueprint?.name}"</Label>
+              <Select 
+                onValueChange={(val) => {
+                  setSelectedBlueprintToConfigure(val);
+                  setShowBlueprintSelector(false);
+                  setShowBlueprintConfigDialog(true);
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Seleccionar Plantilla..." /></SelectTrigger>
+                <SelectContent>
+                  {blueprints.map(bp => (
+                    <SelectItem key={bp.id} value={bp.id}>{bp.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-gray-500 bg-yellow-50 p-2 rounded">
+              Nota: Al aplicar una plantilla, se agregarán las sesiones y segmentos de la plantilla al servicio existente. No se borrará el contenido actual.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

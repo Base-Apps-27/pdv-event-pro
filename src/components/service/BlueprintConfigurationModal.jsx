@@ -262,7 +262,7 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            Crear Servicio Completo
+            {initialServiceData?.id ? 'Aplicar Plantilla' : 'Crear Servicio Completo'}
           </Button>
         </DialogFooter>
       </DialogContent>
