@@ -12,39 +12,39 @@ import { es } from "date-fns/locale";
 
 export default function Dashboard() {
   const gradientStyle = {
-    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)'
   };
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['events'],
-    queryFn: () => base44.entities.Event.list('-year'),
+    queryFn: () => base44.entities.Event.list('-year')
   });
 
   const { data: sessions = [] } = useQuery({
     queryKey: ['sessions'],
-    queryFn: () => base44.entities.Session.list(),
+    queryFn: () => base44.entities.Session.list()
   });
 
   const { data: segments = [] } = useQuery({
     queryKey: ['segments'],
-    queryFn: () => base44.entities.Segment.list(),
+    queryFn: () => base44.entities.Segment.list()
   });
 
-  const upcomingEvents = events
-    .filter(e => e.status !== 'completed' && e.status !== 'archived')
-    .sort((a, b) => {
-      if (!a.start_date) return 1;
-      if (!b.start_date) return -1;
-      return new Date(a.start_date) - new Date(b.start_date);
-    });
+  const upcomingEvents = events.
+  filter((e) => e.status !== 'completed' && e.status !== 'archived').
+  sort((a, b) => {
+    if (!a.start_date) return 1;
+    if (!b.start_date) return -1;
+    return new Date(a.start_date) - new Date(b.start_date);
+  });
   const recentEvent = upcomingEvents[0];
 
   const getSessionCount = (eventId) => {
-    return sessions.filter(s => s.event_id === eventId).length;
+    return sessions.filter((s) => s.event_id === eventId).length;
   };
 
   const getSegmentCount = (eventId) => {
-    const eventSessions = sessions.filter(s => s.event_id === eventId);
-    return segments.filter(seg => eventSessions.some(s => s.id === seg.session_id)).length;
+    const eventSessions = sessions.filter((s) => s.event_id === eventId);
+    return segments.filter((seg) => eventSessions.some((s) => s.id === seg.session_id)).length;
   };
 
   const statusColors = {
@@ -73,8 +73,8 @@ export default function Dashboard() {
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6">
           <div>
             <h1 className="text-6xl md:text-8xl font-bold uppercase tracking-tighter leading-none font-['Bebas_Neue'] mb-2 text-white">BIENVENIDA</h1>
-            <p className="text-xl md:text-2xl font-medium text-white text-opacity-90 max-w-2xl">
-              Aquí tienes un resumen de tus eventos para el día de hoy.
+            <p className="text-xl md:text-2xl font-medium text-white text-opacity-90 max-w-2xl">Aquí tienes un resumen de tus eventos
+
             </p>
           </div>
           <Link to={createPageUrl("Events")}>
@@ -136,8 +136,8 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {recentEvent && (
-        <Card className="border-l-4 border-pdv-green bg-white shadow-md">
+      {recentEvent &&
+      <Card className="border-l-4 border-pdv-green bg-white shadow-md">
           <CardHeader className="bg-gradient-to-r from-gray-50 to-transparent border-b border-gray-200">
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl font-bold uppercase tracking-tight text-gray-900">Próximo Evento</CardTitle>
@@ -148,9 +148,9 @@ export default function Dashboard() {
             <div className="space-y-4">
               <div>
                 <h3 className="text-3xl font-bold text-gray-900 uppercase tracking-tight">{recentEvent.name}</h3>
-                {recentEvent.theme && (
-                  <p className="text-xl text-pdv-green mt-2 font-semibold italic">"{recentEvent.theme}"</p>
-                )}
+                {recentEvent.theme &&
+              <p className="text-xl text-pdv-green mt-2 font-semibold italic">"{recentEvent.theme}"</p>
+              }
               </div>
               
               <div className="grid md:grid-cols-3 gap-4">
@@ -199,7 +199,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       <div>
         <div className="flex items-center justify-between mb-6">
@@ -213,8 +213,8 @@ export default function Dashboard() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => (
-            <Link key={event.id} to={createPageUrl(`EventDetail?id=${event.id}`)}>
+          {events.map((event) =>
+          <Link key={event.id} to={createPageUrl(`EventDetail?id=${event.id}`)}>
               <Card className="hover:shadow-lg hover:border-pdv-green transition-all duration-200 h-full cursor-pointer bg-white border-gray-200 border-l-4 hover:border-l-pdv-green">
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -229,9 +229,9 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {event.theme && (
-                      <p className="text-sm text-pdv-green font-semibold italic line-clamp-2">"{event.theme}"</p>
-                    )}
+                    {event.theme &&
+                  <p className="text-sm text-pdv-green font-semibold italic line-clamp-2">"{event.theme}"</p>
+                  }
                     
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <MapPin className="w-4 h-4" />
@@ -246,10 +246,10 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </Link>
-          ))}
+          )}
 
-          {events.length === 0 && !isLoading && (
-            <Card className="col-span-full p-12 text-center border-dashed border-2 bg-white border-gray-300">
+          {events.length === 0 && !isLoading &&
+          <Card className="col-span-full p-12 text-center border-dashed border-2 bg-white border-gray-300">
               <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-bold uppercase text-gray-900 mb-2">No hay eventos</h3>
               <p className="text-gray-600 mb-4">Comienza creando tu primer evento</p>
@@ -260,9 +260,9 @@ export default function Dashboard() {
                 </Button>
               </Link>
             </Card>
-          )}
+          }
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
