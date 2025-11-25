@@ -35,15 +35,17 @@ export default function Templates() {
   const [templateToUse, setTemplateToUse] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: segmentTemplates = [] } = useQuery({
+  const { data: segmentTemplatesData } = useQuery({
     queryKey: ['segmentTemplates'],
     queryFn: () => base44.entities.SegmentTemplate.list(),
   });
+  const segmentTemplates = segmentTemplatesData || [];
 
-  const { data: eventTemplates = [] } = useQuery({
+  const { data: eventTemplatesData } = useQuery({
     queryKey: ['eventTemplates'],
     queryFn: () => base44.entities.Event.filter({ status: 'template' }),
   });
+  const eventTemplates = eventTemplatesData || [];
 
   const deleteEventTemplateMutation = useMutation({
     mutationFn: (id) => base44.entities.Event.delete(id),

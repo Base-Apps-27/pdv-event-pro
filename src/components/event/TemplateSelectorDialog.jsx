@@ -6,11 +6,13 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Calendar, Loader2, FileText } from "lucide-react";
 
 export default function TemplateSelectorDialog({ open, onOpenChange, onSelect }) {
-  const { data: templates = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['eventTemplates'],
     queryFn: () => base44.entities.Event.filter({ status: 'template' }),
     enabled: open
   });
+
+  const templates = data || [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

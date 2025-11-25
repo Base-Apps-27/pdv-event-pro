@@ -18,10 +18,11 @@ export default function ServiceTemplatesTab() {
   const [formData, setFormData] = useState({});
   const queryClient = useQueryClient();
 
-  const { data: blueprints = [], isLoading } = useQuery({
+  const { data: blueprintsData, isLoading } = useQuery({
     queryKey: ['service-blueprints'],
     queryFn: () => base44.entities.Service.filter({ status: 'blueprint' }),
   });
+  const blueprints = blueprintsData || [];
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Service.create({ ...data, status: 'blueprint', origin: 'manual' }),
