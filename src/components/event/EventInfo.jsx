@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, FileText } from "lucide-react";
+import { Calendar, MapPin, FileText, Megaphone } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -74,6 +74,29 @@ export default function EventInfo({ event }) {
             <div>
               <p className="text-sm text-slate-500">Descripción</p>
               <p className="text-slate-900 mt-1">{event.description}</p>
+            </div>
+          </div>
+        )}
+
+        {event.promote_in_announcements && (
+          <div className="flex items-start gap-3 pt-4 border-t border-gray-100">
+            <Megaphone className="w-5 h-5 text-pdv-teal mt-0.5" />
+            <div>
+              <p className="text-sm text-pdv-teal font-bold">Promoción Activa</p>
+              <p className="text-slate-600 mt-1 text-sm">
+                {event.announcement_blurb || "Sin texto definido"}
+              </p>
+              <div className="flex gap-2 mt-2 text-xs text-slate-500">
+                 {event.promotion_start_date && <span>Desde: {format(new Date(event.promotion_start_date), "d MMM", { locale: es })}</span>}
+                 {event.promotion_end_date && <span>Hasta: {format(new Date(event.promotion_end_date), "d MMM", { locale: es })}</span>}
+              </div>
+              {event.promotion_targets && event.promotion_targets.length > 0 && (
+                <div className="flex gap-1 mt-2">
+                  {event.promotion_targets.map(t => (
+                    <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

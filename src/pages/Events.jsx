@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import DeleteEventDialog from "@/components/event/DeleteEventDialog";
 import DuplicateEventDialog from "@/components/event/DuplicateEventDialog";
 import TemplateSelectorDialog from "@/components/event/TemplateSelectorDialog";
@@ -85,6 +86,7 @@ export default function Events() {
       ...formData,
       year: parseInt(formData.year),
       field_origins: fieldOrigins,
+      promotion_targets: formData.promotion_targets.split(',').map(s => s.trim()).filter(Boolean),
     };
 
     if (editingEvent) {
@@ -107,6 +109,11 @@ export default function Events() {
       description: event?.description || '',
       status: event?.status || 'planning',
       print_color: event?.print_color || 'blue',
+      promote_in_announcements: event?.promote_in_announcements || false,
+      promotion_start_date: event?.promotion_start_date || '',
+      promotion_end_date: event?.promotion_end_date || '',
+      announcement_blurb: event?.announcement_blurb || '',
+      promotion_targets: event?.promotion_targets ? event.promotion_targets.join(', ') : '',
     });
     setShowDialog(true);
   };
@@ -372,6 +379,57 @@ export default function Events() {
                 />
                 <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'description')} />
               </div>
+            </div>
+
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-center space-x-2 mb-4">
+                <Checkbox 
+                  id="promote_in_announcements" 
+                  checked={formData.promote_in_announcements}
+                  onCheckedChange={(checked) => updateFormField('promote_in_announcements', checked)}
+                />
+                <Label htmlFor="promote_in_announcements" className="font-bold text-pdv-teal">Promocionar en Anuncios</Label>
+              </div>
+
+              {formData.promote_in_announcements && (
+                <div className="space-y-4 pl-6 border-l-2 border-pdv-teal/20">
+                   <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Inicio Promoción</Label>
+                        <Input 
+                          type="date"
+                          value={formData.promotion_start_date}
+                          onChange={(e) => updateFormField('promotion_start_date', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Fin Promoción</Label>
+                        <Input 
+                          type="date"
+                          value={formData.promotion_end_date}
+                          onChange={(e) => updateFormField('promotion_end_date', e.target.value)}
+                        />
+                      </div>
+                   </div>
+                   <div className="space-y-2">
+                      <Label>Blurb para Anuncio (Corto)</Label>
+                      <Textarea 
+                        value={formData.announcement_blurb}
+                        onChange={(e) => updateFormField('announcement_blurb', e.target.value)}
+                        rows={2}
+                        placeholder="Texto corto para leer en anuncios..."
+                      />
+                   </div>
+                   <div className="space-y-2">
+                      <Label>Targets (Tags separados por coma)</Label>
+                      <Input 
+                        value={formData.promotion_targets}
+                        onChange={(e) => updateFormField('promotion_targets', e.target.value)}
+                        placeholder="Ej. Domingo AM, Jóvenes"
+                      />
+                   </div>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
