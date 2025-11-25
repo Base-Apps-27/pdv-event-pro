@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Plus, Calendar, MapPin, Edit, Trash2, Clock, Layers } from "lucide-react";
+import { Plus, Calendar, MapPin, Edit, Trash2, Clock, Layers, Loader2 } from "lucide-react";
+import BlueprintConfigurationModal from "../components/service/BlueprintConfigurationModal";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,9 @@ export default function Services() {
   const [editingService, setEditingService] = useState(null);
   const [formData, setFormData] = useState({});
   const [fieldOrigins, setFieldOrigins] = useState({});
+  const [showBlueprintConfigDialog, setShowBlueprintConfigDialog] = useState(false);
+  const [selectedBlueprintToConfigure, setSelectedBlueprintToConfigure] = useState(null);
+  const [newServiceDraftData, setNewServiceDraftData] = useState({});
   const queryClient = useQueryClient();
 
   const { data: services = [], isLoading } = useQuery({
@@ -40,13 +44,15 @@ export default function Services() {
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
+      const { blueprint_id, blueprintSessionSegmentData, ...serviceData } = data;
+      
       // 1. Create the service
-      const newService = await base44.entities.Service.create(data);
+      const newService = await base44.entities.Service.create(serviceData);
 
       // 2. If blueprint selected, clone sessions and segments
-      if (data.blueprint_id) {
+      if (blueprint_id) {
         // Fetch blueprint sessions
-        const bpSessions = await base44.entities.Session.filter({ service_id: data.blueprint_id });
+        const bpSessions = await base44.entities.Session.filter({ service_id: blueprint_id }, 'order');
         
         for (const bpSession of bpSessions) {
           // Create Session clone
@@ -55,16 +61,29 @@ export default function Services() {
             id: undefined, // Clear ID
             service_id: newService.id,
             origin: 'duplicate', // Mark as duplicate/template based
-            date: data.date_hint || "", // If we had a date picker for the specific service date
+            date: "", // Reset date for new service
           });
+
+          // Find overrides for this session
+          const sessionOverrides = blueprintSessionSegmentData?.find(s => s.sessionId === bpSession.id);
 
           // Fetch blueprint segments for this session
           const bpSegments = await base44.entities.Segment.filter({ session_id: bpSession.id });
           
           // Clone Segments
           for (const bpSeg of bpSegments) {
+             // Find overrides for this segment
+             const segmentOverrides = sessionOverrides?.segments?.find(seg => seg.segmentId === bpSeg.id);
+             const overrides = segmentOverrides || {};
+             
+             // Remove internal IDs from overrides
+             delete overrides.segmentId;
+             delete overrides.segment_type; // Keep original type just in case
+             delete overrides.color_code; // Keep original color
+
              await base44.entities.Segment.create({
                ...bpSeg,
+               ...overrides,
                id: undefined,
                session_id: newSession.id,
                service_id: undefined, // Ensure it links to session
@@ -78,7 +97,10 @@ export default function Services() {
     onSuccess: () => {
       queryClient.invalidateQueries(['services']);
       setShowDialog(false);
+      setShowBlueprintConfigDialog(false);
       setEditingService(null);
+      setNewServiceDraftData({});
+      setSelectedBlueprintToConfigure(null);
     },
   });
 
@@ -121,7 +143,15 @@ export default function Services() {
     if (editingService) {
       updateMutation.mutate({ id: editingService.id, data });
     } else {
-      createMutation.mutate(data);
+      if (formData.blueprint_id) {
+        // If using a blueprint, open configuration modal first
+        setNewServiceDraftData(data);
+        setSelectedBlueprintToConfigure(formData.blueprint_id);
+        setShowDialog(false);
+        setShowBlueprintConfigDialog(true);
+      } else {
+        createMutation.mutate(data);
+      }
     }
   };
 
@@ -352,6 +382,17 @@ export default function Services() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {showBlueprintConfigDialog && (
+        <BlueprintConfigurationModal
+          isOpen={showBlueprintConfigDialog}
+          onClose={() => setShowBlueprintConfigDialog(false)}
+          blueprintId={selectedBlueprintToConfigure}
+          initialServiceData={newServiceDraftData}
+          onSave={(data) => createMutation.mutate(data)}
+          isSaving={createMutation.isLoading}
+        />
+      )}
     </div>
   );
 }
