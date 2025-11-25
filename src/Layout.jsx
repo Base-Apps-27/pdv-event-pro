@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Megaphone } from "lucide-react";
+import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -100,7 +100,7 @@ export default function Layout({ children }) {
             }`}
             style={isActive(createPageUrl("AnnouncementsReport")) ? gradientStyle : {}}
           >
-            <Megaphone className="w-5 h-5" />
+            <Bell className="w-5 h-5" />
             Anuncios
           </Link>
 
