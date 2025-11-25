@@ -134,7 +134,7 @@ export default function AnnouncementsReport() {
 
   return (
     <div className="p-6 md:p-8 space-y-6">
-      <div className="flex justify-between items-end border-b pb-6">
+      <div className="flex justify-between items-end border-b pb-6 print:hidden">
         <div>
           <h1 className="text-4xl font-bold uppercase font-['Bebas_Neue']">Gestión de Anuncios</h1>
           <p className="text-gray-500">Vista unificada de anuncios dinámicos, eventos y segmentos</p>
@@ -149,16 +149,31 @@ export default function AnnouncementsReport() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 print:block">
+      {/* Print-only Header */}
+      <div className="hidden print:block mb-8 border-b border-black pb-4">
+          <div className="flex justify-between items-start">
+              <div>
+                  <h1 className="text-3xl font-bold uppercase font-['Bebas_Neue']">Reporte de Anuncios</h1>
+                  <p className="text-sm text-gray-600">Palabras de Vida - {format(new Date(), 'PPP', { locale: es })}</p>
+              </div>
+              <div className="text-right">
+                  <div className="text-xs text-gray-500">Generado el {format(new Date(), 'dd/MM/yyyy HH:mm')}</div>
+              </div>
+          </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 print:block print:columns-2 print:gap-6 print:space-y-0">
         {items.map((item) => (
-            <Card key={`${item.type}-${item.id}`} className="break-inside-avoid print:mb-4 print:shadow-none print:border-black">
-                <CardHeader className="pb-2 flex flex-row justify-between items-start">
+            <Card key={`${item.type}-${item.id}`} className="break-inside-avoid mb-6 print:mb-4 print:shadow-none print:border print:border-gray-300 print:rounded-lg print:bg-white">
+                <CardHeader className="pb-2 flex flex-row justify-between items-start print:pt-4 print:pb-1">
                     <div>
-                        <div className="flex gap-2 mb-2">
-                            <Badge variant={item.type === 'Dynamic' ? 'default' : 'secondary'}>{item.type === 'Segment' ? 'En Programa' : (item.type === 'EventPromo' ? 'Evento' : item.tags)}</Badge>
-                            {item.date_display && <span className="text-xs text-gray-500 self-center">{item.date_display}</span>}
+                        <div className="flex gap-2 mb-2 print:mb-1">
+                            <Badge variant={item.type === 'Dynamic' ? 'default' : 'secondary'} className="print:border print:border-black print:text-black print:bg-transparent print:px-1 print:h-5 print:text-[10px]">
+                                {item.type === 'Segment' ? 'En Programa' : (item.type === 'EventPromo' ? 'Evento' : item.tags)}
+                            </Badge>
+                            {item.date_display && <span className="text-xs text-gray-500 self-center print:text-gray-600 print:text-[10px]">{item.date_display}</span>}
                         </div>
-                        <CardTitle className="text-lg font-bold">{item.title}</CardTitle>
+                        <CardTitle className="text-lg font-bold print:text-base print:leading-tight">{item.title}</CardTitle>
                     </div>
                     {item.type === 'Dynamic' && (
                         <div className="flex gap-1 print:hidden">
@@ -171,13 +186,13 @@ export default function AnnouncementsReport() {
                         </div>
                     )}
                 </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{item.description}</p>
-                    {item.presenter && <p className="text-xs text-gray-500 mt-2 font-semibold">Presenta: {item.presenter}</p>}
+                <CardContent className="print:pb-4 print:pt-1">
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap print:text-xs print:text-justify print:leading-relaxed">{item.description}</p>
+                    {item.presenter && <p className="text-xs text-gray-500 mt-2 font-semibold print:text-[10px]">Presenta: {item.presenter}</p>}
                 </CardContent>
             </Card>
         ))}
-      </div>
+        </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent>

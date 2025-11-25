@@ -22,7 +22,7 @@ export default function Layout({ children }) {
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Dark Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-black text-white fixed h-full font-sans">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-black text-white fixed h-full font-sans print:hidden">
         <div className="p-6 mb-2">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg" style={gradientStyle}>
@@ -134,9 +134,9 @@ export default function Layout({ children }) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:ml-64">
+      <div className="flex-1 lg:ml-64 print:ml-0">
         {/* Mobile Header */}
-        <header className="lg:hidden bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+        <header className="lg:hidden bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50 print:hidden">
           <div className="px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
