@@ -123,6 +123,48 @@ export default function Services() {
     },
   });
 
+  const updateServiceConfigurationMutation = useMutation({
+    mutationFn: async ({ serviceId, blueprintSessionSegmentData }) => {
+      // Iterate through sessions and segments to update them
+      for (const sessionData of blueprintSessionSegmentData) {
+        for (const segmentData of sessionData.segments) {
+          // Filter out non-updateable fields or reconstruct the update object
+          const { segmentId, title, presenter, message_title, scripture_references, 
+                  number_of_songs, song_1_title, song_1_lead, song_2_title, song_2_lead,
+                  song_3_title, song_3_lead, song_4_title, song_4_lead, song_5_title, song_5_lead,
+                  song_6_title, song_6_lead, announcement_title, announcement_description
+          } = segmentData;
+
+          const updateData = {
+            title,
+            presenter,
+            message_title,
+            scripture_references,
+            number_of_songs,
+            song_1_title, song_1_lead,
+            song_2_title, song_2_lead,
+            song_3_title, song_3_lead,
+            song_4_title, song_4_lead,
+            song_5_title, song_5_lead,
+            song_6_title, song_6_lead,
+            announcement_title,
+            announcement_description
+          };
+
+          // Remove undefined/null keys if necessary, though base44 update usually handles partials
+          await base44.entities.Segment.update(segmentId, updateData);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['services']);
+      setShowBlueprintConfigDialog(false);
+      setServiceToApplyBlueprint(null);
+      setSelectedBlueprintToConfigure(null);
+      setNewServiceDraftData({});
+    }
+  });
+
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Service.update(id, data),
     onSuccess: () => {
@@ -259,10 +301,11 @@ export default function Services() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    title="Aplicar Plantilla"
+                    title="Configurar Detalles"
                     onClick={() => {
                       setServiceToApplyBlueprint(service);
-                      setShowBlueprintSelector(true);
+                      setSelectedBlueprintToConfigure(service.id); // Use service ID as "blueprint" to load its own data
+                      setShowBlueprintConfigDialog(true);
                     }}
                   >
                     <Wand2 className="w-4 h-4 text-pdv-teal" />
@@ -420,21 +463,36 @@ export default function Services() {
           onClose={() => {
             setShowBlueprintConfigDialog(false);
             setServiceToApplyBlueprint(null);
+            setSelectedBlueprintToConfigure(null);
           }}
           blueprintId={selectedBlueprintToConfigure}
           initialServiceData={serviceToApplyBlueprint ? serviceToApplyBlueprint : newServiceDraftData}
+          title={serviceToApplyBlueprint ? `Configurar: ${serviceToApplyBlueprint.name}` : "Configurar Servicio desde Plantilla"}
           onSave={(data) => {
             if (serviceToApplyBlueprint) {
-              applyBlueprintMutation.mutate({
-                serviceId: serviceToApplyBlueprint.id,
-                blueprintId: selectedBlueprintToConfigure,
-                blueprintSessionSegmentData: data.blueprintSessionSegmentData
-              });
+              // If we are editing an existing service (using its own ID as blueprint), we update.
+              // If we were applying a NEW blueprint, we'd use applyBlueprintMutation.
+              // Since we removed the selector for existing services, we assume update mode here 
+              // if blueprintId matches serviceId or simply if we are in "edit existing" flow.
+              
+              if (selectedBlueprintToConfigure === serviceToApplyBlueprint.id) {
+                 updateServiceConfigurationMutation.mutate({
+                   serviceId: serviceToApplyBlueprint.id,
+                   blueprintSessionSegmentData: data.blueprintSessionSegmentData
+                 });
+              } else {
+                 // Fallback for apply template logic if we re-enable it later
+                 applyBlueprintMutation.mutate({
+                   serviceId: serviceToApplyBlueprint.id,
+                   blueprintId: selectedBlueprintToConfigure,
+                   blueprintSessionSegmentData: data.blueprintSessionSegmentData
+                 });
+              }
             } else {
               createMutation.mutate(data);
             }
           }}
-          isSaving={createMutation.isLoading || applyBlueprintMutation.isLoading}
+          isSaving={createMutation.isLoading || applyBlueprintMutation.isLoading || updateServiceConfigurationMutation.isLoading}
         />
       )}
 

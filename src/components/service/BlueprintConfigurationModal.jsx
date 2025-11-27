@@ -18,7 +18,7 @@ const COLOR_SCHEMES = {
   default: { bg: 'bg-slate-100', text: 'text-slate-800', border: 'border-slate-300' },
 };
 
-export default function BlueprintConfigurationModal({ isOpen, onClose, blueprintId, initialServiceData, onSave, isSaving }) {
+export default function BlueprintConfigurationModal({ isOpen, onClose, blueprintId, initialServiceData, onSave, isSaving, title }) {
   const [sessionSegmentData, setSessionSegmentData] = useState([]);
   const [loadingBlueprintDetails, setLoadingBlueprintDetails] = useState(true);
 
@@ -117,9 +117,9 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Configurar Servicio desde Plantilla</DialogTitle>
+          <DialogTitle>{title || "Configurar Servicio desde Plantilla"}</DialogTitle>
           <p className="text-sm text-gray-500">
-            Completa la información faltante para los segmentos clave.
+            Completa o actualiza la información faltante para los segmentos clave.
           </p>
         </DialogHeader>
 
@@ -269,7 +269,7 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            {initialServiceData?.id ? 'Aplicar Plantilla' : 'Crear Servicio Completo'}
+            {initialServiceData?.id ? 'Guardar Cambios' : 'Crear Servicio Completo'}
           </Button>
         </DialogFooter>
       </DialogContent>
