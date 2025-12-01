@@ -177,9 +177,23 @@ export default function Services() {
       const newService = await base44.entities.Service.create(newServiceData);
 
       // 2. Get source sessions
-      const sessions = await base44.entities.Session.filter({ service_id: sourceService.id });
+      const rawSessions = await base44.entities.Session.filter({ service_id: sourceService.id });
       
-      for (const session of sessions) {
+      // Deduplicate sessions by name to prevent carrying over accidental duplicates from source
+      const uniqueSessions = [];
+      const processedNames = new Set();
+      
+      // Sort raw sessions to prefer those with data if possible, or just by order/creation
+      // Since we don't have segment counts here easily, we'll take the first occurrence.
+      // Usually accidental duplicates are appended, so the first one is likely the original/correct one.
+      for (const session of rawSessions) {
+        if (!processedNames.has(session.name)) {
+          uniqueSessions.push(session);
+          processedNames.add(session.name);
+        }
+      }
+
+      for (const session of uniqueSessions) {
         // 3. Create new session
         const newSessionData = {
           ...session,

@@ -31,15 +31,18 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
   const { data: allBlueprintSegments = [], isLoading: isLoadingSegments } = useQuery({
     queryKey: ['blueprintSegments', blueprintId],
     queryFn: async () => {
-      if (!blueprintId) return [];
-      const segments = await base44.entities.Segment.list();
-      // We need segments that belong to the sessions of this blueprint
-      // Since filter by list of IDs isn't always available, we fetch all and filter in JS or fetch by session if possible
-      // Assuming list() returns enough, but for safety/performance in real apps we might want a better query. 
-      // Here we'll just filter the list result.
-      return segments;
+      if (!blueprintId || !blueprintSessions.length) return [];
+
+      // Fetch segments for each session individually to ensure we get all of them
+      // (base44.entities.Segment.list() has a default limit of 50)
+      const segmentsPromises = blueprintSessions.map(session => 
+        base44.entities.Segment.filter({ session_id: session.id })
+      );
+
+      const segmentsArrays = await Promise.all(segmentsPromises);
+      return segmentsArrays.flat();
     },
-    enabled: !!blueprintId && isOpen && !isLoadingSessions,
+    enabled: !!blueprintId && isOpen && !isLoadingSessions && blueprintSessions.length > 0,
   });
 
   useEffect(() => {
