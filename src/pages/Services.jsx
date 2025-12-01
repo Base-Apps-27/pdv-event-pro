@@ -348,8 +348,8 @@ export default function Services() {
                   <p className="text-sm text-gray-500 line-clamp-2">{service.description}</p>
                 )}
 
-                <div className="pt-3 border-t border-gray-200 flex gap-2">
-                  <Link to={createPageUrl(`ServiceDetail?id=${service.id}`)} className="flex-1">
+                <div className="pt-3 border-t border-gray-200 flex flex-wrap gap-2">
+                  <Link to={createPageUrl(`ServiceDetail?id=${service.id}`)} className="flex-grow min-w-[120px]">
                     <Button variant="outline" size="sm" className="w-full border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white">
                       <Layers className="w-4 h-4 mr-2" />
                       Gestionar
