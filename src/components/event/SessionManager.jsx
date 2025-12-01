@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import SegmentList from "../session/SegmentList";
 import SegmentFormTwoColumn from "../session/SegmentFormTwoColumn";
@@ -141,6 +142,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments 
       photography_team: session?.photography_team || '',
       worship_leader: session?.worship_leader || '',
       session_color: session?.session_color || 'blue',
+      is_translated_session: session?.is_translated_session || false,
     });
     setShowDialog(true);
   };
@@ -349,6 +351,15 @@ export default function SessionManager({ eventId, serviceId, sessions, segments 
                           <span className="text-blue-600 font-semibold">
                             Citación de Equipos: {session.default_stage_call_offset_min} min antes
                           </span>
+                        </div>
+                      )}
+
+                      {session.is_translated_session && (
+                        <div className="mt-2 mb-1">
+                          <Badge variant="secondary" className="bg-purple-100 text-purple-800 hover:bg-purple-200 border-purple-200">
+                            <Users className="w-3 h-3 mr-1" />
+                            Sesión Bilingüe
+                          </Badge>
                         </div>
                       )}
 
@@ -693,6 +704,20 @@ export default function SessionManager({ eventId, serviceId, sessions, segments 
                     />
                     <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'notes')} />
                   </div>
+                </div>
+
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox 
+                    id="is_translated_session" 
+                    checked={formData.is_translated_session}
+                    onCheckedChange={(checked) => updateFormField('is_translated_session', checked)}
+                  />
+                  <label
+                    htmlFor="is_translated_session"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Esta sesión requiere traducción (Bilingüe)
+                  </label>
                 </div>
               </div>
             </div>
