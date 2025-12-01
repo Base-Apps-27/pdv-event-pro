@@ -21,6 +21,14 @@ const COLOR_SCHEMES = {
 export default function BlueprintConfigurationModal({ isOpen, onClose, blueprintId, initialServiceData, onSave, isSaving, title }) {
   const [sessionSegmentData, setSessionSegmentData] = useState([]);
   const [loadingBlueprintDetails, setLoadingBlueprintDetails] = useState(true);
+  const [globalValues, setGlobalValues] = useState({
+    presenter: "",
+    message_title: "",
+    scripture_references: "",
+    announcement_title: "",
+    announcement_description: "",
+    songs: Array(6).fill({ title: "", lead: "" })
+  });
 
   const { data: blueprintSessions = [], isLoading: isLoadingSessions } = useQuery({
     queryKey: ['blueprintSessions', blueprintId],
@@ -65,6 +73,7 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
           return {
             sessionId: session.id,
             sessionName: session.name,
+            isTranslated: session.is_translated_session || false,
             segments: segmentsInSession.map(segment => ({
               segmentId: segment.id,
               title: segment.title,
@@ -89,6 +98,7 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
               announcement_title: segment.announcement_title || "",
               announcement_description: segment.announcement_description || "",
               announcement_date: segment.announcement_date || "",
+              translator_name: segment.translator_name || "",
             })),
           };
         });
@@ -100,6 +110,52 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
       setLoadingBlueprintDetails(false);
     }
   }, [blueprintSessions, allBlueprintSegments, blueprintId, isOpen, isLoadingSessions, isLoadingSegments]);
+
+  const handleGlobalChange = (field, value, songIndex = null, subField = null) => {
+    // Update global state
+    setGlobalValues(prev => {
+      if (songIndex !== null) {
+        const newSongs = [...prev.songs];
+        newSongs[songIndex] = { ...newSongs[songIndex], [subField]: value };
+        return { ...prev, songs: newSongs };
+      }
+      return { ...prev, [field]: value };
+    });
+
+    // Propagate to ALL sessions
+    setSessionSegmentData(prev => {
+      return prev.map(session => ({
+        ...session,
+        segments: session.segments.map(segment => {
+          let updates = {};
+          
+          if (songIndex !== null && segment.segment_type === "Alabanza") {
+             updates[`song_${songIndex + 1}_${subField}`] = value;
+          } else if (segment.segment_type === "Plenaria" && (field === 'message_title' || field === 'scripture_references')) {
+             updates[field] = value;
+          } else if (segment.segment_type === "Anuncio" && (field === 'announcement_title' || field === 'announcement_description')) {
+             updates[field] = value;
+          } else if (field === 'presenter' && segment.segment_type !== 'Break' && segment.segment_type !== 'TechOnly') {
+             // Only update presenter if it seems appropriate (e.g. not Break)
+             // But maybe user wants global presenter for MC?
+             // Let's be selective: Plenaria, Bienvenida, Anuncio, MC usually share presenter? 
+             // Or just apply to all interactive segments if they match the type?
+             // Simpler: Apply 'presenter' global only to specific types if we had type-specific globals.
+             // But here 'presenter' is a generic global. Let's apply it to everything except Alabanza/Break/Tech/Video?
+             // Actually, usually Speaker is specific to Plenaria. MC is specific to MC. 
+             // Let's restrict global 'presenter' to Plenaria for now, or remove global presenter and keep it per-segment type?
+             // User asked for "link like fields".
+             // I'll apply 'presenter' to Plenaria and Bienvenida and Cierre.
+             if (['Plenaria', 'Bienvenida', 'Cierre', 'MC'].includes(segment.segment_type)) {
+                updates[field] = value;
+             }
+          }
+
+          return { ...segment, ...updates };
+        })
+      }));
+    });
+  };
 
   const handleSegmentFieldChange = (sessionIndex, segmentIndex, field, value) => {
     setSessionSegmentData(prev => {
@@ -118,11 +174,11 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className="max-w-4xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{title || "Configurar Servicio desde Plantilla"}</DialogTitle>
           <p className="text-sm text-gray-500">
-            Completa o actualiza la información faltante para los segmentos clave.
+            Ingresa los datos generales arriba para aplicarlos a todas las sesiones, o edita cada sesión individualmente.
           </p>
         </DialogHeader>
 
@@ -132,14 +188,91 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
             <span className="ml-3 text-gray-600">Cargando plantilla...</span>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-8">
+            {/* Global Configuration Section */}
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <span className="bg-pdv-teal text-white text-xs px-2 py-1 rounded">GLOBAL</span>
+                Datos Generales del Servicio
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Songs (Assuming typical service has worship) */}
+                <div className="space-y-3">
+                   <Label className="text-xs font-bold text-slate-500 uppercase">Alabanza (Global)</Label>
+                   {[0, 1, 2].map((idx) => (
+                      <div key={idx} className="grid grid-cols-12 gap-2">
+                        <div className="col-span-7">
+                          <Input 
+                            placeholder={`Canción ${idx + 1}`} 
+                            className="h-8 text-sm bg-white"
+                            value={globalValues.songs[idx].title}
+                            onChange={(e) => handleGlobalChange('songs', e.target.value, idx, 'title')}
+                          />
+                        </div>
+                        <div className="col-span-5">
+                           <Input 
+                            placeholder="Vocalista" 
+                            className="h-8 text-sm bg-white"
+                            value={globalValues.songs[idx].lead}
+                            onChange={(e) => handleGlobalChange('songs', e.target.value, idx, 'lead')}
+                           />
+                        </div>
+                      </div>
+                   ))}
+                </div>
+
+                {/* Message & Announcements */}
+                <div className="space-y-4">
+                   <div className="space-y-2">
+                      <Label className="text-xs font-bold text-slate-500 uppercase">Mensaje / Plenaria</Label>
+                      <Input 
+                        placeholder="Título del Mensaje" 
+                        className="h-9 bg-white"
+                        value={globalValues.message_title}
+                        onChange={(e) => handleGlobalChange('message_title', e.target.value)}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                         <Input 
+                            placeholder="Predicador" 
+                            className="h-9 bg-white"
+                            value={globalValues.presenter}
+                            onChange={(e) => handleGlobalChange('presenter', e.target.value)}
+                         />
+                         <Input 
+                            placeholder="Citas Bíblicas" 
+                            className="h-9 bg-white"
+                            value={globalValues.scripture_references}
+                            onChange={(e) => handleGlobalChange('scripture_references', e.target.value)}
+                         />
+                      </div>
+                   </div>
+
+                   <div className="space-y-2">
+                      <Label className="text-xs font-bold text-slate-500 uppercase">Anuncios</Label>
+                      <Input 
+                        placeholder="Título Anuncio Principal" 
+                        className="h-9 bg-white"
+                        value={globalValues.announcement_title}
+                        onChange={(e) => handleGlobalChange('announcement_title', e.target.value)}
+                      />
+                   </div>
+                </div>
+              </div>
+            </div>
+
             {sessionSegmentData.length === 0 && (
                 <p className="text-center text-gray-500">Esta plantilla no tiene sesiones ni segmentos configurados.</p>
             )}
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {sessionSegmentData.map((session, sessionIndex) => (
-              <div key={session.sessionId} className="border rounded-lg p-4 bg-gray-50">
-                <h4 className="font-bold text-lg mb-3 text-gray-800">{session.sessionName}</h4>
-                <div className="space-y-4">
+              <div key={session.sessionId} className={`border rounded-lg p-4 ${session.isTranslated ? 'bg-purple-50 border-purple-200' : 'bg-white'}`}>
+                <div className="flex justify-between items-center mb-4">
+                   <h4 className="font-bold text-lg text-gray-800">{session.sessionName}</h4>
+                   {session.isTranslated && <Badge className="bg-purple-600">Bilingüe / Traducción</Badge>}
+                </div>
+                
+                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                   {session.segments.map((segment, segmentIndex) => {
                     const colorScheme = COLOR_SCHEMES[segment.color_code] || COLOR_SCHEMES.default;
                     
@@ -151,76 +284,84 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
                     if (!isInteractive) return null;
 
                     return (
-                      <div key={segment.segmentId} className={`border-l-4 ${colorScheme.border} pl-4 py-3 bg-white rounded shadow-sm`}>
+                      <div key={segment.segmentId} className={`border-l-4 ${colorScheme.border} pl-4 py-3 bg-white/50 rounded shadow-sm`}>
                         <div className="flex items-center gap-2 mb-3">
                             <Badge variant="outline" className={`${colorScheme.bg} ${colorScheme.text} border-none font-bold`}>
                                 {segment.segment_type}
                             </Badge>
-                            <span className="font-semibold text-gray-700">{segment.title}</span>
+                            <span className="font-semibold text-gray-700 text-sm">{segment.title}</span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
                           {/* Presenter Field - Common for most */}
                           {segment.segment_type !== "Break" && segment.segment_type !== "TechOnly" && segment.segment_type !== "Alabanza" && (
-                              <div className="space-y-1">
-                                  <Label htmlFor={`presenter-${sessionIndex}-${segmentIndex}`} className="text-xs font-medium text-gray-500">Quién presenta / dirige</Label>
-                                  <Input
-                                      id={`presenter-${sessionIndex}-${segmentIndex}`}
-                                      value={segment.presenter}
-                                      onChange={(e) => handleSegmentFieldChange(sessionIndex, segmentIndex, 'presenter', e.target.value)}
-                                      placeholder="Nombre..."
-                                      className="h-9"
-                                  />
+                              <div className="grid grid-cols-1 gap-2">
+                                  <div>
+                                    <Label htmlFor={`presenter-${sessionIndex}-${segmentIndex}`} className="text-xs font-medium text-gray-500">Quién presenta</Label>
+                                    <Input
+                                        id={`presenter-${sessionIndex}-${segmentIndex}`}
+                                        value={segment.presenter}
+                                        onChange={(e) => handleSegmentFieldChange(sessionIndex, segmentIndex, 'presenter', e.target.value)}
+                                        placeholder="Nombre..."
+                                        className="h-8 text-sm"
+                                    />
+                                  </div>
                               </div>
+                          )}
+
+                          {session.isTranslated && (
+                             <div className="bg-purple-50 p-2 rounded border border-purple-100">
+                                <Label htmlFor={`trans-${sessionIndex}-${segmentIndex}`} className="text-xs font-bold text-purple-700">Traductor</Label>
+                                <Input
+                                    id={`trans-${sessionIndex}-${segmentIndex}`}
+                                    value={segment.translator_name}
+                                    onChange={(e) => handleSegmentFieldChange(sessionIndex, segmentIndex, 'translator_name', e.target.value)}
+                                    placeholder="Nombre del traductor..."
+                                    className="h-8 text-sm border-purple-200"
+                                />
+                             </div>
                           )}
 
                           {segment.segment_type === "Plenaria" && (
-                            <>
-                              <div className="space-y-1">
-                                <Label htmlFor={`message_title-${sessionIndex}-${segmentIndex}`} className="text-xs font-medium text-gray-500">Título del Mensaje</Label>
+                            <div className="grid grid-cols-1 gap-2">
+                              <div>
+                                <Label className="text-xs font-medium text-gray-500">Título</Label>
                                 <Input
-                                  id={`message_title-${sessionIndex}-${segmentIndex}`}
                                   value={segment.message_title}
                                   onChange={(e) => handleSegmentFieldChange(sessionIndex, segmentIndex, 'message_title', e.target.value)}
-                                  placeholder="Título..."
-                                  className="h-9"
+                                  className="h-8 text-sm"
                                 />
                               </div>
-                              <div className="space-y-1 col-span-2">
-                                <Label htmlFor={`scripture-${sessionIndex}-${segmentIndex}`} className="text-xs font-medium text-gray-500">Citas Bíblicas</Label>
+                              <div>
+                                <Label className="text-xs font-medium text-gray-500">Citas</Label>
                                 <Input
-                                  id={`scripture-${sessionIndex}-${segmentIndex}`}
                                   value={segment.scripture_references}
                                   onChange={(e) => handleSegmentFieldChange(sessionIndex, segmentIndex, 'scripture_references', e.target.value)}
-                                  placeholder="Ej. Juan 3:16, Salmos 23"
-                                  className="h-9"
+                                  className="h-8 text-sm"
                                 />
                               </div>
-                            </>
+                            </div>
                           )}
 
                           {segment.segment_type === "Alabanza" && (
-                              <div className="col-span-2 space-y-3">
+                              <div className="space-y-2">
                                   {[...Array(segment.number_of_songs || 0)].map((_, songIdx) => (
-                                      <div key={songIdx} className="grid grid-cols-12 gap-2 items-end">
-                                          <div className="col-span-7 space-y-1">
-                                              <Label htmlFor={`song-${songIdx}-title-${sessionIndex}-${segmentIndex}`} className="text-xs font-medium text-gray-500">Canción {songIdx + 1}</Label>
+                                      <div key={songIdx} className="grid grid-cols-12 gap-2 items-center">
+                                          <div className="col-span-1 text-xs text-gray-400 font-mono">{songIdx+1}</div>
+                                          <div className="col-span-7">
                                               <Input
-                                                  id={`song-${songIdx}-title-${sessionIndex}-${segmentIndex}`}
                                                   value={segment[`song_${songIdx + 1}_title`]}
                                                   onChange={(e) => handleSegmentFieldChange(sessionIndex, segmentIndex, `song_${songIdx + 1}_title`, e.target.value)}
-                                                  placeholder="Título de la canción"
-                                                  className="h-9"
+                                                  placeholder="Título"
+                                                  className="h-7 text-xs"
                                               />
                                           </div>
-                                          <div className="col-span-5 space-y-1">
-                                              <Label htmlFor={`song-${songIdx}-lead-${sessionIndex}-${segmentIndex}`} className="text-xs font-medium text-gray-500">Vocalista</Label>
+                                          <div className="col-span-4">
                                               <Input
-                                                  id={`song-${songIdx}-lead-${sessionIndex}-${segmentIndex}`}
                                                   value={segment[`song_${songIdx + 1}_lead`]}
                                                   onChange={(e) => handleSegmentFieldChange(sessionIndex, segmentIndex, `song_${songIdx + 1}_lead`, e.target.value)}
-                                                  placeholder="Nombre"
-                                                  className="h-9"
+                                                  placeholder="Vocal"
+                                                  className="h-7 text-xs"
                                               />
                                           </div>
                                       </div>
@@ -229,28 +370,20 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
                           )}
 
                           {segment.segment_type === "Anuncio" && (
-                            <>
-                              <div className="space-y-1 col-span-2">
-                                  <Label htmlFor={`announcement_title-${sessionIndex}-${segmentIndex}`} className="text-xs font-medium text-gray-500">Título del Anuncio</Label>
-                                  <Input
-                                      id={`announcement_title-${sessionIndex}-${segmentIndex}`}
-                                      value={segment.announcement_title}
-                                      onChange={(e) => handleSegmentFieldChange(sessionIndex, segmentIndex, 'announcement_title', e.target.value)}
-                                      placeholder="Ej. Retiro de Jóvenes"
-                                      className="h-9"
-                                  />
-                              </div>
-                              <div className="space-y-1 col-span-2">
-                                  <Label htmlFor={`announcement_description-${sessionIndex}-${segmentIndex}`} className="text-xs font-medium text-gray-500">Descripción / Detalles</Label>
-                                  <Textarea
-                                      id={`announcement_description-${sessionIndex}-${segmentIndex}`}
-                                      value={segment.announcement_description}
-                                      onChange={(e) => handleSegmentFieldChange(sessionIndex, segmentIndex, 'announcement_description', e.target.value)}
-                                      placeholder="Puntos clave o script..."
-                                      className="text-sm resize-none h-20"
-                                  />
-                              </div>
-                            </>
+                            <div className="space-y-2">
+                                <Input
+                                    value={segment.announcement_title}
+                                    onChange={(e) => handleSegmentFieldChange(sessionIndex, segmentIndex, 'announcement_title', e.target.value)}
+                                    placeholder="Título"
+                                    className="h-8 text-sm"
+                                />
+                                <Textarea
+                                    value={segment.announcement_description}
+                                    onChange={(e) => handleSegmentFieldChange(sessionIndex, segmentIndex, 'announcement_description', e.target.value)}
+                                    placeholder="Detalles..."
+                                    className="text-xs resize-none h-16"
+                                />
+                            </div>
                           )}
                         </div>
                       </div>
@@ -259,6 +392,7 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
                 </div>
               </div>
             ))}
+            </div>
           </div>
         )}
 
