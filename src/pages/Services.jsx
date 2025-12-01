@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Plus, Calendar, MapPin, Edit, Trash2, Clock, Layers, Loader2, Wand2 } from "lucide-react";
+import { Plus, Calendar, MapPin, Edit, Trash2, Clock, Layers, Loader2, Wand2, Languages } from "lucide-react";
 import BlueprintConfigurationModal from "../components/service/BlueprintConfigurationModal";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -165,6 +165,66 @@ export default function Services() {
     }
   });
 
+  const duplicateAsBilingualMutation = useMutation({
+    mutationFn: async (sourceService) => {
+      // 1. Create new service
+      const newServiceData = {
+        ...sourceService,
+        id: undefined,
+        name: `${sourceService.name} (Bilingüe)`,
+        origin: 'duplicate'
+      };
+      const newService = await base44.entities.Service.create(newServiceData);
+
+      // 2. Get source sessions
+      const sessions = await base44.entities.Session.filter({ service_id: sourceService.id });
+      
+      for (const session of sessions) {
+        // 3. Create new session
+        const newSessionData = {
+          ...session,
+          id: undefined,
+          service_id: newService.id,
+          origin: 'duplicate'
+        };
+        const newSession = await base44.entities.Session.create(newSessionData);
+
+        // 4. Get source segments
+        const segments = await base44.entities.Segment.filter({ session_id: session.id });
+
+        for (const segment of segments) {
+          const overrides = {};
+          
+          // Apply bilingual defaults for non-worship/tech/break segments
+          const skipTranslationTypes = ['Alabanza', 'Break', 'TechOnly'];
+          if (!skipTranslationTypes.includes(segment.segment_type)) {
+            overrides.requires_translation = true;
+            overrides.translation_mode = 'InPerson';
+          }
+
+          // 5. Create new segment
+          const newSegmentData = {
+            ...segment,
+            id: undefined,
+            session_id: newSession.id,
+            service_id: undefined, // Ensure it links to session
+            origin: 'duplicate',
+            ...overrides
+          };
+          await base44.entities.Segment.create(newSegmentData);
+        }
+      }
+      return newService;
+    },
+    onSuccess: (newService) => {
+      queryClient.invalidateQueries(['services']);
+      // Open configuration modal for the new service
+      setServiceToApplyBlueprint(newService);
+      setSelectedBlueprintToConfigure(newService.id);
+      setShowBlueprintConfigDialog(true);
+    }
+  });
+
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Service.update(id, data),
     onSuccess: () => {
@@ -309,6 +369,23 @@ export default function Services() {
                     }}
                   >
                     <Wand2 className="w-4 h-4 text-pdv-teal" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    title="Duplicar como Bilingüe"
+                    onClick={() => {
+                      if (window.confirm(`¿Crear versión bilingüe de "${service.name}"?`)) {
+                        duplicateAsBilingualMutation.mutate(service);
+                      }
+                    }}
+                    disabled={duplicateAsBilingualMutation.isLoading}
+                  >
+                    {duplicateAsBilingualMutation.isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Languages className="w-4 h-4 text-blue-600" />
+                    )}
                   </Button>
                   <Button 
                     variant="outline" 

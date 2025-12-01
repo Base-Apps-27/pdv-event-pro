@@ -269,8 +269,8 @@ export default function BlueprintConfigurationModal({ isOpen, onClose, blueprint
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            {initialServiceData?.id ? 'Guardar Cambios' : 'Crear Servicio Completo'}
-          </Button>
+            {title?.includes('Bilingüe') ? 'Guardar Servicio Bilingüe' : (initialServiceData?.id ? 'Guardar Cambios' : 'Crear Servicio Completo')}
+            </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
