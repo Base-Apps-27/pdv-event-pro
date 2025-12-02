@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles } from "lucide-react";
+import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -156,7 +156,20 @@ export default function Layout({ children }) {
             <Sparkles className="w-5 h-5" />
             Importador IA
           </Link>
-        </nav>
+
+          <Link
+            to={createPageUrl("SchemaGuide")}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+              isActive(createPageUrl("SchemaGuide"))
+                ? "text-white shadow-md"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
+            }`}
+            style={isActive(createPageUrl("SchemaGuide")) ? gradientStyle : {}}
+          >
+            <FileCode className="w-5 h-5" />
+            Guía de Datos
+          </Link>
+          </nav>
       </aside>
 
       {/* Main Content Area */}
@@ -261,7 +274,14 @@ export default function Layout({ children }) {
                   >
                     Importador IA
                   </Link>
-                </div>
+                  <Link
+                    to={createPageUrl("SchemaGuide")}
+                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Guía de Datos
+                  </Link>
+                  </div>
               </div>
             )}
           </div>
