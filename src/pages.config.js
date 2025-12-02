@@ -12,6 +12,7 @@ import AnnouncementsReport from './pages/AnnouncementsReport';
 import People from './pages/People';
 import ScheduleImporter from './pages/ScheduleImporter';
 import SchemaGuide from './pages/SchemaGuide';
+import DataSeeder from './pages/DataSeeder';
 import __Layout from './Layout.jsx';
 
 
@@ -30,6 +31,7 @@ export const PAGES = {
     "People": People,
     "ScheduleImporter": ScheduleImporter,
     "SchemaGuide": SchemaGuide,
+    "DataSeeder": DataSeeder,
 }
 
 export const pagesConfig = {
