@@ -10,6 +10,7 @@ import Services from './pages/Services';
 import ServiceDetail from './pages/ServiceDetail';
 import AnnouncementsReport from './pages/AnnouncementsReport';
 import People from './pages/People';
+import ScheduleImporter from './pages/ScheduleImporter';
 import __Layout from './Layout.jsx';
 
 
@@ -26,6 +27,7 @@ export const PAGES = {
     "ServiceDetail": ServiceDetail,
     "AnnouncementsReport": AnnouncementsReport,
     "People": People,
+    "ScheduleImporter": ScheduleImporter,
 }
 
 export const pagesConfig = {
