@@ -11,6 +11,7 @@ import ServiceDetail from './pages/ServiceDetail';
 import AnnouncementsReport from './pages/AnnouncementsReport';
 import People from './pages/People';
 import ScheduleImporter from './pages/ScheduleImporter';
+import SchemaGuide from './pages/SchemaGuide';
 import __Layout from './Layout.jsx';
 
 
@@ -28,6 +29,7 @@ export const PAGES = {
     "AnnouncementsReport": AnnouncementsReport,
     "People": People,
     "ScheduleImporter": ScheduleImporter,
+    "SchemaGuide": SchemaGuide,
 }
 
 export const pagesConfig = {
