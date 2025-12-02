@@ -3,150 +3,108 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Copy, Download, FileJson } from "lucide-react";
+import { Copy, Download, FileJson, Info, Split } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SchemaGuide() {
+  // comprehensive example showing variety of types
   const fullSchemaExample = {
     "event": {
-      "name": "Event Name",
+      "name": "Conferencia Global: Visión 2025",
       "origin": "manual",
-      "field_origins": {},
-      "theme": "Event Theme",
       "year": 2025,
-      "location": "Event Location",
-      "start_date": "2025-01-01",
-      "end_date": "2025-01-03",
-      "description": "Event Description",
-      "status": "planning",
-      "print_color": "blue",
+      "location": "Auditorio Principal",
+      "start_date": "2025-10-15",
+      "end_date": "2025-10-17",
+      "description": "Capacitación intensiva.",
+      "status": "confirmed",
+      "print_color": "teal",
       "promote_in_announcements": true,
-      "promotion_start_date": "2024-12-01",
-      "promotion_end_date": "2025-01-01",
-      "announcement_blurb": "Short blurb",
-      "promotion_targets": ["Target 1", "Target 2"]
+      "promotion_start_date": "2025-08-01",
+      "promotion_end_date": "2025-10-14",
+      "announcement_blurb": "Regístrate antes del 1 de Septiembre.",
+      "promotion_targets": ["Domingo AM", "Líderes"]
     },
     "sessions": [
       {
-        "name": "Session Name",
-        "date": "2025-01-01",
-        "origin": "manual",
-        "field_origins": {},
-        "event_id": "uuid (optional if nested)",
-        "service_id": "uuid (optional)",
-        "event_day_id": "uuid (optional)",
-        "room_id": "uuid (optional)",
-        "planned_start_time": "09:00",
-        "planned_end_time": "10:30",
-        "default_stage_call_offset_min": 15,
-        "location": "Session Location",
-        "notes": "Session Notes",
+        "name": "Sesión 1: Apertura",
+        "date": "2025-10-15",
+        "planned_start_time": "19:00",
+        "planned_end_time": "21:00",
         "order": 1,
-        "presenter": "Session Presenter",
-        "admin_team": "Admin Team Info",
-        "coordinators": "Coordinators Info",
-        "sound_team": "Sound Team Info",
-        "tech_team": "Tech Team Info",
-        "ushers_team": "Ushers Team Info",
-        "translation_team": "Translation Team Info",
-        "hospitality_team": "Hospitality Team Info",
-        "photography_team": "Photo Team Info",
-        "worship_leader": "Worship Leader Name",
         "session_color": "blue",
         "is_translated_session": true,
+        "translation_team": "Mesa 1 (ES->EN)",
         "segments": [
           {
-            "title": "Complete Segment Example (All Fields)",
-            "segment_type": "Plenaria",
-            "origin": "manual",
-            "field_origins": {},
-            "session_id": "uuid (optional if nested)",
-            "service_id": "uuid (optional)",
+            "title": "Adoración (Worship Example)",
+            "segment_type": "Alabanza",
             "order": 1,
-            "presenter": "Segment Presenter",
-            "description_details": "Detailed description",
-            "prep_instructions": "Prep instructions",
-            "start_time": "09:00",
-            "duration_min": 15,
-            "end_time": "09:15",
-            "stage_call_offset_min": 10,
-            "stage_call_time": "08:50",
-            "projection_notes": "Projection notes",
-            "sound_notes": "Sound notes",
-            "ushers_notes": "Ushers notes",
-            "translation_notes": "Translation notes",
-            "stage_decor_notes": "Stage decor notes",
-            "microphone_assignments": "Mic assignments",
-            "other_notes": "Other notes",
-            "show_in_general": true,
-            "show_in_projection": true,
-            "show_in_sound": true,
-            "show_in_ushers": true,
-            "color_code": "default",
-            "message_title": "Message Title",
-            "scripture_references": "Scripture Refs",
-            "number_of_songs": 0,
-            "song_1_title": "",
-            "song_1_lead": "",
-            "song_2_title": "",
-            "song_2_lead": "",
-            "song_3_title": "",
-            "song_3_lead": "",
-            "song_4_title": "",
-            "song_4_lead": "",
-            "song_5_title": "",
-            "song_5_lead": "",
-            "song_6_title": "",
-            "song_6_lead": "",
-            "slide_pack_id": "uuid",
-            "countdown_asset_id": "uuid",
-            "music_profile_id": "uuid",
-            "requires_translation": false,
-            "translation_mode": "InPerson",
-            "translator_name": "",
-            "major_break": false,
+            "start_time": "19:10",
+            "duration_min": 30,
+            "color_code": "worship",
+            "number_of_songs": 2,
+            "music_profile_id": "uuid-music-profile",
+            "song_1_title": "Gracia Sublime",
+            "song_1_lead": "Marcos",
+            "song_2_title": "En Tu Luz",
+            "song_2_lead": "Elena"
+          },
+          {
+            "title": "Mensaje (Preaching Example)",
+            "segment_type": "Plenaria",
+            "order": 2,
+            "presenter": "Dr. Juan Pérez",
+            "message_title": "Expandiendo el Reino",
+            "scripture_references": "Habacuc 2:2-3",
+            "start_time": "19:40",
+            "duration_min": 45,
+            "color_code": "preach",
+            "requires_translation": true,
+            "translation_mode": "BoothHeadphones",
+            "translator_name": "Sarah J."
+          },
+          {
+            "title": "Video Spot (Video Example)",
+            "segment_type": "Video",
+            "order": 3,
+            "start_time": "20:25",
+            "duration_min": 5,
+            "has_video": true,
+            "video_name": "Testimonio.mp4",
+            "video_location": "/assets/videos/",
+            "video_length_sec": 300
+          },
+          {
+            "title": "Talleres (Breakout Example)",
+            "segment_type": "Breakout",
+            "order": 4,
+            "start_time": "20:30",
+            "duration_min": 30,
+            "color_code": "break",
             "breakout_rooms": [
               {
-                "room_id": "uuid",
-                "hosts": "Hosts",
-                "speakers": "Speakers",
-                "topic": "Topic",
-                "general_notes": "Notes",
-                "other_notes": "Other Notes",
-                "requires_translation": false,
-                "translation_mode": "InPerson",
-                "translator_name": ""
+                "room_id": "uuid-room-1",
+                "topic": "Liderazgo",
+                "hosts": "Pedro"
+              },
+              {
+                "room_id": "uuid-room-2",
+                "topic": "Finanzas",
+                "speakers": "Maria"
               }
-            ],
-            "room_id": "uuid",
-            "has_video": false,
-            "video_name": "",
-            "video_location": "",
-            "video_owner": "",
-            "video_length_sec": 0,
-            "art_types": [],
-            "drama_handheld_mics": 0,
-            "drama_headset_mics": 0,
-            "drama_start_cue": "",
-            "drama_end_cue": "",
-            "drama_has_song": false,
-            "drama_song_title": "",
-            "drama_song_source": "",
-            "drama_song_owner": "",
-            "dance_has_song": false,
-            "dance_song_title": "",
-            "dance_song_source": "",
-            "dance_song_owner": "",
-            "dance_handheld_mics": 0,
-            "dance_headset_mics": 0,
-            "dance_start_cue": "",
-            "dance_end_cue": "",
-            "art_other_description": "",
-            "announcement_title": "",
-            "announcement_description": "",
-            "announcement_date": "",
-            "announcement_tone": "",
-            "announcement_series_id": "uuid"
+            ]
+          },
+          {
+            "title": "Drama Special (Arts Example)",
+            "segment_type": "Especial",
+            "order": 5,
+            "start_time": "21:00",
+            "duration_min": 10,
+            "art_types": ["DRAMA"],
+            "drama_headset_mics": 2,
+            "drama_start_cue": "Lights blackout",
+            "drama_end_cue": "Fade to black"
           }
         ]
       }
@@ -165,7 +123,7 @@ export default function SchemaGuide() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "complete_event_schema.json";
+    a.download = "event_schema_examples.json";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -174,11 +132,11 @@ export default function SchemaGuide() {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-8">
+    <div className="p-8 max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="space-y-2">
           <h1 className="text-4xl font-bold font-['Bebas_Neue'] uppercase">Data Injection Guide</h1>
-          <p className="text-gray-500">Comprehensive reference for Event, Session, and Segment data structures.</p>
+          <p className="text-gray-500">Complete reference for Event, Session, and Segment data structures with variety examples.</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={copyToClipboard} variant="outline" className="gap-2">
@@ -187,77 +145,192 @@ export default function SchemaGuide() {
           </Button>
           <Button onClick={downloadJson} className="gap-2 bg-pdv-teal hover:bg-pdv-teal/90 text-white">
             <Download className="w-4 h-4" />
-            Download Schema
+            Download JSON
           </Button>
         </div>
       </div>
 
-      <Card>
+      {/* Full JSON Example */}
+      <Card className="border-pdv-teal/20 shadow-md">
         <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileJson className="w-5 h-5 text-pdv-teal" />
-              Complete Schema Reference (All Fields)
+              Master JSON Payload (With Examples)
             </CardTitle>
         </CardHeader>
         <CardContent>
             <p className="text-sm text-gray-500 mb-4">
-              This JSON object contains every possible field defined in the database schema for Events, Sessions, and Segments. 
-              Use this as a master template for AI agents or manual data injection.
+              This example includes a full Event structure with a Session containing multiple <strong>Segment Types</strong> (Worship, Preaching, Video, Breakouts) to demonstrate the different field requirements for each.
             </p>
-            <ScrollArea className="h-[600px] w-full rounded-md border bg-gray-900 p-4">
-                <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap">
+            <ScrollArea className="h-[500px] w-full rounded-md border bg-gray-900 p-4">
+                <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap leading-relaxed">
                   {jsonString}
                 </pre>
             </ScrollArea>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-              <CardTitle>Entity Hierarchy</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
-                  <h3 className="font-bold text-lg mb-1">1. Event</h3>
-                  <p className="text-sm text-gray-600">Root container. Includes high-level details like name, dates, and promotion settings.</p>
-              </div>
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 ml-6 relative before:absolute before:left-[-24px] before:top-[24px] before:w-[24px] before:h-[2px] before:bg-slate-300 before:content-['']">
-                  <h3 className="font-bold text-lg mb-1">2. Session</h3>
-                  <p className="text-sm text-gray-600">Time blocks within an event. Contains team assignments and specific schedules.</p>
-              </div>
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 ml-12 relative before:absolute before:left-[-24px] before:top-[24px] before:w-[24px] before:h-[2px] before:bg-slate-300 before:content-['']">
-                  <h3 className="font-bold text-lg mb-1">3. Segment</h3>
-                  <p className="text-sm text-gray-600">Granular items (songs, preaching, videos). Contains the most logic and conditional fields.</p>
-              </div>
-          </CardContent>
-        </Card>
+      {/* Detailed Documentation */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Event Logic */}
+        <div className="lg:col-span-1 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Info className="w-4 h-4" />
+                        Event Logic
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="p-3 bg-slate-50 rounded border border-slate-100">
+                        <h4 className="font-bold text-sm mb-1">Basic Fields</h4>
+                        <p className="text-xs text-gray-600"><code>name</code>, <code>year</code>, <code>status</code> are always required.</p>
+                    </div>
+                    <div className="p-3 bg-blue-50 rounded border border-blue-100">
+                        <h4 className="font-bold text-sm mb-1 text-blue-800">Announcements</h4>
+                        <p className="text-xs text-blue-700 mb-2">
+                            If <code>promote_in_announcements: true</code>, you must include:
+                        </p>
+                        <ul className="list-disc pl-4 text-xs text-blue-700 space-y-1">
+                            <li><code>promotion_start_date</code></li>
+                            <li><code>promotion_end_date</code></li>
+                            <li><code>announcement_blurb</code></li>
+                        </ul>
+                    </div>
+                </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-              <CardTitle>Key Notes</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ul className="space-y-3 text-sm text-gray-600">
-              <li className="flex gap-2">
-                <Badge variant="outline">IDs</Badge>
-                <span>When creating new nested structures, IDs are optional/auto-generated. When referencing existing entities, IDs are required.</span>
-              </li>
-              <li className="flex gap-2">
-                <Badge variant="outline">Enums</Badge>
-                <span>Fields like <code>segment_type</code>, <code>status</code>, and <code>color_code</code> accept specific string values only.</span>
-              </li>
-              <li className="flex gap-2">
-                <Badge variant="outline">Dates</Badge>
-                <span>Use <code>YYYY-MM-DD</code> for dates and <code>HH:MM</code> (24h) for times.</span>
-              </li>
-              <li className="flex gap-2">
-                <Badge variant="outline">Logic</Badge>
-                <span>Example: Setting <code>requires_translation: true</code> implies you should also provide <code>translation_mode</code> and <code>translator_name</code>.</span>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Split className="w-4 h-4" />
+                        Segment Universal Logic
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                     <div className="p-3 bg-slate-50 rounded border border-slate-100">
+                        <h4 className="font-bold text-sm mb-1">Translation</h4>
+                        <p className="text-xs text-gray-600 mb-1">
+                            If <code>requires_translation: true</code>:
+                        </p>
+                        <ul className="list-disc pl-4 text-xs text-gray-600">
+                            <li><code>translation_mode</code> (e.g. "BoothHeadphones")</li>
+                            <li><code>translator_name</code></li>
+                        </ul>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded border border-slate-100">
+                        <h4 className="font-bold text-sm mb-1">Video Content</h4>
+                        <p className="text-xs text-gray-600 mb-1">
+                            If <code>has_video: true</code> (regardless of type):
+                        </p>
+                        <ul className="list-disc pl-4 text-xs text-gray-600">
+                            <li><code>video_name</code></li>
+                            <li><code>video_location</code></li>
+                            <li><code>video_length_sec</code></li>
+                        </ul>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+
+        {/* Segment Types Variety */}
+        <div className="lg:col-span-2">
+            <Card className="h-full">
+                <CardHeader>
+                    <CardTitle>Segment Types & Varieties</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        
+                        {/* Worship */}
+                        <div className="border p-4 rounded-lg bg-slate-50/50">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-bold text-sm">Type: Alabanza (Worship)</h3>
+                                <Badge variant="outline" className="text-xs">Song Set</Badge>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">Used for worship blocks.</p>
+                            <div className="bg-white p-2 rounded border text-xs font-mono text-gray-600">
+                                "number_of_songs": 2,<br/>
+                                "song_1_title": "Song Name",<br/>
+                                "song_1_lead": "Singer Name"
+                            </div>
+                        </div>
+
+                        {/* Preaching */}
+                        <div className="border p-4 rounded-lg bg-slate-50/50">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-bold text-sm">Type: Plenaria (Preaching)</h3>
+                                <Badge variant="outline" className="text-xs">Message</Badge>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">Main teaching or keynote.</p>
+                            <div className="bg-white p-2 rounded border text-xs font-mono text-gray-600">
+                                "presenter": "Speaker Name",<br/>
+                                "message_title": "Sermon Title",<br/>
+                                "scripture_references": "John 3:16"
+                            </div>
+                        </div>
+
+                        {/* Breakout */}
+                        <div className="border p-4 rounded-lg bg-slate-50/50">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-bold text-sm">Type: Breakout (Talleres)</h3>
+                                <Badge variant="outline" className="text-xs">Complex</Badge>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">Multiple simultaneous rooms.</p>
+                            <div className="bg-white p-2 rounded border text-xs font-mono text-gray-600">
+                                "breakout_rooms": [<br/>
+                                &nbsp;&nbsp;{"{ \"topic\": \"A\", \"hosts\": \"Name\" }"}<br/>
+                                ]
+                            </div>
+                        </div>
+
+                        {/* Video */}
+                        <div className="border p-4 rounded-lg bg-slate-50/50">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-bold text-sm">Type: Video</h3>
+                                <Badge variant="outline" className="text-xs">Media</Badge>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">Dedicated video segment.</p>
+                            <div className="bg-white p-2 rounded border text-xs font-mono text-gray-600">
+                                "has_video": true,<br/>
+                                "video_name": "File.mp4",<br/>
+                                "video_length_sec": 120
+                            </div>
+                        </div>
+                        
+                        {/* Arts/Drama */}
+                        <div className="border p-4 rounded-lg bg-slate-50/50">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-bold text-sm">Type: Especial (Arts)</h3>
+                                <Badge variant="outline" className="text-xs">Production</Badge>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">Drama, dance, or special items.</p>
+                            <div className="bg-white p-2 rounded border text-xs font-mono text-gray-600">
+                                "art_types": ["DRAMA", "DANCE"],<br/>
+                                "drama_headset_mics": 2,<br/>
+                                "drama_start_cue": "Cue info"
+                            </div>
+                        </div>
+
+                        {/* Announcement */}
+                        <div className="border p-4 rounded-lg bg-slate-50/50">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-bold text-sm">Type: Anuncio</h3>
+                                <Badge variant="outline" className="text-xs">Script</Badge>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">Live announcements.</p>
+                            <div className="bg-white p-2 rounded border text-xs font-mono text-gray-600">
+                                "announcement_title": "Welcome",<br/>
+                                "announcement_description": "Script..."
+                            </div>
+                        </div>
+
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+
       </div>
     </div>
   );
