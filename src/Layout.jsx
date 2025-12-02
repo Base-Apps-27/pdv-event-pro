@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell } from "lucide-react";
+import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -104,6 +104,19 @@ export default function Layout({ children }) {
             Anuncios
           </Link>
 
+          <Link
+            to={createPageUrl("People")}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+              isActive(createPageUrl("People"))
+                ? "text-white shadow-md"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
+            }`}
+            style={isActive(createPageUrl("People")) ? gradientStyle : {}}
+          >
+            <Users className="w-5 h-5" />
+            Personas
+          </Link>
+
           <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-8 mb-3 pl-3">Gestión y Configuración</div>
           <Link
             to={createPageUrl("Rooms")}
@@ -204,6 +217,13 @@ export default function Layout({ children }) {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Anuncios
+                  </Link>
+                  <Link
+                    to={createPageUrl("People")}
+                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Personas
                   </Link>
 
                   <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">Configuración</div>
