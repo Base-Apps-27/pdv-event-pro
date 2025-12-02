@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Copy, Download, FileJson, Info, Split } from "lucide-react";
+import { Copy, Download, FileJson, Info, Split, BookText } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SchemaGuide() {
@@ -113,6 +113,140 @@ export default function SchemaGuide() {
 
   const jsonString = JSON.stringify(fullSchemaExample, null, 2);
 
+  const markdownGuide = `# Event System Complete Reference Guide
+
+## 1. System Hierarchy & Overview
+The system is built on a strictly hierarchical model designed for event production and scheduling.
+
+1.  **Event**: The container. Represents the entire conference, retreat, or recurring service instance.
+2.  **Session**: A specific block of time. E.g., "Friday Night", "Saturday Morning", "Sunday Service". Events have multiple sessions.
+3.  **Segment**: The atomic unit of a schedule. E.g., "Song 1", "Preaching", "Video", "Announcements". Sessions have ordered segments.
+
+---
+
+## 2. Entity Reference: Event
+The root object.
+
+### Essential Fields
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| \`name\` | string | YES | Internal name. |
+| \`year\` | number | YES | e.g., 2025. |
+| \`status\` | enum | YES | \`planning\`, \`confirmed\`, \`in_progress\`, \`completed\`, \`archived\`. |
+
+### Metadata & Styling
+- \`theme\`: Public-facing theme/slogan.
+- \`location\`: General venue name.
+- \`start_date\`, \`end_date\`: YYYY-MM-DD.
+- \`print_color\`: Styling for PDF exports. Options: \`blue\`, \`green\`, \`pink\`, \`orange\`, \`yellow\`, \`purple\`, \`red\`, \`teal\`, \`charcoal\`.
+
+### Conditional Logic: Announcements
+If you want this event to appear in the "Upcoming Events" announcement loop:
+
+**Trigger**: \`promote_in_announcements = true\`
+**Required if Triggered**:
+- \`promotion_start_date\` (Date to start showing)
+- \`promotion_end_date\` (Date to stop showing)
+- \`announcement_blurb\` (Short text for the slide)
+- \`promotion_targets\` (Array of service types, e.g. ["Domingo AM"])
+
+---
+
+## 3. Entity Reference: Session
+A block of time within an Event.
+
+### Essential Fields
+- \`name\`: Display name (e.g. "Sesión 1").
+- \`date\`: YYYY-MM-DD.
+- \`planned_start_time\`: HH:MM (24h).
+- \`planned_end_time\`: HH:MM (24h).
+- \`order\`: Number (sort order within event).
+
+### Team Assignments (Strings)
+Free text fields to assign teams for this specific block:
+- \`admin_team\`, \`coordinators\`, \`sound_team\`, \`tech_team\`, \`ushers_team\`, \`translation_team\`, \`hospitality_team\`, \`photography_team\`.
+- \`worship_leader\`: Name of the person leading worship.
+
+### Styling
+- \`session_color\`: Visual theme for UI/Print. Same options as Event print_color.
+
+---
+
+## 4. Entity Reference: Segment
+The most complex entity with significant conditional logic based on \`segment_type\`.
+
+### Universal Fields (All Types)
+- \`title\`: Required. Display title.
+- \`start_time\`: HH:MM.
+- \`duration_min\`: Integer minutes.
+- \`color_code\`: Visual cue. \`default\`, \`worship\` (blue), \`preach\` (purple), \`break\` (gray), \`tech\` (red), \`special\` (yellow).
+- \`notes\`: Specific instructions per department:
+  - \`projection_notes\`, \`sound_notes\`, \`ushers_notes\`, \`stage_decor_notes\`, \`translation_notes\`.
+
+### Universal Logic: Translation
+**Trigger**: \`requires_translation = true\`
+**Required**:
+- \`translation_mode\`: \`InPerson\` (stage) or \`BoothHeadphones\` (remote).
+- \`translator_name\`: Name of translator.
+
+### Universal Logic: Video
+**Trigger**: \`has_video = true\` (Can apply to ANY type, e.g. a song with a video backing)
+**Required**:
+- \`video_name\`: File name.
+- \`video_location\`: Path or link.
+- \`video_length_sec\`: Duration in seconds.
+
+---
+
+## 5. Segment Types & Specific Fields
+
+### Type: Alabanza (Worship)
+Used for musical worship sets.
+- \`number_of_songs\`: Integer (1-6).
+- \`music_profile_id\`: Reference to music style profile.
+- **Song Fields**:
+  - \`song_1_title\`, \`song_1_lead\`
+  - ... up to \`song_6_title\`, \`song_6_lead\`
+
+### Type: Plenaria (Preaching)
+Used for the main message.
+- \`presenter\`: Speaker name.
+- \`message_title\`: Sermon title.
+- \`scripture_references\`: e.g. "John 3:16".
+
+### Type: Breakout (Talleres)
+Used for simultaneous tracks.
+- \`breakout_rooms\`: Array of objects.
+  \`\`\`json
+  {
+    "room_id": "uuid",
+    "topic": "Title",
+    "hosts": "Name",
+    "speakers": "Name"
+  }
+  \`\`\`
+
+### Type: Especial / Artes (Drama, Dance)
+Used for special productions.
+- \`art_types\`: Array of enums: \`['DRAMA', 'DANCE', 'VIDEO', 'OTHER']\`.
+- \`drama_handheld_mics\`, \`drama_headset_mics\`: Counts.
+- \`drama_start_cue\`, \`drama_end_cue\`: Technical cues.
+- \`dance_song_title\`, \`dance_song_source\`: Backing track info.
+
+### Type: Anuncio (Announcement)
+Used for live spoken announcements.
+- \`announcement_title\`: Headline.
+- \`announcement_description\`: Script or bullet points.
+- \`announcement_series_id\`: Optional link to series.
+
+---
+
+## 6. Full JSON Payload Example
+\`\`\`json
+${jsonString}
+\`\`\`
+`;
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(jsonString);
     toast.success("JSON Schema copied to clipboard");
@@ -131,6 +265,19 @@ export default function SchemaGuide() {
     toast.success("Download started");
   };
 
+  const downloadMarkdown = () => {
+    const blob = new Blob([markdownGuide], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Base44_Event_Schema_Guide.md";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Documentation download started");
+  };
+
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
@@ -141,11 +288,15 @@ export default function SchemaGuide() {
         <div className="flex gap-2">
           <Button onClick={copyToClipboard} variant="outline" className="gap-2">
             <Copy className="w-4 h-4" />
-            Copy JSON
+            Copy JSON Only
           </Button>
-          <Button onClick={downloadJson} className="gap-2 bg-pdv-teal hover:bg-pdv-teal/90 text-white">
-            <Download className="w-4 h-4" />
+          <Button onClick={downloadJson} variant="outline" className="gap-2">
+            <FileJson className="w-4 h-4" />
             Download JSON
+          </Button>
+          <Button onClick={downloadMarkdown} className="gap-2 bg-pdv-teal hover:bg-pdv-teal/90 text-white">
+            <BookText className="w-4 h-4" />
+            Download Full Guide (MD)
           </Button>
         </div>
       </div>
