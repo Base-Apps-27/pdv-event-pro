@@ -111,6 +111,11 @@ export default function Reports() {
     return segment?.segment_actions || [];
   };
 
+  const isPrepAction = (action) => {
+    // "before_start" is always prep, otherwise check is_prep flag (defaults to true)
+    return action.timing === 'before_start' || action.is_prep !== false;
+  };
+
   const departmentColors = {
     Admin: "bg-orange-50 border-orange-200 text-orange-700",
     MC: "bg-blue-50 border-blue-200 text-blue-700",
@@ -281,7 +286,7 @@ export default function Reports() {
                       return (
                         <React.Fragment key={segment.id}>
                         {/* Prep Actions Row - spans full width above segment */}
-                        {getSegmentActions(segment).filter(a => a.is_prep !== false).length > 0 && (
+                        {getSegmentActions(segment).filter(a => isPrepAction(a)).length > 0 && (
                           <tr className="bg-amber-50 border-t-2 border-amber-300">
                             <td colSpan="3" className="p-2">
                               <div className="flex items-start gap-2">
@@ -289,7 +294,7 @@ export default function Reports() {
                                   ⚠ PREP
                                 </div>
                                 <div className="flex-1 flex flex-wrap gap-2">
-                                  {getSegmentActions(segment).filter(a => a.is_prep !== false).map((action, actionIdx) => (
+                                  {getSegmentActions(segment).filter(a => isPrepAction(a)).map((action, actionIdx) => (
                                     <div
                                       key={actionIdx}
                                       className={`text-[10px] px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
@@ -311,7 +316,7 @@ export default function Reports() {
                             </td>
                           </tr>
                         )}
-                        <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => a.is_prep !== false).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
+                        <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
                         <td className="p-2 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
                             <div className="flex flex-col items-center leading-tight">
                               <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
@@ -386,7 +391,7 @@ export default function Reports() {
                     return (
                       <React.Fragment key={segment.id}>
                       {/* Prep Actions Row - spans full width above segment */}
-                      {getSegmentActions(segment).filter(a => a.is_prep !== false).length > 0 && (
+                      {getSegmentActions(segment).filter(a => isPrepAction(a)).length > 0 && (
                         <tr className="bg-amber-50 border-t-2 border-amber-300">
                           <td colSpan="3" className="p-2">
                             <div className="flex items-start gap-2">
@@ -394,7 +399,7 @@ export default function Reports() {
                                 ⚠ PREP
                               </div>
                               <div className="flex-1 flex flex-wrap gap-2">
-                                {getSegmentActions(segment).filter(a => a.is_prep !== false).map((action, actionIdx) => (
+                                {getSegmentActions(segment).filter(a => isPrepAction(a)).map((action, actionIdx) => (
                                   <div
                                     key={actionIdx}
                                     className={`text-[10px] px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
@@ -416,7 +421,7 @@ export default function Reports() {
                           </td>
                         </tr>
                       )}
-                      <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => a.is_prep !== false).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
+                      <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
                       <td className="p-2 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
                         <div className="flex flex-col items-center leading-tight">
                           <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
@@ -446,8 +451,8 @@ export default function Reports() {
                         </div>
                       </td>
                       <td className="p-2 border-r border-gray-200">
-                        <div className={getSegmentActions(segment).filter(a => a.is_prep === false).length > 0 ? "grid grid-cols-2 gap-2" : ""}>
-                          <div className={getSegmentActions(segment).filter(a => a.is_prep === false).length > 0 ? "space-y-1" : "grid grid-cols-2 gap-x-4 gap-y-1"}>
+                        <div className={getSegmentActions(segment).filter(a => !isPrepAction(a)).length > 0 ? "grid grid-cols-2 gap-2" : ""}>
+                          <div className={getSegmentActions(segment).filter(a => !isPrepAction(a)).length > 0 ? "space-y-1" : "grid grid-cols-2 gap-x-4 gap-y-1"}>
                             <div className="text-gray-900 font-bold text-xs uppercase">
                               {segment.title}
                             </div>
@@ -549,13 +554,13 @@ export default function Reports() {
                           </div>
 
                           {/* In-segment cues shown in the details column */}
-                          {getSegmentActions(segment).filter(a => a.is_prep === false).length > 0 && (
+                          {getSegmentActions(segment).filter(a => !isPrepAction(a)).length > 0 && (
                           <div className="border-l border-gray-200 pl-2">
                               <div className="text-[10px] space-y-0.5">
                                 <div className="font-bold uppercase text-blue-700 mb-0.5 flex items-center gap-1">
                                   <span className="bg-blue-100 px-1 rounded">▶ DURANTE</span>
                                 </div>
-                                {getSegmentActions(segment).filter(a => a.is_prep === false).map((action, actionIdx) => (
+                                {getSegmentActions(segment).filter(a => !isPrepAction(a)).map((action, actionIdx) => (
                                   <div
                                     key={actionIdx}
                                     className={`p-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
