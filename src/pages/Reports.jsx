@@ -83,8 +83,16 @@ export default function Reports() {
     charcoal: 'border-t-8 border-gray-800',
   };
 
+  const [printAllMode, setPrintAllMode] = useState(false);
+
   const handlePrint = () => {
-    window.print();
+    setPrintAllMode(false);
+    setTimeout(() => window.print(), 100);
+  };
+
+  const handlePrintAll = () => {
+    setPrintAllMode(true);
+    setTimeout(() => window.print(), 100);
   };
 
   const getPublicViewUrl = () => {
@@ -919,6 +927,18 @@ export default function Reports() {
             margin-bottom: 0.5rem !important;
           }
 
+          /* Print All Reports mode */
+          .print-all-reports {
+            display: block !important;
+          }
+          .print-all-reports .print-section {
+            break-before: page;
+            page-break-before: always;
+          }
+          .print-all-reports .print-section:first-child {
+            break-before: auto;
+            page-break-before: auto;
+          }
         }
       `}</style>
       
@@ -961,14 +981,27 @@ export default function Reports() {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-            <Button 
-              onClick={handlePrint}
-              disabled={!selectedEventId}
-              className="gradient-pdv text-white font-bold uppercase"
-            >
-              <Printer className="w-4 h-4 mr-2" />
-              Imprimir/Exportar
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  disabled={!selectedEventId}
+                  className="gradient-pdv text-white font-bold uppercase"
+                >
+                  <Printer className="w-4 h-4 mr-2" />
+                  Imprimir/Exportar
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handlePrint}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Imprimir Vista Actual
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handlePrintAll}>
+                  <List className="w-4 h-4 mr-2" />
+                  Imprimir Todos los Informes
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -1061,6 +1094,36 @@ export default function Reports() {
                 {renderHospitalityView()}
               </TabsContent>
             </Tabs>
+
+            {/* Print All Mode - renders all reports for printing */}
+            {printAllMode && (
+              <div className="print-all-reports hidden print:block">
+                <div className="print-section">
+                  <h2 className="text-lg font-bold mb-2 border-b pb-1">INFORME DETALLADO</h2>
+                  {renderDetailedProgram()}
+                </div>
+                <div className="print-section" style={{ breakBefore: 'page' }}>
+                  <h2 className="text-lg font-bold mb-2 border-b pb-1">PROGRAMA GENERAL</h2>
+                  {renderGeneralProgram()}
+                </div>
+                <div className="print-section" style={{ breakBefore: 'page' }}>
+                  <h2 className="text-lg font-bold mb-2 border-b pb-1">NOTAS DE PROYECCIÓN</h2>
+                  {renderProjectionView()}
+                </div>
+                <div className="print-section" style={{ breakBefore: 'page' }}>
+                  <h2 className="text-lg font-bold mb-2 border-b pb-1">NOTAS DE SONIDO</h2>
+                  {renderSoundView()}
+                </div>
+                <div className="print-section" style={{ breakBefore: 'page' }}>
+                  <h2 className="text-lg font-bold mb-2 border-b pb-1">NOTAS DE UJIERES</h2>
+                  {renderUshersView()}
+                </div>
+                <div className="print-section" style={{ breakBefore: 'page' }}>
+                  <h2 className="text-lg font-bold mb-2 border-b pb-1">HOSPITALIDAD</h2>
+                  {renderHospitalityView()}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
