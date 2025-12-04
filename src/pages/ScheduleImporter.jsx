@@ -57,91 +57,134 @@ export default function ScheduleImporter() {
       setProcessingStatus("Analizando imagen con IA...");
       
       const schemaPrompt = `
-      You are the Schedule Import Specialist. Your goal is to digitize a church event schedule from an image/PDF into structured JSON.
+You are the Schedule Import Specialist. Digitize church event schedules into structured JSON.
 
-      ### LAYOUT ANALYSIS
-      - The schedule typically has 3 main columns: 
-        1. **LEFT**: Start Time (e.g., "7:00PM")
-        2. **MIDDLE**: Content/Activity (e.g., "ALABANZA", "BIENVENIDA")
-        3. **RIGHT**: Duration/End Time (e.g., "30 mins", "7:28pm")
-      - **HEADER**: Contains Event Name, Teams (Audio, Admin, Ushers/Ujieres), and Registration time.
+## DOCUMENT STRUCTURE
+These schedules have:
+1. **HEADER BAND**: Event name, session name (e.g. "SECCIÓN 4"), date, and SESSION-LEVEL team assignments (VIDEO, LUCES, SONIDO, COORDINADOR).
+2. **GRID ROWS**: Each row is a SEGMENT with time, content, duration, and notes columns.
 
-      ### EXTRACTION RULES
+## EXTRACTION RULES
 
-      1. **TEAMS (Header)**:
-         - Extract 'ADMIN', 'EQUIPO TÉCNICO' (Tech), 'SONIDO' (Sound), 'UJIERES' (Ushers), 'COORDINADORES'.
-         - Map them to the session object.
+### SESSION-LEVEL DATA (from header)
+Extract these team assignments to the session object:
+- VIDEO/EQUIPO TÉCNICO → tech_team
+- LUCES/LIGHTING → (include in tech_team or notes)
+- SONIDO/AUDIO → sound_team
+- COORDINADOR A CARGO → coordinators
+- ADMIN → admin_team
+- UJIERES → ushers_team
 
-      2. **PRE-SESSION**:
-         - Look for "REGISTRACIÓN" or "REGISTRATION" to get 'registration_desk_open_time' (Convert to HH:MM 24h).
+### SEGMENTS (each grid row = one segment)
+**CRITICAL TIME FORMAT**: Always use 24-hour "HH:MM" format.
+- 3:18 PM → "15:18"
+- 7:00 PM → "19:00"
+- 9:30 PM → "21:30"
 
-      3. **SEGMENTS (The Grid)**:
-         - **CRITICAL**: Use the Time column to define the start of a segment.
-         - **Time Format**: MUST be "HH:MM" (24-hour format). Example: "19:00" for 7pm. DO NOT return "1" or "7".
-         
-         **SPECIAL HANDLING BY TYPE**:
-         
-         - **ALABANZA (Worship)**:
-           - If you see "ALABANZA" or "WORSHIP", create **ONE single segment**.
-           - The songs listed below it are NOT separate segments. Map them to 'song_1_title', 'song_2_title', etc.
-           - Duration: Extract from right column (e.g., "30 mins" -> 30).
-           
-         - **MULTI-ITEM BLOCKS**:
-           - If a time block (e.g., 7:30PM) has multiple bold items like "BIENVENIDA" and "OFRENDAS":
-             - Create **SEPARATE segments** for them.
-             - Segment 1: "Bienvenida" at 19:30.
-             - Segment 2: "Ofrenda" at 19:35 (Estimate a 5-min offset if distinct duration isn't clear).
-             
-         - **PLENARIA (Preaching)**:
-           - Look for "SESIÓN #1", "PREDICACIÓN", or speaker names.
-           - Extract 'message_title' (e.g., text in quotes) and 'presenter' (Speaker name).
-           
-         - **OTHER TYPES**:
-           - Detect types: 'Anuncio', 'Video', 'Dinámica', 'Break', 'Cierre'.
+**SEGMENT TYPES** (use exactly these values):
+- "MC" or "Bienvenida" - For MC/host introductions
+- "Plenaria" - For main messages/sermons/panels
+- "Alabanza" - For worship/song sets
+- "Artes" - For dance/drama presentations
+- "Cierre" - For closing segments
+- "Ofrenda" - For offering
+- "Anuncio" - For announcements
+- "Video" - For video playback
+- "Break" - For breaks
 
-      ### OUTPUT JSON STRUCTURE
-      Return ONLY valid JSON. No markdown.
+### SEGMENT FIELD MAPPING
 
-      {
-        "type": "schedule_proposal",
-        "event": { 
-          "name": "Name from header (e.g. LAPET USA)", 
-          "date": "YYYY-MM-DD (use today's year if missing)", 
-          "location": "Location name" 
-        },
-        "session": { 
-          "name": "Session Name (e.g. Jueves PM)", 
-          "admin_team": "Names...", 
-          "tech_team": "Names...", 
-          "sound_team": "Names...", 
-          "ushers_team": "Names...", 
-          "coordinators": "Names..."
-        },
-        "pre_session": { 
-          "registration_desk_open_time": "HH:MM" 
-        },
-        "segments": [
-          {
-            "time": "HH:MM",
-            "duration_min": 30,
-            "title": "Alabanza & Adoración",
-            "type": "Alabanza",
-            "presenter": "Worship Leader Name",
-            "number_of_songs": 3,
-            "song_1_title": "Song Name",
-            "song_1_lead": "Lead Name",
-            "song_2_title": "Song Name..."
-          },
-          {
-            "time": "HH:MM",
-            "duration_min": 10,
-            "title": "Bienvenida",
-            "type": "Bienvenida",
-            "presenter": "Host Name"
-          }
-        ]
-      }
-      `;
+**For ALL segments**:
+- time: "HH:MM" (24h format, e.g. "15:18")
+- duration_min: number (e.g. 60)
+- title: Main title of segment
+- type: One of the types above
+- presenter: Speaker/MC/Leader name
+- requires_translation: true/false
+- translator_name: "Name" if translated
+- projection_notes: Instructions for projection team
+- sound_notes: Instructions for sound team
+- ushers_notes: Instructions for ushers
+
+**For type="Plenaria"**:
+- message_title: The sermon title in quotes (e.g. "A PESAR DE LO QUE CUESTE")
+- If it's a PANEL, list panelists in description_details
+
+**For type="Alabanza"**:
+- number_of_songs: count of songs
+- song_1_title, song_2_title, etc.: Individual song names
+- song_1_lead, song_2_lead, etc.: Lead vocalist if shown
+
+**For type="Artes"**:
+- Include art_types: ["DANCE", "DRAMA", "VIDEO"] as applicable
+- dance_song_title: Song name used
+- dance_song_source: Artist/source
+
+### SPECIAL INSTRUCTIONS
+1. **MC intro segments**: When you see "MC presenta a..." before a Plenaria, that's a SEPARATE short segment (2-5 min).
+2. **Worship cues**: "A&A sube 15 mins antes" = worship team starts 15 min before segment ends. Put in sound_notes.
+3. **Usher cues**: "remover púlpito", "colocar sillas" = Put in ushers_notes.
+4. **Stage call times**: The blue "Hora en escenario" column shows when team should arrive. Can be stored as stage_call_time or derived.
+
+## OUTPUT FORMAT
+Return ONLY valid JSON (no markdown):
+
+{
+  "type": "schedule_proposal",
+  "event": {
+    "name": "ÚNICA 2025 - SOY ÚNICA",
+    "date": "2025-03-15",
+    "location": "Santuario"
+  },
+  "session": {
+    "name": "Sección 4 - Sábado PM",
+    "tech_team": "Rick Pineda (Video), Danny Sena (Luces)",
+    "sound_team": "Jerry Xelo",
+    "coordinators": "Rubén Fabeiro",
+    "admin_team": "",
+    "ushers_team": ""
+  },
+  "pre_session": {
+    "registration_desk_open_time": "14:30"
+  },
+  "segments": [
+    {
+      "time": "15:18",
+      "duration_min": 2,
+      "title": "MC: Bienvenida & presenta P. Kenia Andújar",
+      "type": "MC",
+      "presenter": "Denise Honrado",
+      "requires_translation": true,
+      "translator_name": "Mariel Guzmán",
+      "projection_notes": "Anuncios / Announcements"
+    },
+    {
+      "time": "15:20",
+      "duration_min": 60,
+      "title": "Plenaria #5",
+      "type": "Plenaria",
+      "presenter": "P. Kenia Andújar",
+      "message_title": "A PESAR DE LO QUE CUESTE",
+      "requires_translation": true,
+      "translator_name": "Mariel Guzmán",
+      "projection_notes": "Mostrar imágenes del mensaje",
+      "sound_notes": "A&A sube 15 mins antes de concluir",
+      "ushers_notes": "Remover púlpito con mesita; agua y kleenex"
+    },
+    {
+      "time": "18:35",
+      "duration_min": 25,
+      "title": "Ministración / Worship",
+      "type": "Alabanza",
+      "number_of_songs": 4,
+      "song_1_title": "Who Else",
+      "song_2_title": "Give Me Jesus",
+      "song_3_title": "Nothing Else",
+      "song_4_title": "Cristo Eres Tú"
+    }
+  ]
+}
+`;
 
       const llmResponse = await base44.integrations.Core.InvokeLLM({
         prompt: schemaPrompt,
