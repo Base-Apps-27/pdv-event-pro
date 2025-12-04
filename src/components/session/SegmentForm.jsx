@@ -584,17 +584,22 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
                       </SelectContent>
                     </Select>
                     <Select 
-                      value={action.timing || "before_end"} 
-                      onValueChange={(val) => handleUpdateAction(idx, 'timing', val)}
+                        value={action.timing || "before_end"} 
+                        onValueChange={(val) => {
+                          handleUpdateAction(idx, 'timing', val);
+                          if (val === 'before_start') {
+                            handleUpdateAction(idx, 'is_prep', true);
+                          }
+                        }}
                     >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Timing" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ACTION_TIMINGS.map((t) => (
-                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                        ))}
-                      </SelectContent>
+                        <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Timing" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {ACTION_TIMINGS.map((t) => (
+                              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                            ))}
+                        </SelectContent>
                     </Select>
                     <div className="flex items-center gap-1">
                       <Input 
@@ -607,15 +612,16 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-xs mb-2">
-                    <label className="flex items-center gap-1 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={action.is_prep ?? true}
-                        onChange={(e) => handleUpdateAction(idx, 'is_prep', e.target.checked)}
-                        className="rounded"
-                      />
-                      <span>Es preparación</span>
-                    </label>
+                    <label className={`flex items-center gap-1 ${action.timing === 'before_start' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                              <input 
+                                  type="checkbox" 
+                                  checked={action.is_prep ?? true}
+                                  onChange={(e) => handleUpdateAction(idx, 'is_prep', e.target.checked)}
+                                  disabled={action.timing === 'before_start'}
+                                  className="rounded"
+                              />
+                              <span>Es preparación</span>
+                          </label>
                     <label className="flex items-center gap-1 cursor-pointer">
                       <input 
                         type="checkbox" 
