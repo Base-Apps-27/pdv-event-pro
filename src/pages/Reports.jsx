@@ -280,7 +280,38 @@ export default function Reports() {
                     if (segment.segment_type === "Breakout" && segment.breakout_rooms) {
                       return (
                         <React.Fragment key={segment.id}>
-                        <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
+                        {/* Prep Actions Row - spans full width above segment */}
+                        {getSegmentActions(segment).filter(a => a.is_prep !== false).length > 0 && (
+                          <tr className="bg-amber-50 border-t-2 border-amber-300">
+                            <td colSpan="3" className="p-2">
+                              <div className="flex items-start gap-2">
+                                <div className="bg-amber-500 text-white px-2 py-1 rounded font-bold text-[10px] uppercase whitespace-nowrap">
+                                  ⚠ PREP
+                                </div>
+                                <div className="flex-1 flex flex-wrap gap-2">
+                                  {getSegmentActions(segment).filter(a => a.is_prep !== false).map((action, actionIdx) => (
+                                    <div
+                                      key={actionIdx}
+                                      className={`text-[10px] px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
+                                    >
+                                      <span className="font-bold">[{action.department}]</span> {action.label}
+                                      {action.is_required && <span className="ml-1 text-red-600">*</span>}
+                                      {action.timing && action.offset_min !== undefined && (
+                                        <span className="italic ml-1">
+                                          ({action.timing === "before_start" && `${action.offset_min}m antes`}
+                                          {action.timing === "before_end" && `${action.offset_min}m antes de fin`}
+                                          {action.timing === "absolute" && action.absolute_time})
+                                        </span>
+                                      )}
+                                      {action.notes && <span className="ml-1">— {action.notes}</span>}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => a.is_prep !== false).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
                         <td className="p-2 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
                             <div className="flex flex-col items-center leading-tight">
                               <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
@@ -354,7 +385,38 @@ export default function Reports() {
 
                     return (
                       <React.Fragment key={segment.id}>
-                      <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
+                      {/* Prep Actions Row - spans full width above segment */}
+                      {getSegmentActions(segment).filter(a => a.is_prep !== false).length > 0 && (
+                        <tr className="bg-amber-50 border-t-2 border-amber-300">
+                          <td colSpan="3" className="p-2">
+                            <div className="flex items-start gap-2">
+                              <div className="bg-amber-500 text-white px-2 py-1 rounded font-bold text-[10px] uppercase whitespace-nowrap">
+                                ⚠ PREP
+                              </div>
+                              <div className="flex-1 flex flex-wrap gap-2">
+                                {getSegmentActions(segment).filter(a => a.is_prep !== false).map((action, actionIdx) => (
+                                  <div
+                                    key={actionIdx}
+                                    className={`text-[10px] px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
+                                  >
+                                    <span className="font-bold">[{action.department}]</span> {action.label}
+                                    {action.is_required && <span className="ml-1 text-red-600">*</span>}
+                                    {action.timing && action.offset_min !== undefined && (
+                                      <span className="italic ml-1">
+                                        ({action.timing === "before_start" && `${action.offset_min}m antes`}
+                                        {action.timing === "before_end" && `${action.offset_min}m antes de fin`}
+                                        {action.timing === "absolute" && action.absolute_time})
+                                      </span>
+                                    )}
+                                    {action.notes && <span className="ml-1">— {action.notes}</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => a.is_prep !== false).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
                       <td className="p-2 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
                         <div className="flex flex-col items-center leading-tight">
                           <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
@@ -384,8 +446,8 @@ export default function Reports() {
                         </div>
                       </td>
                       <td className="p-2 border-r border-gray-200">
-                        <div className={getSegmentActions(segment).length > 0 ? "grid grid-cols-2 gap-2" : ""}>
-                          <div className={getSegmentActions(segment).length > 0 ? "space-y-1" : "grid grid-cols-2 gap-x-4 gap-y-1"}>
+                        <div className={getSegmentActions(segment).filter(a => a.is_prep === false).length > 0 ? "grid grid-cols-2 gap-2" : ""}>
+                          <div className={getSegmentActions(segment).filter(a => a.is_prep === false).length > 0 ? "space-y-1" : "grid grid-cols-2 gap-x-4 gap-y-1"}>
                             <div className="text-gray-900 font-bold text-xs uppercase">
                               {segment.title}
                             </div>
@@ -486,82 +548,40 @@ export default function Reports() {
                             )}
                           </div>
 
-                          {getSegmentActions(segment).length > 0 && (() => {
-                            const prepActions = getSegmentActions(segment).filter(a => a.is_prep !== false);
-                            const cueActions = getSegmentActions(segment).filter(a => a.is_prep === false);
-                            return (
+                          {/* In-segment cues shown in the details column */}
+                          {getSegmentActions(segment).filter(a => a.is_prep === false).length > 0 && (
                           <div className="border-l border-gray-200 pl-2">
-                              <div className="text-[10px] space-y-1">
-                                {prepActions.length > 0 && (
-                                  <div>
-                                    <div className="font-bold uppercase text-amber-700 mb-0.5 flex items-center gap-1">
-                                      <span className="bg-amber-100 px-1 rounded">⚠ PREP</span>
-                                    </div>
-                                    <div className="space-y-0.5">
-                                      {prepActions.map((action, actionIdx) => (
-                                        <div
-                                          key={actionIdx}
-                                          className={`p-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
-                                        >
-                                          <div className="flex items-start gap-1">
-                                            <div className="flex-1">
-                                              <div className="font-semibold">
-                                                [{action.department}] {action.label}
-                                                {action.is_required && <span className="ml-1 text-red-600">*</span>}
-                                              </div>
-                                              {action.timing && action.offset_min !== undefined && (
-                                                <div className="italic">
-                                                  {action.timing === "before_start" && `${action.offset_min} min antes de iniciar`}
-                                                  {action.timing === "after_start" && `${action.offset_min} min después de iniciar`}
-                                                  {action.timing === "before_end" && `${action.offset_min} min antes de terminar`}
-                                                  {action.timing === "absolute" && action.absolute_time}
-                                                </div>
-                                              )}
-                                              {action.notes && <div>{action.notes}</div>}
-                                            </div>
-                                          </div>
+                              <div className="text-[10px] space-y-0.5">
+                                <div className="font-bold uppercase text-blue-700 mb-0.5 flex items-center gap-1">
+                                  <span className="bg-blue-100 px-1 rounded">▶ DURANTE</span>
+                                </div>
+                                {getSegmentActions(segment).filter(a => a.is_prep === false).map((action, actionIdx) => (
+                                  <div
+                                    key={actionIdx}
+                                    className={`p-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
+                                  >
+                                    <div className="flex items-start gap-1">
+                                      <div className="flex-1">
+                                        <div className="font-semibold">
+                                          [{action.department}] {action.label}
+                                          {action.is_required && <span className="ml-1 text-red-600">*</span>}
                                         </div>
-                                      ))}
+                                        {action.timing && action.offset_min !== undefined && (
+                                          <div className="italic">
+                                            {action.timing === "before_start" && `${action.offset_min} min antes de iniciar`}
+                                            {action.timing === "after_start" && `${action.offset_min} min después de iniciar`}
+                                            {action.timing === "before_end" && `${action.offset_min} min antes de terminar`}
+                                            {action.timing === "absolute" && action.absolute_time}
+                                          </div>
+                                        )}
+                                        {action.notes && <div>{action.notes}</div>}
+                                      </div>
                                     </div>
                                   </div>
-                                )}
-                                {cueActions.length > 0 && (
-                                  <div>
-                                    <div className="font-bold uppercase text-blue-700 mb-0.5 flex items-center gap-1">
-                                      <span className="bg-blue-100 px-1 rounded">▶ DURANTE</span>
-                                    </div>
-                                    <div className="space-y-0.5">
-                                      {cueActions.map((action, actionIdx) => (
-                                        <div
-                                          key={actionIdx}
-                                          className={`p-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
-                                        >
-                                          <div className="flex items-start gap-1">
-                                            <div className="flex-1">
-                                              <div className="font-semibold">
-                                                [{action.department}] {action.label}
-                                                {action.is_required && <span className="ml-1 text-red-600">*</span>}
-                                              </div>
-                                              {action.timing && action.offset_min !== undefined && (
-                                                <div className="italic">
-                                                  {action.timing === "before_start" && `${action.offset_min} min antes de iniciar`}
-                                                  {action.timing === "after_start" && `${action.offset_min} min después de iniciar`}
-                                                  {action.timing === "before_end" && `${action.offset_min} min antes de terminar`}
-                                                  {action.timing === "absolute" && action.absolute_time}
-                                                </div>
-                                              )}
-                                              {action.notes && <div>{action.notes}</div>}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
+                                ))}
                               </div>
                           </div>
-                            );
-                          })()}
+                          )}
                         </div>
                       </td>
                       <td className="p-2 text-gray-600 text-[10px] align-top">
