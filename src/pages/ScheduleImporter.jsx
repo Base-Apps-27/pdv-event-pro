@@ -14,11 +14,10 @@ export default function ScheduleImporter() {
   const [processingStatus, setProcessingStatus] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [reviewData, setReviewData] = useState(null);
-  const [conversationId, setConversationId] = useState(null);
+  // Removed state for conversationId as we'll use stateless LLM call
   
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
-  const lastProcessedMessageIdRef = useRef(null);
 
   // Handle file selection
   const handleFileSelect = (e) => {
@@ -27,7 +26,7 @@ export default function ScheduleImporter() {
     }
   };
 
-  // Step 1: Process File
+  // Step 1: Process File (Stateless LLM Implementation)
   const handleProcessFile = async () => {
     if (!file) return;
     
@@ -55,96 +54,90 @@ export default function ScheduleImporter() {
 
       if (!fileUrl) throw new Error("No se recibió la URL del archivo.");
 
-      // 2. Create Conversation
-      setProcessingStatus("Conectando con el Asistente IA...");
-      let conv = null;
-      try {
-          conv = await base44.agents.createConversation({
-            agent_name: "schedule_importer",
-            metadata: { name: `Import ${file.name}` }
-          });
-          setConversationId(conv.id);
-      } catch (agentError) {
-           throw new Error(`Error al iniciar agente: ${agentError.message || 'No responde'}`);
+      // 2. Invoke LLM Directly (Stateless - No Agents SDK which was causing crashes)
+      setProcessingStatus("Analizando imagen con IA...");
+      
+      const schemaPrompt = `
+      You are the Schedule Import Specialist. Extract structured data from the schedule image.
+      
+      Map text to these exact fields:
+      EVENT: name, date (YYYY-MM-DD), location
+      SESSION: name, description, admin_team, tech_team, sound_team, ushers_team, coordinators
+      PRE_SESSION: registration_desk_open_time (HH:MM 24h)
+      SEGMENTS: time (HH:MM 24h), duration_min, title, presenter, type (Alabanza, Plenaria, Video, Anuncio, etc.), notes
+      
+      FOR ALABANZA: number_of_songs, song_1_title, song_1_lead, etc.
+      FOR PLENARIA: message_title, scripture_references
+      
+      Convert all times to 24H format.
+      
+      RETURN ONLY VALID JSON. No markdown blocks needed, just the JSON object.
+      Structure:
+      {
+        "type": "schedule_proposal",
+        "event": { "name": "...", "date": "...", "location": "..." },
+        "session": { "name": "...", "admin_team": "...", ... },
+        "pre_session": { "registration_desk_open_time": "..." },
+        "segments": [ ... ]
+      }
+      `;
+
+      const llmResponse = await base44.integrations.Core.InvokeLLM({
+        prompt: schemaPrompt,
+        file_urls: [fileUrl],
+        response_json_schema: {
+            "type": "object",
+            "properties": {
+                "type": { "type": "string", "const": "schedule_proposal" },
+                "event": { "type": "object" },
+                "session": { "type": "object" },
+                "pre_session": { "type": "object" },
+                "segments": { "type": "array" }
+            },
+            "required": ["type", "event", "session", "segments"]
+        }
+      });
+
+      setProcessingStatus("Procesando respuesta...");
+
+      // 3. Parse Response
+      let parsedData = null;
+      
+      // Handle case where InvokeLLM returns string or object
+      if (typeof llmResponse === 'string') {
+         try {
+             parsedData = JSON.parse(llmResponse);
+         } catch (e) {
+             // Try to find JSON in the string if it's wrapped in text
+             const jsonMatch = llmResponse.match(/(\{[\s\S]*\})/);
+             if (jsonMatch) parsedData = JSON.parse(jsonMatch[1]);
+         }
+      } else if (typeof llmResponse === 'object') {
+         parsedData = llmResponse;
       }
 
-      // 3. Send Message
-      setProcessingStatus("Enviando imagen para análisis...");
-      await base44.agents.addMessage(conv, {
-        role: "user",
-        content: "Extract data from this schedule file. Output ONLY the JSON proposal.",
-        file_urls: [fileUrl]
-      });
-      
-      setProcessingStatus("Esperando respuesta de la IA...");
+      if (!parsedData || parsedData.type !== 'schedule_proposal') {
+         // Fallback: try to construct proposal from partial data
+         if (parsedData && (parsedData.event || parsedData.segments)) {
+            parsedData = { type: 'schedule_proposal', ...parsedData };
+         } else {
+            throw new Error("La IA no devolvió datos válidos.");
+         }
+      }
+
+      setReviewData(parsedData);
+      setStep("review");
+      toast.success("Datos extraídos correctamente");
 
     } catch (error) {
       console.error("Error detailed:", error);
-      setErrorMessage(error.message || "Error desconocido");
+      setErrorMessage(error.message || "Error desconocido durante el análisis");
       setStep("error");
       setIsLoading(false);
     }
   };
-
-  // Poll for agent updates (Robust fallback for subscription issues)
-  useEffect(() => {
-    if (!conversationId || step !== "processing") return;
-
-    let isMounted = true;
-    const pollInterval = setInterval(async () => {
-      if (!isMounted) return;
-      
-      try {
-        // Use listMessages instead of getConversation to avoid potential heavy payload or overhead
-        // Assuming the SDK has a way to get messages, otherwise stick to getConversation but be careful
-        const conversation = await base44.agents.getConversation(conversationId);
-        
-        if (!conversation) return;
-        
-        const msgs = conversation.messages || [];
-
-        // Update status if last message is user (waiting for assistant)
-        const lastMsg = msgs[msgs.length - 1];
-        if (lastMsg?.role === 'user') {
-             setProcessingStatus("La IA está pensando...");
-        }
-
-        if (lastMsg?.role === 'assistant' && lastMsg.content && lastMsg.content !== lastProcessedMessageIdRef.current) {
-            // Parse JSON
-            let jsonString = null;
-            const codeBlockMatch = lastMsg.content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-            
-            if (codeBlockMatch && codeBlockMatch[1]) {
-                jsonString = codeBlockMatch[1];
-            } else {
-                const rawMatch = lastMsg.content.match(/(\{[\s\S]*"type"\s*:\s*"schedule_proposal"[\s\S]*\})/);
-                if (rawMatch && rawMatch[1]) jsonString = rawMatch[1];
-            }
-
-            if (jsonString) {
-                try {
-                    const parsed = JSON.parse(jsonString);
-                    if (parsed.type === 'schedule_proposal') {
-                        lastProcessedMessageIdRef.current = lastMsg.content;
-                        setReviewData(parsed);
-                        setStep("review");
-                        toast.success("Datos extraídos correctamente");
-                    }
-                } catch (e) {
-                    console.error("JSON Parse error", e);
-                }
-            }
-        }
-      } catch (err) {
-        console.warn("Polling error:", err);
-      }
-    }, 2000); // Poll every 2 seconds
-
-    return () => {
-      isMounted = false;
-      clearInterval(pollInterval);
-    };
-  }, [conversationId, step]);
+  
+  // Removed useEffect for polling since we use stateless await
 
   // Step 2: Handle Confirmation & DB Creation
   const handleConfirmImport = async (finalData) => {
