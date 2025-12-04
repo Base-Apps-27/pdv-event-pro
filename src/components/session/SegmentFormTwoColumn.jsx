@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell, ListChecks } from "lucide-react";
+import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell, ListChecks, Zap } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import SegmentTimelinePreview from "./SegmentTimelinePreview";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
@@ -40,19 +40,19 @@ const getColorForType = (type) => {
 };
 
 const DEPARTMENTS = [
-  "Admin", "MC", "Sound", "Projection", "Hospitality", "Ujieres", "Kids", "Coordinador", "Stage & Decor", "Other"
+  "Admin", "MC", "Sound", "Projection", "Hospitality", "Ujieres", "Kids", "Coordinador", "Stage & Decor", "Alabanza", "Translation", "Other"
+];
+
+const ACTION_TIMINGS = [
+  { value: "before_start", label: "Antes de iniciar" },
+  { value: "after_start", label: "Después de iniciar" },
+  { value: "before_end", label: "Antes de terminar" },
+  { value: "absolute", label: "Hora exacta" }
 ];
 
 export default function SegmentFormTwoColumn({ session, segment, templates, onClose, sessionId }) {
   const queryClient = useQueryClient();
   const [selectedTemplate, setSelectedTemplate] = useState("");
-  const [editingAction, setEditingAction] = useState(null);
-  const [actionForm, setActionForm] = useState({
-    label: "",
-    department: "Other",
-    time_hint: "",
-    details: ""
-  });
   const [breakoutRooms, setBreakoutRooms] = useState(segment?.breakout_rooms || []);
   const [showSeriesManager, setShowSeriesManager] = useState(false);
   
@@ -147,6 +147,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     announcement_date: segment?.announcement_date || "",
     announcement_tone: segment?.announcement_tone || "",
     announcement_series_id: segment?.announcement_series_id || "",
+    segment_actions: segment?.segment_actions || [],
   });
 
   const [fieldOrigins, setFieldOrigins] = useState(segment?.field_origins || {});
@@ -231,36 +232,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     },
   });
 
-  const { data: actions = [] } = useQuery({
-    queryKey: ['segmentActions', segment?.id],
-    queryFn: () => segment?.id ? base44.entities.SegmentAction.filter({ segment_id: segment.id }, 'order') : [],
-    enabled: !!segment?.id,
-  });
 
-  const createActionMutation = useMutation({
-    mutationFn: (data) => base44.entities.SegmentAction.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['segmentActions', segment?.id]);
-      setActionForm({ label: "", department: "Other", time_hint: "", details: "" });
-      setEditingAction(null);
-    },
-  });
-
-  const updateActionMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.SegmentAction.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['segmentActions', segment?.id]);
-      setActionForm({ label: "", department: "Other", time_hint: "", details: "" });
-      setEditingAction(null);
-    },
-  });
-
-  const deleteActionMutation = useMutation({
-    mutationFn: (id) => base44.entities.SegmentAction.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['segmentActions', segment?.id]);
-    },
-  });
 
   const { data: rooms = [] } = useQuery({
     queryKey: ['rooms'],
@@ -370,34 +342,27 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   }, [isVideoType]);
 
   const handleAddAction = () => {
-    if (!actionForm.label || !segment?.id) return;
-
-    const data = {
-      segment_id: segment.id,
-      order: editingAction ? editingAction.order : actions.length + 1,
-      ...actionForm
+    const newAction = {
+      label: "",
+      department: "Other",
+      timing: "before_end",
+      offset_min: 5,
+      is_prep: true,
+      is_required: false,
+      notes: ""
     };
-
-    if (editingAction) {
-      updateActionMutation.mutate({ id: editingAction.id, data });
-    } else {
-      createActionMutation.mutate(data);
-    }
+    setFormData({...formData, segment_actions: [...formData.segment_actions, newAction]});
   };
 
-  const handleEditAction = (action) => {
-    setEditingAction(action);
-    setActionForm({
-      label: action.label,
-      department: action.department,
-      time_hint: action.time_hint || "",
-      details: action.details || ""
-    });
+  const handleUpdateAction = (index, field, value) => {
+    const newActions = [...formData.segment_actions];
+    newActions[index] = {...newActions[index], [field]: value};
+    setFormData({...formData, segment_actions: newActions});
   };
 
-  const handleCancelAction = () => {
-    setEditingAction(null);
-    setActionForm({ label: "", department: "Other", time_hint: "", details: "" });
+  const handleDeleteAction = (index) => {
+    const newActions = formData.segment_actions.filter((_, i) => i !== index);
+    setFormData({...formData, segment_actions: newActions});
   };
 
   const scrollToSection = (sectionId) => {
@@ -436,7 +401,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
         <div className="flex gap-2 overflow-x-auto pb-1">
           <button type="button" onClick={() => scrollToSection('basico')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Básico</button>
           <button type="button" onClick={() => scrollToSection('contenido')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Contenido</button>
-          {segment && <button type="button" onClick={() => scrollToSection('acciones')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Acciones</button>}
+          <button type="button" onClick={() => scrollToSection('acciones')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Acciones</button>
           <button type="button" onClick={() => scrollToSection('notas')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Notas</button>
           <button type="button" onClick={() => scrollToSection('otros')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Otros</button>
           {segment && <button type="button" onClick={() => scrollToSection('timeline')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap flex items-center gap-1"><ScrollText className="w-3 h-3"/>Timeline</button>}
@@ -954,110 +919,114 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
               </div>
             </div>
 
-            {segment && showActions && (
-              <div id="acciones" className="bg-white rounded-lg border border-l-4 border-l-pdv-green border-slate-200 shadow-sm overflow-hidden">
-                <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-pdv-green"></div>
-                  <h3 className="font-bold text-lg text-slate-900">Acciones del Segmento</h3>
-                </div>
-                <div className="p-4 space-y-4">
-                  {actions.length > 0 && (
-                    <div className="space-y-2">
-                      {actions.map((action) => (
-                        <div key={action.id} className="bg-white p-3 rounded border text-sm">
-                          <div className="flex justify-between items-start mb-1">
-                            <Badge variant="outline" className="text-xs">{action.department}</Badge>
-                            <div className="flex gap-1">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditAction(action)}
-                                className="h-7 w-7 p-0"
-                              >
-                                <FileText className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => deleteActionMutation.mutate(action.id)}
-                                className="h-7 w-7 p-0"
-                              >
-                                <Trash2 className="w-4 h-4 text-red-500" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="font-medium">{action.label}</div>
-                          {action.time_hint && <div className="text-slate-500 italic text-xs mt-0.5">{action.time_hint}</div>}
-                          {action.details && <div className="text-slate-600 text-xs mt-1">{action.details}</div>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="space-y-3 pt-3 border-t">
-                    <Label className="text-sm font-semibold">Añadir Nueva Acción</Label>
-                    <Input
-                      value={actionForm.label}
-                      onChange={(e) => setActionForm({...actionForm, label: e.target.value})}
-                      placeholder="Etiqueta de la acción"
-                      className="h-9"
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label className="text-xs">Departamento</Label>
-                        <Select
-                          value={actionForm.department}
-                          onValueChange={(value) => setActionForm({...actionForm, department: value})}
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {DEPARTMENTS.map((dept) => (
-                              <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Referencia de Tiempo</Label>
-                        <Input
-                          value={actionForm.time_hint}
-                          onChange={(e) => setActionForm({...actionForm, time_hint: e.target.value})}
-                          placeholder="ej. at 2:30"
-                          className="h-9"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Detalles</Label>
-                      <Textarea
-                        value={actionForm.details}
-                        onChange={(e) => setActionForm({...actionForm, details: e.target.value})}
-                        rows={2}
-                        placeholder="Descripción completa de la acción..."
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      {editingAction && (
-                        <Button type="button" variant="outline" size="sm" onClick={handleCancelAction} className="flex-1">
-                          Cancelar
-                        </Button>
-                      )}
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleAddAction}
-                        disabled={!actionForm.label}
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        {editingAction ? "Actualizar Acción" : "Añadir Acción"}
-                      </Button>
-                    </div>
+            {showActions && (
+              <div id="acciones" className="bg-white rounded-lg border border-l-4 border-l-orange-500 border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-orange-500" />
+                    <h3 className="font-bold text-lg text-slate-900">Acciones / Tareas de Preparación</h3>
                   </div>
+                  <Badge variant="outline" className="text-xs">{formData.segment_actions.length}</Badge>
+                </div>
+                <div className="p-4 space-y-3">
+                  {formData.segment_actions.length === 0 ? (
+                    <p className="text-sm text-gray-500 italic text-center py-2">No hay acciones definidas para este segmento.</p>
+                  ) : (
+                    formData.segment_actions.map((action, idx) => (
+                      <Card key={idx} className="p-3 bg-orange-50/30 border-orange-200">
+                        <div className="flex items-start gap-2 mb-2">
+                          <Input 
+                            placeholder="Etiqueta (ej: A&A sube)" 
+                            className="flex-1 h-8 text-sm bg-white"
+                            value={action.label || ""}
+                            onChange={(e) => handleUpdateAction(idx, 'label', e.target.value)}
+                          />
+                          <Button 
+                            type="button"
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-8 w-8 text-red-400 hover:text-red-600"
+                            onClick={() => handleDeleteAction(idx)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mb-2">
+                          <Select 
+                            value={action.department || "Other"} 
+                            onValueChange={(val) => handleUpdateAction(idx, 'department', val)}
+                          >
+                            <SelectTrigger className="h-8 text-xs bg-white">
+                              <SelectValue placeholder="Equipo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {DEPARTMENTS.map((dept) => (
+                                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select 
+                            value={action.timing || "before_end"} 
+                            onValueChange={(val) => handleUpdateAction(idx, 'timing', val)}
+                          >
+                            <SelectTrigger className="h-8 text-xs bg-white">
+                              <SelectValue placeholder="Timing" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ACTION_TIMINGS.map((t) => (
+                                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <div className="flex items-center gap-1">
+                            <Input 
+                              type="number" 
+                              className="h-8 text-xs w-16 bg-white"
+                              value={action.offset_min || 0}
+                              onChange={(e) => handleUpdateAction(idx, 'offset_min', parseInt(e.target.value) || 0)}
+                            />
+                            <span className="text-xs text-gray-500">min</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 text-xs mb-2">
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={action.is_prep ?? true}
+                              onChange={(e) => handleUpdateAction(idx, 'is_prep', e.target.checked)}
+                              className="rounded"
+                            />
+                            <span>Es preparación</span>
+                          </label>
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={action.is_required ?? false}
+                              onChange={(e) => handleUpdateAction(idx, 'is_required', e.target.checked)}
+                              className="rounded"
+                            />
+                            <span>Requerido</span>
+                          </label>
+                        </div>
+                        <Input 
+                          placeholder="Notas adicionales..."
+                          className="h-8 text-xs bg-white"
+                          value={action.notes || ""}
+                          onChange={(e) => handleUpdateAction(idx, 'notes', e.target.value)}
+                        />
+                      </Card>
+                    ))
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddAction}
+                    className="w-full border-dashed border-orange-300 text-orange-600 hover:bg-orange-50"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Acción
+                  </Button>
                 </div>
               </div>
             )}
