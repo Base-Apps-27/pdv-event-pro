@@ -112,8 +112,8 @@ export default function Reports() {
   };
 
   const isPrepAction = (action) => {
-    // "before_start" is always prep, otherwise check is_prep flag (defaults to true)
-    return action.timing === 'before_start' || action.is_prep !== false;
+    // Prep = before_start timing, During = everything else
+    return action.timing === 'before_start';
   };
 
   const departmentColors = {

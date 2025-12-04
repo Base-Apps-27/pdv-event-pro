@@ -584,13 +584,8 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
                       </SelectContent>
                     </Select>
                     <Select 
-                        value={action.timing || "before_end"} 
-                        onValueChange={(val) => {
-                          handleUpdateAction(idx, 'timing', val);
-                          if (val === 'before_start') {
-                            handleUpdateAction(idx, 'is_prep', true);
-                          }
-                        }}
+                        value={action.timing || "before_start"} 
+                        onValueChange={(val) => handleUpdateAction(idx, 'timing', val)}
                     >
                         <SelectTrigger className="h-8 text-xs">
                             <SelectValue placeholder="Timing" />
@@ -612,25 +607,18 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-xs mb-2">
-                    <label className={`flex items-center gap-1 ${action.timing === 'before_start' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <label className="flex items-center gap-1 cursor-pointer">
                               <input 
                                   type="checkbox" 
-                                  checked={action.is_prep ?? true}
-                                  onChange={(e) => handleUpdateAction(idx, 'is_prep', e.target.checked)}
-                                  disabled={action.timing === 'before_start'}
+                                  checked={action.is_required ?? false}
+                                  onChange={(e) => handleUpdateAction(idx, 'is_required', e.target.checked)}
                                   className="rounded"
                               />
-                              <span>Es preparación</span>
+                              <span>Requerido</span>
                           </label>
-                    <label className="flex items-center gap-1 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={action.is_required ?? false}
-                        onChange={(e) => handleUpdateAction(idx, 'is_required', e.target.checked)}
-                        className="rounded"
-                      />
-                      <span>Requerido</span>
-                    </label>
+                          <span className={`px-2 py-0.5 rounded text-xs ${action.timing === 'before_start' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                              {action.timing === 'before_start' ? '⚡ PREP' : '▶ DURANTE'}
+                          </span>
                   </div>
                   <Input 
                     placeholder="Notas adicionales..."

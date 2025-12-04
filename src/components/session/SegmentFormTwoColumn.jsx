@@ -345,9 +345,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     const newAction = {
       label: "",
       department: "Other",
-      timing: "before_end",
+      timing: "before_start",
       offset_min: 5,
-      is_prep: true,
       is_required: false,
       notes: ""
     };
@@ -980,21 +979,15 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                           <label className="flex items-center gap-1 cursor-pointer">
                             <input 
                               type="checkbox" 
-                              checked={action.is_prep ?? true}
-                              onChange={(e) => handleUpdateAction(idx, 'is_prep', e.target.checked)}
-                              className="rounded"
-                            />
-                            <span>Es preparación</span>
-                          </label>
-                          <label className="flex items-center gap-1 cursor-pointer">
-                            <input 
-                              type="checkbox" 
                               checked={action.is_required ?? false}
                               onChange={(e) => handleUpdateAction(idx, 'is_required', e.target.checked)}
                               className="rounded"
                             />
                             <span>Requerido</span>
                           </label>
+                          <span className={`px-2 py-0.5 rounded text-xs ${action.timing === 'before_start' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                            {action.timing === 'before_start' ? '⚡ PREP' : '▶ DURANTE'}
+                          </span>
                         </div>
                         <Input 
                           placeholder="Notas adicionales..."
