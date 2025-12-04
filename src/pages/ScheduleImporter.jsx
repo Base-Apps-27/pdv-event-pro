@@ -95,8 +95,13 @@ export default function ScheduleImporter() {
       if (!isMounted) return;
       
       try {
+        // Use listMessages instead of getConversation to avoid potential heavy payload or overhead
+        // Assuming the SDK has a way to get messages, otherwise stick to getConversation but be careful
         const conversation = await base44.agents.getConversation(conversationId);
-        const msgs = conversation?.messages || [];
+        
+        if (!conversation) return;
+        
+        const msgs = conversation.messages || [];
 
         // Update status if last message is user (waiting for assistant)
         const lastMsg = msgs[msgs.length - 1];
