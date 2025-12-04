@@ -86,21 +86,25 @@ export default function ScheduleImporter() {
     }
   };
 
-  // Subscribe to agent updates
+  // Poll for agent updates (Robust fallback for subscription issues)
   useEffect(() => {
     if (!conversationId || step !== "processing") return;
 
-    const unsubscribe = base44.agents.subscribeToConversation(conversationId, (data) => {
-      const msgs = data?.messages || [];
+    let isMounted = true;
+    const pollInterval = setInterval(async () => {
+      if (!isMounted) return;
       
-      if (data.status === 'processing') {
-         setProcessingStatus("La IA está extrayendo los datos...");
-      }
+      try {
+        const conversation = await base44.agents.getConversation(conversationId);
+        const msgs = conversation?.messages || [];
 
-      if (data.status === 'idle' && msgs.length > 0) {
+        // Update status if last message is user (waiting for assistant)
         const lastMsg = msgs[msgs.length - 1];
-        
-        if (lastMsg.role === 'assistant' && lastMsg.content && lastMsg.content !== lastProcessedMessageIdRef.current) {
+        if (lastMsg?.role === 'user') {
+             setProcessingStatus("La IA está pensando...");
+        }
+
+        if (lastMsg?.role === 'assistant' && lastMsg.content && lastMsg.content !== lastProcessedMessageIdRef.current) {
             // Parse JSON
             let jsonString = null;
             const codeBlockMatch = lastMsg.content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
@@ -126,10 +130,15 @@ export default function ScheduleImporter() {
                 }
             }
         }
+      } catch (err) {
+        console.warn("Polling error:", err);
       }
-    });
+    }, 2000); // Poll every 2 seconds
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      clearInterval(pollInterval);
+    };
   }, [conversationId, step]);
 
   // Step 2: Handle Confirmation & DB Creation
