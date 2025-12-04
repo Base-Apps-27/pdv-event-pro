@@ -227,19 +227,20 @@ Return ONLY valid JSON (no markdown):
         response_json_schema: {
             "type": "object",
             "properties": {
-                "type": { "type": "string", "const": "schedule_proposal" },
+                "type": { "type": "string" },
                 "event": { "type": "object" },
                 "session": { "type": "object" },
                 "pre_session": { "type": "object" },
-                "segments": { "type": "array" }
-            },
-            "required": ["type", "event", "session", "segments"],
-            "properties": {
-                "segments": {
+                "segments": { 
                     "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
+                            "time": { "type": "string" },
+                            "duration_min": { "type": "number" },
+                            "title": { "type": "string" },
+                            "type": { "type": "string" },
+                            "presenter": { "type": "string" },
                             "segment_actions": {
                                 "type": "array",
                                 "items": {
@@ -258,7 +259,8 @@ Return ONLY valid JSON (no markdown):
                         }
                     }
                 }
-            }
+            },
+            "required": ["type", "event", "session", "segments"]
         }
       });
 

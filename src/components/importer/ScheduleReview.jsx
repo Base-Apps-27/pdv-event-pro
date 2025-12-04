@@ -520,15 +520,13 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                                     ))}
                                 </div>
                             )}
+                        </div>
                     </div>
                 </ScrollArea>
             )}
-            </div>
-            </div>
-            )}
             <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingSegmentIdx(null)}>Cancelar</Button>
-            <Button onClick={saveEditDialog}>Guardar Cambios</Button>
+                <Button variant="outline" onClick={() => setEditingSegmentIdx(null)}>Cancelar</Button>
+                <Button onClick={saveEditDialog}>Guardar Cambios</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
