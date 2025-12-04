@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, Zap } from "lucide-react";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -35,20 +35,24 @@ const DEPARTMENTS = [
   "Hospitality",
   "Ujieres",
   "Kids",
+  "Coordinador",
+  "Stage & Decor",
+  "Alabanza",
+  "Translation",
   "Other"
+];
+
+const ACTION_TIMINGS = [
+  { value: "before_start", label: "Antes de iniciar" },
+  { value: "after_start", label: "Después de iniciar" },
+  { value: "before_end", label: "Antes de terminar" },
+  { value: "absolute", label: "Hora exacta" }
 ];
 
 export default function SegmentForm({ session, segment, templates, onClose, sessionId }) {
   const queryClient = useQueryClient();
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [showActions, setShowActions] = useState(false);
-  const [editingAction, setEditingAction] = useState(null);
-  const [actionForm, setActionForm] = useState({
-    label: "",
-    department: "Other",
-    time_hint: "",
-    details: ""
-  });
   const [formData, setFormData] = useState({
     title: segment?.title || "",
     segment_type: segment?.segment_type || "Plenaria",
@@ -86,6 +90,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     requires_translation: segment?.requires_translation || false,
     translator_name: segment?.translator_name || "",
     major_break: segment?.major_break || false,
+    segment_actions: segment?.segment_actions || [],
   });
 
   const calculateTimes = (startTime, durationMin, offsetMin) => {
@@ -147,36 +152,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     },
   });
 
-  const { data: actions = [] } = useQuery({
-    queryKey: ['segmentActions', segment?.id],
-    queryFn: () => segment?.id ? base44.entities.SegmentAction.filter({ segment_id: segment.id }, 'order') : [],
-    enabled: !!segment?.id,
-  });
 
-  const createActionMutation = useMutation({
-    mutationFn: (data) => base44.entities.SegmentAction.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['segmentActions', segment?.id]);
-      setActionForm({ label: "", department: "Other", time_hint: "", details: "" });
-      setEditingAction(null);
-    },
-  });
-
-  const updateActionMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.SegmentAction.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['segmentActions', segment?.id]);
-      setActionForm({ label: "", department: "Other", time_hint: "", details: "" });
-      setEditingAction(null);
-    },
-  });
-
-  const deleteActionMutation = useMutation({
-    mutationFn: (id) => base44.entities.SegmentAction.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['segmentActions', segment?.id]);
-    },
-  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -208,34 +184,27 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
   const needsPresenter = !isBreakType && !isTechOnly;
 
   const handleAddAction = () => {
-    if (!actionForm.label || !segment?.id) return;
-
-    const data = {
-      segment_id: segment.id,
-      order: editingAction ? editingAction.order : actions.length + 1,
-      ...actionForm
+    const newAction = {
+      label: "",
+      department: "Other",
+      timing: "before_end",
+      offset_min: 5,
+      is_prep: true,
+      is_required: false,
+      notes: ""
     };
-
-    if (editingAction) {
-      updateActionMutation.mutate({ id: editingAction.id, data });
-    } else {
-      createActionMutation.mutate(data);
-    }
+    setFormData({...formData, segment_actions: [...formData.segment_actions, newAction]});
   };
 
-  const handleEditAction = (action) => {
-    setEditingAction(action);
-    setActionForm({
-      label: action.label,
-      department: action.department,
-      time_hint: action.time_hint || "",
-      details: action.details || ""
-    });
+  const handleUpdateAction = (index, field, value) => {
+    const newActions = [...formData.segment_actions];
+    newActions[index] = {...newActions[index], [field]: value};
+    setFormData({...formData, segment_actions: newActions});
   };
 
-  const handleCancelAction = () => {
-    setEditingAction(null);
-    setActionForm({ label: "", department: "Other", time_hint: "", details: "" });
+  const handleDeleteAction = (index) => {
+    const newActions = formData.segment_actions.filter((_, i) => i !== index);
+    setFormData({...formData, segment_actions: newActions});
   };
 
   return (
@@ -559,90 +528,54 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
 
       <Separator />
 
-      {segment && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-slate-900">Acciones dentro del segmento (opcional)</h3>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowActions(!showActions)}
-            >
-              {showActions ? <ChevronUp className="w-4 h-4 mr-2" /> : <ChevronDown className="w-4 h-4 mr-2" />}
-              {showActions ? "Ocultar" : "Mostrar"}
-            </Button>
-          </div>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+            <Zap className="w-4 h-4 text-orange-500" />
+            Acciones / Tareas de Preparación
+          </h3>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowActions(!showActions)}
+          >
+            {showActions ? <ChevronUp className="w-4 h-4 mr-2" /> : <ChevronDown className="w-4 h-4 mr-2" />}
+            {showActions ? "Ocultar" : "Mostrar"} ({formData.segment_actions.length})
+          </Button>
+        </div>
 
-          {showActions && (
-            <div className="space-y-4">
-              {actions.length > 0 && (
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b">
-                      <tr>
-                        <th className="p-2 text-left font-medium w-12">#</th>
-                        <th className="p-2 text-left font-medium">Etiqueta</th>
-                        <th className="p-2 text-left font-medium">Departamento</th>
-                        <th className="p-2 text-left font-medium">Pista</th>
-                        <th className="p-2 text-left font-medium w-20">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {actions.map((action) => (
-                        <tr key={action.id} className="border-b hover:bg-gray-50">
-                          <td className="p-2 text-gray-600">{action.order}</td>
-                          <td className="p-2 font-medium">{action.label}</td>
-                          <td className="p-2">
-                            <Badge variant="outline">{action.department}</Badge>
-                          </td>
-                          <td className="p-2 text-gray-600 text-xs">{action.time_hint || "-"}</td>
-                          <td className="p-2">
-                            <div className="flex gap-1">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditAction(action)}
-                              >
-                                <FileText className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => deleteActionMutation.mutate(action.id)}
-                              >
-                                <Trash2 className="w-3 h-3 text-red-500" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              <Card className="p-4 bg-gray-50">
-                <h4 className="font-medium text-sm mb-3">{editingAction ? "Editar Acción" : "Nueva Acción"}</h4>
-                <div className="grid md:grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Etiqueta *</Label>
-                    <Input
-                      value={actionForm.label}
-                      onChange={(e) => setActionForm({...actionForm, label: e.target.value})}
-                      placeholder="Video 1, MC Intro..."
+        {showActions && (
+          <div className="space-y-3 border rounded-lg p-4 bg-orange-50/30">
+            {formData.segment_actions.length === 0 ? (
+              <p className="text-sm text-gray-500 italic">No hay acciones definidas para este segmento.</p>
+            ) : (
+              formData.segment_actions.map((action, idx) => (
+                <Card key={idx} className="p-3 bg-white">
+                  <div className="flex items-start gap-2 mb-2">
+                    <Input 
+                      placeholder="Etiqueta (ej: A&A sube)" 
+                      className="flex-1 h-8 text-sm"
+                      value={action.label || ""}
+                      onChange={(e) => handleUpdateAction(idx, 'label', e.target.value)}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Departamento *</Label>
-                    <Select
-                      value={actionForm.department}
-                      onValueChange={(value) => setActionForm({...actionForm, department: value})}
+                    <Button 
+                      type="button"
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-8 w-8 text-red-400 hover:text-red-600"
+                      onClick={() => handleDeleteAction(idx)}
                     >
-                      <SelectTrigger>
-                        <SelectValue />
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-2">
+                    <Select 
+                      value={action.department || "Other"} 
+                      onValueChange={(val) => handleUpdateAction(idx, 'department', val)}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Equipo" />
                       </SelectTrigger>
                       <SelectContent>
                         {DEPARTMENTS.map((dept) => (
@@ -650,47 +583,71 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
                         ))}
                       </SelectContent>
                     </Select>
+                    <Select 
+                      value={action.timing || "before_end"} 
+                      onValueChange={(val) => handleUpdateAction(idx, 'timing', val)}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Timing" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ACTION_TIMINGS.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="flex items-center gap-1">
+                      <Input 
+                        type="number" 
+                        className="h-8 text-xs w-16"
+                        value={action.offset_min || 0}
+                        onChange={(e) => handleUpdateAction(idx, 'offset_min', parseInt(e.target.value) || 0)}
+                      />
+                      <span className="text-xs text-gray-500">min</span>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Pista de tiempo</Label>
-                    <Input
-                      value={actionForm.time_hint}
-                      onChange={(e) => setActionForm({...actionForm, time_hint: e.target.value})}
-                      placeholder="start at 0:00, lower at 2:06..."
-                    />
+                  <div className="flex items-center gap-4 text-xs mb-2">
+                    <label className="flex items-center gap-1 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={action.is_prep ?? true}
+                        onChange={(e) => handleUpdateAction(idx, 'is_prep', e.target.checked)}
+                        className="rounded"
+                      />
+                      <span>Es preparación</span>
+                    </label>
+                    <label className="flex items-center gap-1 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={action.is_required ?? false}
+                        onChange={(e) => handleUpdateAction(idx, 'is_required', e.target.checked)}
+                        className="rounded"
+                      />
+                      <span>Requerido</span>
+                    </label>
                   </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label>Detalles</Label>
-                    <Textarea
-                      value={actionForm.details}
-                      onChange={(e) => setActionForm({...actionForm, details: e.target.value})}
-                      rows={2}
-                      placeholder="Descripción de la acción..."
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2 mt-3">
-                  {editingAction && (
-                    <Button type="button" variant="outline" size="sm" onClick={handleCancelAction}>
-                      Cancelar
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleAddAction}
-                    disabled={!actionForm.label}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    {editingAction ? "Actualizar" : "Añadir"}
-                  </Button>
-                </div>
-              </Card>
-            </div>
-          )}
-        </div>
-      )}
+                  <Input 
+                    placeholder="Notas adicionales..."
+                    className="h-8 text-xs"
+                    value={action.notes || ""}
+                    onChange={(e) => handleUpdateAction(idx, 'notes', e.target.value)}
+                  />
+                </Card>
+              ))
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddAction}
+              className="w-full border-dashed"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Agregar Acción
+            </Button>
+          </div>
+        )}
+      </div>
 
       <Separator />
 
