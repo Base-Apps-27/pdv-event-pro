@@ -8,10 +8,11 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function ScheduleImporter() {
-  const [step, setStep] = useState("upload"); // upload, processing, review, success
+  const [step, setStep] = useState("upload"); // upload, processing, review, success, error
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [processingStatus, setProcessingStatus] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [reviewData, setReviewData] = useState(null);
   const [conversationId, setConversationId] = useState(null);
   
@@ -30,34 +31,58 @@ export default function ScheduleImporter() {
   const handleProcessFile = async () => {
     if (!file) return;
     
+    // Size check (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+        toast.error("El archivo es demasiado grande (Máx 10MB)");
+        return;
+    }
+
     setStep("processing");
     setIsLoading(true);
-    setProcessingStatus("Iniciando conversación con IA...");
+    setErrorMessage("");
+    setProcessingStatus("Iniciando proceso...");
 
     try {
       // 1. Upload File
-      setProcessingStatus("Subiendo archivo...");
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setProcessingStatus("Subiendo archivo al servidor...");
+      let fileUrl = null;
+      try {
+          const uploadRes = await base44.integrations.Core.UploadFile({ file });
+          fileUrl = uploadRes.file_url;
+      } catch (uploadError) {
+          throw new Error(`Error al subir archivo: ${uploadError.message || 'Falló la subida'}`);
+      }
+
+      if (!fileUrl) throw new Error("No se recibió la URL del archivo.");
 
       // 2. Create Conversation
-      const conv = await base44.agents.createConversation({
-        agent_name: "schedule_importer",
-        metadata: { name: `Import ${file.name}` }
-      });
-      setConversationId(conv.id);
+      setProcessingStatus("Conectando con el Asistente IA...");
+      let conv = null;
+      try {
+          conv = await base44.agents.createConversation({
+            agent_name: "schedule_importer",
+            metadata: { name: `Import ${file.name}` }
+          });
+          setConversationId(conv.id);
+      } catch (agentError) {
+           throw new Error(`Error al iniciar agente: ${agentError.message || 'No responde'}`);
+      }
 
       // 3. Send Message
-      setProcessingStatus("Analizando imagen...");
+      setProcessingStatus("Enviando imagen para análisis...");
       await base44.agents.addMessage(conv, {
         role: "user",
         content: "Extract data from this schedule file. Output ONLY the JSON proposal.",
-        file_urls: [file_url]
+        file_urls: [fileUrl]
       });
+      
+      setProcessingStatus("Esperando respuesta de la IA...");
 
     } catch (error) {
-      console.error("Error starting process:", error);
-      toast.error("Error al procesar el archivo.");
-      setStep("upload");
+      console.error("Error detailed:", error);
+      setErrorMessage(error.message || "Error desconocido");
+      setStep("error");
+      setIsLoading(false);
     }
   };
 
@@ -271,6 +296,20 @@ export default function ScheduleImporter() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Procesando Cronograma</h3>
             <p className="text-gray-500 animate-pulse">{processingStatus}</p>
+        </Card>
+      )}
+
+      {/* Error State */}
+      {step === "error" && (
+        <Card className="w-full max-w-md p-8 text-center bg-white shadow-lg animate-in fade-in zoom-in duration-300 border-red-100">
+            <div className="h-20 w-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertCircle className="w-10 h-10 text-red-500" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Hubo un problema</h3>
+            <p className="text-red-500 mb-6 text-sm bg-red-50 p-3 rounded-md font-mono">{errorMessage}</p>
+            <Button onClick={() => setStep("upload")} variant="outline" className="w-full">
+                Intentar de Nuevo
+            </Button>
         </Card>
       )}
 
