@@ -1,17 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Check, Edit2, ArrowRight } from "lucide-react";
+import { Plus, Trash2, Check, Edit2, ArrowRight, Settings, Music, Mic, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ScheduleReview({ data, onConfirm, onCancel }) {
   const [eventData, setEventData] = useState(data.event || { name: "", date: "" });
   const [sessionData, setSessionData] = useState(data.session || { name: "", description: "" });
+  const [preSessionData, setPreSessionData] = useState(data.pre_session || { registration_desk_open_time: "" });
   const [segments, setSegments] = useState(data.segments || []);
+  
+  // For Segment Details Dialog
+  const [editingSegmentIdx, setEditingSegmentIdx] = useState(null);
+  const [editingSegment, setEditingSegment] = useState(null);
 
   const handleSegmentChange = (index, field, value) => {
     const newSegments = [...segments];
@@ -33,10 +40,23 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
     }]);
   };
 
+  const openEditDialog = (idx) => {
+    setEditingSegmentIdx(idx);
+    setEditingSegment({ ...segments[idx] });
+  };
+
+  const saveEditDialog = () => {
+    const newSegments = [...segments];
+    newSegments[editingSegmentIdx] = editingSegment;
+    setSegments(newSegments);
+    setEditingSegmentIdx(null);
+  };
+
   const handleConfirm = () => {
     onConfirm({
       event: eventData,
       session: sessionData,
+      pre_session: preSessionData,
       segments: segments
     });
   };
@@ -61,46 +81,63 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
             </Badge>
           </div>
           <p className="text-sm text-gray-500">
-            La IA ha extraído la siguiente información. Por favor verifica y corrige si es necesario antes de crear.
+            Verifica los datos extraídos antes de importar.
           </p>
         </CardHeader>
         
-        <CardContent className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+        <CardContent className="p-6 space-y-6 max-h-[65vh] overflow-y-auto">
           {/* Event Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
+            <h3 className="col-span-full text-xs font-bold uppercase text-pdv-teal tracking-wider mb-2">Datos del Evento</h3>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-gray-500">Evento</Label>
-              <Input 
-                value={eventData.name} 
-                onChange={(e) => setEventData({...eventData, name: e.target.value})}
-                placeholder="Nombre del Evento"
-                className="font-medium"
-              />
+              <Label className="text-xs text-gray-500">Nombre del Evento</Label>
+              <Input value={eventData.name} onChange={(e) => setEventData({...eventData, name: e.target.value})} />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-gray-500">Fecha</Label>
-              <Input 
-                value={eventData.date} 
-                onChange={(e) => setEventData({...eventData, date: e.target.value})}
-                placeholder="YYYY-MM-DD" 
-              />
+              <Label className="text-xs text-gray-500">Fecha (YYYY-MM-DD)</Label>
+              <Input value={eventData.date} onChange={(e) => setEventData({...eventData, date: e.target.value})} />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-gray-500">Sesión</Label>
-              <Input 
-                value={sessionData.name} 
-                onChange={(e) => setSessionData({...sessionData, name: e.target.value})}
-                placeholder="Nombre de la Sesión"
-              />
+              <Label className="text-xs text-gray-500">Sesión</Label>
+              <Input value={sessionData.name} onChange={(e) => setSessionData({...sessionData, name: e.target.value})} />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-gray-500">Descripción / Notas</Label>
+              <Label className="text-xs text-gray-500">Registro / Apertura (Hora)</Label>
               <Input 
-                value={sessionData.description} 
-                onChange={(e) => setSessionData({...sessionData, description: e.target.value})}
-                placeholder="Notas de la sesión"
+                value={preSessionData.registration_desk_open_time || ""} 
+                onChange={(e) => setPreSessionData({...preSessionData, registration_desk_open_time: e.target.value})}
+                placeholder="00:00"
               />
             </div>
+          </div>
+
+          {/* Team Details */}
+          <div className="p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
+             <h3 className="text-xs font-bold uppercase text-pdv-teal tracking-wider mb-4 flex items-center gap-2">
+                <Users className="w-4 h-4" /> Equipos y Responsables
+             </h3>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                    <Label className="text-xs text-gray-500">Admin Team</Label>
+                    <Input className="h-8 text-sm" value={sessionData.admin_team || ""} onChange={(e) => setSessionData({...sessionData, admin_team: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                    <Label className="text-xs text-gray-500">Tech Team</Label>
+                    <Input className="h-8 text-sm" value={sessionData.tech_team || ""} onChange={(e) => setSessionData({...sessionData, tech_team: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                    <Label className="text-xs text-gray-500">Sonido</Label>
+                    <Input className="h-8 text-sm" value={sessionData.sound_team || ""} onChange={(e) => setSessionData({...sessionData, sound_team: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                    <Label className="text-xs text-gray-500">Ujieres</Label>
+                    <Input className="h-8 text-sm" value={sessionData.ushers_team || ""} onChange={(e) => setSessionData({...sessionData, ushers_team: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                    <Label className="text-xs text-gray-500">Coordinadores</Label>
+                    <Input className="h-8 text-sm" value={sessionData.coordinators || ""} onChange={(e) => setSessionData({...sessionData, coordinators: e.target.value})} />
+                </div>
+             </div>
           </div>
 
           {/* Segments Table */}
@@ -114,10 +151,11 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[100px]">Hora</TableHead>
-                  <TableHead className="w-[140px]">Tipo</TableHead>
+                  <TableHead className="w-[80px]">Hora</TableHead>
+                  <TableHead className="w-[120px]">Tipo</TableHead>
                   <TableHead>Título</TableHead>
                   <TableHead>Responsable</TableHead>
+                  <TableHead className="w-[80px] text-center">Detalles</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -162,6 +200,12 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                       />
                     </TableCell>
                     <TableCell className="p-2 text-center">
+                         <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => openEditDialog(idx)}>
+                            <Settings className="w-3 h-3 mr-1" />
+                            Editar
+                         </Button>
+                    </TableCell>
+                    <TableCell className="p-2 text-center">
                       <Button 
                         size="icon" 
                         variant="ghost" 
@@ -180,7 +224,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
 
         <CardFooter className="bg-slate-50 p-4 flex justify-end gap-3 border-t border-slate-100">
           <Button variant="outline" onClick={onCancel}>
-            Cancelar / Chatear
+            Cancelar
           </Button>
           <Button onClick={handleConfirm} className="bg-pdv-teal hover:bg-pdv-teal/90 text-white shadow-sm gap-2">
             <Check className="w-4 h-4" />
@@ -189,6 +233,88 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
           </Button>
         </CardFooter>
       </Card>
+
+      {/* Detailed Edit Dialog */}
+      <Dialog open={editingSegmentIdx !== null} onOpenChange={(open) => !open && setEditingSegmentIdx(null)}>
+        <DialogContent className="max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>Editar Detalles del Segmento</DialogTitle>
+            </DialogHeader>
+            {editingSegment && (
+                <ScrollArea className="max-h-[60vh]">
+                    <div className="grid gap-4 py-4 pr-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Duración (min)</Label>
+                                <Input 
+                                    type="number" 
+                                    value={editingSegment.duration_min || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, duration_min: parseInt(e.target.value) || 0})} 
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Notas / Instrucciones</Label>
+                                <Input 
+                                    value={editingSegment.notes || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, notes: e.target.value})} 
+                                />
+                            </div>
+                        </div>
+
+                        {editingSegment.type === 'Alabanza' && (
+                            <div className="border rounded-lg p-4 bg-blue-50/50 space-y-4">
+                                <h4 className="font-bold text-sm flex items-center gap-2 text-blue-700">
+                                    <Music className="w-4 h-4" /> Detalles de Alabanza
+                                </h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                     <div className="space-y-2">
+                                        <Label className="text-xs">Canción 1</Label>
+                                        <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_1_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_1_title: e.target.value})} />
+                                        <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_1_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_1_lead: e.target.value})} />
+                                     </div>
+                                     <div className="space-y-2">
+                                        <Label className="text-xs">Canción 2</Label>
+                                        <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_2_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_2_title: e.target.value})} />
+                                        <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_2_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_2_lead: e.target.value})} />
+                                     </div>
+                                     <div className="space-y-2">
+                                        <Label className="text-xs">Canción 3</Label>
+                                        <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_3_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_3_title: e.target.value})} />
+                                        <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_3_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_3_lead: e.target.value})} />
+                                     </div>
+                                     <div className="space-y-2">
+                                        <Label className="text-xs">Canción 4</Label>
+                                        <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_4_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_4_title: e.target.value})} />
+                                        <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_4_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_4_lead: e.target.value})} />
+                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {editingSegment.type === 'Plenaria' && (
+                            <div className="border rounded-lg p-4 bg-purple-50/50 space-y-4">
+                                <h4 className="font-bold text-sm flex items-center gap-2 text-purple-700">
+                                    <Mic className="w-4 h-4" /> Detalles de Plenaria
+                                </h4>
+                                <div className="space-y-2">
+                                    <Label>Título del Mensaje</Label>
+                                    <Input className="bg-white" value={editingSegment.message_title || ""} onChange={(e) => setEditingSegment({...editingSegment, message_title: e.target.value})} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Escrituras / Citas</Label>
+                                    <Input className="bg-white" value={editingSegment.scripture_references || ""} onChange={(e) => setEditingSegment({...editingSegment, scripture_references: e.target.value})} />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </ScrollArea>
+            )}
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setEditingSegmentIdx(null)}>Cancelar</Button>
+                <Button onClick={saveEditDialog}>Guardar Cambios</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
