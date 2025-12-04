@@ -126,6 +126,21 @@ Extract these team assignments to the session object:
 3. **Usher cues**: "remover púlpito", "colocar sillas" = Put in ushers_notes.
 4. **Stage call times**: The blue "Hora en escenario" column shows when team should arrive. Can be stored as stage_call_time or derived.
 
+## SEGMENT_ACTIONS (CRITICAL FOR PREP TASKS)
+Extract timed operational tasks into segment_actions array. These are instructions like:
+- "A&A sube 15 mins antes de concluir" → Alabanza team prep action
+- "MC entra 2 mins antes" → MC prep action  
+- "Ujieres: colocar púlpito" → Ushers prep action
+
+Each action needs:
+- label: Short description
+- department: "Admin" | "MC" | "Sound" | "Projection" | "Hospitality" | "Ujieres" | "Alabanza" | "Stage & Decor" | "Translation" | "Other"
+- timing: "before_start" | "after_start" | "before_end" | "absolute"
+- offset_min: Minutes from timing reference
+- is_prep: true if prep task (before segment), false if in-segment cue
+- is_required: true if mandatory
+- notes: Additional details
+
 ## OUTPUT FORMAT
 Return ONLY valid JSON (no markdown):
 
@@ -156,7 +171,8 @@ Return ONLY valid JSON (no markdown):
       "presenter": "Denise Honrado",
       "requires_translation": true,
       "translator_name": "Mariel Guzmán",
-      "projection_notes": "Anuncios / Announcements"
+      "projection_notes": "Anuncios / Announcements",
+      "segment_actions": []
     },
     {
       "time": "15:20",
@@ -168,8 +184,26 @@ Return ONLY valid JSON (no markdown):
       "requires_translation": true,
       "translator_name": "Mariel Guzmán",
       "projection_notes": "Mostrar imágenes del mensaje",
-      "sound_notes": "A&A sube 15 mins antes de concluir",
-      "ushers_notes": "Remover púlpito con mesita; agua y kleenex"
+      "segment_actions": [
+        {
+          "label": "A&A sube",
+          "department": "Alabanza",
+          "timing": "before_end",
+          "offset_min": 15,
+          "is_prep": true,
+          "is_required": true,
+          "notes": "Equipo de adoración en posición para ministración"
+        },
+        {
+          "label": "Remover púlpito",
+          "department": "Ujieres",
+          "timing": "before_end",
+          "offset_min": 5,
+          "is_prep": true,
+          "is_required": true,
+          "notes": "Remover púlpito con mesita; agua y kleenex"
+        }
+      ]
     },
     {
       "time": "18:35",
@@ -180,7 +214,8 @@ Return ONLY valid JSON (no markdown):
       "song_1_title": "Who Else",
       "song_2_title": "Give Me Jesus",
       "song_3_title": "Nothing Else",
-      "song_4_title": "Cristo Eres Tú"
+      "song_4_title": "Cristo Eres Tú",
+      "segment_actions": []
     }
   ]
 }
@@ -198,7 +233,32 @@ Return ONLY valid JSON (no markdown):
                 "pre_session": { "type": "object" },
                 "segments": { "type": "array" }
             },
-            "required": ["type", "event", "session", "segments"]
+            "required": ["type", "event", "session", "segments"],
+            "properties": {
+                "segments": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "segment_actions": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "label": { "type": "string" },
+                                        "department": { "type": "string" },
+                                        "timing": { "type": "string" },
+                                        "offset_min": { "type": "number" },
+                                        "is_prep": { "type": "boolean" },
+                                        "is_required": { "type": "boolean" },
+                                        "notes": { "type": "string" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
       });
 
@@ -292,26 +352,38 @@ Return ONLY valid JSON (no markdown):
         if (finalData.segments?.length > 0) {
              const segmentPromises = finalData.segments.map((seg, idx) => {
                 return base44.entities.Segment.create({
-                    session_id: newSession.id,
-                    order: idx + 1,
-                    title: seg.title || "Untitled Segment",
-                    start_time: seg.time,
-                    duration_min: seg.duration_min,
-                    segment_type: seg.type,
-                    presenter: seg.presenter,
-                    notes: seg.notes,
-                    
-                    // Conditional fields
-                    number_of_songs: seg.number_of_songs,
-                    song_1_title: seg.song_1_title, song_1_lead: seg.song_1_lead,
-                    song_2_title: seg.song_2_title, song_2_lead: seg.song_2_lead,
-                    song_3_title: seg.song_3_title, song_3_lead: seg.song_3_lead,
-                    
-                    message_title: seg.message_title,
-                    scripture_references: seg.scripture_references,
-                    
-                    origin: 'manual'
-                });
+                     session_id: newSession.id,
+                     order: idx + 1,
+                     title: seg.title || "Untitled Segment",
+                     start_time: seg.time,
+                     duration_min: seg.duration_min,
+                     segment_type: seg.type,
+                     presenter: seg.presenter,
+                     other_notes: seg.notes,
+
+                     // Conditional fields
+                     number_of_songs: seg.number_of_songs,
+                     song_1_title: seg.song_1_title, song_1_lead: seg.song_1_lead,
+                     song_2_title: seg.song_2_title, song_2_lead: seg.song_2_lead,
+                     song_3_title: seg.song_3_title, song_3_lead: seg.song_3_lead,
+
+                     message_title: seg.message_title,
+                     scripture_references: seg.scripture_references,
+
+                     // Translation
+                     requires_translation: seg.requires_translation,
+                     translator_name: seg.translator_name,
+
+                     // Team notes
+                     projection_notes: seg.projection_notes,
+                     sound_notes: seg.sound_notes,
+                     ushers_notes: seg.ushers_notes,
+
+                     // Structured actions
+                     segment_actions: seg.segment_actions || [],
+
+                     origin: 'manual'
+                 });
              });
              
              await Promise.all(segmentPromises);
