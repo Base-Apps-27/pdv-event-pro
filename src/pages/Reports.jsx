@@ -40,10 +40,7 @@ export default function Reports() {
     queryFn: () => base44.entities.Segment.list(),
   });
 
-  const { data: allActions = [] } = useQuery({
-    queryKey: ['segmentActions'],
-    queryFn: () => base44.entities.SegmentAction.list(),
-  });
+
 
   const { data: allPreSessionDetails = [] } = useQuery({
     queryKey: ['preSessionDetails'],
@@ -110,10 +107,8 @@ export default function Reports() {
     navigate(createPageUrl("PublicProgramView") + `?eventId=${selectedEventId}`);
   };
 
-  const getSegmentActions = (segmentId) => {
-    return allActions
-      .filter(action => action.segment_id === segmentId)
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  const getSegmentActions = (segment) => {
+    return segment?.segment_actions || [];
   };
 
   const departmentColors = {
@@ -285,20 +280,6 @@ export default function Reports() {
                     if (segment.segment_type === "Breakout" && segment.breakout_rooms) {
                       return (
                         <React.Fragment key={segment.id}>
-                        {segment.prep_instructions && (
-                          <tr key={`${segment.id}-prep`} className="bg-amber-100 border-t-2 border-amber-400">
-                            <td colSpan="3" className="p-2">
-                              <div className="flex items-start gap-2">
-                                <div className="bg-amber-500 text-white px-2 py-1 rounded font-bold text-[10px] uppercase whitespace-nowrap">
-                                  ⚠ PREPARACIÓN
-                                </div>
-                                <div className="text-amber-900 font-semibold text-[10px] flex-1">
-                                  {segment.prep_instructions}
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
                         <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
                         <td className="p-2 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
                             <div className="flex flex-col items-center leading-tight">
@@ -373,20 +354,6 @@ export default function Reports() {
 
                     return (
                       <React.Fragment key={segment.id}>
-                      {segment.prep_instructions && (
-                        <tr key={`${segment.id}-prep`} className="bg-amber-100 border-t-2 border-amber-400">
-                          <td colSpan="3" className="p-2">
-                            <div className="flex items-start gap-2">
-                              <div className="bg-amber-500 text-white px-2 py-1 rounded font-bold text-[10px] uppercase whitespace-nowrap">
-                                ⚠ PREPARACIÓN
-                              </div>
-                              <div className="text-amber-900 font-semibold text-[10px] flex-1">
-                                {segment.prep_instructions}
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
                       <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
                       <td className="p-2 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
                         <div className="flex flex-col items-center leading-tight">
@@ -417,8 +384,8 @@ export default function Reports() {
                         </div>
                       </td>
                       <td className="p-2 border-r border-gray-200">
-                        <div className={getSegmentActions(segment.id).length > 0 ? "grid grid-cols-2 gap-2" : ""}>
-                          <div className={getSegmentActions(segment.id).length > 0 ? "space-y-1" : "grid grid-cols-2 gap-x-4 gap-y-1"}>
+                        <div className={getSegmentActions(segment).length > 0 ? "grid grid-cols-2 gap-2" : ""}>
+                          <div className={getSegmentActions(segment).length > 0 ? "space-y-1" : "grid grid-cols-2 gap-x-4 gap-y-1"}>
                             <div className="text-gray-900 font-bold text-xs uppercase">
                               {segment.title}
                             </div>
@@ -519,13 +486,13 @@ export default function Reports() {
                             )}
                           </div>
 
-                          {getSegmentActions(segment.id).length > 0 && (
+                          {getSegmentActions(segment).length > 0 && (
                           <div className="border-l border-gray-200 pl-2">
                               <div className="text-[10px] space-y-0.5">
                                 <div className="font-bold uppercase text-gray-900 mb-1">ACCIONES:</div>
-                                {getSegmentActions(segment.id).map((action, actionIdx) => (
+                                {getSegmentActions(segment).map((action, actionIdx) => (
                                   <div
-                                    key={action.id}
+                                    key={actionIdx}
                                     className={`p-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
                                   >
                                     <div className="flex items-start gap-1">
@@ -533,15 +500,19 @@ export default function Reports() {
                                       <div className="flex-1">
                                         <div className="font-semibold">
                                           [{action.department}] {action.label}
+                                          {action.is_required && <span className="ml-1 text-red-600">*</span>}
                                         </div>
-                                        {action.time_hint && (
+                                        {action.timing && action.offset_min !== undefined && (
                                           <div className="italic">
-                                            {action.time_hint}
+                                            {action.timing === "before_start" && `${action.offset_min} min antes de iniciar`}
+                                            {action.timing === "after_start" && `${action.offset_min} min después de iniciar`}
+                                            {action.timing === "before_end" && `${action.offset_min} min antes de terminar`}
+                                            {action.timing === "absolute" && action.absolute_time}
                                           </div>
                                         )}
-                                        {action.details && (
+                                        {action.notes && (
                                           <div>
-                                            {action.details}
+                                            {action.notes}
                                           </div>
                                         )}
                                       </div>
