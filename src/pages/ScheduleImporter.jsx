@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, Paperclip, Sparkles, Image as ImageIcon, Trash2, RefreshCw } from "lucide-react";
+import { Send, Paperclip, Sparkles, Image as ImageIcon, Trash2, RefreshCw, CheckCircle2 } from "lucide-react";
+import ScheduleReview from "@/components/importer/ScheduleReview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -15,6 +16,7 @@ export default function ScheduleImporter() {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [files, setFiles] = useState([]);
+  const [reviewData, setReviewData] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
@@ -51,8 +53,31 @@ export default function ScheduleImporter() {
     if (!conversationId) return;
 
     const unsubscribe = base44.agents.subscribeToConversation(conversationId, (data) => {
-      setMessages(data?.messages || []);
+      const newMessages = data?.messages || [];
+      setMessages(newMessages);
       setIsLoading(data.status === 'processing');
+
+      // Check for review proposal in the last assistant message
+      if (data.status === 'idle' && newMessages.length > 0) {
+        const lastMsg = newMessages[newMessages.length - 1];
+        if (lastMsg.role === 'assistant' && lastMsg.content) {
+          // Extract JSON block if present
+          const match = lastMsg.content.match(/```json\s*([\s\S]*?)\s*```/);
+          if (match && match[1]) {
+            try {
+              const parsed = JSON.parse(match[1]);
+              if (parsed.type === 'schedule_proposal') {
+                setReviewData(parsed);
+                // Scroll to review form
+                setTimeout(scrollToBottom, 100);
+              }
+            } catch (e) {
+              console.error("Failed to parse proposal JSON", e);
+            }
+          }
+        }
+      }
+
       // Invalidate queries when agent operations complete to refresh data elsewhere
       if (data.status === 'idle') {
           queryClient.invalidateQueries(['events']);
@@ -73,14 +98,15 @@ export default function ScheduleImporter() {
   }, [messages]);
 
   const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if ((!input.trim() && files.length === 0) || !conversationId) return;
+    e?.preventDefault(); // e might be missing if called programmatically
+    if ((!input?.trim() && files.length === 0) || !conversationId) return;
 
     const content = input;
     const currentFiles = [...files];
     
     setInput("");
     setFiles([]);
+    setReviewData(null); // Clear review if user sends manual message
     setIsLoading(true);
 
     try {
@@ -104,6 +130,24 @@ export default function ScheduleImporter() {
 
     } catch (error) {
       console.error("Error sending message:", error);
+      setIsLoading(false);
+    }
+  };
+
+  const handleReviewConfirm = async (confirmedData) => {
+    setReviewData(null);
+    setIsLoading(true);
+    
+    const messageContent = `CONFIRMED_PROPOSAL: Please proceed with creating the event/session using this verified data:\n\`\`\`json\n${JSON.stringify(confirmedData, null, 2)}\n\`\`\``;
+
+    try {
+      const conversationObj = await base44.agents.getConversation(conversationId);
+      await base44.agents.addMessage(conversationObj, {
+          role: "user",
+          content: messageContent
+      });
+    } catch (error) {
+      console.error("Error sending confirmation:", error);
       setIsLoading(false);
     }
   };
@@ -161,6 +205,14 @@ export default function ScheduleImporter() {
             {messages.map((msg, idx) => (
                 <MessageBubble key={idx} message={msg} />
             ))}
+
+            {reviewData && (
+              <ScheduleReview 
+                data={reviewData} 
+                onConfirm={handleReviewConfirm} 
+                onCancel={() => setReviewData(null)} 
+              />
+            )}
             
             {isLoading && (
                 <div className="flex justify-start gap-3">
