@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, UploadCloud, FileText, ArrowRight, Sparkles, Loader2, CheckCircle2, AlertCircle, Calendar } from "lucide-react";
+import { UploadCloud, FileText, ArrowRight, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
 import ScheduleReview from "@/components/importer/ScheduleReview";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,7 +14,6 @@ export default function ScheduleImporter() {
   const [processingStatus, setProcessingStatus] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [reviewData, setReviewData] = useState(null);
-  // Removed state for conversationId as we'll use stateless LLM call
   
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
@@ -136,8 +135,6 @@ export default function ScheduleImporter() {
       setIsLoading(false);
     }
   };
-  
-  // Removed useEffect for polling since we use stateless await
 
   // Step 2: Handle Confirmation & DB Creation
   const handleConfirmImport = async (finalData) => {
@@ -151,7 +148,7 @@ export default function ScheduleImporter() {
         if (finalData.mode === 'new') {
             const newEvent = await base44.entities.Event.create({
                 name: finalData.event.name || "Evento Importado",
-                date: finalData.event.date, // Assuming schema supports date directly or mapping to start_date
+                date: finalData.event.date, 
                 start_date: finalData.event.date,
                 end_date: finalData.event.date,
                 year: new Date(finalData.event.date || Date.now()).getFullYear(),
@@ -188,8 +185,6 @@ export default function ScheduleImporter() {
 
         // 4. Create Segments
         if (finalData.segments?.length > 0) {
-             // Create segments sequentially to preserve order if needed, or parallel
-             // Mapped to schema
              const segmentPromises = finalData.segments.map((seg, idx) => {
                 return base44.entities.Segment.create({
                     session_id: newSession.id,
@@ -232,7 +227,6 @@ export default function ScheduleImporter() {
     setStep("upload");
     setFile(null);
     setReviewData(null);
-    setConversationId(null);
     setIsLoading(false);
   };
 
