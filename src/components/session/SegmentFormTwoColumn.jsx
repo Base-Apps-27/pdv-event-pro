@@ -347,6 +347,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       department: "Other",
       timing: "before_end",
       offset_min: 5,
+      is_prep: true,
       is_required: false,
       notes: ""
     };
@@ -976,6 +977,15 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                           </div>
                         </div>
                         <div className="flex items-center gap-4 text-xs mb-2">
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={action.is_prep ?? true}
+                              onChange={(e) => handleUpdateAction(idx, 'is_prep', e.target.checked)}
+                              className="rounded"
+                            />
+                            <span>Es preparación</span>
+                          </label>
                           <label className="flex items-center gap-1 cursor-pointer">
                             <input 
                               type="checkbox" 
