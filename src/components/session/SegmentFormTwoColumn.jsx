@@ -890,19 +890,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="prep_instructions">Instrucciones de Preparación</Label>
-                  <div className="relative">
-                    <Textarea 
-                      id="prep_instructions" 
-                      value={formData.prep_instructions}
-                      onChange={(e) => updateField('prep_instructions', e.target.value)}
-                      rows={2}
-                      placeholder="Configuración previa, chequeos necesarios..."
-                    />
-                    <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'prep_instructions')} />
-                  </div>
-                </div>
+
 
                 {isBreakType && (
                   <div className="flex items-center space-x-2">
