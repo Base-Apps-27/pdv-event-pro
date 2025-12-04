@@ -51,7 +51,7 @@ export default function ScheduleImporter() {
     if (!conversationId) return;
 
     const unsubscribe = base44.agents.subscribeToConversation(conversationId, (data) => {
-      setMessages(data.messages);
+      setMessages(data?.messages || []);
       setIsLoading(data.status === 'processing');
       // Invalidate queries when agent operations complete to refresh data elsewhere
       if (data.status === 'idle') {
@@ -94,20 +94,7 @@ export default function ScheduleImporter() {
         }
       }
 
-      await base44.agents.addMessage({
-        id: conversationId, // pass the conversation object usually, but ID works in some SDK versions, wait, SDK says pass object
-        // Checking SDK docs in prompt: "pass the entire conversation object and the message object"
-        // We need the conversation object. Let's fetch it or use a stored one.
-        // Actually base44.agents.addMessage(conversation, message)
-      }, {
-        role: "user",
-        content: content,
-        file_urls: fileUrls.length > 0 ? fileUrls : undefined
-      });
-      
-      // Note: addMessage in the new SDK might handle ID lookup internally if we pass an object with ID, 
-      // but strictly it asks for the conversation object.
-      // Let's refine:
+      // Retrieve conversation object and send message
       const conversationObj = await base44.agents.getConversation(conversationId);
       await base44.agents.addMessage(conversationObj, {
           role: "user",
