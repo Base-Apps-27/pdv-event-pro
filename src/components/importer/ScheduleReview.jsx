@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Check, Edit2, ArrowRight, Settings, Music, Mic, Users, CalendarPlus, Calendar } from "lucide-react";
+import { Plus, Trash2, Check, Edit2, ArrowRight, Settings, Music, Mic, Users, CalendarPlus, Calendar, Clock, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -365,12 +365,170 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                                 </div>
                             </div>
                         )}
+
+                        {/* Segment Actions */}
+                        <div className="border rounded-lg p-4 bg-orange-50/50 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h4 className="font-bold text-sm flex items-center gap-2 text-orange-700">
+                                    <Zap className="w-4 h-4" /> Acciones / Tareas de Preparación
+                                </h4>
+                                <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="h-7 text-xs"
+                                    onClick={() => {
+                                        const newActions = [...(editingSegment.segment_actions || []), {
+                                            label: "",
+                                            department: "Other",
+                                            timing: "before_end",
+                                            offset_min: 5,
+                                            is_prep: true,
+                                            is_required: false,
+                                            notes: ""
+                                        }];
+                                        setEditingSegment({...editingSegment, segment_actions: newActions});
+                                    }}
+                                >
+                                    <Plus className="w-3 h-3 mr-1" /> Agregar Acción
+                                </Button>
+                            </div>
+
+                            {(editingSegment.segment_actions || []).length === 0 ? (
+                                <p className="text-sm text-gray-500 italic">No hay acciones definidas para este segmento.</p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {(editingSegment.segment_actions || []).map((action, actionIdx) => (
+                                        <div key={actionIdx} className="bg-white border rounded-md p-3 space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <Input 
+                                                    placeholder="Etiqueta (ej: A&A sube)" 
+                                                    className="flex-1 h-8 text-sm"
+                                                    value={action.label || ""}
+                                                    onChange={(e) => {
+                                                        const newActions = [...editingSegment.segment_actions];
+                                                        newActions[actionIdx] = {...action, label: e.target.value};
+                                                        setEditingSegment({...editingSegment, segment_actions: newActions});
+                                                    }}
+                                                />
+                                                <Button 
+                                                    size="icon" 
+                                                    variant="ghost" 
+                                                    className="h-8 w-8 text-red-400 hover:text-red-600"
+                                                    onClick={() => {
+                                                        const newActions = editingSegment.segment_actions.filter((_, i) => i !== actionIdx);
+                                                        setEditingSegment({...editingSegment, segment_actions: newActions});
+                                                    }}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <Select 
+                                                    value={action.department || "Other"} 
+                                                    onValueChange={(val) => {
+                                                        const newActions = [...editingSegment.segment_actions];
+                                                        newActions[actionIdx] = {...action, department: val};
+                                                        setEditingSegment({...editingSegment, segment_actions: newActions});
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="h-8 text-xs">
+                                                        <SelectValue placeholder="Equipo" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Admin">Admin</SelectItem>
+                                                        <SelectItem value="MC">MC</SelectItem>
+                                                        <SelectItem value="Sound">Sonido</SelectItem>
+                                                        <SelectItem value="Projection">Proyección</SelectItem>
+                                                        <SelectItem value="Ujieres">Ujieres</SelectItem>
+                                                        <SelectItem value="Alabanza">Alabanza</SelectItem>
+                                                        <SelectItem value="Stage & Decor">Escenario</SelectItem>
+                                                        <SelectItem value="Translation">Traducción</SelectItem>
+                                                        <SelectItem value="Other">Otro</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <Select 
+                                                    value={action.timing || "before_end"} 
+                                                    onValueChange={(val) => {
+                                                        const newActions = [...editingSegment.segment_actions];
+                                                        newActions[actionIdx] = {...action, timing: val};
+                                                        setEditingSegment({...editingSegment, segment_actions: newActions});
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="h-8 text-xs">
+                                                        <SelectValue placeholder="Timing" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="before_start">Antes de iniciar</SelectItem>
+                                                        <SelectItem value="after_start">Después de iniciar</SelectItem>
+                                                        <SelectItem value="before_end">Antes de terminar</SelectItem>
+                                                        <SelectItem value="absolute">Hora exacta</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <div className="flex items-center gap-1">
+                                                    <Input 
+                                                        type="number" 
+                                                        className="h-8 text-xs w-16"
+                                                        value={action.offset_min || 0}
+                                                        onChange={(e) => {
+                                                            const newActions = [...editingSegment.segment_actions];
+                                                            newActions[actionIdx] = {...action, offset_min: parseInt(e.target.value) || 0};
+                                                            setEditingSegment({...editingSegment, segment_actions: newActions});
+                                                        }}
+                                                    />
+                                                    <span className="text-xs text-gray-500">min</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4 text-xs">
+                                                <label className="flex items-center gap-1 cursor-pointer">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={action.is_prep ?? true}
+                                                        onChange={(e) => {
+                                                            const newActions = [...editingSegment.segment_actions];
+                                                            newActions[actionIdx] = {...action, is_prep: e.target.checked};
+                                                            setEditingSegment({...editingSegment, segment_actions: newActions});
+                                                        }}
+                                                        className="rounded"
+                                                    />
+                                                    <span>Es preparación</span>
+                                                </label>
+                                                <label className="flex items-center gap-1 cursor-pointer">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={action.is_required ?? false}
+                                                        onChange={(e) => {
+                                                            const newActions = [...editingSegment.segment_actions];
+                                                            newActions[actionIdx] = {...action, is_required: e.target.checked};
+                                                            setEditingSegment({...editingSegment, segment_actions: newActions});
+                                                        }}
+                                                        className="rounded"
+                                                    />
+                                                    <span>Requerido</span>
+                                                </label>
+                                            </div>
+                                            <Input 
+                                                placeholder="Notas adicionales..."
+                                                className="h-8 text-xs"
+                                                value={action.notes || ""}
+                                                onChange={(e) => {
+                                                    const newActions = [...editingSegment.segment_actions];
+                                                    newActions[actionIdx] = {...action, notes: e.target.value};
+                                                    setEditingSegment({...editingSegment, segment_actions: newActions});
+                                                }}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                     </div>
                 </ScrollArea>
             )}
+            </div>
+            </div>
+            )}
             <DialogFooter>
-                <Button variant="outline" onClick={() => setEditingSegmentIdx(null)}>Cancelar</Button>
-                <Button onClick={saveEditDialog}>Guardar Cambios</Button>
+            <Button variant="outline" onClick={() => setEditingSegmentIdx(null)}>Cancelar</Button>
+            <Button onClick={saveEditDialog}>Guardar Cambios</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
