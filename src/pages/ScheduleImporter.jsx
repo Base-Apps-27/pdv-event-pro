@@ -57,27 +57,89 @@ export default function ScheduleImporter() {
       setProcessingStatus("Analizando imagen con IA...");
       
       const schemaPrompt = `
-      You are the Schedule Import Specialist. Extract structured data from the schedule image.
-      
-      Map text to these exact fields:
-      EVENT: name, date (YYYY-MM-DD), location
-      SESSION: name, description, admin_team, tech_team, sound_team, ushers_team, coordinators
-      PRE_SESSION: registration_desk_open_time (HH:MM 24h)
-      SEGMENTS: time (HH:MM 24h), duration_min, title, presenter, type (Alabanza, Plenaria, Video, Anuncio, etc.), notes
-      
-      FOR ALABANZA: number_of_songs, song_1_title, song_1_lead, etc.
-      FOR PLENARIA: message_title, scripture_references
-      
-      Convert all times to 24H format.
-      
-      RETURN ONLY VALID JSON. No markdown blocks needed, just the JSON object.
-      Structure:
+      You are the Schedule Import Specialist. Your goal is to digitize a church event schedule from an image/PDF into structured JSON.
+
+      ### LAYOUT ANALYSIS
+      - The schedule typically has 3 main columns: 
+        1. **LEFT**: Start Time (e.g., "7:00PM")
+        2. **MIDDLE**: Content/Activity (e.g., "ALABANZA", "BIENVENIDA")
+        3. **RIGHT**: Duration/End Time (e.g., "30 mins", "7:28pm")
+      - **HEADER**: Contains Event Name, Teams (Audio, Admin, Ushers/Ujieres), and Registration time.
+
+      ### EXTRACTION RULES
+
+      1. **TEAMS (Header)**:
+         - Extract 'ADMIN', 'EQUIPO TÉCNICO' (Tech), 'SONIDO' (Sound), 'UJIERES' (Ushers), 'COORDINADORES'.
+         - Map them to the session object.
+
+      2. **PRE-SESSION**:
+         - Look for "REGISTRACIÓN" or "REGISTRATION" to get 'registration_desk_open_time' (Convert to HH:MM 24h).
+
+      3. **SEGMENTS (The Grid)**:
+         - **CRITICAL**: Use the Time column to define the start of a segment.
+         - **Time Format**: MUST be "HH:MM" (24-hour format). Example: "19:00" for 7pm. DO NOT return "1" or "7".
+         
+         **SPECIAL HANDLING BY TYPE**:
+         
+         - **ALABANZA (Worship)**:
+           - If you see "ALABANZA" or "WORSHIP", create **ONE single segment**.
+           - The songs listed below it are NOT separate segments. Map them to 'song_1_title', 'song_2_title', etc.
+           - Duration: Extract from right column (e.g., "30 mins" -> 30).
+           
+         - **MULTI-ITEM BLOCKS**:
+           - If a time block (e.g., 7:30PM) has multiple bold items like "BIENVENIDA" and "OFRENDAS":
+             - Create **SEPARATE segments** for them.
+             - Segment 1: "Bienvenida" at 19:30.
+             - Segment 2: "Ofrenda" at 19:35 (Estimate a 5-min offset if distinct duration isn't clear).
+             
+         - **PLENARIA (Preaching)**:
+           - Look for "SESIÓN #1", "PREDICACIÓN", or speaker names.
+           - Extract 'message_title' (e.g., text in quotes) and 'presenter' (Speaker name).
+           
+         - **OTHER TYPES**:
+           - Detect types: 'Anuncio', 'Video', 'Dinámica', 'Break', 'Cierre'.
+
+      ### OUTPUT JSON STRUCTURE
+      Return ONLY valid JSON. No markdown.
+
       {
         "type": "schedule_proposal",
-        "event": { "name": "...", "date": "...", "location": "..." },
-        "session": { "name": "...", "admin_team": "...", ... },
-        "pre_session": { "registration_desk_open_time": "..." },
-        "segments": [ ... ]
+        "event": { 
+          "name": "Name from header (e.g. LAPET USA)", 
+          "date": "YYYY-MM-DD (use today's year if missing)", 
+          "location": "Location name" 
+        },
+        "session": { 
+          "name": "Session Name (e.g. Jueves PM)", 
+          "admin_team": "Names...", 
+          "tech_team": "Names...", 
+          "sound_team": "Names...", 
+          "ushers_team": "Names...", 
+          "coordinators": "Names..."
+        },
+        "pre_session": { 
+          "registration_desk_open_time": "HH:MM" 
+        },
+        "segments": [
+          {
+            "time": "HH:MM",
+            "duration_min": 30,
+            "title": "Alabanza & Adoración",
+            "type": "Alabanza",
+            "presenter": "Worship Leader Name",
+            "number_of_songs": 3,
+            "song_1_title": "Song Name",
+            "song_1_lead": "Lead Name",
+            "song_2_title": "Song Name..."
+          },
+          {
+            "time": "HH:MM",
+            "duration_min": 10,
+            "title": "Bienvenida",
+            "type": "Bienvenida",
+            "presenter": "Host Name"
+          }
+        ]
       }
       `;
 
