@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Send, Paperclip, Sparkles, Image as ImageIcon, Trash2, RefreshCw, CheckCircle2 } from "lucide-react";
 import ScheduleReview from "@/components/importer/ScheduleReview";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -44,6 +45,7 @@ export default function ScheduleImporter() {
         }
       } catch (error) {
         console.error("Failed to init conversation:", error);
+        toast.error("Error de conexión con el asistente.");
       }
     };
     initConversation();
@@ -67,19 +69,36 @@ export default function ScheduleImporter() {
         const msgId = lastMsg.id || lastMsg.created_at || lastMsg.content?.substring(0, 20);
         
         if (lastMsg.role === 'assistant' && lastMsg.content && lastMsg.content !== lastProcessedMessageIdRef.current) {
-          // Relaxed regex to capture JSON with or without the 'json' tag, and even without backticks if it looks like a raw JSON object
-          const jsonMatch = lastMsg.content.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || lastMsg.content.match(/^\s*(\{[\s\S]*\})\s*$/);
+          // 1. Try standard code block extraction
+          let jsonString = null;
+          const codeBlockMatch = lastMsg.content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
           
-          if (jsonMatch && jsonMatch[1]) {
+          if (codeBlockMatch && codeBlockMatch[1]) {
+            jsonString = codeBlockMatch[1];
+          } else {
+             // 2. Fallback: Look for raw JSON object signature
+             const rawMatch = lastMsg.content.match(/(\{[\s\S]*"type"\s*:\s*"schedule_proposal"[\s\S]*\})/);
+             if (rawMatch && rawMatch[1]) {
+                jsonString = rawMatch[1];
+             }
+          }
+
+          if (jsonString) {
             try {
-              const parsed = JSON.parse(jsonMatch[1]);
+              // Sanitize potential markdown artifacts if regex was too greedy
+              const cleanJson = jsonString.trim();
+              const parsed = JSON.parse(cleanJson);
+              
               if (parsed.type === 'schedule_proposal') {
                 lastProcessedMessageIdRef.current = lastMsg.content; // Mark as processed
                 setReviewData(parsed);
-                setTimeout(scrollToBottom, 200);
+                toast.success("Datos extraídos exitosamente. Por favor revisa abajo.");
+                setTimeout(scrollToBottom, 500);
               }
             } catch (e) {
-              // Silent fail if it's not valid JSON
+              console.error("JSON Parse Error:", e);
+              // Don't silent fail - let the user know we tried
+              // toast.error("Error al procesar los datos de la IA.");
             }
           }
         }
@@ -137,6 +156,7 @@ export default function ScheduleImporter() {
 
     } catch (error) {
       console.error("Error sending message:", error);
+      toast.error("Error al enviar el mensaje. Intenta de nuevo.");
       setIsLoading(false);
     }
   };
