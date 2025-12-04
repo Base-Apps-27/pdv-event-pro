@@ -1,322 +1,310 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, Paperclip, Sparkles, Image as ImageIcon, Trash2, RefreshCw, CheckCircle2 } from "lucide-react";
+import { Send, UploadCloud, FileText, ArrowRight, Sparkles, Loader2, CheckCircle2, AlertCircle, Calendar } from "lucide-react";
 import ScheduleReview from "@/components/importer/ScheduleReview";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2 } from "lucide-react";
-import MessageBubble from "@/components/ui/MessageBubble";
+import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function ScheduleImporter() {
-  const [input, setInput] = useState("");
-  const [conversationId, setConversationId] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [step, setStep] = useState("upload"); // upload, processing, review, success
+  const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [files, setFiles] = useState([]);
+  const [processingStatus, setProcessingStatus] = useState("");
   const [reviewData, setReviewData] = useState(null);
-  const messagesEndRef = useRef(null);
+  const [conversationId, setConversationId] = useState(null);
+  
   const fileInputRef = useRef(null);
-  const lastProcessedMessageIdRef = useRef(null);
   const queryClient = useQueryClient();
+  const lastProcessedMessageIdRef = useRef(null);
 
-  // Initialize or fetch conversation
-  useEffect(() => {
-    const initConversation = async () => {
-      try {
-        // Check if we have a stored conversation ID or create new
-        // For simplicity, creating a new one for this session
-        const conv = await base44.agents.createConversation({
-          agent_name: "schedule_importer",
-          metadata: {
-            name: "Schedule Import Session " + new Date().toLocaleDateString(),
-          }
-        });
-        setConversationId(conv.id);
-        
-        // Add initial greeting if empty
-        if (!conv.messages || conv.messages.length === 0) {
-            // We can fake a greeting or let the user start
-        } else {
-            setMessages(conv.messages);
-        }
-      } catch (error) {
-        console.error("Failed to init conversation:", error);
-        toast.error("Error de conexión con el asistente.");
-      }
-    };
-    initConversation();
-  }, []);
+  // Handle file selection
+  const handleFileSelect = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
 
-  // Subscribe to updates
+  // Step 1: Process File
+  const handleProcessFile = async () => {
+    if (!file) return;
+    
+    setStep("processing");
+    setIsLoading(true);
+    setProcessingStatus("Iniciando conversación con IA...");
+
+    try {
+      // 1. Upload File
+      setProcessingStatus("Subiendo archivo...");
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      // 2. Create Conversation
+      const conv = await base44.agents.createConversation({
+        agent_name: "schedule_importer",
+        metadata: { name: `Import ${file.name}` }
+      });
+      setConversationId(conv.id);
+
+      // 3. Send Message
+      setProcessingStatus("Analizando imagen...");
+      await base44.agents.addMessage(conv, {
+        role: "user",
+        content: "Extract data from this schedule file. Output ONLY the JSON proposal.",
+        file_urls: [file_url]
+      });
+
+    } catch (error) {
+      console.error("Error starting process:", error);
+      toast.error("Error al procesar el archivo.");
+      setStep("upload");
+    }
+  };
+
+  // Subscribe to agent updates
   useEffect(() => {
-    if (!conversationId) return;
+    if (!conversationId || step !== "processing") return;
 
     const unsubscribe = base44.agents.subscribeToConversation(conversationId, (data) => {
-      const newMessages = data?.messages || [];
-      setMessages(newMessages);
-      setIsLoading(data.status === 'processing');
-
-      // Check for review proposal in the last assistant message
-      if (data.status === 'idle' && newMessages.length > 0) {
-        const lastMsg = newMessages[newMessages.length - 1];
-        
-        // Only process if it's a new message we haven't handled yet
-        // We use a ref to track the last message ID (or content hash if ID missing) to prevent loops
-        const msgId = lastMsg.id || lastMsg.created_at || lastMsg.content?.substring(0, 20);
-        
-        if (lastMsg.role === 'assistant' && lastMsg.content && lastMsg.content !== lastProcessedMessageIdRef.current) {
-          // 1. Try standard code block extraction
-          let jsonString = null;
-          const codeBlockMatch = lastMsg.content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-          
-          if (codeBlockMatch && codeBlockMatch[1]) {
-            jsonString = codeBlockMatch[1];
-          } else {
-             // 2. Fallback: Look for raw JSON object signature
-             const rawMatch = lastMsg.content.match(/(\{[\s\S]*"type"\s*:\s*"schedule_proposal"[\s\S]*\})/);
-             if (rawMatch && rawMatch[1]) {
-                jsonString = rawMatch[1];
-             }
-          }
-
-          if (jsonString) {
-            try {
-              // Sanitize potential markdown artifacts if regex was too greedy
-              const cleanJson = jsonString.trim();
-              const parsed = JSON.parse(cleanJson);
-              
-              if (parsed.type === 'schedule_proposal') {
-                lastProcessedMessageIdRef.current = lastMsg.content; // Mark as processed
-                setReviewData(parsed);
-                toast.success("Datos extraídos exitosamente. Por favor revisa abajo.");
-                setTimeout(scrollToBottom, 500);
-              }
-            } catch (e) {
-              console.error("JSON Parse Error:", e);
-              // Don't silent fail - let the user know we tried
-              // toast.error("Error al procesar los datos de la IA.");
-            }
-          }
-        }
+      const msgs = data?.messages || [];
+      
+      if (data.status === 'processing') {
+         setProcessingStatus("La IA está extrayendo los datos...");
       }
 
-      // Invalidate queries when agent operations complete to refresh data elsewhere
-      if (data.status === 'idle') {
-          queryClient.invalidateQueries(['events']);
-          queryClient.invalidateQueries(['sessions']);
-          queryClient.invalidateQueries(['segments']);
+      if (data.status === 'idle' && msgs.length > 0) {
+        const lastMsg = msgs[msgs.length - 1];
+        
+        if (lastMsg.role === 'assistant' && lastMsg.content && lastMsg.content !== lastProcessedMessageIdRef.current) {
+            // Parse JSON
+            let jsonString = null;
+            const codeBlockMatch = lastMsg.content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+            
+            if (codeBlockMatch && codeBlockMatch[1]) {
+                jsonString = codeBlockMatch[1];
+            } else {
+                const rawMatch = lastMsg.content.match(/(\{[\s\S]*"type"\s*:\s*"schedule_proposal"[\s\S]*\})/);
+                if (rawMatch && rawMatch[1]) jsonString = rawMatch[1];
+            }
+
+            if (jsonString) {
+                try {
+                    const parsed = JSON.parse(jsonString);
+                    if (parsed.type === 'schedule_proposal') {
+                        lastProcessedMessageIdRef.current = lastMsg.content;
+                        setReviewData(parsed);
+                        setStep("review");
+                        toast.success("Datos extraídos correctamente");
+                    }
+                } catch (e) {
+                    console.error("JSON Parse error", e);
+                }
+            }
+        }
       }
     });
 
     return () => unsubscribe();
-  }, [conversationId, queryClient]);
+  }, [conversationId, step]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSendMessage = async (e) => {
-    e?.preventDefault(); // e might be missing if called programmatically
-    if ((!input?.trim() && files.length === 0) || !conversationId) return;
-
-    const content = input;
-    const currentFiles = [...files];
-    
-    setInput("");
-    setFiles([]);
-    setReviewData(null); // Clear review if user sends manual message
+  // Step 2: Handle Confirmation & DB Creation
+  const handleConfirmImport = async (finalData) => {
     setIsLoading(true);
-
+    setProcessingStatus("Guardando en base de datos...");
+    
     try {
-      let fileUrls = [];
-      
-      // Upload files first if any
-      if (currentFiles.length > 0) {
-        for (const file of currentFiles) {
-          const { file_url } = await base44.integrations.Core.UploadFile({ file });
-          fileUrls.push(file_url);
+        let eventId = finalData.existingEventId;
+
+        // 1. Create Event if needed
+        if (finalData.mode === 'new') {
+            const newEvent = await base44.entities.Event.create({
+                name: finalData.event.name || "Evento Importado",
+                date: finalData.event.date, // Assuming schema supports date directly or mapping to start_date
+                start_date: finalData.event.date,
+                end_date: finalData.event.date,
+                year: new Date(finalData.event.date || Date.now()).getFullYear(),
+                status: 'planning',
+                origin: 'manual'
+            });
+            eventId = newEvent.id;
         }
-      }
 
-      // Retrieve conversation object and send message
-      const conversationObj = await base44.agents.getConversation(conversationId);
-      await base44.agents.addMessage(conversationObj, {
-          role: "user",
-          content: content || "Here is the file",
-          file_urls: fileUrls.length > 0 ? fileUrls : undefined
-      });
+        if (!eventId) throw new Error("No Event ID available");
+
+        // 2. Create Session
+        const newSession = await base44.entities.Session.create({
+            event_id: eventId,
+            name: finalData.session.name || "Sesión General",
+            date: finalData.event.date,
+            origin: 'manual',
+            // Map teams
+            admin_team: finalData.session.admin_team,
+            tech_team: finalData.session.tech_team,
+            sound_team: finalData.session.sound_team,
+            ushers_team: finalData.session.ushers_team,
+            coordinators: finalData.session.coordinators
+        });
+
+        // 3. Create Pre-Session Details
+        if (finalData.pre_session?.registration_desk_open_time) {
+            await base44.entities.PreSessionDetails.create({
+                session_id: newSession.id,
+                registration_desk_open_time: finalData.pre_session.registration_desk_open_time,
+                origin: 'manual'
+            });
+        }
+
+        // 4. Create Segments
+        if (finalData.segments?.length > 0) {
+             // Create segments sequentially to preserve order if needed, or parallel
+             // Mapped to schema
+             const segmentPromises = finalData.segments.map((seg, idx) => {
+                return base44.entities.Segment.create({
+                    session_id: newSession.id,
+                    order: idx + 1,
+                    title: seg.title || "Untitled Segment",
+                    start_time: seg.time,
+                    duration_min: seg.duration_min,
+                    segment_type: seg.type,
+                    presenter: seg.presenter,
+                    notes: seg.notes,
+                    
+                    // Conditional fields
+                    number_of_songs: seg.number_of_songs,
+                    song_1_title: seg.song_1_title, song_1_lead: seg.song_1_lead,
+                    song_2_title: seg.song_2_title, song_2_lead: seg.song_2_lead,
+                    song_3_title: seg.song_3_title, song_3_lead: seg.song_3_lead,
+                    
+                    message_title: seg.message_title,
+                    scripture_references: seg.scripture_references,
+                    
+                    origin: 'manual'
+                });
+             });
+             
+             await Promise.all(segmentPromises);
+        }
+
+        setStep("success");
+        queryClient.invalidateQueries(['events']);
+        toast.success("Importación completada exitosamente");
 
     } catch (error) {
-      console.error("Error sending message:", error);
-      toast.error("Error al enviar el mensaje. Intenta de nuevo.");
-      setIsLoading(false);
+        console.error("Import error:", error);
+        toast.error("Error al guardar los datos: " + error.message);
+        setIsLoading(false);
     }
   };
 
-  const handleReviewConfirm = async (confirmedData) => {
+  const resetImporter = () => {
+    setStep("upload");
+    setFile(null);
     setReviewData(null);
-    setIsLoading(true);
-    
-    const messageContent = `CONFIRMED_PROPOSAL: Please proceed with creating the event/session using this verified data:\n\`\`\`json\n${JSON.stringify(confirmedData, null, 2)}\n\`\`\``;
-
-    try {
-      const conversationObj = await base44.agents.getConversation(conversationId);
-      await base44.agents.addMessage(conversationObj, {
-          role: "user",
-          content: messageContent
-      });
-    } catch (error) {
-      console.error("Error sending confirmation:", error);
-      setIsLoading(false);
-    }
-  };
-
-  const handleFileSelect = (e) => {
-    if (e.target.files) {
-      setFiles(Array.from(e.target.files));
-    }
-  };
-
-  const gradientStyle = {
-    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+    setConversationId(null);
+    setIsLoading(false);
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-gray-50">
+    <div className="min-h-screen bg-gray-50 p-6 md:p-12 flex flex-col items-center">
+      
       {/* Header */}
-      <div className="px-6 py-4 bg-white border-b border-gray-200 flex items-center justify-between shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-pdv-teal" />
-            Importador Inteligente
-          </h1>
-          <p className="text-sm text-gray-500">Sube fotos de tus cronogramas antiguos y deja que la IA los digitalice.</p>
-        </div>
-        <Button 
-            variant="outline" 
-            size="sm"
-            onClick={async () => {
-                if(confirm("¿Reiniciar conversación?")) {
-                    const conv = await base44.agents.createConversation({
-                        agent_name: "schedule_importer",
-                        metadata: { name: "New Session" }
-                    });
-                    setConversationId(conv.id);
-                    setMessages([]);
-                }
-            }}
-        >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Reiniciar
-        </Button>
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase flex items-center justify-center gap-3">
+          <Sparkles className="w-8 h-8 text-pdv-teal" />
+          Importador Inteligente de Cronogramas
+        </h1>
+        <p className="text-gray-500 mt-2 max-w-2xl mx-auto">
+          Transforma tus cronogramas en papel o PDF en eventos digitales estructurados en segundos.
+        </p>
       </div>
 
-      {/* Chat Area */}
-      <ScrollArea className="flex-1 p-4 md:p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-            {messages.length === 0 && (
-                <div className="text-center py-12 opacity-50">
-                    <ImageIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <p className="text-lg font-medium text-gray-500">Sube una imagen para comenzar</p>
-                </div>
-            )}
-            
-            {messages.map((msg, idx) => (
-                <MessageBubble key={idx} message={msg} />
-            ))}
+      {/* Step 1: Upload */}
+      {step === "upload" && (
+        <Card className="w-full max-w-2xl border-2 border-dashed border-gray-300 hover:border-pdv-teal transition-colors bg-white">
+          <div 
+            className="p-12 flex flex-col items-center justify-center cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+          >
+             <div className="h-20 w-20 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+                <UploadCloud className="w-10 h-10 text-blue-500" />
+             </div>
+             <h3 className="text-xl font-bold text-gray-900 mb-2">Sube tu archivo aquí</h3>
+             <p className="text-gray-500 mb-8 text-center">
+               Arrastra y suelta o haz clic para seleccionar.<br/>
+               Soporta imágenes (JPG, PNG) y documentos PDF.
+             </p>
+             
+             <input 
+               type="file" 
+               ref={fileInputRef} 
+               className="hidden" 
+               accept="image/*,.pdf" 
+               onChange={handleFileSelect}
+             />
 
-            {reviewData && (
-              <ScheduleReview 
+             {file ? (
+               <div className="flex items-center gap-4 bg-blue-50 px-4 py-3 rounded-lg border border-blue-100 w-full max-w-md animate-in fade-in zoom-in duration-300">
+                  <FileText className="w-6 h-6 text-blue-600" />
+                  <div className="flex-1 truncate font-medium text-blue-900">{file.name}</div>
+                  <Button size="sm" onClick={(e) => { e.stopPropagation(); handleProcessFile(); }} className="bg-blue-600 hover:bg-blue-700">
+                    Procesar <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+               </div>
+             ) : (
+               <Button variant="outline" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+                 Seleccionar Archivo
+               </Button>
+             )}
+          </div>
+        </Card>
+      )}
+
+      {/* Step 2: Processing */}
+      {step === "processing" && (
+        <Card className="w-full max-w-md p-8 text-center bg-white shadow-lg animate-in fade-in zoom-in duration-300">
+            <div className="flex justify-center mb-6">
+                <div className="relative">
+                    <div className="h-20 w-20 rounded-full border-4 border-slate-100"></div>
+                    <div className="absolute top-0 left-0 h-20 w-20 rounded-full border-4 border-pdv-teal border-t-transparent animate-spin"></div>
+                    <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-pdv-teal animate-pulse" />
+                </div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Procesando Cronograma</h3>
+            <p className="text-gray-500 animate-pulse">{processingStatus}</p>
+        </Card>
+      )}
+
+      {/* Step 3: Review */}
+      {step === "review" && reviewData && (
+        <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <ScheduleReview 
                 data={reviewData} 
-                onConfirm={handleReviewConfirm} 
-                onCancel={() => setReviewData(null)} 
-              />
-            )}
-            
-            {isLoading && (
-                <div className="flex justify-start gap-3">
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-pdv-teal to-pdv-green flex items-center justify-center mt-0.5 shrink-0 shadow-sm animate-pulse">
-                        <Sparkles className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="bg-white border border-slate-100 rounded-2xl rounded-bl-none px-5 py-3.5 shadow-sm">
-                        <div className="flex items-center gap-2 text-slate-500 text-sm">
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Analizando cronograma...
-                        </div>
-                    </div>
-                </div>
-            )}
-            <div ref={messagesEndRef} />
+                onConfirm={handleConfirmImport} 
+                onCancel={resetImporter}
+            />
         </div>
-      </ScrollArea>
+      )}
 
-      {/* Input Area */}
-      <div className="p-4 bg-white border-t border-gray-200 shrink-0">
-        <div className="max-w-4xl mx-auto">
-            {files.length > 0 && (
-                <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
-                    {files.map((file, i) => (
-                        <div key={i} className="relative bg-gray-100 border border-gray-200 rounded-lg p-2 flex items-center gap-2 pr-8">
-                            <div className="bg-white p-1 rounded border border-gray-200">
-                                <ImageIcon className="w-4 h-4 text-blue-500" />
-                            </div>
-                            <span className="text-xs font-medium text-gray-700 truncate max-w-[150px]">{file.name}</span>
-                            <button 
-                                onClick={() => setFiles(files.filter((_, idx) => idx !== i))}
-                                className="absolute right-1 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full text-gray-500"
-                            >
-                                <Trash2 className="w-3 h-3" />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            )}
-            
-            <form onSubmit={handleSendMessage} className="flex gap-3 items-end">
-                <input
-                    type="file"
-                    multiple
-                    accept="image/*,.pdf"
-                    className="hidden"
-                    ref={fileInputRef}
-                    onChange={handleFileSelect}
-                />
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-12 w-12 shrink-0 rounded-xl"
-                    onClick={() => fileInputRef.current?.click()}
-                >
-                    <Paperclip className="w-5 h-5 text-gray-500" />
+      {/* Step 4: Success */}
+      {step === "success" && (
+        <Card className="w-full max-w-md p-8 text-center bg-white shadow-lg animate-in fade-in zoom-in duration-300">
+            <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-10 h-10 text-green-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">¡Importación Exitosa!</h3>
+            <p className="text-gray-500 mb-8">
+                El evento y la sesión han sido creados correctamente en la base de datos.
+            </p>
+            <div className="flex flex-col gap-3">
+                <Button onClick={resetImporter} className="w-full bg-gray-900 text-white">
+                    Importar Otro
                 </Button>
-                
-                <Input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Escribe un mensaje o describe el cronograma..."
-                    className="h-12 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-pdv-teal focus-visible:ring-offset-0"
-                />
-                
-                <Button 
-                    type="submit" 
-                    className="h-12 w-12 shrink-0 rounded-xl text-white shadow-md hover:shadow-lg transition-all"
-                    style={gradientStyle}
-                    disabled={!input.trim() && files.length === 0}
-                >
-                    <Send className="w-5 h-5" />
+                <Button variant="outline" onClick={() => window.location.href = '/events'} className="w-full">
+                    Ver en Eventos
                 </Button>
-            </form>
-        </div>
-      </div>
+            </div>
+        </Card>
+      )}
     </div>
   );
 }

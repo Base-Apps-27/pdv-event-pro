@@ -1,17 +1,29 @@
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Check, Edit2, ArrowRight, Settings, Music, Mic, Users } from "lucide-react";
+import { Plus, Trash2, Check, Edit2, ArrowRight, Settings, Music, Mic, Users, CalendarPlus, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function ScheduleReview({ data, onConfirm, onCancel }) {
+  const [importMode, setImportMode] = useState("new"); // "new" or "existing"
+  const [selectedEventId, setSelectedEventId] = useState("");
   const [eventData, setEventData] = useState(data.event || { name: "", date: "" });
+
+  // Fetch existing events for the dropdown
+  const { data: existingEvents } = useQuery({
+    queryKey: ['events', 'upcoming'],
+    queryFn: () => base44.entities.Event.list('-start_date', 50),
+    enabled: importMode === "existing"
+  });
   const [sessionData, setSessionData] = useState(data.session || { name: "", description: "" });
   const [preSessionData, setPreSessionData] = useState(data.pre_session || { registration_desk_open_time: "" });
   const [segments, setSegments] = useState(data.segments || []);
@@ -54,6 +66,8 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
 
   const handleConfirm = () => {
     onConfirm({
+      mode: importMode,
+      existingEventId: selectedEventId,
       event: eventData,
       session: sessionData,
       pre_session: preSessionData,
@@ -86,19 +100,64 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
         </CardHeader>
         
         <CardContent className="p-6 space-y-6 max-h-[65vh] overflow-y-auto">
-          {/* Event Details */}
+          {/* Import Mode Selection */}
+          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <Label className="text-xs font-bold uppercase text-gray-500 mb-3 block">Modo de Importación</Label>
+            <RadioGroup defaultValue="new" value={importMode} onValueChange={setImportMode} className="flex gap-6">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="new" id="mode-new" />
+                <Label htmlFor="mode-new" className="flex items-center gap-2 cursor-pointer font-medium">
+                  <CalendarPlus className="w-4 h-4 text-pdv-teal" /> Crear Nuevo Evento
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="existing" id="mode-existing" />
+                <Label htmlFor="mode-existing" className="flex items-center gap-2 cursor-pointer font-medium">
+                  <Calendar className="w-4 h-4 text-blue-600" /> Agregar a Evento Existente
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Event Details (Conditional) */}
+          {importMode === "new" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white rounded-lg border border-gray-100 shadow-sm animate-in fade-in slide-in-from-top-2">
+              <h3 className="col-span-full text-xs font-bold uppercase text-pdv-teal tracking-wider mb-2">Datos del Nuevo Evento</h3>
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-500">Nombre del Evento</Label>
+                <Input value={eventData.name} onChange={(e) => setEventData({...eventData, name: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-500">Fecha (YYYY-MM-DD)</Label>
+                <Input value={eventData.date} onChange={(e) => setEventData({...eventData, date: e.target.value})} />
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100 shadow-sm animate-in fade-in slide-in-from-top-2">
+               <h3 className="text-xs font-bold uppercase text-blue-700 tracking-wider mb-2">Seleccionar Evento Existente</h3>
+               <div className="space-y-2">
+                 <Label className="text-xs text-gray-500">Evento</Label>
+                 <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Selecciona un evento..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {existingEvents?.map(evt => (
+                        <SelectItem key={evt.id} value={evt.id}>
+                          {evt.name} ({evt.year})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                 </Select>
+               </div>
+            </div>
+          )}
+
+          {/* Session Details (Always visible but context changes) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
-            <h3 className="col-span-full text-xs font-bold uppercase text-pdv-teal tracking-wider mb-2">Datos del Evento</h3>
+            <h3 className="col-span-full text-xs font-bold uppercase text-pdv-teal tracking-wider mb-2">Datos de la Sesión</h3>
             <div className="space-y-2">
-              <Label className="text-xs text-gray-500">Nombre del Evento</Label>
-              <Input value={eventData.name} onChange={(e) => setEventData({...eventData, name: e.target.value})} />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-gray-500">Fecha (YYYY-MM-DD)</Label>
-              <Input value={eventData.date} onChange={(e) => setEventData({...eventData, date: e.target.value})} />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-gray-500">Sesión</Label>
+              <Label className="text-xs text-gray-500">Nombre de Sesión</Label>
               <Input value={sessionData.name} onChange={(e) => setSessionData({...sessionData, name: e.target.value})} />
             </div>
             <div className="space-y-2">
