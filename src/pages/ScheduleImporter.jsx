@@ -57,89 +57,121 @@ export default function ScheduleImporter() {
       setProcessingStatus("Analizando imagen con IA...");
       
       const schemaPrompt = `
-You are the Schedule Import Specialist. Digitize church event schedules into structured JSON.
+You are the BASE44 INGESTION MODEL for church event schedule digitization.
 
-## DOCUMENT STRUCTURE
-These schedules have:
-1. **HEADER BAND**: Event name, session name (e.g. "SECCIÓN 4"), date, and SESSION-LEVEL team assignments (VIDEO, LUCES, SONIDO, COORDINADOR).
-2. **GRID ROWS**: Each row is a SEGMENT with time, content, duration, and notes columns.
+## YOUR JOB
+1. Visually read the PDF/image (layout, colors, labels, times)
+2. Understand the structure: Event → Session → Segments → SegmentActions
+3. Map everything into the Base44 schema
+4. Preserve ALL operational detail, especially timed instructions
 
-## EXTRACTION RULES
+## EVENT-LEVEL EXTRACTION
+From the header area (e.g. "PROGRAMA DETALLADO ÚNICA 2025 'SOY ÚNICA' – SÁBADO 15 DE MARZO"):
+- event.name: Full event name (e.g. "Única 2025 - Soy Única")
+- event.year: Extract year (e.g. 2025)
+- event.location: Venue if shown
+- event.date: Use format "YYYY-MM-DD"
 
-### SESSION-LEVEL DATA (from header)
-Extract these team assignments to the session object:
+## SESSION-LEVEL EXTRACTION
+A Session is defined by day label, section label, or continuous time band.
+
+### Session Core Fields
+- name: From "SECCIÓN X / SESSION X" and sub-labels
+- date: From header date (format "YYYY-MM-DD")
+
+### Session Team Assignments (from colored header bar)
+Map these labels:
 - VIDEO/EQUIPO TÉCNICO → tech_team
-- LUCES/LIGHTING → (include in tech_team or notes)
+- LUCES/LIGHTING → tech_team (combine)
 - SONIDO/AUDIO → sound_team
 - COORDINADOR A CARGO → coordinators
 - ADMIN → admin_team
 - UJIERES → ushers_team
+- TRADUCCIÓN → translation_team
+- FOTOGRAFÍA/MEDIA → photography_team
+- HOSPITALIDAD → hospitality_team
 
-### SEGMENTS (each grid row = one segment)
-**CRITICAL TIME FORMAT**: Always use 24-hour "HH:MM" format.
+## SEGMENT EXTRACTION
+
+### TIME FORMAT (CRITICAL)
+Always use 24-hour "HH:MM" format:
 - 3:18 PM → "15:18"
 - 7:00 PM → "19:00"
 - 9:30 PM → "21:30"
 
-**SEGMENT TYPES** (use exactly these values):
-- "MC" or "Bienvenida" - For MC/host introductions
-- "Plenaria" - For main messages/sermons/panels
-- "Alabanza" - For worship/song sets
-- "Artes" - For dance/drama presentations
-- "Cierre" - For closing segments
-- "Ofrenda" - For offering
-- "Anuncio" - For announcements
-- "Video" - For video playback
-- "Break" - For breaks
+### SEGMENT TYPES (use exactly these values)
+- "Alabanza" - Worship/song sets
+- "Bienvenida" / "MC" - MC/host introductions
+- "Plenaria" - Main messages/sermons/panels
+- "Ofrenda" - Offering
+- "Anuncio" - Announcements
+- "Break" - Breaks/meals (set major_break=true for meals)
+- "Artes" / "Especial" - Dance/drama/arts presentations
+- "Video" - Video playback
+- "Cierre" - Closing segments
+- "Breakout" - Parallel sessions/rooms
 
-### SEGMENT FIELD MAPPING
+### SEGMENT FIELDS BY TYPE
 
 **For ALL segments**:
-- time: "HH:MM" (24h format, e.g. "15:18")
-- duration_min: number (e.g. 60)
-- title: Main title of segment
-- type: One of the types above
+- time: "HH:MM" (24h)
+- duration_min: number
+- title: Main title
+- type: One of above types
 - presenter: Speaker/MC/Leader name
 - requires_translation: true/false
-- translator_name: "Name" if translated
-- projection_notes: Instructions for projection team
-- sound_notes: Instructions for sound team
-- ushers_notes: Instructions for ushers
+- translator_name: Name if translated
+- translation_mode: "InPerson" or "RemoteBooth"
+- projection_notes, sound_notes, ushers_notes, stage_decor_notes, other_notes
 
 **For type="Plenaria"**:
-- message_title: The sermon title in quotes (e.g. "A PESAR DE LO QUE CUESTE")
-- If it's a PANEL, list panelists in description_details
+- message_title: Sermon title
+- scripture_references: Bible references
+- description_details: For panels, list panelists here
 
 **For type="Alabanza"**:
-- number_of_songs: count of songs
-- song_1_title, song_2_title, etc.: Individual song names
-- song_1_lead, song_2_lead, etc.: Lead vocalist if shown
+- number_of_songs: count (1-6)
+- song_1_title through song_6_title
+- song_1_lead through song_6_lead
 
 **For type="Artes"**:
-- Include art_types: ["DANCE", "DRAMA", "VIDEO"] as applicable
-- dance_song_title: Song name used
-- dance_song_source: Artist/source
+- art_types: array of ["DANCE", "DRAMA", "VIDEO", "OTHER"]
+- drama_handheld_mics, drama_headset_mics
+- drama_start_cue, drama_end_cue
+- dance_song_title, dance_song_source
 
-### SPECIAL INSTRUCTIONS
-1. **MC intro segments**: When you see "MC presenta a..." before a Plenaria, that's a SEPARATE short segment (2-5 min).
-2. **Worship cues**: "A&A sube 15 mins antes" = worship team starts 15 min before segment ends. Put in sound_notes.
-3. **Usher cues**: "remover púlpito", "colocar sillas" = Put in ushers_notes.
-4. **Stage call times**: The blue "Hora en escenario" column shows when team should arrive. Can be stored as stage_call_time or derived.
+**For type="Video"**:
+- has_video: true
+- video_name, video_location, video_length_sec
 
-## SEGMENT_ACTIONS (CRITICAL FOR PREP TASKS)
-Extract timed operational tasks into segment_actions array. These are instructions like:
-- "A&A sube 15 mins antes de concluir" → Alabanza team prep action
-- "MC entra 2 mins antes" → MC prep action  
-- "Ujieres: colocar púlpito" → Ushers prep action
+## SEGMENT_ACTIONS (CRITICAL)
 
-Each action needs:
-- label: Short description
-- department: "Admin" | "MC" | "Sound" | "Projection" | "Hospitality" | "Ujieres" | "Alabanza" | "Stage & Decor" | "Translation" | "Other"
-- timing: "before_start" | "after_start" | "before_end" | "absolute"
-- offset_min: Minutes from timing reference
-- is_prep: true if prep task (before segment), false if in-segment cue
-- is_required: true if mandatory
-- notes: Additional details
+Extract ALL timed operational instructions into segment_actions array. These include:
+- "A&A sube 15 mins antes de concluir"
+- "MC entra 2 mins antes"
+- "Ujieres: remover púlpito y mesita"
+- "Verificar video antes de iniciar"
+
+### Action Schema
+{
+  "label": "Short description (e.g. 'A&A sube')",
+  "department": "Admin" | "MC" | "Sound" | "Projection" | "Hospitality" | "Ujieres" | "Kids" | "Coordinador" | "Stage & Decor" | "Alabanza" | "Translation" | "Other",
+  "timing": "before_start" | "after_start" | "before_end" | "absolute",
+  "offset_min": number (minutes from timing reference),
+  "notes": "Additional details"
+}
+
+### TIMING CLASSIFICATION (CRITICAL)
+- timing="before_start" → This is a PREP action (shown in PREP section)
+- All other timings (after_start, before_end, absolute) → DURANTE action (shown during segment)
+
+### Mapping Text to Timing
+- "X mins antes de comenzar" → timing: "before_start", offset_min: X
+- "X mins antes de concluir/terminar" → timing: "before_end", offset_min: X
+- "al inicio/al comenzar" → timing: "after_start", offset_min: 0
+- "X mins después de iniciar" → timing: "after_start", offset_min: X
+- "al terminar/al finalizar" → timing: "before_end", offset_min: 0
+- Explicit clock time → timing: "absolute"
 
 ## OUTPUT FORMAT
 Return ONLY valid JSON (no markdown):
@@ -157,21 +189,27 @@ Return ONLY valid JSON (no markdown):
     "sound_team": "Jerry Xelo",
     "coordinators": "Rubén Fabeiro",
     "admin_team": "",
-    "ushers_team": ""
+    "ushers_team": "",
+    "translation_team": "",
+    "hospitality_team": "",
+    "photography_team": ""
   },
   "pre_session": {
-    "registration_desk_open_time": "14:30"
+    "registration_desk_open_time": "14:30",
+    "general_notes": ""
   },
   "segments": [
     {
       "time": "15:18",
       "duration_min": 2,
-      "title": "MC: Bienvenida & presenta P. Kenia Andújar",
+      "title": "MC: Bienvenida",
       "type": "MC",
       "presenter": "Denise Honrado",
       "requires_translation": true,
       "translator_name": "Mariel Guzmán",
-      "projection_notes": "Anuncios / Announcements",
+      "projection_notes": "Anuncios slide",
+      "sound_notes": "",
+      "ushers_notes": "",
       "segment_actions": []
     },
     {
@@ -183,33 +221,36 @@ Return ONLY valid JSON (no markdown):
       "message_title": "A PESAR DE LO QUE CUESTE",
       "requires_translation": true,
       "translator_name": "Mariel Guzmán",
-      "projection_notes": "Mostrar imágenes del mensaje",
       "segment_actions": [
+        {
+          "label": "Verificar slides del mensaje",
+          "department": "Projection",
+          "timing": "before_start",
+          "offset_min": 10,
+          "notes": "Confirmar orden de slides con predicador"
+        },
         {
           "label": "A&A sube",
           "department": "Alabanza",
           "timing": "before_end",
           "offset_min": 15,
-          "is_prep": true,
-          "is_required": true,
-          "notes": "Equipo de adoración en posición para ministración"
+          "notes": "Equipo de adoración en posición"
         },
         {
           "label": "Remover púlpito",
           "department": "Ujieres",
           "timing": "before_end",
           "offset_min": 5,
-          "is_prep": true,
-          "is_required": true,
-          "notes": "Remover púlpito con mesita; agua y kleenex"
+          "notes": "Remover púlpito con mesita"
         }
       ]
     },
     {
       "time": "18:35",
       "duration_min": 25,
-      "title": "Ministración / Worship",
+      "title": "Ministración",
       "type": "Alabanza",
+      "presenter": "Sofía Ramos",
       "number_of_songs": 4,
       "song_1_title": "Who Else",
       "song_2_title": "Give Me Jesus",
