@@ -19,6 +19,7 @@ export default function ScheduleImporter() {
   const [reviewData, setReviewData] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const lastProcessedMessageIdRef = useRef(null);
   const queryClient = useQueryClient();
 
   // Initialize or fetch conversation
@@ -60,19 +61,25 @@ export default function ScheduleImporter() {
       // Check for review proposal in the last assistant message
       if (data.status === 'idle' && newMessages.length > 0) {
         const lastMsg = newMessages[newMessages.length - 1];
-        if (lastMsg.role === 'assistant' && lastMsg.content) {
-          // Extract JSON block if present
-          const match = lastMsg.content.match(/```json\s*([\s\S]*?)\s*```/);
-          if (match && match[1]) {
+        
+        // Only process if it's a new message we haven't handled yet
+        // We use a ref to track the last message ID (or content hash if ID missing) to prevent loops
+        const msgId = lastMsg.id || lastMsg.created_at || lastMsg.content?.substring(0, 20);
+        
+        if (lastMsg.role === 'assistant' && lastMsg.content && lastMsg.content !== lastProcessedMessageIdRef.current) {
+          // Relaxed regex to capture JSON with or without the 'json' tag, and even without backticks if it looks like a raw JSON object
+          const jsonMatch = lastMsg.content.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || lastMsg.content.match(/^\s*(\{[\s\S]*\})\s*$/);
+          
+          if (jsonMatch && jsonMatch[1]) {
             try {
-              const parsed = JSON.parse(match[1]);
+              const parsed = JSON.parse(jsonMatch[1]);
               if (parsed.type === 'schedule_proposal') {
+                lastProcessedMessageIdRef.current = lastMsg.content; // Mark as processed
                 setReviewData(parsed);
-                // Scroll to review form
-                setTimeout(scrollToBottom, 100);
+                setTimeout(scrollToBottom, 200);
               }
             } catch (e) {
-              console.error("Failed to parse proposal JSON", e);
+              // Silent fail if it's not valid JSON
             }
           }
         }
