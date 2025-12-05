@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SessionManager from "../components/event/SessionManager";
 import EventInfo from "../components/event/EventInfo";
 import EventCalendar from "../components/event/EventCalendar";
+import EventAIHelper from "../components/event/EventAIHelper";
 
 export default function EventDetail() {
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const eventId = urlParams.get('id');
   const queryClient = useQueryClient();
+  const [showAIHelper, setShowAIHelper] = useState(false);
 
   const { data: event } = useQuery({
     queryKey: ['event', eventId],
@@ -104,8 +106,24 @@ export default function EventDetail() {
             </div>
             {event.theme && <p className="text-xl text-pdv-teal font-medium italic">"{event.theme}"</p>}
           </div>
+          <div className="ml-auto">
+            <Button 
+              onClick={() => setShowAIHelper(true)}
+              variant="outline"
+              className="bg-gradient-to-r from-pdv-teal/10 to-pdv-green/10 border-pdv-teal/30 hover:border-pdv-teal text-pdv-teal"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Asistente IA
+            </Button>
+          </div>
         </div>
       </div>
+
+      <EventAIHelper 
+        eventId={eventId} 
+        isOpen={showAIHelper} 
+        onClose={() => setShowAIHelper(false)} 
+      />
 
       <Tabs defaultValue="sessions" className="w-full">
         <TabsList className="grid w-full grid-cols-3 max-w-2xl">
