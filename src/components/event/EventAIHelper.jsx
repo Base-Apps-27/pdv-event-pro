@@ -14,6 +14,7 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
   const [userInput, setUserInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [proposedActions, setProposedActions] = useState(null);
+  const [queryResult, setQueryResult] = useState(null);
   const [executionStatus, setExecutionStatus] = useState(null); // null, 'executing', 'success', 'error'
 
   const { data: event } = useQuery({
@@ -44,29 +45,50 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
     
     setIsProcessing(true);
     setProposedActions(null);
+    setQueryResult(null);
 
     try {
       const contextSummary = {
-        event: event ? { id: event.id, name: event.name, year: event.year } : null,
+        event: event ? { 
+          id: event.id, 
+          name: event.name, 
+          year: event.year, 
+          location: event.location,
+          start_date: event.start_date,
+          end_date: event.end_date,
+          theme: event.theme
+        } : null,
         sessions: sessions.map(s => ({ 
           id: s.id, 
           name: s.name, 
           date: s.date,
+          planned_start_time: s.planned_start_time,
+          planned_end_time: s.planned_end_time,
+          location: s.location,
+          presenter: s.presenter,
           is_translated_session: s.is_translated_session,
-          translation_team: s.translation_team
+          translation_team: s.translation_team,
+          sound_team: s.sound_team,
+          tech_team: s.tech_team,
+          coordinators: s.coordinators,
+          worship_leader: s.worship_leader
         })),
-        segments_count: eventSegments.length,
-        segments_sample: eventSegments.slice(0, 5).map(seg => ({
+        segments: eventSegments.map(seg => ({
           id: seg.id,
           title: seg.title,
           session_id: seg.session_id,
+          segment_type: seg.segment_type,
+          start_time: seg.start_time,
+          duration_min: seg.duration_min,
+          presenter: seg.presenter,
           requires_translation: seg.requires_translation,
-          translation_mode: seg.translation_mode
+          translation_mode: seg.translation_mode,
+          translator_name: seg.translator_name
         }))
       };
 
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an AI assistant helping manage church event data. Analyze the user's request and propose specific database actions.
+        prompt: `You are an AI assistant helping manage church event data. You can either QUERY information or PROPOSE actions.
 
 ## CURRENT EVENT CONTEXT
 ${JSON.stringify(contextSummary, null, 2)}
@@ -75,6 +97,12 @@ ${JSON.stringify(contextSummary, null, 2)}
 "${userInput}"
 
 ## YOUR TASK
+First, determine if this is a QUERY (asking for information) or an ACTION (requesting changes).
+
+### For QUERIES (questions about data):
+Return information in a structured, readable format.
+
+### For ACTIONS (requests to change data):
 1. Understand what the user wants to change
 2. Propose specific actions to accomplish it
 3. Be precise about which records will be affected
@@ -86,7 +114,18 @@ ${JSON.stringify(contextSummary, null, 2)}
 
 ## RESPONSE FORMAT (JSON only)
 {
+  "request_type": "query" | "action",
   "understood_request": "Brief summary of what you understood",
+  
+  // For queries:
+  "query_result": {
+    "summary": "Brief answer",
+    "details": [
+      { "title": "Item name", "info": "Key details" }
+    ]
+  },
+  
+  // For actions:
   "actions": [
     {
       "type": "update_sessions" | "update_segments" | "update_event",
@@ -111,7 +150,24 @@ For translation mode changes:
         response_json_schema: {
           type: "object",
           properties: {
+            request_type: { type: "string" },
             understood_request: { type: "string" },
+            query_result: {
+              type: "object",
+              properties: {
+                summary: { type: "string" },
+                details: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      info: { type: "string" }
+                    }
+                  }
+                }
+              }
+            },
             actions: {
               type: "array",
               items: {
@@ -130,6 +186,12 @@ For translation mode changes:
           }
         }
       });
+
+      if (response.request_type === 'query') {
+        setQueryResult(response);
+      } else {
+        setProposedActions(response);
+      }
 
       setProposedActions(response);
     } catch (error) {
@@ -185,6 +247,7 @@ For translation mode changes:
   const reset = () => {
     setUserInput("");
     setProposedActions(null);
+    setQueryResult(null);
     setExecutionStatus(null);
   };
 
@@ -210,17 +273,24 @@ For translation mode changes:
           )}
 
           {/* Input Area */}
-          {!proposedActions && executionStatus !== 'success' && (
+          {!proposedActions && !queryResult && executionStatus !== 'success' && (
             <div className="space-y-3">
               <Textarea
-                placeholder="Describe lo que necesitas cambiar. Ejemplos:
+                placeholder="Pregunta o solicita cambios. Ejemplos:
+
+CONSULTAS:
+• ¿Qué sesiones tienen traducción?
+• ¿Quién presenta los segmentos de Plenaria?
+• Muéstrame los horarios de la Sesión 3
+• ¿Qué equipo de sonido está asignado?
+
+ACCIONES:
 • Cambiar todas las sesiones a traducción en persona
 • Actualizar el traductor de todos los segmentos a 'Juan Pérez'
-• Marcar todos los segmentos de Plenaria como requieren traducción
-• Cambiar el equipo de sonido de todas las sesiones"
+• Marcar todos los segmentos de Plenaria como requieren traducción"
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
-                rows={4}
+                rows={5}
                 className="resize-none"
               />
               <Button 
@@ -231,14 +301,50 @@ For translation mode changes:
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Analizando...
+                    Procesando...
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4 mr-2" />
-                    Analizar Solicitud
+                    Enviar
                   </>
                 )}
+              </Button>
+            </div>
+          )}
+
+          {/* Query Results */}
+          {queryResult && executionStatus !== 'success' && (
+            <div className="space-y-4">
+              <Card className="p-4 bg-blue-50 border-blue-200">
+                <h4 className="font-semibold text-blue-900 mb-2">Respuesta:</h4>
+                <p className="text-blue-800">{queryResult.understood_request}</p>
+              </Card>
+
+              {queryResult.query_result?.summary && (
+                <Card className="p-4 bg-white border-gray-200">
+                  <p className="text-gray-800 font-medium mb-3">{queryResult.query_result.summary}</p>
+                  
+                  {queryResult.query_result.details?.length > 0 && (
+                    <div className="space-y-2 mt-3">
+                      {queryResult.query_result.details.map((detail, idx) => (
+                        <div key={idx} className="border-l-2 border-pdv-teal pl-3 py-1">
+                          <div className="font-semibold text-gray-900">{detail.title}</div>
+                          <div className="text-sm text-gray-700">{detail.info}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              )}
+
+              <Button 
+                variant="outline" 
+                onClick={reset}
+                className="w-full"
+              >
+                <Undo2 className="w-4 h-4 mr-2" />
+                Nueva Consulta
               </Button>
             </div>
           )}
