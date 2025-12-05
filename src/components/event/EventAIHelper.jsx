@@ -192,8 +192,6 @@ For translation mode changes:
       } else {
         setProposedActions(response);
       }
-
-      setProposedActions(response);
     } catch (error) {
       console.error("AI analysis error:", error);
       toast.error("Error al analizar la solicitud");
