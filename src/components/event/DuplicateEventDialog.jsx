@@ -239,7 +239,7 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
           <Button 
             onClick={handleDuplicate} 
             disabled={!newName || !newYear || isDuplicating}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             {isDuplicating ? (isTemplateMode ? "Guardando..." : "Creando...") : (isTemplateMode ? "Guardar Plantilla" : "Crear Evento")}
           </Button>

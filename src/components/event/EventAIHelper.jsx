@@ -354,21 +354,21 @@ ACCIONES:
                 className="resize-none"
               />
               <Button 
-                onClick={analyzeRequest} 
-                disabled={!userInput.trim() || isProcessing}
-                className="w-full bg-pdv-teal hover:bg-pdv-teal/90"
+               onClick={analyzeRequest} 
+               disabled={!userInput.trim() || isProcessing}
+               className="w-full bg-pdv-teal hover:bg-pdv-teal/90 text-white"
               >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 mr-2" />
-                    Enviar
-                  </>
-                )}
+               {isProcessing ? (
+                 <>
+                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                   Procesando...
+                 </>
+               ) : (
+                 <>
+                   <Send className="w-4 h-4 mr-2" />
+                   Enviar
+                 </>
+               )}
               </Button>
             </div>
           )}
@@ -476,7 +476,7 @@ ACCIONES:
                 </Button>
                 <Button 
                   onClick={executeActions}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                   disabled={executionStatus === 'executing'}
                 >
                   {executionStatus === 'executing' ? (

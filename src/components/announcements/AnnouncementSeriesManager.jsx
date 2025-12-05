@@ -138,7 +138,7 @@ export default function AnnouncementSeriesManager({ isOpen, onClose, initialSeri
             </div>
             <div className="space-y-2">
                 <div 
-                    className={`p-2 rounded cursor-pointer text-sm ${selectedSeriesId === "new" ? "bg-pdv-teal text-white font-bold" : "hover:bg-gray-100"}`}
+                    className={`p-2 rounded cursor-pointer text-sm ${selectedSeriesId === "new" ? "bg-pdv-teal text-white font-bold" : "hover:bg-gray-100 text-gray-900"}`}
                     onClick={() => setSelectedSeriesId("new")}
                 >
                     + Nueva Serie
@@ -146,7 +146,7 @@ export default function AnnouncementSeriesManager({ isOpen, onClose, initialSeri
                 {seriesList.map(series => (
                     <div 
                         key={series.id}
-                        className={`p-2 rounded cursor-pointer text-sm ${selectedSeriesId === series.id ? "bg-slate-200 font-bold" : "hover:bg-gray-100"}`}
+                        className={`p-2 rounded cursor-pointer text-sm ${selectedSeriesId === series.id ? "bg-slate-200 font-bold text-gray-900" : "hover:bg-gray-100 text-gray-900"}`}
                         onClick={() => setSelectedSeriesId(series.id)}
                     >
                         {series.name}
@@ -304,7 +304,7 @@ export default function AnnouncementSeriesManager({ isOpen, onClose, initialSeri
 
         <DialogFooter className="border-t pt-4 mt-4">
             <Button variant="outline" onClick={onClose}>Cancelar</Button>
-            <Button type="submit" form="series-form" disabled={createMutation.isLoading || updateMutation.isLoading}>
+            <Button type="submit" form="series-form" disabled={createMutation.isLoading || updateMutation.isLoading} className="bg-pdv-teal hover:bg-pdv-teal/90 text-white">
                 {(createMutation.isLoading || updateMutation.isLoading) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Guardar Serie
             </Button>
