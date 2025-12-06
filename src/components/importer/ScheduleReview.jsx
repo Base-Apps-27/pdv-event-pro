@@ -281,11 +281,15 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
           </div>
         </CardContent>
 
-        <CardFooter className="bg-slate-50 p-4 flex justify-end gap-3 border-t border-slate-100">
-          <Button variant="outline" onClick={onCancel}>
+        <CardFooter className="bg-slate-50 p-4 flex justify-end gap-3 border-t border-slate-100 sticky bottom-0 z-10 shadow-lg">
+          <Button variant="outline" onClick={onCancel} className="text-gray-900">
             Cancelar
           </Button>
-          <Button onClick={handleConfirm} className="bg-pdv-teal hover:bg-pdv-teal/90 text-white shadow-sm gap-2">
+          <Button 
+            onClick={handleConfirm} 
+            className="bg-pdv-teal hover:bg-pdv-teal/90 text-white shadow-md gap-2"
+            disabled={importMode === "existing" && !selectedEventId}
+          >
             <Check className="w-4 h-4" />
             Confirmar y Crear
             <ArrowRight className="w-4 h-4" />
