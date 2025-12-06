@@ -80,25 +80,39 @@ A Session is defined by day label, section label, or continuous time band.
 - name: From "SECCIÓN X / SESSION X" and sub-labels
 - date: From header date (format "YYYY-MM-DD")
 
-### Session Team Assignments (CRITICAL - from colored header rows)
-The first 6-8 rows typically contain team assignments in format "LABEL: Name1 / Name2" or "LABEL: Name1 & Name2"
+### Session Team Assignments (CRITICAL - LOOK AT THE TOP COLORED/HIGHLIGHTED ROWS)
 
-Extract ALL team member names from these rows:
-- EQUIPO TÉCNICO / VIDEO → tech_team (include all names listed)
-- LUCES / LIGHTING → tech_team (append to tech_team if already has video team)
-- SONIDO / AUDIO → sound_team (extract names, ignore general descriptions like "música en el santuario")
-- COORDINADOR / COORDINADORES / COORDINADOR A CARGO → coordinators
-- ADMIN / ADMINISTRACIÓN → admin_team
-- UJIER / UJIERES / UJIER A CARGO → ushers_team
-- TRADUCCIÓN / TRANSLATION → translation_team
-- FOTOGRAFÍA / MEDIA / PHOTOGRAPHY → photography_team
-- HOSPITALIDAD / HOSPITALITY → hospitality_team
+**WHERE TO LOOK:** The first 6-8 rows after the event title are typically colored (orange, blue, green backgrounds) and contain team assignments.
 
-**Name Extraction Rules:**
-- Separate multiple names with commas: "Rick Pineda, Danny Sena"
-- Ignore "?" or empty values
-- Extract full names, not just labels
-- Combine roles with "/" or "&" into comma-separated lists
+**ROW FORMAT PATTERN:** "LABEL IN CAPS: Person Name(s) / Other Names"
+
+**EXTRACTION STEPS:**
+1. Scan rows immediately below the main event title
+2. Look for BOLD/COLORED text before colons (:)
+3. Extract everything after the colon as the team member(s)
+
+**LABEL MAPPINGS - Match these patterns:**
+- "EQUIPO TÉCNICO:" or "VIDEO:" → tech_team
+- "LUCES:" or "LIGHTING:" → tech_team (add to existing tech_team with comma)
+- "ADMIN:" or "ADMINISTRACIÓN:" → admin_team
+- "COORDINADORES:" or "COORDINADOR A CARGO:" → coordinators
+- "UJIER A CARGO:" or "UJIERES:" → ushers_team
+- "SONIDO:" → sound_team (ONLY extract names, NOT descriptions like "música en el...")
+- "FOTOGRAFÍA:" or "MEDIA:" → photography_team
+- "TRADUCCIÓN:" or "TRANSLATION:" → translation_team
+- "HOSPITALIDAD:" or "HOSPITALITY:" → hospitality_team
+
+**PARSING RULES:**
+- "/" means "or/and" - convert to comma: "Rick Pineda / Danny Sena" → "Rick Pineda, Danny Sena"
+- "&" also means multiple people - convert to comma: "Name1 & Name2" → "Name1, Name2"
+- "?" means unassigned - leave that field empty
+- Extract ONLY proper names, skip descriptive text like "música en el santuario a partir de las 4:30pm"
+
+**EXAMPLE FROM IMAGE:**
+Row: "EQUIPO TÉCNICO: RICK PINEDA / DANNY SENA" → tech_team: "Rick Pineda, Danny Sena"
+Row: "ADMIN: ISABEL GÓMEZ/ASSIEL SANTOS" → admin_team: "Isabel Gómez, Assiel Santos"
+Row: "COORDINADORES: RITA R/ RUBEN R." → coordinators: "Rita R, Ruben R."
+Row: "FOTOGRAFÍA: ?" → photography_team: "" (leave empty)
 
 ## SEGMENT EXTRACTION
 
