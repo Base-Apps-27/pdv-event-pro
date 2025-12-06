@@ -193,61 +193,61 @@ export default function Reports() {
 
               <div className="grid grid-cols-4 gap-x-2 gap-y-0.5 mt-1 text-[10px]">
                 {session.presenter && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-blue-700 font-bold">PRES:</span>
                     <span className="text-gray-800 ml-1">{session.presenter}</span>
                   </span>
                 )}
                 {session.worship_leader && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-green-600 font-bold">ALAB:</span>
                     <span className="text-gray-800 ml-1">{session.worship_leader}</span>
                   </span>
                 )}
                 {session.coordinators && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-indigo-600 font-bold">COORD:</span>
                     <span className="text-gray-800 ml-1">{session.coordinators}</span>
                   </span>
                 )}
                 {session.admin_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-orange-600 font-bold">ADMIN:</span>
                     <span className="text-gray-800 ml-1">{session.admin_team}</span>
                   </span>
                 )}
                 {session.sound_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-red-600 font-bold">SONIDO:</span>
                     <span className="text-gray-800 ml-1">{session.sound_team}</span>
                   </span>
                 )}
                 {session.tech_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-purple-600 font-bold">TÉC:</span>
                     <span className="text-gray-800 ml-1">{session.tech_team}</span>
                   </span>
                 )}
                 {session.ushers_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-blue-600 font-bold">UJIER:</span>
                     <span className="text-gray-800 ml-1">{session.ushers_team}</span>
                   </span>
                 )}
                 {session.translation_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-purple-700 font-bold">TRAD:</span>
                     <span className="text-gray-800 ml-1">{session.translation_team}</span>
                   </span>
                 )}
                 {session.hospitality_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-pink-600 font-bold">HOSP:</span>
                     <span className="text-gray-800 ml-1">{session.hospitality_team}</span>
                   </span>
                 )}
                 {session.photography_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200 truncate">
+                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
                     <span className="text-teal-600 font-bold">FOTO:</span>
                     <span className="text-gray-800 ml-1">{session.photography_team}</span>
                   </span>
