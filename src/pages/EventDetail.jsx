@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -106,7 +106,15 @@ export default function EventDetail() {
             </div>
             {event.theme && <p className="text-xl text-pdv-teal font-medium italic">"{event.theme}"</p>}
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto flex gap-2">
+            <Button 
+              onClick={() => navigate(createPageUrl("Reports") + `?eventId=${eventId}`)}
+              variant="outline"
+              className="border-gray-300 hover:border-gray-400 text-gray-700"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Reportes
+            </Button>
             <Button 
               onClick={() => setShowAIHelper(true)}
               variant="outline"

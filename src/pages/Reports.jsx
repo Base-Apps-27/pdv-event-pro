@@ -21,7 +21,9 @@ import { formatTimeToEST } from "../components/utils/timeFormat";
 
 export default function Reports() {
   const navigate = useNavigate();
-  const [selectedEventId, setSelectedEventId] = useState("");
+  const urlParams = new URLSearchParams(window.location.search);
+  const eventIdFromUrl = urlParams.get('eventId');
+  const [selectedEventId, setSelectedEventId] = useState(eventIdFromUrl || "");
   const [activeReport, setActiveReport] = useState("detailed");
   const [copySuccess, setCopySuccess] = useState(false);
 
