@@ -530,7 +530,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
             )}
             <DialogFooter>
                 <Button variant="outline" onClick={() => setEditingSegmentIdx(null)}>Cancelar</Button>
-                <Button onClick={saveEditDialog}>Guardar Cambios</Button>
+                <Button onClick={saveEditDialog} className="bg-pdv-teal hover:bg-pdv-teal/90 text-white">Guardar Cambios</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
