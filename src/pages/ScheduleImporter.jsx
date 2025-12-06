@@ -106,25 +106,7 @@ Always use 24-hour "HH:MM" format:
 - Use segment_type: "Breakout"
 - Parse each sub-topic into the breakout_rooms array
 
-Example visual pattern:
-```
-10:00 AM  | Topic A - Speaker 1
-          | Topic B - Speaker 2
-          | Topic C - Speaker 3
-```
-Maps to:
-```json
-{
-  "type": "Breakout",
-  "time": "10:00",
-  "title": "Breakout Sessions",
-  "breakout_rooms": [
-    {"topic": "Topic A", "speakers": "Speaker 1"},
-    {"topic": "Topic B", "speakers": "Speaker 2"},
-    {"topic": "Topic C", "speakers": "Speaker 3"}
-  ]
-}
-```
+Example: If you see multiple topics under one time slot (like Topic A with Speaker 1, Topic B with Speaker 2, Topic C with Speaker 3 all at 10:00 AM), create a Breakout segment with breakout_rooms array containing each topic and speaker pair.
 
 ### SEGMENT TYPES (use exactly these values)
 - "Alabanza" - Worship/song sets
