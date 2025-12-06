@@ -80,17 +80,25 @@ A Session is defined by day label, section label, or continuous time band.
 - name: From "SECCIÓN X / SESSION X" and sub-labels
 - date: From header date (format "YYYY-MM-DD")
 
-### Session Team Assignments (from colored header bar or rows)
-Map these labels:
-- VIDEO/EQUIPO TÉCNICO → tech_team
-- LUCES/LIGHTING → tech_team (combine)
-- SONIDO/AUDIO → sound_team
-- COORDINADOR A CARGO → coordinators
-- ADMIN → admin_team
-- UJIERES → ushers_team
-- TRADUCCIÓN → translation_team
-- FOTOGRAFÍA/MEDIA → photography_team
-- HOSPITALIDAD → hospitality_team
+### Session Team Assignments (CRITICAL - from colored header rows)
+The first 6-8 rows typically contain team assignments in format "LABEL: Name1 / Name2" or "LABEL: Name1 & Name2"
+
+Extract ALL team member names from these rows:
+- EQUIPO TÉCNICO / VIDEO → tech_team (include all names listed)
+- LUCES / LIGHTING → tech_team (append to tech_team if already has video team)
+- SONIDO / AUDIO → sound_team (extract names, ignore general descriptions like "música en el santuario")
+- COORDINADOR / COORDINADORES / COORDINADOR A CARGO → coordinators
+- ADMIN / ADMINISTRACIÓN → admin_team
+- UJIER / UJIERES / UJIER A CARGO → ushers_team
+- TRADUCCIÓN / TRANSLATION → translation_team
+- FOTOGRAFÍA / MEDIA / PHOTOGRAPHY → photography_team
+- HOSPITALIDAD / HOSPITALITY → hospitality_team
+
+**Name Extraction Rules:**
+- Separate multiple names with commas: "Rick Pineda, Danny Sena"
+- Ignore "?" or empty values
+- Extract full names, not just labels
+- Combine roles with "/" or "&" into comma-separated lists
 
 ## SEGMENT EXTRACTION
 
