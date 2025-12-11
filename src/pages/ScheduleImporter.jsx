@@ -57,7 +57,14 @@ export default function ScheduleImporter() {
       setProcessingStatus("Analizando imagen con IA...");
       
       const schemaPrompt = `
-You are the BASE44 INGESTION MODEL for church event schedule digitization.
+You are an AI specialized in extracting church event schedule data from images and PDFs.
+
+CRITICAL INSTRUCTIONS:
+1. CAREFULLY EXAMINE the uploaded image/PDF - read ALL visible text
+2. If you cannot see the image clearly or it's blank, say so in the output
+3. Extract EVERYTHING you can see - event names, dates, times, people, segments
+4. DO NOT return empty objects - if you see data, extract it
+5. Be thorough and precise
 
 ## YOUR JOB
 1. Visually read the PDF/image (layout, colors, labels, times, table structure)
@@ -233,7 +240,12 @@ Extract ONLY timed operational instructions into segment_actions array.
 - Explicit clock time → timing: "absolute", is_prep: depends on context
 
 ## OUTPUT FORMAT
-Return ONLY valid JSON (no markdown):
+Return ONLY valid JSON (no markdown, no explanations).
+
+IMPORTANT: If you cannot extract data from a field, OMIT that field entirely rather than including it as empty.
+Only include fields where you successfully extracted information.
+
+Example structure (include only fields with actual data):
 
 {
   "type": "schedule_proposal",
@@ -328,9 +340,35 @@ Return ONLY valid JSON (no markdown):
             "type": "object",
             "properties": {
                 "type": { "type": "string" },
-                "event": { "type": "object" },
-                "session": { "type": "object" },
-                "pre_session": { "type": "object" },
+                "event": { 
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string" },
+                        "date": { "type": "string" },
+                        "location": { "type": "string" }
+                    }
+                },
+                "session": { 
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string" },
+                        "tech_team": { "type": "string" },
+                        "sound_team": { "type": "string" },
+                        "coordinators": { "type": "string" },
+                        "admin_team": { "type": "string" },
+                        "ushers_team": { "type": "string" },
+                        "translation_team": { "type": "string" },
+                        "hospitality_team": { "type": "string" },
+                        "photography_team": { "type": "string" }
+                    }
+                },
+                "pre_session": { 
+                    "type": "object",
+                    "properties": {
+                        "registration_desk_open_time": { "type": "string" },
+                        "general_notes": { "type": "string" }
+                    }
+                },
                 "segments": { 
                     "type": "array",
                     "items": {
@@ -341,6 +379,13 @@ Return ONLY valid JSON (no markdown):
                             "title": { "type": "string" },
                             "type": { "type": "string" },
                             "presenter": { "type": "string" },
+                            "requires_translation": { "type": "boolean" },
+                            "translator_name": { "type": "string" },
+                            "projection_notes": { "type": "string" },
+                            "sound_notes": { "type": "string" },
+                            "ushers_notes": { "type": "string" },
+                            "message_title": { "type": "string" },
+                            "number_of_songs": { "type": "number" },
                             "segment_actions": {
                                 "type": "array",
                                 "items": {
@@ -359,8 +404,7 @@ Return ONLY valid JSON (no markdown):
                         }
                     }
                 }
-            },
-            "required": ["type", "event", "session", "segments"]
+            }
         }
       });
 
@@ -382,14 +426,29 @@ Return ONLY valid JSON (no markdown):
          parsedData = llmResponse;
       }
 
-      if (!parsedData || parsedData.type !== 'schedule_proposal') {
-         // Fallback: try to construct proposal from partial data
-         if (parsedData && (parsedData.event || parsedData.segments)) {
-            parsedData = { type: 'schedule_proposal', ...parsedData };
-         } else {
-            throw new Error("La IA no devolvió datos válidos.");
-         }
+      // Validate we got some data
+      if (!parsedData) {
+         throw new Error("La IA no devolvió ningún dato. Por favor, intenta con una imagen más clara.");
       }
+
+      // Check if AI could read the image
+      const hasEventData = parsedData.event && Object.keys(parsedData.event).length > 0;
+      const hasSegments = parsedData.segments && parsedData.segments.length > 0;
+      
+      if (!hasEventData && !hasSegments) {
+         throw new Error("No se pudo extraer información de la imagen. Verifica que:\n• La imagen sea clara y legible\n• El texto sea visible\n• El archivo no esté corrupto");
+      }
+
+      // Ensure type is set
+      if (!parsedData.type) {
+         parsedData.type = 'schedule_proposal';
+      }
+
+      // Initialize empty objects if needed
+      parsedData.event = parsedData.event || {};
+      parsedData.session = parsedData.session || {};
+      parsedData.pre_session = parsedData.pre_session || {};
+      parsedData.segments = parsedData.segments || [];
 
       setReviewData(parsedData);
       setStep("review");
