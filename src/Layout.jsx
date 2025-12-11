@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode } from "lucide-react";
+import { useLanguage } from "@/utils/i18n";
+import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Layout({ children }) {
+  const { language, setLanguage, t } = useLanguage();
   // Hardcoded brand colors for reliable gradient rendering
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', // Brand Teal -> Brand Green -> Brand Lime
@@ -36,7 +38,7 @@ export default function Layout({ children }) {
         </div>
 
         <nav className="flex-1 px-4 space-y-1">
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 mt-2 pl-3">Panel Principal</div>
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 mt-2 pl-3">{t('section.main')}</div>
           <Link
             to={createPageUrl("Dashboard")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -47,13 +49,13 @@ export default function Layout({ children }) {
             style={isActive(createPageUrl("Dashboard")) ? gradientStyle : {}}
           >
             <LayoutDashboard className="w-5 h-5" />
-            Inicio
+            {t('nav.dashboard')}
           </Link>
 
           {/* EVENTS PILLAR */}
           <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3 flex items-center gap-2">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-            <span>Eventos Especiales</span>
+            <span>{t('section.events')}</span>
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
           </div>
           <Link
@@ -67,7 +69,7 @@ export default function Layout({ children }) {
             style={isActive(createPageUrl("Events")) || isActive(createPageUrl("EventDetail")) ? gradientStyle : {}}
           >
             <Calendar className="w-5 h-5" />
-            Eventos
+            {t('nav.events')}
           </Link>
           <Link
             to={createPageUrl("Reports")}
@@ -79,13 +81,13 @@ export default function Layout({ children }) {
             style={isActive(createPageUrl("Reports")) ? gradientStyle : {}}
           >
             <FileText className="w-5 h-5" />
-            Informes de Eventos
+            {t('nav.reports')}
           </Link>
 
           {/* SERVICES PILLAR */}
           <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3 flex items-center gap-2">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-            <span>Servicios Semanales</span>
+            <span>{t('section.services')}</span>
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
           </div>
           <Link
@@ -99,7 +101,7 @@ export default function Layout({ children }) {
             style={isActive(createPageUrl("Services")) || isActive(createPageUrl("ServiceDetail")) ? gradientStyle : {}}
           >
             <Clock className="w-5 h-5" />
-            Servicios
+            {t('nav.services')}
           </Link>
           <Link
             to={createPageUrl("AnnouncementsReport")}
@@ -111,11 +113,11 @@ export default function Layout({ children }) {
             style={isActive(createPageUrl("AnnouncementsReport")) ? gradientStyle : {}}
           >
             <Bell className="w-5 h-5" />
-            Anuncios
+            {t('nav.announcements')}
           </Link>
 
           {/* SHARED RESOURCES */}
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3">Recursos Compartidos</div>
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3">{t('section.resources')}</div>
           <Link
             to={createPageUrl("People")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -126,10 +128,10 @@ export default function Layout({ children }) {
             style={isActive(createPageUrl("People")) ? gradientStyle : {}}
           >
             <Users className="w-5 h-5" />
-            Personas
+            {t('nav.people')}
           </Link>
 
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-6 mb-3 pl-3">Gestión y Configuración</div>
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-6 mb-3 pl-3">{t('section.settings')}</div>
           <Link
             to={createPageUrl("Rooms")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -140,7 +142,7 @@ export default function Layout({ children }) {
             style={isActive(createPageUrl("Rooms")) ? gradientStyle : {}}
           >
             <MapPin className="w-5 h-5" />
-            Salas
+            {t('nav.rooms')}
           </Link>
 
           <Link
@@ -153,7 +155,7 @@ export default function Layout({ children }) {
             style={isActive(createPageUrl("Templates")) ? gradientStyle : {}}
           >
             <Copy className="w-5 h-5" />
-            Plantillas
+            {t('nav.templates')}
           </Link>
 
           <Link
@@ -166,7 +168,7 @@ export default function Layout({ children }) {
             style={isActive(createPageUrl("ScheduleImporter")) ? gradientStyle : {}}
           >
             <Sparkles className="w-5 h-5" />
-            Importador IA
+            {t('nav.importer')}
           </Link>
 
           <Link
@@ -179,8 +181,19 @@ export default function Layout({ children }) {
             style={isActive(createPageUrl("SchemaGuide")) ? gradientStyle : {}}
           >
             <FileCode className="w-5 h-5" />
-            Guía de Datos
+            {t('nav.schema')}
           </Link>
+
+          {/* Language Toggle */}
+          <div className="pt-4 mt-4 border-t border-gray-700">
+            <button
+              onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+              className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all w-full"
+            >
+              <Languages className="w-5 h-5" />
+              {language === 'es' ? 'English' : 'Español'}
+            </button>
+          </div>
           </nav>
       </aside>
 

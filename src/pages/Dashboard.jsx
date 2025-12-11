@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { useLanguage } from "@/utils/i18n";
 import { Calendar, Clock, Users, FileText, Plus, ArrowRight, Copy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { es } from "date-fns/locale";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)'
   };
@@ -60,10 +62,10 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-6">
             <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-wide mb-2">
-              Panel de Control
+              {t('dashboard.title')}
             </h1>
             <p className="text-white/90 text-base">
-              Gestiona eventos especiales y servicios semanales
+              {t('dashboard.subtitle')}
             </p>
           </div>
           
@@ -75,12 +77,12 @@ export default function Dashboard() {
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold uppercase">Eventos Especiales</h3>
-                  <p className="text-white/80 text-sm">Congresos, retiros, conferencias</p>
+                  <h3 className="text-lg font-bold uppercase">{t('dashboard.events.title')}</h3>
+                  <p className="text-white/80 text-sm">{t('dashboard.events.subtitle')}</p>
                 </div>
               </div>
               <Button className="w-full bg-white text-pdv-teal hover:bg-gray-100 font-semibold">
-                Ver Eventos
+                {t('btn.view_events')}
               </Button>
             </div>
 
@@ -90,12 +92,12 @@ export default function Dashboard() {
                   <Clock className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold uppercase">Servicios Semanales</h3>
-                  <p className="text-white/80 text-sm">Domingos, miércoles, operación regular</p>
+                  <h3 className="text-lg font-bold uppercase">{t('dashboard.services.title')}</h3>
+                  <p className="text-white/80 text-sm">{t('dashboard.services.subtitle')}</p>
                 </div>
               </div>
               <Button className="w-full bg-white text-pdv-teal hover:bg-gray-100 font-semibold">
-                Ver Servicios
+                {t('btn.view_services')}
               </Button>
             </div>
           </div>
@@ -109,14 +111,14 @@ export default function Dashboard() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="w-5 h-5 text-pdv-teal" />
-              <h2 className="text-xl font-bold text-gray-900 uppercase">Eventos Especiales</h2>
+              <h2 className="text-xl font-bold text-gray-900 uppercase">{t('dashboard.events.title')}</h2>
             </div>
             <div className="space-y-4">
               <Card className="bg-white shadow hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-600 text-xs font-medium uppercase">Total Eventos</p>
+                      <p className="text-gray-600 text-xs font-medium uppercase">{t('dashboard.events.total')}</p>
                       <p className="text-2xl font-bold text-gray-900 mt-1">{events.filter(e => e.status !== 'template').length}</p>
                     </div>
                     <div className="bg-blue-100 p-2 rounded-full">
@@ -130,7 +132,7 @@ export default function Dashboard() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-600 text-xs font-medium uppercase">Sesiones</p>
+                      <p className="text-gray-600 text-xs font-medium uppercase">{t('dashboard.events.sessions')}</p>
                       <p className="text-2xl font-bold text-gray-900 mt-1">{sessions.length}</p>
                     </div>
                     <div className="bg-green-100 p-2 rounded-full">
@@ -144,7 +146,7 @@ export default function Dashboard() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-600 text-xs font-medium uppercase">Segmentos</p>
+                      <p className="text-gray-600 text-xs font-medium uppercase">{t('dashboard.events.segments')}</p>
                       <p className="text-2xl font-bold text-gray-900 mt-1">{segments.length}</p>
                     </div>
                     <div className="bg-purple-100 p-2 rounded-full">
@@ -160,14 +162,14 @@ export default function Dashboard() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Clock className="w-5 h-5 text-pdv-green" />
-              <h2 className="text-xl font-bold text-gray-900 uppercase">Servicios Semanales</h2>
+              <h2 className="text-xl font-bold text-gray-900 uppercase">{t('dashboard.services.title')}</h2>
             </div>
             <div className="space-y-4">
               <Card className="bg-white shadow hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-600 text-xs font-medium uppercase">Servicios Activos</p>
+                      <p className="text-gray-600 text-xs font-medium uppercase">{t('dashboard.services.active')}</p>
                       <p className="text-2xl font-bold text-gray-900 mt-1">{services?.filter(s => s.status === 'active').length || 0}</p>
                     </div>
                     <div className="bg-orange-100 p-2 rounded-full">
@@ -181,7 +183,7 @@ export default function Dashboard() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-600 text-xs font-medium uppercase">Plantillas</p>
+                      <p className="text-gray-600 text-xs font-medium uppercase">{t('dashboard.services.templates')}</p>
                       <p className="text-2xl font-bold text-gray-900 mt-1">{services?.filter(s => s.status === 'blueprint').length || 0}</p>
                     </div>
                     <div className="bg-teal-100 p-2 rounded-full">
@@ -195,7 +197,7 @@ export default function Dashboard() {
                 onClick={() => navigate(createPageUrl('Services'))}
                 className="w-full bg-pdv-green hover:bg-pdv-green/90 text-white font-semibold"
               >
-                Gestionar Servicios
+                {t('btn.manage_services')}
               </Button>
             </div>
           </div>
@@ -206,7 +208,7 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-6 md:px-8 pb-8">
         <h2 className="text-xl font-bold text-gray-900 uppercase mb-4 flex items-center gap-2">
           <Calendar className="w-5 h-5 text-pdv-teal" />
-          Próximos Eventos
+          {t('dashboard.upcoming')}
         </h2>
         
         {nextEvent ? (
@@ -252,7 +254,7 @@ export default function Dashboard() {
                     onClick={() => navigate(createPageUrl('EventDetail') + `?eventId=${nextEvent.id}`)}
                     className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                   >
-                    Ver Detalles
+                    {t('btn.view_details')}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
@@ -263,14 +265,14 @@ export default function Dashboard() {
           <Card className="bg-white shadow">
             <CardContent className="p-8 text-center">
               <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <h3 className="text-lg font-bold text-gray-900 mb-2">No hay eventos próximos</h3>
-              <p className="text-gray-600 text-sm mb-4">Comienza creando tu primer evento</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">{t('dashboard.no_events')}</h3>
+              <p className="text-gray-600 text-sm mb-4">{t('dashboard.create_first')}</p>
               <Button 
                 onClick={() => navigate(createPageUrl('Events'))}
                 className="gradient-pdv text-white font-semibold"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Crear Evento
+                {t('btn.create_event')}
               </Button>
             </CardContent>
           </Card>
@@ -278,7 +280,7 @@ export default function Dashboard() {
 
         {events.filter(e => e.status !== 'template').length > 1 && (
           <div className="mt-4">
-            <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">Otros Eventos</h3>
+            <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">{t('dashboard.other')}</h3>
             <div className="grid gap-3">
               {events
                 .filter(e => e.status !== 'template' && e.id !== nextEvent?.id)
@@ -311,7 +313,7 @@ export default function Dashboard() {
                 variant="outline"
                 className="w-full mt-3"
               >
-                Ver Todos los Eventos
+                {t('btn.view_all')}
               </Button>
             )}
           </div>
