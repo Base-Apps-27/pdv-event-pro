@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Check, Edit2, ArrowRight, Settings, Music, Mic, Users, CalendarPlus, Calendar, Clock, Zap, Eye, Code } from "lucide-react";
+import { Plus, Trash2, Check, Edit2, ArrowRight, Settings, Music, Mic, Users, CalendarPlus, Calendar, Clock, Zap, Eye, Code, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,7 +15,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, AlertTriangle, Trash2 } from "lucide-react";
 
 export default function ScheduleReview({ data, onConfirm, onCancel }) {
   const [importMode, setImportMode] = useState("new"); // "new" or "existing"
