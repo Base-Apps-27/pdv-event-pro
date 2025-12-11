@@ -36,7 +36,7 @@ export default function Layout({ children }) {
         </div>
 
         <nav className="flex-1 px-4 space-y-1">
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 mt-2 pl-3">Operaciones Principales</div>
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 mt-2 pl-3">Panel Principal</div>
           <Link
             to={createPageUrl("Dashboard")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -50,6 +50,12 @@ export default function Layout({ children }) {
             Inicio
           </Link>
 
+          {/* EVENTS PILLAR */}
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3 flex items-center gap-2">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+            <span>Eventos Especiales</span>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+          </div>
           <Link
             to={createPageUrl("Events")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -63,7 +69,25 @@ export default function Layout({ children }) {
             <Calendar className="w-5 h-5" />
             Eventos
           </Link>
+          <Link
+            to={createPageUrl("Reports")}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+              isActive(createPageUrl("Reports"))
+                ? "text-white shadow-md"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
+            }`}
+            style={isActive(createPageUrl("Reports")) ? gradientStyle : {}}
+          >
+            <FileText className="w-5 h-5" />
+            Informes de Eventos
+          </Link>
 
+          {/* SERVICES PILLAR */}
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3 flex items-center gap-2">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+            <span>Servicios Semanales</span>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+          </div>
           <Link
             to={createPageUrl("Services")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -77,20 +101,6 @@ export default function Layout({ children }) {
             <Clock className="w-5 h-5" />
             Servicios
           </Link>
-
-          <Link
-            to={createPageUrl("Reports")}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-              isActive(createPageUrl("Reports"))
-                ? "text-white shadow-md"
-                : "text-gray-400 hover:bg-white/5 hover:text-white"
-            }`}
-            style={isActive(createPageUrl("Reports")) ? gradientStyle : {}}
-          >
-            <FileText className="w-5 h-5" />
-            Informes
-          </Link>
-
           <Link
             to={createPageUrl("AnnouncementsReport")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -104,6 +114,8 @@ export default function Layout({ children }) {
             Anuncios
           </Link>
 
+          {/* SHARED RESOURCES */}
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3">Recursos Compartidos</div>
           <Link
             to={createPageUrl("People")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -117,7 +129,7 @@ export default function Layout({ children }) {
             Personas
           </Link>
 
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-8 mb-3 pl-3">Gestión y Configuración</div>
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-6 mb-3 pl-3">Gestión y Configuración</div>
           <Link
             to={createPageUrl("Rooms")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
