@@ -60,11 +60,12 @@ export default function ScheduleImporter() {
 You are an AI specialized in extracting church event schedule data from images and PDFs.
 
 CRITICAL INSTRUCTIONS:
-1. CAREFULLY EXAMINE the uploaded image/PDF - read ALL visible text
-2. If you cannot see the image clearly or it's blank, say so in the output
-3. Extract EVERYTHING you can see - event names, dates, times, people, segments
-4. DO NOT return empty objects - if you see data, extract it
-5. Be thorough and precise
+1. CAREFULLY EXAMINE the uploaded image/PDF - read ALL visible text, EVERY piece of information
+2. Extract EVERYTHING you can see - leave nothing behind
+3. For data you CAN map confidently → place it in the correct fields (event, session, segments)
+4. For data you CANNOT map confidently → put it in "unmapped_data" array with context
+5. NEVER discard information - if you see it, capture it somewhere
+6. Be thorough and precise - extract ALL text, labels, notes, instructions
 
 ## YOUR JOB
 1. Visually read the PDF/image (layout, colors, labels, times, table structure)
@@ -239,13 +240,26 @@ Extract ONLY timed operational instructions into segment_actions array.
 - "al terminar/al finalizar" → timing: "before_end", offset_min: 0, is_prep: false
 - Explicit clock time → timing: "absolute", is_prep: depends on context
 
+## UNMAPPED DATA HANDLING
+If you find text/data that you cannot confidently map to a specific field, add it to the "unmapped_data" array:
+
+{
+  "content": "The actual text you found",
+  "context": "Where you found it (e.g., 'below team assignments', 'in sidebar', 'after segment 3')",
+  "possible_fields": ["field1", "field2"] // your best guesses where this might belong
+}
+
+Examples:
+- Found "Verificar luces antes del evento" but unsure if it's a note or action → add to unmapped_data
+- Found "Pastor Juan - 555-1234" but unsure which field → add to unmapped_data
+- Found a table with data but unclear structure → add each row to unmapped_data
+
 ## OUTPUT FORMAT
 Return ONLY valid JSON (no markdown, no explanations).
 
-IMPORTANT: If you cannot extract data from a field, OMIT that field entirely rather than including it as empty.
-Only include fields where you successfully extracted information.
+EXTRACT EVERYTHING - data you're confident about goes in proper fields, uncertain data goes in unmapped_data.
 
-Example structure (include only fields with actual data):
+Example structure:
 
 {
   "type": "schedule_proposal",
@@ -329,6 +343,13 @@ Example structure (include only fields with actual data):
       "song_4_title": "Cristo Eres Tú",
       "segment_actions": []
     }
+  ],
+  "unmapped_data": [
+    {
+      "content": "Extra note found: 'Recordar traer extension cables'",
+      "context": "Found at bottom of page",
+      "possible_fields": ["session.notes", "sound_notes", "tech_team_notes"]
+    }
   ]
 }
 `;
@@ -403,6 +424,20 @@ Example structure (include only fields with actual data):
                             }
                         }
                     }
+                },
+                "unmapped_data": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "content": { "type": "string" },
+                            "context": { "type": "string" },
+                            "possible_fields": { 
+                                "type": "array",
+                                "items": { "type": "string" }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -449,6 +484,7 @@ Example structure (include only fields with actual data):
       parsedData.session = parsedData.session || {};
       parsedData.pre_session = parsedData.pre_session || {};
       parsedData.segments = parsedData.segments || [];
+      parsedData.unmapped_data = parsedData.unmapped_data || [];
 
       setReviewData(parsedData);
       setStep("review");

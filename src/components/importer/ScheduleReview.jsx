@@ -14,6 +14,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp, AlertTriangle, Trash2 } from "lucide-react";
 
 export default function ScheduleReview({ data, onConfirm, onCancel }) {
   const [importMode, setImportMode] = useState("new"); // "new" or "existing"
@@ -30,6 +32,8 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
   const [sessionData, setSessionData] = useState(data.session || { name: "", description: "" });
   const [preSessionData, setPreSessionData] = useState(data.pre_session || { registration_desk_open_time: "" });
   const [segments, setSegments] = useState(data.segments || []);
+  const [unmappedData, setUnmappedData] = useState(data.unmapped_data || []);
+  const [showUnmapped, setShowUnmapped] = useState(false);
   
   // For Segment Details Dialog
   const [editingSegmentIdx, setEditingSegmentIdx] = useState(null);
@@ -74,8 +78,29 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
       event: eventData,
       session: sessionData,
       pre_session: preSessionData,
-      segments: segments
+      segments: segments,
+      unmapped_data: unmappedData
     });
+  };
+
+  const handleDeleteUnmappedItem = (index) => {
+    setUnmappedData(unmappedData.filter((_, i) => i !== index));
+  };
+
+  const handleApplyUnmappedToField = (unmappedIndex, targetPath) => {
+    const item = unmappedData[unmappedIndex];
+    const pathParts = targetPath.split('.');
+    
+    if (pathParts[0] === 'event') {
+      setEventData({...eventData, [pathParts[1]]: item.content});
+    } else if (pathParts[0] === 'session') {
+      setSessionData({...sessionData, [pathParts[1]]: item.content});
+    } else if (pathParts[0] === 'pre_session') {
+      setPreSessionData({...preSessionData, [pathParts[1]]: item.content});
+    }
+    
+    // Remove from unmapped
+    handleDeleteUnmappedItem(unmappedIndex);
   };
 
   const segmentTypes = [
@@ -114,6 +139,66 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
         </CardHeader>
         
         <CardContent className="p-6 space-y-6 max-h-[65vh] overflow-y-auto">
+          {/* Unmapped Data Section */}
+          {unmappedData.length > 0 && (
+            <Collapsible open={showUnmapped} onOpenChange={setShowUnmapped}>
+              <CollapsibleTrigger asChild>
+                <div className="p-4 bg-orange-50 rounded-lg border-2 border-orange-200 cursor-pointer hover:bg-orange-100 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-orange-600" />
+                      <h3 className="text-sm font-bold uppercase text-orange-700">
+                        Datos Sin Mapear ({unmappedData.length})
+                      </h3>
+                    </div>
+                    {showUnmapped ? <ChevronUp className="w-4 h-4 text-orange-600" /> : <ChevronDown className="w-4 h-4 text-orange-600" />}
+                  </div>
+                  <p className="text-xs text-orange-600 mt-1">
+                    La IA encontró estos datos pero no pudo determinar dónde colocarlos. Revisa y asígnalos manualmente.
+                  </p>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <div className="space-y-2">
+                  {unmappedData.map((item, idx) => (
+                    <div key={idx} className="p-3 bg-white rounded-lg border border-orange-200 shadow-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 space-y-2">
+                          <div className="text-sm font-medium text-gray-900">{item.content}</div>
+                          {item.context && (
+                            <div className="text-xs text-gray-500 italic">Contexto: {item.context}</div>
+                          )}
+                          {item.possible_fields && item.possible_fields.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              <span className="text-xs text-gray-500">Sugerencias:</span>
+                              {item.possible_fields.map((field, fIdx) => (
+                                <button
+                                  key={fIdx}
+                                  onClick={() => handleApplyUnmappedToField(idx, field)}
+                                  className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
+                                >
+                                  {field}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleDeleteUnmappedItem(idx)}
+                          className="h-8 w-8 text-red-400 hover:text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
           {/* Raw Data Viewer */}
           {showRawData && (
             <div className="p-4 bg-slate-900 rounded-lg border border-slate-700">
