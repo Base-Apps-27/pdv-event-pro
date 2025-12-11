@@ -7,16 +7,19 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Check, Edit2, ArrowRight, Settings, Music, Mic, Users, CalendarPlus, Calendar, Clock, Zap } from "lucide-react";
+import { Plus, Trash2, Check, Edit2, ArrowRight, Settings, Music, Mic, Users, CalendarPlus, Calendar, Clock, Zap, Eye, Code } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ScheduleReview({ data, onConfirm, onCancel }) {
   const [importMode, setImportMode] = useState("new"); // "new" or "existing"
   const [selectedEventId, setSelectedEventId] = useState("");
   const [eventData, setEventData] = useState(data.event || { name: "", date: "" });
+  const [showRawData, setShowRawData] = useState(false);
 
   // Fetch existing events for the dropdown
   const { data: existingEvents } = useQuery({
@@ -90,9 +93,20 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
               <Edit2 className="w-5 h-5" />
               Revisar Datos Extraídos
             </CardTitle>
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-              Verificación Requerida
-            </Badge>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowRawData(!showRawData)}
+                className="text-xs"
+              >
+                <Code className="w-3 h-3 mr-1" />
+                {showRawData ? 'Ocultar' : 'Ver'} Datos Crudos
+              </Button>
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                Verificación Requerida
+              </Badge>
+            </div>
           </div>
           <p className="text-sm text-gray-500">
             Verifica los datos extraídos antes de importar.
@@ -100,6 +114,25 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
         </CardHeader>
         
         <CardContent className="p-6 space-y-6 max-h-[65vh] overflow-y-auto">
+          {/* Raw Data Viewer */}
+          {showRawData && (
+            <div className="p-4 bg-slate-900 rounded-lg border border-slate-700">
+              <div className="flex items-center gap-2 mb-3">
+                <Code className="w-4 h-4 text-slate-300" />
+                <h3 className="text-sm font-bold uppercase text-slate-300">Datos Crudos (JSON)</h3>
+              </div>
+              <Textarea 
+                value={JSON.stringify(data, null, 2)}
+                readOnly
+                className="font-mono text-xs bg-slate-800 text-green-400 border-slate-600 h-64"
+              />
+              <p className="text-xs text-slate-400 mt-2">
+                💡 Esta es toda la información que la IA extrajo del documento. Si falta información, 
+                revisa el prompt o la calidad de la imagen.
+              </p>
+            </div>
+          )}
+
           {/* Import Mode Selection */}
           <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
             <Label className="text-xs font-bold uppercase text-gray-500 mb-3 block">Modo de Importación</Label>
@@ -196,6 +229,18 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                     <Label className="text-xs text-gray-500">Coordinadores</Label>
                     <Input className="h-8 text-sm" value={sessionData.coordinators || ""} onChange={(e) => setSessionData({...sessionData, coordinators: e.target.value})} />
                 </div>
+                <div className="space-y-1">
+                    <Label className="text-xs text-gray-500">Hospitalidad</Label>
+                    <Input className="h-8 text-sm" value={sessionData.hospitality_team || ""} onChange={(e) => setSessionData({...sessionData, hospitality_team: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                    <Label className="text-xs text-gray-500">Traducción</Label>
+                    <Input className="h-8 text-sm" value={sessionData.translation_team || ""} onChange={(e) => setSessionData({...sessionData, translation_team: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                    <Label className="text-xs text-gray-500">Fotografía</Label>
+                    <Input className="h-8 text-sm" value={sessionData.photography_team || ""} onChange={(e) => setSessionData({...sessionData, photography_team: e.target.value})} />
+                </div>
              </div>
           </div>
 
@@ -211,6 +256,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="w-[80px]">Hora</TableHead>
+                  <TableHead className="w-[60px]">Dur.</TableHead>
                   <TableHead className="w-[120px]">Tipo</TableHead>
                   <TableHead>Título</TableHead>
                   <TableHead>Responsable</TableHead>
@@ -227,6 +273,15 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                         onChange={(e) => handleSegmentChange(idx, 'time', e.target.value)}
                         className="h-8 text-xs"
                         placeholder="00:00"
+                      />
+                    </TableCell>
+                    <TableCell className="p-2">
+                      <Input 
+                        type="number"
+                        value={segment.duration_min || ""} 
+                        onChange={(e) => handleSegmentChange(idx, 'duration_min', parseInt(e.target.value))}
+                        className="h-8 text-xs w-16"
+                        placeholder="min"
                       />
                     </TableCell>
                     <TableCell className="p-2">
@@ -316,10 +371,72 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Notas / Instrucciones</Label>
-                                <Input 
-                                    value={editingSegment.notes || ""} 
-                                    onChange={(e) => setEditingSegment({...editingSegment, notes: e.target.value})} 
+                                <Label>Requiere Traducción</Label>
+                                <div className="flex items-center gap-4 pt-2">
+                                  <label className="flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                      type="checkbox" 
+                                      checked={editingSegment.requires_translation ?? false}
+                                      onChange={(e) => setEditingSegment({...editingSegment, requires_translation: e.target.checked})}
+                                      className="rounded"
+                                    />
+                                    <span className="text-sm">Sí</span>
+                                  </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {editingSegment.requires_translation && (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Traductor</Label>
+                              <Input 
+                                value={editingSegment.translator_name || ""} 
+                                onChange={(e) => setEditingSegment({...editingSegment, translator_name: e.target.value})} 
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Modo</Label>
+                              <Select 
+                                value={editingSegment.translation_mode || "InPerson"}
+                                onValueChange={(val) => setEditingSegment({...editingSegment, translation_mode: val})}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="InPerson">En Persona</SelectItem>
+                                  <SelectItem value="RemoteBooth">Cabina Remota</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <Label>Notas de Proyección</Label>
+                            <Textarea 
+                                value={editingSegment.projection_notes || ""} 
+                                onChange={(e) => setEditingSegment({...editingSegment, projection_notes: e.target.value})} 
+                                className="h-16"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Notas de Sonido</Label>
+                                <Textarea 
+                                    value={editingSegment.sound_notes || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, sound_notes: e.target.value})} 
+                                    className="h-16"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Notas de Ujieres</Label>
+                                <Textarea 
+                                    value={editingSegment.ushers_notes || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, ushers_notes: e.target.value})} 
+                                    className="h-16"
                                 />
                             </div>
                         </div>
