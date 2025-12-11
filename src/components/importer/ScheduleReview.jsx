@@ -438,138 +438,316 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
 
       {/* Detailed Edit Dialog */}
       <Dialog open={editingSegmentIdx !== null} onOpenChange={(open) => !open && setEditingSegmentIdx(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh]">
             <DialogHeader>
                 <DialogTitle>Editar Detalles del Segmento</DialogTitle>
             </DialogHeader>
             {editingSegment && (
-                <ScrollArea className="max-h-[60vh]">
+                <ScrollArea className="h-[70vh]">
                     <div className="grid gap-4 py-4 pr-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        {/* Basic Info */}
+                        <div className="border rounded-lg p-4 bg-slate-50 space-y-4">
+                            <h4 className="font-bold text-sm uppercase text-slate-700">Información Básica</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Duración (min)</Label>
+                                    <Input 
+                                        type="number" 
+                                        value={editingSegment.duration_min || ""} 
+                                        onChange={(e) => setEditingSegment({...editingSegment, duration_min: parseInt(e.target.value) || 0})} 
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Stage Call Offset (min)</Label>
+                                    <Input 
+                                        type="number" 
+                                        value={editingSegment.stage_call_offset_min || ""} 
+                                        onChange={(e) => setEditingSegment({...editingSegment, stage_call_offset_min: parseInt(e.target.value) || 15})} 
+                                    />
+                                </div>
+                            </div>
                             <div className="space-y-2">
-                                <Label>Duración (min)</Label>
+                                <Label>Descripción / Detalles</Label>
+                                <Textarea 
+                                    value={editingSegment.description_details || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, description_details: e.target.value})} 
+                                    className="h-16"
+                                    placeholder="Descripción detallada del segmento..."
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Instrucciones de Preparación</Label>
+                                <Textarea 
+                                    value={editingSegment.prep_instructions || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, prep_instructions: e.target.value})} 
+                                    className="h-16"
+                                    placeholder="Setup, checks, etc..."
+                                />
+                            </div>
+                        </div>
+
+                        {/* Translation */}
+                        <div className="border rounded-lg p-4 bg-blue-50 space-y-4">
+                            <h4 className="font-bold text-sm uppercase text-blue-700">Traducción</h4>
+                            <div className="flex items-center gap-4">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input 
+                                  type="checkbox" 
+                                  checked={editingSegment.requires_translation ?? false}
+                                  onChange={(e) => setEditingSegment({...editingSegment, requires_translation: e.target.checked})}
+                                  className="rounded"
+                                />
+                                <span className="text-sm font-medium">Requiere Traducción</span>
+                              </label>
+                            </div>
+                            {editingSegment.requires_translation && (
+                              <>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label>Traductor</Label>
+                                    <Input 
+                                      value={editingSegment.translator_name || ""} 
+                                      onChange={(e) => setEditingSegment({...editingSegment, translator_name: e.target.value})} 
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>Modo</Label>
+                                    <Select 
+                                      value={editingSegment.translation_mode || "InPerson"}
+                                      onValueChange={(val) => setEditingSegment({...editingSegment, translation_mode: val})}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="InPerson">En Persona</SelectItem>
+                                        <SelectItem value="RemoteBooth">Cabina Remota</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label>Notas de Traducción</Label>
+                                  <Textarea 
+                                      value={editingSegment.translation_notes || ""} 
+                                      onChange={(e) => setEditingSegment({...editingSegment, translation_notes: e.target.value})} 
+                                      className="h-16"
+                                  />
+                                </div>
+                              </>
+                            )}
+                        </div>
+
+                        {/* Team Notes */}
+                        <div className="border rounded-lg p-4 bg-green-50 space-y-4">
+                            <h4 className="font-bold text-sm uppercase text-green-700">Notas por Equipo</h4>
+                            <div className="space-y-2">
+                                <Label>Proyección</Label>
+                                <Textarea 
+                                    value={editingSegment.projection_notes || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, projection_notes: e.target.value})} 
+                                    className="h-16"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Sonido</Label>
+                                    <Textarea 
+                                        value={editingSegment.sound_notes || ""} 
+                                        onChange={(e) => setEditingSegment({...editingSegment, sound_notes: e.target.value})} 
+                                        className="h-16"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Ujieres</Label>
+                                    <Textarea 
+                                        value={editingSegment.ushers_notes || ""} 
+                                        onChange={(e) => setEditingSegment({...editingSegment, ushers_notes: e.target.value})} 
+                                        className="h-16"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Stage & Decor</Label>
+                                <Textarea 
+                                    value={editingSegment.stage_decor_notes || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, stage_decor_notes: e.target.value})} 
+                                    className="h-16"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Micrófonos</Label>
+                                <Textarea 
+                                    value={editingSegment.microphone_assignments || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, microphone_assignments: e.target.value})} 
+                                    className="h-16"
+                                    placeholder="Asignaciones de micrófonos..."
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Otras Notas</Label>
+                                <Textarea 
+                                    value={editingSegment.other_notes || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, other_notes: e.target.value})} 
+                                    className="h-16"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Alabanza Details - Always show */}
+                        <div className="border rounded-lg p-4 bg-purple-50 space-y-4">
+                            <h4 className="font-bold text-sm flex items-center gap-2 text-purple-700">
+                                <Music className="w-4 h-4" /> Alabanza (Canciones)
+                            </h4>
+                            <div className="space-y-2">
+                                <Label className="text-xs">Número de Canciones</Label>
                                 <Input 
                                     type="number" 
-                                    value={editingSegment.duration_min || ""} 
-                                    onChange={(e) => setEditingSegment({...editingSegment, duration_min: parseInt(e.target.value) || 0})} 
+                                    min="0" 
+                                    max="6"
+                                    className="bg-white h-8 w-24" 
+                                    value={editingSegment.number_of_songs || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, number_of_songs: parseInt(e.target.value) || 0})} 
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label>Requiere Traducción</Label>
-                                <div className="flex items-center gap-4 pt-2">
-                                  <label className="flex items-center gap-2 cursor-pointer">
-                                    <input 
-                                      type="checkbox" 
-                                      checked={editingSegment.requires_translation ?? false}
-                                      onChange={(e) => setEditingSegment({...editingSegment, requires_translation: e.target.checked})}
-                                      className="rounded"
-                                    />
-                                    <span className="text-sm">Sí</span>
-                                  </label>
-                                </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                 <div className="space-y-2">
+                                    <Label className="text-xs">Canción 1</Label>
+                                    <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_1_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_1_title: e.target.value})} />
+                                    <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_1_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_1_lead: e.target.value})} />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <Label className="text-xs">Canción 2</Label>
+                                    <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_2_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_2_title: e.target.value})} />
+                                    <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_2_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_2_lead: e.target.value})} />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <Label className="text-xs">Canción 3</Label>
+                                    <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_3_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_3_title: e.target.value})} />
+                                    <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_3_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_3_lead: e.target.value})} />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <Label className="text-xs">Canción 4</Label>
+                                    <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_4_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_4_title: e.target.value})} />
+                                    <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_4_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_4_lead: e.target.value})} />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <Label className="text-xs">Canción 5</Label>
+                                    <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_5_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_5_title: e.target.value})} />
+                                    <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_5_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_5_lead: e.target.value})} />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <Label className="text-xs">Canción 6</Label>
+                                    <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_6_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_6_title: e.target.value})} />
+                                    <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_6_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_6_lead: e.target.value})} />
+                                 </div>
                             </div>
                         </div>
 
-                        {editingSegment.requires_translation && (
-                          <div className="grid grid-cols-2 gap-4">
+                        {/* Plenaria Details - Always show */}
+                        <div className="border rounded-lg p-4 bg-indigo-50 space-y-4">
+                            <h4 className="font-bold text-sm flex items-center gap-2 text-indigo-700">
+                                <Mic className="w-4 h-4" /> Plenaria (Mensaje)
+                            </h4>
                             <div className="space-y-2">
-                              <Label>Traductor</Label>
-                              <Input 
-                                value={editingSegment.translator_name || ""} 
-                                onChange={(e) => setEditingSegment({...editingSegment, translator_name: e.target.value})} 
-                              />
+                                <Label>Título del Mensaje</Label>
+                                <Input className="bg-white" value={editingSegment.message_title || ""} onChange={(e) => setEditingSegment({...editingSegment, message_title: e.target.value})} />
                             </div>
                             <div className="space-y-2">
-                              <Label>Modo</Label>
-                              <Select 
-                                value={editingSegment.translation_mode || "InPerson"}
-                                onValueChange={(val) => setEditingSegment({...editingSegment, translation_mode: val})}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="InPerson">En Persona</SelectItem>
-                                  <SelectItem value="RemoteBooth">Cabina Remota</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="space-y-2">
-                            <Label>Notas de Proyección</Label>
-                            <Textarea 
-                                value={editingSegment.projection_notes || ""} 
-                                onChange={(e) => setEditingSegment({...editingSegment, projection_notes: e.target.value})} 
-                                className="h-16"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>Notas de Sonido</Label>
-                                <Textarea 
-                                    value={editingSegment.sound_notes || ""} 
-                                    onChange={(e) => setEditingSegment({...editingSegment, sound_notes: e.target.value})} 
-                                    className="h-16"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Notas de Ujieres</Label>
-                                <Textarea 
-                                    value={editingSegment.ushers_notes || ""} 
-                                    onChange={(e) => setEditingSegment({...editingSegment, ushers_notes: e.target.value})} 
-                                    className="h-16"
-                                />
+                                <Label>Escrituras / Citas</Label>
+                                <Input className="bg-white" value={editingSegment.scripture_references || ""} onChange={(e) => setEditingSegment({...editingSegment, scripture_references: e.target.value})} />
                             </div>
                         </div>
 
-                        {editingSegment.type === 'Alabanza' && (
-                            <div className="border rounded-lg p-4 bg-blue-50/50 space-y-4">
-                                <h4 className="font-bold text-sm flex items-center gap-2 text-blue-700">
-                                    <Music className="w-4 h-4" /> Detalles de Alabanza
-                                </h4>
+                        {/* Video Details - Always show */}
+                        <div className="border rounded-lg p-4 bg-pink-50 space-y-4">
+                            <h4 className="font-bold text-sm uppercase text-pink-700">Video</h4>
+                            <div className="flex items-center gap-4">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input 
+                                  type="checkbox" 
+                                  checked={editingSegment.has_video ?? false}
+                                  onChange={(e) => setEditingSegment({...editingSegment, has_video: e.target.checked})}
+                                  className="rounded"
+                                />
+                                <span className="text-sm font-medium">Incluye Video</span>
+                              </label>
+                            </div>
+                            {editingSegment.has_video && (
+                              <>
                                 <div className="grid grid-cols-2 gap-4">
-                                     <div className="space-y-2">
-                                        <Label className="text-xs">Canción 1</Label>
-                                        <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_1_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_1_title: e.target.value})} />
-                                        <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_1_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_1_lead: e.target.value})} />
-                                     </div>
-                                     <div className="space-y-2">
-                                        <Label className="text-xs">Canción 2</Label>
-                                        <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_2_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_2_title: e.target.value})} />
-                                        <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_2_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_2_lead: e.target.value})} />
-                                     </div>
-                                     <div className="space-y-2">
-                                        <Label className="text-xs">Canción 3</Label>
-                                        <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_3_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_3_title: e.target.value})} />
-                                        <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_3_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_3_lead: e.target.value})} />
-                                     </div>
-                                     <div className="space-y-2">
-                                        <Label className="text-xs">Canción 4</Label>
-                                        <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_4_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_4_title: e.target.value})} />
-                                        <Input placeholder="Líder" className="bg-white h-7 text-xs" value={editingSegment.song_4_lead || ""} onChange={(e) => setEditingSegment({...editingSegment, song_4_lead: e.target.value})} />
-                                     </div>
+                                  <div className="space-y-2">
+                                    <Label>Nombre del Video</Label>
+                                    <Input 
+                                      value={editingSegment.video_name || ""} 
+                                      onChange={(e) => setEditingSegment({...editingSegment, video_name: e.target.value})} 
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>Duración (segundos)</Label>
+                                    <Input 
+                                      type="number"
+                                      value={editingSegment.video_length_sec || ""} 
+                                      onChange={(e) => setEditingSegment({...editingSegment, video_length_sec: parseInt(e.target.value) || 0})} 
+                                    />
+                                  </div>
                                 </div>
-                            </div>
-                        )}
+                                <div className="space-y-2">
+                                  <Label>Ubicación del Video</Label>
+                                  <Input 
+                                    value={editingSegment.video_location || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, video_location: e.target.value})} 
+                                    placeholder="Ruta o ubicación del archivo..."
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label>Propietario/Fuente</Label>
+                                  <Input 
+                                    value={editingSegment.video_owner || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, video_owner: e.target.value})} 
+                                  />
+                                </div>
+                              </>
+                            )}
+                        </div>
 
-                        {editingSegment.type === 'Plenaria' && (
-                            <div className="border rounded-lg p-4 bg-purple-50/50 space-y-4">
-                                <h4 className="font-bold text-sm flex items-center gap-2 text-purple-700">
-                                    <Mic className="w-4 h-4" /> Detalles de Plenaria
-                                </h4>
+                        {/* Announcement Details - Always show */}
+                        <div className="border rounded-lg p-4 bg-yellow-50 space-y-4">
+                            <h4 className="font-bold text-sm uppercase text-yellow-700">Anuncio</h4>
+                            <div className="space-y-2">
+                                <Label>Título del Anuncio</Label>
+                                <Input 
+                                    value={editingSegment.announcement_title || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, announcement_title: e.target.value})} 
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Descripción / Script</Label>
+                                <Textarea 
+                                    value={editingSegment.announcement_description || ""} 
+                                    onChange={(e) => setEditingSegment({...editingSegment, announcement_description: e.target.value})} 
+                                    className="h-20"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Título del Mensaje</Label>
-                                    <Input className="bg-white" value={editingSegment.message_title || ""} onChange={(e) => setEditingSegment({...editingSegment, message_title: e.target.value})} />
+                                    <Label>Fecha del Anuncio</Label>
+                                    <Input 
+                                        type="date"
+                                        value={editingSegment.announcement_date || ""} 
+                                        onChange={(e) => setEditingSegment({...editingSegment, announcement_date: e.target.value})} 
+                                    />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Escrituras / Citas</Label>
-                                    <Input className="bg-white" value={editingSegment.scripture_references || ""} onChange={(e) => setEditingSegment({...editingSegment, scripture_references: e.target.value})} />
+                                    <Label>Tono</Label>
+                                    <Input 
+                                        value={editingSegment.announcement_tone || ""} 
+                                        onChange={(e) => setEditingSegment({...editingSegment, announcement_tone: e.target.value})} 
+                                        placeholder="Ej: Energético, Serio..."
+                                    />
                                 </div>
                             </div>
-                        )}
+                        </div>
 
                         {/* Segment Actions */}
                         <div className="border rounded-lg p-4 bg-orange-50/50 space-y-4">
