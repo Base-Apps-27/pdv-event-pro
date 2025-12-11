@@ -1,9 +1,9 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, Clock, MapPin, Plus, ArrowRight, FileText } from "lucide-react";
+import { Calendar, Clock, Users, FileText, Plus, ArrowRight, Copy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,12 +11,19 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)'
   };
+  
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['events'],
     queryFn: () => base44.entities.Event.list('-year')
+  });
+
+  const { data: services = [] } = useQuery({
+    queryKey: ['services'],
+    queryFn: () => base44.entities.Service.list()
   });
 
   const { data: sessions = [] } = useQuery({
@@ -29,23 +36,14 @@ export default function Dashboard() {
     queryFn: () => base44.entities.Segment.list()
   });
 
-  const upcomingEvents = events.
-  filter((e) => e.status !== 'completed' && e.status !== 'archived').
-  sort((a, b) => {
-    if (!a.start_date) return 1;
-    if (!b.start_date) return -1;
-    return new Date(a.start_date) - new Date(b.start_date);
-  });
-  const recentEvent = upcomingEvents[0];
-
-  const getSessionCount = (eventId) => {
-    return sessions.filter((s) => s.event_id === eventId).length;
-  };
-
-  const getSegmentCount = (eventId) => {
-    const eventSessions = sessions.filter((s) => s.event_id === eventId);
-    return segments.filter((seg) => eventSessions.some((s) => s.id === seg.session_id)).length;
-  };
+  const upcomingEvents = events
+    .filter((e) => e.status !== 'completed' && e.status !== 'archived' && e.status !== 'template')
+    .sort((a, b) => {
+      if (!a.start_date) return 1;
+      if (!b.start_date) return -1;
+      return new Date(a.start_date) - new Date(b.start_date);
+    });
+  const nextEvent = upcomingEvents[0];
 
   const statusColors = {
     planning: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -55,214 +53,270 @@ export default function Dashboard() {
     archived: "bg-slate-100 text-slate-600 border-slate-200"
   };
 
-  const statusLabels = {
-    planning: "EN PLANIFICACIÓN",
-    confirmed: "CONFIRMADO",
-    in_progress: "EN CURSO",
-    completed: "COMPLETADO",
-    archived: "ARCHIVADO"
-  };
-
   return (
-    <div className="p-6 md:p-8 space-y-8">
-      {/* Hero Header with Brand Gradient */}
-      <div className="rounded-2xl p-10 text-[#1A1A1A] shadow-lg relative overflow-hidden" style={gradientStyle}>
-         {/* Decorative circle for texture */}
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white opacity-20 rounded-full blur-3xl"></div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6">
-          <div>
-            <h1 className="text-6xl md:text-8xl font-bold uppercase tracking-tighter leading-none font-['Bebas_Neue'] mb-2 text-white">BIENVENIDA</h1>
-            <p className="text-xl md:text-2xl font-medium text-white text-opacity-90 max-w-2xl">Aquí tienes un resumen de tus eventos
-
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <div className="gradient-pdv text-white py-8 px-6 md:px-8 shadow-lg">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-wide mb-2">
+              Panel de Control
+            </h1>
+            <p className="text-white/90 text-base">
+              Gestiona eventos especiales y servicios semanales
             </p>
           </div>
-          <Link to={createPageUrl("Events")}>
-            <Button size="lg" className="bg-[#1A1A1A] text-white hover:bg-gray-800 font-bold uppercase tracking-wide h-12 px-6 shadow-lg transition-transform hover:scale-105">
-              <Plus className="w-5 h-5 mr-2" />
-              Nuevo Evento
-            </Button>
-          </Link>
+          
+          {/* Two Pillars */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all cursor-pointer" onClick={() => navigate(createPageUrl('Events'))}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-white/20 p-2 rounded-lg">
+                  <Calendar className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold uppercase">Eventos Especiales</h3>
+                  <p className="text-white/80 text-sm">Congresos, retiros, conferencias</p>
+                </div>
+              </div>
+              <Button className="w-full bg-white text-pdv-teal hover:bg-gray-100 font-semibold">
+                Ver Eventos
+              </Button>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all cursor-pointer" onClick={() => navigate(createPageUrl('Services'))}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-white/20 p-2 rounded-lg">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold uppercase">Servicios Semanales</h3>
+                  <p className="text-white/80 text-sm">Domingos, miércoles, operación regular</p>
+                </div>
+              </div>
+              <Button className="w-full bg-white text-pdv-teal hover:bg-gray-100 font-semibold">
+                Ver Servicios
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="relative overflow-hidden bg-gradient-to-br from-white to-teal-50 border-none shadow-md hover:shadow-lg transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-pdv-teal opacity-20 rounded-bl-full" />
-          <CardHeader className="relative pb-2">
-            <CardTitle className="text-sm font-bold uppercase text-pdv-teal tracking-wider flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-pdv-teal" />
-              Total Eventos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-6xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-tight">{events.length}</div>
-            <div className="flex items-center mt-2">
-              <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-200 border-none">{upcomingEvents.length} activos</Badge>
+      {/* Stats Section - Two Pillars Side by Side */}
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-8">
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* EVENTS PILLAR */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar className="w-5 h-5 text-pdv-teal" />
+              <h2 className="text-xl font-bold text-gray-900 uppercase">Eventos Especiales</h2>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden bg-gradient-to-br from-white to-green-50 border-none shadow-md hover:shadow-lg transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-pdv-green opacity-20 rounded-bl-full" />
-          <CardHeader className="relative pb-2">
-            <CardTitle className="text-sm font-bold uppercase text-pdv-green tracking-wider flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-pdv-green" />
-              Total Sesiones
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-6xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-tight">{sessions.length}</div>
-            <div className="flex items-center mt-2">
-               <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-none">En todos los eventos</Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden bg-gradient-to-br from-white to-lime-50 border-none shadow-md hover:shadow-lg transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-pdv-lime opacity-20 rounded-bl-full" />
-          <CardHeader className="relative pb-2">
-            <CardTitle className="text-sm font-bold uppercase text-pdv-lime tracking-wider flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-pdv-lime" />
-              Total Segmentos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-6xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-tight">{segments.length}</div>
-            <div className="flex items-center mt-2">
-              <Badge className="bg-lime-100 text-lime-800 hover:bg-lime-200 border-none">Programados</Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {recentEvent &&
-      <Card className="border-l-4 border-pdv-green bg-white shadow-md">
-          <CardHeader className="bg-gradient-to-r from-gray-50 to-transparent border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-bold uppercase tracking-tight text-gray-900">Próximo Evento</CardTitle>
-              <Badge className="text-white font-bold uppercase border-none" style={gradientStyle}>Destacado</Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
             <div className="space-y-4">
-              <div>
-                <h3 className="text-3xl font-bold text-gray-900 uppercase tracking-tight">{recentEvent.name}</h3>
-                {recentEvent.theme &&
-              <p className="text-xl text-pdv-green mt-2 font-semibold italic">"{recentEvent.theme}"</p>
-              }
-              </div>
-              
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded bg-pdv-teal bg-opacity-10 flex items-center justify-center">
-                    <Calendar className="w-6 h-6 text-pdv-teal" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase text-gray-600 tracking-wider">Fechas</p>
-                    <p className="font-semibold text-gray-900">
-                      {recentEvent.start_date && format(new Date(recentEvent.start_date), "d MMM", { locale: es })}
-                      {recentEvent.end_date && ` - ${format(new Date(recentEvent.end_date), "d MMM yyyy", { locale: es })}`}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded bg-pdv-green bg-opacity-10 flex items-center justify-center">
-                    <MapPin className="w-6 h-6 text-pdv-green" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase text-gray-600 tracking-wider">Ubicación</p>
-                    <p className="font-semibold text-gray-900">{recentEvent.location || "Por definir"}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded bg-gray-200 flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-gray-700" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase text-gray-600 tracking-wider">Sesiones</p>
-                    <p className="font-semibold text-gray-900">{getSessionCount(recentEvent.id)} programadas</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Link to={createPageUrl(`EventDetail?id=${recentEvent.id}`)} className="flex-1">
-                  <Button variant="outline" className="w-full border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white font-bold uppercase">
-                    Ver Detalles
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      }
-
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold text-gray-900 uppercase tracking-tight">Todos los Eventos</h2>
-          <Link to={createPageUrl("Events")}>
-            <Button variant="ghost" size="sm" className="text-pdv-green hover:text-pdv-teal font-bold uppercase hover:bg-gray-100">
-              Ver todos
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) =>
-          <Link key={event.id} to={createPageUrl(`EventDetail?id=${event.id}`)}>
-              <Card className="hover:shadow-lg hover:border-pdv-green transition-all duration-200 h-full cursor-pointer bg-white border-gray-200 border-l-4 hover:border-l-pdv-green">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg mb-3 font-bold uppercase tracking-tight text-gray-900">{event.name}</CardTitle>
-                      <Badge className={`${statusColors[event.status]} border text-xs font-bold uppercase`}>
-                        {statusLabels[event.status]}
-                      </Badge>
+              <Card className="bg-white shadow hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-xs font-medium uppercase">Total Eventos</p>
+                      <p className="text-2xl font-bold text-gray-900 mt-1">{events.filter(e => e.status !== 'template').length}</p>
                     </div>
-                    <div className="text-3xl font-bold text-gray-300">{event.year}</div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {event.theme &&
-                  <p className="text-sm text-pdv-green font-semibold italic line-clamp-2">"{event.theme}"</p>
-                  }
-                    
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <MapPin className="w-4 h-4" />
-                      <span className="font-medium">{event.location || "Sin ubicación"}</span>
-                    </div>
-
-                    <div className="pt-3 border-t border-gray-200 flex items-center justify-between text-sm font-semibold">
-                      <span className="text-gray-600">{getSessionCount(event.id)} sesiones</span>
-                      <span className="text-gray-600">{getSegmentCount(event.id)} segmentos</span>
+                    <div className="bg-blue-100 p-2 rounded-full">
+                      <Calendar className="w-6 h-6 text-blue-600" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            </Link>
-          )}
 
-          {events.length === 0 && !isLoading &&
-          <Card className="col-span-full p-12 text-center border-dashed border-2 bg-white border-gray-300">
-              <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-bold uppercase text-gray-900 mb-2">No hay eventos</h3>
-              <p className="text-gray-600 mb-4">Comienza creando tu primer evento</p>
-              <Link to={createPageUrl("Events")}>
-                <Button className="text-white font-bold uppercase" style={gradientStyle}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Crear Evento
-                </Button>
-              </Link>
-            </Card>
-          }
+              <Card className="bg-white shadow hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-xs font-medium uppercase">Sesiones</p>
+                      <p className="text-2xl font-bold text-gray-900 mt-1">{sessions.length}</p>
+                    </div>
+                    <div className="bg-green-100 p-2 rounded-full">
+                      <Users className="w-6 h-6 text-green-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-xs font-medium uppercase">Segmentos</p>
+                      <p className="text-2xl font-bold text-gray-900 mt-1">{segments.length}</p>
+                    </div>
+                    <div className="bg-purple-100 p-2 rounded-full">
+                      <FileText className="w-6 h-6 text-purple-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* SERVICES PILLAR */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Clock className="w-5 h-5 text-pdv-green" />
+              <h2 className="text-xl font-bold text-gray-900 uppercase">Servicios Semanales</h2>
+            </div>
+            <div className="space-y-4">
+              <Card className="bg-white shadow hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-xs font-medium uppercase">Servicios Activos</p>
+                      <p className="text-2xl font-bold text-gray-900 mt-1">{services?.filter(s => s.status === 'active').length || 0}</p>
+                    </div>
+                    <div className="bg-orange-100 p-2 rounded-full">
+                      <Clock className="w-6 h-6 text-orange-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-xs font-medium uppercase">Plantillas</p>
+                      <p className="text-2xl font-bold text-gray-900 mt-1">{services?.filter(s => s.status === 'blueprint').length || 0}</p>
+                    </div>
+                    <div className="bg-teal-100 p-2 rounded-full">
+                      <Copy className="w-6 h-6 text-teal-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Button 
+                onClick={() => navigate(createPageUrl('Services'))}
+                className="w-full bg-pdv-green hover:bg-pdv-green/90 text-white font-semibold"
+              >
+                Gestionar Servicios
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>);
 
+      {/* Upcoming Events Section */}
+      <div className="max-w-7xl mx-auto px-6 md:px-8 pb-8">
+        <h2 className="text-xl font-bold text-gray-900 uppercase mb-4 flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-pdv-teal" />
+          Próximos Eventos
+        </h2>
+        
+        {nextEvent ? (
+          <Card className="bg-gradient-to-br from-white to-blue-50 shadow-lg border border-blue-200 mb-4">
+            <CardContent className="p-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{nextEvent.name}</h3>
+                  {nextEvent.theme && (
+                    <p className="text-base text-blue-600 italic mb-3">"{nextEvent.theme}"</p>
+                  )}
+                  <div className="space-y-2 text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      <span className="font-semibold">
+                        {format(new Date(nextEvent.start_date), 'MMMM d, yyyy', { locale: es })}
+                      </span>
+                    </div>
+                    {nextEvent.location && (
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        <span>{nextEvent.location}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <Badge className={statusColors[nextEvent.status] || "bg-gray-500"}>
+                      {nextEvent.status}
+                    </Badge>
+                    
+                    {sessions.filter(s => s.event_id === nextEvent.id).length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs text-gray-600">Sesiones</p>
+                        <p className="text-xl font-bold text-gray-900">
+                          {sessions.filter(s => s.event_id === nextEvent.id).length}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <Button 
+                    onClick={() => navigate(createPageUrl('EventDetail') + `?eventId=${nextEvent.id}`)}
+                    className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                  >
+                    Ver Detalles
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-white shadow">
+            <CardContent className="p-8 text-center">
+              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <h3 className="text-lg font-bold text-gray-900 mb-2">No hay eventos próximos</h3>
+              <p className="text-gray-600 text-sm mb-4">Comienza creando tu primer evento</p>
+              <Button 
+                onClick={() => navigate(createPageUrl('Events'))}
+                className="gradient-pdv text-white font-semibold"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Crear Evento
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {events.filter(e => e.status !== 'template').length > 1 && (
+          <div className="mt-4">
+            <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">Otros Eventos</h3>
+            <div className="grid gap-3">
+              {events
+                .filter(e => e.status !== 'template' && e.id !== nextEvent?.id)
+                .slice(0, 3)
+                .map((event) => (
+                  <Card 
+                    key={event.id} 
+                    className="bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => navigate(createPageUrl('EventDetail') + `?eventId=${event.id}`)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-900">{event.name}</h4>
+                          <p className="text-sm text-gray-600">
+                            {format(new Date(event.start_date), 'MMM d, yyyy', { locale: es })}
+                          </p>
+                        </div>
+                        <Badge className={statusColors[event.status] || "bg-gray-500"}>
+                          {event.status}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+            {events.filter(e => e.status !== 'template').length > 4 && (
+              <Button 
+                onClick={() => navigate(createPageUrl('Events'))}
+                variant="outline"
+                className="w-full mt-3"
+              >
+                Ver Todos los Eventos
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
