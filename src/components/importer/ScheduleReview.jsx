@@ -438,17 +438,17 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
 
       {/* Detailed Edit Dialog */}
       <Dialog open={editingSegmentIdx !== null} onOpenChange={(open) => !open && setEditingSegmentIdx(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh]">
+        <DialogContent className="max-w-full md:max-w-3xl max-h-[90vh] w-[95vw]">
             <DialogHeader>
                 <DialogTitle>Editar Detalles del Segmento</DialogTitle>
             </DialogHeader>
             {editingSegment && (
-                <ScrollArea className="h-[70vh]">
+                <ScrollArea className="h-[60vh] md:h-[70vh]">
                     <div className="grid gap-4 py-4 pr-4">
                         {/* Basic Info */}
-                        <div className="border rounded-lg p-4 bg-slate-50 space-y-4">
+                        <div className="border rounded-lg p-3 md:p-4 bg-slate-50 space-y-4">
                             <h4 className="font-bold text-sm uppercase text-slate-700">Información Básica</h4>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Duración (min)</Label>
                                     <Input 
@@ -487,7 +487,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                         </div>
 
                         {/* Translation */}
-                        <div className="border rounded-lg p-4 bg-blue-50 space-y-4">
+                        <div className="border rounded-lg p-3 md:p-4 bg-blue-50 space-y-4">
                             <h4 className="font-bold text-sm uppercase text-blue-700">Traducción</h4>
                             <div className="flex items-center gap-4">
                               <label className="flex items-center gap-2 cursor-pointer">
@@ -502,7 +502,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                             </div>
                             {editingSegment.requires_translation && (
                               <>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div className="space-y-2">
                                     <Label>Traductor</Label>
                                     <Input 
@@ -539,7 +539,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                         </div>
 
                         {/* Team Notes */}
-                        <div className="border rounded-lg p-4 bg-green-50 space-y-4">
+                        <div className="border rounded-lg p-3 md:p-4 bg-green-50 space-y-4">
                             <h4 className="font-bold text-sm uppercase text-green-700">Notas por Equipo</h4>
                             <div className="space-y-2">
                                 <Label>Proyección</Label>
@@ -549,7 +549,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                                     className="h-16"
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Sonido</Label>
                                     <Textarea 
@@ -595,7 +595,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                         </div>
 
                         {/* Alabanza Details - Always show */}
-                        <div className="border rounded-lg p-4 bg-purple-50 space-y-4">
+                        <div className="border rounded-lg p-3 md:p-4 bg-purple-50 space-y-4">
                             <h4 className="font-bold text-sm flex items-center gap-2 text-purple-700">
                                 <Music className="w-4 h-4" /> Alabanza (Canciones)
                             </h4>
@@ -610,7 +610,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                                     onChange={(e) => setEditingSegment({...editingSegment, number_of_songs: parseInt(e.target.value) || 0})} 
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                  <div className="space-y-2">
                                     <Label className="text-xs">Canción 1</Label>
                                     <Input placeholder="Título" className="bg-white h-8" value={editingSegment.song_1_title || ""} onChange={(e) => setEditingSegment({...editingSegment, song_1_title: e.target.value})} />
@@ -645,7 +645,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                         </div>
 
                         {/* Plenaria Details - Always show */}
-                        <div className="border rounded-lg p-4 bg-indigo-50 space-y-4">
+                        <div className="border rounded-lg p-3 md:p-4 bg-indigo-50 space-y-4">
                             <h4 className="font-bold text-sm flex items-center gap-2 text-indigo-700">
                                 <Mic className="w-4 h-4" /> Plenaria (Mensaje)
                             </h4>
@@ -660,7 +660,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                         </div>
 
                         {/* Video Details - Always show */}
-                        <div className="border rounded-lg p-4 bg-pink-50 space-y-4">
+                        <div className="border rounded-lg p-3 md:p-4 bg-pink-50 space-y-4">
                             <h4 className="font-bold text-sm uppercase text-pink-700">Video</h4>
                             <div className="flex items-center gap-4">
                               <label className="flex items-center gap-2 cursor-pointer">
@@ -675,7 +675,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                             </div>
                             {editingSegment.has_video && (
                               <>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div className="space-y-2">
                                     <Label>Nombre del Video</Label>
                                     <Input 
@@ -712,7 +712,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                         </div>
 
                         {/* Announcement Details - Always show */}
-                        <div className="border rounded-lg p-4 bg-yellow-50 space-y-4">
+                        <div className="border rounded-lg p-3 md:p-4 bg-yellow-50 space-y-4">
                             <h4 className="font-bold text-sm uppercase text-yellow-700">Anuncio</h4>
                             <div className="space-y-2">
                                 <Label>Título del Anuncio</Label>
@@ -729,7 +729,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                                     className="h-20"
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Fecha del Anuncio</Label>
                                     <Input 
@@ -750,9 +750,9 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                         </div>
 
                         {/* Break & Display Settings */}
-                        <div className="border rounded-lg p-4 bg-slate-100 space-y-4">
+                        <div className="border rounded-lg p-3 md:p-4 bg-slate-100 space-y-4">
                             <h4 className="font-bold text-sm uppercase text-slate-700">Configuración de Visualización</h4>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Código de Color</Label>
                                     <Select 
@@ -787,7 +787,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                             </div>
                             <div className="space-y-2">
                                 <Label className="font-semibold">Mostrar en Vistas:</Label>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input 
                                             type="checkbox" 
@@ -829,7 +829,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                         </div>
 
                         {/* Segment Actions */}
-                        <div className="border rounded-lg p-4 bg-orange-50/50 space-y-4">
+                        <div className="border rounded-lg p-3 md:p-4 bg-orange-50/50 space-y-4">
                             <div className="flex items-center justify-between">
                                 <h4 className="font-bold text-sm flex items-center gap-2 text-orange-700">
                                     <Zap className="w-4 h-4" /> Acciones / Tareas de Preparación
@@ -884,7 +884,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </div>
-                                            <div className="grid grid-cols-3 gap-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                 <Select 
                                                     value={action.department || "Other"} 
                                                     onValueChange={(val) => {
@@ -986,9 +986,9 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                     </div>
                 </ScrollArea>
             )}
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setEditingSegmentIdx(null)}>Cancelar</Button>
-                <Button onClick={saveEditDialog} className="bg-pdv-teal hover:bg-pdv-teal/90 text-white">Guardar Cambios</Button>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button variant="outline" onClick={() => setEditingSegmentIdx(null)} className="w-full sm:w-auto">Cancelar</Button>
+                <Button onClick={saveEditDialog} className="bg-pdv-teal hover:bg-pdv-teal/90 text-white w-full sm:w-auto">Guardar Cambios</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
