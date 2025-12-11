@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage, LanguageProvider } from "@/components/utils/i18n";
 import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages } from "lucide-react";
 import {
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function Layout({ children }) {
+function LayoutContent({ children }) {
   const { language, setLanguage, t } = useLanguage();
   // Hardcoded brand colors for reliable gradient rendering
   const gradientStyle = {
@@ -317,5 +317,13 @@ export default function Layout({ children }) {
         </main>
       </div>
     </div>
-  );
-}
+    );
+    }
+
+    export default function Layout({ children }) {
+    return (
+    <LanguageProvider>
+    <LayoutContent>{children}</LayoutContent>
+    </LanguageProvider>
+    );
+    }
