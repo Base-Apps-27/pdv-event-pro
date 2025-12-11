@@ -749,6 +749,85 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                             </div>
                         </div>
 
+                        {/* Break & Display Settings */}
+                        <div className="border rounded-lg p-4 bg-slate-100 space-y-4">
+                            <h4 className="font-bold text-sm uppercase text-slate-700">Configuración de Visualización</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Código de Color</Label>
+                                    <Select 
+                                        value={editingSegment.color_code || "default"}
+                                        onValueChange={(val) => setEditingSegment({...editingSegment, color_code: val})}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="default">Default</SelectItem>
+                                            <SelectItem value="worship">Worship (Alabanza)</SelectItem>
+                                            <SelectItem value="preach">Preach (Plenaria)</SelectItem>
+                                            <SelectItem value="break">Break</SelectItem>
+                                            <SelectItem value="tech">Tech Only</SelectItem>
+                                            <SelectItem value="special">Special</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="block">Es un Break Mayor</Label>
+                                    <label className="flex items-center gap-2 cursor-pointer pt-2">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={editingSegment.major_break ?? false}
+                                            onChange={(e) => setEditingSegment({...editingSegment, major_break: e.target.checked})}
+                                            className="rounded"
+                                        />
+                                        <span className="text-sm">Almuerzo / Cena</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="font-semibold">Mostrar en Vistas:</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={editingSegment.show_in_general ?? true}
+                                            onChange={(e) => setEditingSegment({...editingSegment, show_in_general: e.target.checked})}
+                                            className="rounded"
+                                        />
+                                        <span className="text-sm">General</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={editingSegment.show_in_projection ?? true}
+                                            onChange={(e) => setEditingSegment({...editingSegment, show_in_projection: e.target.checked})}
+                                            className="rounded"
+                                        />
+                                        <span className="text-sm">Proyección</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={editingSegment.show_in_sound ?? true}
+                                            onChange={(e) => setEditingSegment({...editingSegment, show_in_sound: e.target.checked})}
+                                            className="rounded"
+                                        />
+                                        <span className="text-sm">Sonido</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={editingSegment.show_in_ushers ?? true}
+                                            onChange={(e) => setEditingSegment({...editingSegment, show_in_ushers: e.target.checked})}
+                                            className="rounded"
+                                        />
+                                        <span className="text-sm">Ujieres</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Segment Actions */}
                         <div className="border rounded-lg p-4 bg-orange-50/50 space-y-4">
                             <div className="flex items-center justify-between">
