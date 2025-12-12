@@ -38,7 +38,8 @@ function LayoutContent({ children }) {
         const authenticated = await base44.auth.isAuthenticated();
         
         if (!authenticated) {
-          base44.auth.redirectToLogin();
+          // Allow public access, no redirect
+          setLoading(false);
           return;
         }
 
@@ -70,7 +71,6 @@ function LayoutContent({ children }) {
 
       } catch (error) {
         console.error('Auth error:', error);
-        base44.auth.redirectToLogin();
       } finally {
         setLoading(false);
       }
@@ -78,8 +78,13 @@ function LayoutContent({ children }) {
     checkAuth();
   }, [location.pathname]);
 
-  if (loading || !user) {
+  if (loading) {
     return null;
+  }
+
+  // Not authenticated - show minimal layout
+  if (!user) {
+    return <div className="min-h-screen bg-gray-50">{children}</div>;
   }
 
   const userRole = user.app_role || 'EventDayViewer';
