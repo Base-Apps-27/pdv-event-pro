@@ -152,21 +152,21 @@ export default function PublicProgramView() {
 
             {/* Filters Card */}
             <Card className="bg-white shadow-md">
-              <CardHeader>
+              <CardHeader className="bg-gray-50">
                 <div className="flex items-center gap-2">
                   <Filter className="w-5 h-5 text-pdv-teal" />
-                  <h3 className="text-lg font-bold uppercase">Filtros y Opciones</h3>
+                  <h3 className="text-lg font-bold uppercase text-gray-900">Filtros y Opciones</h3>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700">Sesión</label>
+                    <label className="text-sm font-semibold text-gray-900">Sesión</label>
                     <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white">
                         <SelectItem value="all">Todas las Sesiones</SelectItem>
                         {eventSessions.map((session) => (
                           <SelectItem key={session.id} value={session.id}>
@@ -178,54 +178,59 @@ export default function PublicProgramView() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700">Ver Detalles</label>
+                    <label className="text-sm font-semibold text-gray-900">Ver Detalles</label>
                     <div className="flex items-center space-x-2 h-10">
                       <Checkbox 
                         id="show-details"
                         checked={showDetails}
                         onCheckedChange={setShowDetails}
+                        className="border-gray-400"
                       />
-                      <label htmlFor="show-details" className="text-sm cursor-pointer">
+                      <label htmlFor="show-details" className="text-sm cursor-pointer text-gray-900">
                         Mostrar información detallada
                       </label>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t">
-                  <label className="text-sm font-semibold text-gray-700 block mb-3">Mostrar Notas de Equipos</label>
+                <div className="pt-4 border-t border-gray-200">
+                  <label className="text-sm font-semibold text-gray-900 block mb-3">Mostrar Notas de Equipos</label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="flex items-center space-x-2">
                       <Checkbox 
                         id="filter-projection"
                         checked={teamFilters.projection}
                         onCheckedChange={(checked) => setTeamFilters({...teamFilters, projection: checked})}
+                        className="border-gray-400"
                       />
-                      <label htmlFor="filter-projection" className="text-sm cursor-pointer">Proyección</label>
+                      <label htmlFor="filter-projection" className="text-sm cursor-pointer text-gray-900">Proyección</label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox 
                         id="filter-sound"
                         checked={teamFilters.sound}
                         onCheckedChange={(checked) => setTeamFilters({...teamFilters, sound: checked})}
+                        className="border-gray-400"
                       />
-                      <label htmlFor="filter-sound" className="text-sm cursor-pointer">Sonido</label>
+                      <label htmlFor="filter-sound" className="text-sm cursor-pointer text-gray-900">Sonido</label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox 
                         id="filter-ushers"
                         checked={teamFilters.ushers}
                         onCheckedChange={(checked) => setTeamFilters({...teamFilters, ushers: checked})}
+                        className="border-gray-400"
                       />
-                      <label htmlFor="filter-ushers" className="text-sm cursor-pointer">Ujieres</label>
+                      <label htmlFor="filter-ushers" className="text-sm cursor-pointer text-gray-900">Ujieres</label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox 
                         id="filter-translation"
                         checked={teamFilters.translation}
                         onCheckedChange={(checked) => setTeamFilters({...teamFilters, translation: checked})}
+                        className="border-gray-400"
                       />
-                      <label htmlFor="filter-translation" className="text-sm cursor-pointer">Traducción</label>
+                      <label htmlFor="filter-translation" className="text-sm cursor-pointer text-gray-900">Traducción</label>
                     </div>
                   </div>
                 </div>
