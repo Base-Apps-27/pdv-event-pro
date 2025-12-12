@@ -4,10 +4,10 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
-        // Parse query parameters
-        const url = new URL(req.url);
-        const eventId = url.searchParams.get("eventId");
-        const sessionId = url.searchParams.get("sessionId");
+        // Parse parameters from request body
+        const body = await req.json();
+        const eventId = body.eventId;
+        const sessionId = body.sessionId;
 
         // Validate required parameters
         if (!eventId) {
