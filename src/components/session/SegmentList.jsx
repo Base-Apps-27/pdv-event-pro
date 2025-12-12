@@ -438,57 +438,40 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        className={`p-4 bg-white rounded-lg border border-gray-200 ${snapshot.isDragging ? 'shadow-lg' : 'shadow-sm'}`}
+                        className={`p-3 bg-white rounded-lg border border-gray-200 ${snapshot.isDragging ? 'shadow-lg' : 'shadow-sm'}`}
                       >
-                        <div className="flex items-start gap-3">
+                        <div className="flex gap-2">
                           <div {...provided.dragHandleProps} className="pt-1">
-                            <GripVertical className="w-5 h-5 text-slate-400" />
+                            <GripVertical className="w-4 h-4 text-slate-400" />
                           </div>
+                          
+                          {/* Left Column - Main Info */}
                           <div className="flex-1 min-w-0">
-                            {/* Header */}
-                            <div className="flex items-start justify-between gap-2 mb-2">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                  <span className="font-bold text-slate-600 text-sm">#{segment.order}</span>
-                                  <Badge className={`${colorSchemes[segment.color_code || 'default']} border text-xs`}>
-                                    {segment.segment_type}
-                                  </Badge>
-                                  {segment.segment_type === "Breakout" && segment.breakout_rooms && (
-                                    <Badge variant="outline" className="text-xs gap-1 bg-amber-50 border-amber-300">
-                                      <Users className="w-3 h-3" />
-                                      {segment.breakout_rooms.length}
-                                    </Badge>
-                                  )}
-                                </div>
-                                <h4 className="font-semibold text-sm text-slate-900 truncate">{segment.title}</h4>
-                                {segment.presenter && (
-                                  <p className="text-xs text-slate-600 mt-0.5 truncate">
-                                    {segment.segment_type === "Alabanza" ? "Líder: " : segment.segment_type === "Plenaria" ? "Predicador: " : ""}
-                                    {segment.presenter}
-                                  </p>
-                                )}
-                                {segment.segment_type === "Plenaria" && segment.message_title && (
-                                  <p className="text-xs text-blue-600 mt-0.5 italic truncate">{segment.message_title}</p>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Time & Duration */}
-                            <div className="flex items-center gap-3 text-xs text-slate-600 mb-2">
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                <span className="font-mono">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</span>
-                              </div>
-                              {segment.duration_min && (
-                                <span className="text-slate-500">• {segment.duration_min}min</span>
-                              )}
-                              {timingIssues.length > 0 && (
-                                <AlertTriangle className="w-4 h-4 text-red-500" title={timingIssues.map(i => i.message).join('\n')} />
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-bold text-slate-600 text-sm">#{segment.order}</span>
+                              <Badge className={`${colorSchemes[segment.color_code || 'default']} border text-xs`}>
+                                {segment.segment_type}
+                              </Badge>
+                              {segment.segment_type === "Breakout" && segment.breakout_rooms && (
+                                <Badge variant="outline" className="text-xs gap-1 bg-amber-50 border-amber-300">
+                                  <Users className="w-3 h-3" />
+                                  {segment.breakout_rooms.length}
+                                </Badge>
                               )}
                             </div>
-
+                            <h4 className="font-semibold text-sm text-slate-900 line-clamp-1">{segment.title}</h4>
+                            {segment.presenter && (
+                              <p className="text-xs text-slate-600 mt-0.5 line-clamp-1">
+                                {segment.segment_type === "Alabanza" ? "L: " : segment.segment_type === "Plenaria" ? "P: " : ""}
+                                {segment.presenter}
+                              </p>
+                            )}
+                            {segment.segment_type === "Plenaria" && segment.message_title && (
+                              <p className="text-xs text-blue-600 mt-0.5 italic line-clamp-1">{segment.message_title}</p>
+                            )}
+                            
                             {/* Content Badges */}
-                            <div className="flex flex-wrap gap-1 mb-3">
+                            <div className="flex flex-wrap gap-1 mt-2">
                               {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
                                 <Badge variant="outline" className="text-xs gap-1">
                                   <Music className="w-3 h-3" />
@@ -498,7 +481,6 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                               {segment.requires_translation && (
                                 <Badge variant="outline" className="text-xs gap-1 bg-purple-50">
                                   <Languages className="w-3 h-3" />
-                                  Trad.
                                 </Badge>
                               )}
                               {actionCount > 0 && (
@@ -510,16 +492,45 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                               {(hasProjectionNotes || hasSoundNotes || hasUshersNotes) && (
                                 <Badge variant="outline" className="text-xs gap-1">
                                   <MessageSquare className="w-3 h-3" />
-                                  Notas
                                 </Badge>
                               )}
                             </div>
+                          </div>
 
-                            {/* Actions */}
-                            <div className="flex gap-2 pt-2 border-t border-gray-100">
-                              <Button variant="outline" size="sm" onClick={() => onEdit(segment)} className="flex-1 h-8 text-xs">
-                                <Edit className="w-3 h-3 mr-1" />
-                                Editar
+                          {/* Right Column - Time & Actions */}
+                          <div className="flex flex-col items-end justify-between gap-2 min-w-[80px]">
+                            <div className="text-right">
+                              <div className="flex items-center gap-1 justify-end font-mono text-sm font-semibold text-slate-900">
+                                {timingIssues.length > 0 && (
+                                  <AlertTriangle className="w-3 h-3 text-red-500" />
+                                )}
+                                {segment.start_time ? formatTimeToEST(segment.start_time) : "-"}
+                              </div>
+                              {segment.duration_min && (
+                                <div className="text-xs text-slate-500 mt-0.5">
+                                  • {segment.duration_min}min
+                                </div>
+                              )}
+                              {segment.end_time && (
+                                <div className="text-xs text-slate-400 font-mono">
+                                  → {formatTimeToEST(segment.end_time)}
+                                </div>
+                              )}
+                              {segment.stage_call_time && (
+                                <div className="text-xs text-blue-600 font-mono mt-0.5">
+                                  ↓ {formatTimeToEST(segment.stage_call_time)}
+                                </div>
+                              )}
+                              {segment.room_id && (
+                                <div className="text-xs text-slate-500 mt-1">
+                                  {getRoomName(segment.room_id)}
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="flex gap-1">
+                              <Button variant="outline" size="sm" onClick={() => onEdit(segment)} className="h-7 px-2">
+                                <Edit className="w-3 h-3" />
                               </Button>
                               <Button 
                                 variant="ghost" 
@@ -529,9 +540,9 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                                     deleteMutation.mutate(segment.id);
                                   }
                                 }}
-                                className="h-8 px-2"
+                                className="h-7 px-2"
                               >
-                                <Trash2 className="w-4 h-4 text-red-500" />
+                                <Trash2 className="w-3 h-3 text-red-500" />
                               </Button>
                             </div>
                           </div>
