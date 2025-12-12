@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -20,6 +20,7 @@ function LayoutContent({ children }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const redirectingRef = React.useRef(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -34,20 +35,21 @@ function LayoutContent({ children }) {
   // If on PublicProgramView page, don't require auth
   const isPublicPage = location.pathname.includes('PublicProgramView');
   
-  // Still loading auth state
-  if (isAuthenticated === null && !isPublicPage) {
-    return <div className="min-h-screen bg-gray-50">{children}</div>;
-  }
-
-  // Redirect to login if not authenticated (except public pages)
-  if (isAuthenticated === false && !isPublicPage) {
-    base44.auth.redirectToLogin();
-    return <div className="min-h-screen bg-gray-50">{children}</div>;
-  }
-
-  // Public page or unauthenticated - show minimal layout
+  // Public page - show minimal layout
   if (isPublicPage) {
     return <div className="min-h-screen bg-gray-50">{children}</div>;
+  }
+
+  // Still loading auth state
+  if (isAuthenticated === null) {
+    return <div className="min-h-screen bg-gray-50">{children}</div>;
+  }
+
+  // Redirect to login if not authenticated (prevent multiple redirects)
+  if (isAuthenticated === false && !redirectingRef.current) {
+    redirectingRef.current = true;
+    base44.auth.redirectToLogin();
+    return null;
   }
 
   return (
