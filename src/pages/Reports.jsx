@@ -110,6 +110,10 @@ export default function Reports() {
   const getPublicViewUrl = () => {
     const baseUrl = window.location.origin;
     const pagePath = createPageUrl("PublicProgramView");
+    const eventSlug = selectedEvent?.slug;
+    if (eventSlug) {
+      return `${baseUrl}${pagePath}?slug=${eventSlug}`;
+    }
     return `${baseUrl}${pagePath}?eventId=${selectedEventId}`;
   };
 
@@ -124,7 +128,12 @@ export default function Reports() {
   };
 
   const handleOpenPublicView = () => {
-    navigate(createPageUrl("PublicProgramView") + `?eventId=${selectedEventId}`);
+    const eventSlug = selectedEvent?.slug;
+    if (eventSlug) {
+      navigate(createPageUrl("PublicProgramView") + `?slug=${eventSlug}`);
+    } else {
+      navigate(createPageUrl("PublicProgramView") + `?eventId=${selectedEventId}`);
+    }
   };
 
   const getSegmentActions = (segment) => {

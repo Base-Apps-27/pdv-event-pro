@@ -80,10 +80,19 @@ export default function Events() {
     }
   };
 
+  const generateSlug = (name, year) => {
+    return `${name}-${year}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    const slug = formData.slug || generateSlug(formData.name, formData.year);
     const data = {
       ...formData,
+      slug,
       year: parseInt(formData.year),
       field_origins: fieldOrigins,
       promotion_targets: formData.promotion_targets.split(',').map(s => s.trim()).filter(Boolean),
@@ -101,6 +110,7 @@ export default function Events() {
     setFieldOrigins(event?.field_origins || {});
     setFormData({
       name: event?.name || '',
+      slug: event?.slug || '',
       theme: event?.theme || '',
       year: event?.year || new Date().getFullYear(),
       location: event?.location || '',

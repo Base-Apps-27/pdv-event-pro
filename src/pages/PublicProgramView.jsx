@@ -11,6 +11,7 @@ import { formatTimeToEST } from "../components/utils/timeFormat";
 
 export default function PublicProgramView() {
   const urlParams = new URLSearchParams(window.location.search);
+  const preloadedSlug = urlParams.get('slug');
   const preloadedEventId = urlParams.get('eventId') || "";
   
   const [selectedEventId, setSelectedEventId] = useState(preloadedEventId);
@@ -38,6 +39,16 @@ export default function PublicProgramView() {
       return events.filter(e => e.status === 'confirmed' || e.status === 'in_progress');
     },
   });
+
+  // If slug is provided, find the event and set the ID
+  useEffect(() => {
+    if (preloadedSlug && publicEvents.length > 0 && !selectedEventId) {
+      const event = publicEvents.find(e => e.slug === preloadedSlug);
+      if (event) {
+        setSelectedEventId(event.id);
+      }
+    }
+  }, [preloadedSlug, publicEvents, selectedEventId]);
 
   // Fetch sessions for selected event
   const { data: sessions = [] } = useQuery({
