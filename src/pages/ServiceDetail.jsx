@@ -11,6 +11,16 @@ import ServiceBuilder from "../components/service/ServiceBuilder";
 
 export default function ServiceDetail() {
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      const isAuthenticated = await base44.auth.isAuthenticated();
+      if (!isAuthenticated) {
+        base44.auth.redirectToLogin();
+      }
+    };
+    checkAuth();
+  }, []);
   const urlParams = new URLSearchParams(window.location.search);
   const serviceId = urlParams.get('id');
 

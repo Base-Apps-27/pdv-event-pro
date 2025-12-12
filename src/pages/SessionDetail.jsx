@@ -14,6 +14,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 export default function SessionDetail() {
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      const isAuthenticated = await base44.auth.isAuthenticated();
+      if (!isAuthenticated) {
+        base44.auth.redirectToLogin();
+      }
+    };
+    checkAuth();
+  }, []);
   const urlParams = new URLSearchParams(window.location.search);
   const sessionId = urlParams.get('id');
   const queryClient = useQueryClient();
