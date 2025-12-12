@@ -108,7 +108,18 @@ export default function Reports() {
   };
 
   const getPublicViewUrl = () => {
-    const baseUrl = window.location.origin;
+    // Extract app identifier from current URL and construct production URL
+    let baseUrl = window.location.origin;
+    
+    // If on preview/sandbox, convert to production format
+    if (baseUrl.includes('preview-sandbox--')) {
+      const appId = baseUrl.split('preview-sandbox--')[1].split('.')[0];
+      baseUrl = `https://${appId}.base44.app`;
+    } else if (baseUrl.includes('sandbox--')) {
+      const appId = baseUrl.split('sandbox--')[1].split('.')[0];
+      baseUrl = `https://${appId}.base44.app`;
+    }
+    
     const pagePath = createPageUrl("PublicProgramView");
     const eventSlug = selectedEvent?.slug;
     if (eventSlug) {
