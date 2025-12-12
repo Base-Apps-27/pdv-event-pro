@@ -328,7 +328,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
              </div>
           </div>
 
-          {/* Segments Table */}
+          {/* Segments Table/Cards */}
           <div className="rounded-md border border-gray-200 overflow-hidden">
             <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex justify-between items-center">
               <span className="text-xs font-bold uppercase text-gray-600">Segmentos ({segments.length})</span>
@@ -336,87 +336,138 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
                 <Plus className="w-4 h-4 mr-1" /> Agregar
               </Button>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[80px]">Hora</TableHead>
-                  <TableHead className="w-[60px]">Dur.</TableHead>
-                  <TableHead className="w-[120px]">Tipo</TableHead>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Responsable</TableHead>
-                  <TableHead className="w-[80px] text-center">Detalles</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {segments.map((segment, idx) => (
-                  <TableRow key={idx} className="group hover:bg-slate-50">
-                    <TableCell className="p-2">
-                      <Input 
-                        value={segment.time} 
-                        onChange={(e) => handleSegmentChange(idx, 'time', e.target.value)}
-                        className="h-8 text-xs"
-                        placeholder="00:00"
-                      />
-                    </TableCell>
-                    <TableCell className="p-2">
-                      <Input 
-                        type="number"
-                        value={segment.duration_min || ""} 
-                        onChange={(e) => handleSegmentChange(idx, 'duration_min', parseInt(e.target.value))}
-                        className="h-8 text-xs w-16"
-                        placeholder="min"
-                      />
-                    </TableCell>
-                    <TableCell className="p-2">
-                      <Select 
-                        value={segmentTypes.includes(segment.type) ? segment.type : "Alabanza"} 
-                        onValueChange={(val) => handleSegmentChange(idx, 'type', val)}
-                      >
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {segmentTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="p-2">
-                      <Input 
-                        value={segment.title} 
-                        onChange={(e) => handleSegmentChange(idx, 'title', e.target.value)}
-                        className="h-8 text-xs font-medium"
-                        placeholder="Título"
-                      />
-                    </TableCell>
-                    <TableCell className="p-2">
-                      <Input 
-                        value={segment.presenter} 
-                        onChange={(e) => handleSegmentChange(idx, 'presenter', e.target.value)}
-                        className="h-8 text-xs text-gray-500"
-                        placeholder="Nombre"
-                      />
-                    </TableCell>
-                    <TableCell className="p-2 text-center">
-                         <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => openEditDialog(idx)}>
-                            <Settings className="w-3 h-3 mr-1" />
-                            Editar
-                         </Button>
-                    </TableCell>
-                    <TableCell className="p-2 text-center">
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => handleDeleteSegment(idx)}
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-[80px]">Hora</TableHead>
+                    <TableHead className="w-[60px]">Dur.</TableHead>
+                    <TableHead className="w-[120px]">Tipo</TableHead>
+                    <TableHead>Título</TableHead>
+                    <TableHead>Responsable</TableHead>
+                    <TableHead className="w-[80px] text-center">Detalles</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {segments.map((segment, idx) => (
+                    <TableRow key={idx} className="group hover:bg-slate-50">
+                      <TableCell className="p-2">
+                        <Input 
+                          value={segment.time} 
+                          onChange={(e) => handleSegmentChange(idx, 'time', e.target.value)}
+                          className="h-8 text-xs"
+                          placeholder="00:00"
+                        />
+                      </TableCell>
+                      <TableCell className="p-2">
+                        <Input 
+                          type="number"
+                          value={segment.duration_min || ""} 
+                          onChange={(e) => handleSegmentChange(idx, 'duration_min', parseInt(e.target.value))}
+                          className="h-8 text-xs w-16"
+                          placeholder="min"
+                        />
+                      </TableCell>
+                      <TableCell className="p-2">
+                        <Select 
+                          value={segmentTypes.includes(segment.type) ? segment.type : "Alabanza"} 
+                          onValueChange={(val) => handleSegmentChange(idx, 'type', val)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {segmentTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="p-2">
+                        <Input 
+                          value={segment.title} 
+                          onChange={(e) => handleSegmentChange(idx, 'title', e.target.value)}
+                          className="h-8 text-xs font-medium"
+                          placeholder="Título"
+                        />
+                      </TableCell>
+                      <TableCell className="p-2">
+                        <Input 
+                          value={segment.presenter} 
+                          onChange={(e) => handleSegmentChange(idx, 'presenter', e.target.value)}
+                          className="h-8 text-xs text-gray-500"
+                          placeholder="Nombre"
+                        />
+                      </TableCell>
+                      <TableCell className="p-2 text-center">
+                           <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => openEditDialog(idx)}>
+                              <Settings className="w-3 h-3 mr-1" />
+                              Editar
+                           </Button>
+                      </TableCell>
+                      <TableCell className="p-2 text-center">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          onClick={() => handleDeleteSegment(idx)}
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden divide-y divide-gray-200">
+              {segments.map((segment, idx) => (
+                <div key={idx} className="p-4 bg-white hover:bg-slate-50 transition-colors">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="outline" className="text-xs font-semibold">
+                          {segment.type || "Alabanza"}
+                        </Badge>
+                        <span className="text-xs text-gray-500">{segment.time || "--:--"}</span>
+                        {segment.duration_min && (
+                          <span className="text-xs text-gray-400">({segment.duration_min}min)</span>
+                        )}
+                      </div>
+                      <h4 className="font-semibold text-sm text-gray-900 mb-1">
+                        {segment.title || "Sin título"}
+                      </h4>
+                      {segment.presenter && (
+                        <p className="text-xs text-gray-600">
+                          <Users className="w-3 h-3 inline mr-1" />
+                          {segment.presenter}
+                        </p>
+                      )}
+                    </div>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      onClick={() => handleDeleteSegment(idx)}
+                      className="h-8 w-8 text-red-400 hover:text-red-600 ml-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="w-full h-9 text-sm" 
+                    onClick={() => openEditDialog(idx)}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Editar Detalles
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
 
