@@ -30,35 +30,52 @@ export default function PublicProgramView() {
     }
   }, [preloadedEventId]);
 
-  // Fetch list of public events via backend function
-  const { data: eventsData } = useQuery({
+  // Fetch list of public events
+  const { data: publicEvents = [] } = useQuery({
     queryKey: ['publicEvents'],
     queryFn: async () => {
-      const response = await base44.functions.invoke('getPublicProgramData', { listPublicEvents: true });
-      return response.data;
+      const events = await base44.entities.Event.list('-start_date');
+      return events.filter(e => e.status === 'confirmed' || e.status === 'in_progress');
     },
   });
 
-  const publicEvents = eventsData?.events || [];
-
-  // Fetch program data via backend function
-  const { data: programData, isLoading: isProgramLoading } = useQuery({
-    queryKey: ['publicProgram', selectedEventId, selectedSessionId],
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        eventId: selectedEventId,
-        ...(selectedSessionId !== "all" && { sessionId: selectedSessionId })
-      });
-      const response = await base44.functions.invoke('getPublicProgramData', { eventId: selectedEventId, sessionId: selectedSessionId });
-      return response.data;
-    },
+  // Fetch sessions for selected event
+  const { data: sessions = [] } = useQuery({
+    queryKey: ['sessions', selectedEventId],
+    queryFn: () => base44.entities.Session.filter({ event_id: selectedEventId }, 'order'),
     enabled: !!selectedEventId,
   });
 
-  const sessions = programData?.sessions || [];
-  const allSegments = programData?.segments || [];
-  const rooms = programData?.rooms || [];
-  const eventDays = programData?.eventDays || [];
+  // Fetch segments for selected sessions
+  const { data: allSegments = [] } = useQuery({
+    queryKey: ['segments', selectedEventId, selectedSessionId],
+    queryFn: async () => {
+      const sessionIds = selectedSessionId === "all" 
+        ? sessions.map(s => s.id)
+        : [selectedSessionId];
+      
+      if (sessionIds.length === 0) return [];
+      
+      const allSegs = await base44.entities.Segment.list('order');
+      return allSegs.filter(seg => 
+        sessionIds.includes(seg.session_id) && seg.show_in_general !== false
+      );
+    },
+    enabled: !!selectedEventId && sessions.length > 0,
+  });
+
+  // Fetch rooms
+  const { data: rooms = [] } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: () => base44.entities.Room.list(),
+  });
+
+  // Fetch event days
+  const { data: eventDays = [] } = useQuery({
+    queryKey: ['eventDays', selectedEventId],
+    queryFn: () => base44.entities.EventDay.filter({ event_id: selectedEventId }),
+    enabled: !!selectedEventId,
+  });
 
   const selectedEvent = programData?.event || publicEvents.find(e => e.id === selectedEventId);
   const eventSessions = sessions;
