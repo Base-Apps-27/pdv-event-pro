@@ -30,6 +30,7 @@ export default function PublicProgramView() {
     }
   }, [preloadedEventId]);
 
+  // Fetch list of public events
   const { data: allEvents = [] } = useQuery({
     queryKey: ['events'],
     queryFn: () => base44.entities.Event.list('-year'),
@@ -37,31 +38,31 @@ export default function PublicProgramView() {
 
   const publicEvents = allEvents.filter(e => e.status === 'confirmed' || e.status === 'in_progress');
 
-  const { data: sessions = [] } = useQuery({
-    queryKey: ['sessions', selectedEventId],
-    queryFn: () => base44.entities.Session.list(),
+  // Fetch program data via backend function
+  const { data: programData, isLoading: isProgramLoading } = useQuery({
+    queryKey: ['publicProgram', selectedEventId, selectedSessionId],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        eventId: selectedEventId,
+        ...(selectedSessionId !== "all" && { sessionId: selectedSessionId })
+      });
+      const response = await base44.functions.invoke('getPublicProgramData', { eventId: selectedEventId, sessionId: selectedSessionId });
+      return response.data;
+    },
     enabled: !!selectedEventId,
   });
 
-  const { data: allSegments = [] } = useQuery({
-    queryKey: ['segments', selectedEventId],
-    queryFn: () => base44.entities.Segment.list(),
-    enabled: !!selectedEventId,
-  });
+  const sessions = programData?.sessions || [];
+  const allSegments = programData?.segments || [];
+  const rooms = programData?.rooms || [];
+  const eventDays = programData?.eventDays || [];
 
-  const { data: rooms = [] } = useQuery({
-    queryKey: ['rooms'],
-    queryFn: () => base44.entities.Room.list(),
-  });
-
-  const selectedEvent = publicEvents.find(e => e.id === selectedEventId);
-  const eventSessions = sessions.filter(s => s.event_id === selectedEventId).sort((a, b) => (a.order || 0) - (b.order || 0));
-  const filteredSessions = selectedSessionId === "all" ? eventSessions : eventSessions.filter(s => s.id === selectedSessionId);
+  const selectedEvent = programData?.event || publicEvents.find(e => e.id === selectedEventId);
+  const eventSessions = sessions;
+  const filteredSessions = eventSessions;
 
   const getSessionSegments = (sessionId) => {
-    return allSegments
-      .filter(seg => seg.session_id === sessionId && seg.show_in_general)
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
+    return allSegments.filter(seg => seg.session_id === sessionId);
   };
 
   const getRoomName = (roomId) => {
