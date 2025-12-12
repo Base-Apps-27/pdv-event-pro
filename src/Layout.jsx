@@ -19,14 +19,37 @@ function LayoutContent({ children }) {
   };
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const redirectingRef = React.useRef(false);
 
   const isActive = (path) => location.pathname === path;
 
-  // If on PublicProgramView page, show minimal layout
+  // If on PublicProgramView page, show minimal layout without auth
   const isPublicPage = location.pathname.includes('PublicProgramView');
   
   if (isPublicPage) {
     return <div className="min-h-screen bg-gray-50">{children}</div>;
+  }
+
+  // For all other pages, check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const authenticated = await base44.auth.isAuthenticated();
+      setIsAuthenticated(authenticated);
+    };
+    checkAuth();
+  }, []);
+
+  // Still loading auth state
+  if (isAuthenticated === null) {
+    return <div className="min-h-screen bg-gray-50"></div>;
+  }
+
+  // Redirect to login if not authenticated (prevent multiple redirects)
+  if (isAuthenticated === false && !redirectingRef.current) {
+    redirectingRef.current = true;
+    base44.auth.redirectToLogin();
+    return null;
   }
 
   return (
