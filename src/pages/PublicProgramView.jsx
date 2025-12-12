@@ -30,13 +30,16 @@ export default function PublicProgramView() {
     }
   }, [preloadedEventId]);
 
-  // Fetch list of public events
-  const { data: allEvents = [] } = useQuery({
-    queryKey: ['events'],
-    queryFn: () => base44.entities.Event.list('-year'),
+  // Fetch list of public events via backend function
+  const { data: eventsData } = useQuery({
+    queryKey: ['publicEvents'],
+    queryFn: async () => {
+      const response = await base44.functions.invoke('getPublicProgramData', { listPublicEvents: true });
+      return response.data;
+    },
   });
 
-  const publicEvents = allEvents.filter(e => e.status === 'confirmed' || e.status === 'in_progress');
+  const publicEvents = eventsData?.events || [];
 
   // Fetch program data via backend function
   const { data: programData, isLoading: isProgramLoading } = useQuery({

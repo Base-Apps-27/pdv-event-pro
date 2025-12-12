@@ -8,8 +8,16 @@ Deno.serve(async (req) => {
         const body = await req.json();
         const eventId = body.eventId;
         const sessionId = body.sessionId;
+        const listPublicEvents = body.listPublicEvents;
 
-        // Validate required parameters
+        // If requesting list of public events
+        if (listPublicEvents) {
+            const allEvents = await base44.asServiceRole.entities.Event.list('-year');
+            const publicEvents = allEvents.filter(e => e.status === 'confirmed' || e.status === 'in_progress');
+            return Response.json({ events: publicEvents });
+        }
+
+        // Validate required parameters for event details
         if (!eventId) {
             return Response.json({ 
                 error: "Missing required parameter: eventId" 
