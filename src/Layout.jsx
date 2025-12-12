@@ -36,19 +36,17 @@ function LayoutContent({ children }) {
     const checkAuth = async () => {
       const authenticated = await base44.auth.isAuthenticated();
       setIsAuthenticated(authenticated);
+      
+      if (!authenticated && !redirectingRef.current) {
+        redirectingRef.current = true;
+        base44.auth.redirectToLogin();
+      }
     };
     checkAuth();
-  }, []);
+  }, [location.pathname]);
 
-  // Still loading auth state
-  if (isAuthenticated === null) {
-    return <div className="min-h-screen bg-gray-50"></div>;
-  }
-
-  // Redirect to login if not authenticated (prevent multiple redirects)
-  if (isAuthenticated === false && !redirectingRef.current) {
-    redirectingRef.current = true;
-    base44.auth.redirectToLogin();
+  // Still loading auth state or redirecting - show nothing
+  if (isAuthenticated === null || isAuthenticated === false) {
     return null;
   }
 
