@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { base44 } from "@/api/base44Client";
 import { useLanguage, LanguageProvider } from "@/components/utils/i18n";
 import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages } from "lucide-react";
 import {
@@ -18,8 +19,27 @@ function LayoutContent({ children }) {
   };
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const authenticated = await base44.auth.isAuthenticated();
+      setIsAuthenticated(authenticated);
+    };
+    checkAuth();
+  }, []);
 
   const isActive = (path) => location.pathname === path;
+
+  // If on PublicProgramView page, don't show navigation
+  if (location.pathname.includes('PublicProgramView') || isAuthenticated === false) {
+    return <div className="min-h-screen bg-gray-50">{children}</div>;
+  }
+
+  // Still loading auth state
+  if (isAuthenticated === null) {
+    return <div className="min-h-screen bg-gray-50">{children}</div>;
+  }
 
   return (
     <div className="min-h-screen flex bg-gray-50">
