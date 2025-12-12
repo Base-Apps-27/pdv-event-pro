@@ -31,13 +31,22 @@ function LayoutContent({ children }) {
 
   const isActive = (path) => location.pathname === path;
 
-  // If on PublicProgramView page, don't show navigation
-  if (location.pathname.includes('PublicProgramView') || isAuthenticated === false) {
+  // If on PublicProgramView page, don't require auth
+  const isPublicPage = location.pathname.includes('PublicProgramView');
+  
+  // Still loading auth state
+  if (isAuthenticated === null && !isPublicPage) {
     return <div className="min-h-screen bg-gray-50">{children}</div>;
   }
 
-  // Still loading auth state
-  if (isAuthenticated === null) {
+  // Redirect to login if not authenticated (except public pages)
+  if (isAuthenticated === false && !isPublicPage) {
+    base44.auth.redirectToLogin();
+    return <div className="min-h-screen bg-gray-50">{children}</div>;
+  }
+
+  // Public page or unauthenticated - show minimal layout
+  if (isPublicPage) {
     return <div className="min-h-screen bg-gray-50">{children}</div>;
   }
 

@@ -8,16 +8,6 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function ScheduleImporter() {
-  React.useEffect(() => {
-    const checkAuth = async () => {
-      const isAuthenticated = await base44.auth.isAuthenticated();
-      if (!isAuthenticated) {
-        base44.auth.redirectToLogin();
-      }
-    };
-    checkAuth();
-  }, []);
-
   const [step, setStep] = useState("upload"); // upload, processing, review, success, error
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
