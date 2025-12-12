@@ -88,7 +88,7 @@ export default function PublicProgramView() {
     enabled: !!selectedEventId,
   });
 
-  const selectedEvent = programData?.event || publicEvents.find(e => e.id === selectedEventId);
+  const selectedEvent = publicEvents.find(e => e.id === selectedEventId);
   const eventSessions = sessions;
   const filteredSessions = eventSessions;
 
