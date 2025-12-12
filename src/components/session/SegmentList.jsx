@@ -127,7 +127,8 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="overflow-x-auto">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50">
@@ -394,6 +395,156 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
             )}
           </Droppable>
         </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {/* Pre-Session Card */}
+        <div className={`p-4 rounded-lg border-l-4 ${preSession ? 'bg-blue-50 border-blue-500' : 'bg-gray-50 border-gray-300'}`}>
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex-1">
+              <Badge className={`${preSession ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-600 border-gray-200'} border text-xs mb-2`}>
+                Pre-Sesión
+              </Badge>
+              <h4 className={`font-semibold text-sm ${preSession ? 'text-slate-900' : 'text-gray-400'}`}>
+                {preSession ? 'Preparación Pre-Sesión' : 'Pre-Sesión (vacío)'}
+              </h4>
+              {preSession && (
+                <p className="text-xs text-slate-600 mt-1">
+                  {preSession.registration_desk_open_time ? `Apertura: ${formatTimeToEST(preSession.registration_desk_open_time)}` : ''}
+                </p>
+              )}
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => onEditPreSession && onEditPreSession()}>
+              <Edit className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Segment Cards */}
+        <Droppable droppableId="segments-mobile">
+          {(provided) => (
+            <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
+              {segments.map((segment, index) => {
+                const actionCount = getSegmentActions(segment.id).length;
+                const hasProjectionNotes = !!segment.projection_notes;
+                const hasSoundNotes = !!segment.sound_notes;
+                const hasUshersNotes = !!segment.ushers_notes;
+                const timingIssues = checkTimingIssues(segment, index);
+
+                return (
+                  <Draggable key={segment.id} draggableId={segment.id} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className={`p-4 bg-white rounded-lg border border-gray-200 ${snapshot.isDragging ? 'shadow-lg' : 'shadow-sm'}`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div {...provided.dragHandleProps} className="pt-1">
+                            <GripVertical className="w-5 h-5 text-slate-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            {/* Header */}
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                  <span className="font-bold text-slate-600 text-sm">#{segment.order}</span>
+                                  <Badge className={`${colorSchemes[segment.color_code || 'default']} border text-xs`}>
+                                    {segment.segment_type}
+                                  </Badge>
+                                  {segment.segment_type === "Breakout" && segment.breakout_rooms && (
+                                    <Badge variant="outline" className="text-xs gap-1 bg-amber-50 border-amber-300">
+                                      <Users className="w-3 h-3" />
+                                      {segment.breakout_rooms.length}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <h4 className="font-semibold text-sm text-slate-900 truncate">{segment.title}</h4>
+                                {segment.presenter && (
+                                  <p className="text-xs text-slate-600 mt-0.5 truncate">
+                                    {segment.segment_type === "Alabanza" ? "Líder: " : segment.segment_type === "Plenaria" ? "Predicador: " : ""}
+                                    {segment.presenter}
+                                  </p>
+                                )}
+                                {segment.segment_type === "Plenaria" && segment.message_title && (
+                                  <p className="text-xs text-blue-600 mt-0.5 italic truncate">{segment.message_title}</p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Time & Duration */}
+                            <div className="flex items-center gap-3 text-xs text-slate-600 mb-2">
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                <span className="font-mono">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</span>
+                              </div>
+                              {segment.duration_min && (
+                                <span className="text-slate-500">• {segment.duration_min}min</span>
+                              )}
+                              {timingIssues.length > 0 && (
+                                <AlertTriangle className="w-4 h-4 text-red-500" title={timingIssues.map(i => i.message).join('\n')} />
+                              )}
+                            </div>
+
+                            {/* Content Badges */}
+                            <div className="flex flex-wrap gap-1 mb-3">
+                              {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
+                                <Badge variant="outline" className="text-xs gap-1">
+                                  <Music className="w-3 h-3" />
+                                  {segment.number_of_songs}
+                                </Badge>
+                              )}
+                              {segment.requires_translation && (
+                                <Badge variant="outline" className="text-xs gap-1 bg-purple-50">
+                                  <Languages className="w-3 h-3" />
+                                  Trad.
+                                </Badge>
+                              )}
+                              {actionCount > 0 && (
+                                <Badge variant="outline" className="text-xs gap-1 bg-blue-50">
+                                  <ListOrdered className="w-3 h-3" />
+                                  {actionCount}
+                                </Badge>
+                              )}
+                              {(hasProjectionNotes || hasSoundNotes || hasUshersNotes) && (
+                                <Badge variant="outline" className="text-xs gap-1">
+                                  <MessageSquare className="w-3 h-3" />
+                                  Notas
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-2 pt-2 border-t border-gray-100">
+                              <Button variant="outline" size="sm" onClick={() => onEdit(segment)} className="flex-1 h-8 text-xs">
+                                <Edit className="w-3 h-3 mr-1" />
+                                Editar
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm('¿Eliminar este segmento?')) {
+                                    deleteMutation.mutate(segment.id);
+                                  }
+                                }}
+                                className="h-8 px-2"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </Draggable>
+                );
+              })}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
       </div>
     </DragDropContext>
   );
