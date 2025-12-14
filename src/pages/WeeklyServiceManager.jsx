@@ -133,7 +133,7 @@ export default function WeeklyServiceManager() {
       queryClient.invalidateQueries(['allAnnouncements']);
       queryClient.invalidateQueries(['dynamicAnnouncements']);
       setShowAnnouncementDialog(false);
-      setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, is_recurring: false, recurrence_end_date: "", has_video: false });
+      setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, has_video: false, date_of_occurrence: "" });
       setEditingAnnouncement(null);
     },
   });
@@ -144,7 +144,7 @@ export default function WeeklyServiceManager() {
       queryClient.invalidateQueries(['allAnnouncements']);
       queryClient.invalidateQueries(['dynamicAnnouncements']);
       setShowAnnouncementDialog(false);
-      setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, is_recurring: false, recurrence_end_date: "", has_video: false });
+      setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, has_video: false, date_of_occurrence: "" });
       setEditingAnnouncement(null);
     },
   });
