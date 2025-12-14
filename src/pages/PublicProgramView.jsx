@@ -18,6 +18,8 @@ export default function PublicProgramView() {
   const [selectedSessionId, setSelectedSessionId] = useState("all");
   const [showDetails, setShowDetails] = useState(false);
   const [expandedSegments, setExpandedSegments] = useState({});
+  const [expandedSessions, setExpandedSessions] = useState({});
+  const [showEventDetails, setShowEventDetails] = useState(false);
   const [teamFilters, setTeamFilters] = useState({
     projection: false,
     sound: false,
@@ -108,6 +110,13 @@ export default function PublicProgramView() {
     }));
   };
 
+  const toggleSessionExpanded = (sessionId) => {
+    setExpandedSessions(prev => ({
+      ...prev,
+      [sessionId]: !prev[sessionId]
+    }));
+  };
+
   const sessionColorClasses = {
     green: 'border-l-4 border-pdv-green',
     blue: 'border-l-4 border-blue-500',
@@ -164,7 +173,7 @@ export default function PublicProgramView() {
                 {selectedEvent.theme && (
                   <p className="text-xl text-pdv-green italic mb-4">"{selectedEvent.theme}"</p>
                 )}
-                <div className="flex flex-wrap gap-4 text-sm">
+                <div className="flex flex-wrap gap-4 text-sm mb-4">
                   {selectedEvent.start_date && (
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-gray-600" />
@@ -179,6 +188,57 @@ export default function PublicProgramView() {
                     </div>
                   )}
                 </div>
+
+                {/* Toggle Event Details */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowEventDetails(!showEventDetails)}
+                  className="mb-4"
+                >
+                  {showEventDetails ? <ChevronUp className="w-4 h-4 mr-2" /> : <ChevronDown className="w-4 h-4 mr-2" />}
+                  {showEventDetails ? 'Ocultar Detalles' : 'Ver Más Detalles'}
+                </Button>
+
+                {/* Expanded Event Details */}
+                {showEventDetails && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                    {selectedEvent.description && (
+                      <div>
+                        <p className="font-semibold text-gray-900 mb-1">Descripción:</p>
+                        <p className="text-gray-700">{selectedEvent.description}</p>
+                      </div>
+                    )}
+                    {selectedEvent.announcement_blurb && (
+                      <div>
+                        <p className="font-semibold text-gray-900 mb-1">Anuncio:</p>
+                        <p className="text-gray-700">{selectedEvent.announcement_blurb}</p>
+                      </div>
+                    )}
+                    {selectedEvent.promotion_targets && selectedEvent.promotion_targets.length > 0 && (
+                      <div>
+                        <p className="font-semibold text-gray-900 mb-1">Audiencia:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedEvent.promotion_targets.map((target, idx) => (
+                            <Badge key={idx} variant="outline">{target}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div>
+                        <p className="font-semibold text-gray-900 mb-1">Total Sesiones:</p>
+                        <p className="text-2xl font-bold text-pdv-teal">{eventSessions.length}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900 mb-1">Total Segmentos:</p>
+                        <p className="text-2xl font-bold text-pdv-teal">
+                          {allSegments.filter(seg => eventSessions.some(s => s.id === seg.session_id)).length}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -278,21 +338,52 @@ export default function PublicProgramView() {
                 return (
                   <div key={session.id} className={`bg-white rounded-lg shadow-md overflow-hidden ${sessionColorClasses[session.session_color] || ''}`}>
                     <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-4 border-b">
-                      <h3 className="text-2xl font-bold uppercase mb-1">{session.name}</h3>
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-                        {session.date && <span>{session.date}</span>}
-                        {session.planned_start_time && (
-                          <>
-                            <span>•</span>
-                            <span>{formatTimeToEST(session.planned_start_time)}</span>
-                          </>
-                        )}
-                        {session.location && (
-                          <>
-                            <span>•</span>
-                            <span>{session.location}</span>
-                          </>
-                        )}
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="text-2xl font-bold uppercase mb-1">{session.name}</h3>
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                            {session.date && <span>{session.date}</span>}
+                            {session.planned_start_time && (
+                              <>
+                                <span>•</span>
+                                <span>{formatTimeToEST(session.planned_start_time)}</span>
+                              </>
+                            )}
+                            {session.location && (
+                              <>
+                                <span>•</span>
+                                <span>{session.location}</span>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Expanded Session Details */}
+                          {expandedSessions[session.id] && (
+                            <div className="mt-3 pt-3 border-t border-gray-300 space-y-2 text-sm">
+                              {session.notes && (
+                                <p><strong>Notas:</strong> {session.notes}</p>
+                              )}
+                              <div className="grid grid-cols-2 gap-2">
+                                <p><strong>Segmentos:</strong> {segments.length}</p>
+                                <p><strong>Duración:</strong> {session.planned_start_time && session.planned_end_time ? 
+                                  `${formatTimeToEST(session.planned_start_time)} - ${formatTimeToEST(session.planned_end_time)}` : 
+                                  'Por definir'}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleSessionExpanded(session.id)}
+                          className="ml-2"
+                        >
+                          {expandedSessions[session.id] ? 
+                            <ChevronUp className="w-5 h-5" /> : 
+                            <ChevronDown className="w-5 h-5" />
+                          }
+                        </Button>
                       </div>
                     </div>
 
