@@ -33,9 +33,8 @@ export default function WeeklyServiceManager() {
     category: "General",
     is_active: true,
     priority: 10,
-    is_recurring: false,
-    recurrence_end_date: "",
-    has_video: false
+    has_video: false,
+    date_of_occurrence: ""
   });
 
   const queryClient = useQueryClient();
@@ -82,29 +81,33 @@ export default function WeeklyServiceManager() {
     queryFn: async () => {
       const selDate = new Date(selectedDate);
       const [items, events] = await Promise.all([
-        base44.entities.AnnouncementItem.list('priority'),
+        base44.entities.AnnouncementItem.list(),
         base44.entities.Event.list()
       ]);
       
+      // Filter items: show if date_of_occurrence is today or in the future
       const filteredItems = items.filter(a => {
         if (a.category === 'General' || !a.is_active) return false;
-        const startDate = a.start_date ? new Date(a.start_date) : null;
-        const endDate = a.end_date ? new Date(a.end_date) : null;
-        if (startDate && selDate < startDate) return false;
-        if (endDate && selDate > endDate) return false;
-        return true;
+        if (!a.date_of_occurrence) return false;
+        const occurrenceDate = new Date(a.date_of_occurrence);
+        return occurrenceDate >= selDate;
       });
 
+      // Filter events: show only if event hasn't started yet or is in progress
       const filteredEvents = events.filter(e => {
-        if (!e.promote_in_announcements) return false;
-        const promoStart = e.promotion_start_date ? new Date(e.promotion_start_date) : null;
-        const promoEnd = e.promotion_end_date ? new Date(e.promotion_end_date) : null;
-        if (promoStart && selDate < promoStart) return false;
-        if (promoEnd && selDate > promoEnd) return false;
-        return true;
+        if (!e.promote_in_announcements || !e.start_date) return false;
+        const eventStartDate = new Date(e.start_date);
+        // Show up to the start date
+        return eventStartDate >= selDate;
       });
 
-      return [...filteredItems, ...filteredEvents.map(e => ({ ...e, isEvent: true, priority: e.priority || 10 }))];
+      // Combine and sort by occurrence date (earliest first)
+      const combined = [
+        ...filteredItems.map(a => ({ ...a, sortDate: new Date(a.date_of_occurrence) })),
+        ...filteredEvents.map(e => ({ ...e, isEvent: true, sortDate: new Date(e.start_date) }))
+      ];
+
+      return combined.sort((a, b) => a.sortDate - b.sortDate);
     },
     enabled: !!selectedDate
   });
@@ -304,9 +307,8 @@ export default function WeeklyServiceManager() {
       category: ann.category,
       is_active: ann.is_active,
       priority: ann.priority || 10,
-      is_recurring: ann.is_recurring || false,
-      recurrence_end_date: ann.recurrence_end_date || "",
-      has_video: ann.has_video || false
+      has_video: ann.has_video || false,
+      date_of_occurrence: ann.date_of_occurrence || ""
     });
     setShowAnnouncementDialog(true);
   };
@@ -700,7 +702,7 @@ export default function WeeklyServiceManager() {
             <Button
               onClick={() => {
                 setEditingAnnouncement(null);
-                setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, is_recurring: false, recurrence_end_date: "", has_video: false });
+                setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, has_video: false, date_of_occurrence: "" });
                 setShowAnnouncementDialog(true);
               }}
               size="sm"
@@ -775,18 +777,11 @@ export default function WeeklyServiceManager() {
                       <p className="text-xs text-amber-800 whitespace-pre-wrap">{ann.instructions}</p>
                     </div>
                     )}
-                    <div className="flex gap-1 mt-2">
-                    {ann.is_recurring && (
-                      <Badge className="bg-green-100 text-green-800 text-[10px]">
-                        Recurrente {ann.recurrence_end_date && `hasta ${ann.recurrence_end_date}`}
-                      </Badge>
-                    )}
                     {ann.has_video && (
-                      <Badge className="bg-purple-100 text-purple-800 text-[10px]">
+                      <Badge className="bg-purple-100 text-purple-800 text-[10px] mt-2">
                         📹 Video
                       </Badge>
                     )}
-                    </div>
                     </div>
                     </div>
                     ))}
@@ -816,9 +811,9 @@ export default function WeeklyServiceManager() {
                           <h3 className="font-bold text-sm leading-tight">{ann.isEvent ? ann.name : ann.title}</h3>
                           {ann.isEvent && <Badge className="bg-purple-200 text-purple-800 text-[10px]">Evento</Badge>}
                         </div>
-                        {(ann.start_date || ann.end_date) && (
+                        {(ann.date_of_occurrence || ann.start_date) && (
                           <p className="text-xs font-semibold text-blue-600 mb-1">
-                            {ann.start_date} {ann.end_date && `- ${ann.end_date}`}
+                            📅 {ann.date_of_occurrence || ann.start_date} {ann.end_date && `- ${ann.end_date}`}
                           </p>
                         )}
                       </div>
@@ -884,18 +879,11 @@ export default function WeeklyServiceManager() {
                         <p className="text-xs text-amber-800 whitespace-pre-wrap">{ann.instructions}</p>
                       </div>
                     )}
-                    <div className="flex gap-1 mt-2">
-                      {ann.is_recurring && (
-                        <Badge className="bg-green-100 text-green-800 text-[10px]">
-                          Recurrente {ann.recurrence_end_date && `hasta ${ann.recurrence_end_date}`}
-                        </Badge>
-                      )}
-                      {(ann.has_video || ann.announcement_has_video) && (
-                        <Badge className="bg-purple-100 text-purple-800 text-[10px]">
-                          📹 Video
-                        </Badge>
-                      )}
-                    </div>
+                    {(ann.has_video || ann.announcement_has_video) && (
+                      <Badge className="bg-purple-100 text-purple-800 text-[10px] mt-2">
+                        📹 Video
+                      </Badge>
+                    )}
                   </div>
                 </div>
               ))}
@@ -971,29 +959,12 @@ export default function WeeklyServiceManager() {
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox
-                  checked={announcementForm.is_recurring}
-                  onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, is_recurring: checked }))}
-                />
-                <Label className="font-semibold">🔁 Recurrente</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
                   checked={announcementForm.is_active}
                   onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, is_active: checked }))}
                 />
                 <Label className="font-semibold">👁️ Visible</Label>
               </div>
             </div>
-            {announcementForm.is_recurring && (
-              <div className="space-y-2 bg-green-50 p-3 rounded border border-green-200">
-                <Label>Fecha de Fin de Recurrencia</Label>
-                <Input
-                  type="date"
-                  value={announcementForm.recurrence_end_date}
-                  onChange={(e) => setAnnouncementForm(prev => ({ ...prev, recurrence_end_date: e.target.value }))}
-                />
-              </div>
-            )}
             <div className="space-y-2">
               <Label>Título</Label>
               <Input
@@ -1001,6 +972,15 @@ export default function WeeklyServiceManager() {
                 onChange={(e) => setAnnouncementForm(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Título del anuncio"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Fecha de Ocurrencia</Label>
+              <Input
+                type="date"
+                value={announcementForm.date_of_occurrence}
+                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, date_of_occurrence: e.target.value }))}
+              />
+              <p className="text-xs text-gray-500">El anuncio se mostrará hasta esta fecha (inclusive)</p>
             </div>
             <div className="space-y-2">
               <Label>Contenido (Texto principal con contexto, fechas, horarios)</Label>
