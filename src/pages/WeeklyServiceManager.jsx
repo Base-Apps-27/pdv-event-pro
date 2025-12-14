@@ -130,7 +130,7 @@ export default function WeeklyServiceManager() {
       queryClient.invalidateQueries(['allAnnouncements']);
       queryClient.invalidateQueries(['dynamicAnnouncements']);
       setShowAnnouncementDialog(false);
-      setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, is_recurring: false, recurrence_end_date: "" });
+      setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, is_recurring: false, recurrence_end_date: "", has_video: false });
       setEditingAnnouncement(null);
     },
   });
@@ -141,7 +141,7 @@ export default function WeeklyServiceManager() {
       queryClient.invalidateQueries(['allAnnouncements']);
       queryClient.invalidateQueries(['dynamicAnnouncements']);
       setShowAnnouncementDialog(false);
-      setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, is_recurring: false, recurrence_end_date: "" });
+      setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, is_recurring: false, recurrence_end_date: "", has_video: false });
       setEditingAnnouncement(null);
     },
   });
@@ -700,7 +700,7 @@ export default function WeeklyServiceManager() {
             <Button
               onClick={() => {
                 setEditingAnnouncement(null);
-                setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, is_recurring: false, recurrence_end_date: "" });
+                setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, is_recurring: false, recurrence_end_date: "", has_video: false });
                 setShowAnnouncementDialog(true);
               }}
               size="sm"
@@ -770,21 +770,28 @@ export default function WeeklyServiceManager() {
                     </div>
                     <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap mb-2">{ann.content}</p>
                     {ann.instructions && (
-                      <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
-                        <p className="text-xs text-amber-900 font-semibold mb-1">Instrucciones:</p>
-                        <p className="text-xs text-amber-800 whitespace-pre-wrap">{ann.instructions}</p>
-                      </div>
+                    <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
+                      <p className="text-xs text-amber-900 font-semibold mb-1">Instrucciones:</p>
+                      <p className="text-xs text-amber-800 whitespace-pre-wrap">{ann.instructions}</p>
+                    </div>
                     )}
+                    <div className="flex gap-1 mt-2">
                     {ann.is_recurring && (
-                      <Badge className="mt-2 bg-green-100 text-green-800 text-[10px]">
+                      <Badge className="bg-green-100 text-green-800 text-[10px]">
                         Recurrente {ann.recurrence_end_date && `hasta ${ann.recurrence_end_date}`}
                       </Badge>
                     )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                    {ann.has_video && (
+                      <Badge className="bg-purple-100 text-purple-800 text-[10px]">
+                        📹 Video
+                      </Badge>
+                    )}
+                    </div>
+                    </div>
+                    </div>
+                    ))}
+                    </div>
+                    </div>
 
           {/* Dynamic Announcements */}
           <div className="space-y-3">
