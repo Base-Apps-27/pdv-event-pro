@@ -29,9 +29,12 @@ export default function WeeklyServiceManager() {
   const [announcementForm, setAnnouncementForm] = useState({
     title: "",
     content: "",
+    instructions: "",
     category: "General",
     is_active: true,
-    priority: 10
+    priority: 10,
+    is_recurring: false,
+    recurrence_end_date: ""
   });
 
   const queryClient = useQueryClient();
@@ -126,7 +129,7 @@ export default function WeeklyServiceManager() {
       queryClient.invalidateQueries(['allAnnouncements']);
       queryClient.invalidateQueries(['dynamicAnnouncements']);
       setShowAnnouncementDialog(false);
-      setAnnouncementForm({ title: "", content: "", category: "General", is_active: true, priority: 10 });
+      setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, is_recurring: false, recurrence_end_date: "" });
       setEditingAnnouncement(null);
     },
   });
@@ -137,7 +140,7 @@ export default function WeeklyServiceManager() {
       queryClient.invalidateQueries(['allAnnouncements']);
       queryClient.invalidateQueries(['dynamicAnnouncements']);
       setShowAnnouncementDialog(false);
-      setAnnouncementForm({ title: "", content: "", category: "General", is_active: true, priority: 10 });
+      setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, is_recurring: false, recurrence_end_date: "" });
       setEditingAnnouncement(null);
     },
   });
@@ -296,9 +299,12 @@ export default function WeeklyServiceManager() {
     setAnnouncementForm({
       title: ann.title,
       content: ann.content,
+      instructions: ann.instructions || "",
       category: ann.category,
       is_active: ann.is_active,
-      priority: ann.priority || 10
+      priority: ann.priority || 10,
+      is_recurring: ann.is_recurring || false,
+      recurrence_end_date: ann.recurrence_end_date || ""
     });
     setShowAnnouncementDialog(true);
   };
@@ -692,7 +698,7 @@ export default function WeeklyServiceManager() {
             <Button
               onClick={() => {
                 setEditingAnnouncement(null);
-                setAnnouncementForm({ title: "", content: "", category: "General", is_active: true, priority: 10 });
+                setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, is_recurring: false, recurrence_end_date: "" });
                 setShowAnnouncementDialog(true);
               }}
               size="sm"
@@ -721,7 +727,7 @@ export default function WeeklyServiceManager() {
                     className="mt-1"
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
+                    <div className="flex items-start justify-between gap-2 mb-2">
                       <h3 className="font-bold text-sm leading-tight">{ann.title}</h3>
                       <div className="flex gap-1 flex-shrink-0 print:hidden">
                         <Button
@@ -760,7 +766,18 @@ export default function WeeklyServiceManager() {
                         </Button>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">{ann.content}</p>
+                    <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap mb-2">{ann.content}</p>
+                    {ann.instructions && (
+                      <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
+                        <p className="text-xs text-amber-900 font-semibold mb-1">Instrucciones:</p>
+                        <p className="text-xs text-amber-800 whitespace-pre-wrap">{ann.instructions}</p>
+                      </div>
+                    )}
+                    {ann.is_recurring && (
+                      <Badge className="mt-2 bg-green-100 text-green-800 text-[10px]">
+                        Recurrente {ann.recurrence_end_date && `hasta ${ann.recurrence_end_date}`}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               ))}
@@ -784,7 +801,7 @@ export default function WeeklyServiceManager() {
                     className="mt-1"
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
+                    <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-bold text-sm leading-tight">{ann.isEvent ? ann.name : ann.title}</h3>
@@ -835,9 +852,20 @@ export default function WeeklyServiceManager() {
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap mb-2">
                       {ann.isEvent ? ann.announcement_blurb || ann.description : ann.content}
                     </p>
+                    {ann.instructions && (
+                      <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
+                        <p className="text-xs text-amber-900 font-semibold mb-1">Instrucciones:</p>
+                        <p className="text-xs text-amber-800 whitespace-pre-wrap">{ann.instructions}</p>
+                      </div>
+                    )}
+                    {ann.is_recurring && (
+                      <Badge className="mt-2 bg-green-100 text-green-800 text-[10px]">
+                        Recurrente {ann.recurrence_end_date && `hasta ${ann.recurrence_end_date}`}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               ))}
@@ -898,7 +926,7 @@ export default function WeeklyServiceManager() {
 
       {/* Announcement Dialog */}
       <Dialog open={showAnnouncementDialog} onOpenChange={setShowAnnouncementDialog}>
-        <DialogContent className="max-w-lg bg-white">
+        <DialogContent className="max-w-2xl bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingAnnouncement ? "Editar Anuncio" : "Nuevo Anuncio"}</DialogTitle>
           </DialogHeader>
@@ -912,12 +940,21 @@ export default function WeeklyServiceManager() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Contenido (Incluye contexto, fechas, horarios, instrucciones)</Label>
+              <Label>Contenido (Texto principal con contexto, fechas, horarios)</Label>
               <Textarea
                 value={announcementForm.content}
                 onChange={(e) => setAnnouncementForm(prev => ({ ...prev, content: e.target.value }))}
                 placeholder="Contenido completo del anuncio con todos los detalles necesarios..."
-                rows={8}
+                rows={6}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Instrucciones para el Presentador (Opcional)</Label>
+              <Textarea
+                value={announcementForm.instructions}
+                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, instructions: e.target.value }))}
+                placeholder="Instrucciones especiales, notas de tono, recordatorios para el presentador..."
+                rows={3}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -942,6 +979,25 @@ export default function WeeklyServiceManager() {
                   onChange={(e) => setAnnouncementForm(prev => ({ ...prev, priority: parseInt(e.target.value) }))}
                 />
               </div>
+            </div>
+            <div className="space-y-3 border-t pt-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={announcementForm.is_recurring}
+                  onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, is_recurring: checked }))}
+                />
+                <Label>Anuncio Recurrente (se repite cada semana)</Label>
+              </div>
+              {announcementForm.is_recurring && (
+                <div className="space-y-2 pl-6">
+                  <Label>Fecha de Fin de Recurrencia</Label>
+                  <Input
+                    type="date"
+                    value={announcementForm.recurrence_end_date}
+                    onChange={(e) => setAnnouncementForm(prev => ({ ...prev, recurrence_end_date: e.target.value }))}
+                  />
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
