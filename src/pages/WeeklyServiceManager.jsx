@@ -9,14 +9,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar, Clock, Save, Plus, Trash2, Printer, Copy, Edit } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, Clock, Save, Plus, Trash2, Printer, Copy, Edit, Sparkles, Settings } from "lucide-react";
 
 export default function WeeklyServiceManager() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [serviceData, setServiceData] = useState(null);
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
+  const [specialSegmentDetails, setSpecialSegmentDetails] = useState({
+    timeSlot: "9:30am",
+    title: "",
+    type: "Especial",
+    duration: 15,
+    insertAfterIdx: -1,
+  });
   const [selectedAnnouncements, setSelectedAnnouncements] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showAnnouncementDialog, setShowAnnouncementDialog] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+  const [announcementForm, setAnnouncementForm] = useState({
+    title: "",
+    content: "",
+    category: "General",
+    is_active: true
+  });
 
   const queryClient = useQueryClient();
 
@@ -50,13 +66,12 @@ export default function WeeklyServiceManager() {
   });
 
   // Fetch announcements
-  const { data: fixedAnnouncements = [] } = useQuery({
-    queryKey: ['fixedAnnouncements'],
-    queryFn: async () => {
-      const all = await base44.entities.AnnouncementItem.list();
-      return all.filter(a => a.category === 'General' && a.is_active);
-    }
+  const { data: allAnnouncements = [] } = useQuery({
+    queryKey: ['allAnnouncements'],
+    queryFn: () => base44.entities.AnnouncementItem.list(),
   });
+
+  const fixedAnnouncements = allAnnouncements.filter(a => a.category === 'General' && a.is_active);
 
   const { data: dynamicAnnouncements = [] } = useQuery({
     queryKey: ['dynamicAnnouncements', selectedDate],
@@ -105,6 +120,33 @@ export default function WeeklyServiceManager() {
     }
   });
 
+  const createAnnouncementMutation = useMutation({
+    mutationFn: (data) => base44.entities.AnnouncementItem.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['allAnnouncements']);
+      setShowAnnouncementDialog(false);
+      setAnnouncementForm({ title: "", content: "", category: "General", is_active: true });
+      setEditingAnnouncement(null);
+    },
+  });
+
+  const updateAnnouncementMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.AnnouncementItem.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['allAnnouncements']);
+      setShowAnnouncementDialog(false);
+      setAnnouncementForm({ title: "", content: "", category: "General", is_active: true });
+      setEditingAnnouncement(null);
+    },
+  });
+
+  const deleteAnnouncementMutation = useMutation({
+    mutationFn: (id) => base44.entities.AnnouncementItem.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['allAnnouncements']);
+    },
+  });
+
   // Initialize service data from existing or blueprint
   useEffect(() => {
     if (existingData) {
@@ -134,7 +176,6 @@ export default function WeeklyServiceManager() {
             { title: "", lead: "" }
           ] : undefined
         })),
-        special_segments: [],
         coordinators: { "9:30am": "", "11:30am": "" },
         ujieres: { "9:30am": "", "11:30am": "" },
         sound: { "9:30am": "", "11:30am": "" },
@@ -198,10 +239,64 @@ export default function WeeklyServiceManager() {
     if (window.confirm('¿Copiar datos de 9:30am a 11:30am?')) {
       setServiceData(prev => ({
         ...prev,
-        "11:30am": prev["9:30am"].slice(0, -1).map(seg => ({ ...seg })) // Copy all except break
+        "11:30am": prev["9:30am"].filter(s => s.type !== 'break' && s.type !== 'special').map(seg => ({ ...seg }))
       }));
       setHasChanges(true);
     }
+  };
+
+  const addSpecialSegment = () => {
+    setServiceData(prev => {
+      const updated = { ...prev };
+      const newSegment = {
+        type: "special",
+        title: specialSegmentDetails.title,
+        duration: specialSegmentDetails.duration,
+        fields: ["description"],
+        data: { description: "" }
+      };
+
+      const targetArray = updated[specialSegmentDetails.timeSlot];
+      let insertIndex = specialSegmentDetails.insertAfterIdx + 1;
+      if (insertIndex <= 0) insertIndex = 0;
+      if (insertIndex > targetArray.length) insertIndex = targetArray.length;
+      
+      targetArray.splice(insertIndex, 0, newSegment);
+      return updated;
+    });
+    setHasChanges(true);
+    setShowSpecialDialog(false);
+    setSpecialSegmentDetails({
+      timeSlot: "9:30am", title: "", type: "Especial", duration: 15, insertAfterIdx: -1,
+    });
+  };
+
+  const removeSpecialSegment = (timeSlot, index) => {
+    setServiceData(prev => {
+      const updated = { ...prev };
+      updated[timeSlot].splice(index, 1);
+      return updated;
+    });
+    setHasChanges(true);
+  };
+
+  const handleAnnouncementSubmit = () => {
+    if (editingAnnouncement) {
+      updateAnnouncementMutation.mutate({ id: editingAnnouncement.id, data: announcementForm });
+    } else {
+      createAnnouncementMutation.mutate(announcementForm);
+    }
+  };
+
+  const openAnnouncementEdit = (ann) => {
+    setEditingAnnouncement(ann);
+    setAnnouncementForm({
+      title: ann.title,
+      content: ann.content,
+      category: ann.category,
+      is_active: ann.is_active
+    });
+    setShowAnnouncementDialog(true);
   };
 
   if (!serviceData || isLoading) {
@@ -232,306 +327,578 @@ export default function WeeklyServiceManager() {
         </div>
       </div>
 
-      {/* Date Selection */}
-      <Card className="print:hidden">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-4">
-            <Calendar className="w-5 h-5 text-pdv-teal" />
-            <div className="flex-1">
-              <Label>Fecha del Domingo</Label>
-              <Input 
-                type="date" 
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="mt-1"
+      <Tabs defaultValue="service" className="print:hidden">
+        <TabsList>
+          <TabsTrigger value="service">Orden de Servicio</TabsTrigger>
+          <TabsTrigger value="announcements">Gestionar Anuncios</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="service" className="space-y-6 mt-6">
+          {/* Date Selection */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <Calendar className="w-5 h-5 text-pdv-teal" />
+                <div className="flex-1">
+                  <Label>Fecha del Domingo</Label>
+                  <Input 
+                    type="date" 
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Two Services Side by Side */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* 9:30 AM Service */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-bold text-red-600">9:30 a.m.</h2>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={copyTo1130}
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copiar a 11:30
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "9:30am" }));
+                      setShowSpecialDialog(true);
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Especial
+                  </Button>
+                </div>
+              </div>
+
+              {serviceData["9:30am"].map((segment, idx) => {
+                const timeSlot = "9:30am";
+                if (segment.type === "special") {
+                  return (
+                    <Card key={`${timeSlot}-special-${idx}`} className="border-l-4 border-l-orange-500 bg-orange-50">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-orange-600" />
+                            {segment.title}
+                            <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
+                          </CardTitle>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSpecialSegment(timeSlot, idx)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-2 pt-3">
+                        <Textarea
+                          placeholder="Descripción / Notas"
+                          value={segment.data?.description || ""}
+                          onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
+                          className="text-sm"
+                          rows={2}
+                        />
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                return (
+                  <Card key={`${timeSlot}-${idx}`} className="border-l-4 border-l-red-500">
+                    <CardHeader className="pb-2 bg-gray-50">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-red-600" />
+                        {segment.title}
+                        <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 pt-3">
+                      {segment.fields.includes("leader") && (
+                        <Input
+                          placeholder="Líder / Director"
+                          value={segment.data?.leader || ""}
+                          onChange={(e) => updateSegmentField("9:30am", idx, "leader", e.target.value)}
+                          className="text-sm"
+                        />
+                      )}
+                      {segment.fields.includes("presenter") && (
+                        <Input
+                          placeholder="Presentador"
+                          value={segment.data?.presenter || ""}
+                          onChange={(e) => updateSegmentField("9:30am", idx, "presenter", e.target.value)}
+                          className="text-sm"
+                        />
+                      )}
+                      {segment.fields.includes("preacher") && (
+                        <Input
+                          placeholder="Predicador"
+                          value={segment.data?.preacher || ""}
+                          onChange={(e) => updateSegmentField("9:30am", idx, "preacher", e.target.value)}
+                          className="text-sm"
+                        />
+                      )}
+                      {segment.fields.includes("title") && (
+                        <Input
+                          placeholder="Título del Mensaje"
+                          value={segment.data?.title || ""}
+                          onChange={(e) => updateSegmentField("9:30am", idx, "title", e.target.value)}
+                          className="text-sm"
+                        />
+                      )}
+                      {segment.fields.includes("verse") && (
+                        <Input
+                          placeholder="Verso / Cita Bíblica"
+                          value={segment.data?.verse || ""}
+                          onChange={(e) => updateSegmentField("9:30am", idx, "verse", e.target.value)}
+                          className="text-sm"
+                        />
+                      )}
+                      {segment.songs && (
+                        <div className="space-y-1">
+                          <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
+                          {segment.songs.map((song, sIdx) => (
+                            <div key={sIdx} className="grid grid-cols-2 gap-2">
+                              <Input
+                                placeholder={`Canción ${sIdx + 1}`}
+                                value={song.title}
+                                onChange={(e) => {
+                                  const newSongs = [...segment.songs];
+                                  newSongs[sIdx].title = e.target.value;
+                                  updateSegmentField("9:30am", idx, "songs", newSongs);
+                                }}
+                                className="text-xs"
+                              />
+                              <Input
+                                placeholder="Líder"
+                                value={song.lead}
+                                onChange={(e) => {
+                                  const newSongs = [...segment.songs];
+                                  newSongs[sIdx].lead = e.target.value;
+                                  updateSegmentField("9:30am", idx, "songs", newSongs);
+                                }}
+                                className="text-xs"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+
+              {/* Team Section */}
+              <Card className="bg-green-50 border-green-200">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">EQUIPO 9:30am</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Input placeholder="Coordinador(a)" value={serviceData.coordinators?.["9:30am"] || ""} onChange={(e) => updateTeamField("coordinators", "9:30am", e.target.value)} className="text-xs" />
+                  <Input placeholder="Ujieres" value={serviceData.ujieres?.["9:30am"] || ""} onChange={(e) => updateTeamField("ujieres", "9:30am", e.target.value)} className="text-xs" />
+                  <Input placeholder="Sonido" value={serviceData.sound?.["9:30am"] || ""} onChange={(e) => updateTeamField("sound", "9:30am", e.target.value)} className="text-xs" />
+                  <Input placeholder="Luces" value={serviceData.luces?.["9:30am"] || ""} onChange={(e) => updateTeamField("luces", "9:30am", e.target.value)} className="text-xs" />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* 11:30 AM Service */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-bold text-blue-600">11:30 a.m.</h2>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "11:30am" }));
+                    setShowSpecialDialog(true);
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Especial
+                </Button>
+              </div>
+
+              {serviceData["11:30am"].map((segment, idx) => {
+                const timeSlot = "11:30am";
+                if (segment.type === "special") {
+                  return (
+                    <Card key={`${timeSlot}-special-${idx}`} className="border-l-4 border-l-orange-500 bg-orange-50">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-orange-600" />
+                            {segment.title}
+                            <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
+                          </CardTitle>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSpecialSegment(timeSlot, idx)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-2 pt-3">
+                        <Textarea
+                          placeholder="Descripción / Notas"
+                          value={segment.data?.description || ""}
+                          onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
+                          className="text-sm"
+                          rows={2}
+                        />
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                return (
+                  <Card key={`${timeSlot}-${idx}`} className="border-l-4 border-l-blue-500">
+                    <CardHeader className="pb-2 bg-gray-50">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-blue-600" />
+                        {segment.title}
+                        <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 pt-3">
+                      {segment.fields.includes("leader") && (
+                        <Input
+                          placeholder="Líder / Director"
+                          value={segment.data?.leader || ""}
+                          onChange={(e) => updateSegmentField("11:30am", idx, "leader", e.target.value)}
+                          className="text-sm"
+                        />
+                      )}
+                      {segment.fields.includes("presenter") && (
+                        <Input
+                          placeholder="Presentador"
+                          value={segment.data?.presenter || ""}
+                          onChange={(e) => updateSegmentField("11:30am", idx, "presenter", e.target.value)}
+                          className="text-sm"
+                        />
+                      )}
+                      {segment.fields.includes("preacher") && (
+                        <Input
+                          placeholder="Predicador"
+                          value={segment.data?.preacher || ""}
+                          onChange={(e) => updateSegmentField("11:30am", idx, "preacher", e.target.value)}
+                          className="text-sm"
+                        />
+                      )}
+                      {segment.fields.includes("title") && (
+                        <Input
+                          placeholder="Título del Mensaje"
+                          value={segment.data?.title || ""}
+                          onChange={(e) => updateSegmentField("11:30am", idx, "title", e.target.value)}
+                          className="text-sm"
+                        />
+                      )}
+                      {segment.fields.includes("verse") && (
+                        <Input
+                          placeholder="Verso / Cita Bíblica"
+                          value={segment.data?.verse || ""}
+                          onChange={(e) => updateSegmentField("11:30am", idx, "verse", e.target.value)}
+                          className="text-sm"
+                        />
+                      )}
+                      {segment.songs && (
+                        <div className="space-y-1">
+                          <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
+                          {segment.songs.map((song, sIdx) => (
+                            <div key={sIdx} className="grid grid-cols-2 gap-2">
+                              <Input
+                                placeholder={`Canción ${sIdx + 1}`}
+                                value={song.title}
+                                onChange={(e) => {
+                                  const newSongs = [...segment.songs];
+                                  newSongs[sIdx].title = e.target.value;
+                                  updateSegmentField("11:30am", idx, "songs", newSongs);
+                                }}
+                                className="text-xs"
+                              />
+                              <Input
+                                placeholder="Líder"
+                                value={song.lead}
+                                onChange={(e) => {
+                                  const newSongs = [...segment.songs];
+                                  newSongs[sIdx].lead = e.target.value;
+                                  updateSegmentField("11:30am", idx, "songs", newSongs);
+                                }}
+                                className="text-xs"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+
+              {/* Team Section */}
+              <Card className="bg-blue-50 border-blue-200">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">EQUIPO 11:30am</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Input placeholder="Coordinador(a)" value={serviceData.coordinators?.["11:30am"] || ""} onChange={(e) => updateTeamField("coordinators", "11:30am", e.target.value)} className="text-xs" />
+                  <Input placeholder="Ujieres" value={serviceData.ujieres?.["11:30am"] || ""} onChange={(e) => updateTeamField("ujieres", "11:30am", e.target.value)} className="text-xs" />
+                  <Input placeholder="Sonido" value={serviceData.sound?.["11:30am"] || ""} onChange={(e) => updateTeamField("sound", "11:30am", e.target.value)} className="text-xs" />
+                  <Input placeholder="Luces" value={serviceData.luces?.["11:30am"] || ""} onChange={(e) => updateTeamField("luces", "11:30am", e.target.value)} className="text-xs" />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Announcements Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold uppercase">Anuncios</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="font-semibold">Anuncios Fijos</Label>
+                <div className="grid md:grid-cols-3 gap-2">
+                  {fixedAnnouncements.map(ann => (
+                    <div key={ann.id} className="flex items-start gap-2 p-2 border rounded">
+                      <Checkbox
+                        checked={selectedAnnouncements.includes(ann.id)}
+                        onCheckedChange={(checked) => {
+                          setSelectedAnnouncements(prev => 
+                            checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
+                          );
+                          setHasChanges(true);
+                        }}
+                      />
+                      <div className="flex-1">
+                        <p className="font-semibold text-sm">{ann.title}</p>
+                        <p className="text-xs text-gray-600">{ann.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="font-semibold">Anuncios Dinámicos</Label>
+                <div className="grid md:grid-cols-2 gap-3">
+                  {dynamicAnnouncements.map(ann => (
+                    <div key={ann.id} className="flex items-start gap-2 p-3 border rounded bg-blue-50">
+                      <Checkbox
+                        checked={selectedAnnouncements.includes(ann.id)}
+                        onCheckedChange={(checked) => {
+                          setSelectedAnnouncements(prev => 
+                            checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
+                          );
+                          setHasChanges(true);
+                        }}
+                      />
+                      <div className="flex-1">
+                        <p className="font-bold">{ann.isEvent ? ann.name : ann.title}</p>
+                        {(ann.start_date || ann.end_date) && (
+                          <p className="text-xs text-blue-600 font-semibold">
+                            {ann.start_date} {ann.end_date && `- ${ann.end_date}`}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-700 mt-1">
+                          {ann.isEvent ? ann.announcement_blurb || ann.description : ann.content}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="announcements" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Gestión de Anuncios</CardTitle>
+                <Button
+                  onClick={() => {
+                    setEditingAnnouncement(null);
+                    setAnnouncementForm({ title: "", content: "", category: "General", is_active: true });
+                    setShowAnnouncementDialog(true);
+                  }}
+                  className="bg-pdv-teal text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nuevo Anuncio
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {allAnnouncements.map(ann => (
+                  <Card key={ann.id} className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold">{ann.title}</h3>
+                          <Badge variant={ann.is_active ? "default" : "secondary"}>
+                            {ann.is_active ? "Activo" : "Inactivo"}
+                          </Badge>
+                          <Badge variant="outline">{ann.category}</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600">{ann.content}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openAnnouncementEdit(ann)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (window.confirm('¿Eliminar este anuncio?')) {
+                              deleteAnnouncementMutation.mutate(ann.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Print View - Hidden on Screen */}
+      <div className="hidden print:block">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold uppercase">Orden de Servicio</h1>
+          <p className="text-xl text-blue-600">Domingo {selectedDate}</p>
+        </div>
+        {/* Print content here - simplified version of the service */}
+      </div>
+
+      {/* Special Segment Dialog */}
+      <Dialog open={showSpecialDialog} onOpenChange={setShowSpecialDialog}>
+        <DialogContent className="max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle>Insertar Segmento Especial ({specialSegmentDetails.timeSlot})</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Título del Segmento</Label>
+              <Input
+                value={specialSegmentDetails.title}
+                onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Ej. Presentación de Niños"
               />
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Print Header */}
-      <div className="hidden print:block text-center mb-6">
-        <h1 className="text-3xl font-bold uppercase">Orden de Servicio</h1>
-        <p className="text-xl text-blue-600">Domingo {selectedDate}</p>
-      </div>
-
-      {/* Two Services Side by Side */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* 9:30 AM Service */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-bold text-red-600">9:30 a.m.</h2>
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={copyTo1130}
-              className="print:hidden"
-            >
-              <Copy className="w-4 h-4 mr-2" />
-              Copiar a 11:30
-            </Button>
-          </div>
-
-          {serviceData["9:30am"].map((segment, idx) => (
-            <Card key={idx} className="border-l-4 border-l-red-500">
-              <CardHeader className="pb-2 bg-gray-50">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-red-600" />
-                  {segment.title}
-                  <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-3">
-                {segment.fields.includes("leader") && (
-                  <Input
-                    placeholder="Líder / Director"
-                    value={segment.data?.leader || ""}
-                    onChange={(e) => updateSegmentField("9:30am", idx, "leader", e.target.value)}
-                    className="text-sm"
-                  />
-                )}
-                {segment.fields.includes("presenter") && (
-                  <Input
-                    placeholder="Presentador"
-                    value={segment.data?.presenter || ""}
-                    onChange={(e) => updateSegmentField("9:30am", idx, "presenter", e.target.value)}
-                    className="text-sm"
-                  />
-                )}
-                {segment.fields.includes("preacher") && (
-                  <Input
-                    placeholder="Predicador"
-                    value={segment.data?.preacher || ""}
-                    onChange={(e) => updateSegmentField("9:30am", idx, "preacher", e.target.value)}
-                    className="text-sm"
-                  />
-                )}
-                {segment.fields.includes("title") && (
-                  <Input
-                    placeholder="Título del Mensaje"
-                    value={segment.data?.title || ""}
-                    onChange={(e) => updateSegmentField("9:30am", idx, "title", e.target.value)}
-                    className="text-sm"
-                  />
-                )}
-                {segment.fields.includes("verse") && (
-                  <Input
-                    placeholder="Verso / Cita Bíblica"
-                    value={segment.data?.verse || ""}
-                    onChange={(e) => updateSegmentField("9:30am", idx, "verse", e.target.value)}
-                    className="text-sm"
-                  />
-                )}
-                {segment.songs && (
-                  <div className="space-y-1">
-                    <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
-                    {segment.songs.map((song, sIdx) => (
-                      <div key={sIdx} className="grid grid-cols-2 gap-2">
-                        <Input
-                          placeholder={`Canción ${sIdx + 1}`}
-                          value={song.title}
-                          onChange={(e) => {
-                            const newSongs = [...segment.songs];
-                            newSongs[sIdx].title = e.target.value;
-                            updateSegmentField("9:30am", idx, "songs", newSongs);
-                          }}
-                          className="text-xs"
-                        />
-                        <Input
-                          placeholder="Líder"
-                          value={song.lead}
-                          onChange={(e) => {
-                            const newSongs = [...segment.songs];
-                            newSongs[sIdx].lead = e.target.value;
-                            updateSegmentField("9:30am", idx, "songs", newSongs);
-                          }}
-                          className="text-xs"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Team Section */}
-          <Card className="bg-green-50 border-green-200 print:hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">EQUIPO 9:30am</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Input placeholder="Coordinador(a)" value={serviceData.coordinators?.["9:30am"] || ""} onChange={(e) => updateTeamField("coordinators", "9:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Ujieres" value={serviceData.ujieres?.["9:30am"] || ""} onChange={(e) => updateTeamField("ujieres", "9:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Sonido" value={serviceData.sound?.["9:30am"] || ""} onChange={(e) => updateTeamField("sound", "9:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Luces" value={serviceData.luces?.["9:30am"] || ""} onChange={(e) => updateTeamField("luces", "9:30am", e.target.value)} className="text-xs" />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* 11:30 AM Service */}
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold text-blue-600">11:30 a.m.</h2>
-
-          {serviceData["11:30am"].map((segment, idx) => (
-            <Card key={idx} className="border-l-4 border-l-blue-500">
-              <CardHeader className="pb-2 bg-gray-50">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-600" />
-                  {segment.title}
-                  <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-3">
-                {segment.fields.includes("leader") && (
-                  <Input
-                    placeholder="Líder / Director"
-                    value={segment.data?.leader || ""}
-                    onChange={(e) => updateSegmentField("11:30am", idx, "leader", e.target.value)}
-                    className="text-sm"
-                  />
-                )}
-                {segment.fields.includes("presenter") && (
-                  <Input
-                    placeholder="Presentador"
-                    value={segment.data?.presenter || ""}
-                    onChange={(e) => updateSegmentField("11:30am", idx, "presenter", e.target.value)}
-                    className="text-sm"
-                  />
-                )}
-                {segment.fields.includes("preacher") && (
-                  <Input
-                    placeholder="Predicador"
-                    value={segment.data?.preacher || ""}
-                    onChange={(e) => updateSegmentField("11:30am", idx, "preacher", e.target.value)}
-                    className="text-sm"
-                  />
-                )}
-                {segment.fields.includes("title") && (
-                  <Input
-                    placeholder="Título del Mensaje"
-                    value={segment.data?.title || ""}
-                    onChange={(e) => updateSegmentField("11:30am", idx, "title", e.target.value)}
-                    className="text-sm"
-                  />
-                )}
-                {segment.fields.includes("verse") && (
-                  <Input
-                    placeholder="Verso / Cita Bíblica"
-                    value={segment.data?.verse || ""}
-                    onChange={(e) => updateSegmentField("11:30am", idx, "verse", e.target.value)}
-                    className="text-sm"
-                  />
-                )}
-                {segment.songs && (
-                  <div className="space-y-1">
-                    <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
-                    {segment.songs.map((song, sIdx) => (
-                      <div key={sIdx} className="grid grid-cols-2 gap-2">
-                        <Input
-                          placeholder={`Canción ${sIdx + 1}`}
-                          value={song.title}
-                          onChange={(e) => {
-                            const newSongs = [...segment.songs];
-                            newSongs[sIdx].title = e.target.value;
-                            updateSegmentField("11:30am", idx, "songs", newSongs);
-                          }}
-                          className="text-xs"
-                        />
-                        <Input
-                          placeholder="Líder"
-                          value={song.lead}
-                          onChange={(e) => {
-                            const newSongs = [...segment.songs];
-                            newSongs[sIdx].lead = e.target.value;
-                            updateSegmentField("11:30am", idx, "songs", newSongs);
-                          }}
-                          className="text-xs"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Team Section */}
-          <Card className="bg-blue-50 border-blue-200 print:hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">EQUIPO 11:30am</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Input placeholder="Coordinador(a)" value={serviceData.coordinators?.["11:30am"] || ""} onChange={(e) => updateTeamField("coordinators", "11:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Ujieres" value={serviceData.ujieres?.["11:30am"] || ""} onChange={(e) => updateTeamField("ujieres", "11:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Sonido" value={serviceData.sound?.["11:30am"] || ""} onChange={(e) => updateTeamField("sound", "11:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Luces" value={serviceData.luces?.["11:30am"] || ""} onChange={(e) => updateTeamField("luces", "11:30am", e.target.value)} className="text-xs" />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Announcements Section */}
-      <Card className="print:break-before-page">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold uppercase">Anuncios</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="font-semibold">Anuncios Fijos</Label>
-            <div className="grid md:grid-cols-3 gap-2">
-              {fixedAnnouncements.map(ann => (
-                <div key={ann.id} className="flex items-start gap-2 p-2 border rounded">
-                  <Checkbox
-                    checked={selectedAnnouncements.includes(ann.id)}
-                    onCheckedChange={(checked) => {
-                      setSelectedAnnouncements(prev => 
-                        checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
-                      );
-                      setHasChanges(true);
-                    }}
-                  />
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm">{ann.title}</p>
-                    <p className="text-xs text-gray-600">{ann.content}</p>
-                  </div>
-                </div>
-              ))}
+            <div className="space-y-2">
+              <Label>Duración (minutos)</Label>
+              <Input
+                type="number"
+                value={specialSegmentDetails.duration}
+                onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Insertar después de:</Label>
+              <select
+                className="w-full border rounded-md p-2"
+                value={specialSegmentDetails.insertAfterIdx}
+                onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, insertAfterIdx: parseInt(e.target.value) }))}
+              >
+                <option value="-1">Al inicio</option>
+                {serviceData[specialSegmentDetails.timeSlot]
+                  .filter(seg => seg.type !== "special")
+                  .map((segment, idx) => (
+                    <option key={idx} value={idx}>{segment.title}</option>
+                  ))}
+              </select>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowSpecialDialog(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={addSpecialSegment} className="bg-pdv-teal text-white">
+                Añadir Segmento
+              </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          <div className="space-y-2">
-            <Label className="font-semibold">Anuncios Dinámicos</Label>
-            <div className="grid md:grid-cols-2 gap-3">
-              {dynamicAnnouncements.map(ann => (
-                <div key={ann.id} className="flex items-start gap-2 p-3 border rounded bg-blue-50">
-                  <Checkbox
-                    checked={selectedAnnouncements.includes(ann.id)}
-                    onCheckedChange={(checked) => {
-                      setSelectedAnnouncements(prev => 
-                        checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
-                      );
-                      setHasChanges(true);
-                    }}
-                  />
-                  <div className="flex-1">
-                    <p className="font-bold">{ann.isEvent ? ann.name : ann.title}</p>
-                    {(ann.start_date || ann.end_date) && (
-                      <p className="text-xs text-blue-600 font-semibold">
-                        {ann.start_date} {ann.end_date && `- ${ann.end_date}`}
-                      </p>
-                    )}
-                    <p className="text-sm text-gray-700 mt-1">
-                      {ann.isEvent ? ann.announcement_blurb || ann.description : ann.content}
-                    </p>
-                  </div>
-                </div>
-              ))}
+      {/* Announcement Dialog */}
+      <Dialog open={showAnnouncementDialog} onOpenChange={setShowAnnouncementDialog}>
+        <DialogContent className="max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle>{editingAnnouncement ? "Editar Anuncio" : "Nuevo Anuncio"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Título</Label>
+              <Input
+                value={announcementForm.title}
+                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Título del anuncio"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Contenido</Label>
+              <Textarea
+                value={announcementForm.content}
+                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, content: e.target.value }))}
+                placeholder="Contenido del anuncio"
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Categoría</Label>
+              <select
+                className="w-full border rounded-md p-2"
+                value={announcementForm.category}
+                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, category: e.target.value }))}
+              >
+                <option value="General">General</option>
+                <option value="Event">Evento</option>
+                <option value="Ministry">Ministerio</option>
+                <option value="Urgent">Urgente</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={announcementForm.is_active}
+                onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, is_active: checked }))}
+              />
+              <Label>Activo</Label>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowAnnouncementDialog(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAnnouncementSubmit} className="bg-pdv-teal text-white">
+                {editingAnnouncement ? "Guardar" : "Crear"}
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
