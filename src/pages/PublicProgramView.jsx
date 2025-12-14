@@ -210,67 +210,6 @@ export default function PublicProgramView() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        {/* Event/Service Type Toggle and Selection */}
-        <Card className="bg-white shadow-md">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {viewType === "event" ? <Calendar className="w-5 h-5 text-pdv-teal" /> : <Clock className="w-5 h-5 text-pdv-green" />}
-                <h2 className="text-xl font-bold uppercase">Seleccionar {viewType === "event" ? "Evento" : "Servicio"}</h2>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={viewType === "event" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewType("event")}
-                  className={viewType === "event" ? "bg-pdv-teal text-white" : ""}
-                >
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Eventos
-                </Button>
-                <Button
-                  variant={viewType === "service" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewType("service")}
-                  className={viewType === "service" ? "bg-pdv-green text-white" : ""}
-                >
-                  <Clock className="w-4 h-4 mr-2" />
-                  Servicios
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {viewType === "event" ? (
-              <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Elige un evento..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {publicEvents.map((event) => (
-                    <SelectItem key={event.id} value={event.id}>
-                      {event.name} - {event.year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Elige un servicio..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.filter(s => s.status === 'active').map((service) => (
-                    <SelectItem key={service.id} value={service.id}>
-                      {service.name} - {service.day_of_week}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </CardContent>
-        </Card>
-
         {((selectedEventId && selectedEvent) || (selectedServiceId && selectedService)) && (
           <>
             {/* Event/Service Info Card */}
