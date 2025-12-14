@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,16 +16,10 @@ export default function PublicProgramView() {
   
   const [selectedEventId, setSelectedEventId] = useState(preloadedEventId);
   const [selectedSessionId, setSelectedSessionId] = useState("all");
-  const [showDetails, setShowDetails] = useState(false);
+  const [viewMode, setViewMode] = useState("simple"); // "simple" or "full"
   const [expandedSegments, setExpandedSegments] = useState({});
   const [expandedSessions, setExpandedSessions] = useState({});
   const [showEventDetails, setShowEventDetails] = useState(false);
-  const [teamFilters, setTeamFilters] = useState({
-    projection: false,
-    sound: false,
-    ushers: false,
-    translation: false
-  });
 
   useEffect(() => {
     if (preloadedEventId) {
@@ -127,7 +121,24 @@ export default function PublicProgramView() {
     red: 'border-l-4 border-red-500',
   };
 
-  const anyTeamFilter = teamFilters.projection || teamFilters.sound || teamFilters.ushers || teamFilters.translation;
+  const getSegmentActions = (segment) => {
+    return segment?.segment_actions || [];
+  };
+
+  const departmentColors = {
+    Admin: "bg-orange-50 border-orange-200 text-orange-700",
+    MC: "bg-blue-50 border-blue-200 text-blue-700",
+    Sound: "bg-red-50 border-red-200 text-red-700",
+    Projection: "bg-purple-50 border-purple-200 text-purple-700",
+    Hospitality: "bg-pink-50 border-pink-200 text-pink-700",
+    Ujieres: "bg-green-50 border-green-200 text-green-700",
+    Kids: "bg-yellow-50 border-yellow-200 text-yellow-700",
+    Coordinador: "bg-orange-50 border-orange-200 text-orange-700",
+    "Stage & Decor": "bg-purple-50 border-purple-200 text-purple-700",
+    Alabanza: "bg-green-50 border-green-200 text-green-700",
+    Translation: "bg-purple-50 border-purple-200 text-purple-700",
+    Other: "bg-gray-50 border-gray-200 text-gray-700"
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -242,89 +253,52 @@ export default function PublicProgramView() {
               </CardContent>
             </Card>
 
-            {/* Filters Card */}
+            {/* View Mode and Filters Card */}
             <Card className="bg-white shadow-md">
               <CardHeader className="bg-gray-50">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-pdv-teal" />
-                  <h3 className="text-lg font-bold uppercase text-gray-900">Filtros y Opciones</h3>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-5 h-5 text-pdv-teal" />
+                    <h3 className="text-lg font-bold uppercase text-gray-900">Vista y Filtros</h3>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={viewMode === "simple" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setViewMode("simple")}
+                      className={viewMode === "simple" ? "bg-pdv-teal text-white" : ""}
+                    >
+                      <List className="w-4 h-4 mr-2" />
+                      Simple
+                    </Button>
+                    <Button
+                      variant={viewMode === "full" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setViewMode("full")}
+                      className={viewMode === "full" ? "bg-pdv-teal text-white" : ""}
+                    >
+                      <ListChecks className="w-4 h-4 mr-2" />
+                      Run of Show
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-900">Sesión</label>
-                    <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
-                      <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white">
-                        <SelectItem value="all">Todas las Sesiones</SelectItem>
-                        {eventSessions.map((session) => (
-                          <SelectItem key={session.id} value={session.id}>
-                            {session.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-900">Ver Detalles</label>
-                    <div className="flex items-center space-x-2 h-10">
-                      <Checkbox 
-                        id="show-details"
-                        checked={showDetails}
-                        onCheckedChange={setShowDetails}
-                        className="border-gray-400"
-                      />
-                      <label htmlFor="show-details" className="text-sm cursor-pointer text-gray-900">
-                        Mostrar información detallada
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-gray-200">
-                  <label className="text-sm font-semibold text-gray-900 block mb-3">Mostrar Notas de Equipos</label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="filter-projection"
-                        checked={teamFilters.projection}
-                        onCheckedChange={(checked) => setTeamFilters({...teamFilters, projection: checked})}
-                        className="border-gray-400"
-                      />
-                      <label htmlFor="filter-projection" className="text-sm cursor-pointer text-gray-900">Proyección</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="filter-sound"
-                        checked={teamFilters.sound}
-                        onCheckedChange={(checked) => setTeamFilters({...teamFilters, sound: checked})}
-                        className="border-gray-400"
-                      />
-                      <label htmlFor="filter-sound" className="text-sm cursor-pointer text-gray-900">Sonido</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="filter-ushers"
-                        checked={teamFilters.ushers}
-                        onCheckedChange={(checked) => setTeamFilters({...teamFilters, ushers: checked})}
-                        className="border-gray-400"
-                      />
-                      <label htmlFor="filter-ushers" className="text-sm cursor-pointer text-gray-900">Ujieres</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="filter-translation"
-                        checked={teamFilters.translation}
-                        onCheckedChange={(checked) => setTeamFilters({...teamFilters, translation: checked})}
-                        className="border-gray-400"
-                      />
-                      <label htmlFor="filter-translation" className="text-sm cursor-pointer text-gray-900">Traducción</label>
-                    </div>
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-900">Filtrar por Sesión</label>
+                  <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
+                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="all">Todas las Sesiones</SelectItem>
+                      {eventSessions.map((session) => (
+                        <SelectItem key={session.id} value={session.id}>
+                          {session.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
@@ -390,6 +364,9 @@ export default function PublicProgramView() {
                     <div className="divide-y divide-gray-200">
                       {segments.map((segment) => {
                         const isExpanded = expandedSegments[segment.id];
+                        const segmentActions = getSegmentActions(segment);
+                        const prepActions = segmentActions.filter(a => a.timing === 'before_start');
+                        const duringActions = segmentActions.filter(a => a.timing !== 'before_start');
 
                         if (segment.segment_type === "Breakout" && segment.breakout_rooms) {
                           return (
@@ -448,53 +425,162 @@ export default function PublicProgramView() {
                         }
 
                         return (
-                          <div key={segment.id} className="p-4 hover:bg-gray-50 transition-colors">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <Clock className="w-5 h-5 text-pdv-teal flex-shrink-0" />
-                                  <div>
-                                    <span className="font-bold text-lg">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</span>
-                                    {segment.end_time && (
-                                      <span className="text-gray-600 ml-2">- {formatTimeToEST(segment.end_time)}</span>
+                          <div key={segment.id} className="p-4 hover:bg-gray-50 transition-colors border-b last:border-b-0">
+                            {/* SIMPLE MODE */}
+                            {viewMode === "simple" && (
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-1">
+                                    <Clock className="w-5 h-5 text-pdv-teal flex-shrink-0" />
+                                    <div>
+                                      <span className="font-bold text-lg">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</span>
+                                      {segment.end_time && (
+                                        <span className="text-gray-600 ml-2">- {formatTimeToEST(segment.end_time)}</span>
+                                      )}
+                                      {segment.duration_min && (
+                                        <span className="text-sm text-gray-600 ml-2">({segment.duration_min} min)</span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h4 className="text-xl font-bold">{segment.title}</h4>
+                                    <Badge variant="outline" className="text-xs">{segment.segment_type}</Badge>
+                                  </div>
+
+                                  {segment.presenter && (
+                                    <p className="text-blue-600 text-sm mt-1">{segment.presenter}</p>
+                                  )}
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleSegmentExpanded(segment.id)}
+                                >
+                                  {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                </Button>
+                              </div>
+                            )}
+
+                            {/* FULL RUN OF SHOW MODE */}
+                            {viewMode === "full" && (
+                              <div className="space-y-3">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      <Clock className="w-5 h-5 text-pdv-teal flex-shrink-0" />
+                                      <div>
+                                        <span className="font-bold text-lg">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</span>
+                                        {segment.end_time && (
+                                          <span className="text-gray-600 ml-2">- {formatTimeToEST(segment.end_time)}</span>
+                                        )}
+                                        {segment.duration_min && (
+                                          <span className="text-sm text-gray-600 ml-2">({segment.duration_min} min)</span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                      <h4 className="text-xl font-bold">{segment.title}</h4>
+                                      <Badge variant="outline" className="text-xs">{segment.segment_type}</Badge>
+                                      {segment.requires_translation && (
+                                        <div className="flex items-center gap-1">
+                                          <Languages className="w-4 h-4 text-purple-600" />
+                                          {segment.translation_mode === "InPerson" && <Mic className="w-4 h-4 text-purple-600" />}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {segment.presenter && (
+                                      <div className="flex items-center gap-2 text-blue-600 mb-2">
+                                        <Users className="w-4 h-4" />
+                                        <span className="font-semibold">{segment.presenter}</span>
+                                      </div>
                                     )}
-                                    {segment.duration_min && (
-                                      <span className="text-sm text-gray-600 ml-2">({segment.duration_min} min)</span>
+
+                                    {segment.room_id && (
+                                      <div className="flex items-center gap-2 text-gray-600 mb-2">
+                                        <MapPin className="w-4 h-4" />
+                                        <span>{getRoomName(segment.room_id)}</span>
+                                      </div>
                                     )}
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 mb-2">
-                                  <h4 className="text-xl font-bold">{segment.title}</h4>
-                                  <Badge variant="outline" className="text-xs">{segment.segment_type}</Badge>
-                                  {segment.requires_translation && (
-                                    <div className="flex items-center gap-1">
-                                      <Languages className="w-4 h-4 text-purple-600" />
-                                      {segment.translation_mode === "InPerson" && <Mic className="w-4 h-4 text-purple-600" />}
+                                {/* Prep Actions */}
+                                {prepActions.length > 0 && (
+                                  <div className="bg-amber-50 border border-amber-200 rounded p-3">
+                                    <p className="font-bold text-amber-900 text-sm mb-2">⚠ PREPARACIÓN</p>
+                                    <div className="space-y-1">
+                                      {prepActions.map((action, idx) => (
+                                        <div key={idx} className={`text-xs px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}>
+                                          <span className="font-bold">[{action.department}]</span> {action.label}
+                                          {action.offset_min !== undefined && (
+                                            <span className="italic ml-1">({action.offset_min}m antes)</span>
+                                          )}
+                                          {action.notes && <span className="ml-1">— {action.notes}</span>}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* During Actions */}
+                                {duringActions.length > 0 && (
+                                  <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                                    <p className="font-bold text-blue-900 text-sm mb-2">▶ DURANTE SEGMENTO</p>
+                                    <div className="space-y-1">
+                                      {duringActions.map((action, idx) => (
+                                        <div key={idx} className={`text-xs px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}>
+                                          <span className="font-bold">[{action.department}]</span> {action.label}
+                                          {action.notes && <span className="ml-1">— {action.notes}</span>}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Team Notes */}
+                                <div className="grid md:grid-cols-2 gap-2">
+                                  {segment.projection_notes && (
+                                    <div className="bg-purple-50 p-2 rounded border border-purple-200 text-xs">
+                                      <span className="font-bold text-purple-800">PROYECCIÓN:</span>
+                                      <p className="mt-1">{segment.projection_notes}</p>
+                                    </div>
+                                  )}
+                                  {segment.sound_notes && (
+                                    <div className="bg-red-50 p-2 rounded border border-red-200 text-xs">
+                                      <span className="font-bold text-red-800">SONIDO:</span>
+                                      <p className="mt-1">{segment.sound_notes}</p>
+                                    </div>
+                                  )}
+                                  {segment.ushers_notes && (
+                                    <div className="bg-green-50 p-2 rounded border border-green-200 text-xs">
+                                      <span className="font-bold text-green-800">UJIERES:</span>
+                                      <p className="mt-1">{segment.ushers_notes}</p>
+                                    </div>
+                                  )}
+                                  {segment.translation_notes && (
+                                    <div className="bg-blue-50 p-2 rounded border border-blue-200 text-xs">
+                                      <span className="font-bold text-blue-800">TRADUCCIÓN:</span>
+                                      <p className="mt-1">{segment.translation_notes}</p>
+                                    </div>
+                                  )}
+                                  {segment.stage_decor_notes && (
+                                    <div className="bg-purple-50 p-2 rounded border border-purple-200 text-xs">
+                                      <span className="font-bold text-purple-800">STAGE & DECOR:</span>
+                                      <p className="mt-1">{segment.stage_decor_notes}</p>
                                     </div>
                                   )}
                                 </div>
 
-                                {segment.presenter && (
-                                  <div className="flex items-center gap-2 text-blue-600 mb-2">
-                                    <Users className="w-4 h-4" />
-                                    <span className="font-semibold">{segment.presenter}</span>
-                                  </div>
-                                )}
-
-                                {segment.room_id && (
-                                  <div className="flex items-center gap-2 text-gray-600 mb-2">
-                                    <MapPin className="w-4 h-4" />
-                                    <span>{getRoomName(segment.room_id)}</span>
-                                  </div>
-                                )}
-
-                                {showDetails && (
-                                  <div className="mt-3 space-y-2">
+                                {/* Additional Details (collapsed by default in full mode) */}
+                                {isExpanded && (
+                                  <div className="border-t pt-3 space-y-2">
                                     {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
-                                      <div className="bg-green-50 p-3 rounded border border-green-200">
+                                      <div className="bg-green-50 p-2 rounded border border-green-200 text-xs">
                                         <p className="font-semibold text-green-800 mb-1">Canciones:</p>
-                                        <div className="space-y-1 text-sm">
+                                        <div className="space-y-1">
                                           {[...Array(segment.number_of_songs)].map((_, idx) => {
                                             const songNum = idx + 1;
                                             const title = segment[`song_${songNum}_title`];
@@ -511,58 +597,65 @@ export default function PublicProgramView() {
                                     )}
 
                                     {segment.segment_type === "Plenaria" && segment.message_title && (
-                                      <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                                      <div className="bg-blue-50 p-2 rounded border border-blue-200 text-xs">
                                         <p className="font-semibold text-blue-800">Mensaje: {segment.message_title}</p>
                                         {segment.scripture_references && (
-                                          <p className="text-sm mt-1">Escrituras: {segment.scripture_references}</p>
+                                          <p className="mt-1">Escrituras: {segment.scripture_references}</p>
                                         )}
                                       </div>
                                     )}
 
                                     {segment.description_details && (
-                                      <p className="text-gray-600">{segment.description_details}</p>
+                                      <p className="text-gray-600 text-xs">{segment.description_details}</p>
                                     )}
                                   </div>
-                                )}
+                                  )}
 
-                                {anyTeamFilter && (
-                                  <div className="mt-3 space-y-2">
-                                    {teamFilters.projection && segment.projection_notes && (
-                                      <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm">
-                                        <span className="font-semibold text-purple-800">Proyección:</span> {segment.projection_notes}
-                                      </div>
-                                    )}
-                                    {teamFilters.sound && segment.sound_notes && (
-                                      <div className="bg-red-50 p-2 rounded border border-red-200 text-sm">
-                                        <span className="font-semibold text-red-800">Sonido:</span> {segment.sound_notes}
-                                      </div>
-                                    )}
-                                    {teamFilters.ushers && segment.ushers_notes && (
-                                      <div className="bg-green-50 p-2 rounded border border-green-200 text-sm">
-                                        <span className="font-semibold text-green-800">Ujieres:</span> {segment.ushers_notes}
-                                      </div>
-                                    )}
-                                    {teamFilters.translation && segment.translation_notes && (
-                                      <div className="bg-blue-50 p-2 rounded border border-blue-200 text-sm">
-                                        <span className="font-semibold text-blue-800">Traducción:</span> {segment.translation_notes}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-
-                              {(showDetails || anyTeamFilter) && (
-                                <Button
+                                  <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => toggleSegmentExpanded(segment.id)}
-                                  className="flex-shrink-0"
-                                >
+                                  className="mt-2"
+                                  >
                                   {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                </Button>
-                              )}
-                            </div>
-                          </div>
+                                  {isExpanded ? 'Menos' : 'Más Detalles'}
+                                  </Button>
+                                  </div>
+                                  )}
+
+                                  {/* Expanded details in SIMPLE mode */}
+                                  {viewMode === "simple" && isExpanded && (
+                                  <div className="mt-3 pt-3 border-t space-y-2">
+                                  {segment.description_details && (
+                                  <p className="text-gray-600 text-sm">{segment.description_details}</p>
+                                  )}
+
+                                  {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
+                                  <div className="bg-green-50 p-2 rounded border border-green-200 text-sm">
+                                  <p className="font-semibold text-green-800 mb-1">Canciones:</p>
+                                  <div className="space-y-1">
+                                    {[...Array(segment.number_of_songs)].map((_, idx) => {
+                                      const songNum = idx + 1;
+                                      const title = segment[`song_${songNum}_title`];
+                                      const lead = segment[`song_${songNum}_lead`];
+                                      if (!title) return null;
+                                      return <div key={songNum}>{songNum}. {title} {lead && `(${lead})`}</div>;
+                                    })}
+                                  </div>
+                                  </div>
+                                  )}
+
+                                  {segment.segment_type === "Plenaria" && segment.message_title && (
+                                  <div className="bg-blue-50 p-2 rounded border border-blue-200 text-sm">
+                                  <p className="font-semibold text-blue-800">Mensaje: {segment.message_title}</p>
+                                  {segment.scripture_references && (
+                                    <p className="mt-1">Escrituras: {segment.scripture_references}</p>
+                                  )}
+                                  </div>
+                                  )}
+                                  </div>
+                                  )}
+                                  </div>
                         );
                       })}
                     </div>
