@@ -346,7 +346,7 @@ function LayoutContent({ children }) {
                     Inicio
                   </Link>
 
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">Operaciones</div>
+                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">Eventos</div>
                   <Link
                     to={createPageUrl("Events")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
@@ -355,6 +355,15 @@ function LayoutContent({ children }) {
                     Eventos
                   </Link>
                   <Link
+                    to={createPageUrl("Reports")}
+                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Informes
+                  </Link>
+
+                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">Servicios</div>
+                  <Link
                     to={createPageUrl("Services")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
@@ -362,19 +371,21 @@ function LayoutContent({ children }) {
                     Servicios
                   </Link>
                   <Link
-                    to={createPageUrl("Reports")}
+                    to={createPageUrl("ServiceQuickEditor")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Informes
+                    Editor Rápido
                   </Link>
                   <Link
-                    to={createPageUrl("AnnouncementsReport")}
+                    to={createPageUrl("ServiceAnnouncementBuilder")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Anuncios
                   </Link>
+
+                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">Recursos</div>
                   <Link
                     to={createPageUrl("People")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
