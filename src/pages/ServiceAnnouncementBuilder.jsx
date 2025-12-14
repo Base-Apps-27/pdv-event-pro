@@ -42,7 +42,43 @@ export default function ServiceAnnouncementBuilder() {
   });
 
   const fixedAnnouncements = allAnnouncements.filter(a => a.category === 'General' && a.is_active);
-  const dynamicAnnouncements = [...allAnnouncements.filter(a => a.category !== 'General' && a.is_active), ...events.filter(e => e.promote_in_announcements)];
+  
+  // Get dynamic announcements that are active for selected date
+  const dynamicFromItems = allAnnouncements.filter(a => {
+    if (a.category === 'General' || !a.is_active) return false;
+    if (!selectedDate) return true;
+    const selDate = new Date(selectedDate);
+    const startDate = a.start_date ? new Date(a.start_date) : null;
+    const endDate = a.end_date ? new Date(a.end_date) : null;
+    
+    if (startDate && selDate < startDate) return false;
+    if (endDate && selDate > endDate) return false;
+    return true;
+  });
+
+  const dynamicFromEvents = events.filter(e => {
+    if (!e.promote_in_announcements) return false;
+    if (!selectedDate) return true;
+    const selDate = new Date(selectedDate);
+    const promoStart = e.promotion_start_date ? new Date(e.promotion_start_date) : null;
+    const promoEnd = e.promotion_end_date ? new Date(e.promotion_end_date) : null;
+    
+    if (promoStart && selDate < promoStart) return false;
+    if (promoEnd && selDate > promoEnd) return false;
+    return true;
+  });
+
+  const dynamicAnnouncements = [...dynamicFromItems, ...dynamicFromEvents];
+
+  // Auto-select dynamic announcements when date changes
+  useEffect(() => {
+    if (selectedDate && dynamicAnnouncements.length > 0) {
+      setSelectedAnnouncements(prev => ({
+        ...prev,
+        dynamic: dynamicAnnouncements.map(a => a.id)
+      }));
+    }
+  }, [selectedDate, selectedServiceId]);
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.AnnouncementItem.create(data),
