@@ -45,38 +45,42 @@ function LayoutContent({ children }) {
 
         const currentUser = await base44.auth.me();
         setUser(currentUser);
-
-        // Role-based page access control
-        const userRole = currentUser.app_role || 'EventDayViewer';
-        const currentPath = location.pathname;
-
-        // EventDayViewers can only access PublicProgramView
-        if (userRole === 'EventDayViewer' && !currentPath.includes('PublicProgramView')) {
-          navigate(createPageUrl('PublicProgramView'));
-          return;
-        }
-
-        // AdmAsst can access Events, Services, Reports, Announcements, People
-        if (userRole === 'AdmAsst') {
-          const allowedPaths = ['Events', 'EventDetail', 'Services', 'ServiceDetail', 'Reports', 'AnnouncementsReport', 'People', 'PublicProgramView'];
-          const hasAccess = allowedPaths.some(path => currentPath.includes(path));
-          
-          if (!hasAccess && currentPath !== createPageUrl('Dashboard')) {
-            navigate(createPageUrl('Dashboard'));
-            return;
-          }
-        }
-
-        // Admin has full access (no restrictions)
+        setLoading(false);
 
       } catch (error) {
         console.error('Auth error:', error);
-      } finally {
         setLoading(false);
       }
     };
     checkAuth();
-  }, [location.pathname]);
+  }, []);
+
+  // Separate effect for role-based redirects (only once when user changes)
+  useEffect(() => {
+    if (!user || loading) return;
+
+    const userRole = user.app_role || 'EventDayViewer';
+    const currentPath = location.pathname;
+
+    // EventDayViewers can only access PublicProgramView
+    if (userRole === 'EventDayViewer' && !currentPath.includes('PublicProgramView')) {
+      navigate(createPageUrl('PublicProgramView'), { replace: true });
+      return;
+    }
+
+    // AdmAsst can access Events, Services, Reports, Announcements, People
+    if (userRole === 'AdmAsst') {
+      const allowedPaths = ['Events', 'EventDetail', 'Services', 'ServiceDetail', 'Reports', 'AnnouncementsReport', 'People', 'PublicProgramView', 'Dashboard'];
+      const hasAccess = allowedPaths.some(path => currentPath.includes(path));
+      
+      if (!hasAccess) {
+        navigate(createPageUrl('Dashboard'), { replace: true });
+        return;
+      }
+    }
+
+    // Admin has full access (no restrictions)
+  }, [user, location.pathname, loading]);
 
   if (loading) {
     return null;
