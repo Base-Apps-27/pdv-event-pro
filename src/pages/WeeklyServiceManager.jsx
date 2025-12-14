@@ -822,6 +822,20 @@ export default function WeeklyServiceManager() {
                           </p>
                         )}
                       </div>
+                      {ann.isEvent && (
+                        <div className="flex items-center gap-1 print:hidden">
+                          <Checkbox
+                            checked={ann.announcement_has_video}
+                            onCheckedChange={(checked) => {
+                              updateAnnouncementMutation.mutate({
+                                id: ann.id,
+                                data: { ...ann, announcement_has_video: checked }
+                              });
+                            }}
+                          />
+                          <span className="text-xs font-semibold text-purple-700">📹</span>
+                        </div>
+                      )}
                       {!ann.isEvent && (
                         <div className="flex gap-1 flex-shrink-0 print:hidden">
                           <Button
