@@ -13,8 +13,11 @@ export default function PublicProgramView() {
   const urlParams = new URLSearchParams(window.location.search);
   const preloadedSlug = urlParams.get('slug');
   const preloadedEventId = urlParams.get('eventId') || "";
+  const preloadedServiceId = urlParams.get('serviceId') || "";
   
+  const [viewType, setViewType] = useState(preloadedServiceId ? "service" : "event"); // "event" or "service"
   const [selectedEventId, setSelectedEventId] = useState(preloadedEventId);
+  const [selectedServiceId, setSelectedServiceId] = useState(preloadedServiceId);
   const [selectedSessionId, setSelectedSessionId] = useState("all");
   const [viewMode, setViewMode] = useState("simple"); // "simple" or "full"
   const [expandedSegments, setExpandedSegments] = useState({});
@@ -36,26 +39,88 @@ export default function PublicProgramView() {
     },
   });
 
+  // Fetch services
+  const { data: services = [] } = useQuery({
+    queryKey: ['services'],
+    queryFn: () => base44.entities.Service.list(),
+  });
+
   // If slug is provided, find the event and set the ID
   useEffect(() => {
     if (preloadedSlug && publicEvents.length > 0 && !selectedEventId) {
       const event = publicEvents.find(e => e.slug === preloadedSlug);
       if (event) {
         setSelectedEventId(event.id);
+        setViewType("event");
       }
     }
   }, [preloadedSlug, publicEvents, selectedEventId]);
 
-  // Fetch sessions for selected event
+  // Auto-select next upcoming event or service
+  useEffect(() => {
+    if (!preloadedEventId && !preloadedServiceId && publicEvents.length > 0 && services.length > 0) {
+      const today = new Date();
+      
+      // Find next event
+      const nextEvent = publicEvents.find(e => e.start_date && new Date(e.start_date) >= today);
+      
+      // Find next service
+      const dayMap = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
+      const activeServices = services.filter(s => s.status === 'active');
+      const upcomingServices = activeServices.map(service => {
+        const serviceDayNum = dayMap[service.day_of_week];
+        let daysUntil = serviceDayNum - today.getDay();
+        if (daysUntil < 0) daysUntil += 7;
+        if (daysUntil === 0 && service.time) {
+          const [hours, minutes] = service.time.split(':');
+          const serviceTime = new Date(today);
+          serviceTime.setHours(parseInt(hours), parseInt(minutes), 0);
+          if (serviceTime < today) daysUntil = 7;
+        }
+        const nextDate = new Date(today);
+        nextDate.setDate(today.getDate() + daysUntil);
+        return { ...service, nextDate, daysUntil };
+      }).sort((a, b) => a.daysUntil - b.daysUntil);
+      
+      const nextService = upcomingServices[0];
+      
+      // Compare and select closest
+      if (nextEvent && nextService) {
+        const eventDaysAway = Math.floor((new Date(nextEvent.start_date) - today) / (1000 * 60 * 60 * 24));
+        if (nextService.daysUntil <= eventDaysAway) {
+          setSelectedServiceId(nextService.id);
+          setViewType("service");
+        } else {
+          setSelectedEventId(nextEvent.id);
+          setViewType("event");
+        }
+      } else if (nextEvent) {
+        setSelectedEventId(nextEvent.id);
+        setViewType("event");
+      } else if (nextService) {
+        setSelectedServiceId(nextService.id);
+        setViewType("service");
+      }
+    }
+  }, [publicEvents, services, preloadedEventId, preloadedServiceId]);
+
+  // Fetch sessions for selected event OR service
   const { data: sessions = [] } = useQuery({
-    queryKey: ['sessions', selectedEventId],
-    queryFn: () => base44.entities.Session.filter({ event_id: selectedEventId }, 'order'),
-    enabled: !!selectedEventId,
+    queryKey: ['sessions', selectedEventId, selectedServiceId, viewType],
+    queryFn: () => {
+      if (viewType === "event" && selectedEventId) {
+        return base44.entities.Session.filter({ event_id: selectedEventId }, 'order');
+      } else if (viewType === "service" && selectedServiceId) {
+        return base44.entities.Session.filter({ service_id: selectedServiceId }, 'order');
+      }
+      return [];
+    },
+    enabled: !!(selectedEventId || selectedServiceId),
   });
 
   // Fetch segments for selected sessions
   const { data: allSegments = [] } = useQuery({
-    queryKey: ['segments', selectedEventId, selectedSessionId],
+    queryKey: ['segments', selectedEventId, selectedServiceId, selectedSessionId, viewType],
     queryFn: async () => {
       const sessionIds = selectedSessionId === "all" 
         ? sessions.map(s => s.id)
@@ -68,7 +133,7 @@ export default function PublicProgramView() {
         sessionIds.includes(seg.session_id) && seg.show_in_general !== false
       );
     },
-    enabled: !!selectedEventId && sessions.length > 0,
+    enabled: !!(selectedEventId || selectedServiceId) && sessions.length > 0,
   });
 
   // Fetch rooms
@@ -77,14 +142,8 @@ export default function PublicProgramView() {
     queryFn: () => base44.entities.Room.list(),
   });
 
-  // Fetch event days
-  const { data: eventDays = [] } = useQuery({
-    queryKey: ['eventDays', selectedEventId],
-    queryFn: () => base44.entities.EventDay.filter({ event_id: selectedEventId }),
-    enabled: !!selectedEventId,
-  });
-
   const selectedEvent = publicEvents.find(e => e.id === selectedEventId);
+  const selectedService = services.find(s => s.id === selectedServiceId);
   const eventSessions = sessions;
   const filteredSessions = eventSessions;
 
@@ -151,51 +210,107 @@ export default function PublicProgramView() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        {/* Event Selection */}
+        {/* Event/Service Type Toggle and Selection */}
         <Card className="bg-white shadow-md">
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-pdv-teal" />
-              <h2 className="text-xl font-bold uppercase">Seleccionar Evento</h2>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {viewType === "event" ? <Calendar className="w-5 h-5 text-pdv-teal" /> : <Clock className="w-5 h-5 text-pdv-green" />}
+                <h2 className="text-xl font-bold uppercase">Seleccionar {viewType === "event" ? "Evento" : "Servicio"}</h2>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={viewType === "event" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewType("event")}
+                  className={viewType === "event" ? "bg-pdv-teal text-white" : ""}
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Eventos
+                </Button>
+                <Button
+                  variant={viewType === "service" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewType("service")}
+                  className={viewType === "service" ? "bg-pdv-green text-white" : ""}
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  Servicios
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
-            <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Elige un evento..." />
-              </SelectTrigger>
-              <SelectContent>
-                {publicEvents.map((event) => (
-                  <SelectItem key={event.id} value={event.id}>
-                    {event.name} - {event.year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {viewType === "event" ? (
+              <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Elige un evento..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {publicEvents.map((event) => (
+                    <SelectItem key={event.id} value={event.id}>
+                      {event.name} - {event.year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Elige un servicio..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {services.filter(s => s.status === 'active').map((service) => (
+                    <SelectItem key={service.id} value={service.id}>
+                      {service.name} - {service.day_of_week}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </CardContent>
         </Card>
 
-        {selectedEventId && selectedEvent && (
+        {((selectedEventId && selectedEvent) || (selectedServiceId && selectedService)) && (
           <>
-            {/* Event Info Card */}
-            <Card className="bg-white shadow-md border-l-4 border-pdv-green">
+            {/* Event/Service Info Card */}
+            <Card className={`bg-white shadow-md border-l-4 ${viewType === "event" ? "border-pdv-teal" : "border-pdv-green"}`}>
               <CardContent className="p-6">
-                <h2 className="text-3xl font-bold uppercase mb-2">{selectedEvent.name}</h2>
-                {selectedEvent.theme && (
+                <h2 className="text-3xl font-bold uppercase mb-2">
+                  {viewType === "event" ? selectedEvent?.name : selectedService?.name}
+                </h2>
+                {viewType === "event" && selectedEvent?.theme && (
                   <p className="text-xl text-pdv-green italic mb-4">"{selectedEvent.theme}"</p>
                 )}
+                {viewType === "service" && selectedService?.description && (
+                  <p className="text-lg text-gray-600 mb-4">{selectedService.description}</p>
+                )}
                 <div className="flex flex-wrap gap-4 text-sm mb-4">
-                  {selectedEvent.start_date && (
+                  {viewType === "event" && selectedEvent?.start_date && (
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-gray-600" />
                       <span>{selectedEvent.start_date}</span>
                       {selectedEvent.end_date && <span> - {selectedEvent.end_date}</span>}
                     </div>
                   )}
-                  {selectedEvent.location && (
+                  {viewType === "service" && selectedService && (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-gray-600" />
+                        <span>{selectedService.day_of_week}</span>
+                      </div>
+                      {selectedService.time && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-gray-600" />
+                          <span>{selectedService.time}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {(selectedEvent?.location || selectedService?.location) && (
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-gray-600" />
-                      <span>{selectedEvent.location}</span>
+                      <span>{viewType === "event" ? selectedEvent?.location : selectedService?.location}</span>
                     </div>
                   )}
                 </div>
@@ -211,22 +326,22 @@ export default function PublicProgramView() {
                   {showEventDetails ? 'Ocultar Detalles' : 'Ver Más Detalles'}
                 </Button>
 
-                {/* Expanded Event Details */}
+                {/* Expanded Details */}
                 {showEventDetails && (
                   <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-                    {selectedEvent.description && (
+                    {viewType === "event" && selectedEvent?.description && (
                       <div>
                         <p className="font-semibold text-gray-900 mb-1">Descripción:</p>
                         <p className="text-gray-700">{selectedEvent.description}</p>
                       </div>
                     )}
-                    {selectedEvent.announcement_blurb && (
+                    {viewType === "event" && selectedEvent?.announcement_blurb && (
                       <div>
                         <p className="font-semibold text-gray-900 mb-1">Anuncio:</p>
                         <p className="text-gray-700">{selectedEvent.announcement_blurb}</p>
                       </div>
                     )}
-                    {selectedEvent.promotion_targets && selectedEvent.promotion_targets.length > 0 && (
+                    {viewType === "event" && selectedEvent?.promotion_targets && selectedEvent.promotion_targets.length > 0 && (
                       <div>
                         <p className="font-semibold text-gray-900 mb-1">Audiencia:</p>
                         <div className="flex flex-wrap gap-2">
@@ -239,11 +354,13 @@ export default function PublicProgramView() {
                     <div className="grid grid-cols-2 gap-4 pt-2">
                       <div>
                         <p className="font-semibold text-gray-900 mb-1">Total Sesiones:</p>
-                        <p className="text-2xl font-bold text-pdv-teal">{eventSessions.length}</p>
+                        <p className={`text-2xl font-bold ${viewType === "event" ? "text-pdv-teal" : "text-pdv-green"}`}>
+                          {eventSessions.length}
+                        </p>
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900 mb-1">Total Segmentos:</p>
-                        <p className="text-2xl font-bold text-pdv-teal">
+                        <p className={`text-2xl font-bold ${viewType === "event" ? "text-pdv-teal" : "text-pdv-green"}`}>
                           {allSegments.filter(seg => eventSessions.some(s => s.id === seg.session_id)).length}
                         </p>
                       </div>
@@ -673,10 +790,10 @@ export default function PublicProgramView() {
           </>
         )}
 
-        {!selectedEventId && (
+        {!selectedEventId && !selectedServiceId && (
           <Card className="p-12 text-center bg-white border-dashed border-2">
             <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Selecciona un evento para ver su programa</p>
+            <p className="text-gray-600">Selecciona un {viewType === "event" ? "evento" : "servicio"} para ver su programa</p>
           </Card>
         )}
       </div>
