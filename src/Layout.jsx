@@ -174,41 +174,16 @@ function LayoutContent({ children }) {
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
                 </div>
                 <Link
-                  to={createPageUrl("Services")}
+                  to={createPageUrl("WeeklyServiceManager")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("Services")) || 
-                    isActive(createPageUrl("ServiceDetail"))
+                    isActive(createPageUrl("WeeklyServiceManager"))
                       ? "text-white shadow-md"
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
-                  style={isActive(createPageUrl("Services")) || isActive(createPageUrl("ServiceDetail")) ? gradientStyle : {}}
+                  style={isActive(createPageUrl("WeeklyServiceManager")) ? gradientStyle : {}}
                 >
                   <Clock className="w-5 h-5" />
-                  {t('nav.services')}
-                </Link>
-                <Link
-                  to={createPageUrl("ServiceQuickEditor")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("ServiceQuickEditor"))
-                      ? "text-white shadow-md"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={isActive(createPageUrl("ServiceQuickEditor")) ? gradientStyle : {}}
-                >
-                  <Clock className="w-5 h-5" />
-                  Editor Rápido
-                </Link>
-                <Link
-                  to={createPageUrl("ServiceAnnouncementBuilder")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("ServiceAnnouncementBuilder"))
-                      ? "text-white shadow-md"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={isActive(createPageUrl("ServiceAnnouncementBuilder")) ? gradientStyle : {}}
-                >
-                  <Bell className="w-5 h-5" />
-                  Anuncios
+                  Servicios Dominicales
                 </Link>
               </>
             )}
@@ -364,25 +339,11 @@ function LayoutContent({ children }) {
 
                   <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">Servicios</div>
                   <Link
-                    to={createPageUrl("Services")}
+                    to={createPageUrl("WeeklyServiceManager")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Servicios
-                  </Link>
-                  <Link
-                    to={createPageUrl("ServiceQuickEditor")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Editor Rápido
-                  </Link>
-                  <Link
-                    to={createPageUrl("ServiceAnnouncementBuilder")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Anuncios
+                    Servicios Dominicales
                   </Link>
 
                   <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">Recursos</div>
