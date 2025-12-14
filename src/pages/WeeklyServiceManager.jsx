@@ -706,168 +706,140 @@ export default function WeeklyServiceManager() {
         <CardContent className="space-y-6">
           {/* Fixed Announcements */}
           <div className="space-y-3">
-            <Label className="text-lg font-bold text-gray-900">Anuncios Fijos</Label>
-            <div className="space-y-2">
+            <Label className="text-base font-bold text-gray-900">Anuncios Fijos</Label>
+            <div className="grid md:grid-cols-2 gap-3">
               {fixedAnnouncements.map(ann => (
-                <Card key={ann.id} className="border-2">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        checked={selectedAnnouncements.includes(ann.id)}
-                        onCheckedChange={(checked) => {
-                          setSelectedAnnouncements(prev => 
-                            checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
-                          );
-                          setHasChanges(true);
-                        }}
-                        className="mt-1"
-                      />
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <h3 className="font-bold text-lg">{ann.title}</h3>
-                            <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{ann.content}</p>
-                          </div>
-                          <div className="flex gap-1 print:hidden">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => moveAnnouncementPriority(ann, 'up')}
-                              title="Subir prioridad"
-                            >
-                              <ChevronUp className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => moveAnnouncementPriority(ann, 'down')}
-                              title="Bajar prioridad"
-                            >
-                              <ChevronDown className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleAnnouncementVisibility(ann)}
-                              title={ann.is_active ? "Ocultar" : "Mostrar"}
-                            >
-                              {ann.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-gray-400" />}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openAnnouncementEdit(ann)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                if (window.confirm('¿Eliminar este anuncio?')) {
-                                  deleteAnnouncementMutation.mutate(ann.id);
-                                }
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </div>
+                <div key={ann.id} className="flex items-start gap-2 p-3 border-2 rounded-lg bg-white hover:shadow-md transition-shadow">
+                  <Checkbox
+                    checked={selectedAnnouncements.includes(ann.id)}
+                    onCheckedChange={(checked) => {
+                      setSelectedAnnouncements(prev => 
+                        checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
+                      );
+                      setHasChanges(true);
+                    }}
+                    className="mt-1"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <h3 className="font-bold text-sm leading-tight">{ann.title}</h3>
+                      <div className="flex gap-1 flex-shrink-0 print:hidden">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => moveAnnouncementPriority(ann, 'up')}
+                        >
+                          <ChevronUp className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => moveAnnouncementPriority(ann, 'down')}
+                        >
+                          <ChevronDown className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => openAnnouncementEdit(ann)}
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            if (window.confirm('¿Eliminar?')) deleteAnnouncementMutation.mutate(ann.id);
+                          }}
+                        >
+                          <Trash2 className="w-3 h-3 text-red-500" />
+                        </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">{ann.content}</p>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
 
           {/* Dynamic Announcements */}
           <div className="space-y-3">
-            <Label className="text-lg font-bold text-gray-900">Anuncios Dinámicos</Label>
-            <div className="space-y-2">
+            <Label className="text-base font-bold text-gray-900">Anuncios Dinámicos</Label>
+            <div className="grid md:grid-cols-2 gap-3">
               {dynamicAnnouncements.map(ann => (
-                <Card key={ann.id} className="border-2 bg-blue-50">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        checked={selectedAnnouncements.includes(ann.id)}
-                        onCheckedChange={(checked) => {
-                          setSelectedAnnouncements(prev => 
-                            checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
-                          );
-                          setHasChanges(true);
-                        }}
-                        className="mt-1"
-                      />
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-bold text-lg">{ann.isEvent ? ann.name : ann.title}</h3>
-                              {ann.isEvent && <Badge className="bg-purple-200 text-purple-800">Evento</Badge>}
-                            </div>
-                            {(ann.start_date || ann.end_date) && (
-                              <p className="text-sm font-semibold text-blue-600 mb-1">
-                                {ann.start_date} {ann.end_date && `- ${ann.end_date}`}
-                              </p>
-                            )}
-                            <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                              {ann.isEvent ? ann.announcement_blurb || ann.description : ann.content}
-                            </p>
-                          </div>
-                          <div className="flex gap-1 print:hidden">
-                            {!ann.isEvent && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => moveAnnouncementPriority(ann, 'up')}
-                                  title="Subir prioridad"
-                                >
-                                  <ChevronUp className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => moveAnnouncementPriority(ann, 'down')}
-                                  title="Bajar prioridad"
-                                >
-                                  <ChevronDown className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleAnnouncementVisibility(ann)}
-                                  title={ann.is_active ? "Ocultar" : "Mostrar"}
-                                >
-                                  {ann.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-gray-400" />}
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => openAnnouncementEdit(ann)}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    if (window.confirm('¿Eliminar este anuncio?')) {
-                                      deleteAnnouncementMutation.mutate(ann.id);
-                                    }
-                                  }}
-                                >
-                                  <Trash2 className="w-4 h-4 text-red-500" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
+                <div key={ann.id} className="flex items-start gap-2 p-3 border-2 rounded-lg bg-blue-50 hover:shadow-md transition-shadow">
+                  <Checkbox
+                    checked={selectedAnnouncements.includes(ann.id)}
+                    onCheckedChange={(checked) => {
+                      setSelectedAnnouncements(prev => 
+                        checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
+                      );
+                      setHasChanges(true);
+                    }}
+                    className="mt-1"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold text-sm leading-tight">{ann.isEvent ? ann.name : ann.title}</h3>
+                          {ann.isEvent && <Badge className="bg-purple-200 text-purple-800 text-[10px]">Evento</Badge>}
                         </div>
+                        {(ann.start_date || ann.end_date) && (
+                          <p className="text-xs font-semibold text-blue-600 mb-1">
+                            {ann.start_date} {ann.end_date && `- ${ann.end_date}`}
+                          </p>
+                        )}
                       </div>
+                      {!ann.isEvent && (
+                        <div className="flex gap-1 flex-shrink-0 print:hidden">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => moveAnnouncementPriority(ann, 'up')}
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => moveAnnouncementPriority(ann, 'down')}
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => openAnnouncementEdit(ann)}
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => {
+                              if (window.confirm('¿Eliminar?')) deleteAnnouncementMutation.mutate(ann.id);
+                            }}
+                          >
+                            <Trash2 className="w-3 h-3 text-red-500" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
+                    <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {ann.isEvent ? ann.announcement_blurb || ann.description : ann.content}
+                    </p>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
