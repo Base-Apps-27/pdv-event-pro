@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,10 +29,12 @@ export default function ServiceQuickEditor() {
     queryKey: ['serviceSessions', selectedServiceId],
     queryFn: () => base44.entities.Session.filter({ service_id: selectedServiceId }, 'order'),
     enabled: !!selectedServiceId,
-    onSuccess: (data) => {
-      setSessions(data);
-    }
   });
+
+  // Update sessions state when data changes
+  useEffect(() => {
+    setSessions(serviceSessions);
+  }, [serviceSessions]);
 
   // Fetch segments for sessions
   const { data: allSegments = [] } = useQuery({
@@ -43,18 +45,19 @@ export default function ServiceQuickEditor() {
       return segs.filter(seg => serviceSessions.some(s => s.id === seg.session_id));
     },
     enabled: !!selectedServiceId && serviceSessions.length > 0,
-    onSuccess: (data) => {
-      // Organize segments by session
-      const segmentsBySession = {};
-      data.forEach(seg => {
-        if (!segmentsBySession[seg.session_id]) {
-          segmentsBySession[seg.session_id] = [];
-        }
-        segmentsBySession[seg.session_id].push(seg);
-      });
-      setSegments(segmentsBySession);
-    }
   });
+
+  // Organize segments by session when data changes
+  useEffect(() => {
+    const segmentsBySession = {};
+    allSegments.forEach(seg => {
+      if (!segmentsBySession[seg.session_id]) {
+        segmentsBySession[seg.session_id] = [];
+      }
+      segmentsBySession[seg.session_id].push(seg);
+    });
+    setSegments(segmentsBySession);
+  }, [allSegments]);
 
   const updateSegmentMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Segment.update(id, data),
