@@ -876,7 +876,7 @@ export default function WeeklyServiceManager() {
                           Recurrente {ann.recurrence_end_date && `hasta ${ann.recurrence_end_date}`}
                         </Badge>
                       )}
-                      {ann.has_video && (
+                      {(ann.has_video || ann.announcement_has_video) && (
                         <Badge className="bg-purple-100 text-purple-800 text-[10px]">
                           📹 Video
                         </Badge>
@@ -947,6 +947,39 @@ export default function WeeklyServiceManager() {
             <DialogTitle>{editingAnnouncement ? "Editar Anuncio" : "Nuevo Anuncio"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="flex gap-6 p-3 bg-gray-50 rounded-lg border">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={announcementForm.has_video}
+                  onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, has_video: checked }))}
+                />
+                <Label className="font-semibold">📹 Incluye Video</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={announcementForm.is_recurring}
+                  onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, is_recurring: checked }))}
+                />
+                <Label className="font-semibold">🔁 Recurrente</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={announcementForm.is_active}
+                  onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, is_active: checked }))}
+                />
+                <Label className="font-semibold">👁️ Visible</Label>
+              </div>
+            </div>
+            {announcementForm.is_recurring && (
+              <div className="space-y-2 bg-green-50 p-3 rounded border border-green-200">
+                <Label>Fecha de Fin de Recurrencia</Label>
+                <Input
+                  type="date"
+                  value={announcementForm.recurrence_end_date}
+                  onChange={(e) => setAnnouncementForm(prev => ({ ...prev, recurrence_end_date: e.target.value }))}
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Título</Label>
               <Input
@@ -996,39 +1029,7 @@ export default function WeeklyServiceManager() {
                 />
               </div>
             </div>
-            <div className="space-y-3 border-t pt-4">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={announcementForm.is_recurring}
-                  onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, is_recurring: checked }))}
-                />
-                <Label>Anuncio Recurrente (se repite cada semana)</Label>
-              </div>
-              {announcementForm.is_recurring && (
-                <div className="space-y-2 pl-6">
-                  <Label>Fecha de Fin de Recurrencia</Label>
-                  <Input
-                    type="date"
-                    value={announcementForm.recurrence_end_date}
-                    onChange={(e) => setAnnouncementForm(prev => ({ ...prev, recurrence_end_date: e.target.value }))}
-                  />
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={announcementForm.has_video}
-                onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, has_video: checked }))}
-              />
-              <Label>Incluye Video</Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={announcementForm.is_active}
-                onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, is_active: checked }))}
-              />
-              <Label>Visible / Activo</Label>
-            </div>
+
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowAnnouncementDialog(false)}>
                 Cancelar
