@@ -34,7 +34,8 @@ export default function WeeklyServiceManager() {
     is_active: true,
     priority: 10,
     is_recurring: false,
-    recurrence_end_date: ""
+    recurrence_end_date: "",
+    has_video: false
   });
 
   const queryClient = useQueryClient();
@@ -304,7 +305,8 @@ export default function WeeklyServiceManager() {
       is_active: ann.is_active,
       priority: ann.priority || 10,
       is_recurring: ann.is_recurring || false,
-      recurrence_end_date: ann.recurrence_end_date || ""
+      recurrence_end_date: ann.recurrence_end_date || "",
+      has_video: ann.has_video || false
     });
     setShowAnnouncementDialog(true);
   };
@@ -861,11 +863,18 @@ export default function WeeklyServiceManager() {
                         <p className="text-xs text-amber-800 whitespace-pre-wrap">{ann.instructions}</p>
                       </div>
                     )}
-                    {ann.is_recurring && (
-                      <Badge className="mt-2 bg-green-100 text-green-800 text-[10px]">
-                        Recurrente {ann.recurrence_end_date && `hasta ${ann.recurrence_end_date}`}
-                      </Badge>
-                    )}
+                    <div className="flex gap-1 mt-2">
+                      {ann.is_recurring && (
+                        <Badge className="bg-green-100 text-green-800 text-[10px]">
+                          Recurrente {ann.recurrence_end_date && `hasta ${ann.recurrence_end_date}`}
+                        </Badge>
+                      )}
+                      {ann.has_video && (
+                        <Badge className="bg-purple-100 text-purple-800 text-[10px]">
+                          📹 Video
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -998,6 +1007,13 @@ export default function WeeklyServiceManager() {
                   />
                 </div>
               )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={announcementForm.has_video}
+                onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, has_video: checked }))}
+              />
+              <Label>Incluye Video</Label>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
