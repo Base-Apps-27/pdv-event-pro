@@ -23,6 +23,15 @@ export default function PublicProgramView() {
   const [expandedSegments, setExpandedSegments] = useState({});
   const [expandedSessions, setExpandedSessions] = useState({});
   const [showEventDetails, setShowEventDetails] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (preloadedEventId) {
@@ -149,6 +158,22 @@ export default function PublicProgramView() {
 
   const getSessionSegments = (sessionId) => {
     return allSegments.filter(seg => seg.session_id === sessionId);
+  };
+
+  const isSegmentCurrent = (segment) => {
+    if (!segment.start_time || !segment.end_time) return false;
+    
+    const now = currentTime;
+    const [startHours, startMinutes] = segment.start_time.split(':').map(Number);
+    const [endHours, endMinutes] = segment.end_time.split(':').map(Number);
+    
+    const startTime = new Date(now);
+    startTime.setHours(startHours, startMinutes, 0);
+    
+    const endTime = new Date(now);
+    endTime.setHours(endHours, endMinutes, 0);
+    
+    return now >= startTime && now <= endTime;
   };
 
   const getRoomName = (roomId) => {
@@ -480,8 +505,17 @@ export default function PublicProgramView() {
                           );
                         }
 
+                        const isCurrent = isSegmentCurrent(segment);
+
                         return (
-                          <div key={segment.id} className="p-4 hover:bg-gray-50 transition-colors border-b last:border-b-0">
+                          <div key={segment.id} className={`p-4 transition-colors border-b last:border-b-0 ${isCurrent ? 'bg-yellow-100 border-l-4 border-l-yellow-500' : 'hover:bg-gray-50'}`}>
+                            {/* Current Segment Indicator */}
+                            {isCurrent && (
+                              <div className="mb-2">
+                                <Badge className="bg-yellow-500 text-white animate-pulse">EN CURSO AHORA</Badge>
+                              </div>
+                            )}
+
                             {/* SIMPLE MODE */}
                             {viewMode === "simple" && (
                               <div className="flex items-start justify-between gap-4">

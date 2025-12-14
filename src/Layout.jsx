@@ -187,16 +187,28 @@ function LayoutContent({ children }) {
                   {t('nav.services')}
                 </Link>
                 <Link
-                  to={createPageUrl("AnnouncementsReport")}
+                  to={createPageUrl("ServiceQuickEditor")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("AnnouncementsReport"))
+                    isActive(createPageUrl("ServiceQuickEditor"))
                       ? "text-white shadow-md"
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
-                  style={isActive(createPageUrl("AnnouncementsReport")) ? gradientStyle : {}}
+                  style={isActive(createPageUrl("ServiceQuickEditor")) ? gradientStyle : {}}
+                >
+                  <Clock className="w-5 h-5" />
+                  Editor Rápido
+                </Link>
+                <Link
+                  to={createPageUrl("ServiceAnnouncementBuilder")}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                    isActive(createPageUrl("ServiceAnnouncementBuilder"))
+                      ? "text-white shadow-md"
+                      : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  }`}
+                  style={isActive(createPageUrl("ServiceAnnouncementBuilder")) ? gradientStyle : {}}
                 >
                   <Bell className="w-5 h-5" />
-                  {t('nav.announcements')}
+                  Anuncios
                 </Link>
               </>
             )}
