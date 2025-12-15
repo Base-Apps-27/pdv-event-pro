@@ -23,9 +23,9 @@ export default function CustomServiceBuilder() {
 
   const [serviceData, setServiceData] = useState({
     name: "",
-    day_of_week: "Sunday",
-    time: "10:00",
     date: new Date().toISOString().split('T')[0],
+    day_of_week: "",
+    time: "10:00",
     location: "",
     description: "",
     segments: [
@@ -130,6 +130,18 @@ export default function CustomServiceBuilder() {
       setServiceData(existingService);
     }
   }, [existingService]);
+
+  // Auto-populate day of week from date
+  useEffect(() => {
+    if (serviceData.date) {
+      const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const dateObj = new Date(serviceData.date + 'T00:00:00');
+      const dayOfWeek = days[dateObj.getDay()];
+      if (dayOfWeek !== serviceData.day_of_week) {
+        setServiceData(prev => ({ ...prev, day_of_week: dayOfWeek }));
+      }
+    }
+  }, [serviceData.date]);
 
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
@@ -258,31 +270,34 @@ export default function CustomServiceBuilder() {
           <CardTitle>Detalles del Servicio</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Nombre del Servicio *</Label>
               <Input
                 value={serviceData.name}
                 onChange={(e) => setServiceData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Ej. Servicio Especial de Navidad"
+                required
               />
             </div>
             <div className="space-y-2">
-              <Label>Día de la Semana *</Label>
-              <Select value={serviceData.day_of_week} onValueChange={(value) => setServiceData(prev => ({ ...prev, day_of_week: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Sunday">Domingo</SelectItem>
-                  <SelectItem value="Monday">Lunes</SelectItem>
-                  <SelectItem value="Tuesday">Martes</SelectItem>
-                  <SelectItem value="Wednesday">Miércoles</SelectItem>
-                  <SelectItem value="Thursday">Jueves</SelectItem>
-                  <SelectItem value="Friday">Viernes</SelectItem>
-                  <SelectItem value="Saturday">Sábado</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Fecha *</Label>
+              <Input
+                type="date"
+                value={serviceData.date}
+                onChange={(e) => setServiceData(prev => ({ ...prev, date: e.target.value }))}
+                required
+              />
+            </div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Día de la Semana (auto)</Label>
+              <Input
+                value={serviceData.day_of_week}
+                disabled
+                className="bg-gray-50"
+              />
             </div>
             <div className="space-y-2">
               <Label>Hora *</Label>
@@ -290,16 +305,7 @@ export default function CustomServiceBuilder() {
                 type="time"
                 value={serviceData.time}
                 onChange={(e) => setServiceData(prev => ({ ...prev, time: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Fecha</Label>
-              <Input
-                type="date"
-                value={serviceData.date}
-                onChange={(e) => setServiceData(prev => ({ ...prev, date: e.target.value }))}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -310,7 +316,7 @@ export default function CustomServiceBuilder() {
                 placeholder="Santuario principal"
               />
             </div>
-          </div>
+            </div>
           <div className="space-y-2">
             <Label>Descripción</Label>
             <Textarea
