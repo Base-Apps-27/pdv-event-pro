@@ -85,6 +85,8 @@ export default function ServiceTemplatesTab() {
   const updateSegmentField = (service, segmentIndex, field, value) => {
     setBlueprintData(prev => {
       const updated = { ...prev };
+      if (!updated[service] || !updated[service][segmentIndex]) return prev;
+      
       if (field === 'songs') {
         updated[service][segmentIndex].songs = value;
       } else if (field === 'duration' || field === 'title' || field === 'type') {
@@ -262,7 +264,7 @@ export default function ServiceTemplatesTab() {
           <h3 className="text-2xl font-bold">Blueprint: Servicios Dominicales</h3>
           <p className="text-sm text-gray-500 mt-1">Define la estructura fija que se aplicará cada semana</p>
         </div>
-        <Button onClick={handleSave} className="bg-pdv-teal text-white">
+        <Button onClick={handleSave} className="bg-pdv-teal hover:bg-pdv-teal/90 text-white">
           <Save className="w-4 h-4 mr-2" />
           Guardar Blueprint
         </Button>
