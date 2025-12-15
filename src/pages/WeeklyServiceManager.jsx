@@ -806,17 +806,6 @@ export default function WeeklyServiceManager() {
                       className="text-sm"
                     />
                   )}
-                  {segment.fields.includes("translator") && (
-                    <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                      <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
-                      <Input
-                        placeholder="Nombre del traductor"
-                        value={segment.data?.translator || ""}
-                        onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
-                        className="text-sm"
-                      />
-                    </div>
-                  )}
                   {segment.songs && (
                     <div className="space-y-1">
                       <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
@@ -853,6 +842,33 @@ export default function WeeklyServiceManager() {
                         placeholder="Líder de Ministración"
                         value={segment.data?.ministry_leader || ""}
                         onChange={(e) => updateSegmentField("11:30am", idx, "ministry_leader", e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
+                  )}
+                  {segment.fields.includes("translator") && segment.type === "worship" && (
+                    <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                      <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) - Ministración, Anuncios, Ofrenda</Label>
+                      <Input
+                        placeholder="Nombre del traductor"
+                        value={segment.data?.translator || ""}
+                        onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
+                  )}
+                  {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
+                    <div className="text-xs text-blue-600 italic flex items-center gap-1 mt-1">
+                      🌐 Traductor(a): {serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || "Por definir"}
+                    </div>
+                  )}
+                  {segment.fields.includes("translator") && segment.type === "message" && (
+                    <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                      <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) del Mensaje</Label>
+                      <Input
+                        placeholder="Nombre del traductor (puede ser el mismo)"
+                        value={segment.data?.translator || ""}
+                        onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
                         className="text-sm"
                       />
                     </div>
