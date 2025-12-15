@@ -95,9 +95,38 @@ export function normalizeTitle(title) {
   return normalized;
 }
 
+// Validate that a name can be normalized into "Title FirstName LastName" format
+function isValidName(name) {
+  if (!name || !name.trim()) return false;
+  
+  const trimmed = name.trim();
+  const words = trimmed.split(/\s+/);
+  
+  // Must have at least 2 words (First Last) or 3 with title (Title First Last)
+  if (words.length < 2) return false;
+  
+  // Check if all words are reasonable (not just symbols or numbers)
+  const allWordsValid = words.every(word => {
+    const cleaned = word.replace(/[.,]/g, '');
+    return /^[a-zA-ZáéíóúÁÉÍÓÚñÑ'-]+$/.test(cleaned);
+  });
+  
+  return allWordsValid;
+}
+
 // Save a suggestion to the database
 export async function saveSuggestion(base44, type, value) {
   if (!value || !value.trim()) return;
+  
+  // For person-related types, validate the name format
+  const personTypes = ['presenter', 'translator', 'preacher', 'leader', 'worshipLeader', 'ministryLeader'];
+  
+  if (personTypes.includes(type)) {
+    if (!isValidName(value)) {
+      console.log(`Skipping invalid name format: "${value}"`);
+      return;
+    }
+  }
   
   const normalized = type === 'songTitle' || type === 'messageTitle' 
     ? normalizeTitle(value) 
