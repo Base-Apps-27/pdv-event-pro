@@ -28,8 +28,18 @@ export default function ServiceTemplatesTab() {
   const [blueprintData, setBlueprintData] = useState({
     name: "Servicios Dominicales",
     day_of_week: "Sunday",
-    "9:30am": [],
-    "11:30am": [],
+    "9:30am": [
+      { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
+      { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
+      { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [] },
+      { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
+    ],
+    "11:30am": [
+      { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
+      { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
+      { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [] },
+      { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
+    ],
     coordinators: { "9:30am": "", "11:30am": "" },
     ujieres: { "9:30am": "", "11:30am": "" },
     sound: { "9:30am": "", "11:30am": "" },
@@ -39,28 +49,6 @@ export default function ServiceTemplatesTab() {
   useEffect(() => {
     if (existingBlueprint) {
       setBlueprintData(existingBlueprint);
-    } else {
-      // Initialize with default structure
-      setBlueprintData({
-        name: "Servicios Dominicales",
-        day_of_week: "Sunday",
-        "9:30am": [
-          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
-          { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
-          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [] },
-          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
-        ],
-        "11:30am": [
-          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
-          { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
-          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [] },
-          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
-        ],
-        coordinators: { "9:30am": "", "11:30am": "" },
-        ujieres: { "9:30am": "", "11:30am": "" },
-        sound: { "9:30am": "", "11:30am": "" },
-        luces: { "9:30am": "", "11:30am": "" }
-      });
     }
   }, [existingBlueprint]);
 
