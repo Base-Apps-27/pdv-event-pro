@@ -566,29 +566,29 @@ export default function WeeklyServiceManager() {
             </div>
 
             {/* Pre-Service Block */}
-            <Card className="bg-blue-50 border-blue-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2 text-blue-600">
-                <Clock className="w-4 h-4" />
-                PRE-SERVICIO
-                <Badge variant="outline" className="ml-auto text-xs text-blue-500 border-blue-300">Antes de iniciar</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-2">
-              <Textarea
-                placeholder="Instrucciones pre-servicio (opcional)..."
-                value={serviceData.pre_service_notes?.["9:30am"] || ""}
-                onChange={(e) => {
-                  setServiceData(prev => ({
-                    ...prev,
-                    pre_service_notes: { ...prev.pre_service_notes, "9:30am": e.target.value }
-                  }));
-                  setHasChanges(true);
-                }}
-                className="text-xs bg-white border-blue-200 text-gray-700 placeholder:text-gray-400"
-                rows={2}
-              />
-            </CardContent>
+            <Card className="bg-gray-100 border-gray-300">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
+                  <Clock className="w-4 h-4" />
+                  PRE-SERVICIO
+                  <Badge variant="outline" className="ml-auto text-xs text-gray-500 border-gray-400">Antes de iniciar</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 pt-2">
+                <Textarea
+                  placeholder="Instrucciones pre-servicio (opcional)..."
+                  value={serviceData.pre_service_notes?.["9:30am"] || ""}
+                  onChange={(e) => {
+                    setServiceData(prev => ({
+                      ...prev,
+                      pre_service_notes: { ...prev.pre_service_notes, "9:30am": e.target.value }
+                    }));
+                    setHasChanges(true);
+                  }}
+                  className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
+                  rows={2}
+                />
+              </CardContent>
             </Card>
 
             <DragDropContext onDragEnd={(result) => handleDragEnd(result, "9:30am")}>
@@ -913,29 +913,29 @@ export default function WeeklyServiceManager() {
             </div>
 
             {/* Pre-Service Block */}
-            <Card className="bg-blue-50 border-blue-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2 text-blue-600">
-                <Clock className="w-4 h-4" />
-                PRE-SERVICIO
-                <Badge variant="outline" className="ml-auto text-xs text-blue-500 border-blue-300">Antes de iniciar</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-2">
-              <Textarea
-                placeholder="Instrucciones pre-servicio (opcional)..."
-                value={serviceData.pre_service_notes?.["11:30am"] || ""}
-                onChange={(e) => {
-                  setServiceData(prev => ({
-                    ...prev,
-                    pre_service_notes: { ...prev.pre_service_notes, "11:30am": e.target.value }
-                  }));
-                  setHasChanges(true);
-                }}
-                className="text-xs bg-white border-blue-200 text-gray-700 placeholder:text-gray-400"
-                rows={2}
-              />
-            </CardContent>
+            <Card className="bg-gray-100 border-gray-300">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
+                  <Clock className="w-4 h-4" />
+                  PRE-SERVICIO
+                  <Badge variant="outline" className="ml-auto text-xs text-gray-500 border-gray-400">Antes de iniciar</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 pt-2">
+                <Textarea
+                  placeholder="Instrucciones pre-servicio (opcional)..."
+                  value={serviceData.pre_service_notes?.["11:30am"] || ""}
+                  onChange={(e) => {
+                    setServiceData(prev => ({
+                      ...prev,
+                      pre_service_notes: { ...prev.pre_service_notes, "11:30am": e.target.value }
+                    }));
+                    setHasChanges(true);
+                  }}
+                  className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
+                  rows={2}
+                />
+              </CardContent>
             </Card>
 
             <DragDropContext onDragEnd={(result) => handleDragEnd(result, "11:30am")}>
