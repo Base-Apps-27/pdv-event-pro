@@ -76,7 +76,7 @@ export default function WeeklyServiceManager() {
           { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }
         ]
       },
-      { type: "break", title: "RECESO", duration: 30, fields: [], actions: [] }
+
     ],
     "11:30am": [
       { 
@@ -244,7 +244,8 @@ export default function WeeklyServiceManager() {
         coordinators: { "9:30am": "", "11:30am": "" },
         ujieres: { "9:30am": "", "11:30am": "" },
         sound: { "9:30am": "", "11:30am": "" },
-        luces: { "9:30am": "", "11:30am": "" }
+        luces: { "9:30am": "", "11:30am": "" },
+        receso_notes: { "9:30am": "" }
       };
       setServiceData(initialData);
     }
@@ -534,7 +535,7 @@ export default function WeeklyServiceManager() {
             <Droppable droppableId="9:30am">
               {(provided) => (
                 <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
-                  {serviceData["9:30am"].map((segment, idx) => {
+                  {serviceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => {
             const timeSlot = "9:30am";
             const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
             
@@ -771,6 +772,32 @@ export default function WeeklyServiceManager() {
               )}
             </Droppable>
           </DragDropContext>
+
+          {/* Fixed Receso Block */}
+          <Card className="bg-gradient-to-r from-gray-800 to-gray-900 text-white border-none">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                RECESO
+                <Badge variant="outline" className="ml-auto text-white border-white">30 min</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 pt-2">
+              <Textarea
+                placeholder="Notas del receso (opcional)..."
+                value={serviceData.receso_notes?.["9:30am"] || ""}
+                onChange={(e) => {
+                  setServiceData(prev => ({
+                    ...prev,
+                    receso_notes: { ...prev.receso_notes, "9:30am": e.target.value }
+                  }));
+                  setHasChanges(true);
+                }}
+                className="text-sm bg-gray-900/30 border-gray-700 text-white placeholder:text-gray-400"
+                rows={2}
+              />
+            </CardContent>
+          </Card>
 
           {/* Team Section */}
           <Card className="bg-green-50 border-green-200 print:hidden">
