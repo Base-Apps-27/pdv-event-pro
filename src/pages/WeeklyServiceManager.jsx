@@ -525,11 +525,11 @@ export default function WeeklyServiceManager() {
                     }
                     button[role="gridcell"][data-selected="true"],
                     button[role="gridcell"][aria-selected="true"] {
-                      background-color: #1F8A70 !important;
+                      background-color: #8DC63F !important;
                       color: white !important;
                     }
                     .rdp-day_selected {
-                      background-color: #1F8A70 !important;
+                      background-color: #8DC63F !important;
                       color: white !important;
                     }
                   `}</style>
