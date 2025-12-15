@@ -267,16 +267,14 @@ export default function WeeklyServiceManager() {
     }
   }, [existingData, selectedDate]);
 
-  // Auto-select dynamic announcements
+  // Auto-select all visible and non-expired announcements
   useEffect(() => {
-    if (dynamicAnnouncements.length > 0 && !existingData) {
-      setSelectedAnnouncements(prev => {
-        const fixed = fixedAnnouncements.map(a => a.id);
-        const dynamic = dynamicAnnouncements.map(a => a.id);
-        return [...new Set([...fixed, ...dynamic])];
-      });
+    if (!existingData && (fixedAnnouncements.length > 0 || dynamicAnnouncements.length > 0)) {
+      const fixed = fixedAnnouncements.map(a => a.id);
+      const dynamic = dynamicAnnouncements.map(a => a.id);
+      setSelectedAnnouncements([...new Set([...fixed, ...dynamic])]);
     }
-  }, [dynamicAnnouncements, fixedAnnouncements]);
+  }, [dynamicAnnouncements, fixedAnnouncements, existingData]);
 
   // Auto-save after 2 seconds of inactivity
   useEffect(() => {
