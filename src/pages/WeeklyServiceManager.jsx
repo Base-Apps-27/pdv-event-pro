@@ -332,7 +332,7 @@ export default function WeeklyServiceManager() {
   };
 
   const handlePrint = () => {
-    navigate(createPageUrl('WeeklyServiceReport') + `?date=${selectedDate}`);
+    window.print();
   };
 
   const copyTo1130 = () => {
@@ -474,8 +474,492 @@ export default function WeeklyServiceManager() {
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-8 print:p-2">
-      {/* Header */}
+    <div className="p-6 md:p-8 space-y-8 print:p-0">
+      <style>{`
+        @media print {
+          @page { size: letter; margin: 0.5in; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+          .print-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #1F8A70;
+          }
+
+          .print-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #1F8A70 0%, #8DC63F 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+          }
+
+          .print-title {
+            text-align: center;
+            flex: 1;
+            margin: 0 20px;
+          }
+
+          .print-title h1 {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+            text-transform: uppercase;
+          }
+
+          .print-title p {
+            font-size: 16px;
+            color: #1F8A70;
+            font-weight: bold;
+            margin: 4px 0 0 0;
+          }
+
+          .print-team-box {
+            text-align: right;
+            font-size: 9px;
+            line-height: 1.3;
+          }
+
+          .print-team-box div {
+            margin-bottom: 2px;
+          }
+
+          .print-team-label {
+            font-weight: bold;
+            color: #1F8A70;
+          }
+
+          .print-two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+          }
+
+          .print-service-column {
+            break-inside: avoid;
+          }
+
+          .print-service-time {
+            font-size: 20px;
+            font-weight: bold;
+            color: #dc2626;
+            margin-bottom: 4px;
+            border-bottom: 2px solid #dc2626;
+            padding-bottom: 2px;
+          }
+
+          .print-service-column.right .print-service-time {
+            color: #2563eb;
+            border-color: #2563eb;
+          }
+
+          .print-segment {
+            margin-bottom: 8px;
+            font-size: 10px;
+            line-height: 1.4;
+          }
+
+          .print-segment-time {
+            font-weight: bold;
+            color: #dc2626;
+            font-size: 11px;
+          }
+
+          .print-service-column.right .print-segment-time {
+            color: #2563eb;
+          }
+
+          .print-segment-title {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10px;
+            margin-left: 4px;
+          }
+
+          .print-segment-detail {
+            margin-left: 12px;
+            font-size: 9px;
+            color: #374151;
+          }
+
+          .print-segment-songs {
+            margin-left: 12px;
+            font-size: 9px;
+            line-height: 1.3;
+          }
+
+          .print-receso {
+            background: #f3f4f6;
+            padding: 8px;
+            margin: 8px 0;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #6b7280;
+          }
+
+          .print-team-section {
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #d1d5db;
+            font-size: 8px;
+            line-height: 1.4;
+          }
+
+          .print-team-row {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 4px;
+            margin-bottom: 2px;
+          }
+
+          .print-announcements {
+            break-before: page;
+            padding-top: 40px;
+          }
+
+          .print-announcements-header {
+            text-align: center;
+            margin-bottom: 20px;
+          }
+
+          .print-announcements-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+          }
+
+          .print-announcement-item {
+            margin-bottom: 16px;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            break-inside: avoid;
+          }
+
+          .print-announcement-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #1F8A70;
+          }
+
+          .print-announcement-content {
+            font-size: 10px;
+            line-height: 1.4;
+            margin-bottom: 4px;
+          }
+
+          .print-announcement-instructions {
+            font-size: 9px;
+            background: #fef3c7;
+            padding: 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+          }
+
+          .print-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: lowercase;
+          }
+        }
+      `}</style>
+
+      {/* Print Layout */}
+      <div className="hidden print:block">
+        {/* Print Header */}
+        <div className="print-header">
+          <div className="print-logo">P</div>
+          <div className="print-title">
+            <h1>Orden de Servicio</h1>
+            <p>Domingo {formatDate(new Date(selectedDate), "d 'de' MMMM, yyyy", { locale: require('date-fns/locale/es') })}</p>
+          </div>
+          <div className="print-team-box">
+            <div><span className="print-team-label">Coordinador(a):</span> {serviceData?.coordinators?.["9:30am"] || ""}</div>
+            <div><span className="print-team-label">Ujier:</span> {serviceData?.ujieres?.["9:30am"]?.split(',')[0] || ""}</div>
+            <div><span className="print-team-label">Sonido:</span> {serviceData?.sound?.["9:30am"] || ""}</div>
+            <div><span className="print-team-label">Luces:</span> {serviceData?.luces?.["9:30am"] || ""}</div>
+          </div>
+        </div>
+
+        {/* Two Column Layout */}
+        <div className="print-two-columns">
+          {/* 9:30 AM Column */}
+          <div className="print-service-column left">
+            <div className="print-service-time">9:30 a.m.</div>
+            {serviceData?.pre_service_notes?.["9:30am"] && (
+              <div className="print-segment">
+                <div className="print-segment-detail" style={{ fontStyle: 'italic', color: '#6b7280' }}>
+                  {serviceData.pre_service_notes["9:30am"]}
+                </div>
+              </div>
+            )}
+            {serviceData?.["9:30am"]?.filter(s => s.type !== 'break').map((segment, idx) => {
+              let currentTime = parse("9:30am", "h:mma", new Date());
+              for (let i = 0; i < idx; i++) {
+                if (serviceData["9:30am"][i].type !== 'break' && serviceData["9:30am"][i].type !== 'ministry') {
+                  currentTime = addMinutes(currentTime, serviceData["9:30am"][i].duration || 0);
+                }
+              }
+              const segmentTime = formatDate(currentTime, "h:mm a");
+
+              return (
+                <div key={idx} className="print-segment">
+                  <div>
+                    <span className="print-segment-time">{segmentTime}</span>
+                    <span className="print-segment-title">{segment.title}</span>
+                    {segment.duration && <span style={{ fontSize: '9px', color: '#6b7280' }}> ({segment.duration} min)</span>}
+                  </div>
+
+                  {segment.data?.leader && (
+                    <div className="print-segment-detail">
+                      <strong>Dir:</strong> {segment.data.leader}
+                    </div>
+                  )}
+
+                  {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
+                    <div className="print-segment-songs">
+                      {segment.songs.filter(s => s.title).map((song, sIdx) => (
+                        <div key={sIdx}>• {song.title} {song.lead && `(${song.lead})`}</div>
+                      ))}
+                    </div>
+                  )}
+
+                  {segment.data?.ministry_leader && (
+                    <div className="print-segment-detail" style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed #d1d5db' }}>
+                      <strong>Ministración de Sanidad y Milagros</strong><br/>
+                      P. {segment.data.ministry_leader} (5 min)
+                    </div>
+                  )}
+
+                  {segment.data?.presenter && (
+                    <div className="print-segment-detail">
+                      <strong>P:</strong> {segment.data.presenter}
+                    </div>
+                  )}
+
+                  {segment.data?.preacher && (
+                    <div className="print-segment-detail">
+                      <strong>P:</strong> {segment.data.preacher}
+                    </div>
+                  )}
+
+                  {segment.data?.title && (
+                    <div className="print-segment-detail">
+                      <em>{segment.data.title}</em>
+                    </div>
+                  )}
+
+                  {segment.data?.verse && (
+                    <div className="print-segment-detail">
+                      {segment.data.verse}
+                    </div>
+                  )}
+
+                  {segment.data?.description && (
+                    <div className="print-segment-detail" style={{ fontStyle: 'italic' }}>
+                      {segment.data.description}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Receso for 9:30 */}
+            <div className="print-receso">
+              11:00am a 11:30am<br/>
+              <strong>RECESO</strong>
+            </div>
+
+            {/* Team Info */}
+            <div className="print-team-section">
+              <div className="print-team-row">
+                <strong>SONIDO 9:30AM:</strong>
+                <span>{serviceData?.sound?.["9:30am"] || ""}</span>
+              </div>
+              <div className="print-team-row">
+                <strong>MC 1:</strong>
+                <span>{serviceData?.ujieres?.["9:30am"]?.split(',')[0] || ""}</span>
+              </div>
+              <div className="print-team-row">
+                <strong>MC 2:</strong>
+                <span>{serviceData?.ujieres?.["9:30am"]?.split(',')[1] || ""}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 11:30 AM Column */}
+          <div className="print-service-column right">
+            <div className="print-service-time">11:30 a.m.</div>
+            {serviceData?.pre_service_notes?.["11:30am"] && (
+              <div className="print-segment">
+                <div className="print-segment-detail" style={{ fontStyle: 'italic', color: '#6b7280' }}>
+                  {serviceData.pre_service_notes["11:30am"]}
+                </div>
+              </div>
+            )}
+            {serviceData?.["11:30am"]?.map((segment, idx) => {
+              let currentTime = parse("11:30am", "h:mma", new Date());
+              for (let i = 0; i < idx; i++) {
+                if (serviceData["11:30am"][i].type !== 'break' && serviceData["11:30am"][i].type !== 'ministry') {
+                  currentTime = addMinutes(currentTime, serviceData["11:30am"][i].duration || 0);
+                }
+              }
+              const segmentTime = formatDate(currentTime, "h:mm a");
+
+              return (
+                <div key={idx} className="print-segment">
+                  <div>
+                    <span className="print-segment-time">{segmentTime}</span>
+                    <span className="print-segment-title">{segment.title}</span>
+                    {segment.duration && <span style={{ fontSize: '9px', color: '#6b7280' }}> ({segment.duration} min)</span>}
+                  </div>
+
+                  {segment.data?.leader && (
+                    <div className="print-segment-detail">
+                      <strong>Dir:</strong> {segment.data.leader}
+                    </div>
+                  )}
+
+                  {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
+                    <div className="print-segment-songs">
+                      {segment.songs.filter(s => s.title).map((song, sIdx) => (
+                        <div key={sIdx}>• {song.title} {song.lead && `(${song.lead})`}</div>
+                      ))}
+                    </div>
+                  )}
+
+                  {segment.data?.ministry_leader && (
+                    <div className="print-segment-detail" style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed #d1d5db' }}>
+                      <strong>Ministración de Sanidad y Milagros</strong><br/>
+                      P. {segment.data.ministry_leader} (5 min)
+                    </div>
+                  )}
+
+                  {segment.data?.translator && (
+                    <div className="print-segment-detail" style={{ color: '#2563eb' }}>
+                      <strong>🌐 Trad:</strong> {segment.data.translator}
+                    </div>
+                  )}
+
+                  {segment.data?.presenter && (
+                    <div className="print-segment-detail">
+                      <strong>P:</strong> {segment.data.presenter}
+                    </div>
+                  )}
+
+                  {segment.data?.preacher && (
+                    <div className="print-segment-detail">
+                      <strong>P:</strong> {segment.data.preacher}
+                    </div>
+                  )}
+
+                  {segment.data?.title && (
+                    <div className="print-segment-detail">
+                      <em>{segment.data.title}</em>
+                    </div>
+                  )}
+
+                  {segment.data?.verse && (
+                    <div className="print-segment-detail">
+                      {segment.data.verse}
+                    </div>
+                  )}
+
+                  {segment.data?.description && (
+                    <div className="print-segment-detail" style={{ fontStyle: 'italic' }}>
+                      {segment.data.description}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Team Info */}
+            <div className="print-team-section">
+              <div className="print-team-row">
+                <strong>SONIDO 11:30AM:</strong>
+                <span>{serviceData?.sound?.["11:30am"] || ""}</span>
+              </div>
+              <div className="print-team-row">
+                <strong>MC 1:</strong>
+                <span>{serviceData?.ujieres?.["11:30am"]?.split(',')[0] || ""}</span>
+              </div>
+              <div className="print-team-row">
+                <strong>MC 2:</strong>
+                <span>{serviceData?.ujieres?.["11:30am"]?.split(',')[1] || ""}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Announcements Page */}
+        <div className="print-announcements">
+          <div className="print-announcements-header">
+            <div className="print-logo" style={{ margin: '0 auto 16px', width: '80px', height: '80px' }}>P</div>
+            <div className="print-announcements-title">ANUNCIOS</div>
+            <p style={{ fontSize: '14px', color: '#1F8A70', fontWeight: 'bold' }}>
+              Domingo {formatDate(new Date(selectedDate), "d 'de' MMMM, yyyy", { locale: require('date-fns/locale/es') })}
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            {[...fixedAnnouncements, ...dynamicAnnouncements]
+              .filter(ann => selectedAnnouncements.includes(ann.id))
+              .map(ann => (
+                <div key={ann.id} className="print-announcement-item">
+                  <div className="print-announcement-title">
+                    {ann.isEvent ? ann.name : ann.title}
+                    {(ann.has_video || ann.announcement_has_video) && ' 📹'}
+                  </div>
+                  {(ann.date_of_occurrence || ann.start_date) && (
+                    <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#2563eb', marginBottom: '4px' }}>
+                      📅 {ann.date_of_occurrence || ann.start_date}
+                      {ann.end_date && ` - ${ann.end_date}`}
+                    </div>
+                  )}
+                  <div className="print-announcement-content">
+                    {ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content}
+                  </div>
+                  {ann.instructions && (
+                    <div className="print-announcement-instructions">
+                      <strong>Instrucciones:</strong> {ann.instructions}
+                    </div>
+                  )}
+                </div>
+              ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="print-footer">
+          ¡atrévete a cambiar!
+        </div>
+      </div>
+
+      {/* Screen UI */}
       <div className="flex justify-between items-center print:hidden">
         <div>
           <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">
