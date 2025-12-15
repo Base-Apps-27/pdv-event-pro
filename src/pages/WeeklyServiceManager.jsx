@@ -16,6 +16,7 @@ import { Calendar as CalendarIcon, Clock, Save, Plus, Trash2, Printer, Copy, Edi
 import { Calendar } from "@/components/ui/calendar";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
+import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 
 export default function WeeklyServiceManager() {
@@ -694,7 +695,7 @@ export default function WeeklyServiceManager() {
           <div className="print-logo">P</div>
           <div className="print-title">
             <h1>Orden de Servicio</h1>
-            <p>Domingo {formatDate(new Date(selectedDate), "d 'de' MMMM, yyyy", { locale: require('date-fns/locale/es') })}</p>
+            <p>Domingo {formatDate(new Date(selectedDate), "d 'de' MMMM, yyyy", { locale: es })}</p>
           </div>
           <div className="print-team-box">
             <div><span className="print-team-label">Coordinador(a):</span> {serviceData?.coordinators?.["9:30am"] || ""}</div>
@@ -921,7 +922,7 @@ export default function WeeklyServiceManager() {
             <div className="print-logo" style={{ margin: '0 auto 16px', width: '80px', height: '80px' }}>P</div>
             <div className="print-announcements-title">ANUNCIOS</div>
             <p style={{ fontSize: '14px', color: '#1F8A70', fontWeight: 'bold' }}>
-              Domingo {formatDate(new Date(selectedDate), "d 'de' MMMM, yyyy", { locale: require('date-fns/locale/es') })}
+              Domingo {formatDate(new Date(selectedDate), "d 'de' MMMM, yyyy", { locale: es })}
             </p>
           </div>
 
