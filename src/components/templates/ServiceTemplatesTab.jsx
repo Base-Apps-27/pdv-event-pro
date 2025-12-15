@@ -48,7 +48,28 @@ export default function ServiceTemplatesTab() {
 
   useEffect(() => {
     if (existingBlueprint) {
-      setBlueprintData(existingBlueprint);
+      // Ensure existing blueprint has segment arrays, populate with defaults if empty
+      const populated = { ...existingBlueprint };
+      
+      if (!populated["9:30am"] || populated["9:30am"].length === 0) {
+        populated["9:30am"] = [
+          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
+          { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
+          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [] },
+          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
+        ];
+      }
+      
+      if (!populated["11:30am"] || populated["11:30am"].length === 0) {
+        populated["11:30am"] = [
+          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
+          { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
+          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [] },
+          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
+        ];
+      }
+      
+      setBlueprintData(populated);
     }
   }, [existingBlueprint]);
 
