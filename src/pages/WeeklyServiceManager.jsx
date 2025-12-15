@@ -45,6 +45,7 @@ export default function WeeklyServiceManager() {
     date_of_occurrence: ""
   });
   const [expandedSegments, setExpandedSegments] = useState({});
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -1282,11 +1283,7 @@ export default function WeeklyServiceManager() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log('Delete clicked for:', ann.id);
-                            if (window.confirm('¿Eliminar este anuncio?')) {
-                              console.log('Confirmed, deleting...');
-                              deleteAnnouncementMutation.mutate(ann.id);
-                            }
+                            setDeleteConfirmId(ann.id);
                           }}
                         >
                           <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" />
@@ -1386,11 +1383,7 @@ export default function WeeklyServiceManager() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              console.log('Delete clicked for:', ann.id);
-                              if (window.confirm('¿Eliminar este anuncio?')) {
-                                console.log('Confirmed, deleting...');
-                                deleteAnnouncementMutation.mutate(ann.id);
-                              }
+                              setDeleteConfirmId(ann.id);
                             }}
                           >
                             <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" />
@@ -1494,6 +1487,30 @@ export default function WeeklyServiceManager() {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
+        <DialogContent className="max-w-sm bg-white">
+          <DialogHeader>
+            <DialogTitle>Confirmar Eliminación</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">¿Estás seguro de que deseas eliminar este anuncio?</p>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={() => {
+                deleteAnnouncementMutation.mutate(deleteConfirmId);
+                setDeleteConfirmId(null);
+              }}
+            >
+              Eliminar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Announcement Dialog */}
       <Dialog open={showAnnouncementDialog} onOpenChange={setShowAnnouncementDialog}>
         <DialogContent className="max-w-2xl bg-white max-h-[90vh] overflow-y-auto">
@@ -1505,10 +1522,8 @@ export default function WeeklyServiceManager() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    if (window.confirm('¿Eliminar este anuncio permanentemente?')) {
-                      deleteAnnouncementMutation.mutate(editingAnnouncement.id);
-                      setShowAnnouncementDialog(false);
-                    }
+                    setDeleteConfirmId(editingAnnouncement.id);
+                    setShowAnnouncementDialog(false);
                   }}
                   className="text-red-500 hover:text-red-700 hover:bg-red-50"
                 >
