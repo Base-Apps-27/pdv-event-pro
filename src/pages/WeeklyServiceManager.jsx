@@ -966,6 +966,19 @@ export default function WeeklyServiceManager() {
               </div>
             </div>
             <div className="space-y-2">
+              <Label>Categoría</Label>
+              <select
+                className="w-full border rounded-md p-2"
+                value={announcementForm.category}
+                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, category: e.target.value }))}
+              >
+                <option value="General">General</option>
+                <option value="Event">Evento</option>
+                <option value="Ministry">Ministerio</option>
+                <option value="Urgent">Urgente</option>
+              </select>
+            </div>
+            <div className="space-y-2">
               <Label>Título</Label>
               <Input
                 value={announcementForm.title}
@@ -973,15 +986,17 @@ export default function WeeklyServiceManager() {
                 placeholder="Título del anuncio"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Fecha de Ocurrencia</Label>
-              <Input
-                type="date"
-                value={announcementForm.date_of_occurrence}
-                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, date_of_occurrence: e.target.value }))}
-              />
-              <p className="text-xs text-gray-500">El anuncio se mostrará hasta esta fecha (inclusive)</p>
-            </div>
+            {announcementForm.category !== "General" && (
+              <div className="space-y-2">
+                <Label>Fecha de Ocurrencia</Label>
+                <Input
+                  type="date"
+                  value={announcementForm.date_of_occurrence}
+                  onChange={(e) => setAnnouncementForm(prev => ({ ...prev, date_of_occurrence: e.target.value }))}
+                />
+                <p className="text-xs text-gray-500">El anuncio se mostrará hasta esta fecha (inclusive)</p>
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Contenido (Texto principal con contexto, fechas, horarios)</Label>
               <Textarea
@@ -1000,28 +1015,13 @@ export default function WeeklyServiceManager() {
                 rows={3}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Categoría</Label>
-                <select
-                  className="w-full border rounded-md p-2"
-                  value={announcementForm.category}
-                  onChange={(e) => setAnnouncementForm(prev => ({ ...prev, category: e.target.value }))}
-                >
-                  <option value="General">General</option>
-                  <option value="Event">Evento</option>
-                  <option value="Ministry">Ministerio</option>
-                  <option value="Urgent">Urgente</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label>Prioridad (menor = más arriba)</Label>
-                <Input
-                  type="number"
-                  value={announcementForm.priority}
-                  onChange={(e) => setAnnouncementForm(prev => ({ ...prev, priority: parseInt(e.target.value) }))}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Prioridad (menor = más arriba)</Label>
+              <Input
+                type="number"
+                value={announcementForm.priority}
+                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, priority: parseInt(e.target.value) }))}
+              />
             </div>
 
             <div className="flex justify-end gap-3">
