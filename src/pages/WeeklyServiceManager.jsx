@@ -52,7 +52,7 @@ export default function WeeklyServiceManager() {
       { type: "break", title: "RECESO", duration: 30, fields: [] }
     ],
     "11:30am": [
-      { type: "worship", title: "Equipo de A&A", duration: 30, fields: ["leader", "songs", "ministry_leader", "translator"] },
+      { type: "worship", title: "Equipo de A&A", duration: 45, fields: ["leader", "songs", "ministry_leader", "translator"] },
       { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter", "translator"] },
       { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse", "translator"] },
       { type: "message", title: "Mensaje", duration: 45, fields: ["preacher", "title", "verse", "translator"] }
