@@ -363,7 +363,7 @@ export default function CustomServiceBuilder() {
                           className={`border-l-4 ${isSpecial ? 'border-l-orange-500 bg-orange-50' : 'border-l-pdv-teal'}`}
                         >
                           <CardHeader className="pb-2 bg-gray-50">
-                            <CardTitle className="text-lg flex items-center gap-2">
+                            <div className="flex items-center gap-2 mb-2">
                               <div {...provided.dragHandleProps} className="print:hidden">
                                 <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
                               </div>
@@ -371,10 +371,10 @@ export default function CustomServiceBuilder() {
                               <Input
                                 value={segment.title}
                                 onChange={(e) => updateSegmentField(idx, 'title', e.target.value)}
-                                className="text-lg font-bold border-0 shadow-none p-0 h-auto focus-visible:ring-0"
+                                className="text-lg font-bold border-0 shadow-none p-0 h-auto focus-visible:ring-0 flex-1"
                                 placeholder="Título del segmento"
                               />
-                              <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
+                              <Badge variant="outline" className="text-xs">{segment.duration} min</Badge>
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
@@ -383,105 +383,218 @@ export default function CustomServiceBuilder() {
                               >
                                 <Trash2 className="w-4 h-4 text-red-500" />
                               </Button>
-                            </CardTitle>
+                            </div>
+                            <div className="print:hidden">
+                              <Select 
+                                value={segment.type} 
+                                onValueChange={(value) => updateSegmentField(idx, 'type', value)}
+                              >
+                                <SelectTrigger className="w-48">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="worship">Alabanza</SelectItem>
+                                  <SelectItem value="message">Mensaje</SelectItem>
+                                  <SelectItem value="welcome">Bienvenida</SelectItem>
+                                  <SelectItem value="offering">Ofrenda</SelectItem>
+                                  <SelectItem value="Especial">Especial</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </CardHeader>
                           <CardContent className="space-y-2 pt-3">
-                            <div className="grid md:grid-cols-2 gap-2">
-                              <div className="space-y-2">
-                                <Label className="text-xs">Presentador</Label>
-                                <AutocompleteInput
-                                  type="presenter"
-                                  value={segment.presenter}
-                                  onChange={(e) => updateSegmentField(idx, 'presenter', e.target.value)}
-                                  placeholder="Nombre del presentador"
-                                  className="text-sm"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs">Traductor</Label>
-                                <AutocompleteInput
-                                  type="translator"
-                                  value={segment.translator}
-                                  onChange={(e) => updateSegmentField(idx, 'translator', e.target.value)}
-                                  placeholder="Nombre del traductor"
-                                  className="text-sm"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-2">
-                              <div className="space-y-2">
-                                <Label className="text-xs">Predicador</Label>
-                                <AutocompleteInput
-                                  type="preacher"
-                                  value={segment.preacher}
-                                  onChange={(e) => updateSegmentField(idx, 'preacher', e.target.value)}
-                                  placeholder="Nombre del predicador"
-                                  className="text-sm"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs">Líder / Director</Label>
-                                <AutocompleteInput
-                                  type="leader"
-                                  value={segment.leader}
-                                  onChange={(e) => updateSegmentField(idx, 'leader', e.target.value)}
-                                  placeholder="Nombre del líder"
-                                  className="text-sm"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label className="text-xs">Título del Mensaje</Label>
-                              <AutocompleteInput
-                                type="messageTitle"
-                                value={segment.messageTitle}
-                                onChange={(e) => updateSegmentField(idx, 'messageTitle', e.target.value)}
-                                placeholder="Título del mensaje"
-                                className="text-sm"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label className="text-xs">Verso / Cita Bíblica</Label>
-                              <Input
-                                value={segment.verse}
-                                onChange={(e) => updateSegmentField(idx, 'verse', e.target.value)}
-                                placeholder="Ej. Juan 3:16"
-                                className="text-sm"
-                              />
-                            </div>
-
-                            {segment.songs && segment.songs.length > 0 && (
-                              <div className="space-y-1">
-                                <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
-                                {segment.songs.map((song, sIdx) => (
-                                  <div key={sIdx} className="grid grid-cols-2 gap-2">
-                                    <AutocompleteInput
-                                      type="songTitle"
-                                      placeholder={`Canción ${sIdx + 1}`}
-                                      value={song.title}
-                                      onChange={(e) => {
-                                        const newSongs = [...segment.songs];
-                                        newSongs[sIdx].title = e.target.value;
-                                        updateSegmentField(idx, 'songs', newSongs);
-                                      }}
-                                      className="text-xs"
-                                    />
+                            {/* Worship fields */}
+                            {segment.type === 'worship' && (
+                              <>
+                                <div className="grid md:grid-cols-2 gap-2">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs">Líder / Director</Label>
                                     <AutocompleteInput
                                       type="leader"
-                                      placeholder="Líder"
-                                      value={song.lead}
-                                      onChange={(e) => {
-                                        const newSongs = [...segment.songs];
-                                        newSongs[sIdx].lead = e.target.value;
-                                        updateSegmentField(idx, 'songs', newSongs);
-                                      }}
-                                      className="text-xs"
+                                      value={segment.leader}
+                                      onChange={(e) => updateSegmentField(idx, 'leader', e.target.value)}
+                                      placeholder="Nombre del líder"
+                                      className="text-sm"
                                     />
                                   </div>
-                                ))}
+                                  <div className="space-y-2">
+                                    <Label className="text-xs">Traductor</Label>
+                                    <AutocompleteInput
+                                      type="translator"
+                                      value={segment.translator}
+                                      onChange={(e) => updateSegmentField(idx, 'translator', e.target.value)}
+                                      placeholder="Nombre del traductor"
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                </div>
+                                {segment.songs && segment.songs.length > 0 && (
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
+                                    {segment.songs.map((song, sIdx) => (
+                                      <div key={sIdx} className="grid grid-cols-2 gap-2">
+                                        <AutocompleteInput
+                                          type="songTitle"
+                                          placeholder={`Canción ${sIdx + 1}`}
+                                          value={song.title}
+                                          onChange={(e) => {
+                                            const newSongs = [...segment.songs];
+                                            newSongs[sIdx].title = e.target.value;
+                                            updateSegmentField(idx, 'songs', newSongs);
+                                          }}
+                                          className="text-xs"
+                                        />
+                                        <AutocompleteInput
+                                          type="leader"
+                                          placeholder="Líder"
+                                          value={song.lead}
+                                          onChange={(e) => {
+                                            const newSongs = [...segment.songs];
+                                            newSongs[sIdx].lead = e.target.value;
+                                            updateSegmentField(idx, 'songs', newSongs);
+                                          }}
+                                          className="text-xs"
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            )}
+
+                            {/* Message fields */}
+                            {segment.type === 'message' && (
+                              <>
+                                <div className="grid md:grid-cols-2 gap-2">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs">Predicador</Label>
+                                    <AutocompleteInput
+                                      type="preacher"
+                                      value={segment.preacher}
+                                      onChange={(e) => updateSegmentField(idx, 'preacher', e.target.value)}
+                                      placeholder="Nombre del predicador"
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs">Traductor</Label>
+                                    <AutocompleteInput
+                                      type="translator"
+                                      value={segment.translator}
+                                      onChange={(e) => updateSegmentField(idx, 'translator', e.target.value)}
+                                      placeholder="Nombre del traductor"
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Título del Mensaje</Label>
+                                  <AutocompleteInput
+                                    type="messageTitle"
+                                    value={segment.messageTitle}
+                                    onChange={(e) => updateSegmentField(idx, 'messageTitle', e.target.value)}
+                                    placeholder="Título del mensaje"
+                                    className="text-sm"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Verso / Cita Bíblica</Label>
+                                  <Input
+                                    value={segment.verse}
+                                    onChange={(e) => updateSegmentField(idx, 'verse', e.target.value)}
+                                    placeholder="Ej. Juan 3:16"
+                                    className="text-sm"
+                                  />
+                                </div>
+                              </>
+                            )}
+
+                            {/* Welcome fields */}
+                            {segment.type === 'welcome' && (
+                              <div className="grid md:grid-cols-2 gap-2">
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Presentador</Label>
+                                  <AutocompleteInput
+                                    type="presenter"
+                                    value={segment.presenter}
+                                    onChange={(e) => updateSegmentField(idx, 'presenter', e.target.value)}
+                                    placeholder="Nombre del presentador"
+                                    className="text-sm"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Traductor</Label>
+                                  <AutocompleteInput
+                                    type="translator"
+                                    value={segment.translator}
+                                    onChange={(e) => updateSegmentField(idx, 'translator', e.target.value)}
+                                    placeholder="Nombre del traductor"
+                                    className="text-sm"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Offering fields */}
+                            {segment.type === 'offering' && (
+                              <>
+                                <div className="grid md:grid-cols-2 gap-2">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs">Presentador</Label>
+                                    <AutocompleteInput
+                                      type="presenter"
+                                      value={segment.presenter}
+                                      onChange={(e) => updateSegmentField(idx, 'presenter', e.target.value)}
+                                      placeholder="Nombre del presentador"
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs">Traductor</Label>
+                                    <AutocompleteInput
+                                      type="translator"
+                                      value={segment.translator}
+                                      onChange={(e) => updateSegmentField(idx, 'translator', e.target.value)}
+                                      placeholder="Nombre del traductor"
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Verso / Cita Bíblica</Label>
+                                  <Input
+                                    value={segment.verse}
+                                    onChange={(e) => updateSegmentField(idx, 'verse', e.target.value)}
+                                    placeholder="Ej. Malaquías 3:10"
+                                    className="text-sm"
+                                  />
+                                </div>
+                              </>
+                            )}
+
+                            {/* Special/Generic fields */}
+                            {segment.type === 'Especial' && (
+                              <div className="grid md:grid-cols-2 gap-2">
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Presentador</Label>
+                                  <AutocompleteInput
+                                    type="presenter"
+                                    value={segment.presenter}
+                                    onChange={(e) => updateSegmentField(idx, 'presenter', e.target.value)}
+                                    placeholder="Nombre del presentador"
+                                    className="text-sm"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Traductor</Label>
+                                  <AutocompleteInput
+                                    type="translator"
+                                    value={segment.translator}
+                                    onChange={(e) => updateSegmentField(idx, 'translator', e.target.value)}
+                                    placeholder="Nombre del traductor"
+                                    className="text-sm"
+                                  />
+                                </div>
                               </div>
                             )}
 
