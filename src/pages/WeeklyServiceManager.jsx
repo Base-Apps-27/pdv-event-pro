@@ -266,6 +266,24 @@ export default function WeeklyServiceManager() {
     }
   }, [dynamicAnnouncements, fixedAnnouncements]);
 
+  // Auto-save after 2 seconds of inactivity
+  useEffect(() => {
+    if (!hasChanges || !serviceData) return;
+
+    const timeoutId = setTimeout(() => {
+      const dataToSave = {
+        ...serviceData,
+        selected_announcements: selectedAnnouncements,
+        day_of_week: 'Sunday',
+        name: `Domingo - ${selectedDate}`,
+        status: 'active'
+      };
+      saveServiceMutation.mutate(dataToSave);
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [serviceData, selectedAnnouncements, hasChanges]);
+
   const updateSegmentField = (service, segmentIndex, field, value) => {
     setServiceData(prev => {
       const updated = { ...prev };
@@ -453,18 +471,18 @@ export default function WeeklyServiceManager() {
           </h1>
           <p className="text-gray-500 mt-1">Gestión semanal unificada</p>
         </div>
-        <div className="flex gap-3">
-          {hasChanges && (
-            <Button onClick={handleSave} className="bg-pdv-teal text-white">
-              <Save className="w-4 h-4 mr-2" />
-              Guardar
+        <div className="flex gap-3 items-center">
+            {saveServiceMutation.isPending && (
+              <span className="text-sm text-gray-500">Guardando...</span>
+            )}
+            {!saveServiceMutation.isPending && !hasChanges && serviceData && (
+              <span className="text-sm text-green-600">✓ Guardado</span>
+            )}
+            <Button variant="outline" onClick={handlePrint}>
+              <Printer className="w-4 h-4 mr-2" />
+              Imprimir
             </Button>
-          )}
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="w-4 h-4 mr-2" />
-            Imprimir
-          </Button>
-        </div>
+          </div>
       </div>
 
       {/* Date Selection */}
