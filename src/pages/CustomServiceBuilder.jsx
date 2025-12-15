@@ -28,7 +28,69 @@ export default function CustomServiceBuilder() {
     date: new Date().toISOString().split('T')[0],
     location: "",
     description: "",
-    segments: [],
+    segments: [
+      {
+        title: "Equipo de A&A",
+        type: "worship",
+        duration: 35,
+        presenter: "",
+        translator: "",
+        preacher: "",
+        leader: "",
+        messageTitle: "",
+        verse: "",
+        songs: [
+          { title: "", lead: "" },
+          { title: "", lead: "" },
+          { title: "", lead: "" },
+          { title: "", lead: "" }
+        ],
+        description: "",
+        actions: []
+      },
+      {
+        title: "Bienvenida y Anuncios",
+        type: "welcome",
+        duration: 5,
+        presenter: "",
+        translator: "",
+        preacher: "",
+        leader: "",
+        messageTitle: "",
+        verse: "",
+        songs: [],
+        description: "",
+        actions: []
+      },
+      {
+        title: "Ofrendas",
+        type: "offering",
+        duration: 5,
+        presenter: "",
+        translator: "",
+        preacher: "",
+        leader: "",
+        messageTitle: "",
+        verse: "",
+        songs: [],
+        description: "",
+        actions: []
+      },
+      {
+        title: "Mensaje",
+        type: "message",
+        duration: 45,
+        presenter: "",
+        translator: "",
+        preacher: "",
+        leader: "",
+        messageTitle: "",
+        verse: "",
+        songs: [],
+        description: "",
+        actions: []
+      }
+    ],
     coordinators: "",
     ujieres: "",
     sound: "",
@@ -38,7 +100,7 @@ export default function CustomServiceBuilder() {
 
   const [showSegmentDialog, setShowSegmentDialog] = useState(false);
   const [editingSegmentIdx, setEditingSegmentIdx] = useState(null);
-  const [segmentForm, setSegmentForm] = useState({
+  const getDefaultSegmentForm = () => ({
     title: "",
     type: "Especial",
     duration: 15,
@@ -52,6 +114,8 @@ export default function CustomServiceBuilder() {
     description: "",
     actions: []
   });
+
+  const [segmentForm, setSegmentForm] = useState(getDefaultSegmentForm());
 
   const { data: existingService } = useQuery({
     queryKey: ['customService', serviceId],
@@ -108,20 +172,7 @@ export default function CustomServiceBuilder() {
     }
     setShowSegmentDialog(false);
     setEditingSegmentIdx(null);
-    setSegmentForm({
-      title: "",
-      type: "Especial",
-      duration: 15,
-      presenter: "",
-      translator: "",
-      preacher: "",
-      leader: "",
-      messageTitle: "",
-      verse: "",
-      songs: [],
-      description: "",
-      actions: []
-    });
+    setSegmentForm(getDefaultSegmentForm());
   };
 
   const removeSegment = (idx) => {
@@ -285,20 +336,7 @@ export default function CustomServiceBuilder() {
           <Button
             onClick={() => {
               setEditingSegmentIdx(null);
-              setSegmentForm({
-                title: "",
-                type: "Especial",
-                duration: 15,
-                presenter: "",
-                translator: "",
-                preacher: "",
-                leader: "",
-                messageTitle: "",
-                verse: "",
-                songs: [],
-                description: "",
-                actions: []
-              });
+              setSegmentForm(getDefaultSegmentForm());
               setShowSegmentDialog(true);
             }}
             className="bg-pdv-teal text-white print:hidden"
