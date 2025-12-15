@@ -98,8 +98,8 @@ export default function CustomServiceBuilder() {
     notes: ""
   });
 
-  const [showSegmentDialog, setShowSegmentDialog] = useState(false);
-  const [editingSegmentIdx, setEditingSegmentIdx] = useState(null);
+  const [expandedSegments, setExpandedSegments] = useState({});
+
   const getDefaultSegmentForm = () => ({
     title: "",
     type: "Especial",
@@ -114,8 +114,6 @@ export default function CustomServiceBuilder() {
     description: "",
     actions: []
   });
-
-  const [segmentForm, setSegmentForm] = useState(getDefaultSegmentForm());
 
   const { data: existingService } = useQuery({
     queryKey: ['customService', serviceId],
