@@ -1268,10 +1268,17 @@ export default function WeeklyServiceManager() {
                           size="icon"
                           className="h-7 w-7"
                           onClick={() => {
-                            if (window.confirm('¿Eliminar?')) deleteAnnouncementMutation.mutate(ann.id);
+                            if (window.confirm('¿Eliminar este anuncio?')) {
+                              deleteAnnouncementMutation.mutate(ann.id);
+                            }
                           }}
+                          disabled={deleteAnnouncementMutation.isPending}
                         >
-                          <Trash2 className="w-3 h-3 text-red-500" />
+                          {deleteAnnouncementMutation.isPending ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3 h-3 text-red-500" />
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -1367,10 +1374,17 @@ export default function WeeklyServiceManager() {
                             size="icon"
                             className="h-7 w-7"
                             onClick={() => {
-                              if (window.confirm('¿Eliminar?')) deleteAnnouncementMutation.mutate(ann.id);
+                              if (window.confirm('¿Eliminar este anuncio?')) {
+                                deleteAnnouncementMutation.mutate(ann.id);
+                              }
                             }}
+                            disabled={deleteAnnouncementMutation.isPending}
                           >
-                            <Trash2 className="w-3 h-3 text-red-500" />
+                            {deleteAnnouncementMutation.isPending ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3 h-3 text-red-500" />
+                            )}
                           </Button>
                         </div>
                       )}
