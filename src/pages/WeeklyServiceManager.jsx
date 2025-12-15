@@ -180,7 +180,6 @@ export default function WeeklyServiceManager() {
     onSuccess: () => {
       queryClient.invalidateQueries(['weeklyService']);
       setHasChanges(false);
-      alert('Servicio guardado');
     }
   });
 
