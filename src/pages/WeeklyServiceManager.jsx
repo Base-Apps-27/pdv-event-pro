@@ -52,10 +52,10 @@ export default function WeeklyServiceManager() {
       { type: "break", title: "RECESO", duration: 30, fields: [] }
     ],
     "11:30am": [
-      { type: "worship", title: "Equipo de A&A", duration: 30, fields: ["leader", "songs", "ministry_leader"] },
-      { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter"] },
-      { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse"] },
-      { type: "message", title: "Mensaje", duration: 30, fields: ["preacher", "title", "verse"] }
+      { type: "worship", title: "Equipo de A&A", duration: 30, fields: ["leader", "songs", "ministry_leader", "translator"] },
+      { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter", "translator"] },
+      { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse", "translator"] },
+      { type: "message", title: "Mensaje", duration: 30, fields: ["preacher", "title", "verse", "translator"] }
     ]
   };
 
@@ -805,6 +805,17 @@ export default function WeeklyServiceManager() {
                       onChange={(e) => updateSegmentField("11:30am", idx, "verse", e.target.value)}
                       className="text-sm"
                     />
+                  )}
+                  {segment.fields.includes("translator") && (
+                    <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                      <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
+                      <Input
+                        placeholder="Nombre del traductor"
+                        value={segment.data?.translator || ""}
+                        onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
                   )}
                   {segment.songs && (
                     <div className="space-y-1">
