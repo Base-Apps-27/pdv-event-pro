@@ -1,209 +1,273 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import { Plus, Calendar, MapPin, Edit, Trash2, FileText } from "lucide-react";
+import { Clock, Save, Plus, Trash2, ChevronUp, ChevronDown, GripVertical, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import AutocompleteInput from "@/components/ui/AutocompleteInput";
 
 export default function ServiceTemplatesTab() {
-  const [showDialog, setShowDialog] = useState(false);
-  const [editingBlueprint, setEditingBlueprint] = useState(null);
-  const [formData, setFormData] = useState({});
   const queryClient = useQueryClient();
+  const [expandedSegments, setExpandedSegments] = useState({});
 
-  const { data: blueprintsData, isLoading } = useQuery({
-    queryKey: ['service-blueprints'],
-    queryFn: () => base44.entities.Service.filter({ status: 'blueprint' }),
+  // Fetch or create the Sunday blueprint
+  const { data: existingBlueprint, isLoading } = useQuery({
+    queryKey: ['sunday-blueprint'],
+    queryFn: async () => {
+      const blueprints = await base44.entities.Service.filter({ status: 'blueprint', day_of_week: 'Sunday' });
+      return blueprints[0] || null;
+    }
   });
-  const blueprints = blueprintsData || [];
 
-  const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Service.create({ ...data, status: 'blueprint', origin: 'manual' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['service-blueprints']);
-      setShowDialog(false);
-      setEditingBlueprint(null);
+  const [blueprintData, setBlueprintData] = useState({
+    name: "Servicios Dominicales",
+    day_of_week: "Sunday",
+    "9:30am": [],
+    "11:30am": [],
+    coordinators: { "9:30am": "", "11:30am": "" },
+    ujieres: { "9:30am": "", "11:30am": "" },
+    sound: { "9:30am": "", "11:30am": "" },
+    luces: { "9:30am": "", "11:30am": "" }
+  });
+
+  useEffect(() => {
+    if (existingBlueprint) {
+      setBlueprintData(existingBlueprint);
+    } else {
+      // Initialize with default structure
+      setBlueprintData({
+        name: "Servicios Dominicales",
+        day_of_week: "Sunday",
+        "9:30am": [
+          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
+          { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
+          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [] },
+          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
+        ],
+        "11:30am": [
+          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
+          { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
+          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [] },
+          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
+        ],
+        coordinators: { "9:30am": "", "11:30am": "" },
+        ujieres: { "9:30am": "", "11:30am": "" },
+        sound: { "9:30am": "", "11:30am": "" },
+        luces: { "9:30am": "", "11:30am": "" }
+      });
+    }
+  }, [existingBlueprint]);
+
+  const saveMutation = useMutation({
+    mutationFn: async (data) => {
+      if (existingBlueprint?.id) {
+        return await base44.entities.Service.update(existingBlueprint.id, data);
+      } else {
+        return await base44.entities.Service.create({ ...data, status: 'blueprint' });
+      }
     },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Service.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['service-blueprints']);
-      setShowDialog(false);
-      setEditingBlueprint(null);
-    },
+      queryClient.invalidateQueries(['sunday-blueprint']);
+      alert('Blueprint guardado correctamente');
+    }
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Service.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['service-blueprints']);
-    },
-  });
-
-  const openDialog = (blueprint = null) => {
-    setEditingBlueprint(blueprint);
-    setFormData({
-      name: blueprint?.name || '',
-      day_of_week: blueprint?.day_of_week || 'Sunday',
-      time: blueprint?.time || '',
-      location: blueprint?.location || '',
-      description: blueprint?.description || '',
-    });
-    setShowDialog(true);
+  const handleSave = () => {
+    saveMutation.mutate(blueprintData);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (editingBlueprint) {
-      updateMutation.mutate({ id: editingBlueprint.id, data: formData });
-    } else {
-      createMutation.mutate(formData);
+  const updateSegmentField = (service, segmentIndex, field, value) => {
+    setBlueprintData(prev => {
+      const updated = { ...prev };
+      if (field === 'songs') {
+        updated[service][segmentIndex].songs = value;
+      } else if (field === 'duration' || field === 'title' || field === 'type') {
+        updated[service][segmentIndex][field] = value;
+      } else {
+        updated[service][segmentIndex].data = {
+          ...updated[service][segmentIndex].data,
+          [field]: value
+        };
+      }
+      return updated;
+    });
+  };
+
+  const addSegment = (service) => {
+    setBlueprintData(prev => ({
+      ...prev,
+      [service]: [...prev[service], {
+        title: "",
+        type: "Especial",
+        duration: 15,
+        data: {},
+        actions: []
+      }]
+    }));
+  };
+
+  const removeSegment = (service, idx) => {
+    if (window.confirm('¿Eliminar este segmento del blueprint?')) {
+      setBlueprintData(prev => ({
+        ...prev,
+        [service]: prev[service].filter((_, i) => i !== idx)
+      }));
     }
   };
+
+  const toggleSegmentExpanded = (service, idx) => {
+    const key = `${service}-${idx}`;
+    setExpandedSegments(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  const handleDragEnd = (result, service) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(blueprintData[service]);
+    const [reordered] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reordered);
+    
+    setBlueprintData(prev => ({
+      ...prev,
+      [service]: items
+    }));
+  };
+
+  if (isLoading) {
+    return <div className="p-8">Cargando...</div>;
+  }
+
+  const renderServiceColumn = (service, title, color) => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className={`text-2xl font-bold ${color}`}>{title}</h3>
+        <Button size="sm" onClick={() => addSegment(service)} className="print:hidden">
+          <Plus className="w-4 h-4 mr-2" />
+          Añadir
+        </Button>
+      </div>
+
+      <DragDropContext onDragEnd={(result) => handleDragEnd(result, service)}>
+        <Droppable droppableId={service}>
+          {(provided) => (
+            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
+              {blueprintData[service]?.map((segment, idx) => {
+                const isExpanded = expandedSegments[`${service}-${idx}`];
+                const isSpecial = segment.type === "Especial";
+                
+                return (
+                  <Draggable key={`${service}-${idx}`} draggableId={`${service}-${idx}`} index={idx}>
+                    {(provided) => (
+                      <Card
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className={`border-l-4 ${isSpecial ? 'border-l-orange-500 bg-orange-50' : color === 'text-red-600' ? 'border-l-red-500' : 'border-l-blue-500'}`}
+                      >
+                        <CardHeader className="pb-2 bg-gray-50">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div {...provided.dragHandleProps}>
+                              <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+                            </div>
+                            {isSpecial ? <Sparkles className="w-4 h-4 text-orange-600" /> : <Clock className="w-4 h-4" />}
+                            <Input
+                              value={segment.title}
+                              onChange={(e) => updateSegmentField(service, idx, 'title', e.target.value)}
+                              className="text-lg font-bold border-0 shadow-none p-0 h-auto focus-visible:ring-0 flex-1"
+                              placeholder="Título"
+                            />
+                            <Badge variant="outline" className="text-xs">{segment.duration} min</Badge>
+                            <Button variant="ghost" size="sm" onClick={() => removeSegment(service, idx)}>
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </div>
+                          <Select value={segment.type} onValueChange={(value) => updateSegmentField(service, idx, 'type', value)}>
+                            <SelectTrigger className="w-48">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="worship">Alabanza</SelectItem>
+                              <SelectItem value="message">Mensaje</SelectItem>
+                              <SelectItem value="welcome">Bienvenida</SelectItem>
+                              <SelectItem value="offering">Ofrenda</SelectItem>
+                              <SelectItem value="Especial">Especial</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </CardHeader>
+                        <CardContent className="space-y-2 pt-3">
+                          {segment.type === 'worship' && segment.songs && (
+                            <div className="space-y-1">
+                              <Label className="text-xs font-semibold text-pdv-green">Estructura de Canciones</Label>
+                              {segment.songs.map((song, sIdx) => (
+                                <div key={sIdx} className="text-xs text-gray-500">
+                                  Canción {sIdx + 1} (placeholder)
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleSegmentExpanded(service, idx)}
+                            className="w-full text-xs mt-2"
+                          >
+                            {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                            {isExpanded ? "Menos detalles" : "Más detalles"}
+                          </Button>
+
+                          {isExpanded && (
+                            <div className="space-y-2 pt-2 border-t">
+                              <div className="space-y-1">
+                                <Label className="text-xs font-semibold">Duración (minutos)</Label>
+                                <Input
+                                  type="number"
+                                  value={segment.duration || 0}
+                                  onChange={(e) => updateSegmentField(service, idx, 'duration', parseInt(e.target.value) || 0)}
+                                  className="text-xs w-24"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+                  </Draggable>
+                );
+              })}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className="space-y-1">
-            <h3 className="text-lg font-medium">Plantillas de Servicio (Blueprints)</h3>
-            <p className="text-sm text-gray-500">Define la estructura base para tus servicios semanales</p>
+        <div>
+          <h3 className="text-2xl font-bold">Blueprint: Servicios Dominicales</h3>
+          <p className="text-sm text-gray-500 mt-1">Define la estructura fija que se aplicará cada semana</p>
         </div>
-        <Button onClick={() => openDialog()} className="bg-blue-600 hover:bg-blue-700 text-white">
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Plantilla
+        <Button onClick={handleSave} className="bg-pdv-teal text-white">
+          <Save className="w-4 h-4 mr-2" />
+          Guardar Blueprint
         </Button>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {blueprints.map((bp) => (
-          <Card key={bp.id} className="hover:shadow-md transition-all">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex justify-between items-start">
-                <span className="text-xl font-bold">{bp.name}</span>
-                <FileText className="w-5 h-5 text-blue-500" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>{bp.day_of_week} {bp.time && `- ${bp.time}`}</span>
-                </div>
-                {bp.location && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    <span>{bp.location}</span>
-                  </div>
-                )}
-                {bp.description && <p className="italic text-xs">{bp.description}</p>}
-                
-                <div className="pt-4 flex gap-2">
-                  <Link to={createPageUrl(`ServiceDetail?id=${bp.id}`)} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full">
-                      Configurar Estructura
-                    </Button>
-                  </Link>
-                  <Button variant="ghost" size="icon" onClick={() => openDialog(bp)}>
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-red-500 hover:text-red-600"
-                    onClick={() => {
-                      if(confirm('¿Eliminar esta plantilla?')) deleteMutation.mutate(bp.id);
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-
-        {blueprints.length === 0 && (
-            <Card className="col-span-full p-12 text-center border-dashed border-2">
-            <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">No hay plantillas de servicio</h3>
-            <p className="text-slate-500 mb-4">Crea una plantilla para definir la estructura de tus reuniones semanales</p>
-            <Button onClick={() => openDialog()}>
-                <Plus className="w-4 h-4 mr-2" />
-                Crear Plantilla
-            </Button>
-            </Card>
-        )}
+      <div className="grid md:grid-cols-2 gap-6">
+        {renderServiceColumn("9:30am", "9:30 a.m.", "text-red-600")}
+        {renderServiceColumn("11:30am", "11:30 a.m.", "text-blue-600")}
       </div>
-
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingBlueprint ? 'Editar Plantilla' : 'Nueva Plantilla'}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nombre de la Plantilla</Label>
-              <Input 
-                value={formData.name} 
-                onChange={e => setFormData({...formData, name: e.target.value})}
-                placeholder="Ej: Domingo AM Estándar"
-                required 
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Día Recurrente</Label>
-                <Select 
-                  value={formData.day_of_week} 
-                  onValueChange={v => setFormData({...formData, day_of_week: v})}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map(d => (
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Hora Base</Label>
-                <Input 
-                  type="time"
-                  value={formData.time} 
-                  onChange={e => setFormData({...formData, time: e.target.value})}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Ubicación por Defecto</Label>
-              <Input 
-                value={formData.location} 
-                onChange={e => setFormData({...formData, location: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Descripción</Label>
-              <Textarea 
-                value={formData.description} 
-                onChange={e => setFormData({...formData, description: e.target.value})}
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
-              <Button type="submit">Guardar</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
