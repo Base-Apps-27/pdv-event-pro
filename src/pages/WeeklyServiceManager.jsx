@@ -523,17 +523,25 @@ export default function WeeklyServiceManager() {
                     button[role="gridcell"]:not([data-disabled="true"]):not([data-selected="true"]) {
                       color: #111827 !important;
                     }
-                    button[role="gridcell"][data-selected="true"] {
+                    button[role="gridcell"][data-selected="true"],
+                    button[role="gridcell"][aria-selected="true"] {
+                      background-color: #1F8A70 !important;
+                      color: white !important;
+                    }
+                    .rdp-day_selected {
                       background-color: #1F8A70 !important;
                       color: white !important;
                     }
                   `}</style>
                   <Calendar
                     mode="single"
-                    selected={selectedDate ? new Date(selectedDate) : undefined}
+                    selected={selectedDate ? new Date(selectedDate + 'T12:00:00') : undefined}
                     onSelect={(date) => {
                       if (date && date.getDay() === 0) {
-                        setSelectedDate(date.toISOString().split('T')[0]);
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        setSelectedDate(`${year}-${month}-${day}`);
                       }
                     }}
                     disabled={(date) => date.getDay() !== 0}
