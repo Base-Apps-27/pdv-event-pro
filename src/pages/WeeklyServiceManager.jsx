@@ -520,6 +520,13 @@ export default function WeeklyServiceManager() {
                     [data-disabled="true"]:hover {
                       background-color: transparent !important;
                     }
+                    button[role="gridcell"]:not([data-disabled="true"]):not([data-selected="true"]) {
+                      color: #111827 !important;
+                    }
+                    button[role="gridcell"][data-selected="true"] {
+                      background-color: #1F8A70 !important;
+                      color: white !important;
+                    }
                   `}</style>
                   <Calendar
                     mode="single"
@@ -530,12 +537,6 @@ export default function WeeklyServiceManager() {
                       }
                     }}
                     disabled={(date) => date.getDay() !== 0}
-                    modifiers={{
-                      sunday: (date) => date.getDay() === 0
-                    }}
-                    modifiersClassNames={{
-                      sunday: "bg-pdv-teal text-white hover:bg-pdv-teal hover:text-white"
-                    }}
                   />
                 </PopoverContent>
               </Popover>
