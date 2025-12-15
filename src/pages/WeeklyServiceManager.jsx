@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +17,7 @@ import { addMinutes, parse, format } from "date-fns";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 
 export default function WeeklyServiceManager() {
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [serviceData, setServiceData] = useState(null);
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
