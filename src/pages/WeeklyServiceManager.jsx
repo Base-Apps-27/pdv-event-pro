@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar as CalendarIcon, Clock, Save, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Eye, EyeOff, GripVertical, Loader2, Check } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -513,42 +512,22 @@ export default function WeeklyServiceManager() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <TooltipProvider>
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate ? new Date(selectedDate) : undefined}
-                      onSelect={(date) => {
-                        if (date && date.getDay() === 0) {
-                          setSelectedDate(date.toISOString().split('T')[0]);
-                        }
-                      }}
-                      disabled={(date) => date.getDay() !== 0}
-                      modifiers={{
-                        sunday: (date) => date.getDay() === 0
-                      }}
-                      modifiersClassNames={{
-                        sunday: "bg-pdv-teal text-white hover:bg-pdv-teal hover:text-white"
-                      }}
-                      components={{
-                        Day: ({ date, ...props }) => {
-                          const isSunday = date.getDay() === 0;
-                          if (!isSunday) {
-                            return (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div {...props} className="text-gray-300 cursor-not-allowed" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="text-xs">Use Servicio Personalizado para otras fechas</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            );
-                          }
-                          return <div {...props} />;
-                        }
-                      }}
-                    />
-                  </TooltipProvider>
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate ? new Date(selectedDate) : undefined}
+                    onSelect={(date) => {
+                      if (date && date.getDay() === 0) {
+                        setSelectedDate(date.toISOString().split('T')[0]);
+                      }
+                    }}
+                    disabled={(date) => date.getDay() !== 0}
+                    modifiers={{
+                      sunday: (date) => date.getDay() === 0
+                    }}
+                    modifiersClassNames={{
+                      sunday: "bg-pdv-teal text-white hover:bg-pdv-teal hover:text-white"
+                    }}
+                  />
                 </PopoverContent>
               </Popover>
             </div>
