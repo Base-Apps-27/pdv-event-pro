@@ -7,7 +7,9 @@ import { Printer, Calendar } from "lucide-react";
 import WeeklyServiceReport from "@/components/service/WeeklyServiceReport";
 
 export default function WeeklyServiceReportPage() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const urlParams = new URLSearchParams(window.location.search);
+  const dateFromUrl = urlParams.get('date');
+  const [selectedDate, setSelectedDate] = useState(dateFromUrl || new Date().toISOString().split('T')[0]);
 
   const handlePrint = () => {
     window.print();

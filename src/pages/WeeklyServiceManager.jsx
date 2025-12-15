@@ -299,7 +299,7 @@ export default function WeeklyServiceManager() {
   };
 
   const handlePrint = () => {
-    window.print();
+    navigate(createPageUrl('WeeklyServiceReport') + `?date=${selectedDate}`);
   };
 
   const copyTo1130 = () => {
