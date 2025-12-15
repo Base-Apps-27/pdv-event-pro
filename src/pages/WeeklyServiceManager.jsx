@@ -882,6 +882,17 @@ export default function WeeklyServiceManager() {
 
                   {isExpanded && (
                     <div className="space-y-2 pt-2 border-t">
+                      {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
+                        <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                          <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
+                          <Input
+                            placeholder="Auto-rellena del segmento de A&A, editable si es diferente"
+                            value={segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || ""}
+                            onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
+                            className="text-xs"
+                          />
+                        </div>
+                      )}
                       <Textarea
                         placeholder="Notas de Proyección"
                         value={segment.data?.projection_notes || ""}
