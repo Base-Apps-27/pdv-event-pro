@@ -625,8 +625,8 @@ export default function WeeklyServiceManager() {
                   >
                     <CardHeader className="pb-2 bg-gray-50">
                       <CardTitle className="text-lg flex items-center gap-2">
-                        <div {...provided.dragHandleProps} className="print:hidden">
-                          <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+                        <div {...provided.dragHandleProps} className="print:hidden touch-none p-1 -m-1 active:bg-gray-200 rounded">
+                          <GripVertical className="w-6 h-6 md:w-4 md:h-4 text-gray-400 cursor-grab" />
                         </div>
                         <Clock className="w-4 h-4 text-red-600" />
                         {segment.title}
@@ -953,8 +953,8 @@ export default function WeeklyServiceManager() {
                   >
                     <CardHeader className="pb-2 bg-gray-50">
                       <CardTitle className="text-lg flex items-center gap-2">
-                        <div {...provided.dragHandleProps} className="print:hidden">
-                          <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+                        <div {...provided.dragHandleProps} className="print:hidden touch-none p-1 -m-1 active:bg-gray-200 rounded">
+                          <GripVertical className="w-6 h-6 md:w-4 md:h-4 text-gray-400 cursor-grab" />
                         </div>
                         <Clock className="w-4 h-4 text-blue-600" />
                         {segment.title}
@@ -1393,9 +1393,9 @@ export default function WeeklyServiceManager() {
 
       {/* Special Segment Dialog */}
       <Dialog open={showSpecialDialog} onOpenChange={setShowSpecialDialog}>
-        <DialogContent className="max-w-md bg-white">
+        <DialogContent className="max-w-md bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Insertar Segmento Especial ({specialSegmentDetails.timeSlot})</DialogTitle>
+            <DialogTitle className="text-base md:text-lg">Insertar Segmento Especial ({specialSegmentDetails.timeSlot})</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -1406,24 +1406,26 @@ export default function WeeklyServiceManager() {
                 placeholder="Ej. Presentación de Niños"
               />
             </div>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Presentador</Label>
+                <Label className="text-sm">Presentador</Label>
                 <AutocompleteInput
                   type="presenter"
                   value={specialSegmentDetails.presenter}
                   onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, presenter: e.target.value }))}
                   placeholder="Nombre del presentador"
+                  className="text-sm"
                 />
               </div>
               {specialSegmentDetails.timeSlot === "11:30am" && (
                 <div className="space-y-2">
-                  <Label>Traductor</Label>
+                  <Label className="text-sm">Traductor</Label>
                   <AutocompleteInput
                     type="translator"
                     value={specialSegmentDetails.translator}
                     onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, translator: e.target.value }))}
                     placeholder="Nombre del traductor"
+                    className="text-sm"
                   />
                 </div>
               )}
@@ -1439,7 +1441,7 @@ export default function WeeklyServiceManager() {
             <div className="space-y-2">
               <Label>Insertar después de:</Label>
               <select
-                className="w-full border rounded-md p-2"
+                className="w-full border rounded-md p-2 text-sm"
                 value={specialSegmentDetails.insertAfterIdx}
                 onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, insertAfterIdx: parseInt(e.target.value) }))}
               >
@@ -1451,11 +1453,11 @@ export default function WeeklyServiceManager() {
                   ))}
               </select>
             </div>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowSpecialDialog(false)}>
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
+              <Button variant="outline" onClick={() => setShowSpecialDialog(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
-              <Button onClick={addSpecialSegment} className="bg-pdv-teal text-white">
+              <Button onClick={addSpecialSegment} className="bg-pdv-teal text-white w-full sm:w-auto">
                 Añadir Segmento
               </Button>
             </div>
@@ -1489,7 +1491,7 @@ export default function WeeklyServiceManager() {
             <div className="space-y-2">
               <Label>Categoría</Label>
               <select
-                className="w-full border rounded-md p-2"
+                className="w-full border rounded-md p-2 text-sm"
                 value={announcementForm.category}
                 onChange={(e) => setAnnouncementForm(prev => ({ ...prev, category: e.target.value }))}
               >
@@ -1545,11 +1547,11 @@ export default function WeeklyServiceManager() {
               />
             </div>
 
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowAnnouncementDialog(false)}>
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
+              <Button variant="outline" onClick={() => setShowAnnouncementDialog(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
-              <Button onClick={handleAnnouncementSubmit} className="bg-pdv-teal text-white">
+              <Button onClick={handleAnnouncementSubmit} className="bg-pdv-teal text-white w-full sm:w-auto">
                 {editingAnnouncement ? "Guardar" : "Crear"}
               </Button>
             </div>
