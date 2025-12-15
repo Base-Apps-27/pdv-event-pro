@@ -774,12 +774,12 @@ export default function WeeklyServiceManager() {
           </DragDropContext>
 
           {/* Fixed Receso Block */}
-          <Card className="bg-gradient-to-r from-gray-800 to-gray-900 text-white border-none">
+          <Card className="bg-gray-100 border-gray-300">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xl flex items-center gap-2">
-                <Clock className="w-5 h-5" />
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
+                <Clock className="w-4 h-4" />
                 RECESO
-                <Badge variant="outline" className="ml-auto text-white border-white">30 min</Badge>
+                <Badge variant="outline" className="ml-auto text-xs text-gray-500 border-gray-400">30 min</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 pt-2">
@@ -793,7 +793,7 @@ export default function WeeklyServiceManager() {
                   }));
                   setHasChanges(true);
                 }}
-                className="text-sm bg-gray-900/30 border-gray-700 text-white placeholder:text-gray-400"
+                className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
                 rows={2}
               />
             </CardContent>
