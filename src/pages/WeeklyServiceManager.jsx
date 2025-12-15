@@ -1029,7 +1029,7 @@ export default function WeeklyServiceManager() {
       </Card>
 
       {/* Two Services Side by Side */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-6 print:hidden">
         {/* 9:30 AM Service */}
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
@@ -1761,7 +1761,7 @@ export default function WeeklyServiceManager() {
       </div>
 
       {/* Announcements Section */}
-      <Card className="print:break-before-page">
+      <Card className="print:hidden">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl font-bold uppercase">Anuncios</CardTitle>
