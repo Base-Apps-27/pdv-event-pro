@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar, Clock, Save, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Eye, EyeOff, GripVertical } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format } from "date-fns";
+import AutocompleteInput from "@/components/ui/AutocompleteInput";
 
 export default function WeeklyServiceManager() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -569,7 +570,8 @@ export default function WeeklyServiceManager() {
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-2 pt-3">
-                        <Input
+                        <AutocompleteInput
+                          type="presenter"
                           placeholder="Presentador"
                           value={segment.data?.presenter || ""}
                           onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
@@ -608,7 +610,8 @@ export default function WeeklyServiceManager() {
                     </CardHeader>
                     <CardContent className="space-y-2 pt-3">
                   {segment.fields.includes("leader") && (
-                    <Input
+                    <AutocompleteInput
+                      type="leader"
                       placeholder="Líder / Director"
                       value={segment.data?.leader || ""}
                       onChange={(e) => updateSegmentField("9:30am", idx, "leader", e.target.value)}
@@ -616,7 +619,8 @@ export default function WeeklyServiceManager() {
                     />
                   )}
                   {segment.fields.includes("presenter") && (
-                    <Input
+                    <AutocompleteInput
+                      type="presenter"
                       placeholder="Presentador"
                       value={segment.data?.presenter || ""}
                       onChange={(e) => updateSegmentField("9:30am", idx, "presenter", e.target.value)}
@@ -624,7 +628,8 @@ export default function WeeklyServiceManager() {
                     />
                   )}
                   {segment.fields.includes("preacher") && (
-                    <Input
+                    <AutocompleteInput
+                      type="preacher"
                       placeholder="Predicador"
                       value={segment.data?.preacher || ""}
                       onChange={(e) => updateSegmentField("9:30am", idx, "preacher", e.target.value)}
@@ -632,7 +637,8 @@ export default function WeeklyServiceManager() {
                     />
                   )}
                   {segment.fields.includes("title") && (
-                    <Input
+                    <AutocompleteInput
+                      type="messageTitle"
                       placeholder="Título del Mensaje"
                       value={segment.data?.title || ""}
                       onChange={(e) => updateSegmentField("9:30am", idx, "title", e.target.value)}
@@ -652,7 +658,8 @@ export default function WeeklyServiceManager() {
                       <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
                       {segment.songs.map((song, sIdx) => (
                         <div key={sIdx} className="grid grid-cols-2 gap-2">
-                          <Input
+                          <AutocompleteInput
+                            type="songTitle"
                             placeholder={`Canción ${sIdx + 1}`}
                             value={song.title}
                             onChange={(e) => {
@@ -662,7 +669,8 @@ export default function WeeklyServiceManager() {
                             }}
                             className="text-xs"
                           />
-                          <Input
+                          <AutocompleteInput
+                            type="leader"
                             placeholder="Líder"
                             value={song.lead}
                             onChange={(e) => {
@@ -679,7 +687,8 @@ export default function WeeklyServiceManager() {
                   {segment.fields.includes("ministry_leader") && (
                     <div className="bg-purple-50 border border-purple-200 rounded p-2">
                       <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
-                      <Input
+                      <AutocompleteInput
+                        type="leader"
                         placeholder="Líder de Ministración"
                         value={segment.data?.ministry_leader || ""}
                         onChange={(e) => updateSegmentField("9:30am", idx, "ministry_leader", e.target.value)}
@@ -882,13 +891,15 @@ export default function WeeklyServiceManager() {
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-2 pt-3">
-                        <Input
+                        <AutocompleteInput
+                          type="presenter"
                           placeholder="Presentador"
                           value={segment.data?.presenter || ""}
                           onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
                           className="text-sm"
                         />
-                        <Input
+                        <AutocompleteInput
+                          type="translator"
                           placeholder="Traductor"
                           value={segment.data?.translator || ""}
                           onChange={(e) => updateSegmentField(timeSlot, idx, "translator", e.target.value)}
@@ -927,7 +938,8 @@ export default function WeeklyServiceManager() {
                     </CardHeader>
                     <CardContent className="space-y-2 pt-3">
                   {segment.fields.includes("leader") && (
-                    <Input
+                    <AutocompleteInput
+                      type="leader"
                       placeholder="Líder / Director"
                       value={segment.data?.leader || ""}
                       onChange={(e) => updateSegmentField("11:30am", idx, "leader", e.target.value)}
@@ -935,7 +947,8 @@ export default function WeeklyServiceManager() {
                     />
                   )}
                   {segment.fields.includes("presenter") && (
-                    <Input
+                    <AutocompleteInput
+                      type="presenter"
                       placeholder="Presentador"
                       value={segment.data?.presenter || ""}
                       onChange={(e) => updateSegmentField("11:30am", idx, "presenter", e.target.value)}
@@ -943,7 +956,8 @@ export default function WeeklyServiceManager() {
                     />
                   )}
                   {segment.fields.includes("preacher") && (
-                    <Input
+                    <AutocompleteInput
+                      type="preacher"
                       placeholder="Predicador"
                       value={segment.data?.preacher || ""}
                       onChange={(e) => updateSegmentField("11:30am", idx, "preacher", e.target.value)}
@@ -951,7 +965,8 @@ export default function WeeklyServiceManager() {
                     />
                   )}
                   {segment.fields.includes("title") && (
-                    <Input
+                    <AutocompleteInput
+                      type="messageTitle"
                       placeholder="Título del Mensaje"
                       value={segment.data?.title || ""}
                       onChange={(e) => updateSegmentField("11:30am", idx, "title", e.target.value)}
@@ -971,7 +986,8 @@ export default function WeeklyServiceManager() {
                       <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
                       {segment.songs.map((song, sIdx) => (
                         <div key={sIdx} className="grid grid-cols-2 gap-2">
-                          <Input
+                          <AutocompleteInput
+                            type="songTitle"
                             placeholder={`Canción ${sIdx + 1}`}
                             value={song.title}
                             onChange={(e) => {
@@ -981,7 +997,8 @@ export default function WeeklyServiceManager() {
                             }}
                             className="text-xs"
                           />
-                          <Input
+                          <AutocompleteInput
+                            type="leader"
                             placeholder="Líder"
                             value={song.lead}
                             onChange={(e) => {
@@ -998,7 +1015,8 @@ export default function WeeklyServiceManager() {
                   {segment.fields.includes("ministry_leader") && (
                     <div className="bg-purple-50 border border-purple-200 rounded p-2">
                       <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
-                      <Input
+                      <AutocompleteInput
+                        type="leader"
                         placeholder="Líder de Ministración"
                         value={segment.data?.ministry_leader || ""}
                         onChange={(e) => updateSegmentField("11:30am", idx, "ministry_leader", e.target.value)}
@@ -1009,7 +1027,8 @@ export default function WeeklyServiceManager() {
                   {segment.fields.includes("translator") && segment.type === "worship" && (
                     <div className="bg-blue-50 border border-blue-200 rounded p-2">
                       <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) - Ministración, Anuncios, Ofrenda</Label>
-                      <Input
+                      <AutocompleteInput
+                        type="translator"
                         placeholder="Nombre del traductor"
                         value={segment.data?.translator || ""}
                         onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
@@ -1027,7 +1046,8 @@ export default function WeeklyServiceManager() {
                   {segment.fields.includes("translator") && segment.type === "message" && (
                     <div className="bg-blue-50 border border-blue-200 rounded p-2">
                       <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) del Mensaje</Label>
-                      <Input
+                      <AutocompleteInput
+                        type="translator"
                         placeholder="Nombre del traductor (puede ser el mismo)"
                         value={segment.data?.translator || ""}
                         onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
@@ -1089,7 +1109,8 @@ export default function WeeklyServiceManager() {
                       {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
                         <div className="bg-blue-50 border border-blue-200 rounded p-2">
                           <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
-                          <Input
+                          <AutocompleteInput
+                            type="translator"
                             placeholder="Auto-rellena del segmento de A&A, editable si es diferente"
                             value={segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || ""}
                             onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
@@ -1363,7 +1384,8 @@ export default function WeeklyServiceManager() {
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Presentador</Label>
-                <Input
+                <AutocompleteInput
+                  type="presenter"
                   value={specialSegmentDetails.presenter}
                   onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, presenter: e.target.value }))}
                   placeholder="Nombre del presentador"
@@ -1372,7 +1394,8 @@ export default function WeeklyServiceManager() {
               {specialSegmentDetails.timeSlot === "11:30am" && (
                 <div className="space-y-2">
                   <Label>Traductor</Label>
-                  <Input
+                  <AutocompleteInput
+                    type="translator"
                     value={specialSegmentDetails.translator}
                     onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, translator: e.target.value }))}
                     placeholder="Nombre del traductor"
