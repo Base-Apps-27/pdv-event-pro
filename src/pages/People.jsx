@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import SuggestionsManager from "@/components/people/SuggestionsManager";
 
 export default function People() {
   const [activeTab, setActiveTab] = useState("persons");
@@ -105,103 +107,120 @@ export default function People() {
     <div className="p-6 md:p-8 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-gray-200 pb-6">
         <div>
-          <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">Personas</h1>
-          <p className="text-gray-500 mt-1 font-medium">Directorio de miembros y asistentes</p>
+          <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">
+            Personas y Sugerencias
+          </h1>
+          <p className="text-gray-500 mt-1 font-medium">Directorio de miembros y listas de autocompletado</p>
         </div>
-        <Button 
-          onClick={() => setIsUploadDialogOpen(true)} 
-          className="bg-pdv-teal hover:bg-pdv-green text-white shadow-md hover:shadow-lg transition-all font-bold uppercase px-6"
-        >
-          <Upload className="w-5 h-5 mr-2" />
-          Importar CSV
-        </Button>
+        {activeTab === "persons" && (
+          <Button 
+            onClick={() => setIsUploadDialogOpen(true)} 
+            className="bg-pdv-teal hover:bg-pdv-green text-white shadow-md hover:shadow-lg transition-all font-bold uppercase px-6"
+          >
+            <Upload className="w-5 h-5 mr-2" />
+            Importar CSV
+          </Button>
+        )}
       </div>
 
-      <div className="flex gap-4 items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-        <Search className="w-5 h-5 text-gray-400" />
-        <Input 
-          placeholder="Buscar por nombre o email..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="border-none shadow-none focus-visible:ring-0"
-        />
-        <Badge variant="secondary" className="ml-auto">
-          {filteredPeople.length} Personas
-        </Badge>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full max-w-[600px] grid-cols-2">
+          <TabsTrigger value="persons">Personas (Eventos)</TabsTrigger>
+          <TabsTrigger value="suggestions">Sugerencias (Servicios)</TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Red</TableHead>
-                <TableHead>Contacto</TableHead>
-                <TableHead>Estado Civil</TableHead>
-                <TableHead>Encuentro</TableHead>
-                <TableHead>Nueva Vida</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                 <TableRow>
-                   <TableCell colSpan={6} className="h-24 text-center">
-                     <div className="flex justify-center items-center text-gray-500">
-                       <Loader2 className="w-6 h-6 animate-spin mr-2" /> Cargando...
-                     </div>
-                   </TableCell>
-                 </TableRow>
-              ) : filteredPeople.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-gray-500">
-                    No se encontraron personas. ¡Importa datos para comenzar!
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredPeople.map((person) => (
-                  <TableRow key={person.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        <span className="text-base font-bold text-gray-900">{person.first_name} {person.last_name}</span>
-                        <span className="text-xs text-gray-500">{person.gender} • {person.birth_year}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {person.network && (
-                        <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
-                          {person.network}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col text-sm">
-                        {person.email && <span className="text-gray-700">{person.email}</span>}
-                        {person.phone && <span className="text-gray-500">{person.phone}</span>}
-                      </div>
-                    </TableCell>
-                    <TableCell>{person.marital_status}</TableCell>
-                    <TableCell>
-                      {person.attended_encounter ? (
-                        <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200">Sí</Badge>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {person.attended_nueva_vida ? (
-                         <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 border-purple-200">Sí</Badge>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </TableCell>
+        <TabsContent value="persons" className="space-y-6 mt-6">
+          <div className="flex gap-4 items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+            <Search className="w-5 h-5 text-gray-400" />
+            <Input 
+              placeholder="Buscar por nombre o email..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border-none shadow-none focus-visible:ring-0"
+            />
+            <Badge variant="secondary" className="ml-auto">
+              {filteredPeople.length} Personas
+            </Badge>
+          </div>
+
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Red</TableHead>
+                    <TableHead>Contacto</TableHead>
+                    <TableHead>Estado Civil</TableHead>
+                    <TableHead>Encuentro</TableHead>
+                    <TableHead>Nueva Vida</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                     <TableRow>
+                       <TableCell colSpan={6} className="h-24 text-center">
+                         <div className="flex justify-center items-center text-gray-500">
+                           <Loader2 className="w-6 h-6 animate-spin mr-2" /> Cargando...
+                         </div>
+                       </TableCell>
+                     </TableRow>
+                  ) : filteredPeople.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center text-gray-500">
+                        No se encontraron personas. ¡Importa datos para comenzar!
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredPeople.map((person) => (
+                      <TableRow key={person.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex flex-col">
+                            <span className="text-base font-bold text-gray-900">{person.first_name} {person.last_name}</span>
+                            <span className="text-xs text-gray-500">{person.gender} • {person.birth_year}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {person.network && (
+                            <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
+                              {person.network}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col text-sm">
+                            {person.email && <span className="text-gray-700">{person.email}</span>}
+                            {person.phone && <span className="text-gray-500">{person.phone}</span>}
+                          </div>
+                        </TableCell>
+                        <TableCell>{person.marital_status}</TableCell>
+                        <TableCell>
+                          {person.attended_encounter ? (
+                            <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200">Sí</Badge>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {person.attended_nueva_vida ? (
+                             <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 border-purple-200">Sí</Badge>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="suggestions" className="mt-6">
+          <SuggestionsManager />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent>
