@@ -774,6 +774,17 @@ export default function WeeklyServiceManager() {
                       className="text-sm"
                     />
                   )}
+                  {segment.fields.includes("ministry_leader") && (
+                    <div className="bg-purple-50 border border-purple-200 rounded p-2">
+                      <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
+                      <Input
+                        placeholder="Líder de Ministración"
+                        value={segment.data?.ministry_leader || ""}
+                        onChange={(e) => updateSegmentField("11:30am", idx, "ministry_leader", e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
+                  )}
                   {segment.fields.includes("presenter") && (
                     <Input
                       placeholder="Presentador"
