@@ -213,27 +213,14 @@ export default function WeeklyServiceManager() {
 
   const deleteAnnouncementMutation = useMutation({
     mutationFn: async (id) => {
-      try {
-        console.log('Attempting to delete announcement:', id);
-        const user = await base44.auth.me();
-        console.log('Current user:', user);
-        
-        // Try with service role
-        const result = await base44.asServiceRole.entities.AnnouncementItem.delete(id);
-        console.log('Delete result:', result);
-        return result;
-      } catch (error) {
-        console.error('Delete error details:', error);
-        throw error;
-      }
+      return await base44.entities.AnnouncementItem.delete(id);
     },
     onSuccess: () => {
-      console.log('Delete successful, invalidating queries');
       queryClient.invalidateQueries(['allAnnouncements']);
       queryClient.invalidateQueries(['dynamicAnnouncements']);
     },
     onError: (error) => {
-      console.error('Delete mutation error:', error);
+      console.error('Delete error:', error);
       alert('Error al eliminar: ' + (error.message || JSON.stringify(error)));
     }
   });
