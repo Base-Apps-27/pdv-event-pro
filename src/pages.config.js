@@ -16,6 +16,7 @@ import ServiceAnnouncementBuilder from './pages/ServiceAnnouncementBuilder';
 import ServiceQuickEditor from './pages/ServiceQuickEditor';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import CustomServiceBuilder from './pages/CustomServiceBuilder';
+import WeeklyServiceReport from './pages/WeeklyServiceReport';
 import __Layout from './Layout.jsx';
 
 
@@ -38,6 +39,7 @@ export const PAGES = {
     "ServiceQuickEditor": ServiceQuickEditor,
     "WeeklyServiceManager": WeeklyServiceManager,
     "CustomServiceBuilder": CustomServiceBuilder,
+    "WeeklyServiceReport": WeeklyServiceReport,
 }
 
 export const pagesConfig = {
