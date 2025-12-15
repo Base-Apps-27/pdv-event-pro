@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar, Clock, Save, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Eye, EyeOff, GripVertical } from "lucide-react";
+import { Calendar, Clock, Save, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Eye, EyeOff, GripVertical, Loader2, Check } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format } from "date-fns";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
@@ -473,10 +473,10 @@ export default function WeeklyServiceManager() {
         </div>
         <div className="flex gap-3 items-center">
             {saveServiceMutation.isPending && (
-              <span className="text-sm text-gray-500">Guardando...</span>
+              <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
             )}
             {!saveServiceMutation.isPending && !hasChanges && serviceData && (
-              <span className="text-sm text-green-600">✓ Guardado</span>
+              <Check className="w-4 h-4 text-green-600" />
             )}
             <Button variant="outline" onClick={handlePrint}>
               <Printer className="w-4 h-4 mr-2" />
