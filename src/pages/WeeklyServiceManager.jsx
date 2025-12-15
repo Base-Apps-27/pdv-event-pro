@@ -512,6 +512,15 @@ export default function WeeklyServiceManager() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
+                  <style>{`
+                    [data-disabled="true"] {
+                      color: #d1d5db !important;
+                      cursor: not-allowed !important;
+                    }
+                    [data-disabled="true"]:hover {
+                      background-color: transparent !important;
+                    }
+                  `}</style>
                   <Calendar
                     mode="single"
                     selected={selectedDate ? new Date(selectedDate) : undefined}
