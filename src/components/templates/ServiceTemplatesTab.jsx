@@ -150,7 +150,11 @@ export default function ServiceTemplatesTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className={`text-2xl font-bold ${color}`}>{title}</h3>
-        <Button size="sm" onClick={() => addSegment(service)} className="print:hidden">
+        <Button 
+          size="sm" 
+          onClick={() => addSegment(service)} 
+          className="bg-gray-900 hover:bg-gray-800 text-white print:hidden"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Añadir
         </Button>
