@@ -9,7 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar, Clock, Save, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Eye, EyeOff } from "lucide-react";
+import { Calendar, Clock, Save, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Eye, EyeOff, GripVertical } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { addMinutes, parse, format } from "date-fns";
 
 export default function WeeklyServiceManager() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -36,6 +38,7 @@ export default function WeeklyServiceManager() {
     has_video: false,
     date_of_occurrence: ""
   });
+  const [expandedSegments, setExpandedSegments] = useState({});
 
   const queryClient = useQueryClient();
 
@@ -328,6 +331,42 @@ export default function WeeklyServiceManager() {
     });
   };
 
+  const handleDragEnd = (result, timeSlot) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(serviceData[timeSlot]);
+    const [reordered] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reordered);
+    
+    setServiceData(prev => ({
+      ...prev,
+      [timeSlot]: items
+    }));
+    setHasChanges(true);
+  };
+
+  const toggleSegmentExpanded = (timeSlot, idx) => {
+    const key = `${timeSlot}-${idx}`;
+    setExpandedSegments(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  const calculateServiceTimes = (timeSlot) => {
+    const segments = serviceData?.[timeSlot] || [];
+    const totalDuration = segments.reduce((sum, seg) => sum + (seg.duration || 0), 0);
+    
+    const startTime = parse(timeSlot, "h:mma", new Date());
+    const endTime = addMinutes(startTime, totalDuration);
+    
+    return {
+      totalDuration,
+      startTime: format(startTime, "h:mm a"),
+      endTime: format(endTime, "h:mm a")
+    };
+  };
+
   if (!serviceData || isLoading) {
     return <div className="p-8">Cargando...</div>;
   }
@@ -384,77 +423,111 @@ export default function WeeklyServiceManager() {
       <div className="grid md:grid-cols-2 gap-6">
         {/* 9:30 AM Service */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-bold text-red-600">9:30 a.m.</h2>
-            <div className="flex gap-2">
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={copyTo1130}
-                className="print:hidden"
-              >
-                <Copy className="w-4 h-4 mr-2" />
-                Copiar a 11:30
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "9:30am" }));
-                  setShowSpecialDialog(true);
-                }}
-                className="print:hidden"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Especial
-              </Button>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <h2 className="text-3xl font-bold text-red-600">9:30 a.m.</h2>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={copyTo1130}
+                  className="print:hidden"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copiar a 11:30
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "9:30am" }));
+                    setShowSpecialDialog(true);
+                  }}
+                  className="print:hidden"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Especial
+                </Button>
+              </div>
+            </div>
+            <div className="text-sm text-gray-600 flex items-center gap-3">
+              <Badge variant="outline" className="bg-red-50">
+                {calculateServiceTimes("9:30am").totalDuration} min total
+              </Badge>
+              <span>Termina: {calculateServiceTimes("9:30am").endTime}</span>
             </div>
           </div>
 
-          {serviceData["9:30am"].map((segment, idx) => {
+          <DragDropContext onDragEnd={(result) => handleDragEnd(result, "9:30am")}>
+            <Droppable droppableId="9:30am">
+              {(provided) => (
+                <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+                  {serviceData["9:30am"].map((segment, idx) => {
             const timeSlot = "9:30am";
+            const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
+            
             if (segment.type === "special") {
               return (
-                <Card key={`${timeSlot}-special-${idx}`} className="border-l-4 border-l-orange-500 bg-orange-50">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-orange-600" />
-                        {segment.title}
-                        <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
-                      </CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeSpecialSegment(timeSlot, idx)}
-                        className="print:hidden"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-2 pt-3">
-                    <Textarea
-                      placeholder="Descripción / Notas"
-                      value={segment.data?.description || ""}
-                      onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
-                      className="text-sm"
-                      rows={2}
-                    />
-                  </CardContent>
-                </Card>
+                <Draggable key={`${timeSlot}-special-${idx}`} draggableId={`${timeSlot}-special-${idx}`} index={idx}>
+                  {(provided) => (
+                    <Card 
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      className="border-l-4 border-l-orange-500 bg-orange-50"
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <div {...provided.dragHandleProps} className="print:hidden">
+                              <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+                            </div>
+                            <Sparkles className="w-4 h-4 text-orange-600" />
+                            {segment.title}
+                            <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
+                          </CardTitle>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSpecialSegment(timeSlot, idx)}
+                            className="print:hidden"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-2 pt-3">
+                        <Textarea
+                          placeholder="Descripción / Notas"
+                          value={segment.data?.description || ""}
+                          onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
+                          className="text-sm"
+                          rows={2}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+                </Draggable>
               );
             }
             return (
-              <Card key={`${timeSlot}-${idx}`} className="border-l-4 border-l-red-500">
-                <CardHeader className="pb-2 bg-gray-50">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-red-600" />
-                    {segment.title}
-                    <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 pt-3">
+              <Draggable key={`${timeSlot}-${idx}`} draggableId={`${timeSlot}-${idx}`} index={idx}>
+                {(provided) => (
+                  <Card 
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    className="border-l-4 border-l-red-500"
+                  >
+                    <CardHeader className="pb-2 bg-gray-50">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <div {...provided.dragHandleProps} className="print:hidden">
+                          <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+                        </div>
+                        <Clock className="w-4 h-4 text-red-600" />
+                        {segment.title}
+                        <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 pt-3">
                   {segment.fields.includes("leader") && (
                     <Input
                       placeholder="Líder / Director"
@@ -524,10 +597,53 @@ export default function WeeklyServiceManager() {
                       ))}
                     </div>
                   )}
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleSegmentExpanded(timeSlot, idx)}
+                    className="w-full text-xs mt-2 print:hidden"
+                  >
+                    {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                    {isExpanded ? "Menos detalles" : "Más detalles"}
+                  </Button>
+
+                  {isExpanded && (
+                    <div className="space-y-2 pt-2 border-t">
+                      <Textarea
+                        placeholder="Notas de Proyección"
+                        value={segment.data?.projection_notes || ""}
+                        onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
+                        className="text-xs"
+                        rows={2}
+                      />
+                      <Textarea
+                        placeholder="Notas de Sonido"
+                        value={segment.data?.sound_notes || ""}
+                        onChange={(e) => updateSegmentField(timeSlot, idx, "sound_notes", e.target.value)}
+                        className="text-xs"
+                        rows={2}
+                      />
+                      <Textarea
+                        placeholder="Notas Generales"
+                        value={segment.data?.description_details || ""}
+                        onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
+                        className="text-xs"
+                        rows={2}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
+            )}
+          </Draggable>
             );
           })}
+          {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
 
           {/* Team Section */}
           <Card className="bg-green-50 border-green-200 print:hidden">
@@ -545,66 +661,100 @@ export default function WeeklyServiceManager() {
 
         {/* 11:30 AM Service */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-bold text-blue-600">11:30 a.m.</h2>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "11:30am" }));
-                setShowSpecialDialog(true);
-              }}
-              className="print:hidden"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Especial
-            </Button>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <h2 className="text-3xl font-bold text-blue-600">11:30 a.m.</h2>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "11:30am" }));
+                  setShowSpecialDialog(true);
+                }}
+                className="print:hidden"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Especial
+              </Button>
+            </div>
+            <div className="text-sm text-gray-600 flex items-center gap-3">
+              <Badge variant="outline" className="bg-blue-50">
+                {calculateServiceTimes("11:30am").totalDuration} min total
+              </Badge>
+              <span>Termina: {calculateServiceTimes("11:30am").endTime}</span>
+            </div>
           </div>
 
-          {serviceData["11:30am"].map((segment, idx) => {
+          <DragDropContext onDragEnd={(result) => handleDragEnd(result, "11:30am")}>
+            <Droppable droppableId="11:30am">
+              {(provided) => (
+                <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+                  {serviceData["11:30am"].map((segment, idx) => {
             const timeSlot = "11:30am";
+            const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
+            
             if (segment.type === "special") {
               return (
-                <Card key={`${timeSlot}-special-${idx}`} className="border-l-4 border-l-orange-500 bg-orange-50">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-orange-600" />
-                        {segment.title}
-                        <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
-                      </CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeSpecialSegment(timeSlot, idx)}
-                        className="print:hidden"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-2 pt-3">
-                    <Textarea
-                      placeholder="Descripción / Notas"
-                      value={segment.data?.description || ""}
-                      onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
-                      className="text-sm"
-                      rows={2}
-                    />
-                  </CardContent>
-                </Card>
+                <Draggable key={`${timeSlot}-special-${idx}`} draggableId={`${timeSlot}-special-${idx}`} index={idx}>
+                  {(provided) => (
+                    <Card 
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      className="border-l-4 border-l-orange-500 bg-orange-50"
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <div {...provided.dragHandleProps} className="print:hidden">
+                              <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+                            </div>
+                            <Sparkles className="w-4 h-4 text-orange-600" />
+                            {segment.title}
+                            <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
+                          </CardTitle>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSpecialSegment(timeSlot, idx)}
+                            className="print:hidden"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-2 pt-3">
+                        <Textarea
+                          placeholder="Descripción / Notas"
+                          value={segment.data?.description || ""}
+                          onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
+                          className="text-sm"
+                          rows={2}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+                </Draggable>
               );
             }
             return (
-              <Card key={`${timeSlot}-${idx}`} className="border-l-4 border-l-blue-500">
-                <CardHeader className="pb-2 bg-gray-50">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-blue-600" />
-                    {segment.title}
-                    <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 pt-3">
+              <Draggable key={`${timeSlot}-${idx}`} draggableId={`${timeSlot}-${idx}`} index={idx}>
+                {(provided) => (
+                  <Card 
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    className="border-l-4 border-l-blue-500"
+                  >
+                    <CardHeader className="pb-2 bg-gray-50">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <div {...provided.dragHandleProps} className="print:hidden">
+                          <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+                        </div>
+                        <Clock className="w-4 h-4 text-blue-600" />
+                        {segment.title}
+                        <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 pt-3">
                   {segment.fields.includes("leader") && (
                     <Input
                       placeholder="Líder / Director"
@@ -674,10 +824,53 @@ export default function WeeklyServiceManager() {
                       ))}
                     </div>
                   )}
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleSegmentExpanded(timeSlot, idx)}
+                    className="w-full text-xs mt-2 print:hidden"
+                  >
+                    {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                    {isExpanded ? "Menos detalles" : "Más detalles"}
+                  </Button>
+
+                  {isExpanded && (
+                    <div className="space-y-2 pt-2 border-t">
+                      <Textarea
+                        placeholder="Notas de Proyección"
+                        value={segment.data?.projection_notes || ""}
+                        onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
+                        className="text-xs"
+                        rows={2}
+                      />
+                      <Textarea
+                        placeholder="Notas de Sonido"
+                        value={segment.data?.sound_notes || ""}
+                        onChange={(e) => updateSegmentField(timeSlot, idx, "sound_notes", e.target.value)}
+                        className="text-xs"
+                        rows={2}
+                      />
+                      <Textarea
+                        placeholder="Notas Generales"
+                        value={segment.data?.description_details || ""}
+                        onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
+                        className="text-xs"
+                        rows={2}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
+            )}
+          </Draggable>
             );
           })}
+          {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
 
           {/* Team Section */}
           <Card className="bg-blue-50 border-blue-200 print:hidden">
