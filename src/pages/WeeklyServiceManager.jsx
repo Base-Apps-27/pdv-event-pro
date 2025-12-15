@@ -46,7 +46,6 @@ export default function WeeklyServiceManager() {
   const BLUEPRINT = {
     "9:30am": [
       { type: "worship", title: "Equipo de A&A", duration: 35, fields: ["leader", "songs"] },
-      { type: "ministry", title: "Ministración de Sanidad y Milagros", duration: 10, fields: ["leader"] },
       { type: "welcome", title: "Bienvenida", duration: 5, fields: ["presenter"] },
       { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse"] },
       { type: "message", title: "Mensaje", duration: 30, fields: ["preacher", "title", "verse"] },
@@ -54,7 +53,6 @@ export default function WeeklyServiceManager() {
     ],
     "11:30am": [
       { type: "worship", title: "Equipo de A&A", duration: 30, fields: ["leader", "songs"] },
-      { type: "ministry", title: "Ministración de Sanidad y Milagros", duration: 10, fields: ["leader"] },
       { type: "welcome", title: "Bienvenida", duration: 5, fields: ["presenter"] },
       { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse"] },
       { type: "message", title: "Mensaje", duration: 30, fields: ["preacher", "title", "verse"] }
