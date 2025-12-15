@@ -1489,7 +1489,25 @@ export default function WeeklyServiceManager() {
       <Dialog open={showAnnouncementDialog} onOpenChange={setShowAnnouncementDialog}>
         <DialogContent className="max-w-2xl bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingAnnouncement ? "Editar Anuncio" : "Nuevo Anuncio"}</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle>{editingAnnouncement ? "Editar Anuncio" : "Nuevo Anuncio"}</DialogTitle>
+              {editingAnnouncement && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (window.confirm('¿Eliminar este anuncio permanentemente?')) {
+                      deleteAnnouncementMutation.mutate(editingAnnouncement.id);
+                      setShowAnnouncementDialog(false);
+                    }
+                  }}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Eliminar
+                </Button>
+              )}
+            </div>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex gap-6 p-3 bg-gray-50 rounded-lg border">
