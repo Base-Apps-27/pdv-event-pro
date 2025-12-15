@@ -278,6 +278,7 @@ export default function CustomServiceBuilder() {
                 onChange={(e) => setServiceData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Ej. Servicio Especial de Navidad"
                 required
+                className="w-full"
               />
             </div>
             <div className="space-y-2">
@@ -287,6 +288,7 @@ export default function CustomServiceBuilder() {
                 value={serviceData.date}
                 onChange={(e) => setServiceData(prev => ({ ...prev, date: e.target.value }))}
                 required
+                className="w-full max-w-full"
               />
             </div>
           </div>

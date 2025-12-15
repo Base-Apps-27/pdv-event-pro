@@ -493,14 +493,14 @@ export default function WeeklyServiceManager() {
       <Card className="print:hidden">
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            <Calendar className="w-5 h-5 text-pdv-teal" />
-            <div className="flex-1">
+            <Calendar className="w-5 h-5 text-pdv-teal flex-shrink-0" />
+            <div className="flex-1 min-w-0">
               <Label>Fecha del Domingo</Label>
               <Input 
                 type="date" 
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="mt-1"
+                className="mt-1 w-full max-w-full"
               />
             </div>
           </div>
