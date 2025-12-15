@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
-import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, GripVertical } from "lucide-react";
+import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, GripVertical, ChevronUp, ChevronDown, Sparkles } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format } from "date-fns";
 
@@ -160,32 +160,38 @@ export default function CustomServiceBuilder() {
   };
 
   const addSegment = () => {
-    if (editingSegmentIdx !== null) {
-      const updated = [...serviceData.segments];
-      updated[editingSegmentIdx] = segmentForm;
-      setServiceData(prev => ({ ...prev, segments: updated }));
-    } else {
-      setServiceData(prev => ({
-        ...prev,
-        segments: [...prev.segments, segmentForm]
-      }));
-    }
-    setShowSegmentDialog(false);
-    setEditingSegmentIdx(null);
-    setSegmentForm(getDefaultSegmentForm());
-  };
-
-  const removeSegment = (idx) => {
     setServiceData(prev => ({
       ...prev,
-      segments: prev.segments.filter((_, i) => i !== idx)
+      segments: [...prev.segments, getDefaultSegmentForm()]
     }));
   };
 
-  const editSegment = (idx) => {
-    setEditingSegmentIdx(idx);
-    setSegmentForm(serviceData.segments[idx]);
-    setShowSegmentDialog(true);
+  const removeSegment = (idx) => {
+    if (window.confirm('¿Eliminar este segmento?')) {
+      setServiceData(prev => ({
+        ...prev,
+        segments: prev.segments.filter((_, i) => i !== idx)
+      }));
+    }
+  };
+
+  const updateSegmentField = (idx, field, value) => {
+    setServiceData(prev => {
+      const updated = { ...prev };
+      if (field === 'songs') {
+        updated.segments[idx].songs = value;
+      } else {
+        updated.segments[idx][field] = value;
+      }
+      return updated;
+    });
+  };
+
+  const toggleSegmentExpanded = (idx) => {
+    setExpandedSegments(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }));
   };
 
   const handleDragEnd = (result) => {
@@ -334,11 +340,7 @@ export default function CustomServiceBuilder() {
             </div>
           </div>
           <Button
-            onClick={() => {
-              setEditingSegmentIdx(null);
-              setSegmentForm(getDefaultSegmentForm());
-              setShowSegmentDialog(true);
-            }}
+            onClick={addSegment}
             className="bg-pdv-teal text-white print:hidden"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -350,59 +352,177 @@ export default function CustomServiceBuilder() {
           <Droppable droppableId="segments">
             {(provided) => (
               <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
-                {serviceData.segments.map((segment, idx) => (
-                  <Draggable key={`seg-${idx}`} draggableId={`seg-${idx}`} index={idx}>
-                    {(provided) => (
-                      <Card
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className="border-l-4 border-l-pdv-teal"
-                      >
-                        <CardHeader className="pb-2 bg-gray-50">
-                          <div className="flex items-center justify-between">
+                {serviceData.segments.map((segment, idx) => {
+                  const isExpanded = expandedSegments[idx];
+                  const isSpecial = segment.type === "Especial";
+                  
+                  return (
+                    <Draggable key={`seg-${idx}`} draggableId={`seg-${idx}`} index={idx}>
+                      {(provided) => (
+                        <Card
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className={`border-l-4 ${isSpecial ? 'border-l-orange-500 bg-orange-50' : 'border-l-pdv-teal'}`}
+                        >
+                          <CardHeader className="pb-2 bg-gray-50">
                             <CardTitle className="text-lg flex items-center gap-2">
                               <div {...provided.dragHandleProps} className="print:hidden">
                                 <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
                               </div>
-                              <Clock className="w-4 h-4 text-pdv-teal" />
-                              {segment.title}
+                              {isSpecial ? <Sparkles className="w-4 h-4 text-orange-600" /> : <Clock className="w-4 h-4 text-pdv-teal" />}
+                              <Input
+                                value={segment.title}
+                                onChange={(e) => updateSegmentField(idx, 'title', e.target.value)}
+                                className="text-lg font-bold border-0 shadow-none p-0 h-auto focus-visible:ring-0"
+                                placeholder="Título del segmento"
+                              />
                               <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
-                            </CardTitle>
-                            <div className="flex gap-2 print:hidden">
-                              <Button variant="ghost" size="sm" onClick={() => editSegment(idx)}>
-                                Editar
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => removeSegment(idx)}>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => removeSegment(idx)}
+                                className="print:hidden"
+                              >
                                 <Trash2 className="w-4 h-4 text-red-500" />
                               </Button>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2 pt-3">
+                            <div className="grid md:grid-cols-2 gap-2">
+                              <div className="space-y-2">
+                                <Label className="text-xs">Presentador</Label>
+                                <AutocompleteInput
+                                  type="presenter"
+                                  value={segment.presenter}
+                                  onChange={(e) => updateSegmentField(idx, 'presenter', e.target.value)}
+                                  placeholder="Nombre del presentador"
+                                  className="text-sm"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs">Traductor</Label>
+                                <AutocompleteInput
+                                  type="translator"
+                                  value={segment.translator}
+                                  onChange={(e) => updateSegmentField(idx, 'translator', e.target.value)}
+                                  placeholder="Nombre del traductor"
+                                  className="text-sm"
+                                />
+                              </div>
                             </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-3">
-                          <div className="text-sm space-y-1">
-                            {segment.presenter && <p><strong>Presentador:</strong> {segment.presenter}</p>}
-                            {segment.translator && <p><strong>Traductor:</strong> {segment.translator}</p>}
-                            {segment.preacher && <p><strong>Predicador:</strong> {segment.preacher}</p>}
-                            {segment.leader && <p><strong>Líder:</strong> {segment.leader}</p>}
-                            {segment.messageTitle && <p><strong>Mensaje:</strong> {segment.messageTitle}</p>}
-                            {segment.verse && <p><strong>Verso:</strong> {segment.verse}</p>}
+
+                            <div className="grid md:grid-cols-2 gap-2">
+                              <div className="space-y-2">
+                                <Label className="text-xs">Predicador</Label>
+                                <AutocompleteInput
+                                  type="preacher"
+                                  value={segment.preacher}
+                                  onChange={(e) => updateSegmentField(idx, 'preacher', e.target.value)}
+                                  placeholder="Nombre del predicador"
+                                  className="text-sm"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs">Líder / Director</Label>
+                                <AutocompleteInput
+                                  type="leader"
+                                  value={segment.leader}
+                                  onChange={(e) => updateSegmentField(idx, 'leader', e.target.value)}
+                                  placeholder="Nombre del líder"
+                                  className="text-sm"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-xs">Título del Mensaje</Label>
+                              <AutocompleteInput
+                                type="messageTitle"
+                                value={segment.messageTitle}
+                                onChange={(e) => updateSegmentField(idx, 'messageTitle', e.target.value)}
+                                placeholder="Título del mensaje"
+                                className="text-sm"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-xs">Verso / Cita Bíblica</Label>
+                              <Input
+                                value={segment.verse}
+                                onChange={(e) => updateSegmentField(idx, 'verse', e.target.value)}
+                                placeholder="Ej. Juan 3:16"
+                                className="text-sm"
+                              />
+                            </div>
+
                             {segment.songs && segment.songs.length > 0 && (
-                              <div>
-                                <strong>Canciones:</strong>
-                                <ul className="ml-4 list-disc">
-                                  {segment.songs.map((song, sIdx) => (
-                                    <li key={sIdx}>{song.title} {song.lead && `(${song.lead})`}</li>
-                                  ))}
-                                </ul>
+                              <div className="space-y-1">
+                                <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
+                                {segment.songs.map((song, sIdx) => (
+                                  <div key={sIdx} className="grid grid-cols-2 gap-2">
+                                    <AutocompleteInput
+                                      type="songTitle"
+                                      placeholder={`Canción ${sIdx + 1}`}
+                                      value={song.title}
+                                      onChange={(e) => {
+                                        const newSongs = [...segment.songs];
+                                        newSongs[sIdx].title = e.target.value;
+                                        updateSegmentField(idx, 'songs', newSongs);
+                                      }}
+                                      className="text-xs"
+                                    />
+                                    <AutocompleteInput
+                                      type="leader"
+                                      placeholder="Líder"
+                                      value={song.lead}
+                                      onChange={(e) => {
+                                        const newSongs = [...segment.songs];
+                                        newSongs[sIdx].lead = e.target.value;
+                                        updateSegmentField(idx, 'songs', newSongs);
+                                      }}
+                                      className="text-xs"
+                                    />
+                                  </div>
+                                ))}
                               </div>
                             )}
-                            {segment.description && <p className="text-gray-600 mt-2">{segment.description}</p>}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </Draggable>
-                ))}
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleSegmentExpanded(idx)}
+                              className="w-full text-xs mt-2 print:hidden"
+                            >
+                              {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                              {isExpanded ? "Menos detalles" : "Más detalles"}
+                            </Button>
+
+                            {isExpanded && (
+                              <div className="space-y-2 pt-2 border-t">
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
+                                  <Input
+                                    type="number"
+                                    value={segment.duration || 0}
+                                    onChange={(e) => updateSegmentField(idx, 'duration', parseInt(e.target.value) || 0)}
+                                    className="text-xs w-24"
+                                  />
+                                </div>
+                                <Textarea
+                                  placeholder="Descripción / Notas adicionales..."
+                                  value={segment.description}
+                                  onChange={(e) => updateSegmentField(idx, 'description', e.target.value)}
+                                  className="text-xs"
+                                  rows={3}
+                                />
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      )}
+                    </Draggable>
+                  );
+                })}
                 {provided.placeholder}
               </div>
             )}
@@ -461,114 +581,7 @@ export default function CustomServiceBuilder() {
         </CardContent>
       </Card>
 
-      {/* Segment Dialog */}
-      <Dialog open={showSegmentDialog} onOpenChange={setShowSegmentDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
-          <DialogHeader>
-            <DialogTitle>{editingSegmentIdx !== null ? 'Editar Segmento' : 'Nuevo Segmento'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Título del Segmento *</Label>
-                <Input
-                  value={segmentForm.title}
-                  onChange={(e) => setSegmentForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Ej. Alabanza y Adoración"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Duración (minutos) *</Label>
-                <Input
-                  type="number"
-                  value={segmentForm.duration}
-                  onChange={(e) => setSegmentForm(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))}
-                />
-              </div>
-            </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Presentador</Label>
-                <AutocompleteInput
-                  type="presenter"
-                  value={segmentForm.presenter}
-                  onChange={(e) => setSegmentForm(prev => ({ ...prev, presenter: e.target.value }))}
-                  placeholder="Nombre del presentador"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Traductor</Label>
-                <AutocompleteInput
-                  type="translator"
-                  value={segmentForm.translator}
-                  onChange={(e) => setSegmentForm(prev => ({ ...prev, translator: e.target.value }))}
-                  placeholder="Nombre del traductor"
-                />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Predicador</Label>
-                <AutocompleteInput
-                  type="preacher"
-                  value={segmentForm.preacher}
-                  onChange={(e) => setSegmentForm(prev => ({ ...prev, preacher: e.target.value }))}
-                  placeholder="Nombre del predicador"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Líder/Director</Label>
-                <AutocompleteInput
-                  type="leader"
-                  value={segmentForm.leader}
-                  onChange={(e) => setSegmentForm(prev => ({ ...prev, leader: e.target.value }))}
-                  placeholder="Nombre del líder"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Título del Mensaje</Label>
-              <AutocompleteInput
-                type="messageTitle"
-                value={segmentForm.messageTitle}
-                onChange={(e) => setSegmentForm(prev => ({ ...prev, messageTitle: e.target.value }))}
-                placeholder="Título del mensaje o enseñanza"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Verso / Cita Bíblica</Label>
-              <Input
-                value={segmentForm.verse}
-                onChange={(e) => setSegmentForm(prev => ({ ...prev, verse: e.target.value }))}
-                placeholder="Ej. Juan 3:16"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Descripción / Notas</Label>
-              <Textarea
-                value={segmentForm.description}
-                onChange={(e) => setSegmentForm(prev => ({ ...prev, description: e.target.value }))}
-                rows={3}
-                placeholder="Descripción adicional o notas especiales..."
-              />
-            </div>
-
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowSegmentDialog(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={addSegment} className="bg-pdv-teal text-white">
-                {editingSegmentIdx !== null ? 'Actualizar' : 'Añadir'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
