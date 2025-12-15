@@ -1276,23 +1276,21 @@ export default function WeeklyServiceManager() {
                         >
                           <Edit className="w-3 h-3" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => {
+                        <button
+                          type="button"
+                          className="h-7 w-7 flex items-center justify-center hover:bg-red-50 rounded"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('Delete clicked for:', ann.id);
                             if (window.confirm('¿Eliminar este anuncio?')) {
+                              console.log('Confirmed, deleting...');
                               deleteAnnouncementMutation.mutate(ann.id);
                             }
                           }}
-                          disabled={deleteAnnouncementMutation.isPending}
                         >
-                          {deleteAnnouncementMutation.isPending ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-3 h-3 text-red-500" />
-                          )}
-                        </Button>
+                          <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" />
+                        </button>
                       </div>
                     </div>
                     <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap mb-2">{ann.content}</p>
@@ -1382,23 +1380,21 @@ export default function WeeklyServiceManager() {
                           >
                             <Edit className="w-3 h-3" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => {
+                          <button
+                            type="button"
+                            className="h-7 w-7 flex items-center justify-center hover:bg-red-50 rounded"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('Delete clicked for:', ann.id);
                               if (window.confirm('¿Eliminar este anuncio?')) {
+                                console.log('Confirmed, deleting...');
                                 deleteAnnouncementMutation.mutate(ann.id);
                               }
                             }}
-                            disabled={deleteAnnouncementMutation.isPending}
                           >
-                            {deleteAnnouncementMutation.isPending ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-3 h-3 text-red-500" />
-                            )}
-                          </Button>
+                            <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" />
+                          </button>
                         </div>
                       )}
                     </div>
