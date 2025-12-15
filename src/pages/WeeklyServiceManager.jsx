@@ -48,14 +48,14 @@ export default function WeeklyServiceManager() {
       { type: "worship", title: "Equipo de A&A", duration: 35, fields: ["leader", "songs", "ministry_leader"] },
       { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter"] },
       { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse"] },
-      { type: "message", title: "Mensaje", duration: 30, fields: ["preacher", "title", "verse"] },
+      { type: "message", title: "Mensaje", duration: 45, fields: ["preacher", "title", "verse"] },
       { type: "break", title: "RECESO", duration: 30, fields: [] }
     ],
     "11:30am": [
       { type: "worship", title: "Equipo de A&A", duration: 30, fields: ["leader", "songs", "ministry_leader", "translator"] },
       { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter", "translator"] },
       { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse", "translator"] },
-      { type: "message", title: "Mensaje", duration: 30, fields: ["preacher", "title", "verse", "translator"] }
+      { type: "message", title: "Mensaje", duration: 45, fields: ["preacher", "title", "verse", "translator"] }
     ]
   };
 
@@ -360,10 +360,18 @@ export default function WeeklyServiceManager() {
     const startTime = parse(timeSlot, "h:mma", new Date());
     const endTime = addMinutes(startTime, totalDuration);
     
+    // Target durations
+    const targetDuration = timeSlot === "9:30am" ? 90 : 90; // Both should be 90 min
+    const isOverage = totalDuration > targetDuration;
+    const overageAmount = totalDuration - targetDuration;
+    
     return {
       totalDuration,
       startTime: format(startTime, "h:mm a"),
-      endTime: format(endTime, "h:mm a")
+      endTime: format(endTime, "h:mm a"),
+      isOverage,
+      overageAmount,
+      targetDuration
     };
   };
 
@@ -450,11 +458,16 @@ export default function WeeklyServiceManager() {
                 </Button>
               </div>
             </div>
-            <div className="text-sm text-gray-600 flex items-center gap-3">
-              <Badge variant="outline" className="bg-red-50">
+            <div className="text-sm text-gray-600 flex items-center gap-3 flex-wrap">
+              <Badge variant="outline" className={calculateServiceTimes("9:30am").isOverage ? "bg-amber-100 border-amber-400 text-amber-900 font-bold" : "bg-red-50"}>
                 {calculateServiceTimes("9:30am").totalDuration} min total
+                {calculateServiceTimes("9:30am").isOverage && ` (+${calculateServiceTimes("9:30am").overageAmount} min)`}
               </Badge>
               <span>Termina: {calculateServiceTimes("9:30am").endTime}</span>
+              <span className="text-xs text-gray-500">(Meta: 11:00am)</span>
+              {calculateServiceTimes("9:30am").isOverage && (
+                <Badge className="bg-amber-600 text-white text-xs">⚠ Sobrepasa</Badge>
+              )}
             </div>
           </div>
 
@@ -621,6 +634,23 @@ export default function WeeklyServiceManager() {
 
                   {isExpanded && (
                     <div className="space-y-2 pt-2 border-t">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
+                        <Input
+                          type="number"
+                          value={segment.duration || 0}
+                          onChange={(e) => {
+                            const newDuration = parseInt(e.target.value) || 0;
+                            setServiceData(prev => {
+                              const updated = { ...prev };
+                              updated[timeSlot][idx].duration = newDuration;
+                              return updated;
+                            });
+                            setHasChanges(true);
+                          }}
+                          className="text-xs w-24"
+                        />
+                      </div>
                       <Textarea
                         placeholder="Notas de Proyección"
                         value={segment.data?.projection_notes || ""}
@@ -688,11 +718,16 @@ export default function WeeklyServiceManager() {
                 Especial
               </Button>
             </div>
-            <div className="text-sm text-gray-600 flex items-center gap-3">
-              <Badge variant="outline" className="bg-blue-50">
+            <div className="text-sm text-gray-600 flex items-center gap-3 flex-wrap">
+              <Badge variant="outline" className={calculateServiceTimes("11:30am").isOverage ? "bg-amber-100 border-amber-400 text-amber-900 font-bold" : "bg-blue-50"}>
                 {calculateServiceTimes("11:30am").totalDuration} min total
+                {calculateServiceTimes("11:30am").isOverage && ` (+${calculateServiceTimes("11:30am").overageAmount} min)`}
               </Badge>
               <span>Termina: {calculateServiceTimes("11:30am").endTime}</span>
+              <span className="text-xs text-gray-500">(Meta: 1:00pm)</span>
+              {calculateServiceTimes("11:30am").isOverage && (
+                <Badge className="bg-amber-600 text-white text-xs">⚠ Sobrepasa</Badge>
+              )}
             </div>
           </div>
 
@@ -888,6 +923,23 @@ export default function WeeklyServiceManager() {
 
                   {isExpanded && (
                     <div className="space-y-2 pt-2 border-t">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
+                        <Input
+                          type="number"
+                          value={segment.duration || 0}
+                          onChange={(e) => {
+                            const newDuration = parseInt(e.target.value) || 0;
+                            setServiceData(prev => {
+                              const updated = { ...prev };
+                              updated[timeSlot][idx].duration = newDuration;
+                              return updated;
+                            });
+                            setHasChanges(true);
+                          }}
+                          className="text-xs w-24"
+                        />
+                      </div>
                       {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
                         <div className="bg-blue-50 border border-blue-200 rounded p-2">
                           <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
