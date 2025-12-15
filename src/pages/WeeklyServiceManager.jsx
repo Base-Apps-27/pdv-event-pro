@@ -478,29 +478,30 @@ export default function WeeklyServiceManager() {
     <div className="p-6 md:p-8 space-y-8 print:p-0">
       <style>{`
         @media print {
-          @page { size: letter; margin: 0.5in; }
+          @page { size: letter; margin: 0.4in 0.5in; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
           .print-header {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #1F8A70;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #d1d5db;
           }
 
           .print-logo {
-            width: 80px;
-            height: 80px;
+            width: 50px;
+            height: 50px;
             background: linear-gradient(135deg, #1F8A70 0%, #8DC63F 100%);
-            border-radius: 8px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
+            flex-shrink: 0;
           }
 
           .print-title {
@@ -510,39 +511,42 @@ export default function WeeklyServiceManager() {
           }
 
           .print-title h1 {
-            font-size: 28px;
+            font-size: 22px;
             font-weight: bold;
-            margin: 0;
+            margin: 0 0 2px 0;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
           }
 
           .print-title p {
-            font-size: 16px;
-            color: #1F8A70;
+            font-size: 13px;
+            color: #2563eb;
             font-weight: bold;
-            margin: 4px 0 0 0;
+            margin: 0;
           }
 
           .print-team-box {
             text-align: right;
-            font-size: 9px;
-            line-height: 1.3;
+            font-size: 10px;
+            line-height: 1.4;
+            min-width: 140px;
+            flex-shrink: 0;
           }
 
           .print-team-box div {
-            margin-bottom: 2px;
+            margin-bottom: 1px;
           }
 
           .print-team-label {
             font-weight: bold;
-            color: #1F8A70;
+            color: #000;
           }
 
           .print-two-columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 16px;
+            margin-bottom: 0;
           }
 
           .print-service-column {
@@ -550,12 +554,12 @@ export default function WeeklyServiceManager() {
           }
 
           .print-service-time {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             color: #dc2626;
-            margin-bottom: 4px;
-            border-bottom: 2px solid #dc2626;
+            margin-bottom: 6px;
             padding-bottom: 2px;
+            border-bottom: 1.5px solid #dc2626;
           }
 
           .print-service-column.right .print-service-time {
@@ -564,15 +568,17 @@ export default function WeeklyServiceManager() {
           }
 
           .print-segment {
-            margin-bottom: 8px;
-            font-size: 10px;
-            line-height: 1.4;
+            margin-bottom: 6px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 9px;
+            line-height: 1.3;
           }
 
           .print-segment-time {
             font-weight: bold;
             color: #dc2626;
-            font-size: 11px;
+            font-size: 10px;
           }
 
           .print-service-column.right .print-segment-time {
@@ -582,92 +588,107 @@ export default function WeeklyServiceManager() {
           .print-segment-title {
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 10px;
+            font-size: 9px;
             margin-left: 4px;
+            color: #000;
           }
 
           .print-segment-detail {
-            margin-left: 12px;
-            font-size: 9px;
+            margin-left: 8px;
+            font-size: 8px;
             color: #374151;
+            line-height: 1.2;
           }
 
           .print-segment-songs {
-            margin-left: 12px;
-            font-size: 9px;
-            line-height: 1.3;
+            margin-left: 8px;
+            font-size: 8px;
+            line-height: 1.2;
           }
 
           .print-receso {
-            background: #f3f4f6;
-            padding: 8px;
-            margin: 8px 0;
-            border-radius: 4px;
+            background: #f9fafb;
+            padding: 6px;
+            margin: 6px 0;
             text-align: center;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
             color: #6b7280;
-          }
-
-          .print-team-section {
-            margin-top: 12px;
-            padding-top: 8px;
             border-top: 1px solid #d1d5db;
-            font-size: 8px;
-            line-height: 1.4;
-          }
-
-          .print-team-row {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 4px;
-            margin-bottom: 2px;
+            border-bottom: 1px solid #d1d5db;
           }
 
           .print-announcements {
             break-before: page;
-            padding-top: 40px;
+            padding-top: 0;
           }
 
           .print-announcements-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #d1d5db;
           }
 
           .print-announcements-title {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+          }
+
+          .print-announcement-list {
+            padding-left: 30px;
           }
 
           .print-announcement-item {
-            margin-bottom: 16px;
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
             break-inside: avoid;
+            font-size: 10px;
+            line-height: 1.4;
+          }
+
+          .print-announcement-item:last-child {
+            border-bottom: none;
+          }
+
+          .print-announcement-header {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 4px;
           }
 
           .print-announcement-title {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            margin-bottom: 4px;
-            color: #1F8A70;
+            color: #000;
+            text-transform: uppercase;
+          }
+
+          .print-announcement-date {
+            font-size: 9px;
+            font-weight: bold;
+            color: #2563eb;
           }
 
           .print-announcement-content {
-            font-size: 10px;
-            line-height: 1.4;
-            margin-bottom: 4px;
+            font-size: 9px;
+            line-height: 1.3;
+            color: #374151;
+            margin-bottom: 3px;
           }
 
           .print-announcement-instructions {
-            font-size: 9px;
+            font-size: 8px;
             background: #fef3c7;
-            padding: 6px;
-            border-radius: 4px;
+            padding: 4px 6px;
             margin-top: 4px;
+            font-style: italic;
+            border-left: 2px solid #f59e0b;
           }
 
           .print-footer {
@@ -675,13 +696,13 @@ export default function WeeklyServiceManager() {
             bottom: 0;
             left: 0;
             right: 0;
-            height: 40px;
+            height: 35px;
             background: linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             text-transform: lowercase;
           }
@@ -694,14 +715,14 @@ export default function WeeklyServiceManager() {
         <div className="print-header">
           <div className="print-logo">P</div>
           <div className="print-title">
-            <h1>Orden de Servicio</h1>
+            <h1>ORDEN DE SERVICIO</h1>
             <p>Domingo {formatDate(new Date(selectedDate), "d 'de' MMMM, yyyy", { locale: es })}</p>
           </div>
           <div className="print-team-box">
-            <div><span className="print-team-label">Coordinador(a):</span> {serviceData?.coordinators?.["9:30am"] || ""}</div>
-            <div><span className="print-team-label">Ujier:</span> {serviceData?.ujieres?.["9:30am"]?.split(',')[0] || ""}</div>
+            <div><span className="print-team-label">Coordinador(a):</span> {serviceData?.coordinators?.["9:30am"] || serviceData?.coordinators?.["11:30am"] || ""}</div>
+            <div><span className="print-team-label">Ujier:</span> {serviceData?.ujieres?.["9:30am"] || serviceData?.ujieres?.["11:30am"] || ""}</div>
             <div><span className="print-team-label">Sonido:</span> {serviceData?.sound?.["9:30am"] || ""}</div>
-            <div><span className="print-team-label">Luces:</span> {serviceData?.luces?.["9:30am"] || ""}</div>
+            <div><span className="print-team-label">Luces:</span> {serviceData?.luces?.["9:30am"] || serviceData?.luces?.["11:30am"] || ""}</div>
           </div>
         </div>
 
@@ -790,24 +811,7 @@ export default function WeeklyServiceManager() {
 
             {/* Receso for 9:30 */}
             <div className="print-receso">
-              11:00am a 11:30am<br/>
-              <strong>RECESO</strong>
-            </div>
-
-            {/* Team Info */}
-            <div className="print-team-section">
-              <div className="print-team-row">
-                <strong>SONIDO 9:30AM:</strong>
-                <span>{serviceData?.sound?.["9:30am"] || ""}</span>
-              </div>
-              <div className="print-team-row">
-                <strong>MC 1:</strong>
-                <span>{serviceData?.ujieres?.["9:30am"]?.split(',')[0] || ""}</span>
-              </div>
-              <div className="print-team-row">
-                <strong>MC 2:</strong>
-                <span>{serviceData?.ujieres?.["9:30am"]?.split(',')[1] || ""}</span>
-              </div>
+              11:00am a 11:30am - RECESO
             </div>
           </div>
 
@@ -897,56 +901,42 @@ export default function WeeklyServiceManager() {
                 </div>
               );
             })}
-
-            {/* Team Info */}
-            <div className="print-team-section">
-              <div className="print-team-row">
-                <strong>SONIDO 11:30AM:</strong>
-                <span>{serviceData?.sound?.["11:30am"] || ""}</span>
-              </div>
-              <div className="print-team-row">
-                <strong>MC 1:</strong>
-                <span>{serviceData?.ujieres?.["11:30am"]?.split(',')[0] || ""}</span>
-              </div>
-              <div className="print-team-row">
-                <strong>MC 2:</strong>
-                <span>{serviceData?.ujieres?.["11:30am"]?.split(',')[1] || ""}</span>
-              </div>
-            </div>
           </div>
         </div>
 
         {/* Announcements Page */}
         <div className="print-announcements">
           <div className="print-announcements-header">
-            <div className="print-logo" style={{ margin: '0 auto 16px', width: '80px', height: '80px' }}>P</div>
             <div className="print-announcements-title">ANUNCIOS</div>
-            <p style={{ fontSize: '14px', color: '#1F8A70', fontWeight: 'bold' }}>
+            <p style={{ fontSize: '13px', color: '#2563eb', fontWeight: 'bold', margin: 0 }}>
               Domingo {formatDate(new Date(selectedDate), "d 'de' MMMM, yyyy", { locale: es })}
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="print-announcement-list">
             {[...fixedAnnouncements, ...dynamicAnnouncements]
               .filter(ann => selectedAnnouncements.includes(ann.id))
-              .map(ann => (
+              .map((ann, idx) => (
                 <div key={ann.id} className="print-announcement-item">
-                  <div className="print-announcement-title">
-                    {ann.isEvent ? ann.name : ann.title}
-                    {(ann.has_video || ann.announcement_has_video) && ' 📹'}
-                  </div>
-                  {(ann.date_of_occurrence || ann.start_date) && (
-                    <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#2563eb', marginBottom: '4px' }}>
-                      📅 {ann.date_of_occurrence || ann.start_date}
-                      {ann.end_date && ` - ${ann.end_date}`}
+                  <div className="print-announcement-header">
+                    <span style={{ fontSize: '12px', color: '#999' }}>📢</span>
+                    <div className="print-announcement-title">
+                      {ann.isEvent ? ann.name : ann.title}
+                      {(ann.has_video || ann.announcement_has_video) && ' 📹'}
                     </div>
-                  )}
+                    {(ann.date_of_occurrence || ann.start_date) && (
+                      <div className="print-announcement-date">
+                        {ann.date_of_occurrence || ann.start_date}
+                        {ann.end_date && ` - ${ann.end_date}`}
+                      </div>
+                    )}
+                  </div>
                   <div className="print-announcement-content">
                     {ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content}
                   </div>
                   {ann.instructions && (
                     <div className="print-announcement-instructions">
-                      <strong>Instrucciones:</strong> {ann.instructions}
+                      Instrucciones: {ann.instructions}
                     </div>
                   )}
                 </div>
