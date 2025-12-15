@@ -356,7 +356,7 @@ export default function WeeklyServiceManager() {
   const calculateServiceTimes = (timeSlot) => {
     const segments = serviceData?.[timeSlot] || [];
     const totalDuration = segments
-      .filter(seg => seg.type !== 'break')
+      .filter(seg => seg.type !== 'break' && seg.type !== 'ministry')
       .reduce((sum, seg) => sum + (seg.duration || 0), 0);
     
     const startTime = parse(timeSlot, "h:mma", new Date());
