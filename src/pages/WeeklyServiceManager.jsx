@@ -632,7 +632,7 @@ export default function WeeklyServiceManager() {
                     <CardContent className="space-y-2 pt-3">
                   {segment.fields.includes("leader") && (
                     <AutocompleteInput
-                      type="leader"
+                      type="worshipLeader"
                       placeholder="Líder / Director"
                       value={segment.data?.leader || ""}
                       onChange={(e) => updateSegmentField("9:30am", idx, "leader", e.target.value)}
@@ -700,7 +700,126 @@ export default function WeeklyServiceManager() {
                               updateSegmentField("9:30am", idx, "songs", newSongs);
                             }}
                             className="text-xs"
-                          />
+                            />
+                            </div>
+                            ))}
+                            </div>
+                            )}
+                            {segment.fields.includes("ministry_leader") && (
+                            <div className="bg-purple-50 border border-purple-200 rounded p-2">
+                            <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
+                            <AutocompleteInput
+                            type="ministryLeader"
+                            placeholder="Líder de Ministración"
+                            value={segment.data?.ministry_leader || ""}
+                            onChange={(e) => updateSegmentField("9:30am", idx, "ministry_leader", e.target.value)}
+                            className="text-sm"
+                            />
+                            </div>
+                            )}
+                            {segment.fields.includes("translator") && segment.type === "worship" && (
+                            <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                            <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) - Ministración, Anuncios, Ofrenda</Label>
+                            <AutocompleteInput
+                            type="translator"
+                            placeholder="Nombre del traductor"
+                            value={segment.data?.translator || ""}
+                            onChange={(e) => updateSegmentField("9:30am", idx, "translator", e.target.value)}
+                            className="text-sm"
+                            />
+                            </div>
+                            )}
+
+                            {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
+                            <div className="text-xs text-blue-600 italic flex items-center gap-1 mt-1">
+                            🌐 Traductor(a): {segment.data?.translator || serviceData["9:30am"].find(s => s.type === "worship")?.data?.translator || "Por definir"}
+                            </div>
+                            )}
+
+                            {segment.fields.includes("translator") && segment.type === "message" && (
+                            <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                            <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) del Mensaje</Label>
+                            <AutocompleteInput
+                            type="translator"
+                            placeholder="Nombre del traductor (puede ser el mismo)"
+                            value={segment.data?.translator || ""}
+                            onChange={(e) => updateSegmentField("9:30am", idx, "translator", e.target.value)}
+                            className="text-sm"
+                            />
+                            </div>
+                            )}
+
+                            <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleSegmentExpanded(timeSlot, idx)}
+                            className="w-full text-xs mt-2 print:hidden"
+                            >
+                            {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                            {isExpanded ? "Menos detalles" : "Más detalles"}
+                            </Button>
+
+                            {isExpanded && (
+                            <div className="space-y-2 pt-2 border-t">
+                            <div className="space-y-1">
+                            <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
+                            <Input
+                            type="number"
+                            value={segment.duration || 0}
+                            onChange={(e) => {
+                            const newDuration = parseInt(e.target.value) || 0;
+                            setServiceData(prev => {
+                              const updated = { ...prev };
+                              updated[timeSlot][idx].duration = newDuration;
+                              return updated;
+                            });
+                            setHasChanges(true);
+                            }}
+                            className="text-xs w-24"
+                            />
+                            </div>
+
+                            {/* Coordinator Actions */}
+                            {segment.actions && segment.actions.length > 0 && (
+                            <div className="bg-amber-50 border border-amber-200 rounded p-2">
+                            <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
+                            <div className="space-y-1">
+                            {segment.actions.map((action, aIdx) => (
+                              <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
+                                <span className="font-semibold">•</span>
+                                <span>
+                                  {action.label} 
+                                  {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
+                                  {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
+                                  {action.timing === "before_start" && ` (antes de iniciar)`}
+                                </span>
+                              </div>
+                            ))}
+                            </div>
+                            </div>
+                            )}
+
+                            <Textarea
+                            placeholder="Notas de Proyección"
+                            value={segment.data?.projection_notes || ""}
+                            onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
+                            className="text-xs"
+                            rows={2}
+                            />
+                            <Textarea
+                            placeholder="Notas de Sonido"
+                            value={segment.data?.sound_notes || ""}
+                            onChange={(e) => updateSegmentField(timeSlot, idx, "sound_notes", e.target.value)}
+                            className="text-xs"
+                            rows={2}
+                            />
+                            <Textarea
+                            placeholder="Notas Generales"
+                            value={segment.data?.description_details || ""}
+                            onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
+                            className="text-xs"
+                            rows={2}
+                            />
                         </div>
                       ))}
                     </div>
@@ -709,7 +828,7 @@ export default function WeeklyServiceManager() {
                     <div className="bg-purple-50 border border-purple-200 rounded p-2">
                       <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
                       <AutocompleteInput
-                        type="leader"
+                        type="ministryLeader"
                         placeholder="Líder de Ministración"
                         value={segment.data?.ministry_leader || ""}
                         onChange={(e) => updateSegmentField("9:30am", idx, "ministry_leader", e.target.value)}
@@ -960,7 +1079,7 @@ export default function WeeklyServiceManager() {
                     <CardContent className="space-y-2 pt-3">
                   {segment.fields.includes("leader") && (
                     <AutocompleteInput
-                      type="leader"
+                      type="worshipLeader"
                       placeholder="Líder / Director"
                       value={segment.data?.leader || ""}
                       onChange={(e) => updateSegmentField("11:30am", idx, "leader", e.target.value)}
@@ -1019,7 +1138,7 @@ export default function WeeklyServiceManager() {
                             className="text-xs"
                           />
                           <AutocompleteInput
-                            type="leader"
+                            type="worshipLeader"
                             placeholder="Líder"
                             value={song.lead}
                             onChange={(e) => {
@@ -1037,7 +1156,7 @@ export default function WeeklyServiceManager() {
                     <div className="bg-purple-50 border border-purple-200 rounded p-2">
                       <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
                       <AutocompleteInput
-                        type="leader"
+                        type="ministryLeader"
                         placeholder="Líder de Ministración"
                         value={segment.data?.ministry_leader || ""}
                         onChange={(e) => updateSegmentField("11:30am", idx, "ministry_leader", e.target.value)}
