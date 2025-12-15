@@ -181,3 +181,104 @@
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
+
+/* Print Styles */
+@media print {
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+
+  body {
+    background: white;
+    font-size: 10pt;
+  }
+
+  .print\\:hidden {
+    display: none !important;
+  }
+
+  .print\\:block {
+    display: block !important;
+  }
+
+  .print\\:break-before-page {
+    page-break-before: always;
+  }
+
+  .print\\:text-xs {
+    font-size: 8pt;
+  }
+
+  .print\\:text-sm {
+    font-size: 9pt;
+  }
+
+  .print\\:p-2 {
+    padding: 0.5rem;
+  }
+
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+
+  /* Ensure cards and content flow properly */
+  .card-pdv,
+  [class*="Card"] {
+    page-break-inside: avoid;
+  }
+
+  /* Hide shadows and effects for print */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Ensure brand colors print properly */
+  .brand-gradient,
+  .gradient-pdv {
+    background: linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .bg-pdv-teal {
+    background-color: #1F8A70 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .text-pdv-teal {
+    color: #1F8A70 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Compact spacing for print */
+  .space-y-4 > * + * {
+    margin-top: 0.5rem !important;
+  }
+
+  .space-y-3 > * + * {
+    margin-top: 0.375rem !important;
+  }
+
+  .space-y-2 > * + * {
+    margin-top: 0.25rem !important;
+  }
+
+  /* Grid adjustments for print */
+  .grid {
+    display: grid !important;
+  }
+
+  .md\\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* Ensure text is legible */
+  p, li, span, div {
+    orphans: 3;
+    widows: 3;
+  }
+}

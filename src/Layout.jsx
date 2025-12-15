@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useLanguage, LanguageProvider } from "@/components/utils/i18n";
-import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages } from "lucide-react";
+import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -185,6 +185,18 @@ function LayoutContent({ children }) {
                   <Clock className="w-5 h-5" />
                   Servicios Dominicales
                 </Link>
+                <Link
+                  to={createPageUrl("CustomServiceBuilder")}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                    isActive(createPageUrl("CustomServiceBuilder"))
+                      ? "text-white shadow-md"
+                      : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  }`}
+                  style={isActive(createPageUrl("CustomServiceBuilder")) ? gradientStyle : {}}
+                >
+                  <Plus className="w-5 h-5" />
+                  Servicio Personalizado
+                </Link>
               </>
             )}
 
@@ -344,6 +356,13 @@ function LayoutContent({ children }) {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Servicios Dominicales
+                  </Link>
+                  <Link
+                    to={createPageUrl("CustomServiceBuilder")}
+                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Servicio Personalizado
                   </Link>
 
                   <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">Recursos</div>
