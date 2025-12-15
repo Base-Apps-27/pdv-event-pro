@@ -1028,12 +1028,6 @@ export default function WeeklyServiceManager() {
         </CardContent>
       </Card>
 
-      {/* Print Header */}
-      <div className="hidden print:block text-center mb-6">
-        <h1 className="text-3xl font-bold uppercase">Orden de Servicio</h1>
-        <p className="text-xl text-blue-600">Domingo {selectedDate}</p>
-      </div>
-
       {/* Two Services Side by Side */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* 9:30 AM Service */}
