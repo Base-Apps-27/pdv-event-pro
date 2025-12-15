@@ -102,7 +102,7 @@ export default function ServiceTemplatesTab() {
   const addSegment = (service) => {
     setBlueprintData(prev => ({
       ...prev,
-      [service]: [...prev[service], {
+      [service]: [...(prev[service] || []), {
         title: "",
         type: "Especial",
         duration: 15,
@@ -116,7 +116,7 @@ export default function ServiceTemplatesTab() {
     if (window.confirm('¿Eliminar este segmento del blueprint?')) {
       setBlueprintData(prev => ({
         ...prev,
-        [service]: prev[service].filter((_, i) => i !== idx)
+        [service]: (prev[service] || []).filter((_, i) => i !== idx)
       }));
     }
   };
@@ -132,7 +132,7 @@ export default function ServiceTemplatesTab() {
   const handleDragEnd = (result, service) => {
     if (!result.destination) return;
     
-    const items = Array.from(blueprintData[service]);
+    const items = Array.from(blueprintData[service] || []);
     const [reordered] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reordered);
     
