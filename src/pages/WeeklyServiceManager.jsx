@@ -212,12 +212,16 @@ export default function WeeklyServiceManager() {
 
   const deleteAnnouncementMutation = useMutation({
     mutationFn: async (id) => {
-      await base44.asServiceRole.entities.AnnouncementItem.delete(id);
+      return await base44.entities.AnnouncementItem.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['allAnnouncements']);
       queryClient.invalidateQueries(['dynamicAnnouncements']);
     },
+    onError: (error) => {
+      console.error('Delete error:', error);
+      alert('Error al eliminar: ' + error.message);
+    }
   });
 
   // Initialize service data from existing or blueprint
