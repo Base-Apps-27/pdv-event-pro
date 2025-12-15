@@ -260,7 +260,8 @@ export default function WeeklyServiceManager() {
         ujieres: { "9:30am": "", "11:30am": "" },
         sound: { "9:30am": "", "11:30am": "" },
         luces: { "9:30am": "", "11:30am": "" },
-        receso_notes: { "9:30am": "" }
+        receso_notes: { "9:30am": "" },
+        pre_service_notes: { "9:30am": "", "11:30am": "" }
       };
       setServiceData(initialData);
     }
@@ -562,9 +563,35 @@ export default function WeeklyServiceManager() {
                 <Badge className="bg-amber-600 text-white text-xs">⚠ Sobrepasa</Badge>
               )}
             </div>
-          </div>
+            </div>
 
-          <DragDropContext onDragEnd={(result) => handleDragEnd(result, "9:30am")}>
+            {/* Pre-Service Block */}
+            <Card className="bg-blue-50 border-blue-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2 text-blue-600">
+                <Clock className="w-4 h-4" />
+                PRE-SERVICIO
+                <Badge variant="outline" className="ml-auto text-xs text-blue-500 border-blue-300">Antes de iniciar</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 pt-2">
+              <Textarea
+                placeholder="Instrucciones pre-servicio (opcional)..."
+                value={serviceData.pre_service_notes?.["9:30am"] || ""}
+                onChange={(e) => {
+                  setServiceData(prev => ({
+                    ...prev,
+                    pre_service_notes: { ...prev.pre_service_notes, "9:30am": e.target.value }
+                  }));
+                  setHasChanges(true);
+                }}
+                className="text-xs bg-white border-blue-200 text-gray-700 placeholder:text-gray-400"
+                rows={2}
+              />
+            </CardContent>
+            </Card>
+
+            <DragDropContext onDragEnd={(result) => handleDragEnd(result, "9:30am")}>
             <Droppable droppableId="9:30am">
               {(provided) => (
                 <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
@@ -883,9 +910,35 @@ export default function WeeklyServiceManager() {
                 <Badge className="bg-amber-600 text-white text-xs">⚠ Sobrepasa</Badge>
               )}
             </div>
-          </div>
+            </div>
 
-          <DragDropContext onDragEnd={(result) => handleDragEnd(result, "11:30am")}>
+            {/* Pre-Service Block */}
+            <Card className="bg-blue-50 border-blue-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2 text-blue-600">
+                <Clock className="w-4 h-4" />
+                PRE-SERVICIO
+                <Badge variant="outline" className="ml-auto text-xs text-blue-500 border-blue-300">Antes de iniciar</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 pt-2">
+              <Textarea
+                placeholder="Instrucciones pre-servicio (opcional)..."
+                value={serviceData.pre_service_notes?.["11:30am"] || ""}
+                onChange={(e) => {
+                  setServiceData(prev => ({
+                    ...prev,
+                    pre_service_notes: { ...prev.pre_service_notes, "11:30am": e.target.value }
+                  }));
+                  setHasChanges(true);
+                }}
+                className="text-xs bg-white border-blue-200 text-gray-700 placeholder:text-gray-400"
+                rows={2}
+              />
+            </CardContent>
+            </Card>
+
+            <DragDropContext onDragEnd={(result) => handleDragEnd(result, "11:30am")}>
             <Droppable droppableId="11:30am">
               {(provided) => (
                 <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
