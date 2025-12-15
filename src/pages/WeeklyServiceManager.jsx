@@ -568,6 +568,12 @@ export default function WeeklyServiceManager() {
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-2 pt-3">
+                        <Input
+                          placeholder="Presentador"
+                          value={segment.data?.presenter || ""}
+                          onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
+                          className="text-sm"
+                        />
                         <Textarea
                           placeholder="Descripción / Notas"
                           value={segment.data?.description || ""}
@@ -849,6 +855,18 @@ export default function WeeklyServiceManager() {
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-2 pt-3">
+                        <Input
+                          placeholder="Presentador"
+                          value={segment.data?.presenter || ""}
+                          onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
+                          className="text-sm"
+                        />
+                        <Input
+                          placeholder="Traductor"
+                          value={segment.data?.translator || ""}
+                          onChange={(e) => updateSegmentField(timeSlot, idx, "translator", e.target.value)}
+                          className="text-sm"
+                        />
                         <Textarea
                           placeholder="Descripción / Notas"
                           value={segment.data?.description || ""}
