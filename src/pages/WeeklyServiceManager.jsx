@@ -11,9 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar, Clock, Save, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Eye, EyeOff, GripVertical, Loader2, Check } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Calendar as CalendarIcon, Clock, Save, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Eye, EyeOff, GripVertical, Loader2, Check } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { addMinutes, parse, format } from "date-fns";
+import { addMinutes, parse, format as formatDate } from "date-fns";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 
 export default function WeeklyServiceManager() {
@@ -451,21 +454,21 @@ export default function WeeklyServiceManager() {
     
     const startTime = parse(timeSlot, "h:mma", new Date());
     const endTime = addMinutes(startTime, totalDuration);
-    
+
     // Target durations
     const targetDuration = timeSlot === "9:30am" ? 90 : 90; // Both should be 90 min
     const isOverage = totalDuration > targetDuration;
     const overageAmount = totalDuration - targetDuration;
-    
+
     return {
       totalDuration,
-      startTime: format(startTime, "h:mm a"),
-      endTime: format(endTime, "h:mm a"),
+      startTime: formatDate(startTime, "h:mm a"),
+      endTime: formatDate(endTime, "h:mm a"),
       isOverage,
       overageAmount,
       targetDuration
     };
-  };
+    };
 
   if (!serviceData || isLoading) {
     return <div className="p-8">Cargando...</div>;
@@ -499,15 +502,55 @@ export default function WeeklyServiceManager() {
       <Card className="print:hidden">
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            <Calendar className="w-5 h-5 text-pdv-teal flex-shrink-0" />
+            <CalendarIcon className="w-5 h-5 text-pdv-teal flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <Label>Fecha del Domingo</Label>
-              <Input 
-                type="date" 
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="mt-1 w-full max-w-full"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left font-normal mt-1">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate ? formatDate(new Date(selectedDate), "PPPP") : "Seleccionar fecha"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <TooltipProvider>
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate ? new Date(selectedDate) : undefined}
+                      onSelect={(date) => {
+                        if (date && date.getDay() === 0) {
+                          setSelectedDate(date.toISOString().split('T')[0]);
+                        }
+                      }}
+                      disabled={(date) => date.getDay() !== 0}
+                      modifiers={{
+                        sunday: (date) => date.getDay() === 0
+                      }}
+                      modifiersClassNames={{
+                        sunday: "bg-pdv-teal text-white hover:bg-pdv-teal hover:text-white"
+                      }}
+                      components={{
+                        Day: ({ date, ...props }) => {
+                          const isSunday = date.getDay() === 0;
+                          if (!isSunday) {
+                            return (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div {...props} className="text-gray-300 cursor-not-allowed" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="text-xs">Use Servicio Personalizado para otras fechas</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            );
+                          }
+                          return <div {...props} />;
+                        }
+                      }}
+                    />
+                  </TooltipProvider>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </CardContent>
