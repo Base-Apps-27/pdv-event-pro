@@ -23,6 +23,8 @@ export default function WeeklyServiceManager() {
     type: "Especial",
     duration: 15,
     insertAfterIdx: -1,
+    presenter: "",
+    translator: "",
   });
   const [selectedAnnouncements, setSelectedAnnouncements] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
@@ -45,17 +47,67 @@ export default function WeeklyServiceManager() {
   // Blueprint structure
   const BLUEPRINT = {
     "9:30am": [
-      { type: "worship", title: "Equipo de A&A", duration: 35, fields: ["leader", "songs", "ministry_leader"] },
-      { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter"] },
-      { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse"] },
-      { type: "message", title: "Mensaje", duration: 45, fields: ["preacher", "title", "verse"] },
-      { type: "break", title: "RECESO", duration: 30, fields: [] }
+      { 
+        type: "worship", 
+        title: "Equipo de A&A", 
+        duration: 35, 
+        fields: ["leader", "songs", "ministry_leader"],
+        actions: [
+          { label: "Video de introducción en FB", timing: "before_start", offset_min: 0, department: "Projection" }
+        ]
+      },
+      { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter"], actions: [] },
+      { 
+        type: "offering", 
+        title: "Ofrendas", 
+        duration: 5, 
+        fields: ["presenter", "verse"],
+        actions: [
+          { label: "Enviar texto: 844-555-5555", timing: "after_start", offset_min: 0, department: "Admin" }
+        ]
+      },
+      { 
+        type: "message", 
+        title: "Mensaje", 
+        duration: 45, 
+        fields: ["preacher", "title", "verse"],
+        actions: [
+          { label: "Pianista sube", timing: "before_end", offset_min: 15, department: "Alabanza" },
+          { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }
+        ]
+      },
+      { type: "break", title: "RECESO", duration: 30, fields: [], actions: [] }
     ],
     "11:30am": [
-      { type: "worship", title: "Equipo de A&A", duration: 35, fields: ["leader", "songs", "ministry_leader", "translator"] },
-      { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter", "translator"] },
-      { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse", "translator"] },
-      { type: "message", title: "Mensaje", duration: 45, fields: ["preacher", "title", "verse", "translator"] }
+      { 
+        type: "worship", 
+        title: "Equipo de A&A", 
+        duration: 35, 
+        fields: ["leader", "songs", "ministry_leader", "translator"],
+        actions: [
+          { label: "Video de introducción en FB", timing: "before_start", offset_min: 0, department: "Projection" }
+        ]
+      },
+      { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter", "translator"], actions: [] },
+      { 
+        type: "offering", 
+        title: "Ofrendas", 
+        duration: 5, 
+        fields: ["presenter", "verse", "translator"],
+        actions: [
+          { label: "Enviar texto: 844-555-5555", timing: "after_start", offset_min: 0, department: "Admin" }
+        ]
+      },
+      { 
+        type: "message", 
+        title: "Mensaje", 
+        duration: 45, 
+        fields: ["preacher", "title", "verse", "translator"],
+        actions: [
+          { label: "Pianista sube", timing: "before_end", offset_min: 15, department: "Alabanza" },
+          { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }
+        ]
+      }
     ]
   };
 
@@ -170,6 +222,7 @@ export default function WeeklyServiceManager() {
         "9:30am": BLUEPRINT["9:30am"].map(seg => ({
           ...seg,
           data: {},
+          actions: seg.actions || [],
           songs: seg.type === "worship" ? [
             { title: "", lead: "" },
             { title: "", lead: "" },
@@ -180,6 +233,7 @@ export default function WeeklyServiceManager() {
         "11:30am": BLUEPRINT["11:30am"].map(seg => ({
           ...seg,
           data: {},
+          actions: seg.actions || [],
           songs: seg.type === "worship" ? [
             { title: "", lead: "" },
             { title: "", lead: "" },
@@ -264,7 +318,12 @@ export default function WeeklyServiceManager() {
         title: specialSegmentDetails.title,
         duration: specialSegmentDetails.duration,
         fields: ["description"],
-        data: { description: "" }
+        data: { 
+          description: "",
+          presenter: specialSegmentDetails.presenter,
+          translator: specialSegmentDetails.translator
+        },
+        actions: []
       };
 
       const targetArray = updated[specialSegmentDetails.timeSlot];
@@ -278,7 +337,7 @@ export default function WeeklyServiceManager() {
     setHasChanges(true);
     setShowSpecialDialog(false);
     setSpecialSegmentDetails({
-      timeSlot: "9:30am", title: "", type: "Especial", duration: 15, insertAfterIdx: -1,
+      timeSlot: "9:30am", title: "", type: "Especial", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
     });
   };
 
@@ -651,6 +710,27 @@ export default function WeeklyServiceManager() {
                           className="text-xs w-24"
                         />
                       </div>
+
+                      {/* Coordinator Actions */}
+                      {segment.actions && segment.actions.length > 0 && (
+                        <div className="bg-amber-50 border border-amber-200 rounded p-2">
+                          <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
+                          <div className="space-y-1">
+                            {segment.actions.map((action, aIdx) => (
+                              <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
+                                <span className="font-semibold">•</span>
+                                <span>
+                                  {action.label} 
+                                  {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
+                                  {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
+                                  {action.timing === "before_start" && ` (antes de iniciar)`}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <Textarea
                         placeholder="Notas de Proyección"
                         value={segment.data?.projection_notes || ""}
@@ -940,6 +1020,27 @@ export default function WeeklyServiceManager() {
                           className="text-xs w-24"
                         />
                       </div>
+                      
+                      {/* Coordinator Actions */}
+                      {segment.actions && segment.actions.length > 0 && (
+                        <div className="bg-amber-50 border border-amber-200 rounded p-2">
+                          <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
+                          <div className="space-y-1">
+                            {segment.actions.map((action, aIdx) => (
+                              <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
+                                <span className="font-semibold">•</span>
+                                <span>
+                                  {action.label} 
+                                  {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
+                                  {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
+                                  {action.timing === "before_start" && ` (antes de iniciar)`}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
                         <div className="bg-blue-50 border border-blue-200 rounded p-2">
                           <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
@@ -1213,6 +1314,26 @@ export default function WeeklyServiceManager() {
                 onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Ej. Presentación de Niños"
               />
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Presentador</Label>
+                <Input
+                  value={specialSegmentDetails.presenter}
+                  onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, presenter: e.target.value }))}
+                  placeholder="Nombre del presentador"
+                />
+              </div>
+              {specialSegmentDetails.timeSlot === "11:30am" && (
+                <div className="space-y-2">
+                  <Label>Traductor</Label>
+                  <Input
+                    value={specialSegmentDetails.translator}
+                    onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, translator: e.target.value }))}
+                    placeholder="Nombre del traductor"
+                  />
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Duración (minutos)</Label>
