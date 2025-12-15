@@ -179,7 +179,12 @@ export default function WeeklyServiceManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['weeklyService']);
+      queryClient.invalidateQueries(['allAnnouncements']);
       setHasChanges(false);
+    },
+    onError: (error) => {
+      console.error('Error saving service:', error);
+      alert('Error al guardar: ' + error.message);
     }
   });
 
