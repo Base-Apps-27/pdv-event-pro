@@ -857,11 +857,7 @@ export default function WeeklyServiceManager() {
                       />
                     </div>
                   )}
-                  {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
-                    <div className="text-xs text-blue-600 italic flex items-center gap-1 mt-1">
-                      🌐 Traductor(a): {serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || "Por definir"}
-                    </div>
-                  )}
+
                   {segment.fields.includes("translator") && segment.type === "message" && (
                     <div className="bg-blue-50 border border-blue-200 rounded p-2">
                       <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) del Mensaje</Label>
