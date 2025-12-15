@@ -211,7 +211,9 @@ export default function WeeklyServiceManager() {
   });
 
   const deleteAnnouncementMutation = useMutation({
-    mutationFn: (id) => base44.entities.AnnouncementItem.delete(id),
+    mutationFn: async (id) => {
+      await base44.asServiceRole.entities.AnnouncementItem.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['allAnnouncements']);
       queryClient.invalidateQueries(['dynamicAnnouncements']);
