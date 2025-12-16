@@ -362,7 +362,7 @@ export default function WeeklyServiceManager() {
     }, 800);
   }, [selectedDate, selectedAnnouncements, saveServiceMutation]);
 
-  // Sync selected announcements with serviceData
+  // Sync selected announcements with serviceData and save
   useEffect(() => {
     setServiceData(prev => {
       if (!prev) return prev;
@@ -371,6 +371,10 @@ export default function WeeklyServiceManager() {
         selected_announcements: selectedAnnouncements
       };
     });
+    // Trigger save when announcements change
+    if (serviceData) {
+      debouncedSave('announcement-selection');
+    }
   }, [selectedAnnouncements]);
 
   // Update handlers
@@ -3069,7 +3073,6 @@ export default function WeeklyServiceManager() {
               onClick={() => {
                 const allFixed = fixedAnnouncements.map(a => a.id);
                 setSelectedAnnouncements(prev => [...new Set([...prev, ...allFixed])]);
-                debouncedSave('announcement-selection');
               }}
             >
               ✓ Seleccionar todos los fijos
@@ -3080,7 +3083,6 @@ export default function WeeklyServiceManager() {
               onClick={() => {
                 const allDynamic = dynamicAnnouncements.map(a => a.id);
                 setSelectedAnnouncements(prev => [...new Set([...prev, ...allDynamic])]);
-                debouncedSave('announcement-selection');
               }}
             >
               ✓ Seleccionar dinámicos relevantes
@@ -3094,7 +3096,6 @@ export default function WeeklyServiceManager() {
                   ...dynamicAnnouncements.map(a => a.id)
                 ];
                 setSelectedAnnouncements(defaultSelection);
-                debouncedSave('announcement-selection');
               }}
             >
               ⟲ Restaurar selección por defecto
