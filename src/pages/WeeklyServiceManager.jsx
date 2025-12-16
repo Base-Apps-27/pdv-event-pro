@@ -1185,6 +1185,7 @@ export default function WeeklyServiceManager() {
         announcementsEl.remove();
       }
 
+      console.log('Capturing services canvas...');
       const servicesCanvas = await html2canvas(container, {
         scale: 2,
         useCORS: true,
@@ -1192,6 +1193,7 @@ export default function WeeklyServiceManager() {
         backgroundColor: '#ffffff',
         windowWidth: 900
       });
+      console.log('Services canvas captured');
 
       const pdf = new jsPDF('p', 'mm', 'letter');
       const imgWidth = 216;
