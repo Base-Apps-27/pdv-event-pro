@@ -899,6 +899,20 @@ export default function WeeklyServiceManager() {
                     </div>
                   )}
 
+                  {segment.actions && segment.actions.length > 0 && (
+                    <div className="print-segment-detail" style={{ marginTop: '3px', paddingTop: '3px', borderTop: '1px dashed #e5e7eb', background: '#fef3c7', padding: '3px 5px', borderRadius: '2px' }}>
+                      <strong style={{ color: '#92400e' }}>⏰ Acciones:</strong>
+                      {segment.actions.map((action, aIdx) => (
+                        <div key={aIdx} style={{ marginLeft: '8px', fontSize: '7px', color: '#92400e' }}>
+                          • {action.label}
+                          {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
+                          {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después)`}
+                          {action.timing === "before_start" && ` (antes de iniciar)`}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {segment.data?.presenter && (
                     <div className="print-segment-detail">
                       <strong>P:</strong> {segment.data.presenter}
@@ -926,6 +940,24 @@ export default function WeeklyServiceManager() {
                   {segment.data?.description && (
                     <div className="print-segment-detail" style={{ fontStyle: 'italic' }}>
                       {segment.data.description}
+                    </div>
+                  )}
+
+                  {segment.data?.description_details && (
+                    <div className="print-segment-detail" style={{ marginTop: '3px', color: '#6b7280' }}>
+                      {segment.data.description_details}
+                    </div>
+                  )}
+
+                  {segment.data?.projection_notes && (
+                    <div className="print-segment-detail" style={{ marginTop: '3px', paddingTop: '3px', borderTop: '1px dashed #e5e7eb' }}>
+                      <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.sound_notes && (
+                    <div className="print-segment-detail" style={{ marginTop: '2px' }}>
+                      <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
                     </div>
                   )}
                 </div>
@@ -984,6 +1016,20 @@ export default function WeeklyServiceManager() {
                     </div>
                   )}
 
+                  {segment.actions && segment.actions.length > 0 && (
+                    <div className="print-segment-detail" style={{ marginTop: '3px', paddingTop: '3px', borderTop: '1px dashed #e5e7eb', background: '#fef3c7', padding: '3px 5px', borderRadius: '2px' }}>
+                      <strong style={{ color: '#92400e' }}>⏰ Acciones:</strong>
+                      {segment.actions.map((action, aIdx) => (
+                        <div key={aIdx} style={{ marginLeft: '8px', fontSize: '7px', color: '#92400e' }}>
+                          • {action.label}
+                          {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
+                          {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después)`}
+                          {action.timing === "before_start" && ` (antes de iniciar)`}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {segment.data?.translator && (
                     <div className="print-segment-detail" style={{ color: '#2563eb' }}>
                       <strong>🌐 Trad:</strong> {segment.data.translator}
@@ -1017,6 +1063,24 @@ export default function WeeklyServiceManager() {
                   {segment.data?.description && (
                     <div className="print-segment-detail" style={{ fontStyle: 'italic' }}>
                       {segment.data.description}
+                    </div>
+                  )}
+
+                  {segment.data?.description_details && (
+                    <div className="print-segment-detail" style={{ marginTop: '3px', color: '#6b7280' }}>
+                      {segment.data.description_details}
+                    </div>
+                  )}
+
+                  {segment.data?.projection_notes && (
+                    <div className="print-segment-detail" style={{ marginTop: '3px', paddingTop: '3px', borderTop: '1px dashed #e5e7eb' }}>
+                      <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.sound_notes && (
+                    <div className="print-segment-detail" style={{ marginTop: '2px' }}>
+                      <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
                     </div>
                   )}
                 </div>
