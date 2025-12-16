@@ -1135,49 +1135,6 @@ export default function WeeklyServiceManager() {
           el.style.borderBottom = '1px solid #d1d5db';
         });
 
-        const announcementsHeaders = element.querySelectorAll('.print-announcements-header');
-        announcementsHeaders.forEach(el => {
-          el.style.textAlign = 'center';
-          el.style.marginBottom = '20px';
-          el.style.paddingBottom = '0';
-          el.style.borderBottom = 'none';
-        });
-
-        const announcementsLogos = element.querySelectorAll('.print-announcements-logo');
-        announcementsLogos.forEach(el => {
-          el.style.width = '58px';
-          el.style.height = '58px';
-          el.style.margin = '0 auto 10px auto';
-          el.style.background = 'none';
-        });
-
-        const announcementsTitles = element.querySelectorAll('.print-announcements-title');
-        announcementsTitles.forEach(el => {
-          el.style.fontSize = '26px';
-          el.style.fontWeight = '700';
-          el.style.textTransform = 'uppercase';
-          el.style.marginBottom = '6px';
-          el.style.letterSpacing = '1px';
-          el.style.color = '#1F8A70';
-        });
-
-        const announcementsHeaderP = element.querySelectorAll('.print-announcements-header p');
-        announcementsHeaderP.forEach(el => {
-          el.style.fontSize = '13px';
-          el.style.fontWeight = '500';
-          el.style.color = '#4b5563';
-          el.style.margin = '0 0 12px 0';
-        });
-
-        const announcementsDividers = element.querySelectorAll('.print-announcements-divider');
-        announcementsDividers.forEach(el => {
-          el.style.width = '140px';
-          el.style.height = '2.5px';
-          el.style.background = 'linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%)';
-          el.style.margin = '0 auto';
-          el.style.borderRadius = '2px';
-        });
-
         const announcementLists = element.querySelectorAll('.print-announcement-list');
         announcementLists.forEach(el => {
           el.style.paddingLeft = '30px';
