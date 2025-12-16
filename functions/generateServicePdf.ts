@@ -14,46 +14,30 @@ Deno.serve(async (req) => {
     // Generate HTML content for PDF
     const htmlContent = generateServiceHTML(serviceData, selectedDate, includeAnnouncements);
 
-    // Use Playwright to render HTML to PDF with fit-to-page logic
-    const { chromium } = await import('npm:playwright@1.40.1');
-    
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
-    
-    // Set viewport for consistent rendering
-    await page.setViewportSize({ width: 816, height: 1056 }); // Letter size at 96 DPI
-    
-    // Load the HTML content
-    await page.setContent(htmlContent, { waitUntil: 'networkidle' });
-    
-    // Measure content height and apply scaling if needed
-    const contentHeight = await page.evaluate(() => document.documentElement.scrollHeight);
-    const maxPageHeight = 1000; // Approximate printable height in pixels
-    
-    // If content exceeds page height, scale it down
-    if (contentHeight > maxPageHeight) {
-      const scaleFactor = maxPageHeight / contentHeight;
-      await page.evaluate((scale) => {
-        document.body.style.transform = `scale(${scale})`;
-        document.body.style.transformOrigin = 'top left';
-        document.body.style.width = `${100 / scale}%`;
-      }, scaleFactor);
-    }
-    
-    // Generate PDF
-    const pdfBuffer = await page.pdf({
-      format: 'Letter',
-      printBackground: true,
-      margin: {
-        top: '0.5in',
-        right: '0.5in',
-        bottom: '0.5in',
-        left: '0.5in'
+    // Use external PDF service (PDFShift or similar)
+    const pdfApiResponse = await fetch('https://api.html2pdf.app/v1/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      preferCSSPageSize: false
+      body: JSON.stringify({
+        html: htmlContent,
+        format: 'Letter',
+        printBackground: true,
+        margin: {
+          top: '0.5in',
+          right: '0.5in',
+          bottom: '0.5in',
+          left: '0.5in'
+        }
+      })
     });
-    
-    await browser.close();
+
+    if (!pdfApiResponse.ok) {
+      throw new Error(`PDF service error: ${pdfApiResponse.status}`);
+    }
+
+    const pdfBuffer = await pdfApiResponse.arrayBuffer();
 
     // Return PDF as binary response
     return new Response(pdfBuffer, {
