@@ -235,7 +235,7 @@ export default function PublicProgramView() {
   return (
     <div className="min-h-screen bg-[#F0F1F3]">
       {/* Hero Header */}
-      <div className="brand-gradient text-white py-12 px-6">
+      <div className="bg-gradient-to-r from-pdv-teal to-pdv-green text-white py-12 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-4">
             <img 
@@ -244,11 +244,11 @@ export default function PublicProgramView() {
               className="w-16 h-16 md:w-20 md:h-20"
             />
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight">Programa del Evento</h1>
-              <p className="text-sm md:text-base text-white text-opacity-90 mt-1">¡ATRÉVETE A CAMBIAR!</p>
+              <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight text-white">Programa del Evento</h1>
+              <p className="text-sm md:text-base text-white mt-1">¡ATRÉVETE A CAMBIAR!</p>
             </div>
           </div>
-          <p className="text-lg text-white text-opacity-90">Explora el programa completo y mantente actualizado</p>
+          <p className="text-lg text-white">Explora el programa completo y mantente actualizado</p>
         </div>
       </div>
 
@@ -258,7 +258,7 @@ export default function PublicProgramView() {
             {/* Event/Service Info Card */}
             <Card className={`bg-white border-2 border-gray-300 border-l-4 ${viewType === "event" ? "border-l-pdv-teal" : "border-l-pdv-green"}`}>
               <CardContent className="p-6">
-                <h2 className="text-3xl font-bold uppercase mb-2">
+                <h2 className="text-3xl font-bold uppercase mb-2 text-gray-900">
                   {viewType === "event" ? selectedEvent?.name : selectedService?.name}
                 </h2>
                 {viewType === "event" && selectedEvent?.theme && (
@@ -267,7 +267,7 @@ export default function PublicProgramView() {
                 {viewType === "service" && selectedService?.description && (
                   <p className="text-lg text-gray-600 mb-4">{selectedService.description}</p>
                 )}
-                <div className="flex flex-wrap gap-4 text-sm mb-4">
+                <div className="flex flex-wrap gap-4 text-sm mb-4 text-gray-700">
                   {viewType === "event" && selectedEvent?.start_date && (
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-gray-600" />
@@ -302,7 +302,7 @@ export default function PublicProgramView() {
                   variant="outline"
                   size="sm"
                   onClick={() => setShowEventDetails(!showEventDetails)}
-                  className="mb-4"
+                  className="mb-4 border-2 border-gray-400 bg-white text-gray-900 font-semibold"
                 >
                   {showEventDetails ? <ChevronUp className="w-4 h-4 mr-2" /> : <ChevronDown className="w-4 h-4 mr-2" />}
                   {showEventDetails ? 'Ocultar Detalles' : 'Ver Más Detalles'}
@@ -354,7 +354,7 @@ export default function PublicProgramView() {
 
             {/* View Mode and Filters Card */}
             <Card className="bg-white border-2 border-gray-300">
-              <CardHeader className="bg-gray-50">
+              <CardHeader className="bg-gray-100 border-b-2 border-gray-300">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Filter className="w-5 h-5 text-pdv-teal" />
@@ -365,7 +365,7 @@ export default function PublicProgramView() {
                       variant={viewMode === "simple" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setViewMode("simple")}
-                      className={viewMode === "simple" ? "bg-pdv-teal text-white" : ""}
+                      className={viewMode === "simple" ? "bg-pdv-teal text-white border-2 border-pdv-teal font-semibold" : "border-2 border-gray-400 bg-white text-gray-900 font-semibold"}
                     >
                       <List className="w-4 h-4 mr-2" />
                       Simple
@@ -374,7 +374,7 @@ export default function PublicProgramView() {
                       variant={viewMode === "full" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setViewMode("full")}
-                      className={viewMode === "full" ? "bg-pdv-teal text-white" : ""}
+                      className={viewMode === "full" ? "bg-pdv-teal text-white border-2 border-pdv-teal font-semibold" : "border-2 border-gray-400 bg-white text-gray-900 font-semibold"}
                     >
                       <ListChecks className="w-4 h-4 mr-2" />
                       Run of Show
@@ -382,11 +382,11 @@ export default function PublicProgramView() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-900">Filtrar por Sesión</label>
                   <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
-                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                    <SelectTrigger className="bg-white border-2 border-gray-400 text-gray-900">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
@@ -973,7 +973,7 @@ export default function PublicProgramView() {
       </div>
 
       {/* Footer */}
-      <div className="mt-12 py-6 brand-gradient">
+      <div className="mt-12 py-6 bg-gradient-to-r from-pdv-green to-pdv-teal">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
@@ -981,7 +981,7 @@ export default function PublicProgramView() {
             className="w-12 h-12 mx-auto mb-3"
           />
           <p className="text-white font-semibold text-lg tracking-wide uppercase">¡Atrévete a cambiar!</p>
-          <p className="text-white text-opacity-80 text-sm mt-2">Palabras de Vida</p>
+          <p className="text-white text-sm mt-2">Palabras de Vida</p>
         </div>
       </div>
     </div>
