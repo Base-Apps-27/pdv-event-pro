@@ -302,19 +302,21 @@ export default function WeeklyServiceManager() {
 
   // Auto-select announcements for new services AND existing services without selections
   useEffect(() => {
-    // Run when:
-    // 1. New service (no existing data), OR
-    // 2. Existing service but no announcements selected
+    // Skip if still loading
+    if (isLoading) return;
+    
+    // Check if we have announcements but none selected
+    const hasAnnouncements = fixedAnnouncements.length > 0 || dynamicAnnouncements.length > 0;
     const hasNoSelections = !selectedAnnouncements || selectedAnnouncements.length === 0;
     
-    if (!isLoading && hasNoSelections && (fixedAnnouncements.length > 0 || dynamicAnnouncements.length > 0)) {
+    if (hasAnnouncements && hasNoSelections) {
       const allActiveIds = [
         ...fixedAnnouncements.map(a => a.id),
         ...dynamicAnnouncements.map(a => a.id)
       ];
       setSelectedAnnouncements(allActiveIds);
     }
-  }, [existingData, isLoading, fixedAnnouncements.length, dynamicAnnouncements.length]);
+  }, [isLoading, fixedAnnouncements, dynamicAnnouncements]);
 
   // Filter out inactive announcements from loaded selections
   useEffect(() => {
