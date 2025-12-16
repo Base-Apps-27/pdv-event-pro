@@ -1861,14 +1861,14 @@ export default function WeeklyServiceManager() {
             right: 0;
             width: 100%;
             height: 54pt;
-            background: linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%);
+            background: linear-gradient(90deg, #1F5B8C 0%, #8DC63F 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-size: 14pt;
             font-weight: 600;
-            letter-spacing: 0.5pt;
+            letter-spacing: 0.75pt;
           }
 
           .print-content {
