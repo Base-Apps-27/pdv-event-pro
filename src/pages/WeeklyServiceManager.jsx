@@ -1096,7 +1096,7 @@ export default function WeeklyServiceManager() {
                   `}</style>
                   <Calendar
                     mode="single"
-                    selected={selectedDate ? new Date(selectedDate.split('-')[0], parseInt(selectedDate.split('-')[1]) - 1, parseInt(selectedDate.split('-')[2])) : undefined}
+                    selected={selectedDate ? new Date(selectedDate + 'T12:00:00') : undefined}
                     onSelect={(date) => {
                       if (date) {
                         const year = date.getFullYear();
