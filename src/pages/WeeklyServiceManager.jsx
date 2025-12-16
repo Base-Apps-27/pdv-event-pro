@@ -69,6 +69,7 @@ export default function WeeklyServiceManager() {
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [emailAddress, setEmailAddress] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
@@ -525,8 +526,6 @@ export default function WeeklyServiceManager() {
     }
   };
 
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-
   const handleDownloadPDF = async () => {
     try {
       setIsGeneratingPdf(true);
@@ -678,31 +677,12 @@ export default function WeeklyServiceManager() {
     });
   };
 
-
-
-  const addSpecialSegment = () => {
-    setSavingField('add-special');
-    const newSegment = {
-      type: "special",
-      title: specialSegmentDetails.title,
-      duration: specialSegmentDetails.duration,
-      fields: ["description"],
-      data: { 
-        description: "",
-        presenter: specialSegmentDetails.presenter,
-        translator: specialSegmentDetails.translator
-      },
-      actions: []
-    };
-
+  const removeSpecialSegment = (timeSlot, index) => {
+    setSavingField('remove-special');
     const updatedData = { ...serviceData };
-    const targetArray = [...updatedData[specialSegmentDetails.timeSlot]];
-    let insertIndex = specialSegmentDetails.insertAfterIdx + 1;
-    if (insertIndex <= 0) insertIndex = 0;
-    if (insertIndex > targetArray.length) insertIndex = targetArray.length;
-    
-    targetArray.splice(insertIndex, 0, newSegment);
-    updatedData[specialSegmentDetails.timeSlot] = targetArray;
+    const targetArray = [...updatedData[timeSlot]];
+    targetArray.splice(index, 1);
+    updatedData[timeSlot] = targetArray;
     
     setServiceData(updatedData);
     
@@ -717,14 +697,7 @@ export default function WeeklyServiceManager() {
     saveServiceMutation.mutate(dataToSave, {
       onSettled: () => setSavingField(null)
     });
-    
-    setShowSpecialDialog(false);
-    setSpecialSegmentDetails({
-      timeSlot: "9:30am", title: "", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
-    });
   };
-
-
 
   const handleDragEnd = (result, timeSlot) => {
     if (!result.destination) return;
