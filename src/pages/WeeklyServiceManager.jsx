@@ -1044,21 +1044,7 @@ export default function WeeklyServiceManager() {
                   {segment.data?.ministry_leader && (
                     <div className="print-segment-detail" style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed #d1d5db' }}>
                       <strong>Ministración de Sanidad y Milagros</strong><br/>
-                      P. {segment.data.ministry_leader} (5 min)
-                    </div>
-                  )}
-
-                  {segment.actions && segment.actions.length > 0 && (
-                    <div className="print-segment-detail" style={{ marginTop: '3px', paddingTop: '3px', borderTop: '1px dashed #e5e7eb', background: '#fef3c7', padding: '3px 5px', borderRadius: '2px' }}>
-                      <strong style={{ color: '#92400e' }}>⏰ Acciones:</strong>
-                      {segment.actions.map((action, aIdx) => (
-                        <div key={aIdx} style={{ marginLeft: '8px', fontSize: '7px', color: '#92400e' }}>
-                          • {action.label}
-                          {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
-                          {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después)`}
-                          {action.timing === "before_start" && ` (antes de iniciar)`}
-                        </div>
-                      ))}
+                      P. <span className="print-name">{segment.data.ministry_leader}</span> (5 min)
                     </div>
                   )}
 
@@ -1070,13 +1056,13 @@ export default function WeeklyServiceManager() {
 
                   {segment.data?.presenter && (
                     <div className="print-segment-detail">
-                      <strong>P:</strong> {segment.data.presenter}
+                      <strong>P:</strong> <span className="print-name">{segment.data.presenter}</span>
                     </div>
                   )}
 
                   {segment.data?.preacher && (
                     <div className="print-segment-detail">
-                      <strong>P:</strong> {segment.data.preacher}
+                      <strong>P:</strong> <span className="print-name">{segment.data.preacher}</span>
                     </div>
                   )}
 
