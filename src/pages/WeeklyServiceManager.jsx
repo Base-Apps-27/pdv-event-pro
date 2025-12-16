@@ -511,45 +511,48 @@ export default function WeeklyServiceManager() {
 
     // Apply all print styles inline
     const applyPrintStyles = (element) => {
-
-
       const headers = element.querySelectorAll('.print-header');
       headers.forEach(el => {
-        el.style.marginBottom = '14px';
+        el.style.position = 'relative';
+        el.style.marginBottom = '10px';
         el.style.paddingBottom = '0';
-        el.style.borderBottom = 'none';
+        el.style.textAlign = 'center';
       });
 
       const logos = element.querySelectorAll('.print-logo');
       logos.forEach(el => {
-        el.style.width = '72px';
-        el.style.height = '72px';
+        el.style.position = 'absolute';
+        el.style.top = '0';
+        el.style.left = '0';
+        el.style.width = '54px';
+        el.style.height = '54px';
         el.style.background = 'none';
-        el.style.flexShrink = '0';
       });
 
       const titles = element.querySelectorAll('.print-title');
       titles.forEach(el => {
-        el.style.flex = '1';
+        el.style.width = '100%';
         el.style.textAlign = 'center';
+        el.style.margin = '0 auto';
+        el.style.padding = '0 60px';
       });
 
       const titleH1 = element.querySelectorAll('.print-title h1');
       titleH1.forEach(el => {
-        el.style.fontSize = '26px';
-        el.style.fontWeight = '700';
-        el.style.margin = '0 0 6px 0';
+        el.style.fontSize = '20px';
+        el.style.fontWeight = 'bold';
+        el.style.margin = '0 0 3px 0';
         el.style.textTransform = 'uppercase';
-        el.style.letterSpacing = '1px';
-        el.style.color = '#1a1a1a';
+        el.style.letterSpacing = '0.8px';
+        el.style.color = '#000000';
       });
 
       const titleP = element.querySelectorAll('.print-title p');
       titleP.forEach(el => {
-        el.style.fontSize = '13px';
-        el.style.color = '#4b5563';
+        el.style.fontSize = '11px';
+        el.style.color = '#374151';
         el.style.fontWeight = '500';
-        el.style.margin = '0 0 10px 0';
+        el.style.margin = '0 0 6px 0';
       });
 
       const teamInfo = element.querySelectorAll('.print-team-info');
@@ -557,26 +560,26 @@ export default function WeeklyServiceManager() {
         el.style.display = 'flex';
         el.style.justifyContent = 'center';
         el.style.alignItems = 'center';
-        el.style.gap = '16px';
+        el.style.gap = '12px';
         el.style.flexWrap = 'wrap';
-        el.style.marginTop = '6px';
-        el.style.paddingTop = '6px';
+        el.style.marginTop = '4px';
+        el.style.paddingTop = '4px';
         el.style.borderTop = '1px solid #d1d5db';
-        el.style.fontSize = '9px';
+        el.style.fontSize = '8px';
         el.style.color = '#374151';
       });
 
       const teamLabels = element.querySelectorAll('.print-team-label');
       teamLabels.forEach(el => {
-        el.style.fontWeight = '700';
-        el.style.color = '#1a1a1a';
+        el.style.fontWeight = '600';
+        el.style.color = '#000000';
       });
 
       const twoColumns = element.querySelectorAll('.print-two-columns');
       twoColumns.forEach(el => {
         el.style.display = 'grid';
         el.style.gridTemplateColumns = '1fr 1fr';
-        el.style.gap = '20px';
+        el.style.gap = '18px';
         el.style.marginBottom = '0';
         el.style.width = '100%';
       });
@@ -588,36 +591,37 @@ export default function WeeklyServiceManager() {
 
       const serviceTimes = element.querySelectorAll('.print-service-time');
       serviceTimes.forEach(el => {
-        el.style.fontSize = '16px';
+        el.style.fontSize = '13px';
         el.style.fontWeight = 'bold';
-        el.style.color = '#1F5B8C';
-        el.style.marginBottom = '10px';
-        el.style.paddingBottom = '4px';
-        el.style.borderBottom = '2px solid #1F5B8C';
+        el.style.color = '#000000';
+        el.style.marginBottom = '8px';
+        el.style.paddingBottom = '3px';
+        el.style.borderBottom = '1.5px solid #000000';
         el.style.textTransform = 'uppercase';
-        el.style.letterSpacing = '0.5px';
+        el.style.letterSpacing = '0.4px';
       });
 
       const rightServiceTimes = element.querySelectorAll('.print-service-column.right .print-service-time');
       rightServiceTimes.forEach(el => {
-        el.style.color = '#1F5B8C';
+        el.style.color = '#000000';
       });
 
       const segments = element.querySelectorAll('.print-segment');
       segments.forEach(el => {
-        el.style.marginBottom = '12px';
+        el.style.marginBottom = '10px';
         el.style.paddingBottom = '0';
         el.style.borderBottom = 'none';
-        el.style.fontSize = '11px';
-        el.style.lineHeight = '1.35';
+        el.style.fontSize = '9.5px';
+        el.style.lineHeight = '1.3';
         el.style.breakInside = 'avoid';
+        el.style.background = 'transparent';
       });
 
       const segmentTimes = element.querySelectorAll('.print-segment-time');
       segmentTimes.forEach(el => {
         el.style.fontWeight = 'bold';
         el.style.color = '#B53737';
-        el.style.fontSize = '11px';
+        el.style.fontSize = '9.5px';
       });
 
       const rightSegmentTimes = element.querySelectorAll('.print-service-column.right .print-segment-time');
@@ -629,36 +633,37 @@ export default function WeeklyServiceManager() {
       segmentTitles.forEach(el => {
         el.style.fontWeight = 'bold';
         el.style.textTransform = 'uppercase';
-        el.style.fontSize = '11px';
+        el.style.fontSize = '9.5px';
         el.style.marginLeft = '0';
-        el.style.color = '#1a1a1a';
-        el.style.letterSpacing = '0.25px';
+        el.style.color = '#000000';
+        el.style.letterSpacing = '0.2px';
       });
 
       const segmentDetails = element.querySelectorAll('.print-segment-detail');
       segmentDetails.forEach(el => {
         el.style.marginLeft = '0';
-        el.style.fontSize = '11px';
+        el.style.fontSize = '9.5px';
         el.style.color = '#374151';
-        el.style.lineHeight = '1.35';
-        el.style.marginTop = '2px';
+        el.style.lineHeight = '1.3';
+        el.style.marginTop = '1px';
         el.style.whiteSpace = 'pre-wrap';
         el.style.wordWrap = 'break-word';
         el.style.overflowWrap = 'break-word';
         el.style.maxWidth = '100%';
+        el.style.background = 'transparent';
       });
 
       const names = element.querySelectorAll('.print-name');
       names.forEach(el => {
         el.style.color = '#8DC63F';
         el.style.fontWeight = 'bold';
-        el.style.fontSize = '11px';
+        el.style.fontSize = '9.5px';
       });
 
       const coordinatorActions = element.querySelectorAll('.print-coordinator-actions');
       coordinatorActions.forEach(el => {
-        el.style.marginTop = '4px';
-        el.style.marginBottom = '2px';
+        el.style.marginTop = '3px';
+        el.style.marginBottom = '1px';
         el.style.padding = '0';
         el.style.background = 'transparent';
         el.style.borderLeft = 'none';
@@ -673,18 +678,19 @@ export default function WeeklyServiceManager() {
       const actionDivs = element.querySelectorAll('.print-coordinator-actions div');
       actionDivs.forEach(el => {
         el.style.marginLeft = '0';
-        el.style.fontSize = '9.5px';
+        el.style.fontSize = '8px';
         el.style.color = '#6b7280';
-        el.style.lineHeight = '1.25';
+        el.style.lineHeight = '1.2';
         el.style.fontStyle = 'italic';
       });
 
       const segmentSongs = element.querySelectorAll('.print-segment-songs');
       segmentSongs.forEach(el => {
         el.style.marginLeft = '0';
-        el.style.marginTop = '3px';
-        el.style.fontSize = '11px';
-        el.style.lineHeight = '1.3';
+        el.style.marginTop = '2px';
+        el.style.fontSize = '9.5px';
+        el.style.lineHeight = '1.25';
+        el.style.background = 'transparent';
       });
 
       const segmentSongsDivs = element.querySelectorAll('.print-segment-songs div');
@@ -695,16 +701,16 @@ export default function WeeklyServiceManager() {
       const recesos = element.querySelectorAll('.print-receso');
       recesos.forEach(el => {
         el.style.background = 'transparent';
-        el.style.padding = '8px 0';
-        el.style.margin = '16px 0';
+        el.style.padding = '6px 0';
+        el.style.margin = '12px 0';
         el.style.textAlign = 'center';
-        el.style.fontSize = '13px';
+        el.style.fontSize = '11px';
         el.style.fontWeight = 'bold';
-        el.style.color = '#1F5B8C';
+        el.style.color = '#000000';
         el.style.textTransform = 'uppercase';
-        el.style.letterSpacing = '0.5px';
-        el.style.borderTop = '2px solid #1F5B8C';
-        el.style.borderBottom = '2px solid #1F5B8C';
+        el.style.letterSpacing = '0.4px';
+        el.style.borderTop = '1.5px solid #000000';
+        el.style.borderBottom = '1.5px solid #000000';
       });
 
       const announcementsEls = element.querySelectorAll('.print-announcements');
@@ -713,6 +719,7 @@ export default function WeeklyServiceManager() {
         el.style.paddingTop = '0';
         el.style.paddingLeft = '0';
         el.style.paddingRight = '0';
+        el.style.background = 'white';
       });
     };
 
@@ -831,41 +838,46 @@ export default function WeeklyServiceManager() {
       const applyPrintStyles = (element) => {
         const headers = element.querySelectorAll('.print-header');
         headers.forEach(el => {
-          el.style.marginBottom = '14px';
+          el.style.position = 'relative';
+          el.style.marginBottom = '10px';
           el.style.paddingBottom = '0';
-          el.style.borderBottom = 'none';
+          el.style.textAlign = 'center';
         });
 
         const logos = element.querySelectorAll('.print-logo');
         logos.forEach(el => {
-          el.style.width = '72px';
-          el.style.height = '72px';
+          el.style.position = 'absolute';
+          el.style.top = '0';
+          el.style.left = '0';
+          el.style.width = '54px';
+          el.style.height = '54px';
           el.style.background = 'none';
-          el.style.flexShrink = '0';
         });
 
         const titles = element.querySelectorAll('.print-title');
         titles.forEach(el => {
-          el.style.flex = '1';
+          el.style.width = '100%';
           el.style.textAlign = 'center';
+          el.style.margin = '0 auto';
+          el.style.padding = '0 60px';
         });
 
         const titleH1 = element.querySelectorAll('.print-title h1');
         titleH1.forEach(el => {
-          el.style.fontSize = '24px';
+          el.style.fontSize = '20px';
           el.style.fontWeight = 'bold';
-          el.style.margin = '0 0 4px 0';
+          el.style.margin = '0 0 3px 0';
           el.style.textTransform = 'uppercase';
-          el.style.letterSpacing = '1px';
-          el.style.color = '#1F5B8C';
+          el.style.letterSpacing = '0.8px';
+          el.style.color = '#000000';
         });
 
         const titleP = element.querySelectorAll('.print-title p');
         titleP.forEach(el => {
-          el.style.fontSize = '13px';
+          el.style.fontSize = '11px';
           el.style.color = '#374151';
           el.style.fontWeight = '500';
-          el.style.margin = '0 0 8px 0';
+          el.style.margin = '0 0 6px 0';
         });
 
         const teamInfo = element.querySelectorAll('.print-team-info');
@@ -873,26 +885,26 @@ export default function WeeklyServiceManager() {
           el.style.display = 'flex';
           el.style.justifyContent = 'center';
           el.style.alignItems = 'center';
-          el.style.gap = '16px';
+          el.style.gap = '12px';
           el.style.flexWrap = 'wrap';
-          el.style.padding = '6px 0';
+          el.style.padding = '4px 0';
           el.style.borderTop = '1px solid #d1d5db';
-          el.style.marginTop = '6px';
-          el.style.fontSize = '9px';
+          el.style.marginTop = '4px';
+          el.style.fontSize = '8px';
           el.style.color = '#374151';
         });
 
         const teamLabels = element.querySelectorAll('.print-team-label');
         teamLabels.forEach(el => {
           el.style.fontWeight = '600';
-          el.style.color = '#374151';
+          el.style.color = '#000000';
         });
 
         const twoColumns = element.querySelectorAll('.print-two-columns');
         twoColumns.forEach(el => {
           el.style.display = 'grid';
           el.style.gridTemplateColumns = '1fr 1fr';
-          el.style.gap = '20px';
+          el.style.gap = '18px';
           el.style.marginBottom = '0';
         });
 
@@ -903,35 +915,36 @@ export default function WeeklyServiceManager() {
 
         const serviceTimes = element.querySelectorAll('.print-service-time');
         serviceTimes.forEach(el => {
-          el.style.fontSize = '16px';
+          el.style.fontSize = '13px';
           el.style.fontWeight = 'bold';
-          el.style.color = '#1F5B8C';
-          el.style.marginBottom = '10px';
-          el.style.paddingBottom = '4px';
-          el.style.borderBottom = '2px solid #1F5B8C';
+          el.style.color = '#000000';
+          el.style.marginBottom = '8px';
+          el.style.paddingBottom = '3px';
+          el.style.borderBottom = '1.5px solid #000000';
           el.style.textTransform = 'uppercase';
-          el.style.letterSpacing = '0.5px';
+          el.style.letterSpacing = '0.4px';
         });
 
         const rightServiceTimes = element.querySelectorAll('.print-service-column.right .print-service-time');
         rightServiceTimes.forEach(el => {
-          el.style.color = '#1F5B8C';
+          el.style.color = '#000000';
         });
 
         const segments = element.querySelectorAll('.print-segment');
         segments.forEach(el => {
-          el.style.marginBottom = '12px';
+          el.style.marginBottom = '10px';
           el.style.paddingBottom = '0';
           el.style.borderBottom = 'none';
-          el.style.fontSize = '11px';
-          el.style.lineHeight = '1.35';
+          el.style.fontSize = '9.5px';
+          el.style.lineHeight = '1.3';
+          el.style.background = 'transparent';
         });
 
         const segmentTimes = element.querySelectorAll('.print-segment-time');
         segmentTimes.forEach(el => {
           el.style.fontWeight = 'bold';
           el.style.color = '#B53737';
-          el.style.fontSize = '11px';
+          el.style.fontSize = '9.5px';
         });
 
         const rightSegmentTimes = element.querySelectorAll('.print-service-column.right .print-segment-time');
@@ -943,214 +956,112 @@ export default function WeeklyServiceManager() {
         segmentTitles.forEach(el => {
           el.style.fontWeight = 'bold';
           el.style.textTransform = 'uppercase';
-          el.style.fontSize = '11px';
+          el.style.fontSize = '9.5px';
           el.style.marginLeft = '0';
-          el.style.color = '#1a1a1a';
-          el.style.letterSpacing = '0.25px';
+          el.style.color = '#000000';
+          el.style.letterSpacing = '0.2px';
         });
 
         const segmentDetails = element.querySelectorAll('.print-segment-detail');
         segmentDetails.forEach(el => {
           el.style.marginLeft = '0';
-          el.style.fontSize = '11px';
+          el.style.fontSize = '9.5px';
           el.style.color = '#374151';
-          el.style.lineHeight = '1.35';
-          el.style.marginTop = '2px';
+          el.style.lineHeight = '1.3';
+          el.style.marginTop = '1px';
           el.style.whiteSpace = 'pre-wrap';
           el.style.wordWrap = 'break-word';
           el.style.overflowWrap = 'break-word';
+          el.style.background = 'transparent';
         });
 
         const names = element.querySelectorAll('.print-name');
         names.forEach(el => {
           el.style.color = '#8DC63F';
           el.style.fontWeight = 'bold';
-          el.style.fontSize = '11px';
-        });
-
-        const coordinatorActions = element.querySelectorAll('.print-coordinator-actions');
-        coordinatorActions.forEach(el => {
-          el.style.marginTop = '4px';
-          el.style.marginBottom = '2px';
-          el.style.padding = '0';
-          el.style.background = 'transparent';
-          el.style.borderLeft = 'none';
-          el.style.borderRadius = '0';
-        });
-
-        const actionStrongs = element.querySelectorAll('.print-coordinator-actions strong');
-        actionStrongs.forEach(el => {
-          el.style.display = 'none';
-        });
-
-        const actionDivs = element.querySelectorAll('.print-coordinator-actions div');
-        actionDivs.forEach(el => {
-          el.style.marginLeft = '0';
           el.style.fontSize = '9.5px';
-          el.style.color = '#6b7280';
-          el.style.lineHeight = '1.25';
-          el.style.fontWeight = '400';
-          el.style.fontStyle = 'italic';
         });
 
-        const segmentSongs = element.querySelectorAll('.print-segment-songs');
-        segmentSongs.forEach(el => {
-          el.style.marginLeft = '0';
-          el.style.fontSize = '11px';
-          el.style.lineHeight = '1.3';
-          el.style.marginTop = '3px';
-        });
-
-        const segmentSongsDivs = element.querySelectorAll('.print-segment-songs div');
-        segmentSongsDivs.forEach(el => {
-          el.style.color = '#374151';
-        });
-
-        const recesos = element.querySelectorAll('.print-receso');
-        recesos.forEach(el => {
-          el.style.background = 'transparent';
-          el.style.padding = '8px 0';
-          el.style.margin = '16px 0';
-          el.style.textAlign = 'center';
-          el.style.fontSize = '13px';
-          el.style.fontWeight = 'bold';
-          el.style.color = '#1F5B8C';
-          el.style.textTransform = 'uppercase';
-          el.style.letterSpacing = '0.5px';
-          el.style.borderTop = '2px solid #1F5B8C';
-          el.style.borderBottom = '2px solid #1F5B8C';
-        });
-
-        const announcements = element.querySelectorAll('.print-announcements');
-        announcements.forEach(el => {
-          el.style.breakBefore = 'page';
-          el.style.paddingTop = '0';
-          el.style.paddingLeft = '0';
-          el.style.paddingRight = '0';
-        });
-
-        const announcementsHeaderEls = element.querySelectorAll('.print-announcements-header');
-        announcementsHeaderEls.forEach(el => {
-          el.style.textAlign = 'center';
-          el.style.marginBottom = '18px';
-          el.style.paddingBottom = '0';
-          el.style.borderBottom = 'none';
-        });
-
-        const announcementLists = element.querySelectorAll('.print-announcement-list');
-        announcementLists.forEach(el => {
-          el.style.paddingLeft = '0';
+        const twoColumns = element.querySelectorAll('.print-two-columns');
+        twoColumns.forEach(el => {
           el.style.display = 'grid';
           el.style.gridTemplateColumns = '1fr 1fr';
-          el.style.gap = '20px';
-          el.style.margin = '0';
+          el.style.gap = '18px';
+          el.style.marginBottom = '0';
         });
 
-        const announcementItems = element.querySelectorAll('.print-announcement-item');
-        announcementItems.forEach(el => {
-          el.style.marginBottom = '0';
+        const serviceColumns = element.querySelectorAll('.print-service-column');
+        serviceColumns.forEach(el => {
+          el.style.breakInside = 'avoid';
+        });
+
+        const serviceTimes = element.querySelectorAll('.print-service-time');
+        serviceTimes.forEach(el => {
+          el.style.fontSize = '13px';
+          el.style.fontWeight = 'bold';
+          el.style.color = '#000000';
+          el.style.marginBottom = '8px';
+          el.style.paddingBottom = '3px';
+          el.style.borderBottom = '1.5px solid #000000';
+          el.style.textTransform = 'uppercase';
+          el.style.letterSpacing = '0.4px';
+        });
+
+        const rightServiceTimes = element.querySelectorAll('.print-service-column.right .print-service-time');
+        rightServiceTimes.forEach(el => {
+          el.style.color = '#000000';
+        });
+
+        const segments = element.querySelectorAll('.print-segment');
+        segments.forEach(el => {
+          el.style.marginBottom = '10px';
           el.style.paddingBottom = '0';
           el.style.borderBottom = 'none';
-          el.style.breakInside = 'avoid';
-          el.style.fontSize = '11px';
-          el.style.lineHeight = '1.35';
-        });
-
-        const announcementHeaderEls = element.querySelectorAll('.print-announcement-header');
-        announcementHeaderEls.forEach(el => {
-          el.style.display = 'block';
-          el.style.marginBottom = '8px';
-          el.style.paddingBottom = '6px';
-          el.style.borderBottom = '2px solid #1F5B8C';
-        });
-
-        const announcementTitles = element.querySelectorAll('.print-announcement-title');
-        announcementTitles.forEach(el => {
-          el.style.fontSize = '11px';
-          el.style.fontWeight = 'bold';
-          el.style.color = '#1a1a1a';
-          el.style.textTransform = 'uppercase';
-          el.style.letterSpacing = '0.25px';
-        });
-
-        const announcementDates = element.querySelectorAll('.print-announcement-date');
-        announcementDates.forEach(el => {
           el.style.fontSize = '9.5px';
-          el.style.fontWeight = '600';
-          el.style.color = '#B53737';
-          el.style.marginTop = '4px';
+          el.style.lineHeight = '1.3';
+          el.style.background = 'transparent';
         });
 
-        const announcementContents = element.querySelectorAll('.print-announcement-content');
-        announcementContents.forEach(el => {
-          el.style.fontSize = '11px';
-          el.style.lineHeight = '1.35';
+        const segmentTimes = element.querySelectorAll('.print-segment-time');
+        segmentTimes.forEach(el => {
+          el.style.fontWeight = 'bold';
+          el.style.color = '#B53737';
+          el.style.fontSize = '9.5px';
+        });
+
+        const rightSegmentTimes = element.querySelectorAll('.print-service-column.right .print-segment-time');
+        rightSegmentTimes.forEach(el => {
+          el.style.color = '#B53737';
+        });
+
+        const segmentTitles = element.querySelectorAll('.print-segment-title');
+        segmentTitles.forEach(el => {
+          el.style.fontWeight = 'bold';
+          el.style.textTransform = 'uppercase';
+          el.style.fontSize = '9.5px';
+          el.style.marginLeft = '0';
+          el.style.color = '#000000';
+          el.style.letterSpacing = '0.2px';
+        });
+
+        const segmentDetails = element.querySelectorAll('.print-segment-detail');
+        segmentDetails.forEach(el => {
+          el.style.marginLeft = '0';
+          el.style.fontSize = '9.5px';
           el.style.color = '#374151';
-          el.style.marginBottom = '0';
+          el.style.lineHeight = '1.3';
+          el.style.marginTop = '1px';
           el.style.whiteSpace = 'pre-wrap';
           el.style.wordWrap = 'break-word';
           el.style.overflowWrap = 'break-word';
+          el.style.background = 'transparent';
         });
 
-        const announcementInstructions = element.querySelectorAll('.print-announcement-instructions');
-        announcementInstructions.forEach(el => {
-          el.style.fontSize = '9.5px';
-          el.style.background = '#fffbeb';
-          el.style.padding = '6px 10px';
-          el.style.marginTop = '8px';
-          el.style.fontStyle = 'italic';
-          el.style.borderLeft = '2px solid #f59e0b';
-          el.style.color = '#78350f';
-          el.style.lineHeight = '1.3';
-        });
-
-        const announcementsLogoEls = element.querySelectorAll('.print-announcements-logo');
-        announcementsLogoEls.forEach(el => {
-          el.style.width = '72px';
-          el.style.height = '72px';
-          el.style.background = 'none';
-          el.style.flexShrink = '0';
-        });
-
-        const announcementsTitleEls = element.querySelectorAll('.print-announcements-title');
-        announcementsTitleEls.forEach(el => {
-          el.style.fontSize = '24px';
+        const names = element.querySelectorAll('.print-name');
+        names.forEach(el => {
+          el.style.color = '#8DC63F';
           el.style.fontWeight = 'bold';
-          el.style.textTransform = 'uppercase';
-          el.style.marginBottom = '4px';
-          el.style.letterSpacing = '1px';
-          el.style.color = '#1F5B8C';
-        });
-
-        const announcementsHeaderP = element.querySelectorAll('.print-announcements-header p');
-        announcementsHeaderP.forEach(el => {
-          el.style.fontSize = '13px';
-          el.style.fontWeight = '500';
-          el.style.color = '#374151';
-          el.style.margin = '0 0 10px 0';
-        });
-
-        const announcementsDividers = element.querySelectorAll('.print-announcements-divider');
-        announcementsDividers.forEach(el => {
-          el.style.width = '160px';
-          el.style.height = '2.5px';
-          el.style.background = 'linear-gradient(90deg, #1F5B8C 0%, #8DC63F 100%)';
-          el.style.margin = '0 auto';
-          el.style.borderRadius = '2px';
-        });
-
-        const footers = element.querySelectorAll('.print-footer');
-        footers.forEach(el => {
-          el.style.width = '100%';
-          el.style.height = '32px';
-          el.style.background = 'linear-gradient(90deg, #8DC63F 0%, #1F8A70 100%)';
-          el.style.display = 'flex';
-          el.style.alignItems = 'center';
-          el.style.justifyContent = 'center';
-          el.style.color = 'white';
-          el.style.fontSize = '11pt';
-          el.style.fontWeight = '600';
-          el.style.letterSpacing = '0.5pt';
+          el.style.fontSize = '9.5px';
         });
       };
 
