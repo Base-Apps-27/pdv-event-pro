@@ -296,8 +296,9 @@ export default function WeeklyServiceManager() {
         selected_announcements: []
       };
       setServiceData(initialData);
+      setSelectedAnnouncements([]);
     }
-  }, [existingData]);
+  }, [existingData, selectedDate]);
 
   // Auto-select announcements for new services only
   useEffect(() => {
@@ -345,7 +346,7 @@ export default function WeeklyServiceManager() {
       
       const dataToSave = {
         ...currentData,
-        selected_announcements: currentData.selected_announcements || selectedAnnouncements,
+        selected_announcements: selectedAnnouncements,
         day_of_week: 'Sunday',
         name: `Domingo - ${selectedDate}`,
         status: 'active'
@@ -360,6 +361,17 @@ export default function WeeklyServiceManager() {
       });
     }, 800);
   }, [selectedDate, selectedAnnouncements, saveServiceMutation]);
+
+  // Sync selected announcements with serviceData
+  useEffect(() => {
+    setServiceData(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        selected_announcements: selectedAnnouncements
+      };
+    });
+  }, [selectedAnnouncements]);
 
   // Update handlers
   const updateSegmentField = (service, segmentIndex, field, value) => {
