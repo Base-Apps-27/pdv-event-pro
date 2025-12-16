@@ -447,22 +447,27 @@ export default function WeeklyServiceManager() {
     const printContent = document.querySelector('.print-content');
     if (!printContent) return;
 
-    // Show print content temporarily
+    // Temporarily show and apply print styles
+    const originalDisplay = printContent.style.display;
+    const originalClass = printContent.className;
     printContent.style.display = 'block';
+    printContent.className = printContent.className.replace('hidden', '');
     
     try {
       const canvas = await html2canvas(printContent, {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: 816, // 8.5 inches at 96 DPI
+        windowWidth: 816
       });
 
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
+      const imgWidth = 216; // Letter width in mm (8.5 inches)
+      const pageHeight = 279; // Letter height in mm (11 inches)
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdf = new jsPDF('p', 'mm', 'letter');
       let heightLeft = imgHeight;
       let position = 0;
 
@@ -481,7 +486,8 @@ export default function WeeklyServiceManager() {
       console.error('Error generating PDF:', error);
       alert('Error al generar PDF');
     } finally {
-      printContent.style.display = '';
+      printContent.style.display = originalDisplay;
+      printContent.className = originalClass;
     }
   };
 
