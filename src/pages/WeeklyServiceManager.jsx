@@ -1313,7 +1313,6 @@ export default function WeeklyServiceManager() {
                                           newSongs[sIdx].title = e.target.value;
                                           updateSegmentField("9:30am", idx, "songs", newSongs);
                                         }}
-                                        onBlur={() => handleFieldBlur("9:30am", idx, "songs")}
                                         className="text-xs"
                                       />
                                       <AutocompleteInput
@@ -1325,7 +1324,6 @@ export default function WeeklyServiceManager() {
                                           newSongs[sIdx].lead = e.target.value;
                                           updateSegmentField("9:30am", idx, "songs", newSongs);
                                         }}
-                                        onBlur={() => handleFieldBlur("9:30am", idx, "songs")}
                                         className="text-xs"
                                       />
                                     </div>
