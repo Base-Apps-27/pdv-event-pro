@@ -55,7 +55,13 @@ export default function WeeklyServiceManager() {
   const [savingField, setSavingField] = useState(null);
   
   const saveTimeoutRef = useRef(null);
+  const serviceDataRef = useRef(null);
   const queryClient = useQueryClient();
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    serviceDataRef.current = serviceData;
+  }, [serviceData]);
 
   // Blueprint structure
   const BLUEPRINT = {
@@ -292,7 +298,7 @@ export default function WeeklyServiceManager() {
     setSavingField(fieldKey);
 
     saveTimeoutRef.current = setTimeout(() => {
-      const currentData = serviceData;
+      const currentData = serviceDataRef.current;
       if (!currentData) {
         setSavingField(null);
         return;
@@ -300,7 +306,6 @@ export default function WeeklyServiceManager() {
       
       const dataToSave = {
         ...currentData,
-        selected_announcements: selectedAnnouncements,
         day_of_week: 'Sunday',
         name: `Domingo - ${selectedDate}`,
         status: 'active'
@@ -312,7 +317,7 @@ export default function WeeklyServiceManager() {
         }
       });
     }, 800);
-  }, [serviceData, selectedDate, selectedAnnouncements, saveServiceMutation]);
+  }, [selectedDate, saveServiceMutation]);
 
   // Update handlers
   const updateSegmentField = (service, segmentIndex, field, value) => {
