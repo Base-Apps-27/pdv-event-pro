@@ -921,7 +921,7 @@ export default function WeeklyServiceManager() {
                   {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
                     <div className="print-segment-songs">
                       {segment.songs.filter(s => s.title).map((song, sIdx) => (
-                        <div key={sIdx}>• {song.title} {song.lead && `(${song.lead})`}</div>
+                        <div key={sIdx}>• <strong>{song.title}</strong> {song.lead && `(${song.lead})`}</div>
                       ))}
                     </div>
                   )}
@@ -1038,7 +1038,7 @@ export default function WeeklyServiceManager() {
                   {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
                     <div className="print-segment-songs">
                       {segment.songs.filter(s => s.title).map((song, sIdx) => (
-                        <div key={sIdx}>• {song.title} {song.lead && `(${song.lead})`}</div>
+                        <div key={sIdx}>• <strong>{song.title}</strong> {song.lead && `(${song.lead})`}</div>
                       ))}
                     </div>
                   )}
