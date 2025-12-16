@@ -704,7 +704,7 @@ export default function WeeklyServiceManager() {
           .print-segment-time {
             font-weight: bold;
             color: #dc2626;
-            font-size: 10px;
+            font-size: 12px;
           }
 
           .print-service-column.right .print-segment-time {
@@ -714,7 +714,7 @@ export default function WeeklyServiceManager() {
           .print-segment-title {
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 9px;
+            font-size: 11px;
             margin-left: 4px;
             color: #000;
           }
@@ -729,6 +729,28 @@ export default function WeeklyServiceManager() {
           .print-name {
             color: #8DC63F;
             font-weight: bold;
+            font-size: 9px;
+          }
+
+          .print-coordinator-actions {
+            margin-top: 6px;
+            padding-top: 4px;
+            border-top: 1px dashed #e5e7eb;
+            background: #fef9e7;
+            padding: 3px 5px;
+            border-radius: 2px;
+          }
+
+          .print-coordinator-actions strong {
+            color: #b45309;
+            font-size: 7px;
+          }
+
+          .print-coordinator-actions div {
+            margin-left: 8px;
+            font-size: 6px;
+            color: #92400e;
+            opacity: 0.8;
           }
 
           .print-segment-songs {
@@ -907,20 +929,6 @@ export default function WeeklyServiceManager() {
                     </div>
                   )}
 
-                  {segment.actions && segment.actions.length > 0 && (
-                    <div className="print-segment-detail" style={{ marginTop: '3px', paddingTop: '3px', borderTop: '1px dashed #e5e7eb', background: '#fef3c7', padding: '3px 5px', borderRadius: '2px' }}>
-                      <strong style={{ color: '#92400e' }}>⏰ Acciones:</strong>
-                      {segment.actions.map((action, aIdx) => (
-                        <div key={aIdx} style={{ marginLeft: '8px', fontSize: '7px', color: '#92400e' }}>
-                          • {action.label}
-                          {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
-                          {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después)`}
-                          {action.timing === "before_start" && ` (antes de iniciar)`}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
                   {segment.data?.presenter && (
                     <div className="print-segment-detail">
                       <strong>P:</strong> <span className="print-name">{segment.data.presenter}</span>
@@ -1089,6 +1097,20 @@ export default function WeeklyServiceManager() {
                   {segment.data?.sound_notes && (
                     <div className="print-segment-detail" style={{ marginTop: '2px' }}>
                       <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
+                    </div>
+                  )}
+
+                  {segment.actions && segment.actions.length > 0 && (
+                    <div className="print-coordinator-actions">
+                      <strong>⏰ Acciones:</strong>
+                      {segment.actions.map((action, aIdx) => (
+                        <div key={aIdx}>
+                          • {action.label}
+                          {action.timing === "before_end" && ` (${action.offset_min} min antes)`}
+                          {action.timing === "after_start" && action.offset_min > 0 && ` (+${action.offset_min} min)`}
+                          {action.timing === "before_start" && ` (antes)`}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
