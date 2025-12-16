@@ -16,8 +16,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
+
 
 export default function WeeklyServiceManager() {
   // State
@@ -441,60 +440,6 @@ export default function WeeklyServiceManager() {
     setTimeout(() => {
       window.print();
     }, 100);
-  };
-
-  const handleDownloadPDF = async () => {
-    const printContent = document.querySelector('.print-content');
-    if (!printContent) return;
-
-    // Add temporary style to apply print styles
-    const tempStyle = document.createElement('style');
-    tempStyle.id = 'temp-pdf-styles';
-    tempStyle.textContent = `
-      .print-content { display: block !important; }
-      .print-content * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    `;
-    document.head.appendChild(tempStyle);
-    
-    try {
-      // Wait a bit for styles to apply
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const canvas = await html2canvas(printContent, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: 816,
-        width: 816
-      });
-
-      const imgWidth = 216; // Letter width in mm (8.5 inches)
-      const pageHeight = 279; // Letter height in mm (11 inches)
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      const pdf = new jsPDF('p', 'mm', 'letter');
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      pdf.save(`Servicio-${selectedDate}.pdf`);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error al generar PDF');
-    } finally {
-      const tempStyleEl = document.getElementById('temp-pdf-styles');
-      if (tempStyleEl) tempStyleEl.remove();
-    }
   };
 
 
@@ -1247,13 +1192,9 @@ export default function WeeklyServiceManager() {
               <span>Guardando...</span>
             </div>
           )}
-          <Button className="bg-pdv-teal text-white" onClick={handleDownloadPDF}>
+          <Button className="bg-pdv-teal text-white" onClick={handlePrint}>
             <Printer className="w-4 h-4 mr-2" />
-            Descargar PDF
-          </Button>
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="w-4 h-4 mr-2" />
-            Imprimir
+            Imprimir / Guardar PDF
           </Button>
         </div>
       </div>
