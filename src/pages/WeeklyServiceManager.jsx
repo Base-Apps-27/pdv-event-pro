@@ -1729,15 +1729,15 @@ export default function WeeklyServiceManager() {
           .print-announcements {
             break-before: page;
             padding-top: 0;
-            padding-left: 72pt;
-            padding-right: 72pt;
+            padding-left: 0;
+            padding-right: 0;
             padding-bottom: 60pt;
           }
 
           .print-announcements-logo {
-            width: 58px;
-            height: 58px;
-            margin: 0 auto 10pt auto;
+            width: 68px;
+            height: 68px;
+            margin: 0 auto 8pt auto;
             background: none;
           }
 
@@ -1749,44 +1749,45 @@ export default function WeeklyServiceManager() {
 
           .print-announcements-header {
             text-align: center;
-            margin-bottom: 20pt;
+            margin-bottom: 18pt;
             padding-bottom: 0;
             border-bottom: none;
           }
 
           .print-announcements-title {
-            font-size: 26pt;
-            font-weight: 700;
+            font-size: 24pt;
+            font-weight: bold;
             text-transform: uppercase;
-            margin-bottom: 6pt;
-            color: #1F8A70;
+            margin-bottom: 4pt;
+            color: #1F5B8C;
             letter-spacing: 1pt;
           }
 
           .print-announcements-header p {
             font-size: 13pt;
             font-weight: 500;
-            color: #4b5563;
-            margin: 0 0 12pt 0;
+            color: #374151;
+            margin: 0 0 10pt 0;
           }
 
           .print-announcements-divider {
-            width: 140pt;
+            width: 160pt;
             height: 2.5pt;
-            background: linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%);
+            background: linear-gradient(90deg, #1F5B8C 0%, #8DC63F 100%);
             margin: 0 auto;
             border-radius: 2pt;
           }
 
           .print-announcement-list {
             padding-left: 0;
-            display: block;
-            max-width: 480pt;
-            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20pt;
+            margin: 0;
           }
 
           .print-announcement-item {
-            margin-bottom: 32pt;
+            margin-bottom: 0;
             padding: 0;
             border: none;
             break-inside: avoid;
@@ -1795,31 +1796,32 @@ export default function WeeklyServiceManager() {
 
           .print-announcement-header {
             display: block;
-            margin-bottom: 12pt;
-            padding-left: 8pt;
-            border-left: 3pt solid #8DC63F;
+            margin-bottom: 8pt;
+            padding-bottom: 6pt;
+            border-bottom: 2pt solid #1F5B8C;
           }
 
           .print-announcement-title {
-            font-size: 14pt;
-            font-weight: 600;
+            font-size: 11pt;
+            font-weight: bold;
             color: #1a1a1a;
-            text-transform: capitalize;
+            text-transform: uppercase;
             display: block;
             line-height: 1.2;
+            letter-spacing: 0.25pt;
           }
 
           .print-announcement-date {
-            font-size: 11pt;
-            font-weight: 400;
-            color: #1F8A70;
+            font-size: 9.5pt;
+            font-weight: 600;
+            color: #B53737;
             display: block;
             margin-top: 4pt;
           }
 
           .print-announcement-content {
-            font-size: 12.5pt;
-            line-height: 1.5;
+            font-size: 11pt;
+            line-height: 1.35;
             color: #374151;
             margin-bottom: 0;
             margin-top: 0;
@@ -1829,26 +1831,27 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcement-instructions {
-            font-size: 11pt;
-            background: #f3f4f6;
-            padding: 8pt 12pt;
-            margin-top: 12pt;
+            font-size: 9.5pt;
+            background: #fffbeb;
+            padding: 6pt 10pt;
+            margin-top: 8pt;
             font-style: italic;
-            border-left: 3pt solid #1F8A70;
-            color: #4b5563;
+            border-left: 2pt solid #f59e0b;
+            color: #78350f;
             border-radius: 2pt;
+            line-height: 1.3;
           }
 
           .print-announcement-instructions::before {
-            content: "CUE PARA EL ANUNCIADOR";
-            display: block;
-            font-size: 9pt;
-            font-weight: 600;
+            content: "CUE";
+            display: inline;
+            font-size: 8pt;
+            font-weight: bold;
             font-style: normal;
             text-transform: uppercase;
             letter-spacing: 0.5pt;
-            color: #1F8A70;
-            margin-bottom: 6pt;
+            color: #f59e0b;
+            margin-right: 6pt;
           }
 
           .print-footer {
