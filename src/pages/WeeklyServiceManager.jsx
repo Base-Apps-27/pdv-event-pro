@@ -588,57 +588,59 @@ export default function WeeklyServiceManager() {
 
       const serviceTimes = element.querySelectorAll('.print-service-time');
       serviceTimes.forEach(el => {
-        el.style.fontSize = '22.5px';
+        el.style.fontSize = '16px';
         el.style.fontWeight = 'bold';
-        el.style.color = '#dc2626';
-        el.style.marginBottom = '6px';
-        el.style.paddingBottom = '2px';
-        el.style.borderBottom = '1.5px solid #dc2626';
+        el.style.color = '#1F5B8C';
+        el.style.marginBottom = '10px';
+        el.style.paddingBottom = '4px';
+        el.style.borderBottom = '2px solid #1F5B8C';
+        el.style.textTransform = 'uppercase';
+        el.style.letterSpacing = '0.5px';
       });
 
       const rightServiceTimes = element.querySelectorAll('.print-service-column.right .print-service-time');
       rightServiceTimes.forEach(el => {
-        el.style.color = '#2563eb';
-        el.style.borderColor = '#2563eb';
+        el.style.color = '#1F5B8C';
       });
 
       const segments = element.querySelectorAll('.print-segment');
       segments.forEach(el => {
-        el.style.marginBottom = '7px';
-        el.style.paddingBottom = '6px';
-        el.style.borderBottom = '1px solid #e5e7eb';
-        el.style.fontSize = '11.25px';
-        el.style.lineHeight = '1.4';
+        el.style.marginBottom = '12px';
+        el.style.paddingBottom = '0';
+        el.style.borderBottom = 'none';
+        el.style.fontSize = '11px';
+        el.style.lineHeight = '1.35';
         el.style.breakInside = 'avoid';
       });
 
       const segmentTimes = element.querySelectorAll('.print-segment-time');
       segmentTimes.forEach(el => {
         el.style.fontWeight = 'bold';
-        el.style.color = '#dc2626';
-        el.style.fontSize = '15px';
+        el.style.color = '#B53737';
+        el.style.fontSize = '11px';
       });
 
       const rightSegmentTimes = element.querySelectorAll('.print-service-column.right .print-segment-time');
       rightSegmentTimes.forEach(el => {
-        el.style.color = '#2563eb';
+        el.style.color = '#B53737';
       });
 
       const segmentTitles = element.querySelectorAll('.print-segment-title');
       segmentTitles.forEach(el => {
         el.style.fontWeight = 'bold';
         el.style.textTransform = 'uppercase';
-        el.style.fontSize = '13.75px';
-        el.style.marginLeft = '4px';
-        el.style.color = '#000';
+        el.style.fontSize = '11px';
+        el.style.marginLeft = '0';
+        el.style.color = '#1a1a1a';
+        el.style.letterSpacing = '0.25px';
       });
 
       const segmentDetails = element.querySelectorAll('.print-segment-detail');
       segmentDetails.forEach(el => {
-        el.style.marginLeft = '8px';
-        el.style.fontSize = '9.375px';
+        el.style.marginLeft = '0';
+        el.style.fontSize = '11px';
         el.style.color = '#374151';
-        el.style.lineHeight = '1.4';
+        el.style.lineHeight = '1.35';
         el.style.marginTop = '2px';
         el.style.whiteSpace = 'pre-wrap';
         el.style.wordWrap = 'break-word';
@@ -650,52 +652,59 @@ export default function WeeklyServiceManager() {
       names.forEach(el => {
         el.style.color = '#8DC63F';
         el.style.fontWeight = 'bold';
-        el.style.fontSize = '11.25px';
+        el.style.fontSize = '11px';
       });
 
       const coordinatorActions = element.querySelectorAll('.print-coordinator-actions');
       coordinatorActions.forEach(el => {
-        el.style.marginTop = '6px';
-        el.style.padding = '4px 6px';
-        el.style.background = '#fffbeb';
-        el.style.borderLeft = '2px solid #fbbf24';
-        el.style.borderRadius = '2px';
+        el.style.marginTop = '4px';
+        el.style.marginBottom = '2px';
+        el.style.padding = '0';
+        el.style.background = 'transparent';
+        el.style.borderLeft = 'none';
+        el.style.borderRadius = '0';
       });
 
       const actionStrongs = element.querySelectorAll('.print-coordinator-actions strong');
       actionStrongs.forEach(el => {
-        el.style.color = '#92400e';
-        el.style.fontSize = '8.75px';
-        el.style.display = 'block';
-        el.style.marginBottom = '2px';
+        el.style.display = 'none';
       });
 
       const actionDivs = element.querySelectorAll('.print-coordinator-actions div');
       actionDivs.forEach(el => {
-        el.style.marginLeft = '10px';
-        el.style.fontSize = '8.125px';
-        el.style.color = '#78350f';
-        el.style.lineHeight = '1.3';
+        el.style.marginLeft = '0';
+        el.style.fontSize = '9.5px';
+        el.style.color = '#6b7280';
+        el.style.lineHeight = '1.25';
+        el.style.fontStyle = 'italic';
       });
 
       const segmentSongs = element.querySelectorAll('.print-segment-songs');
       segmentSongs.forEach(el => {
-        el.style.marginLeft = '8px';
-        el.style.fontSize = '10px';
-        el.style.lineHeight = '1.2';
+        el.style.marginLeft = '0';
+        el.style.marginTop = '3px';
+        el.style.fontSize = '11px';
+        el.style.lineHeight = '1.3';
+      });
+
+      const segmentSongsDivs = element.querySelectorAll('.print-segment-songs div');
+      segmentSongsDivs.forEach(el => {
+        el.style.color = '#374151';
       });
 
       const recesos = element.querySelectorAll('.print-receso');
       recesos.forEach(el => {
-        el.style.background = '#f9fafb';
-        el.style.padding = '6px';
-        el.style.margin = '6px 0';
+        el.style.background = 'transparent';
+        el.style.padding = '8px 0';
+        el.style.margin = '16px 0';
         el.style.textAlign = 'center';
-        el.style.fontSize = '11.25px';
+        el.style.fontSize = '13px';
         el.style.fontWeight = 'bold';
-        el.style.color = '#6b7280';
-        el.style.borderTop = '1px solid #d1d5db';
-        el.style.borderBottom = '1px solid #d1d5db';
+        el.style.color = '#1F5B8C';
+        el.style.textTransform = 'uppercase';
+        el.style.letterSpacing = '0.5px';
+        el.style.borderTop = '2px solid #1F5B8C';
+        el.style.borderBottom = '2px solid #1F5B8C';
       });
 
       const announcements = element.querySelectorAll('.print-announcements');
