@@ -1561,11 +1561,17 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcement-item {
-            margin-bottom: 0;
-            padding: 0;
+            margin-bottom: 10pt;
+            padding: 0 0 10pt 0;
             border: none;
+            border-bottom: 0.5pt solid #e5e7eb;
             break-inside: avoid;
             page-break-inside: avoid;
+          }
+
+          .print-announcement-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
           }
 
           .print-announcement-header {
@@ -1576,13 +1582,19 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcement-title {
-            font-size: 9.5pt;
-            font-weight: bold;
+            font-size: 10.5pt;
+            font-weight: 600;
             color: #000000;
             text-transform: uppercase;
             display: block;
             line-height: 1.2;
-            letter-spacing: 0.2pt;
+            letter-spacing: 0.4pt;
+          }
+
+          .print-announcement-title::before {
+            content: "▸ ";
+            color: #8DC63F;
+            margin-right: 3pt;
           }
 
           .print-announcement-date {
@@ -1595,25 +1607,27 @@ export default function WeeklyServiceManager() {
 
           .print-announcement-content {
             font-size: 9pt;
-            line-height: 1.3;
+            line-height: 1.45;
             color: #374151;
             margin-bottom: 0;
             margin-top: 0;
+            margin-left: 8pt;
             word-wrap: break-word;
             overflow-wrap: break-word;
             font-weight: 400;
           }
 
           .print-announcement-instructions {
-            font-size: 8pt;
+            font-size: 7.5pt;
             background: transparent !important;
-            padding: 0;
+            padding: 0 0 0 6pt;
             margin-top: 6pt;
+            margin-left: 8pt;
             font-style: italic;
-            border-left: none;
+            border-left: 1pt solid #d1d5db;
             color: #6b7280;
             border-radius: 0;
-            line-height: 1.25;
+            line-height: 1.3;
           }
 
           .print-announcement-instructions::before {
@@ -1623,7 +1637,8 @@ export default function WeeklyServiceManager() {
             font-weight: 600;
             font-style: normal;
             text-transform: uppercase;
-            letter-spacing: 0.4pt;
+            letter-spacing: 0.5pt;
+            font-variant: small-caps;
             color: #6b7280;
             margin-right: 3pt;
           }
@@ -1772,8 +1787,8 @@ export default function WeeklyServiceManager() {
                   {segment.actions && segment.actions.length > 0 && (
                     <div className="print-coordinator-actions">
                       {segment.actions.map((action, aIdx) => (
-                        <div key={aIdx}>
-                          {action.label}
+                        <div key={aIdx} style={{ paddingLeft: '4pt', borderLeft: '1pt solid #e5e7eb', marginLeft: '4pt', background: 'rgba(251, 191, 36, 0.03)' }}>
+                          <span style={{ fontWeight: '600', fontSize: '8pt' }}>⏱</span> {action.label}
                           {action.timing === "before_end" && ` (${action.offset_min} min antes)`}
                         </div>
                       ))}
@@ -1882,16 +1897,16 @@ export default function WeeklyServiceManager() {
                   )}
 
                   {segment.data?.sound_notes && (
-                    <div className="print-segment-detail print-note-text">
-                      {segment.data.sound_notes}
+                    <div className="print-segment-detail print-note-text" style={{ paddingLeft: '4pt', borderLeft: '1pt solid #e5e7eb', marginLeft: '4pt', background: 'rgba(220, 38, 38, 0.03)' }}>
+                      <span style={{ fontWeight: '600', fontSize: '8pt' }}>🎤</span> {segment.data.sound_notes}
                     </div>
                   )}
 
                   {segment.actions && segment.actions.length > 0 && (
                     <div className="print-coordinator-actions">
                       {segment.actions.map((action, aIdx) => (
-                        <div key={aIdx}>
-                          {action.label}
+                        <div key={aIdx} style={{ paddingLeft: '4pt', borderLeft: '1pt solid #e5e7eb', marginLeft: '4pt', background: 'rgba(251, 191, 36, 0.03)' }}>
+                          <span style={{ fontWeight: '600', fontSize: '8pt' }}>⏱</span> {action.label}
                         </div>
                       ))}
                     </div>
