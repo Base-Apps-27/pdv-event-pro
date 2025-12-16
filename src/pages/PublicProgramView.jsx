@@ -233,7 +233,7 @@ export default function PublicProgramView() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F0F1F3]">
       {/* Hero Header */}
       <div className="brand-gradient text-white py-12 px-6">
         <div className="max-w-6xl mx-auto">
@@ -256,7 +256,7 @@ export default function PublicProgramView() {
         {((selectedEventId && selectedEvent) || (selectedServiceId && selectedService)) && (
           <>
             {/* Event/Service Info Card */}
-            <Card className={`bg-white shadow-md border-l-4 ${viewType === "event" ? "border-pdv-teal" : "border-pdv-green"}`}>
+            <Card className={`bg-white border-2 border-gray-300 border-l-4 ${viewType === "event" ? "border-l-pdv-teal" : "border-l-pdv-green"}`}>
               <CardContent className="p-6">
                 <h2 className="text-3xl font-bold uppercase mb-2">
                   {viewType === "event" ? selectedEvent?.name : selectedService?.name}
@@ -353,7 +353,7 @@ export default function PublicProgramView() {
             </Card>
 
             {/* View Mode and Filters Card */}
-            <Card className="bg-white shadow-md">
+            <Card className="bg-white border-2 border-gray-300">
               <CardHeader className="bg-gray-50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -407,7 +407,7 @@ export default function PublicProgramView() {
               <div className="space-y-6">
                 {/* 9:30am Service */}
                 {actualServiceData["9:30am"] && (
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-red-500">
+                  <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500">
                     <div className="bg-gradient-to-r from-red-50 to-white p-4 border-b">
                       <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 a.m.</h3>
                       {actualServiceData.pre_service_notes?.["9:30am"] && (
@@ -496,7 +496,7 @@ export default function PublicProgramView() {
 
                 {/* 11:30am Service */}
                 {actualServiceData["11:30am"] && (
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-blue-500">
+                  <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-blue-500">
                     <div className="bg-gradient-to-r from-blue-50 to-white p-4 border-b">
                       <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 a.m.</h3>
                       {actualServiceData.pre_service_notes?.["11:30am"] && (
@@ -591,7 +591,7 @@ export default function PublicProgramView() {
                 if (segments.length === 0) return null;
 
                 return (
-                  <div key={session.id} className={`bg-white rounded-lg shadow-md overflow-hidden ${sessionColorClasses[session.session_color] || ''}`}>
+                  <div key={session.id} className={`bg-white rounded-lg border-2 border-gray-300 overflow-hidden ${sessionColorClasses[session.session_color] || ''}`}>
                     <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-4 border-b">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -672,7 +672,7 @@ export default function PublicProgramView() {
 
                               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {segment.breakout_rooms.map((room, roomIdx) => (
-                                  <Card key={roomIdx} className="bg-white">
+                                  <Card key={roomIdx} className="bg-white border-2 border-gray-300">
                                     <CardContent className="p-4">
                                       {room.room_id && (
                                         <Badge variant="outline" className="mb-2 bg-blue-50">
@@ -956,7 +956,7 @@ export default function PublicProgramView() {
             )}
 
             {viewType === "event" && filteredSessions.length === 0 && (
-              <Card className="p-12 text-center bg-white">
+                  <Card className="p-12 text-center bg-white border-2 border-gray-300">
                 <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">No hay sesiones disponibles para este evento</p>
               </Card>
@@ -965,7 +965,7 @@ export default function PublicProgramView() {
         )}
 
         {!selectedEventId && !selectedServiceId && (
-          <Card className="p-12 text-center bg-white border-dashed border-2">
+          <Card className="p-12 text-center bg-white border-dashed border-2 border-gray-400">
             <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">Selecciona un {viewType === "event" ? "evento" : "servicio"} para ver su programa</p>
           </Card>

@@ -1448,7 +1448,7 @@ export default function WeeklyServiceManager() {
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-8 print:p-0">
+    <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
       <style>{`
         @media print {
           @page { size: letter; margin: 0.5in; }
@@ -2158,7 +2158,7 @@ export default function WeeklyServiceManager() {
       </div>
 
       {/* Date Selection */}
-      <Card className="print:hidden">
+      <Card className="print:hidden border-2 border-gray-300 bg-white">
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             <CalendarIcon className="w-5 h-5 text-pdv-teal flex-shrink-0" />
@@ -2307,7 +2307,7 @@ export default function WeeklyServiceManager() {
                             <Card 
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              className="border-l-4 border-l-orange-500 bg-orange-50"
+                              className="border-2 border-gray-300 border-l-4 border-l-orange-500 bg-orange-50"
                             >
                               <CardHeader className="pb-2">
                                 <div className="flex items-center justify-between">
@@ -2357,7 +2357,7 @@ export default function WeeklyServiceManager() {
                           <Card 
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className="border-l-4 border-l-red-500"
+                            className="border-2 border-gray-300 border-l-4 border-l-red-500 bg-white"
                           >
                             <CardHeader className="pb-2 bg-gray-50">
                               <CardTitle className="text-lg flex items-center gap-2">
@@ -2551,7 +2551,7 @@ export default function WeeklyServiceManager() {
           </DragDropContext>
 
           {/* Receso Block */}
-          <Card className="bg-gray-100 border-gray-300">
+          <Card className="bg-gray-100 border-2 border-gray-400">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
                 <Clock className="w-4 h-4" />
@@ -2585,7 +2585,7 @@ export default function WeeklyServiceManager() {
           </Card>
 
           {/* Team Section */}
-          <Card className="bg-green-50 border-green-200 print:hidden">
+          <Card className="bg-green-50 border-2 border-green-300 print:hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center justify-between">
                 EQUIPO 9:30am
@@ -2699,7 +2699,7 @@ export default function WeeklyServiceManager() {
                             <Card 
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              className="border-l-4 border-l-orange-500 bg-orange-50"
+                              className="border-2 border-gray-300 border-l-4 border-l-orange-500 bg-orange-50"
                             >
                               <CardHeader className="pb-2">
                                 <div className="flex items-center justify-between">
@@ -2756,7 +2756,7 @@ export default function WeeklyServiceManager() {
                           <Card 
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className="border-l-4 border-l-blue-500"
+                            className="border-2 border-gray-300 border-l-4 border-l-blue-500 bg-white"
                           >
                             <CardHeader className="pb-2 bg-gray-50">
                               <CardTitle className="text-lg flex items-center gap-2">
@@ -2984,7 +2984,7 @@ export default function WeeklyServiceManager() {
           </DragDropContext>
 
           {/* Team Section */}
-          <Card className="bg-blue-50 border-blue-200 print:hidden">
+          <Card className="bg-blue-50 border-2 border-blue-300 print:hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">EQUIPO 11:30am</CardTitle>
             </CardHeader>
@@ -2999,7 +2999,7 @@ export default function WeeklyServiceManager() {
       </div>
 
       {/* Announcements Section */}
-      <Card className="print:hidden">
+      <Card className="print:hidden border-2 border-gray-300 bg-white">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl font-bold uppercase">Anuncios</CardTitle>
@@ -3087,7 +3087,7 @@ export default function WeeklyServiceManager() {
             </div>
             <div className="grid md:grid-cols-2 gap-3">
               {fixedAnnouncements.map(ann => (
-                <div key={ann.id} className="flex items-start gap-2 p-3 border-2 rounded-lg bg-white hover:shadow-md transition-shadow">
+                <div key={ann.id} className="flex items-start gap-2 p-3 border-2 border-gray-300 rounded-lg bg-white hover:border-gray-400 transition-colors">
                   <Checkbox
                     checked={selectedAnnouncements.includes(ann.id)}
                     onCheckedChange={(checked) => {
@@ -3166,7 +3166,7 @@ export default function WeeklyServiceManager() {
             </div>
             <div className="grid md:grid-cols-2 gap-3">
               {dynamicAnnouncements.map(ann => (
-                <div key={ann.id} className={`flex items-start gap-2 p-3 rounded-lg hover:shadow-md transition-shadow ${ann.emphasize || ann.category === 'Urgent' ? 'border-[3px] border-red-300 bg-red-50' : 'border-2 bg-blue-50'}`}>
+                <div key={ann.id} className={`flex items-start gap-2 p-3 rounded-lg transition-colors ${ann.emphasize || ann.category === 'Urgent' ? 'border-[3px] border-red-400 bg-red-50' : 'border-2 border-blue-300 bg-blue-50'}`}>
                   <Checkbox
                     checked={selectedAnnouncements.includes(ann.id)}
                     onCheckedChange={(checked) => {

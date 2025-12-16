@@ -88,18 +88,18 @@ function LayoutContent({ children }) {
 
   // Not authenticated - show minimal layout
   if (!user) {
-    return <div className="min-h-screen bg-gray-50">{children}</div>;
+    return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
   }
 
   const userRole = user.app_role || 'EventDayViewer';
 
   // EventDayViewers only see PublicProgramView
   if (userRole === 'EventDayViewer') {
-    return <div className="min-h-screen bg-gray-50">{children}</div>;
+    return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-[#F0F1F3]">
       {/* Dark Sidebar */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-black text-white fixed h-full font-sans print:hidden">
         <div className="p-6 mb-2">
