@@ -986,7 +986,7 @@ export default function WeeklyServiceManager() {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal mt-1">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? formatDate(new Date(selectedDate), "PPPP") : "Seleccionar fecha"}
+                    {selectedDate ? formatDate(new Date(selectedDate + 'T12:00:00'), "PPPP") : "Seleccionar fecha"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
