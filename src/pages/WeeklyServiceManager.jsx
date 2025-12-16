@@ -1441,65 +1441,75 @@ export default function WeeklyServiceManager() {
           body { 
             -webkit-print-color-adjust: exact; 
             print-color-adjust: exact;
-            font-family: Inter, Helvetica, sans-serif;
+            font-family: Calibri, Arial, sans-serif;
             background: white;
           }
 
           .print-header {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
-            margin-bottom: 18px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 8pt;
+            padding-bottom: 0;
+            border-bottom: none;
           }
 
           .print-logo {
-            display: none;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #1F8A70 0%, #8DC63F 100%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24pt;
+            font-weight: bold;
+            flex-shrink: 0;
           }
 
           .print-title {
             text-align: center;
             flex: 1;
+            margin: 0 16px;
           }
 
           .print-title h1 {
-            font-size: 18pt;
-            font-weight: 600;
-            margin: 0 0 4px 0;
+            font-size: 24pt;
+            font-weight: bold;
+            margin: 0 0 2pt 0;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
-            color: #333;
+            color: #000;
           }
 
           .print-title p {
-            font-size: 12pt;
-            color: #333;
-            font-weight: 400;
+            font-size: 13pt;
+            color: #0000FF;
+            font-weight: bold;
             margin: 0;
           }
 
           .print-team-box {
             text-align: right;
             font-size: 10pt;
-            line-height: 1.35;
-            min-width: 140px;
-            color: #333;
+            line-height: 1.2;
+            min-width: 120px;
+            color: #000;
           }
 
           .print-team-box div {
-            margin-bottom: 2px;
+            margin-bottom: 1pt;
           }
 
           .print-team-label {
-            font-weight: 400;
-            color: #333;
+            font-weight: bold;
+            color: #000;
           }
 
           .print-two-columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 24px;
+            gap: 16pt;
             margin-bottom: 0;
           }
 
@@ -1507,70 +1517,62 @@ export default function WeeklyServiceManager() {
             break-inside: avoid;
           }
 
-          .print-service-column.left {
-            opacity: 1;
-          }
-
-          .print-service-column.right {
-            opacity: 0.85;
-          }
-
           .print-service-time {
-            font-size: 16pt;
-            font-weight: 500;
-            color: #C62828;
-            margin-bottom: 18pt;
+            font-size: 14pt;
+            font-weight: bold;
+            color: #FF0000;
+            margin-bottom: 8pt;
             padding-bottom: 0;
             border-bottom: none;
           }
 
           .print-service-column.right .print-service-time {
-            color: #1565C0;
+            color: #0000FF;
           }
 
           .print-segment {
-            margin-bottom: 18pt;
+            margin-bottom: 10pt;
             padding: 0;
             background: transparent;
             border: none;
             font-size: 11pt;
-            line-height: 1.35;
+            line-height: 1.2;
             break-inside: avoid;
             page-break-inside: avoid;
           }
 
           .print-segment-time {
-            font-weight: 500;
-            color: #C62828;
-            font-size: 16pt;
-            display: block;
-            margin-bottom: 6pt;
+            font-weight: bold;
+            color: #FF0000;
+            font-size: 14pt;
+            display: inline;
+            margin-right: 4pt;
           }
 
           .print-service-column.right .print-segment-time {
-            color: #1565C0;
+            color: #0000FF;
           }
 
           .print-segment-title {
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 13pt;
+            font-weight: bold;
+            text-transform: capitalize;
+            font-size: 12pt;
             margin-left: 0;
-            color: #333;
-            letter-spacing: 0.03em;
-            display: block;
-            padding-bottom: 6pt;
-            border-bottom: 1px solid #e0e0e0;
-            margin-bottom: 6pt;
+            color: #000;
+            letter-spacing: 0;
+            display: inline;
+            padding-bottom: 0;
+            border-bottom: none;
+            margin-bottom: 0;
           }
 
           .print-segment-detail {
             margin-left: 0;
             font-size: 11pt;
-            color: #333;
-            line-height: 1.35;
-            margin-top: 6pt;
-            margin-bottom: 6pt;
+            color: #000;
+            line-height: 1.2;
+            margin-top: 2pt;
+            margin-bottom: 2pt;
             padding: 0;
             background: transparent;
             word-wrap: break-word;
@@ -1578,55 +1580,54 @@ export default function WeeklyServiceManager() {
           }
 
           .print-name {
-            color: #2E7D32;
-            font-weight: 400;
+            color: #000;
+            font-weight: bold;
             font-size: 11pt;
           }
 
           .print-duration {
-            font-size: 10pt;
+            font-size: 11pt;
             font-weight: 400;
-            color: #666;
+            color: #000;
+          }
+
+          .print-note-text {
+            font-size: 10pt;
+            color: #000;
+            font-style: italic;
           }
 
           .print-coordinator-actions {
-            margin-top: 8pt;
-            margin-bottom: 6pt;
+            margin-top: 2pt;
+            margin-bottom: 2pt;
             padding: 0;
-            padding-left: 8pt;
             background: transparent;
-            border-left: 1px solid #FFF8E1;
+            border-left: none;
             break-inside: avoid;
           }
 
           .print-coordinator-actions strong {
-            color: #333;
-            font-size: 10pt;
-            font-weight: 400;
-            text-transform: lowercase;
-            letter-spacing: 0.02em;
-            display: block;
-            margin-bottom: 4pt;
+            display: none;
           }
 
           .print-coordinator-actions div {
             margin-left: 0;
-            font-size: 11pt;
-            color: #333;
-            line-height: 1.35;
+            font-size: 10pt;
+            color: #000;
+            line-height: 1.2;
             font-weight: 400;
+            font-style: italic;
           }
 
           .print-segment-songs {
             margin-left: 0;
-            margin-top: 6pt;
-            margin-bottom: 6pt;
+            margin-top: 2pt;
+            margin-bottom: 2pt;
             padding: 0;
             font-size: 11pt;
-            line-height: 1.35;
+            line-height: 1.2;
             background: transparent;
             border-left: none;
-            list-style-position: inside;
           }
 
           .print-segment-songs div {
@@ -1635,14 +1636,14 @@ export default function WeeklyServiceManager() {
 
           .print-receso {
             background: transparent;
-            padding: 8pt 0;
-            margin: 18pt 0;
+            padding: 6pt 0;
+            margin: 12pt 0;
             text-align: center;
-            font-size: 11pt;
-            font-weight: 400;
-            color: #666;
-            border-top: 1px solid #e0e0e0;
-            border-bottom: 1px solid #e0e0e0;
+            font-size: 12pt;
+            font-weight: bold;
+            color: #0000FF;
+            text-transform: uppercase;
+            border: none;
           }
 
           .print-announcements {
@@ -1652,46 +1653,55 @@ export default function WeeklyServiceManager() {
 
           .print-announcements-header {
             text-align: center;
-            margin-bottom: 24pt;
-            padding-bottom: 12pt;
-            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 12pt;
+            padding-bottom: 0;
+            border-bottom: none;
+          }
+
+          .print-announcements-logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #1F8A70 0%, #8DC63F 100%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28pt;
+            font-weight: bold;
+            margin: 0 auto 8pt auto;
           }
 
           .print-announcements-title {
-            font-size: 18pt;
-            font-weight: 600;
+            font-size: 24pt;
+            font-weight: bold;
             text-transform: uppercase;
-            margin-bottom: 4pt;
-            letter-spacing: 0.03em;
-            color: #333;
+            margin-bottom: 2pt;
+            color: #000;
           }
 
           .print-announcements-header p {
-            font-size: 12pt;
-            font-weight: 400;
-            color: #333;
+            font-size: 13pt;
+            font-weight: bold;
+            color: #0000FF;
             margin: 0;
           }
 
           .print-announcement-list {
             padding-left: 0;
-            max-width: 600px;
-            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12pt;
           }
 
           .print-announcement-item {
-            margin-bottom: 18pt;
-            padding: 0;
-            padding-bottom: 12pt;
-            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 0;
+            padding: 8pt;
+            border: 1px solid #000;
             break-inside: avoid;
             page-break-inside: avoid;
             font-size: 11pt;
-            line-height: 1.35;
-          }
-
-          .print-announcement-item:last-child {
-            border-bottom: none;
+            line-height: 1.2;
           }
 
           .print-announcement-header {
@@ -1700,28 +1710,27 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcement-title {
-            font-size: 13pt;
-            font-weight: 600;
-            color: #333;
+            font-size: 12pt;
+            font-weight: bold;
+            color: #000;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
             display: block;
           }
 
           .print-announcement-date {
             font-size: 10pt;
-            font-weight: 400;
-            color: #666;
+            font-weight: bold;
+            color: #0000FF;
             display: block;
             margin-top: 2pt;
           }
 
           .print-announcement-content {
             font-size: 11pt;
-            line-height: 1.35;
-            color: #333;
-            margin-bottom: 6pt;
-            margin-top: 6pt;
+            line-height: 1.2;
+            color: #000;
+            margin-bottom: 4pt;
+            margin-top: 4pt;
             word-wrap: break-word;
             overflow-wrap: break-word;
             font-weight: 400;
@@ -1729,16 +1738,29 @@ export default function WeeklyServiceManager() {
 
           .print-announcement-instructions {
             font-size: 10pt;
-            background: #FFF8E1;
-            padding: 6pt 8pt;
-            margin-top: 6pt;
+            background: transparent;
+            padding: 0;
+            margin-top: 4pt;
             font-style: italic;
-            border-left: 1px solid #FFF8E1;
-            color: #333;
+            border-left: none;
+            color: #000;
           }
 
           .print-footer {
-            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14pt;
+            font-weight: bold;
+            text-transform: lowercase;
           }
         }
       `}</style>
@@ -1748,8 +1770,8 @@ export default function WeeklyServiceManager() {
         <div className="print-header">
           <div className="print-logo">P</div>
           <div className="print-title">
-            <h1>ORDEN DE SERVICIO</h1>
-            <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
+            <h1>Orden de Servicio</h1>
+            <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es }).toUpperCase()}</p>
           </div>
           <div className="print-team-box">
             <div><span className="print-team-label">Coordinador(a):</span> {serviceData?.coordinators?.["9:30am"] || serviceData?.coordinators?.["11:30am"] || ""}</div>
@@ -1783,31 +1805,46 @@ export default function WeeklyServiceManager() {
                   <div>
                     <span className="print-segment-time">{segmentTime}</span>
                     <span className="print-segment-title">{segment.title}</span>
-                    {segment.duration && <span style={{ fontSize: '9px', color: '#6b7280' }}> ({segment.duration} min)</span>}
+                    {segment.duration && <span className="print-duration"> ({segment.duration} mins)</span>}
                   </div>
 
                   {segment.data?.leader && (
                     <div className="print-segment-detail">
-                      <strong>Dir:</strong> <span className="print-name">{segment.data.leader}</span>
+                      Dirige: <span className="print-name">{segment.data.leader}</span>
+                    </div>
+                  )}
+
+                  {segment.data?.projection_notes && (
+                    <div className="print-segment-detail print-note-text">
+                      - {segment.data.projection_notes}
                     </div>
                   )}
 
                   {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
                     <div className="print-segment-songs">
                       {segment.songs.filter(s => s.title).map((song, sIdx) => (
-                        <div key={sIdx}>• <strong>{song.title}</strong> {song.lead && `(${song.lead})`}</div>
+                        <div key={sIdx}>- {song.title} {song.lead && `(${song.lead})`}</div>
                       ))}
                     </div>
                   )}
 
                   {segment.data?.ministry_leader && (
-                    <div className="print-segment-detail" style={{ marginTop: '6px', paddingTop: '6px', borderTop: '2px solid #e5e7eb' }}>
-                      <strong>Ministración de Sanidad y Milagros</strong><br/>
-                      <span className="print-name">{segment.data.ministry_leader}</span> (5 min)
+                    <div className="print-segment-detail" style={{ marginTop: '4pt', color: '#FF0000', fontWeight: 'bold' }}>
+                      Ministración de Sanidad y Milagros
+                    </div>
+                  )}
+                  {segment.data?.ministry_leader && (
+                    <div className="print-segment-detail">
+                      <span className="print-name">{segment.data.ministry_leader}</span> <span className="print-duration">(4 mins.)</span>
+                    </div>
+                  )}
+                  {segment.data?.ministry_leader && (
+                    <div className="print-segment-detail print-note-text">
+                      (Debe estar listo (a) desde que inicia la adoración)
                     </div>
                   )}
 
-                  {segment.data?.presenter && (
+                  {segment.data?.presenter && !segment.data?.ministry_leader && (
                     <div className="print-segment-detail">
                       <span className="print-name">{segment.data.presenter}</span>
                     </div>
@@ -1821,49 +1858,34 @@ export default function WeeklyServiceManager() {
 
                   {segment.data?.title && (
                     <div className="print-segment-detail">
-                      <em>{segment.data.title}</em>
+                      {segment.data.title}
                     </div>
                   )}
 
                   {segment.data?.verse && (
-                    <div className="print-segment-detail">
+                    <div className="print-segment-detail print-note-text">
                       {segment.data.verse}
                     </div>
                   )}
 
                   {segment.data?.description && (
-                    <div className="print-segment-detail" style={{ fontStyle: 'italic' }}>
+                    <div className="print-segment-detail print-note-text">
                       {segment.data.description}
                     </div>
                   )}
 
-                  {segment.data?.description_details && (
-                    <div className="print-segment-detail" style={{ marginTop: '3px', color: '#6b7280' }}>
-                      {segment.data.description_details}
-                    </div>
-                  )}
-
-                  {segment.data?.projection_notes && (
-                    <div className="print-segment-detail" style={{ marginTop: '3px', paddingTop: '3px', borderTop: '1px dashed #e5e7eb' }}>
-                      <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
-                    </div>
-                  )}
-
                   {segment.data?.sound_notes && (
-                    <div className="print-segment-detail" style={{ marginTop: '2px' }}>
-                      <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
+                    <div className="print-segment-detail print-note-text">
+                      {segment.data.sound_notes}
                     </div>
                   )}
 
                   {segment.actions && segment.actions.length > 0 && (
                     <div className="print-coordinator-actions">
-                      <strong>⏰ Acciones:</strong>
                       {segment.actions.map((action, aIdx) => (
                         <div key={aIdx}>
-                          • {action.label}
+                          {action.label}
                           {action.timing === "before_end" && ` (${action.offset_min} min antes)`}
-                          {action.timing === "after_start" && action.offset_min > 0 && ` (+${action.offset_min} min)`}
-                          {action.timing === "before_start" && ` (antes)`}
                         </div>
                       ))}
                     </div>
@@ -1872,9 +1894,6 @@ export default function WeeklyServiceManager() {
               );
             })}
 
-            <div className="print-receso">
-              11:00am a 11:30am - RECESO
-            </div>
           </div>
 
           <div className="print-service-column right">
@@ -1900,93 +1919,92 @@ export default function WeeklyServiceManager() {
                   <div>
                     <span className="print-segment-time">{segmentTime}</span>
                     <span className="print-segment-title">{segment.title}</span>
-                    {segment.duration && <span style={{ fontSize: '9px', color: '#6b7280' }}> ({segment.duration} min)</span>}
+                    {segment.duration && <span className="print-duration"> ({segment.duration} mins)</span>}
                   </div>
 
                   {segment.data?.leader && (
                     <div className="print-segment-detail">
-                      <strong>Dir:</strong> <span className="print-name">{segment.data.leader}</span>
+                      Dirige: <span className="print-name">{segment.data.leader}</span>
+                    </div>
+                  )}
+
+                  {segment.data?.translator && (
+                    <div className="print-segment-detail">
+                      / traduce: <span className="print-name">{segment.data.translator}</span>
+                    </div>
+                  )}
+
+                  {segment.data?.projection_notes && (
+                    <div className="print-segment-detail print-note-text">
+                      - {segment.data.projection_notes}
                     </div>
                   )}
 
                   {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
                     <div className="print-segment-songs">
                       {segment.songs.filter(s => s.title).map((song, sIdx) => (
-                        <div key={sIdx}>• <strong>{song.title}</strong> {song.lead && `(${song.lead})`}</div>
+                        <div key={sIdx}>- {song.title} {song.lead && `(${song.lead})`}</div>
                       ))}
                     </div>
                   )}
 
                   {segment.data?.ministry_leader && (
-                    <div className="print-segment-detail" style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed #d1d5db' }}>
-                      <strong>Ministración de Sanidad y Milagros</strong><br/>
-                      P. <span className="print-name">{segment.data.ministry_leader}</span> (5 min)
+                    <div className="print-segment-detail" style={{ marginTop: '4pt', color: '#FF0000', fontWeight: 'bold' }}>
+                      Ministración de Sanidad y Milagros
+                    </div>
+                  )}
+                  {segment.data?.ministry_leader && (
+                    <div className="print-segment-detail">
+                      <span className="print-name">{segment.data.ministry_leader}</span> <span className="print-duration">(4 mins.)</span> {segment.data?.translator && `/ traduce: ${segment.data.translator}`}
+                    </div>
+                  )}
+                  {segment.data?.ministry_leader && (
+                    <div className="print-segment-detail print-note-text">
+                      (Debe estar listo (a) desde que inicia la adoración)
                     </div>
                   )}
 
-                  {segment.data?.translator && (
-                    <div className="print-segment-detail" style={{ background: '#eff6ff', borderLeft: '3px solid #3b82f6', color: '#1e40af' }}>
-                      <strong>🌐 Trad:</strong> <span className="print-name" style={{ color: '#1e40af' }}>{segment.data.translator}</span>
-                    </div>
-                  )}
-
-                  {segment.data?.presenter && (
-                    <div className="print-segment-detail" style={{ background: '#f0fdf4', borderLeft: '3px solid #1F8A70' }}>
+                  {segment.data?.presenter && !segment.data?.ministry_leader && (
+                    <div className="print-segment-detail">
                       <span className="print-name">{segment.data.presenter}</span>
                     </div>
                   )}
 
                   {segment.data?.preacher && (
-                    <div className="print-segment-detail" style={{ background: '#f0fdf4', borderLeft: '3px solid #1F8A70' }}>
+                    <div className="print-segment-detail">
                       <span className="print-name">{segment.data.preacher}</span>
                     </div>
                   )}
 
                   {segment.data?.title && (
                     <div className="print-segment-detail">
-                      <em>{segment.data.title}</em>
+                      {segment.data.title}
                     </div>
                   )}
 
                   {segment.data?.verse && (
-                    <div className="print-segment-detail">
+                    <div className="print-segment-detail print-note-text">
                       {segment.data.verse}
                     </div>
                   )}
 
                   {segment.data?.description && (
-                    <div className="print-segment-detail" style={{ fontStyle: 'italic' }}>
+                    <div className="print-segment-detail print-note-text">
                       {segment.data.description}
                     </div>
                   )}
 
-                  {segment.data?.description_details && (
-                    <div className="print-segment-detail" style={{ marginTop: '3px', color: '#6b7280' }}>
-                      {segment.data.description_details}
-                    </div>
-                  )}
-
-                  {segment.data?.projection_notes && (
-                    <div className="print-segment-detail" style={{ marginTop: '3px', paddingTop: '3px', borderTop: '1px dashed #e5e7eb' }}>
-                      <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
-                    </div>
-                  )}
-
                   {segment.data?.sound_notes && (
-                    <div className="print-segment-detail" style={{ marginTop: '2px' }}>
-                      <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
+                    <div className="print-segment-detail print-note-text">
+                      {segment.data.sound_notes}
                     </div>
                   )}
 
                   {segment.actions && segment.actions.length > 0 && (
                     <div className="print-coordinator-actions">
-                      <strong>⏰ Acciones:</strong>
                       {segment.actions.map((action, aIdx) => (
                         <div key={aIdx}>
-                          • {action.label}
-                          {action.timing === "before_end" && ` (${action.offset_min} min antes)`}
-                          {action.timing === "after_start" && action.offset_min > 0 && ` (+${action.offset_min} min)`}
-                          {action.timing === "before_start" && ` (antes)`}
+                          {action.label}
                         </div>
                       ))}
                     </div>
@@ -1997,12 +2015,17 @@ export default function WeeklyServiceManager() {
           </div>
         </div>
 
+        <div className="print-receso">
+          11:00am a 11:30am
+          <br />
+          RECESO
+        </div>
+
         <div className="print-announcements">
           <div className="print-announcements-header">
+            <div className="print-announcements-logo">P</div>
             <div className="print-announcements-title">ANUNCIOS</div>
-            <p style={{ fontSize: '13px', color: '#2563eb', fontWeight: 'bold', margin: 0 }}>
-              Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}
-            </p>
+            <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es }).toUpperCase()}</p>
           </div>
 
           <div className="print-announcement-list">
@@ -2011,10 +2034,8 @@ export default function WeeklyServiceManager() {
               .map((ann, idx) => (
                 <div key={ann.id} className="print-announcement-item">
                   <div className="print-announcement-header">
-                    <span style={{ fontSize: '12px', color: '#999' }}>📢</span>
                     <div className="print-announcement-title">
-                      {ann.isEvent ? ann.name : ann.title}
-                      {(ann.has_video || ann.announcement_has_video) && ' 📹'}
+                      {ann.isEvent ? ann.name : ann.title.toUpperCase()}
                     </div>
                     {(ann.date_of_occurrence || ann.start_date) && (
                       <div className="print-announcement-date">
@@ -2028,7 +2049,7 @@ export default function WeeklyServiceManager() {
                   </div>
                   {ann.instructions && (
                     <div className="print-announcement-instructions">
-                      Instrucciones: {ann.instructions}
+                      {ann.instructions}
                     </div>
                   )}
                 </div>
