@@ -233,10 +233,12 @@ export default function WeeklyServiceManager() {
   // Initialize service data from existing or blueprint
   useEffect(() => {
     if (existingData) {
-      setServiceData({
+      const loadedData = {
         ...existingData,
-        pre_service_notes: existingData.pre_service_notes || { "9:30am": "", "11:30am": "" }
-      });
+        pre_service_notes: existingData.pre_service_notes || { "9:30am": "", "11:30am": "" },
+        receso_notes: existingData.receso_notes || { "9:30am": "" }
+      };
+      setServiceData(loadedData);
       setSelectedAnnouncements(existingData.selected_announcements || []);
     } else {
       // Initialize from blueprint
@@ -273,7 +275,7 @@ export default function WeeklyServiceManager() {
       };
       setServiceData(initialData);
     }
-  }, [existingData, selectedDate]);
+  }, [existingData]);
 
   // Auto-select all visible and non-expired announcements
   useEffect(() => {
@@ -310,30 +312,27 @@ export default function WeeklyServiceManager() {
     setSavingField(fieldKey);
 
     saveTimeoutRef.current = setTimeout(() => {
-      setServiceData(current => {
-        if (!current) {
+      const currentData = serviceData;
+      if (!currentData) {
+        setSavingField(null);
+        return;
+      }
+      
+      const dataToSave = {
+        ...currentData,
+        selected_announcements: selectedAnnouncements,
+        day_of_week: 'Sunday',
+        name: `Domingo - ${selectedDate}`,
+        status: 'active'
+      };
+      
+      saveServiceMutation.mutate(dataToSave, {
+        onSettled: () => {
           setSavingField(null);
-          return current;
         }
-        
-        const dataToSave = {
-          ...current,
-          selected_announcements: selectedAnnouncements,
-          day_of_week: 'Sunday',
-          name: `Domingo - ${selectedDate}`,
-          status: 'active'
-        };
-        
-        saveServiceMutation.mutate(dataToSave, {
-          onSettled: () => {
-            setSavingField(null);
-          }
-        });
-        
-        return current;
       });
     }, 800);
-  }, [selectedDate, selectedAnnouncements, saveServiceMutation]);
+  }, [serviceData, selectedDate, selectedAnnouncements, saveServiceMutation]);
 
   const updateTeamField = (field, service, value) => {
     setServiceData(prev => ({
@@ -359,34 +358,48 @@ export default function WeeklyServiceManager() {
   };
 
   const copyTo1130 = () => {
-    if (window.confirm('¿Copiar datos de 9:30am a 11:30am?')) {
-      setSavingField('copy-1130');
-      setServiceData(prev => {
-        const copied = {
-          ...prev,
-          "11:30am": prev["9:30am"].filter(s => s.type !== 'break' && s.type !== 'special').map(seg => ({
-            ...seg,
-            data: { ...seg.data },
-            songs: seg.songs ? seg.songs.map(s => ({ ...s })) : undefined,
-            actions: seg.actions ? seg.actions.map(a => ({ ...a })) : []
-          }))
+    if (!window.confirm('¿Copiar datos de 9:30am a 11:30am?')) return;
+    
+    setSavingField('copy-1130');
+    
+    const copied930Data = serviceData["9:30am"]
+      .filter(s => s.type !== 'break' && s.type !== 'special')
+      .map(seg => {
+        const newSeg = {
+          type: seg.type,
+          title: seg.title,
+          duration: seg.duration,
+          fields: [...seg.fields],
+          data: { ...seg.data },
+          actions: seg.actions ? seg.actions.map(a => ({ ...a })) : []
         };
-        
-        const dataToSave = {
-          ...copied,
-          selected_announcements: selectedAnnouncements,
-          day_of_week: 'Sunday',
-          name: `Domingo - ${selectedDate}`,
-          status: 'active'
-        };
-        
-        saveServiceMutation.mutate(dataToSave, {
-          onSettled: () => setSavingField(null)
-        });
-        
-        return copied;
+        if (seg.songs) {
+          newSeg.songs = seg.songs.map(s => ({ title: s.title, lead: s.lead }));
+        }
+        return newSeg;
       });
-    }
+    
+    const updatedData = {
+      ...serviceData,
+      "11:30am": copied930Data
+    };
+    
+    setServiceData(updatedData);
+    
+    const dataToSave = {
+      ...updatedData,
+      selected_announcements: selectedAnnouncements,
+      day_of_week: 'Sunday',
+      name: `Domingo - ${selectedDate}`,
+      status: 'active'
+    };
+    
+    saveServiceMutation.mutate(dataToSave, {
+      onSettled: () => {
+        setSavingField(null);
+        queryClient.invalidateQueries(['weeklyService', selectedDate]);
+      }
+    });
   };
 
   const addSpecialSegment = () => {
@@ -1097,14 +1110,17 @@ export default function WeeklyServiceManager() {
                     mode="single"
                     selected={selectedDate ? new Date(selectedDate.split('-')[0], parseInt(selectedDate.split('-')[1]) - 1, parseInt(selectedDate.split('-')[2])) : undefined}
                     onSelect={(date) => {
-                      if (date && date.getDay() === 0) {
+                      if (date) {
                         const year = date.getFullYear();
                         const month = String(date.getMonth() + 1).padStart(2, '0');
                         const day = String(date.getDate()).padStart(2, '0');
                         setSelectedDate(`${year}-${month}-${day}`);
                       }
                     }}
-                    disabled={(date) => date.getDay() !== 0}
+                    disabled={(date) => {
+                      const dayOfWeek = date.getDay();
+                      return dayOfWeek !== 0;
+                    }}
                   />
                 </PopoverContent>
               </Popover>
