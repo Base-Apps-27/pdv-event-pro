@@ -897,6 +897,46 @@ export default function Reports() {
             padding: 0;
             background: white;
           }
+          
+          .print-header {
+            display: flex !important;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+          }
+          
+          .print-logo {
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+          }
+          
+          .print-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+          }
+          
+          .print-title {
+            flex: 1;
+          }
+          
+          .print-title h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin: 0;
+            line-height: 1.2;
+          }
+          
+          .print-title p {
+            font-size: 11pt;
+            color: #1F8A70;
+            font-style: italic;
+            margin: 2px 0 0 0;
+          }
           .no-print {
             display: none !important;
           }
@@ -1061,6 +1101,19 @@ export default function Reports() {
               {selectedEvent.theme && (
                 <p className="text-sm text-pdv-green italic inline ml-2">"{selectedEvent.theme}"</p>
               )}
+            </div>
+
+            {/* Print header with logo */}
+            <div className="hidden print:flex print-header">
+              <div className="print-logo">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
+              </div>
+              <div className="print-title">
+                <h1>{selectedEvent.name}</h1>
+                {selectedEvent.theme && (
+                  <p>"{selectedEvent.theme}"</p>
+                )}
+              </div>
             </div>
 
             <Tabs value={activeReport} onValueChange={setActiveReport} className="w-full">

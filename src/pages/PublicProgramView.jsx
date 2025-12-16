@@ -237,7 +237,17 @@ export default function PublicProgramView() {
       {/* Hero Header */}
       <div className="brand-gradient text-white py-12 px-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight mb-2">Programa del Evento</h1>
+          <div className="flex items-center gap-4 mb-4">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
+              alt="Logo" 
+              className="w-16 h-16 md:w-20 md:h-20"
+            />
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight">Programa del Evento</h1>
+              <p className="text-sm md:text-base text-white text-opacity-90 mt-1">¡ATRÉVETE A CAMBIAR!</p>
+            </div>
+          </div>
           <p className="text-lg text-white text-opacity-90">Explora el programa completo y mantente actualizado</p>
         </div>
       </div>
@@ -960,6 +970,19 @@ export default function PublicProgramView() {
             <p className="text-gray-600">Selecciona un {viewType === "event" ? "evento" : "servicio"} para ver su programa</p>
           </Card>
         )}
+      </div>
+
+      {/* Footer */}
+      <div className="mt-12 py-6 brand-gradient">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
+            alt="Logo" 
+            className="w-12 h-12 mx-auto mb-3"
+          />
+          <p className="text-white font-semibold text-lg tracking-wide uppercase">¡Atrévete a cambiar!</p>
+          <p className="text-white text-opacity-80 text-sm mt-2">Palabras de Vida</p>
+        </div>
       </div>
     </div>
   );
