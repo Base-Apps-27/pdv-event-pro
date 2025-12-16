@@ -367,21 +367,12 @@ export default function WeeklyServiceManager() {
 
       updated["11:30am"] = copiedSegments;
 
-      if (!updated.pre_service_notes["11:30am"]) {
-        updated.pre_service_notes["11:30am"] = updated.pre_service_notes["9:30am"];
-      }
-      if (!updated.coordinators["11:30am"]) {
-        updated.coordinators["11:30am"] = updated.coordinators["9:30am"];
-      }
-      if (!updated.ujieres["11:30am"]) {
-        updated.ujieres["11:30am"] = updated.ujieres["9:30am"];
-      }
-      if (!updated.sound["11:30am"]) {
-        updated.sound["11:30am"] = updated.sound["9:30am"];
-      }
-      if (!updated.luces["11:30am"]) {
-        updated.luces["11:30am"] = updated.luces["9:30am"];
-      }
+      // Always copy pre-service notes and team info
+      updated.pre_service_notes["11:30am"] = updated.pre_service_notes["9:30am"];
+      updated.coordinators["11:30am"] = updated.coordinators["9:30am"];
+      updated.ujieres["11:30am"] = updated.ujieres["9:30am"];
+      updated.sound["11:30am"] = updated.sound["9:30am"];
+      updated.luces["11:30am"] = updated.luces["9:30am"];
 
       return updated;
     });
