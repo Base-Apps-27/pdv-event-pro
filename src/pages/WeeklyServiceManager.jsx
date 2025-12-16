@@ -1703,102 +1703,119 @@ export default function WeeklyServiceManager() {
 
           .print-announcements {
             break-before: page;
-            padding-top: 0;
+            padding-top: 24pt;
+            padding-left: 72pt;
+            padding-right: 72pt;
+            padding-bottom: 48pt;
           }
 
           .print-announcements-header {
             text-align: center;
-            margin-bottom: 12pt;
-            padding-bottom: 0;
+            margin-bottom: 20pt;
+            padding-bottom: 12pt;
             border-bottom: none;
+            position: relative;
           }
 
           .print-announcements-logo {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #1F8A70 0%, #8DC63F 100%);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 28pt;
-            font-weight: bold;
-            margin: 0 auto 8pt auto;
+            display: none;
           }
 
           .print-announcements-title {
-            font-size: 24pt;
-            font-weight: bold;
+            font-size: 20pt;
+            font-weight: 600;
             text-transform: uppercase;
-            margin-bottom: 2pt;
-            color: #000;
+            margin-bottom: 8pt;
+            color: #1F8A70;
+            letter-spacing: 0.5pt;
           }
 
           .print-announcements-header p {
             font-size: 13pt;
-            font-weight: bold;
-            color: #0000FF;
-            margin: 0;
+            font-weight: 400;
+            color: #6b7280;
+            margin: 0 0 12pt 0;
+          }
+
+          .print-announcements-divider {
+            width: 120pt;
+            height: 2pt;
+            background: linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%);
+            margin: 0 auto;
+            border-radius: 2pt;
           }
 
           .print-announcement-list {
             padding-left: 0;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12pt;
+            display: block;
+            max-width: 480pt;
+            margin: 0 auto;
           }
 
           .print-announcement-item {
-            margin-bottom: 0;
-            padding: 8pt;
-            border: 1px solid #000;
+            margin-bottom: 32pt;
+            padding: 0;
+            border: none;
             break-inside: avoid;
             page-break-inside: avoid;
-            font-size: 11pt;
-            line-height: 1.2;
           }
 
           .print-announcement-header {
             display: block;
-            margin-bottom: 6pt;
+            margin-bottom: 12pt;
+            padding-left: 8pt;
+            border-left: 3pt solid #8DC63F;
           }
 
           .print-announcement-title {
-            font-size: 12pt;
-            font-weight: bold;
-            color: #000;
-            text-transform: uppercase;
+            font-size: 14pt;
+            font-weight: 600;
+            color: #1a1a1a;
+            text-transform: capitalize;
             display: block;
+            line-height: 1.2;
           }
 
           .print-announcement-date {
-            font-size: 10pt;
-            font-weight: bold;
-            color: #0000FF;
+            font-size: 11pt;
+            font-weight: 400;
+            color: #1F8A70;
             display: block;
-            margin-top: 2pt;
+            margin-top: 4pt;
           }
 
           .print-announcement-content {
-            font-size: 11pt;
-            line-height: 1.2;
-            color: #000;
-            margin-bottom: 4pt;
-            margin-top: 4pt;
+            font-size: 12.5pt;
+            line-height: 1.5;
+            color: #374151;
+            margin-bottom: 0;
+            margin-top: 0;
             word-wrap: break-word;
             overflow-wrap: break-word;
             font-weight: 400;
           }
 
           .print-announcement-instructions {
-            font-size: 10pt;
-            background: transparent;
-            padding: 0;
-            margin-top: 4pt;
+            font-size: 11pt;
+            background: #f3f4f6;
+            padding: 8pt 12pt;
+            margin-top: 12pt;
             font-style: italic;
-            border-left: none;
-            color: #000;
+            border-left: 3pt solid #1F8A70;
+            color: #4b5563;
+            border-radius: 2pt;
+          }
+
+          .print-announcement-instructions::before {
+            content: "CUE PARA EL ANUNCIADOR";
+            display: block;
+            font-size: 9pt;
+            font-weight: 600;
+            font-style: normal;
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+            color: #1F8A70;
+            margin-bottom: 6pt;
           }
 
           .print-footer {
@@ -2078,9 +2095,9 @@ export default function WeeklyServiceManager() {
 
         <div className="print-announcements">
           <div className="print-announcements-header">
-            <div className="print-announcements-logo">P</div>
             <div className="print-announcements-title">ANUNCIOS</div>
-            <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es }).toUpperCase()}</p>
+            <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
+            <div className="print-announcements-divider"></div>
           </div>
 
           <div className="print-announcement-list">
@@ -2090,7 +2107,7 @@ export default function WeeklyServiceManager() {
                 <div key={ann.id} className="print-announcement-item">
                   <div className="print-announcement-header">
                     <div className="print-announcement-title">
-                      {ann.isEvent ? ann.name : ann.title.toUpperCase()}
+                      {ann.isEvent ? ann.name : ann.title}
                     </div>
                     {(ann.date_of_occurrence || ann.start_date) && (
                       <div className="print-announcement-date">
