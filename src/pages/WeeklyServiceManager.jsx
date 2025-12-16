@@ -949,9 +949,9 @@ export default function WeeklyServiceManager() {
 
         const logos = element.querySelectorAll('.print-logo');
         logos.forEach(el => {
-          el.style.width = '52px';
-          el.style.height = '52px';
-          el.style.margin = '0 auto 10px auto';
+          el.style.width = '62px';
+          el.style.height = '62px';
+          el.style.margin = '0 auto 8px auto';
           el.style.background = 'none';
         });
 
@@ -962,20 +962,20 @@ export default function WeeklyServiceManager() {
 
         const titleH1 = element.querySelectorAll('.print-title h1');
         titleH1.forEach(el => {
-          el.style.fontSize = '26px';
-          el.style.fontWeight = '700';
-          el.style.margin = '0 0 6px 0';
+          el.style.fontSize = '24px';
+          el.style.fontWeight = 'bold';
+          el.style.margin = '0 0 4px 0';
           el.style.textTransform = 'uppercase';
           el.style.letterSpacing = '1px';
-          el.style.color = '#1a1a1a';
+          el.style.color = '#1F5B8C';
         });
 
         const titleP = element.querySelectorAll('.print-title p');
         titleP.forEach(el => {
           el.style.fontSize = '13px';
-          el.style.color = '#4b5563';
+          el.style.color = '#374151';
           el.style.fontWeight = '500';
-          el.style.margin = '0 0 10px 0';
+          el.style.margin = '0 0 8px 0';
         });
 
         const teamInfo = element.querySelectorAll('.print-team-info');
@@ -983,19 +983,20 @@ export default function WeeklyServiceManager() {
           el.style.display = 'flex';
           el.style.justifyContent = 'center';
           el.style.alignItems = 'center';
-          el.style.gap = '20px';
+          el.style.gap = '18px';
           el.style.flexWrap = 'wrap';
-          el.style.marginTop = '0';
-          el.style.paddingTop = '10px';
-          el.style.borderTop = '1.5px solid #e5e7eb';
+          el.style.padding = '8px 0';
+          el.style.borderTop = '1px solid #d1d5db';
+          el.style.borderBottom = '1px solid #d1d5db';
+          el.style.marginTop = '8px';
           el.style.fontSize = '9px';
-          el.style.color = '#374151';
+          el.style.color = '#6b7280';
         });
 
         const teamLabels = element.querySelectorAll('.print-team-label');
         teamLabels.forEach(el => {
-          el.style.fontWeight = '700';
-          el.style.color = '#1a1a1a';
+          el.style.fontWeight = '600';
+          el.style.color = '#374151';
         });
 
         const twoColumns = element.querySelectorAll('.print-two-columns');
