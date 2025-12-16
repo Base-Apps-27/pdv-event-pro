@@ -2250,12 +2250,12 @@ export default function WeeklyServiceManager() {
           </div>
 
           {/* Pre-Service Block */}
-          <Card className="bg-gray-100 border-gray-300">
+          <Card className="bg-gray-100 border-2 border-gray-400">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-700">
                 <Clock className="w-4 h-4" />
                 PRE-SERVICIO
-                <Badge variant="outline" className="ml-auto text-xs text-gray-500 border-gray-400">Antes de iniciar</Badge>
+                <Badge variant="outline" className="ml-auto text-xs text-gray-600 border-gray-500">Antes de iniciar</Badge>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -2651,12 +2651,12 @@ export default function WeeklyServiceManager() {
           </div>
 
           {/* Pre-Service Block */}
-          <Card className="bg-gray-100 border-gray-300">
+          <Card className="bg-gray-100 border-2 border-gray-400">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-700">
                 <Clock className="w-4 h-4" />
                 PRE-SERVICIO
-                <Badge variant="outline" className="ml-auto text-xs text-gray-500 border-gray-400">Antes de iniciar</Badge>
+                <Badge variant="outline" className="ml-auto text-xs text-gray-600 border-gray-500">Antes de iniciar</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 pt-2">
