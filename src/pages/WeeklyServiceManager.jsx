@@ -1122,8 +1122,8 @@ export default function WeeklyServiceManager() {
           el.style.flexShrink = '0';
         });
 
-        const announcementsHeaderEls = element.querySelectorAll('.print-announcements-header');
-        announcementsHeaderEls.forEach(el => {
+        const announcementsHeader2Els = element.querySelectorAll('.print-announcements-header');
+        announcementsHeader2Els.forEach(el => {
           el.style.position = 'relative';
           el.style.marginBottom = '14px';
           el.style.paddingBottom = '0';
