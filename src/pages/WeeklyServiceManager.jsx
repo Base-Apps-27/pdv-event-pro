@@ -1585,8 +1585,8 @@ export default function WeeklyServiceManager() {
             margin-top: 6px;
             margin-bottom: 4px;
             padding: 6px 8px;
-            background: #fffbeb;
-            border-left: 3px solid #f59e0b;
+            background: #fef9c3;
+            border-left: 3px solid #D7DF23;
             border-radius: 3px;
             break-inside: avoid;
           }
@@ -1613,7 +1613,7 @@ export default function WeeklyServiceManager() {
             margin-bottom: 6px;
             padding: 6px 8px;
             background: #f0fdf4;
-            border-left: 3px solid #1F8A70;
+            border-left: 3px solid #8DC63F;
             border-radius: 3px;
           }
 
@@ -1777,7 +1777,7 @@ export default function WeeklyServiceManager() {
                   </div>
 
                   {segment.data?.leader && (
-                    <div className="print-segment-detail" style={{ background: '#f0fdf4', borderLeft: '3px solid #1F8A70' }}>
+                    <div className="print-segment-detail">
                       <strong>Dir:</strong> <span className="print-name">{segment.data.leader}</span>
                     </div>
                   )}
@@ -1791,38 +1791,38 @@ export default function WeeklyServiceManager() {
                   )}
 
                   {segment.data?.ministry_leader && (
-                    <div className="print-segment-detail" style={{ marginTop: '6px', paddingTop: '6px', background: '#faf5ff', borderLeft: '3px solid #a78bfa', borderTop: '2px solid #e9d5ff' }}>
+                    <div className="print-segment-detail" style={{ marginTop: '6px', paddingTop: '6px', borderTop: '2px solid #e5e7eb' }}>
                       <strong>Ministración de Sanidad y Milagros</strong><br/>
                       <span className="print-name">{segment.data.ministry_leader}</span> (5 min)
                     </div>
                   )}
 
                   {segment.data?.presenter && (
-                    <div className="print-segment-detail" style={{ background: '#f0fdf4', borderLeft: '3px solid #1F8A70' }}>
+                    <div className="print-segment-detail">
                       <span className="print-name">{segment.data.presenter}</span>
                     </div>
                   )}
 
                   {segment.data?.preacher && (
-                    <div className="print-segment-detail" style={{ background: '#f0fdf4', borderLeft: '3px solid #1F8A70' }}>
+                    <div className="print-segment-detail">
                       <span className="print-name">{segment.data.preacher}</span>
                     </div>
                   )}
 
                   {segment.data?.title && (
-                    <div className="print-segment-detail" style={{ background: '#fef3c7', borderLeft: '3px solid #f59e0b' }}>
+                    <div className="print-segment-detail">
                       <em>{segment.data.title}</em>
                     </div>
                   )}
 
                   {segment.data?.verse && (
-                    <div className="print-segment-detail" style={{ background: '#fef3c7', borderLeft: '3px solid #f59e0b' }}>
+                    <div className="print-segment-detail">
                       {segment.data.verse}
                     </div>
                   )}
 
                   {segment.data?.description && (
-                    <div className="print-segment-detail" style={{ fontStyle: 'italic', background: '#f3f4f6', borderLeft: '3px solid #9ca3af' }}>
+                    <div className="print-segment-detail" style={{ fontStyle: 'italic' }}>
                       {segment.data.description}
                     </div>
                   )}
