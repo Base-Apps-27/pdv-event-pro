@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPageUrl } from "@/utils";
-import { Users, Upload, Loader2, Search, Filter, FileDown } from "lucide-react";
+import { Users, Upload, Loader2, Search, Filter, FileDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +20,7 @@ export default function People() {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: people = [], isLoading } = useQuery({
@@ -94,6 +95,19 @@ export default function People() {
       console.error("Upload error:", error);
       setUploadStatus("Error durante la importación: " + error.message);
       setUploading(false);
+    }
+  };
+
+  const handleRefreshSuggestions = async () => {
+    setRefreshing(true);
+    try {
+      const response = await base44.functions.invoke('refreshSuggestions', {});
+      alert(`Actualizado: ${response.data.updated} actualizados, ${response.data.deleted} eliminados, ${response.data.unchanged} sin cambios`);
+      queryClient.invalidateQueries(['suggestions']);
+    } catch (error) {
+      alert('Error al actualizar sugerencias: ' + error.message);
+    } finally {
+      setRefreshing(false);
     }
   };
 
