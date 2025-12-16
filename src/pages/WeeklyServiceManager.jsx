@@ -992,11 +992,11 @@ export default function WeeklyServiceManager() {
                       ))}
                     </div>
                   )}
-                  </div>
-                  );
-                  })}
+                </div>
+              );
+            })}
 
-                  <div className="print-receso">
+            <div className="print-receso">
               11:00am a 11:30am - RECESO
             </div>
           </div>
