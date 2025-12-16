@@ -845,8 +845,8 @@ export default function WeeklyServiceManager() {
       alert('Error al generar PDF');
     } finally {
       document.body.removeChild(container);
-      }
-      };
+    }
+  };
 
       const handleEmailPDF = async () => {
       if (!emailAddress) return;
