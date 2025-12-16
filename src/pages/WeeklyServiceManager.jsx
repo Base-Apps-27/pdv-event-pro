@@ -346,6 +346,29 @@ export default function WeeklyServiceManager() {
           [field]: value
         };
       }
+      
+      // Passive copy: if updating 9:30am, also update 11:30am if that field is empty
+      if (service === "9:30am" && updated["11:30am"] && updated["11:30am"][segmentIndex]) {
+        const target1130 = updated["11:30am"][segmentIndex];
+        
+        if (field === 'songs') {
+          // Copy songs if 11:30am songs are all empty
+          const isEmpty = !target1130.songs || target1130.songs.every(s => !s.title && !s.lead);
+          if (isEmpty) {
+            updated["11:30am"][segmentIndex].songs = value.map(s => ({ ...s }));
+          }
+        } else {
+          // Copy field if 11:30am field is empty
+          const currentValue = target1130.data?.[field];
+          if (!currentValue || currentValue === '') {
+            updated["11:30am"][segmentIndex].data = {
+              ...updated["11:30am"][segmentIndex].data,
+              [field]: value
+            };
+          }
+        }
+      }
+      
       return updated;
     });
     debouncedSave(`${service}-${segmentIndex}-${field}`);
@@ -363,50 +386,7 @@ export default function WeeklyServiceManager() {
     window.print();
   };
 
-  // Auto-copy from 9:30am to 11:30am when 11:30am is still in blueprint state
-  useEffect(() => {
-    if (!serviceData) return;
-    
-    // Check if 11:30am is still in default blueprint state (empty data)
-    const is1130Default = serviceData["11:30am"]?.every(seg => {
-      const hasEmptyData = !seg.data || Object.keys(seg.data).length === 0 || 
-        Object.values(seg.data).every(v => !v || v === '');
-      const hasEmptySongs = !seg.songs || seg.songs.every(s => !s.title && !s.lead);
-      return hasEmptyData && hasEmptySongs;
-    });
-    
-    // Check if 9:30am has any content
-    const has930Content = serviceData["9:30am"]?.some(seg => {
-      const hasData = seg.data && Object.values(seg.data).some(v => v && v !== '');
-      const hasSongs = seg.songs && seg.songs.some(s => s.title || s.lead);
-      return hasData || hasSongs;
-    });
-    
-    // Auto-copy if 11:30am is default and 9:30am has content
-    if (is1130Default && has930Content) {
-      const copied930Data = serviceData["9:30am"]
-        .filter(s => s.type !== 'break' && s.type !== 'special')
-        .map(seg => {
-          const newSeg = {
-            type: seg.type,
-            title: seg.title,
-            duration: seg.duration,
-            fields: [...seg.fields],
-            data: { ...seg.data },
-            actions: seg.actions ? seg.actions.map(a => ({ ...a })) : []
-          };
-          if (seg.songs) {
-            newSeg.songs = seg.songs.map(s => ({ title: s.title, lead: s.lead }));
-          }
-          return newSeg;
-        });
-      
-      setServiceData(prev => ({
-        ...prev,
-        "11:30am": copied930Data
-      }));
-    }
-  }, [serviceData?.["9:30am"]]);
+
 
   const addSpecialSegment = () => {
     setSavingField('add-special');
