@@ -60,7 +60,8 @@ export default function WeeklyServiceManager() {
     is_active: true,
     priority: 10,
     has_video: false,
-    date_of_occurrence: ""
+    date_of_occurrence: "",
+    emphasize: false
   });
   const [expandedSegments, setExpandedSegments] = useState({});
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
@@ -1386,7 +1387,8 @@ export default function WeeklyServiceManager() {
       is_active: ann.is_active,
       priority: ann.priority || 10,
       has_video: ann.has_video || false,
-      date_of_occurrence: ann.date_of_occurrence || ""
+      date_of_occurrence: ann.date_of_occurrence || "",
+      emphasize: ann.emphasize || false
     });
     setShowAnnouncementDialog(true);
   };
@@ -2974,7 +2976,7 @@ export default function WeeklyServiceManager() {
             <Button
               onClick={() => {
                 setEditingAnnouncement(null);
-                setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, has_video: false, date_of_occurrence: "" });
+                setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, has_video: false, date_of_occurrence: "", emphasize: false });
                 setShowAnnouncementDialog(true);
               }}
               size="sm"
@@ -3138,7 +3140,7 @@ export default function WeeklyServiceManager() {
             </div>
             <div className="grid md:grid-cols-2 gap-3">
               {dynamicAnnouncements.map(ann => (
-                <div key={ann.id} className="flex items-start gap-2 p-3 border-2 rounded-lg bg-blue-50 hover:shadow-md transition-shadow">
+                <div key={ann.id} className={`flex items-start gap-2 p-3 rounded-lg hover:shadow-md transition-shadow ${ann.emphasize || ann.category === 'Urgent' ? 'border-[3px] border-red-300 bg-red-50' : 'border-2 bg-blue-50'}`}>
                   <Checkbox
                     checked={selectedAnnouncements.includes(ann.id)}
                     onCheckedChange={(checked) => {
@@ -3155,7 +3157,7 @@ export default function WeeklyServiceManager() {
                        <div className="flex items-center gap-2 mb-1">
                          <h3 className="font-bold text-sm leading-tight">{ann.isEvent ? ann.name : ann.title}</h3>
                          {ann.isEvent && <Badge className="bg-purple-200 text-purple-800 text-[10px]">Evento</Badge>}
-                         {!ann.isEvent && ann.category === 'Urgent' && <Badge className="bg-red-100 text-red-700 text-[10px] border border-red-300">⚡ URGENTE</Badge>}
+                         {!ann.isEvent && (ann.emphasize || ann.category === 'Urgent') && <Badge className="bg-red-100 text-red-700 text-[10px] border border-red-300">⚡ DESTACADO</Badge>}
                        </div>
                         {(ann.date_of_occurrence || ann.start_date) && (
                           <p className="text-xs font-semibold text-blue-600 mb-1">
@@ -3403,7 +3405,7 @@ export default function WeeklyServiceManager() {
             </div>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex gap-6 p-3 bg-gray-50 rounded-lg border">
+            <div className="flex gap-6 p-3 bg-gray-50 rounded-lg border flex-wrap">
               <div className="flex items-center gap-2">
                 <Checkbox
                   checked={announcementForm.has_video}
@@ -3418,6 +3420,15 @@ export default function WeeklyServiceManager() {
                 />
                 <Label className="font-semibold">👁️ Visible</Label>
               </div>
+              {announcementForm.category !== "General" && (
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={announcementForm.emphasize}
+                    onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, emphasize: checked }))}
+                  />
+                  <Label className="font-semibold">⭐ Destacar este anuncio</Label>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Categoría</Label>
