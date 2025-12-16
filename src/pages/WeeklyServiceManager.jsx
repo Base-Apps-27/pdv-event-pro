@@ -2142,15 +2142,15 @@ export default function WeeklyServiceManager() {
               <span>Guardando...</span>
             </div>
           )}
-          <Button variant="outline" onClick={() => setShowEmailDialog(true)}>
+          <Button variant="outline" onClick={() => setShowEmailDialog(true)} className="border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:border-gray-500">
             <Mail className="w-4 h-4 mr-2" />
             Enviar Email
           </Button>
-          <Button className="bg-pdv-teal text-white" onClick={handleDownloadPDF}>
+          <Button className="bg-pdv-teal text-white border-2 border-pdv-teal font-semibold" onClick={handleDownloadPDF}>
             <Printer className="w-4 h-4 mr-2" />
             Descargar PDF
           </Button>
-          <Button variant="outline" onClick={handlePrint}>
+          <Button variant="outline" onClick={handlePrint} className="border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:border-gray-500">
             <Printer className="w-4 h-4 mr-2" />
             Imprimir
           </Button>
@@ -2230,7 +2230,7 @@ export default function WeeklyServiceManager() {
                   setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "9:30am" }));
                   setShowSpecialDialog(true);
                 }}
-                className="print:hidden"
+                className="print:hidden border-2 border-gray-400 bg-white text-gray-900 font-semibold"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Especial
@@ -2618,7 +2618,7 @@ export default function WeeklyServiceManager() {
                 <Button
                   size="sm"
                   onClick={copy930To1130}
-                  className="print:hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                  className="print:hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold border-2 border-blue-600"
                 >
                   <ChevronsRight className="w-4 h-4 mr-2" />
                   Copiar Todo de 9:30
@@ -2630,7 +2630,7 @@ export default function WeeklyServiceManager() {
                     setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "11:30am" }));
                     setShowSpecialDialog(true);
                   }}
-                  className="print:hidden"
+                  className="print:hidden border-2 border-gray-400 bg-white text-gray-900 font-semibold"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Especial
