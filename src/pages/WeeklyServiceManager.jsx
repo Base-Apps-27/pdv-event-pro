@@ -346,32 +346,41 @@ export default function WeeklyServiceManager() {
           [field]: value
         };
       }
-      
-      // Passive copy: if updating 9:30am, also update 11:30am if that field is empty
-      if (service === "9:30am" && updated["11:30am"] && updated["11:30am"][segmentIndex]) {
-        const target1130 = updated["11:30am"][segmentIndex];
-        
-        if (field === 'songs') {
-          // Copy songs if 11:30am songs are all empty
-          const isEmpty = !target1130.songs || target1130.songs.every(s => !s.title && !s.lead);
-          if (isEmpty) {
-            updated["11:30am"][segmentIndex].songs = value.map(s => ({ ...s }));
-          }
-        } else {
-          // Copy field if 11:30am field is empty
-          const currentValue = target1130.data?.[field];
-          if (!currentValue || currentValue === '') {
-            updated["11:30am"][segmentIndex].data = {
-              ...updated["11:30am"][segmentIndex].data,
-              [field]: value
-            };
-          }
-        }
-      }
-      
       return updated;
     });
     debouncedSave(`${service}-${segmentIndex}-${field}`);
+  };
+
+  const handleFieldBlur = (service, segmentIndex, field) => {
+    // Passive copy on blur: if updating 9:30am, copy to 11:30am if that field is empty
+    if (service === "9:30am" && serviceData["11:30am"] && serviceData["11:30am"][segmentIndex]) {
+      const source930 = serviceData["9:30am"][segmentIndex];
+      const target1130 = serviceData["11:30am"][segmentIndex];
+      
+      if (field === 'songs') {
+        const isEmpty = !target1130.songs || target1130.songs.every(s => !s.title && !s.lead);
+        if (isEmpty && source930.songs) {
+          setServiceData(prev => {
+            const updated = { ...prev };
+            updated["11:30am"][segmentIndex].songs = source930.songs.map(s => ({ ...s }));
+            return updated;
+          });
+        }
+      } else {
+        const currentValue = target1130.data?.[field];
+        const sourceValue = source930.data?.[field];
+        if ((!currentValue || currentValue === '') && sourceValue) {
+          setServiceData(prev => {
+            const updated = { ...prev };
+            updated["11:30am"][segmentIndex].data = {
+              ...updated["11:30am"][segmentIndex].data,
+              [field]: sourceValue
+            };
+            return updated;
+          });
+        }
+      }
+    }
   };
 
   const updateTeamField = (field, service, value) => {
@@ -1248,6 +1257,7 @@ export default function WeeklyServiceManager() {
                                   placeholder="Líder / Director"
                                   value={segment.data?.leader || ""}
                                   onChange={(e) => updateSegmentField("9:30am", idx, "leader", e.target.value)}
+                                  onBlur={() => handleFieldBlur("9:30am", idx, "leader")}
                                   className="text-sm"
                                 />
                               )}
@@ -1257,6 +1267,7 @@ export default function WeeklyServiceManager() {
                                   placeholder="Presentador"
                                   value={segment.data?.presenter || ""}
                                   onChange={(e) => updateSegmentField("9:30am", idx, "presenter", e.target.value)}
+                                  onBlur={() => handleFieldBlur("9:30am", idx, "presenter")}
                                   className="text-sm"
                                 />
                               )}
@@ -1266,6 +1277,7 @@ export default function WeeklyServiceManager() {
                                   placeholder="Predicador"
                                   value={segment.data?.preacher || ""}
                                   onChange={(e) => updateSegmentField("9:30am", idx, "preacher", e.target.value)}
+                                  onBlur={() => handleFieldBlur("9:30am", idx, "preacher")}
                                   className="text-sm"
                                 />
                               )}
@@ -1274,6 +1286,7 @@ export default function WeeklyServiceManager() {
                                   placeholder="Título del Mensaje"
                                   value={segment.data?.title || ""}
                                   onChange={(e) => updateSegmentField("9:30am", idx, "title", e.target.value)}
+                                  onBlur={() => handleFieldBlur("9:30am", idx, "title")}
                                   className="text-sm"
                                 />
                               )}
@@ -1282,6 +1295,7 @@ export default function WeeklyServiceManager() {
                                   placeholder="Verso / Cita Bíblica"
                                   value={segment.data?.verse || ""}
                                   onChange={(e) => updateSegmentField("9:30am", idx, "verse", e.target.value)}
+                                  onBlur={() => handleFieldBlur("9:30am", idx, "verse")}
                                   className="text-sm"
                                 />
                               )}
@@ -1299,6 +1313,7 @@ export default function WeeklyServiceManager() {
                                           newSongs[sIdx].title = e.target.value;
                                           updateSegmentField("9:30am", idx, "songs", newSongs);
                                         }}
+                                        onBlur={() => handleFieldBlur("9:30am", idx, "songs")}
                                         className="text-xs"
                                       />
                                       <AutocompleteInput
@@ -1310,6 +1325,7 @@ export default function WeeklyServiceManager() {
                                           newSongs[sIdx].lead = e.target.value;
                                           updateSegmentField("9:30am", idx, "songs", newSongs);
                                         }}
+                                        onBlur={() => handleFieldBlur("9:30am", idx, "songs")}
                                         className="text-xs"
                                       />
                                     </div>
@@ -1324,6 +1340,7 @@ export default function WeeklyServiceManager() {
                                     placeholder="Líder de Ministración"
                                     value={segment.data?.ministry_leader || ""}
                                     onChange={(e) => updateSegmentField("9:30am", idx, "ministry_leader", e.target.value)}
+                                    onBlur={() => handleFieldBlur("9:30am", idx, "ministry_leader")}
                                     className="text-sm"
                                   />
                                 </div>
