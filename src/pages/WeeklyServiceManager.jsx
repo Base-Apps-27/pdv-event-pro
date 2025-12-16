@@ -34,7 +34,6 @@ export default function WeeklyServiceManager() {
     translator: "",
   });
   const [selectedAnnouncements, setSelectedAnnouncements] = useState([]);
-  const [hasChanges, setHasChanges] = useState(false);
   const [showAnnouncementDialog, setShowAnnouncementDialog] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
   const [announcementForm, setAnnouncementForm] = useState({
@@ -282,23 +281,7 @@ export default function WeeklyServiceManager() {
     }
   }, [dynamicAnnouncements, fixedAnnouncements, existingData]);
 
-  // Auto-save after 2 seconds of inactivity
-  useEffect(() => {
-    if (!hasChanges || !serviceData) return;
 
-    const timeoutId = setTimeout(() => {
-      const dataToSave = {
-        ...serviceData,
-        selected_announcements: selectedAnnouncements,
-        day_of_week: 'Sunday',
-        name: `Domingo - ${selectedDate}`,
-        status: 'active'
-      };
-      saveServiceMutation.mutate(dataToSave);
-    }, 2000);
-
-    return () => clearTimeout(timeoutId);
-  }, [serviceData, selectedAnnouncements, hasChanges]);
 
   const updateSegmentField = (service, segmentIndex, field, value) => {
     setServiceData(prev => {
@@ -313,7 +296,18 @@ export default function WeeklyServiceManager() {
       }
       return updated;
     });
-    setHasChanges(true);
+  };
+
+  const saveField = () => {
+    if (!serviceData) return;
+    const dataToSave = {
+      ...serviceData,
+      selected_announcements: selectedAnnouncements,
+      day_of_week: 'Sunday',
+      name: `Domingo - ${selectedDate}`,
+      status: 'active'
+    };
+    saveServiceMutation.mutate(dataToSave);
   };
 
   const updateTeamField = (field, service, value) => {
@@ -321,7 +315,6 @@ export default function WeeklyServiceManager() {
       ...prev,
       [field]: { ...prev[field], [service]: value }
     }));
-    setHasChanges(true);
   };
 
   const handleSave = () => {
@@ -343,9 +336,14 @@ export default function WeeklyServiceManager() {
     if (window.confirm('¿Copiar datos de 9:30am a 11:30am?')) {
       setServiceData(prev => ({
         ...prev,
-        "11:30am": prev["9:30am"].filter(s => s.type !== 'break' && s.type !== 'special').map(seg => ({ ...seg }))
+        "11:30am": prev["9:30am"].filter(s => s.type !== 'break' && s.type !== 'special').map(seg => ({
+          ...seg,
+          data: { ...seg.data },
+          songs: seg.songs ? seg.songs.map(s => ({ ...s })) : undefined,
+          actions: seg.actions ? [...seg.actions] : []
+        }))
       }));
-      setHasChanges(true);
+      saveField();
     }
   };
 
@@ -373,7 +371,7 @@ export default function WeeklyServiceManager() {
       targetArray.splice(insertIndex, 0, newSegment);
       return updated;
     });
-    setHasChanges(true);
+    saveField();
     setShowSpecialDialog(false);
     setSpecialSegmentDetails({
       timeSlot: "9:30am", title: "", type: "Especial", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
@@ -386,7 +384,7 @@ export default function WeeklyServiceManager() {
       updated[timeSlot].splice(index, 1);
       return updated;
     });
-    setHasChanges(true);
+    saveField();
   };
 
   const handleAnnouncementSubmit = () => {
@@ -438,7 +436,7 @@ export default function WeeklyServiceManager() {
       ...prev,
       [timeSlot]: items
     }));
-    setHasChanges(true);
+    saveField();
   };
 
   const toggleSegmentExpanded = (timeSlot, idx) => {
@@ -962,17 +960,14 @@ export default function WeeklyServiceManager() {
           <p className="text-gray-500 mt-1">Gestión semanal unificada</p>
         </div>
         <div className="flex gap-3 items-center">
-            {saveServiceMutation.isPending && (
-              <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
-            )}
-            {!saveServiceMutation.isPending && !hasChanges && serviceData && (
-              <Check className="w-4 h-4 text-green-600" />
-            )}
-            <Button variant="outline" onClick={handlePrint}>
-              <Printer className="w-4 h-4 mr-2" />
-              Imprimir
-            </Button>
-          </div>
+          {saveServiceMutation.isPending && (
+            <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+          )}
+          <Button variant="outline" onClick={handlePrint}>
+            <Printer className="w-4 h-4 mr-2" />
+            Imprimir
+          </Button>
+        </div>
       </div>
 
       {/* Date Selection */}
@@ -1093,8 +1088,8 @@ export default function WeeklyServiceManager() {
                       ...prev,
                       pre_service_notes: { ...prev.pre_service_notes, "9:30am": e.target.value }
                     }));
-                    setHasChanges(true);
                   }}
+                  onBlur={saveField}
                   className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
                   rows={2}
                 />
@@ -1184,6 +1179,7 @@ export default function WeeklyServiceManager() {
                       placeholder="Líder / Director"
                       value={segment.data?.leader || ""}
                       onChange={(e) => updateSegmentField("9:30am", idx, "leader", e.target.value)}
+                      onBlur={saveField}
                       className="text-sm"
                     />
                   )}
@@ -1193,6 +1189,7 @@ export default function WeeklyServiceManager() {
                       placeholder="Presentador"
                       value={segment.data?.presenter || ""}
                       onChange={(e) => updateSegmentField("9:30am", idx, "presenter", e.target.value)}
+                      onBlur={saveField}
                       className="text-sm"
                     />
                   )}
@@ -1202,6 +1199,7 @@ export default function WeeklyServiceManager() {
                       placeholder="Predicador"
                       value={segment.data?.preacher || ""}
                       onChange={(e) => updateSegmentField("9:30am", idx, "preacher", e.target.value)}
+                      onBlur={saveField}
                       className="text-sm"
                     />
                   )}
@@ -1210,6 +1208,7 @@ export default function WeeklyServiceManager() {
                       placeholder="Título del Mensaje"
                       value={segment.data?.title || ""}
                       onChange={(e) => updateSegmentField("9:30am", idx, "title", e.target.value)}
+                      onBlur={saveField}
                       className="text-sm"
                     />
                   )}
@@ -1218,6 +1217,7 @@ export default function WeeklyServiceManager() {
                       placeholder="Verso / Cita Bíblica"
                       value={segment.data?.verse || ""}
                       onChange={(e) => updateSegmentField("9:30am", idx, "verse", e.target.value)}
+                      onBlur={saveField}
                       className="text-sm"
                     />
                   )}
@@ -1235,6 +1235,7 @@ export default function WeeklyServiceManager() {
                               newSongs[sIdx].title = e.target.value;
                               updateSegmentField("9:30am", idx, "songs", newSongs);
                             }}
+                            onBlur={saveField}
                             className="text-xs"
                           />
                           <AutocompleteInput
@@ -1246,6 +1247,7 @@ export default function WeeklyServiceManager() {
                               newSongs[sIdx].lead = e.target.value;
                               updateSegmentField("9:30am", idx, "songs", newSongs);
                             }}
+                            onBlur={saveField}
                             className="text-xs"
                           />
                         </div>
@@ -1260,6 +1262,7 @@ export default function WeeklyServiceManager() {
                         placeholder="Líder de Ministración"
                         value={segment.data?.ministry_leader || ""}
                         onChange={(e) => updateSegmentField("9:30am", idx, "ministry_leader", e.target.value)}
+                        onBlur={saveField}
                         className="text-sm"
                       />
                     </div>
@@ -1368,8 +1371,8 @@ export default function WeeklyServiceManager() {
                     ...prev,
                     receso_notes: { ...prev.receso_notes, "9:30am": e.target.value }
                   }));
-                  setHasChanges(true);
                 }}
+                onBlur={saveField}
                 className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
                 rows={2}
               />
@@ -1382,10 +1385,10 @@ export default function WeeklyServiceManager() {
               <CardTitle className="text-sm">EQUIPO 9:30am</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Input placeholder="Coordinador(a)" value={serviceData.coordinators?.["9:30am"] || ""} onChange={(e) => updateTeamField("coordinators", "9:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Ujieres" value={serviceData.ujieres?.["9:30am"] || ""} onChange={(e) => updateTeamField("ujieres", "9:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Sonido" value={serviceData.sound?.["9:30am"] || ""} onChange={(e) => updateTeamField("sound", "9:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Luces" value={serviceData.luces?.["9:30am"] || ""} onChange={(e) => updateTeamField("luces", "9:30am", e.target.value)} className="text-xs" />
+              <Input placeholder="Coordinador(a)" value={serviceData.coordinators?.["9:30am"] || ""} onChange={(e) => updateTeamField("coordinators", "9:30am", e.target.value)} onBlur={saveField} className="text-xs" />
+              <Input placeholder="Ujieres" value={serviceData.ujieres?.["9:30am"] || ""} onChange={(e) => updateTeamField("ujieres", "9:30am", e.target.value)} onBlur={saveField} className="text-xs" />
+              <Input placeholder="Sonido" value={serviceData.sound?.["9:30am"] || ""} onChange={(e) => updateTeamField("sound", "9:30am", e.target.value)} onBlur={saveField} className="text-xs" />
+              <Input placeholder="Luces" value={serviceData.luces?.["9:30am"] || ""} onChange={(e) => updateTeamField("luces", "9:30am", e.target.value)} onBlur={saveField} className="text-xs" />
             </CardContent>
           </Card>
         </div>
@@ -1439,8 +1442,8 @@ export default function WeeklyServiceManager() {
                       ...prev,
                       pre_service_notes: { ...prev.pre_service_notes, "11:30am": e.target.value }
                     }));
-                    setHasChanges(true);
                   }}
+                  onBlur={saveField}
                   className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
                   rows={2}
                 />
@@ -1490,22 +1493,25 @@ export default function WeeklyServiceManager() {
                           placeholder="Presentador"
                           value={segment.data?.presenter || ""}
                           onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
+                          onBlur={saveField}
                           className="text-sm"
-                        />
-                        <AutocompleteInput
+                          />
+                          <AutocompleteInput
                           type="translator"
                           placeholder="Traductor"
                           value={segment.data?.translator || ""}
                           onChange={(e) => updateSegmentField(timeSlot, idx, "translator", e.target.value)}
+                          onBlur={saveField}
                           className="text-sm"
-                        />
-                        <Textarea
+                          />
+                          <Textarea
                           placeholder="Descripción / Notas"
                           value={segment.data?.description || ""}
                           onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
+                          onBlur={saveField}
                           className="text-sm"
                           rows={2}
-                        />
+                          />
                       </CardContent>
                     </Card>
                   )}
@@ -1537,6 +1543,7 @@ export default function WeeklyServiceManager() {
                       placeholder="Líder / Director"
                       value={segment.data?.leader || ""}
                       onChange={(e) => updateSegmentField("11:30am", idx, "leader", e.target.value)}
+                      onBlur={saveField}
                       className="text-sm"
                     />
                   )}
@@ -1546,6 +1553,7 @@ export default function WeeklyServiceManager() {
                       placeholder="Presentador"
                       value={segment.data?.presenter || ""}
                       onChange={(e) => updateSegmentField("11:30am", idx, "presenter", e.target.value)}
+                      onBlur={saveField}
                       className="text-sm"
                     />
                   )}
@@ -1555,6 +1563,7 @@ export default function WeeklyServiceManager() {
                       placeholder="Predicador"
                       value={segment.data?.preacher || ""}
                       onChange={(e) => updateSegmentField("11:30am", idx, "preacher", e.target.value)}
+                      onBlur={saveField}
                       className="text-sm"
                     />
                   )}
@@ -1563,6 +1572,7 @@ export default function WeeklyServiceManager() {
                       placeholder="Título del Mensaje"
                       value={segment.data?.title || ""}
                       onChange={(e) => updateSegmentField("11:30am", idx, "title", e.target.value)}
+                      onBlur={saveField}
                       className="text-sm"
                     />
                   )}
@@ -1571,6 +1581,7 @@ export default function WeeklyServiceManager() {
                       placeholder="Verso / Cita Bíblica"
                       value={segment.data?.verse || ""}
                       onChange={(e) => updateSegmentField("11:30am", idx, "verse", e.target.value)}
+                      onBlur={saveField}
                       className="text-sm"
                     />
                   )}
@@ -1588,6 +1599,7 @@ export default function WeeklyServiceManager() {
                               newSongs[sIdx].title = e.target.value;
                               updateSegmentField("11:30am", idx, "songs", newSongs);
                             }}
+                            onBlur={saveField}
                             className="text-xs"
                           />
                           <AutocompleteInput
@@ -1599,6 +1611,7 @@ export default function WeeklyServiceManager() {
                               newSongs[sIdx].lead = e.target.value;
                               updateSegmentField("11:30am", idx, "songs", newSongs);
                             }}
+                            onBlur={saveField}
                             className="text-xs"
                           />
                         </div>
@@ -1613,6 +1626,7 @@ export default function WeeklyServiceManager() {
                         placeholder="Líder de Ministración"
                         value={segment.data?.ministry_leader || ""}
                         onChange={(e) => updateSegmentField("11:30am", idx, "ministry_leader", e.target.value)}
+                        onBlur={saveField}
                         className="text-sm"
                       />
                     </div>
@@ -1625,6 +1639,7 @@ export default function WeeklyServiceManager() {
                         placeholder="Nombre del traductor"
                         value={segment.data?.translator || ""}
                         onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
+                        onBlur={saveField}
                         className="text-sm"
                       />
                     </div>
@@ -1644,6 +1659,7 @@ export default function WeeklyServiceManager() {
                         placeholder="Nombre del traductor (puede ser el mismo)"
                         value={segment.data?.translator || ""}
                         onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
+                        onBlur={saveField}
                         className="text-sm"
                       />
                     </div>
@@ -1707,6 +1723,7 @@ export default function WeeklyServiceManager() {
                             placeholder="Auto-rellena del segmento de A&A, editable si es diferente"
                             value={segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || ""}
                             onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
+                            onBlur={saveField}
                             className="text-xs"
                           />
                         </div>
@@ -1752,10 +1769,10 @@ export default function WeeklyServiceManager() {
               <CardTitle className="text-sm">EQUIPO 11:30am</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Input placeholder="Coordinador(a)" value={serviceData.coordinators?.["11:30am"] || ""} onChange={(e) => updateTeamField("coordinators", "11:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Ujieres" value={serviceData.ujieres?.["11:30am"] || ""} onChange={(e) => updateTeamField("ujieres", "11:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Sonido" value={serviceData.sound?.["11:30am"] || ""} onChange={(e) => updateTeamField("sound", "11:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Luces" value={serviceData.luces?.["11:30am"] || ""} onChange={(e) => updateTeamField("luces", "11:30am", e.target.value)} className="text-xs" />
+              <Input placeholder="Coordinador(a)" value={serviceData.coordinators?.["11:30am"] || ""} onChange={(e) => updateTeamField("coordinators", "11:30am", e.target.value)} onBlur={saveField} className="text-xs" />
+              <Input placeholder="Ujieres" value={serviceData.ujieres?.["11:30am"] || ""} onChange={(e) => updateTeamField("ujieres", "11:30am", e.target.value)} onBlur={saveField} className="text-xs" />
+              <Input placeholder="Sonido" value={serviceData.sound?.["11:30am"] || ""} onChange={(e) => updateTeamField("sound", "11:30am", e.target.value)} onBlur={saveField} className="text-xs" />
+              <Input placeholder="Luces" value={serviceData.luces?.["11:30am"] || ""} onChange={(e) => updateTeamField("luces", "11:30am", e.target.value)} onBlur={saveField} className="text-xs" />
             </CardContent>
           </Card>
         </div>
