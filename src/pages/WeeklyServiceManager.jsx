@@ -351,44 +351,41 @@ export default function WeeklyServiceManager() {
     debouncedSave(`${service}-${segmentIndex}-${field}`);
   };
 
-  const handleFieldBlur = (service, segmentIndex, field) => {
-    // Passive copy on blur: if updating 9:30am, copy to 11:30am if that field is empty
-    if (service === "9:30am") {
-      // Small delay to ensure state is current
-      setTimeout(() => {
-        const currentData = serviceDataRef.current;
-        if (!currentData || !currentData["11:30am"] || !currentData["11:30am"][segmentIndex]) return;
-        
-        const source930 = currentData["9:30am"][segmentIndex];
-        const target1130 = currentData["11:30am"][segmentIndex];
-        
-        if (field === 'songs') {
-          const isEmpty = !target1130.songs || target1130.songs.every(s => !s.title && !s.lead);
-          if (isEmpty && source930.songs && source930.songs.some(s => s.title || s.lead)) {
-            setServiceData(prev => {
-              const updated = { ...prev };
-              updated["11:30am"][segmentIndex].songs = source930.songs.map(s => ({ ...s }));
-              return updated;
-            });
-            debouncedSave(`copy-songs-${segmentIndex}`);
-          }
-        } else {
-          const currentValue = target1130.data?.[field];
-          const sourceValue = source930.data?.[field];
-          if ((!currentValue || currentValue === '') && sourceValue && sourceValue !== '') {
-            setServiceData(prev => {
-              const updated = { ...prev };
-              updated["11:30am"][segmentIndex].data = {
-                ...updated["11:30am"][segmentIndex].data,
-                [field]: sourceValue
-              };
-              return updated;
-            });
-            debouncedSave(`copy-${field}-${segmentIndex}`);
-          }
-        }
-      }, 100);
-    }
+  const copy930To1130 = () => {
+    setSavingField('copy-services');
+    setServiceData(prev => {
+      if (!prev) return prev;
+
+      const updated = { ...prev };
+
+      const copiedSegments = updated["9:30am"].map(seg => ({
+        ...seg,
+        data: { ...seg.data },
+        actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
+        songs: seg.songs ? seg.songs.map(s => ({ ...s })) : undefined,
+      }));
+
+      updated["11:30am"] = copiedSegments;
+
+      if (!updated.pre_service_notes["11:30am"]) {
+        updated.pre_service_notes["11:30am"] = updated.pre_service_notes["9:30am"];
+      }
+      if (!updated.coordinators["11:30am"]) {
+        updated.coordinators["11:30am"] = updated.coordinators["9:30am"];
+      }
+      if (!updated.ujieres["11:30am"]) {
+        updated.ujieres["11:30am"] = updated.ujieres["9:30am"];
+      }
+      if (!updated.sound["11:30am"]) {
+        updated.sound["11:30am"] = updated.sound["9:30am"];
+      }
+      if (!updated.luces["11:30am"]) {
+        updated.luces["11:30am"] = updated.luces["9:30am"];
+      }
+
+      return updated;
+    });
+    debouncedSave('copy-services');
   };
 
   const updateTeamField = (field, service, value) => {
@@ -1265,7 +1262,6 @@ export default function WeeklyServiceManager() {
                                   placeholder="Líder / Director"
                                   value={segment.data?.leader || ""}
                                   onChange={(e) => updateSegmentField("9:30am", idx, "leader", e.target.value)}
-                                  onBlur={() => handleFieldBlur("9:30am", idx, "leader")}
                                   className="text-sm"
                                 />
                               )}
@@ -1275,7 +1271,6 @@ export default function WeeklyServiceManager() {
                                   placeholder="Presentador"
                                   value={segment.data?.presenter || ""}
                                   onChange={(e) => updateSegmentField("9:30am", idx, "presenter", e.target.value)}
-                                  onBlur={() => handleFieldBlur("9:30am", idx, "presenter")}
                                   className="text-sm"
                                 />
                               )}
@@ -1285,7 +1280,6 @@ export default function WeeklyServiceManager() {
                                   placeholder="Predicador"
                                   value={segment.data?.preacher || ""}
                                   onChange={(e) => updateSegmentField("9:30am", idx, "preacher", e.target.value)}
-                                  onBlur={() => handleFieldBlur("9:30am", idx, "preacher")}
                                   className="text-sm"
                                 />
                               )}
@@ -1294,7 +1288,6 @@ export default function WeeklyServiceManager() {
                                   placeholder="Título del Mensaje"
                                   value={segment.data?.title || ""}
                                   onChange={(e) => updateSegmentField("9:30am", idx, "title", e.target.value)}
-                                  onBlur={() => handleFieldBlur("9:30am", idx, "title")}
                                   className="text-sm"
                                 />
                               )}
@@ -1303,7 +1296,6 @@ export default function WeeklyServiceManager() {
                                   placeholder="Verso / Cita Bíblica"
                                   value={segment.data?.verse || ""}
                                   onChange={(e) => updateSegmentField("9:30am", idx, "verse", e.target.value)}
-                                  onBlur={() => handleFieldBlur("9:30am", idx, "verse")}
                                   className="text-sm"
                                 />
                               )}
@@ -1348,7 +1340,6 @@ export default function WeeklyServiceManager() {
                                     placeholder="Líder de Ministración"
                                     value={segment.data?.ministry_leader || ""}
                                     onChange={(e) => updateSegmentField("9:30am", idx, "ministry_leader", e.target.value)}
-                                    onBlur={() => handleFieldBlur("9:30am", idx, "ministry_leader")}
                                     className="text-sm"
                                   />
                                 </div>
@@ -1491,18 +1482,29 @@ export default function WeeklyServiceManager() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-blue-600">11:30 a.m.</h2>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "11:30am" }));
-                  setShowSpecialDialog(true);
-                }}
-                className="print:hidden"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Especial
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={copy930To1130}
+                  className="print:hidden"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copiar de 9:30
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "11:30am" }));
+                    setShowSpecialDialog(true);
+                  }}
+                  className="print:hidden"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Especial
+                </Button>
+              </div>
             </div>
             <div className="text-sm text-gray-600 flex items-center gap-3 flex-wrap">
               <Badge variant="outline" className={calculateServiceTimes("11:30am").isOverage ? "bg-amber-100 border-amber-400 text-amber-900 font-bold" : "bg-blue-50"}>
