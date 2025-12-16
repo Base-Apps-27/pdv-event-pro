@@ -1519,18 +1519,16 @@ export default function WeeklyServiceManager() {
           }
 
           .print-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            margin-bottom: 8pt;
+            text-align: center;
+            margin-bottom: 16pt;
             padding-bottom: 0;
             border-bottom: none;
           }
 
           .print-logo {
-            width: 50px;
-            height: 50px;
-            flex-shrink: 0;
+            width: 62px;
+            height: 62px;
+            margin: 0 auto 8pt auto;
             background: none;
           }
 
@@ -1542,40 +1540,45 @@ export default function WeeklyServiceManager() {
 
           .print-title {
             text-align: center;
-            flex: 1;
-            margin: 0 16px;
           }
 
           .print-title h1 {
             font-size: 24pt;
             font-weight: bold;
-            margin: 0 0 2pt 0;
+            margin: 0 0 4pt 0;
             text-transform: uppercase;
-            color: #000;
+            color: #1F5B8C;
+            letter-spacing: 1pt;
           }
 
           .print-title p {
             font-size: 13pt;
-            color: #0000FF;
-            font-weight: bold;
-            margin: 0;
+            color: #374151;
+            font-weight: 500;
+            margin: 0 0 8pt 0;
           }
 
-          .print-team-box {
-            text-align: right;
-            font-size: 10pt;
-            line-height: 1.2;
-            min-width: 120px;
-            color: #000;
+          .print-team-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 18pt;
+            flex-wrap: wrap;
+            padding: 8pt 0;
+            border-top: 1pt solid #d1d5db;
+            border-bottom: 1pt solid #d1d5db;
+            margin-top: 8pt;
+            font-size: 9pt;
+            color: #6b7280;
           }
 
-          .print-team-box div {
-            margin-bottom: 1pt;
+          .print-team-info > div {
+            white-space: nowrap;
           }
 
           .print-team-label {
-            font-weight: bold;
-            color: #000;
+            font-weight: 600;
+            color: #374151;
           }
 
           .print-two-columns {
