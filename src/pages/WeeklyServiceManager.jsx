@@ -436,7 +436,9 @@ export default function WeeklyServiceManager() {
   };
 
   const handlePrint = () => {
-    window.print();
+    setTimeout(() => {
+      window.print();
+    }, 100);
   };
 
 
