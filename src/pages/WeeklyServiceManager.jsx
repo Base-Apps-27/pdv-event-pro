@@ -16,6 +16,8 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 export default function WeeklyServiceManager() {
   // State
@@ -439,6 +441,48 @@ export default function WeeklyServiceManager() {
     setTimeout(() => {
       window.print();
     }, 100);
+  };
+
+  const handleDownloadPDF = async () => {
+    const printContent = document.querySelector('.print-content');
+    if (!printContent) return;
+
+    // Show print content temporarily
+    printContent.style.display = 'block';
+    
+    try {
+      const canvas = await html2canvas(printContent, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`Servicio-${selectedDate}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error al generar PDF');
+    } finally {
+      printContent.style.display = '';
+    }
   };
 
 
@@ -879,7 +923,7 @@ export default function WeeklyServiceManager() {
       `}</style>
 
       {/* Print Layout */}
-      <div className="hidden print:block">
+      <div className="hidden print:block print-content">
         <div className="print-header">
           <div className="print-logo">P</div>
           <div className="print-title">
@@ -1191,6 +1235,10 @@ export default function WeeklyServiceManager() {
               <span>Guardando...</span>
             </div>
           )}
+          <Button className="bg-pdv-teal text-white" onClick={handleDownloadPDF}>
+            <Printer className="w-4 h-4 mr-2" />
+            Descargar PDF
+          </Button>
           <Button variant="outline" onClick={handlePrint}>
             <Printer className="w-4 h-4 mr-2" />
             Imprimir
