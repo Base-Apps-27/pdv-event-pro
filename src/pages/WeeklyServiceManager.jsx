@@ -2225,17 +2225,49 @@ export default function WeeklyServiceManager() {
               <span>Guardando...</span>
             </div>
           )}
-          <Button variant="outline" onClick={() => setShowEmailDialog(true)} className="border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:border-gray-500">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowEmailDialog(true)} 
+            disabled={isGeneratingPdf}
+            className="border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:border-gray-500 disabled:opacity-50"
+          >
             <Mail className="w-4 h-4 mr-2" />
             Enviar Email
           </Button>
-          <Button className="bg-pdv-teal text-white border-2 border-pdv-teal font-semibold" onClick={handleDownloadPDF}>
-            <Printer className="w-4 h-4 mr-2" />
-            Descargar PDF
+          <Button 
+            className="bg-pdv-teal text-white border-2 border-pdv-teal font-semibold hover:bg-pdv-teal/90 disabled:opacity-50" 
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPdf}
+          >
+            {isGeneratingPdf ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generando...
+              </>
+            ) : (
+              <>
+                <Printer className="w-4 h-4 mr-2" />
+                Descargar PDF
+              </>
+            )}
           </Button>
-          <Button variant="outline" onClick={handlePrint} className="border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:border-gray-500">
-            <Printer className="w-4 h-4 mr-2" />
-            Imprimir
+          <Button 
+            variant="outline" 
+            onClick={handlePrint} 
+            disabled={isGeneratingPdf}
+            className="border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:border-gray-500 disabled:opacity-50"
+          >
+            {isGeneratingPdf ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Preparando...
+              </>
+            ) : (
+              <>
+                <Printer className="w-4 h-4 mr-2" />
+                Imprimir
+              </>
+            )}
           </Button>
         </div>
       </div>
