@@ -459,13 +459,14 @@ export default function WeeklyServiceManager() {
     container.style.position = 'absolute';
     container.style.left = '-99999px';
     container.style.top = '0';
-    container.style.width = '816px'; // 8.5in at 96dpi
+    container.style.width = '900px'; // Increased width for better rendering
     container.style.background = 'white';
-    container.style.padding = '38px 48px 77px 48px'; // 0.4in 0.5in 0.8in 0.5in
+    container.style.padding = '32px 40px 60px 40px'; // Reduced padding for more space
     container.style.fontFamily = 'Arial, sans-serif';
     container.style.color = '#000';
     container.style.wordWrap = 'break-word';
     container.style.overflowWrap = 'break-word';
+    container.style.boxSizing = 'border-box';
     container.appendChild(clone);
 
     // Apply all print styles inline
@@ -542,8 +543,9 @@ export default function WeeklyServiceManager() {
       twoColumns.forEach(el => {
         el.style.display = 'grid';
         el.style.gridTemplateColumns = '1fr 1fr';
-        el.style.gap = '16px';
+        el.style.gap = '20px';
         el.style.marginBottom = '0';
+        el.style.width = '100%';
       });
 
       const serviceColumns = element.querySelectorAll('.print-service-column');
@@ -569,11 +571,12 @@ export default function WeeklyServiceManager() {
 
       const segments = element.querySelectorAll('.print-segment');
       segments.forEach(el => {
-        el.style.marginBottom = '6px';
-        el.style.paddingBottom = '5px';
+        el.style.marginBottom = '7px';
+        el.style.paddingBottom = '6px';
         el.style.borderBottom = '1px solid #e5e7eb';
         el.style.fontSize = '9px';
-        el.style.lineHeight = '1.3';
+        el.style.lineHeight = '1.4';
+        el.style.breakInside = 'avoid';
       });
 
       const segmentTimes = element.querySelectorAll('.print-segment-time');
@@ -600,13 +603,14 @@ export default function WeeklyServiceManager() {
       const segmentDetails = element.querySelectorAll('.print-segment-detail');
       segmentDetails.forEach(el => {
         el.style.marginLeft = '8px';
-        el.style.fontSize = '8px';
+        el.style.fontSize = '7.5px';
         el.style.color = '#374151';
-        el.style.lineHeight = '1.3';
+        el.style.lineHeight = '1.4';
         el.style.marginTop = '2px';
         el.style.whiteSpace = 'pre-wrap';
         el.style.wordWrap = 'break-word';
         el.style.overflowWrap = 'break-word';
+        el.style.maxWidth = '100%';
       });
 
       const names = element.querySelectorAll('.print-name');
@@ -727,13 +731,14 @@ export default function WeeklyServiceManager() {
 
       const announcementContents = element.querySelectorAll('.print-announcement-content');
       announcementContents.forEach(el => {
-        el.style.fontSize = '9px';
-        el.style.lineHeight = '1.3';
+        el.style.fontSize = '8.5px';
+        el.style.lineHeight = '1.4';
         el.style.color = '#374151';
         el.style.marginBottom = '3px';
         el.style.whiteSpace = 'pre-wrap';
         el.style.wordWrap = 'break-word';
         el.style.overflowWrap = 'break-word';
+        el.style.maxWidth = '100%';
       });
 
       const announcementInstructions = element.querySelectorAll('.print-announcement-instructions');
