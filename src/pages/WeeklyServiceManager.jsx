@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,23 +10,28 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Clock, Save, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Eye, EyeOff, GripVertical, Loader2, Check } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
-import { useRef, useCallback } from "react";
 
 export default function WeeklyServiceManager() {
-  const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  // State
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    const day = today.getDay();
+    const diff = day === 0 ? 0 : 7 - day;
+    const nextSunday = new Date(today);
+    nextSunday.setDate(today.getDate() + diff);
+    return nextSunday.toISOString().split('T')[0];
+  });
   const [serviceData, setServiceData] = useState(null);
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
   const [specialSegmentDetails, setSpecialSegmentDetails] = useState({
     timeSlot: "9:30am",
     title: "",
-    type: "Especial",
     duration: 15,
     insertAfterIdx: -1,
     presenter: "",
@@ -37,8 +40,6 @@ export default function WeeklyServiceManager() {
   const [selectedAnnouncements, setSelectedAnnouncements] = useState([]);
   const [showAnnouncementDialog, setShowAnnouncementDialog] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
-  const [savingField, setSavingField] = useState(null);
-  const saveTimeoutRef = useRef(null);
   const [announcementForm, setAnnouncementForm] = useState({
     title: "",
     content: "",
@@ -51,7 +52,9 @@ export default function WeeklyServiceManager() {
   });
   const [expandedSegments, setExpandedSegments] = useState({});
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
-
+  const [savingField, setSavingField] = useState(null);
+  
+  const saveTimeoutRef = useRef(null);
   const queryClient = useQueryClient();
 
   // Blueprint structure
@@ -85,8 +88,7 @@ export default function WeeklyServiceManager() {
           { label: "Pianista sube", timing: "before_end", offset_min: 15, department: "Alabanza" },
           { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }
         ]
-      },
-
+      }
     ],
     "11:30am": [
       { 
@@ -121,7 +123,7 @@ export default function WeeklyServiceManager() {
     ]
   };
 
-  // Fetch or create service data for selected date
+  // Fetch service data
   const { data: existingData, isLoading } = useQuery({
     queryKey: ['weeklyService', selectedDate],
     queryFn: async () => {
@@ -142,32 +144,28 @@ export default function WeeklyServiceManager() {
   const { data: dynamicAnnouncements = [] } = useQuery({
     queryKey: ['dynamicAnnouncements', selectedDate],
     queryFn: async () => {
-      const selDate = new Date(selectedDate);
+      const selDate = new Date(selectedDate + 'T00:00:00');
       const [items, events] = await Promise.all([
         base44.entities.AnnouncementItem.list(),
         base44.entities.Event.list()
       ]);
       
-      // Filter items: show if date_of_occurrence is today or in the future
       const filteredItems = items.filter(a => {
         if (a.category === 'General' || !a.is_active) return false;
         if (!a.date_of_occurrence) return false;
-        const occurrenceDate = new Date(a.date_of_occurrence);
+        const occurrenceDate = new Date(a.date_of_occurrence + 'T00:00:00');
         return occurrenceDate >= selDate;
       });
 
-      // Filter events: show only if event hasn't started yet or is in progress
       const filteredEvents = events.filter(e => {
         if (!e.promote_in_announcements || !e.start_date) return false;
-        const eventStartDate = new Date(e.start_date);
-        // Show up to the start date
+        const eventStartDate = new Date(e.start_date + 'T00:00:00');
         return eventStartDate >= selDate;
       });
 
-      // Combine and sort by occurrence date (earliest first)
       const combined = [
-        ...filteredItems.map(a => ({ ...a, sortDate: new Date(a.date_of_occurrence) })),
-        ...filteredEvents.map(e => ({ ...e, isEvent: true, sortDate: new Date(e.start_date) }))
+        ...filteredItems.map(a => ({ ...a, sortDate: new Date(a.date_of_occurrence + 'T00:00:00') })),
+        ...filteredEvents.map(e => ({ ...e, isEvent: true, sortDate: new Date(e.start_date + 'T00:00:00') }))
       ];
 
       return combined.sort((a, b) => a.sortDate - b.sortDate);
@@ -175,6 +173,7 @@ export default function WeeklyServiceManager() {
     enabled: !!selectedDate
   });
 
+  // Mutations
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
       if (existingData?.id) {
@@ -186,7 +185,6 @@ export default function WeeklyServiceManager() {
     onSuccess: () => {
       queryClient.invalidateQueries(['weeklyService']);
       queryClient.invalidateQueries(['allAnnouncements']);
-      setHasChanges(false);
     },
     onError: (error) => {
       console.error('Error saving service:', error);
@@ -230,7 +228,7 @@ export default function WeeklyServiceManager() {
     }
   });
 
-  // Initialize service data from existing or blueprint
+  // Initialize service data
   useEffect(() => {
     if (existingData) {
       const loadedData = {
@@ -241,7 +239,6 @@ export default function WeeklyServiceManager() {
       setServiceData(loadedData);
       setSelectedAnnouncements(existingData.selected_announcements || []);
     } else {
-      // Initialize from blueprint
       const initialData = {
         date: selectedDate,
         "9:30am": BLUEPRINT["9:30am"].map(seg => ({
@@ -277,7 +274,7 @@ export default function WeeklyServiceManager() {
     }
   }, [existingData]);
 
-  // Auto-select all visible and non-expired announcements
+  // Auto-select announcements
   useEffect(() => {
     if (!existingData && (fixedAnnouncements.length > 0 || dynamicAnnouncements.length > 0)) {
       const fixed = fixedAnnouncements.map(a => a.id);
@@ -286,24 +283,7 @@ export default function WeeklyServiceManager() {
     }
   }, [dynamicAnnouncements, fixedAnnouncements, existingData]);
 
-
-
-  const updateSegmentField = (service, segmentIndex, field, value) => {
-    setServiceData(prev => {
-      const updated = { ...prev };
-      if (field === 'songs') {
-        updated[service][segmentIndex].songs = value;
-      } else {
-        updated[service][segmentIndex].data = {
-          ...updated[service][segmentIndex].data,
-          [field]: value
-        };
-      }
-      return updated;
-    });
-    debouncedSave(`${service}-${segmentIndex}-${field}`);
-  };
-
+  // Debounced save
   const debouncedSave = useCallback((fieldKey) => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -334,23 +314,29 @@ export default function WeeklyServiceManager() {
     }, 800);
   }, [serviceData, selectedDate, selectedAnnouncements, saveServiceMutation]);
 
+  // Update handlers
+  const updateSegmentField = (service, segmentIndex, field, value) => {
+    setServiceData(prev => {
+      const updated = { ...prev };
+      if (field === 'songs') {
+        updated[service][segmentIndex].songs = value;
+      } else {
+        updated[service][segmentIndex].data = {
+          ...updated[service][segmentIndex].data,
+          [field]: value
+        };
+      }
+      return updated;
+    });
+    debouncedSave(`${service}-${segmentIndex}-${field}`);
+  };
+
   const updateTeamField = (field, service, value) => {
     setServiceData(prev => ({
       ...prev,
       [field]: { ...prev[field], [service]: value }
     }));
     debouncedSave(`team-${field}-${service}`);
-  };
-
-  const handleSave = () => {
-    const dataToSave = {
-      ...serviceData,
-      selected_announcements: selectedAnnouncements,
-      day_of_week: 'Sunday',
-      name: `Domingo - ${selectedDate}`,
-      status: 'active'
-    };
-    saveServiceMutation.mutate(dataToSave);
   };
 
   const handlePrint = () => {
@@ -404,67 +390,95 @@ export default function WeeklyServiceManager() {
 
   const addSpecialSegment = () => {
     setSavingField('add-special');
-    setServiceData(prev => {
-      const updated = { ...prev };
-      const newSegment = {
-        type: "special",
-        title: specialSegmentDetails.title,
-        duration: specialSegmentDetails.duration,
-        fields: ["description"],
-        data: { 
-          description: "",
-          presenter: specialSegmentDetails.presenter,
-          translator: specialSegmentDetails.translator
-        },
-        actions: []
-      };
+    const newSegment = {
+      type: "special",
+      title: specialSegmentDetails.title,
+      duration: specialSegmentDetails.duration,
+      fields: ["description"],
+      data: { 
+        description: "",
+        presenter: specialSegmentDetails.presenter,
+        translator: specialSegmentDetails.translator
+      },
+      actions: []
+    };
 
-      const targetArray = updated[specialSegmentDetails.timeSlot];
-      let insertIndex = specialSegmentDetails.insertAfterIdx + 1;
-      if (insertIndex <= 0) insertIndex = 0;
-      if (insertIndex > targetArray.length) insertIndex = targetArray.length;
-      
-      targetArray.splice(insertIndex, 0, newSegment);
-      
-      const dataToSave = {
-        ...updated,
-        selected_announcements: selectedAnnouncements,
-        day_of_week: 'Sunday',
-        name: `Domingo - ${selectedDate}`,
-        status: 'active'
-      };
-      
-      saveServiceMutation.mutate(dataToSave, {
-        onSettled: () => setSavingField(null)
-      });
-      
-      return updated;
+    const updatedData = { ...serviceData };
+    const targetArray = [...updatedData[specialSegmentDetails.timeSlot]];
+    let insertIndex = specialSegmentDetails.insertAfterIdx + 1;
+    if (insertIndex <= 0) insertIndex = 0;
+    if (insertIndex > targetArray.length) insertIndex = targetArray.length;
+    
+    targetArray.splice(insertIndex, 0, newSegment);
+    updatedData[specialSegmentDetails.timeSlot] = targetArray;
+    
+    setServiceData(updatedData);
+    
+    const dataToSave = {
+      ...updatedData,
+      selected_announcements: selectedAnnouncements,
+      day_of_week: 'Sunday',
+      name: `Domingo - ${selectedDate}`,
+      status: 'active'
+    };
+    
+    saveServiceMutation.mutate(dataToSave, {
+      onSettled: () => setSavingField(null)
     });
+    
     setShowSpecialDialog(false);
     setSpecialSegmentDetails({
-      timeSlot: "9:30am", title: "", type: "Especial", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
+      timeSlot: "9:30am", title: "", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
     });
   };
 
   const removeSpecialSegment = (timeSlot, index) => {
     setSavingField('remove-special');
-    setServiceData(prev => {
-      const updated = { ...prev };
-      updated[timeSlot].splice(index, 1);
-      
-      const dataToSave = {
-        ...updated,
-        selected_announcements: selectedAnnouncements,
-        day_of_week: 'Sunday',
-        name: `Domingo - ${selectedDate}`,
-        status: 'active'
-      };
-      
-      saveServiceMutation.mutate(dataToSave, {
-        onSettled: () => setSavingField(null)
-      });
-      
-      return updated;
+    const updatedData = { ...serviceData };
+    const targetArray = [...updatedData[timeSlot]];
+    targetArray.splice(index, 1);
+    updatedData[timeSlot] = targetArray;
+    
+    setServiceData(updatedData);
+    
+    const dataToSave = {
+      ...updatedData,
+      selected_announcements: selectedAnnouncements,
+      day_of_week: 'Sunday',
+      name: `Domingo - ${selectedDate}`,
+      status: 'active'
+    };
+    
+    saveServiceMutation.mutate(dataToSave, {
+      onSettled: () => setSavingField(null)
+    });
+  };
+
+  const handleDragEnd = (result, timeSlot) => {
+    if (!result.destination) return;
+    
+    setSavingField('reorder');
+    const items = [...serviceData[timeSlot]];
+    const [reordered] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reordered);
+    
+    const updatedData = {
+      ...serviceData,
+      [timeSlot]: items
+    };
+    
+    setServiceData(updatedData);
+    
+    const dataToSave = {
+      ...updatedData,
+      selected_announcements: selectedAnnouncements,
+      day_of_week: 'Sunday',
+      name: `Domingo - ${selectedDate}`,
+      status: 'active'
+    };
+    
+    saveServiceMutation.mutate(dataToSave, {
+      onSettled: () => setSavingField(null)
     });
   };
 
@@ -499,43 +513,6 @@ export default function WeeklyServiceManager() {
     });
   };
 
-  const toggleAnnouncementVisibility = (ann) => {
-    updateAnnouncementMutation.mutate({
-      id: ann.id,
-      data: { ...ann, is_active: !ann.is_active }
-    });
-  };
-
-  const handleDragEnd = (result, timeSlot) => {
-    if (!result.destination) return;
-    
-    setSavingField('reorder');
-    const items = Array.from(serviceData[timeSlot]);
-    const [reordered] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reordered);
-    
-    setServiceData(prev => {
-      const updated = {
-        ...prev,
-        [timeSlot]: items
-      };
-      
-      const dataToSave = {
-        ...updated,
-        selected_announcements: selectedAnnouncements,
-        day_of_week: 'Sunday',
-        name: `Domingo - ${selectedDate}`,
-        status: 'active'
-      };
-      
-      saveServiceMutation.mutate(dataToSave, {
-        onSettled: () => setSavingField(null)
-      });
-      
-      return updated;
-    });
-  };
-
   const toggleSegmentExpanded = (timeSlot, idx) => {
     const key = `${timeSlot}-${idx}`;
     setExpandedSegments(prev => ({
@@ -552,9 +529,7 @@ export default function WeeklyServiceManager() {
     
     const startTime = parse(timeSlot, "h:mma", new Date());
     const endTime = addMinutes(startTime, totalDuration);
-
-    // Target durations
-    const targetDuration = timeSlot === "9:30am" ? 90 : 90; // Both should be 90 min
+    const targetDuration = 90;
     const isOverage = totalDuration > targetDuration;
     const overageAmount = totalDuration - targetDuration;
 
@@ -566,7 +541,7 @@ export default function WeeklyServiceManager() {
       overageAmount,
       targetDuration
     };
-    };
+  };
 
   if (!serviceData || isLoading) {
     return <div className="p-8">Cargando...</div>;
@@ -809,12 +784,11 @@ export default function WeeklyServiceManager() {
 
       {/* Print Layout */}
       <div className="hidden print:block">
-        {/* Print Header */}
         <div className="print-header">
           <div className="print-logo">P</div>
           <div className="print-title">
             <h1>ORDEN DE SERVICIO</h1>
-            <p>Domingo {formatDate(new Date(selectedDate), "d 'de' MMMM, yyyy", { locale: es })}</p>
+            <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
           </div>
           <div className="print-team-box">
             <div><span className="print-team-label">Coordinador(a):</span> {serviceData?.coordinators?.["9:30am"] || serviceData?.coordinators?.["11:30am"] || ""}</div>
@@ -824,9 +798,7 @@ export default function WeeklyServiceManager() {
           </div>
         </div>
 
-        {/* Two Column Layout */}
         <div className="print-two-columns">
-          {/* 9:30 AM Column */}
           <div className="print-service-column left">
             <div className="print-service-time">9:30 a.m.</div>
             {serviceData?.pre_service_notes?.["9:30am"] && (
@@ -907,13 +879,11 @@ export default function WeeklyServiceManager() {
               );
             })}
 
-            {/* Receso for 9:30 */}
             <div className="print-receso">
               11:00am a 11:30am - RECESO
             </div>
           </div>
 
-          {/* 11:30 AM Column */}
           <div className="print-service-column right">
             <div className="print-service-time">11:30 a.m.</div>
             {serviceData?.pre_service_notes?.["11:30am"] && (
@@ -1002,12 +972,11 @@ export default function WeeklyServiceManager() {
           </div>
         </div>
 
-        {/* Announcements Page */}
         <div className="print-announcements">
           <div className="print-announcements-header">
             <div className="print-announcements-title">ANUNCIOS</div>
             <p style={{ fontSize: '13px', color: '#2563eb', fontWeight: 'bold', margin: 0 }}>
-              Domingo {formatDate(new Date(selectedDate), "d 'de' MMMM, yyyy", { locale: es })}
+              Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}
             </p>
           </div>
 
@@ -1042,7 +1011,6 @@ export default function WeeklyServiceManager() {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="print-footer">
           ¡atrévete a cambiar!
         </div>
@@ -1081,7 +1049,7 @@ export default function WeeklyServiceManager() {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal mt-1">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? formatDate(new Date(selectedDate + 'T12:00:00'), "PPPP") : "Seleccionar fecha"}
+                    {selectedDate ? formatDate(new Date(selectedDate + 'T12:00:00'), "PPPP", { locale: es }) : "Seleccionar fecha"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -1171,285 +1139,285 @@ export default function WeeklyServiceManager() {
                 <Badge className="bg-amber-600 text-white text-xs">⚠ Sobrepasa</Badge>
               )}
             </div>
-            </div>
+          </div>
 
-            {/* Pre-Service Block */}
-            <Card className="bg-gray-100 border-gray-300">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
-                  <Clock className="w-4 h-4" />
-                  PRE-SERVICIO
-                  <Badge variant="outline" className="ml-auto text-xs text-gray-500 border-gray-400">Antes de iniciar</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-2">
-                <Textarea
-                  placeholder="Instrucciones pre-servicio (opcional)..."
-                  value={serviceData.pre_service_notes?.["9:30am"] || ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setServiceData(prev => ({
-                      ...prev,
-                      pre_service_notes: { ...prev.pre_service_notes, "9:30am": value }
-                    }));
-                    debouncedSave('pre-service-930');
-                  }}
-                  className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
-                  rows={2}
-                />
-              </CardContent>
-            </Card>
+          {/* Pre-Service Block */}
+          <Card className="bg-gray-100 border-gray-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
+                <Clock className="w-4 h-4" />
+                PRE-SERVICIO
+                <Badge variant="outline" className="ml-auto text-xs text-gray-500 border-gray-400">Antes de iniciar</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 pt-2">
+              <Textarea
+                placeholder="Instrucciones pre-servicio (opcional)..."
+                value={serviceData.pre_service_notes?.["9:30am"] || ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setServiceData(prev => ({
+                    ...prev,
+                    pre_service_notes: { ...prev.pre_service_notes, "9:30am": value }
+                  }));
+                  debouncedSave('pre-service-930');
+                }}
+                className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
+                rows={2}
+              />
+            </CardContent>
+          </Card>
 
-            <DragDropContext onDragEnd={(result) => handleDragEnd(result, "9:30am")}>
+          <DragDropContext onDragEnd={(result) => handleDragEnd(result, "9:30am")}>
             <Droppable droppableId="9:30am">
               {(provided) => (
                 <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
                   {serviceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => {
-            const timeSlot = "9:30am";
-            const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
-            
-            if (segment.type === "special") {
-              return (
-                <Draggable key={`${timeSlot}-special-${idx}`} draggableId={`${timeSlot}-special-${idx}`} index={idx}>
-                  {(provided) => (
-                    <Card 
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      className="border-l-4 border-l-orange-500 bg-orange-50"
-                    >
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <div {...provided.dragHandleProps} className="print:hidden">
-                              <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
-                            </div>
-                            <Sparkles className="w-4 h-4 text-orange-600" />
-                            {segment.title}
-                            <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
-                          </CardTitle>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeSpecialSegment(timeSlot, idx)}
-                            className="print:hidden"
+                    const timeSlot = "9:30am";
+                    const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
+                    
+                    if (segment.type === "special") {
+                      return (
+                        <Draggable key={`${timeSlot}-special-${idx}`} draggableId={`${timeSlot}-special-${idx}`} index={idx}>
+                          {(provided) => (
+                            <Card 
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className="border-l-4 border-l-orange-500 bg-orange-50"
+                            >
+                              <CardHeader className="pb-2">
+                                <div className="flex items-center justify-between">
+                                  <CardTitle className="text-lg flex items-center gap-2">
+                                    <div {...provided.dragHandleProps} className="print:hidden">
+                                      <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+                                    </div>
+                                    <Sparkles className="w-4 h-4 text-orange-600" />
+                                    {segment.title}
+                                    <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
+                                  </CardTitle>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeSpecialSegment(timeSlot, idx)}
+                                    className="print:hidden"
+                                  >
+                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                  </Button>
+                                </div>
+                              </CardHeader>
+                              <CardContent className="space-y-2 pt-3">
+                                <AutocompleteInput
+                                  type="presenter"
+                                  placeholder="Presentador"
+                                  value={segment.data?.presenter || ""}
+                                  onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
+                                  className="text-sm"
+                                />
+                                <Textarea
+                                  placeholder="Descripción / Notas"
+                                  value={segment.data?.description || ""}
+                                  onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
+                                  className="text-sm"
+                                  rows={2}
+                                />
+                              </CardContent>
+                            </Card>
+                          )}
+                        </Draggable>
+                      );
+                    }
+
+                    return (
+                      <Draggable key={`${timeSlot}-${idx}`} draggableId={`${timeSlot}-${idx}`} index={idx}>
+                        {(provided) => (
+                          <Card 
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className="border-l-4 border-l-red-500"
                           >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-2 pt-3">
-                        <AutocompleteInput
-                          type="presenter"
-                          placeholder="Presentador"
-                          value={segment.data?.presenter || ""}
-                          onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
-                          className="text-sm"
-                        />
-                        <Textarea
-                          placeholder="Descripción / Notas"
-                          value={segment.data?.description || ""}
-                          onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
-                          className="text-sm"
-                          rows={2}
-                        />
-                      </CardContent>
-                    </Card>
-                  )}
-                </Draggable>
-              );
-            }
-            return (
-              <Draggable key={`${timeSlot}-${idx}`} draggableId={`${timeSlot}-${idx}`} index={idx}>
-                {(provided) => (
-                  <Card 
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    className="border-l-4 border-l-red-500"
-                  >
-                    <CardHeader className="pb-2 bg-gray-50">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <div {...provided.dragHandleProps} className="print:hidden touch-none p-1 -m-1 active:bg-gray-200 rounded">
-                          <GripVertical className="w-6 h-6 md:w-4 md:h-4 text-gray-400 cursor-grab" />
-                        </div>
-                        <Clock className="w-4 h-4 text-red-600" />
-                        {segment.title}
-                        <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 pt-3">
-                  {segment.fields.includes("leader") && (
-                    <AutocompleteInput
-                      type="worshipLeader"
-                      placeholder="Líder / Director"
-                      value={segment.data?.leader || ""}
-                      onChange={(e) => updateSegmentField("9:30am", idx, "leader", e.target.value)}
-                      className="text-sm"
-                      />
-                  )}
-                  {segment.fields.includes("presenter") && (
-                    <AutocompleteInput
-                      type="presenter"
-                      placeholder="Presentador"
-                      value={segment.data?.presenter || ""}
-                      onChange={(e) => updateSegmentField("9:30am", idx, "presenter", e.target.value)}
-                      className="text-sm"
-                      />
-                  )}
-                  {segment.fields.includes("preacher") && (
-                    <AutocompleteInput
-                      type="preacher"
-                      placeholder="Predicador"
-                      value={segment.data?.preacher || ""}
-                      onChange={(e) => updateSegmentField("9:30am", idx, "preacher", e.target.value)}
-                      className="text-sm"
-                      />
-                  )}
-                  {segment.fields.includes("title") && (
-                    <Input
-                      placeholder="Título del Mensaje"
-                      value={segment.data?.title || ""}
-                      onChange={(e) => updateSegmentField("9:30am", idx, "title", e.target.value)}
-                      className="text-sm"
-                      />
-                  )}
-                  {segment.fields.includes("verse") && (
-                    <Input
-                      placeholder="Verso / Cita Bíblica"
-                      value={segment.data?.verse || ""}
-                      onChange={(e) => updateSegmentField("9:30am", idx, "verse", e.target.value)}
-                      className="text-sm"
-                      />
-                  )}
-                  {segment.songs && (
-                    <div className="space-y-1">
-                      <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
-                      {segment.songs.map((song, sIdx) => (
-                        <div key={sIdx} className="grid grid-cols-2 gap-2">
-                          <AutocompleteInput
-                            type="songTitle"
-                            placeholder={`Canción ${sIdx + 1}`}
-                            value={song.title}
-                            onChange={(e) => {
-                              const newSongs = [...segment.songs];
-                              newSongs[sIdx].title = e.target.value;
-                              updateSegmentField("9:30am", idx, "songs", newSongs);
-                            }}
-                            className="text-xs"
-                            />
-                            <AutocompleteInput
-                            type="worshipLeader"
-                            placeholder="Líder"
-                            value={song.lead}
-                            onChange={(e) => {
-                              const newSongs = [...segment.songs];
-                              newSongs[sIdx].lead = e.target.value;
-                              updateSegmentField("9:30am", idx, "songs", newSongs);
-                            }}
-                            className="text-xs"
-                            />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {segment.fields.includes("ministry_leader") && (
-                    <div className="bg-purple-50 border border-purple-200 rounded p-2">
-                      <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
-                      <AutocompleteInput
-                        type="ministryLeader"
-                        placeholder="Líder de Ministración"
-                        value={segment.data?.ministry_leader || ""}
-                        onChange={(e) => updateSegmentField("9:30am", idx, "ministry_leader", e.target.value)}
-                        className="text-sm"
-                        />
-                    </div>
-                  )}
+                            <CardHeader className="pb-2 bg-gray-50">
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                <div {...provided.dragHandleProps} className="print:hidden touch-none p-1 -m-1 active:bg-gray-200 rounded">
+                                  <GripVertical className="w-6 h-6 md:w-4 md:h-4 text-gray-400 cursor-grab" />
+                                </div>
+                                <Clock className="w-4 h-4 text-red-600" />
+                                {segment.title}
+                                <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2 pt-3">
+                              {segment.fields.includes("leader") && (
+                                <AutocompleteInput
+                                  type="worshipLeader"
+                                  placeholder="Líder / Director"
+                                  value={segment.data?.leader || ""}
+                                  onChange={(e) => updateSegmentField("9:30am", idx, "leader", e.target.value)}
+                                  className="text-sm"
+                                />
+                              )}
+                              {segment.fields.includes("presenter") && (
+                                <AutocompleteInput
+                                  type="presenter"
+                                  placeholder="Presentador"
+                                  value={segment.data?.presenter || ""}
+                                  onChange={(e) => updateSegmentField("9:30am", idx, "presenter", e.target.value)}
+                                  className="text-sm"
+                                />
+                              )}
+                              {segment.fields.includes("preacher") && (
+                                <AutocompleteInput
+                                  type="preacher"
+                                  placeholder="Predicador"
+                                  value={segment.data?.preacher || ""}
+                                  onChange={(e) => updateSegmentField("9:30am", idx, "preacher", e.target.value)}
+                                  className="text-sm"
+                                />
+                              )}
+                              {segment.fields.includes("title") && (
+                                <Input
+                                  placeholder="Título del Mensaje"
+                                  value={segment.data?.title || ""}
+                                  onChange={(e) => updateSegmentField("9:30am", idx, "title", e.target.value)}
+                                  className="text-sm"
+                                />
+                              )}
+                              {segment.fields.includes("verse") && (
+                                <Input
+                                  placeholder="Verso / Cita Bíblica"
+                                  value={segment.data?.verse || ""}
+                                  onChange={(e) => updateSegmentField("9:30am", idx, "verse", e.target.value)}
+                                  className="text-sm"
+                                />
+                              )}
+                              {segment.songs && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
+                                  {segment.songs.map((song, sIdx) => (
+                                    <div key={sIdx} className="grid grid-cols-2 gap-2">
+                                      <AutocompleteInput
+                                        type="songTitle"
+                                        placeholder={`Canción ${sIdx + 1}`}
+                                        value={song.title}
+                                        onChange={(e) => {
+                                          const newSongs = [...segment.songs];
+                                          newSongs[sIdx].title = e.target.value;
+                                          updateSegmentField("9:30am", idx, "songs", newSongs);
+                                        }}
+                                        className="text-xs"
+                                      />
+                                      <AutocompleteInput
+                                        type="worshipLeader"
+                                        placeholder="Líder"
+                                        value={song.lead}
+                                        onChange={(e) => {
+                                          const newSongs = [...segment.songs];
+                                          newSongs[sIdx].lead = e.target.value;
+                                          updateSegmentField("9:30am", idx, "songs", newSongs);
+                                        }}
+                                        className="text-xs"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {segment.fields.includes("ministry_leader") && (
+                                <div className="bg-purple-50 border border-purple-200 rounded p-2">
+                                  <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
+                                  <AutocompleteInput
+                                    type="ministryLeader"
+                                    placeholder="Líder de Ministración"
+                                    value={segment.data?.ministry_leader || ""}
+                                    onChange={(e) => updateSegmentField("9:30am", idx, "ministry_leader", e.target.value)}
+                                    className="text-sm"
+                                  />
+                                </div>
+                              )}
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleSegmentExpanded(timeSlot, idx)}
-                    className="w-full text-xs mt-2 print:hidden"
-                  >
-                    {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
-                    {isExpanded ? "Menos detalles" : "Más detalles"}
-                  </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleSegmentExpanded(timeSlot, idx)}
+                                className="w-full text-xs mt-2 print:hidden"
+                              >
+                                {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                                {isExpanded ? "Menos detalles" : "Más detalles"}
+                              </Button>
 
-                  {isExpanded && (
-                    <div className="space-y-2 pt-2 border-t">
-                      <div className="space-y-1">
-                        <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
-                        <Input
-                          type="number"
-                          value={segment.duration || 0}
-                          onChange={(e) => {
-                            const newDuration = parseInt(e.target.value) || 0;
-                            setServiceData(prev => {
-                              const updated = { ...prev };
-                              updated[timeSlot][idx].duration = newDuration;
-                              return updated;
-                            });
-                            setHasChanges(true);
-                          }}
-                          className="text-xs w-24"
-                        />
-                      </div>
+                              {isExpanded && (
+                                <div className="space-y-2 pt-2 border-t">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
+                                    <Input
+                                      type="number"
+                                      value={segment.duration || 0}
+                                      onChange={(e) => {
+                                        const newDuration = parseInt(e.target.value) || 0;
+                                        setServiceData(prev => {
+                                          const updated = { ...prev };
+                                          updated[timeSlot][idx].duration = newDuration;
+                                          return updated;
+                                        });
+                                        debouncedSave(`${timeSlot}-${idx}-duration`);
+                                      }}
+                                      className="text-xs w-24"
+                                    />
+                                  </div>
 
-                      {/* Coordinator Actions */}
-                      {segment.actions && segment.actions.length > 0 && (
-                        <div className="bg-amber-50 border border-amber-200 rounded p-2">
-                          <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
-                          <div className="space-y-1">
-                            {segment.actions.map((action, aIdx) => (
-                              <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
-                                <span className="font-semibold">•</span>
-                                <span>
-                                  {action.label} 
-                                  {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
-                                  {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
-                                  {action.timing === "before_start" && ` (antes de iniciar)`}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                                  {segment.actions && segment.actions.length > 0 && (
+                                    <div className="bg-amber-50 border border-amber-200 rounded p-2">
+                                      <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
+                                      <div className="space-y-1">
+                                        {segment.actions.map((action, aIdx) => (
+                                          <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
+                                            <span className="font-semibold">•</span>
+                                            <span>
+                                              {action.label} 
+                                              {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
+                                              {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
+                                              {action.timing === "before_start" && ` (antes de iniciar)`}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
 
-                      <Textarea
-                        placeholder="Notas de Proyección"
-                        value={segment.data?.projection_notes || ""}
-                        onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
-                        className="text-xs"
-                        rows={2}
-                      />
-                      <Textarea
-                        placeholder="Notas de Sonido"
-                        value={segment.data?.sound_notes || ""}
-                        onChange={(e) => updateSegmentField(timeSlot, idx, "sound_notes", e.target.value)}
-                        className="text-xs"
-                        rows={2}
-                      />
-                      <Textarea
-                        placeholder="Notas Generales"
-                        value={segment.data?.description_details || ""}
-                        onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
-                        className="text-xs"
-                        rows={2}
-                      />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </Draggable>
-            );
-          })}
-          {provided.placeholder}
+                                  <Textarea
+                                    placeholder="Notas de Proyección"
+                                    value={segment.data?.projection_notes || ""}
+                                    onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
+                                    className="text-xs"
+                                    rows={2}
+                                  />
+                                  <Textarea
+                                    placeholder="Notas de Sonido"
+                                    value={segment.data?.sound_notes || ""}
+                                    onChange={(e) => updateSegmentField(timeSlot, idx, "sound_notes", e.target.value)}
+                                    className="text-xs"
+                                    rows={2}
+                                  />
+                                  <Textarea
+                                    placeholder="Notas Generales"
+                                    value={segment.data?.description_details || ""}
+                                    onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
+                                    className="text-xs"
+                                    rows={2}
+                                  />
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )}
+                      </Draggable>
+                    );
+                  })}
+                  {provided.placeholder}
                 </div>
               )}
             </Droppable>
           </DragDropContext>
 
-          {/* Fixed Receso Block */}
+          {/* Receso Block */}
           <Card className="bg-gray-100 border-gray-300">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
@@ -1519,329 +1487,329 @@ export default function WeeklyServiceManager() {
                 <Badge className="bg-amber-600 text-white text-xs">⚠ Sobrepasa</Badge>
               )}
             </div>
-            </div>
+          </div>
 
-            {/* Pre-Service Block */}
-            <Card className="bg-gray-100 border-gray-300">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
-                  <Clock className="w-4 h-4" />
-                  PRE-SERVICIO
-                  <Badge variant="outline" className="ml-auto text-xs text-gray-500 border-gray-400">Antes de iniciar</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-2">
-                <Textarea
-                  placeholder="Instrucciones pre-servicio (opcional)..."
-                  value={serviceData.pre_service_notes?.["11:30am"] || ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setServiceData(prev => ({
-                      ...prev,
-                      pre_service_notes: { ...prev.pre_service_notes, "11:30am": value }
-                    }));
-                    debouncedSave('pre-service-1130');
-                  }}
-                  className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
-                  rows={2}
-                />
-              </CardContent>
-            </Card>
+          {/* Pre-Service Block */}
+          <Card className="bg-gray-100 border-gray-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
+                <Clock className="w-4 h-4" />
+                PRE-SERVICIO
+                <Badge variant="outline" className="ml-auto text-xs text-gray-500 border-gray-400">Antes de iniciar</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 pt-2">
+              <Textarea
+                placeholder="Instrucciones pre-servicio (opcional)..."
+                value={serviceData.pre_service_notes?.["11:30am"] || ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setServiceData(prev => ({
+                    ...prev,
+                    pre_service_notes: { ...prev.pre_service_notes, "11:30am": value }
+                  }));
+                  debouncedSave('pre-service-1130');
+                }}
+                className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
+                rows={2}
+              />
+            </CardContent>
+          </Card>
 
-            <DragDropContext onDragEnd={(result) => handleDragEnd(result, "11:30am")}>
+          <DragDropContext onDragEnd={(result) => handleDragEnd(result, "11:30am")}>
             <Droppable droppableId="11:30am">
               {(provided) => (
                 <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
                   {serviceData["11:30am"].map((segment, idx) => {
-            const timeSlot = "11:30am";
-            const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
-            
-            if (segment.type === "special") {
-              return (
-                <Draggable key={`${timeSlot}-special-${idx}`} draggableId={`${timeSlot}-special-${idx}`} index={idx}>
-                  {(provided) => (
-                    <Card 
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      className="border-l-4 border-l-orange-500 bg-orange-50"
-                    >
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <div {...provided.dragHandleProps} className="print:hidden">
-                              <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
-                            </div>
-                            <Sparkles className="w-4 h-4 text-orange-600" />
-                            {segment.title}
-                            <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
-                          </CardTitle>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeSpecialSegment(timeSlot, idx)}
-                            className="print:hidden"
+                    const timeSlot = "11:30am";
+                    const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
+                    
+                    if (segment.type === "special") {
+                      return (
+                        <Draggable key={`${timeSlot}-special-${idx}`} draggableId={`${timeSlot}-special-${idx}`} index={idx}>
+                          {(provided) => (
+                            <Card 
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className="border-l-4 border-l-orange-500 bg-orange-50"
+                            >
+                              <CardHeader className="pb-2">
+                                <div className="flex items-center justify-between">
+                                  <CardTitle className="text-lg flex items-center gap-2">
+                                    <div {...provided.dragHandleProps} className="print:hidden">
+                                      <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+                                    </div>
+                                    <Sparkles className="w-4 h-4 text-orange-600" />
+                                    {segment.title}
+                                    <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
+                                  </CardTitle>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeSpecialSegment(timeSlot, idx)}
+                                    className="print:hidden"
+                                  >
+                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                  </Button>
+                                </div>
+                              </CardHeader>
+                              <CardContent className="space-y-2 pt-3">
+                                <AutocompleteInput
+                                  type="presenter"
+                                  placeholder="Presentador"
+                                  value={segment.data?.presenter || ""}
+                                  onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
+                                  className="text-sm"
+                                />
+                                <AutocompleteInput
+                                  type="translator"
+                                  placeholder="Traductor"
+                                  value={segment.data?.translator || ""}
+                                  onChange={(e) => updateSegmentField(timeSlot, idx, "translator", e.target.value)}
+                                  className="text-sm"
+                                />
+                                <Textarea
+                                  placeholder="Descripción / Notas"
+                                  value={segment.data?.description || ""}
+                                  onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
+                                  className="text-sm"
+                                  rows={2}
+                                />
+                              </CardContent>
+                            </Card>
+                          )}
+                        </Draggable>
+                      );
+                    }
+
+                    return (
+                      <Draggable key={`${timeSlot}-${idx}`} draggableId={`${timeSlot}-${idx}`} index={idx}>
+                        {(provided) => (
+                          <Card 
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className="border-l-4 border-l-blue-500"
                           >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-2 pt-3">
-                        <AutocompleteInput
-                          type="presenter"
-                          placeholder="Presentador"
-                          value={segment.data?.presenter || ""}
-                          onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
-                          className="text-sm"
-                          />
-                          <AutocompleteInput
-                          type="translator"
-                          placeholder="Traductor"
-                          value={segment.data?.translator || ""}
-                          onChange={(e) => updateSegmentField(timeSlot, idx, "translator", e.target.value)}
-                          className="text-sm"
-                          />
-                          <Textarea
-                          placeholder="Descripción / Notas"
-                          value={segment.data?.description || ""}
-                          onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
-                          className="text-sm"
-                          rows={2}
-                          />
-                      </CardContent>
-                    </Card>
-                  )}
-                </Draggable>
-              );
-            }
-            return (
-              <Draggable key={`${timeSlot}-${idx}`} draggableId={`${timeSlot}-${idx}`} index={idx}>
-                {(provided) => (
-                  <Card 
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    className="border-l-4 border-l-blue-500"
-                  >
-                    <CardHeader className="pb-2 bg-gray-50">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <div {...provided.dragHandleProps} className="print:hidden touch-none p-1 -m-1 active:bg-gray-200 rounded">
-                          <GripVertical className="w-6 h-6 md:w-4 md:h-4 text-gray-400 cursor-grab" />
-                        </div>
-                        <Clock className="w-4 h-4 text-blue-600" />
-                        {segment.title}
-                        <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 pt-3">
-                  {segment.fields.includes("leader") && (
-                    <AutocompleteInput
-                      type="worshipLeader"
-                      placeholder="Líder / Director"
-                      value={segment.data?.leader || ""}
-                      onChange={(e) => updateSegmentField("11:30am", idx, "leader", e.target.value)}
-                      className="text-sm"
-                      />
-                  )}
-                  {segment.fields.includes("presenter") && (
-                    <AutocompleteInput
-                      type="presenter"
-                      placeholder="Presentador"
-                      value={segment.data?.presenter || ""}
-                      onChange={(e) => updateSegmentField("11:30am", idx, "presenter", e.target.value)}
-                      className="text-sm"
-                      />
-                  )}
-                  {segment.fields.includes("preacher") && (
-                    <AutocompleteInput
-                      type="preacher"
-                      placeholder="Predicador"
-                      value={segment.data?.preacher || ""}
-                      onChange={(e) => updateSegmentField("11:30am", idx, "preacher", e.target.value)}
-                      className="text-sm"
-                      />
-                  )}
-                  {segment.fields.includes("title") && (
-                    <Input
-                      placeholder="Título del Mensaje"
-                      value={segment.data?.title || ""}
-                      onChange={(e) => updateSegmentField("11:30am", idx, "title", e.target.value)}
-                      className="text-sm"
-                      />
-                  )}
-                  {segment.fields.includes("verse") && (
-                    <Input
-                      placeholder="Verso / Cita Bíblica"
-                      value={segment.data?.verse || ""}
-                      onChange={(e) => updateSegmentField("11:30am", idx, "verse", e.target.value)}
-                      className="text-sm"
-                      />
-                  )}
-                  {segment.songs && (
-                    <div className="space-y-1">
-                      <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
-                      {segment.songs.map((song, sIdx) => (
-                        <div key={sIdx} className="grid grid-cols-2 gap-2">
-                          <AutocompleteInput
-                            type="songTitle"
-                            placeholder={`Canción ${sIdx + 1}`}
-                            value={song.title}
-                            onChange={(e) => {
-                              const newSongs = [...segment.songs];
-                              newSongs[sIdx].title = e.target.value;
-                              updateSegmentField("11:30am", idx, "songs", newSongs);
-                            }}
-                            className="text-xs"
-                            />
-                            <AutocompleteInput
-                            type="worshipLeader"
-                            placeholder="Líder"
-                            value={song.lead}
-                            onChange={(e) => {
-                              const newSongs = [...segment.songs];
-                              newSongs[sIdx].lead = e.target.value;
-                              updateSegmentField("11:30am", idx, "songs", newSongs);
-                            }}
-                            className="text-xs"
-                            />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {segment.fields.includes("ministry_leader") && (
-                    <div className="bg-purple-50 border border-purple-200 rounded p-2">
-                      <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
-                      <AutocompleteInput
-                        type="ministryLeader"
-                        placeholder="Líder de Ministración"
-                        value={segment.data?.ministry_leader || ""}
-                        onChange={(e) => updateSegmentField("11:30am", idx, "ministry_leader", e.target.value)}
-                        className="text-sm"
-                        />
-                    </div>
-                  )}
-                  {segment.fields.includes("translator") && segment.type === "worship" && (
-                    <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                      <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) - Ministración, Anuncios, Ofrenda</Label>
-                      <AutocompleteInput
-                        type="translator"
-                        placeholder="Nombre del traductor"
-                        value={segment.data?.translator || ""}
-                        onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
-                        className="text-sm"
-                        />
-                    </div>
-                  )}
+                            <CardHeader className="pb-2 bg-gray-50">
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                <div {...provided.dragHandleProps} className="print:hidden touch-none p-1 -m-1 active:bg-gray-200 rounded">
+                                  <GripVertical className="w-6 h-6 md:w-4 md:h-4 text-gray-400 cursor-grab" />
+                                </div>
+                                <Clock className="w-4 h-4 text-blue-600" />
+                                {segment.title}
+                                <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2 pt-3">
+                              {segment.fields.includes("leader") && (
+                                <AutocompleteInput
+                                  type="worshipLeader"
+                                  placeholder="Líder / Director"
+                                  value={segment.data?.leader || ""}
+                                  onChange={(e) => updateSegmentField("11:30am", idx, "leader", e.target.value)}
+                                  className="text-sm"
+                                />
+                              )}
+                              {segment.fields.includes("presenter") && (
+                                <AutocompleteInput
+                                  type="presenter"
+                                  placeholder="Presentador"
+                                  value={segment.data?.presenter || ""}
+                                  onChange={(e) => updateSegmentField("11:30am", idx, "presenter", e.target.value)}
+                                  className="text-sm"
+                                />
+                              )}
+                              {segment.fields.includes("preacher") && (
+                                <AutocompleteInput
+                                  type="preacher"
+                                  placeholder="Predicador"
+                                  value={segment.data?.preacher || ""}
+                                  onChange={(e) => updateSegmentField("11:30am", idx, "preacher", e.target.value)}
+                                  className="text-sm"
+                                />
+                              )}
+                              {segment.fields.includes("title") && (
+                                <Input
+                                  placeholder="Título del Mensaje"
+                                  value={segment.data?.title || ""}
+                                  onChange={(e) => updateSegmentField("11:30am", idx, "title", e.target.value)}
+                                  className="text-sm"
+                                />
+                              )}
+                              {segment.fields.includes("verse") && (
+                                <Input
+                                  placeholder="Verso / Cita Bíblica"
+                                  value={segment.data?.verse || ""}
+                                  onChange={(e) => updateSegmentField("11:30am", idx, "verse", e.target.value)}
+                                  className="text-sm"
+                                />
+                              )}
+                              {segment.songs && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
+                                  {segment.songs.map((song, sIdx) => (
+                                    <div key={sIdx} className="grid grid-cols-2 gap-2">
+                                      <AutocompleteInput
+                                        type="songTitle"
+                                        placeholder={`Canción ${sIdx + 1}`}
+                                        value={song.title}
+                                        onChange={(e) => {
+                                          const newSongs = [...segment.songs];
+                                          newSongs[sIdx].title = e.target.value;
+                                          updateSegmentField("11:30am", idx, "songs", newSongs);
+                                        }}
+                                        className="text-xs"
+                                      />
+                                      <AutocompleteInput
+                                        type="worshipLeader"
+                                        placeholder="Líder"
+                                        value={song.lead}
+                                        onChange={(e) => {
+                                          const newSongs = [...segment.songs];
+                                          newSongs[sIdx].lead = e.target.value;
+                                          updateSegmentField("11:30am", idx, "songs", newSongs);
+                                        }}
+                                        className="text-xs"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {segment.fields.includes("ministry_leader") && (
+                                <div className="bg-purple-50 border border-purple-200 rounded p-2">
+                                  <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
+                                  <AutocompleteInput
+                                    type="ministryLeader"
+                                    placeholder="Líder de Ministración"
+                                    value={segment.data?.ministry_leader || ""}
+                                    onChange={(e) => updateSegmentField("11:30am", idx, "ministry_leader", e.target.value)}
+                                    className="text-sm"
+                                  />
+                                </div>
+                              )}
+                              {segment.fields.includes("translator") && segment.type === "worship" && (
+                                <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                                  <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) - Ministración, Anuncios, Ofrenda</Label>
+                                  <AutocompleteInput
+                                    type="translator"
+                                    placeholder="Nombre del traductor"
+                                    value={segment.data?.translator || ""}
+                                    onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
+                                    className="text-sm"
+                                  />
+                                </div>
+                              )}
 
-                  {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
-                    <div className="text-xs text-blue-600 italic flex items-center gap-1 mt-1">
-                      🌐 Traductor(a): {segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || "Por definir"}
-                    </div>
-                  )}
+                              {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
+                                <div className="text-xs text-blue-600 italic flex items-center gap-1 mt-1">
+                                  🌐 Traductor(a): {segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || "Por definir"}
+                                </div>
+                              )}
 
-                  {segment.fields.includes("translator") && segment.type === "message" && (
-                    <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                      <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) del Mensaje</Label>
-                      <AutocompleteInput
-                        type="translator"
-                        placeholder="Nombre del traductor (puede ser el mismo)"
-                        value={segment.data?.translator || ""}
-                        onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
-                        className="text-sm"
-                        />
-                    </div>
-                  )}
+                              {segment.fields.includes("translator") && segment.type === "message" && (
+                                <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                                  <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) del Mensaje</Label>
+                                  <AutocompleteInput
+                                    type="translator"
+                                    placeholder="Nombre del traductor (puede ser el mismo)"
+                                    value={segment.data?.translator || ""}
+                                    onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
+                                    className="text-sm"
+                                  />
+                                </div>
+                              )}
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleSegmentExpanded(timeSlot, idx)}
-                    className="w-full text-xs mt-2 print:hidden"
-                  >
-                    {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
-                    {isExpanded ? "Menos detalles" : "Más detalles"}
-                  </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleSegmentExpanded(timeSlot, idx)}
+                                className="w-full text-xs mt-2 print:hidden"
+                              >
+                                {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                                {isExpanded ? "Menos detalles" : "Más detalles"}
+                              </Button>
 
-                  {isExpanded && (
-                    <div className="space-y-2 pt-2 border-t">
-                      <div className="space-y-1">
-                        <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
-                        <Input
-                          type="number"
-                          value={segment.duration || 0}
-                          onChange={(e) => {
-                            const newDuration = parseInt(e.target.value) || 0;
-                            setServiceData(prev => {
-                              const updated = { ...prev };
-                              updated[timeSlot][idx].duration = newDuration;
-                              return updated;
-                            });
-                            setHasChanges(true);
-                          }}
-                          className="text-xs w-24"
-                        />
-                      </div>
-                      
-                      {/* Coordinator Actions */}
-                      {segment.actions && segment.actions.length > 0 && (
-                        <div className="bg-amber-50 border border-amber-200 rounded p-2">
-                          <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
-                          <div className="space-y-1">
-                            {segment.actions.map((action, aIdx) => (
-                              <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
-                                <span className="font-semibold">•</span>
-                                <span>
-                                  {action.label} 
-                                  {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
-                                  {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
-                                  {action.timing === "before_start" && ` (antes de iniciar)`}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                              {isExpanded && (
+                                <div className="space-y-2 pt-2 border-t">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
+                                    <Input
+                                      type="number"
+                                      value={segment.duration || 0}
+                                      onChange={(e) => {
+                                        const newDuration = parseInt(e.target.value) || 0;
+                                        setServiceData(prev => {
+                                          const updated = { ...prev };
+                                          updated[timeSlot][idx].duration = newDuration;
+                                          return updated;
+                                        });
+                                        debouncedSave(`${timeSlot}-${idx}-duration`);
+                                      }}
+                                      className="text-xs w-24"
+                                    />
+                                  </div>
+                                  
+                                  {segment.actions && segment.actions.length > 0 && (
+                                    <div className="bg-amber-50 border border-amber-200 rounded p-2">
+                                      <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
+                                      <div className="space-y-1">
+                                        {segment.actions.map((action, aIdx) => (
+                                          <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
+                                            <span className="font-semibold">•</span>
+                                            <span>
+                                              {action.label} 
+                                              {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
+                                              {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
+                                              {action.timing === "before_start" && ` (antes de iniciar)`}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
 
-                      {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
-                        <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                          <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
-                          <AutocompleteInput
-                            type="translator"
-                            placeholder="Auto-rellena del segmento de A&A, editable si es diferente"
-                            value={segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || ""}
-                            onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
-                            className="text-xs"
-                            />
-                        </div>
-                      )}
-                      <Textarea
-                        placeholder="Notas de Proyección"
-                        value={segment.data?.projection_notes || ""}
-                        onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
-                        className="text-xs"
-                        rows={2}
-                      />
-                      <Textarea
-                        placeholder="Notas de Sonido"
-                        value={segment.data?.sound_notes || ""}
-                        onChange={(e) => updateSegmentField(timeSlot, idx, "sound_notes", e.target.value)}
-                        className="text-xs"
-                        rows={2}
-                      />
-                      <Textarea
-                        placeholder="Notas Generales"
-                        value={segment.data?.description_details || ""}
-                        onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
-                        className="text-xs"
-                        rows={2}
-                      />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </Draggable>
-            );
-          })}
-          {provided.placeholder}
+                                  {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
+                                    <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                                      <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
+                                      <AutocompleteInput
+                                        type="translator"
+                                        placeholder="Auto-rellena del segmento de A&A, editable si es diferente"
+                                        value={segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || ""}
+                                        onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
+                                        className="text-xs"
+                                      />
+                                    </div>
+                                  )}
+                                  <Textarea
+                                    placeholder="Notas de Proyección"
+                                    value={segment.data?.projection_notes || ""}
+                                    onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
+                                    className="text-xs"
+                                    rows={2}
+                                  />
+                                  <Textarea
+                                    placeholder="Notas de Sonido"
+                                    value={segment.data?.sound_notes || ""}
+                                    onChange={(e) => updateSegmentField(timeSlot, idx, "sound_notes", e.target.value)}
+                                    className="text-xs"
+                                    rows={2}
+                                  />
+                                  <Textarea
+                                    placeholder="Notas Generales"
+                                    value={segment.data?.description_details || ""}
+                                    onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
+                                    className="text-xs"
+                                    rows={2}
+                                  />
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )}
+                      </Draggable>
+                    );
+                  })}
+                  {provided.placeholder}
                 </div>
               )}
             </Droppable>
@@ -1894,7 +1862,7 @@ export default function WeeklyServiceManager() {
                       setSelectedAnnouncements(prev => 
                         checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
                       );
-                      setHasChanges(true);
+                      debouncedSave('announcement-selection');
                     }}
                     className="mt-1"
                   />
@@ -1941,21 +1909,21 @@ export default function WeeklyServiceManager() {
                     </div>
                     <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap mb-2">{ann.content}</p>
                     {ann.instructions && (
-                    <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
-                      <p className="text-xs text-amber-900 font-semibold mb-1">Instrucciones:</p>
-                      <p className="text-xs text-amber-800 whitespace-pre-wrap">{ann.instructions}</p>
-                    </div>
+                      <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
+                        <p className="text-xs text-amber-900 font-semibold mb-1">Instrucciones:</p>
+                        <p className="text-xs text-amber-800 whitespace-pre-wrap">{ann.instructions}</p>
+                      </div>
                     )}
                     {ann.has_video && (
                       <Badge className="bg-purple-100 text-purple-800 text-[10px] mt-2">
                         📹 Video
                       </Badge>
                     )}
-                    </div>
-                    </div>
-                    ))}
-                    </div>
-                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Dynamic Announcements */}
           <div className="space-y-3">
@@ -1969,7 +1937,7 @@ export default function WeeklyServiceManager() {
                       setSelectedAnnouncements(prev => 
                         checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
                       );
-                      setHasChanges(true);
+                      debouncedSave('announcement-selection');
                     }}
                     className="mt-1"
                   />
