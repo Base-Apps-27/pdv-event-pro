@@ -726,6 +726,11 @@ export default function WeeklyServiceManager() {
             line-height: 1.2;
           }
 
+          .print-name {
+            color: #8DC63F;
+            font-weight: bold;
+          }
+
           .print-segment-songs {
             margin-left: 8px;
             font-size: 8px;
@@ -766,6 +771,9 @@ export default function WeeklyServiceManager() {
 
           .print-announcement-list {
             padding-left: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
           }
 
           .print-announcement-item {
@@ -1032,7 +1040,7 @@ export default function WeeklyServiceManager() {
 
                   {segment.data?.translator && (
                     <div className="print-segment-detail" style={{ color: '#2563eb' }}>
-                      <strong>🌐 Trad:</strong> {segment.data.translator}
+                      <strong>🌐 Trad:</strong> <span className="print-name">{segment.data.translator}</span>
                     </div>
                   )}
 
