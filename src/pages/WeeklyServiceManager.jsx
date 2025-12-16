@@ -1721,8 +1721,8 @@ export default function WeeklyServiceManager() {
                   )}
 
                   {segment.data?.projection_notes && (
-                    <div className="print-segment-detail print-note-text">
-                      - {segment.data.projection_notes}
+                    <div className="print-segment-detail print-note-text" style={{ paddingLeft: '4pt', borderLeft: '1pt solid #e5e7eb', marginLeft: '4pt', background: 'rgba(147, 51, 234, 0.03)' }}>
+                      <span style={{ fontWeight: '600', fontSize: '8pt' }}>🖥</span> {segment.data.projection_notes}
                     </div>
                   )}
 
@@ -1779,8 +1779,8 @@ export default function WeeklyServiceManager() {
                   )}
 
                   {segment.data?.sound_notes && (
-                    <div className="print-segment-detail print-note-text">
-                      {segment.data.sound_notes}
+                    <div className="print-segment-detail print-note-text" style={{ paddingLeft: '4pt', borderLeft: '1pt solid #e5e7eb', marginLeft: '4pt', background: 'rgba(220, 38, 38, 0.03)' }}>
+                      <span style={{ fontWeight: '600', fontSize: '8pt' }}>🎤</span> {segment.data.sound_notes}
                     </div>
                   )}
 
@@ -1839,8 +1839,8 @@ export default function WeeklyServiceManager() {
                   )}
 
                   {segment.data?.projection_notes && (
-                    <div className="print-segment-detail print-note-text">
-                      - {segment.data.projection_notes}
+                    <div className="print-segment-detail print-note-text" style={{ paddingLeft: '4pt', borderLeft: '1pt solid #e5e7eb', marginLeft: '4pt', background: 'rgba(147, 51, 234, 0.03)' }}>
+                      <span style={{ fontWeight: '600', fontSize: '8pt' }}>🖥</span> {segment.data.projection_notes}
                     </div>
                   )}
 
