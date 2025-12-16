@@ -484,13 +484,95 @@ export default function WeeklyServiceManager() {
     debouncedSave(`team-${field}-${service}`);
   };
 
-  const handlePrint = () => {
-    setTimeout(() => {
-      window.print();
-    }, 100);
+  const handlePrint = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      
+      const serviceData = {
+        service: {
+          '9:30am': formData['9:30am'] || [],
+          '11:30am': formData['11:30am'] || [],
+          coordinators: formData.coordinators,
+          ujieres: formData.ujieres,
+          sound: formData.sound,
+          luces: formData.luces,
+          pre_service_notes: formData.pre_service_notes,
+          receso_notes: formData.receso_notes
+        },
+        announcements: [...fixedAnnouncements, ...dynamicAnnouncements].filter(a => 
+          selectedAnnouncements.includes(a.id)
+        )
+      };
+
+      const response = await base44.functions.invoke('generateServicePdf', {
+        serviceData,
+        selectedDate,
+        includeAnnouncements: true
+      });
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const printWindow = window.open(url, '_blank');
+      
+      if (!printWindow) {
+        alert('No se pudo abrir la ventana de impresión');
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error al generar PDF: ' + error.message);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
   const handleDownloadPDF = async () => {
+    try {
+      setIsGeneratingPdf(true);
+
+      const serviceData = {
+        service: {
+          '9:30am': serviceData['9:30am'] || [],
+          '11:30am': serviceData['11:30am'] || [],
+          coordinators: serviceData.coordinators,
+          ujieres: serviceData.ujieres,
+          sound: serviceData.sound,
+          luces: serviceData.luces,
+          pre_service_notes: serviceData.pre_service_notes,
+          receso_notes: serviceData.receso_notes
+        },
+        announcements: [...fixedAnnouncements, ...dynamicAnnouncements].filter(a => 
+          selectedAnnouncements.includes(a.id)
+        )
+      };
+
+      const response = await base44.functions.invoke('generateServicePdf', {
+        serviceData,
+        selectedDate,
+        includeAnnouncements: true
+      });
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `servicio-${selectedDate}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      alert('PDF descargado exitosamente');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error al generar PDF: ' + error.message);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleDownloadPDF_OLD = async () => {
     const printContent = document.querySelector('.print-content');
     if (!printContent) {
       alert('No se encontró contenido para imprimir');
