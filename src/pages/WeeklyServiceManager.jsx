@@ -447,28 +447,26 @@ export default function WeeklyServiceManager() {
     const printContent = document.querySelector('.print-content');
     if (!printContent) return;
 
-    // Temporarily show the print content with all styles
-    const originalDisplay = printContent.style.display;
-    printContent.style.display = 'block';
-    
-    // Force a reflow to ensure styles are applied
-    printContent.offsetHeight;
+    // Add temporary style to apply print styles
+    const tempStyle = document.createElement('style');
+    tempStyle.id = 'temp-pdf-styles';
+    tempStyle.textContent = `
+      .print-content { display: block !important; }
+      .print-content * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    `;
+    document.head.appendChild(tempStyle);
     
     try {
+      // Wait a bit for styles to apply
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const canvas = await html2canvas(printContent, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
         windowWidth: 816,
-        width: 816,
-        onclone: (clonedDoc) => {
-          const clonedContent = clonedDoc.querySelector('.print-content');
-          if (clonedContent) {
-            clonedContent.style.display = 'block';
-            clonedContent.style.width = '816px';
-          }
-        }
+        width: 816
       });
 
       const imgWidth = 216; // Letter width in mm (8.5 inches)
@@ -494,7 +492,8 @@ export default function WeeklyServiceManager() {
       console.error('Error generating PDF:', error);
       alert('Error al generar PDF');
     } finally {
-      printContent.style.display = originalDisplay;
+      const tempStyleEl = document.getElementById('temp-pdf-styles');
+      if (tempStyleEl) tempStyleEl.remove();
     }
   };
 
