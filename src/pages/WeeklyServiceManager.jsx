@@ -299,12 +299,24 @@ export default function WeeklyServiceManager() {
     }
   }, [existingData]);
 
-  // Auto-select announcements
+  // Auto-select announcements only for brand new services
+  const hasAutoSelectedRef = useRef(false);
+  
   useEffect(() => {
-    if (!existingData && (fixedAnnouncements.length > 0 || dynamicAnnouncements.length > 0)) {
+    // Reset flag when date changes
+    hasAutoSelectedRef.current = false;
+  }, [selectedDate]);
+
+  useEffect(() => {
+    // Only auto-select if:
+    // 1. No existing service data
+    // 2. Haven't already auto-selected for this date
+    // 3. Have announcements to select
+    if (!existingData && !hasAutoSelectedRef.current && (fixedAnnouncements.length > 0 || dynamicAnnouncements.length > 0)) {
       const fixed = fixedAnnouncements.map(a => a.id);
       const dynamic = dynamicAnnouncements.map(a => a.id);
       setSelectedAnnouncements([...new Set([...fixed, ...dynamic])]);
+      hasAutoSelectedRef.current = true;
     }
   }, [dynamicAnnouncements, fixedAnnouncements, existingData]);
 
