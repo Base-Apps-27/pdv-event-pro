@@ -21,11 +21,20 @@ export default function WeeklyServiceManager() {
   // State
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const date = today.getDate();
     const day = today.getDay();
-    const diff = day === 0 ? 0 : 7 - day;
-    const nextSunday = new Date(today);
-    nextSunday.setDate(today.getDate() + diff);
-    return nextSunday.toISOString().split('T')[0];
+    
+    // Calculate days to add to get to next Sunday (0 = Sunday)
+    const daysToAdd = day === 0 ? 0 : 7 - day;
+    
+    const nextSunday = new Date(year, month, date + daysToAdd);
+    const y = nextSunday.getFullYear();
+    const m = String(nextSunday.getMonth() + 1).padStart(2, '0');
+    const d = String(nextSunday.getDate()).padStart(2, '0');
+    
+    return `${y}-${m}-${d}`;
   });
   const [serviceData, setServiceData] = useState(null);
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
