@@ -388,6 +388,29 @@ export default function WeeklyServiceManager() {
     debouncedSave('copy-services');
   };
 
+  const copySegmentTo1130 = (segmentIndex) => {
+    setSavingField(`copy-segment-${segmentIndex}`);
+    setServiceData(prev => {
+      if (!prev) return prev;
+
+      const updated = { ...prev };
+      const sourceSeg = updated["9:30am"][segmentIndex];
+
+      if (sourceSeg) {
+        const copiedSegment = {
+          ...sourceSeg,
+          data: { ...sourceSeg.data },
+          actions: sourceSeg.actions ? sourceSeg.actions.map(a => ({ ...a })) : [],
+          songs: sourceSeg.songs ? sourceSeg.songs.map(s => ({ ...s })) : undefined,
+        };
+        updated["11:30am"][segmentIndex] = copiedSegment;
+      }
+
+      return updated;
+    });
+    debouncedSave(`copy-segment-${segmentIndex}`);
+  };
+
   const updateTeamField = (field, service, value) => {
     setServiceData(prev => ({
       ...prev,
@@ -1253,6 +1276,15 @@ export default function WeeklyServiceManager() {
                                 <Clock className="w-4 h-4 text-red-600" />
                                 {segment.title}
                                 <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => copySegmentTo1130(idx)}
+                                  className="print:hidden h-7 px-2"
+                                  title="Copiar a 11:30"
+                                >
+                                  <Copy className="w-3 h-3 text-red-600" />
+                                </Button>
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-2 pt-3">
