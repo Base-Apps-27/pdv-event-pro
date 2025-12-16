@@ -3119,7 +3119,6 @@ export default function WeeklyServiceManager() {
                       setSelectedAnnouncements(prev => 
                         checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
                       );
-                      debouncedSave('announcement-selection');
                     }}
                     className="mt-1"
                   />
@@ -3199,7 +3198,6 @@ export default function WeeklyServiceManager() {
                       setSelectedAnnouncements(prev => 
                         checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
                       );
-                      debouncedSave('announcement-selection');
                     }}
                     className="mt-1"
                   />
