@@ -1705,26 +1705,31 @@ export default function WeeklyServiceManager() {
             padding-left: 72pt;
             padding-right: 72pt;
             padding-bottom: 48pt;
-          }
-
-          .print-announcements-header {
-            text-align: center;
-            margin-bottom: 20pt;
-            padding-bottom: 12pt;
-            border-bottom: none;
             position: relative;
           }
 
           .print-announcements-logo {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 12pt auto;
+            position: absolute;
+            top: 24pt;
+            left: 72pt;
+            width: 50px;
+            height: 50px;
+            background: none;
           }
 
           .print-announcements-logo img {
             width: 100%;
             height: 100%;
             object-fit: contain;
+          }
+
+          .print-announcements-header {
+            text-align: center;
+            margin-bottom: 20pt;
+            margin-top: 0;
+            padding-bottom: 12pt;
+            border-bottom: none;
+            position: relative;
           }
 
           .print-announcements-title {
