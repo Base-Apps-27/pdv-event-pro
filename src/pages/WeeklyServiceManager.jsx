@@ -888,7 +888,7 @@ export default function WeeklyServiceManager() {
 
                   {segment.data?.leader && (
                     <div className="print-segment-detail">
-                      <strong>Dir:</strong> {segment.data.leader}
+                      <strong>Dir:</strong> <span className="print-name">{segment.data.leader}</span>
                     </div>
                   )}
 
@@ -903,7 +903,7 @@ export default function WeeklyServiceManager() {
                   {segment.data?.ministry_leader && (
                     <div className="print-segment-detail" style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed #d1d5db' }}>
                       <strong>Ministración de Sanidad y Milagros</strong><br/>
-                      P. {segment.data.ministry_leader} (5 min)
+                      P. <span className="print-name">{segment.data.ministry_leader}</span> (5 min)
                     </div>
                   )}
 
@@ -923,13 +923,13 @@ export default function WeeklyServiceManager() {
 
                   {segment.data?.presenter && (
                     <div className="print-segment-detail">
-                      <strong>P:</strong> {segment.data.presenter}
+                      <strong>P:</strong> <span className="print-name">{segment.data.presenter}</span>
                     </div>
                   )}
 
                   {segment.data?.preacher && (
                     <div className="print-segment-detail">
-                      <strong>P:</strong> {segment.data.preacher}
+                      <strong>P:</strong> <span className="print-name">{segment.data.preacher}</span>
                     </div>
                   )}
 
@@ -1005,7 +1005,7 @@ export default function WeeklyServiceManager() {
 
                   {segment.data?.leader && (
                     <div className="print-segment-detail">
-                      <strong>Dir:</strong> {segment.data.leader}
+                      <strong>Dir:</strong> <span className="print-name">{segment.data.leader}</span>
                     </div>
                   )}
 
