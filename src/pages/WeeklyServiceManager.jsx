@@ -1508,12 +1508,13 @@ export default function WeeklyServiceManager() {
           .print-two-columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            gap: 20px;
             margin-bottom: 0;
           }
 
           .print-service-column {
             break-inside: avoid;
+            padding-right: 8px;
           }
 
           .print-service-time {
@@ -1531,11 +1532,13 @@ export default function WeeklyServiceManager() {
           }
 
           .print-segment {
-            margin-bottom: 6px;
-            padding-bottom: 5px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
             border-bottom: 1px solid #e5e7eb;
             font-size: 9px;
-            line-height: 1.3;
+            line-height: 1.4;
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
 
           .print-segment-time {
@@ -1560,8 +1563,11 @@ export default function WeeklyServiceManager() {
             margin-left: 8px;
             font-size: 8px;
             color: #374151;
-            line-height: 1.3;
+            line-height: 1.4;
             margin-top: 2px;
+            margin-bottom: 2px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
           }
 
           .print-name {
@@ -1571,11 +1577,13 @@ export default function WeeklyServiceManager() {
           }
 
           .print-coordinator-actions {
-            margin-top: 6px;
+            margin-top: 4px;
+            margin-bottom: 3px;
             padding: 4px 6px;
             background: #fffbeb;
             border-left: 2px solid #fbbf24;
             border-radius: 2px;
+            break-inside: avoid;
           }
 
           .print-coordinator-actions strong {
@@ -1595,7 +1603,9 @@ export default function WeeklyServiceManager() {
           .print-segment-songs {
             margin-left: 8px;
             font-size: 8px;
-            line-height: 1.2;
+            line-height: 1.3;
+            margin-top: 3px;
+            margin-bottom: 3px;
           }
 
           .print-receso {
@@ -1638,10 +1648,12 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcement-item {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
+            padding: 8px;
             padding-bottom: 10px;
             border-bottom: 1px solid #e5e7eb;
             break-inside: avoid;
+            page-break-inside: avoid;
             font-size: 10px;
             line-height: 1.4;
           }
@@ -1672,9 +1684,12 @@ export default function WeeklyServiceManager() {
 
           .print-announcement-content {
             font-size: 9px;
-            line-height: 1.3;
+            line-height: 1.4;
             color: #374151;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
+            margin-top: 3px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
           }
 
           .print-announcement-instructions {
