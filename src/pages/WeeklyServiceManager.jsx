@@ -402,6 +402,31 @@ export default function WeeklyServiceManager() {
     debouncedSave(`copy-segment-${segmentIndex}`);
   };
 
+  const copyPreServiceNotesTo1130 = () => {
+    setSavingField('copy-preservice');
+    setServiceData(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev };
+      updated.pre_service_notes["11:30am"] = updated.pre_service_notes["9:30am"];
+      return updated;
+    });
+    debouncedSave('copy-preservice');
+  };
+
+  const copyTeamTo1130 = () => {
+    setSavingField('copy-team');
+    setServiceData(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev };
+      updated.coordinators["11:30am"] = updated.coordinators["9:30am"];
+      updated.ujieres["11:30am"] = updated.ujieres["9:30am"];
+      updated.sound["11:30am"] = updated.sound["9:30am"];
+      updated.luces["11:30am"] = updated.luces["9:30am"];
+      return updated;
+    });
+    debouncedSave('copy-team');
+  };
+
   const updateTeamField = (field, service, value) => {
     setServiceData(prev => ({
       ...prev,
@@ -1487,7 +1512,18 @@ export default function WeeklyServiceManager() {
           {/* Team Section */}
           <Card className="bg-green-50 border-green-200 print:hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">EQUIPO 9:30am</CardTitle>
+              <CardTitle className="text-sm flex items-center justify-between">
+                EQUIPO 9:30am
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={copyTeamTo1130}
+                  className="h-7 px-2 hover:bg-blue-50"
+                  title="Copiar a 11:30"
+                >
+                  <ArrowRight className="w-4 h-4 text-blue-600" />
+                </Button>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <Input placeholder="Coordinador(a)" value={serviceData.coordinators?.["9:30am"] || ""} onChange={(e) => updateTeamField("coordinators", "9:30am", e.target.value)} className="text-xs" />
