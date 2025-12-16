@@ -444,51 +444,8 @@ export default function WeeklyServiceManager() {
   };
 
   const handleDownloadPDF = async () => {
-    const printContent = document.querySelector('.print-content');
-    if (!printContent) return;
-
-    // Temporarily show and apply print styles
-    const originalDisplay = printContent.style.display;
-    const originalClass = printContent.className;
-    printContent.style.display = 'block';
-    printContent.className = printContent.className.replace('hidden', '');
-    
-    try {
-      const canvas = await html2canvas(printContent, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        width: 816, // 8.5 inches at 96 DPI
-        windowWidth: 816
-      });
-
-      const imgWidth = 216; // Letter width in mm (8.5 inches)
-      const pageHeight = 279; // Letter height in mm (11 inches)
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      const pdf = new jsPDF('p', 'mm', 'letter');
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      pdf.save(`Servicio-${selectedDate}.pdf`);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error al generar PDF');
-    } finally {
-      printContent.style.display = originalDisplay;
-      printContent.className = originalClass;
-    }
+    // Trigger print dialog which will use the native print styles
+    window.print();
   };
 
 
