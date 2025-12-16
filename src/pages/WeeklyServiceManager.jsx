@@ -1675,7 +1675,7 @@ export default function WeeklyServiceManager() {
           }
 
           .print-coordinator-actions {
-            margin-top: 2pt;
+            margin-top: 4pt;
             margin-bottom: 2pt;
             padding: 0;
             background: transparent;
@@ -1689,38 +1689,41 @@ export default function WeeklyServiceManager() {
 
           .print-coordinator-actions div {
             margin-left: 0;
-            font-size: 10pt;
-            color: #333;
-            line-height: 1.2;
+            font-size: 9.5pt;
+            color: #6b7280;
+            line-height: 1.25;
             font-weight: 400;
             font-style: italic;
           }
 
           .print-segment-songs {
             margin-left: 0;
-            margin-top: 2pt;
+            margin-top: 3pt;
             margin-bottom: 2pt;
             padding: 0;
             font-size: 11pt;
-            line-height: 1.2;
+            line-height: 1.3;
             background: transparent;
             border-left: none;
           }
 
           .print-segment-songs div {
             font-weight: 400;
+            color: #374151;
           }
 
           .print-receso {
             background: transparent;
-            padding: 6pt 0;
-            margin: 12pt 0;
+            padding: 8pt 0;
+            margin: 16pt 0;
             text-align: center;
-            font-size: 12pt;
+            font-size: 13pt;
             font-weight: bold;
-            color: #0000FF;
+            color: #1F5B8C;
             text-transform: uppercase;
-            border: none;
+            letter-spacing: 0.5pt;
+            border-top: 2pt solid #1F5B8C;
+            border-bottom: 2pt solid #1F5B8C;
           }
 
           .print-announcements {
