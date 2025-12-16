@@ -714,15 +714,15 @@ export default function WeeklyServiceManager() {
 
       const announcementsLogos = element.querySelectorAll('.print-announcements-logo');
       announcementsLogos.forEach(el => {
-        el.style.width = '60px';
-        el.style.height = '60px';
+        el.style.width = '58px';
+        el.style.height = '58px';
         el.style.margin = '0 auto 10px auto';
         el.style.background = 'none';
       });
 
       const announcementsTitles = element.querySelectorAll('.print-announcements-title');
       announcementsTitles.forEach(el => {
-        el.style.fontSize = '23px';
+        el.style.fontSize = '26px';
         el.style.fontWeight = '700';
         el.style.textTransform = 'uppercase';
         el.style.marginBottom = '6px';
@@ -1137,109 +1137,64 @@ export default function WeeklyServiceManager() {
 
         const announcementLists = element.querySelectorAll('.print-announcement-list');
         announcementLists.forEach(el => {
-          el.style.paddingLeft = '0';
+          el.style.paddingLeft = '30px';
           el.style.display = 'grid';
           el.style.gridTemplateColumns = '1fr 1fr';
-          el.style.gap = '20px 16px';
-          el.style.margin = '0';
+          el.style.gap = '12px';
         });
 
         const announcementItems = element.querySelectorAll('.print-announcement-item');
-        announcementItems.forEach((el, idx) => {
-          el.style.marginBottom = '18px';
-          el.style.padding = '0';
-          el.style.border = 'none';
+        announcementItems.forEach(el => {
+          el.style.marginBottom = '12px';
+          el.style.paddingBottom = '10px';
+          el.style.borderBottom = '1px solid #e5e7eb';
           el.style.breakInside = 'avoid';
-          el.style.position = 'relative';
-        });
-
-        // Alternating header strips
-        const announcementHeaderStrips = element.querySelectorAll('.print-announcement-header-strip');
-        announcementHeaderStrips.forEach((el, idx) => {
-          el.style.height = '4px';
-          el.style.width = '100%';
-          el.style.marginBottom = '8px';
-          
-          const colorIndex = idx % 3;
-          if (colorIndex === 0) {
-            el.style.background = 'linear-gradient(90deg, #2563eb 0%, rgba(37, 99, 235, 0) 100%)';
-          } else if (colorIndex === 1) {
-            el.style.background = 'linear-gradient(90deg, #1F8A70 0%, rgba(31, 138, 112, 0) 100%)';
-          } else {
-            el.style.background = 'linear-gradient(90deg, #dc2626 0%, rgba(220, 38, 38, 0) 100%)';
-          }
+          el.style.fontSize = '10px';
+          el.style.lineHeight = '1.4';
         });
 
         const announcementHeaders = element.querySelectorAll('.print-announcement-header');
-        announcementHeaders.forEach((el, idx) => {
-          el.style.display = 'block';
-          el.style.marginBottom = '8px';
-          el.style.paddingLeft = '10px';
-          
-          const colorIndex = idx % 3;
-          if (colorIndex === 0) {
-            el.style.borderLeft = '5px solid #2563eb';
-          } else if (colorIndex === 1) {
-            el.style.borderLeft = '5px solid #1F8A70';
-          } else {
-            el.style.borderLeft = '5px solid #dc2626';
-          }
+        announcementHeaders.forEach(el => {
+          el.style.display = 'flex';
+          el.style.alignItems = 'baseline';
+          el.style.gap = '8px';
+          el.style.marginBottom = '4px';
         });
 
         const announcementTitles = element.querySelectorAll('.print-announcement-title');
         announcementTitles.forEach(el => {
-          el.style.fontSize = '13px';
-          el.style.fontWeight = '700';
-          el.style.color = '#1a1a1a';
-          el.style.textTransform = 'capitalize';
-          el.style.display = 'block';
-          el.style.lineHeight = '1.3';
+          el.style.fontSize = '11px';
+          el.style.fontWeight = 'bold';
+          el.style.color = '#000';
+          el.style.textTransform = 'uppercase';
         });
 
         const announcementDates = element.querySelectorAll('.print-announcement-date');
-        announcementDates.forEach((el, idx) => {
-          el.style.fontSize = '10px';
-          el.style.fontWeight = '600';
-          el.style.display = 'inline-block';
-          el.style.marginTop = '4px';
-          el.style.padding = '2px 8px';
-          el.style.borderRadius = '3px';
-          
-          const colorIndex = idx % 3;
-          if (colorIndex === 0) {
-            el.style.background = 'rgba(37, 99, 235, 0.15)';
-            el.style.color = '#2563eb';
-          } else if (colorIndex === 1) {
-            el.style.background = 'rgba(31, 138, 112, 0.15)';
-            el.style.color = '#1F8A70';
-          } else {
-            el.style.background = 'rgba(220, 38, 38, 0.15)';
-            el.style.color = '#dc2626';
-          }
+        announcementDates.forEach(el => {
+          el.style.fontSize = '9px';
+          el.style.fontWeight = 'bold';
+          el.style.color = '#2563eb';
         });
 
         const announcementContents = element.querySelectorAll('.print-announcement-content');
         announcementContents.forEach(el => {
-          el.style.fontSize = '11.5px';
-          el.style.lineHeight = '1.6';
+          el.style.fontSize = '9px';
+          el.style.lineHeight = '1.3';
           el.style.color = '#374151';
-          el.style.marginBottom = '0';
-          el.style.marginTop = '0';
+          el.style.marginBottom = '3px';
           el.style.whiteSpace = 'pre-wrap';
           el.style.wordWrap = 'break-word';
           el.style.overflowWrap = 'break-word';
-          el.style.fontWeight = '400';
         });
 
         const announcementInstructions = element.querySelectorAll('.print-announcement-instructions');
         announcementInstructions.forEach(el => {
-          el.style.fontSize = '9.5px';
-          el.style.background = 'transparent';
-          el.style.padding = '6px 0 6px 10px';
-          el.style.marginTop = '8px';
+          el.style.fontSize = '8px';
+          el.style.background = '#fef3c7';
+          el.style.padding = '4px 6px';
+          el.style.marginTop = '4px';
           el.style.fontStyle = 'italic';
-          el.style.borderLeft = '2px dashed #f59e0b';
-          el.style.color = '#78350f';
+          el.style.borderLeft = '2px solid #f59e0b';
         });
 
         const footers = element.querySelectorAll('.print-footer');
@@ -1772,8 +1727,8 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcements-logo {
-            width: 60px;
-            height: 60px;
+            width: 58px;
+            height: 58px;
             margin: 0 auto 10pt auto;
             background: none;
           }
@@ -1792,7 +1747,7 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcements-title {
-            font-size: 23pt;
+            font-size: 26pt;
             font-weight: 700;
             text-transform: uppercase;
             margin-bottom: 6pt;
@@ -1817,81 +1772,46 @@ export default function WeeklyServiceManager() {
 
           .print-announcement-list {
             padding-left: 0;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20pt 16pt;
-            margin: 0;
+            display: block;
+            max-width: 480pt;
+            margin: 0 auto;
           }
 
           .print-announcement-item {
-            margin-bottom: 18pt;
+            margin-bottom: 32pt;
             padding: 0;
             border: none;
             break-inside: avoid;
             page-break-inside: avoid;
-            position: relative;
-          }
-
-          .print-announcement-item:nth-child(3n+1) .print-announcement-header {
-            border-left-color: #2563eb;
-          }
-
-          .print-announcement-item:nth-child(3n+1) .print-announcement-header-strip {
-            background: linear-gradient(90deg, #2563eb 0%, rgba(37, 99, 235, 0) 100%);
-          }
-
-          .print-announcement-item:nth-child(3n+2) .print-announcement-header {
-            border-left-color: #1F8A70;
-          }
-
-          .print-announcement-item:nth-child(3n+2) .print-announcement-header-strip {
-            background: linear-gradient(90deg, #1F8A70 0%, rgba(31, 138, 112, 0) 100%);
-          }
-
-          .print-announcement-item:nth-child(3n+3) .print-announcement-header {
-            border-left-color: #dc2626;
-          }
-
-          .print-announcement-item:nth-child(3n+3) .print-announcement-header-strip {
-            background: linear-gradient(90deg, #dc2626 0%, rgba(220, 38, 38, 0) 100%);
-          }
-
-          .print-announcement-header-strip {
-            height: 4pt;
-            width: 100%;
-            margin-bottom: 8pt;
           }
 
           .print-announcement-header {
             display: block;
-            margin-bottom: 8pt;
-            padding-left: 10pt;
-            border-left: 5pt solid #8DC63F;
+            margin-bottom: 12pt;
+            padding-left: 8pt;
+            border-left: 3pt solid #8DC63F;
           }
 
           .print-announcement-title {
-            font-size: 13pt;
-            font-weight: 700;
+            font-size: 14pt;
+            font-weight: 600;
             color: #1a1a1a;
             text-transform: capitalize;
             display: block;
-            line-height: 1.3;
+            line-height: 1.2;
           }
 
           .print-announcement-date {
-            font-size: 10pt;
-            font-weight: 600;
-            display: inline-block;
-            margin-top: 4pt;
-            padding: 2pt 8pt;
-            background: rgba(31, 138, 112, 0.15);
-            border-radius: 3pt;
+            font-size: 11pt;
+            font-weight: 400;
             color: #1F8A70;
+            display: block;
+            margin-top: 4pt;
           }
 
           .print-announcement-content {
-            font-size: 11.5pt;
-            line-height: 1.6;
+            font-size: 12.5pt;
+            line-height: 1.5;
             color: #374151;
             margin-bottom: 0;
             margin-top: 0;
@@ -1901,24 +1821,26 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcement-instructions {
-            font-size: 9.5pt;
-            background: transparent;
-            padding: 6pt 0 6pt 10pt;
-            margin-top: 8pt;
+            font-size: 11pt;
+            background: #f3f4f6;
+            padding: 8pt 12pt;
+            margin-top: 12pt;
             font-style: italic;
-            border-left: 2pt dashed #f59e0b;
-            color: #78350f;
+            border-left: 3pt solid #1F8A70;
+            color: #4b5563;
+            border-radius: 2pt;
           }
 
           .print-announcement-instructions::before {
-            content: "CUE: ";
-            display: inline;
+            content: "CUE PARA EL ANUNCIADOR";
+            display: block;
             font-size: 9pt;
-            font-weight: 700;
+            font-weight: 600;
             font-style: normal;
             text-transform: uppercase;
-            letter-spacing: 0.3pt;
-            color: #92400e;
+            letter-spacing: 0.5pt;
+            color: #1F8A70;
+            margin-bottom: 6pt;
           }
 
           .print-footer {
@@ -2217,7 +2139,6 @@ export default function WeeklyServiceManager() {
               .filter(ann => selectedAnnouncements.includes(ann.id))
               .map((ann, idx) => (
                 <div key={ann.id} className="print-announcement-item">
-                  <div className="print-announcement-header-strip"></div>
                   <div className="print-announcement-header">
                     <div className="print-announcement-title">
                       {ann.isEvent ? ann.name : ann.title}
