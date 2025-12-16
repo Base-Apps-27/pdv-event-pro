@@ -227,6 +227,12 @@ export default function WeeklyServiceReport({ date }) {
                 )}
 
                 {/* Additional Notes */}
+                {segment.data?.description_details && (
+                  <div className="text-xs bg-gray-50 p-2 rounded border border-gray-200">
+                    <span className="font-semibold text-gray-700">Notas:</span>
+                    <span className="ml-1">{segment.data.description_details}</span>
+                  </div>
+                )}
                 {segment.data?.projection_notes && (
                   <div className="text-xs bg-purple-50 p-2 rounded border border-purple-200">
                     <span className="font-semibold text-purple-700">Proyección:</span>
