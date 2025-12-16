@@ -1531,7 +1531,7 @@ export default function WeeklyServiceManager() {
           }
 
           .print-segment {
-            margin-bottom: 10pt;
+            margin-bottom: 8pt;
             padding: 0;
             background: transparent;
             border: none;
@@ -1554,7 +1554,7 @@ export default function WeeklyServiceManager() {
           }
 
           .print-segment-title {
-            font-weight: bold;
+            font-weight: 600;
             text-transform: capitalize;
             font-size: 12pt;
             margin-left: 0;
@@ -1613,7 +1613,7 @@ export default function WeeklyServiceManager() {
           .print-coordinator-actions div {
             margin-left: 0;
             font-size: 10pt;
-            color: #000;
+            color: #333;
             line-height: 1.2;
             font-weight: 400;
             font-style: italic;
