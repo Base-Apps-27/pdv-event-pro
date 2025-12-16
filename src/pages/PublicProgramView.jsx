@@ -113,6 +113,13 @@ export default function PublicProgramView() {
     }
   }, [publicEvents, services, preloadedEventId, preloadedServiceId]);
 
+  // Fetch actual Service data for weekly services
+  const { data: weeklyServiceData } = useQuery({
+    queryKey: ['weeklyServiceData', selectedServiceId],
+    queryFn: () => base44.entities.Service.filter({ id: selectedServiceId }),
+    enabled: !!(viewType === "service" && selectedServiceId),
+  });
+
   // Fetch sessions for selected event OR service
   const { data: sessions = [] } = useQuery({
     queryKey: ['sessions', selectedEventId, selectedServiceId, viewType],
@@ -153,6 +160,7 @@ export default function PublicProgramView() {
 
   const selectedEvent = publicEvents.find(e => e.id === selectedEventId);
   const selectedService = services.find(s => s.id === selectedServiceId);
+  const actualServiceData = weeklyServiceData?.[0] || null;
   const eventSessions = sessions;
   const filteredSessions = eventSessions;
 
@@ -384,7 +392,189 @@ export default function PublicProgramView() {
               </CardContent>
             </Card>
 
-            {/* Sessions Display */}
+            {/* Weekly Services Display (for Service view type) */}
+            {viewType === "service" && actualServiceData && (
+              <div className="space-y-6">
+                {/* 9:30am Service */}
+                {actualServiceData["9:30am"] && (
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-red-500">
+                    <div className="bg-gradient-to-r from-red-50 to-white p-4 border-b">
+                      <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 a.m.</h3>
+                      {actualServiceData.pre_service_notes?.["9:30am"] && (
+                        <p className="text-sm text-gray-600 italic mt-2">{actualServiceData.pre_service_notes["9:30am"]}</p>
+                      )}
+                    </div>
+                    <div className="divide-y divide-gray-200">
+                      {actualServiceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
+                        <div key={idx} className="p-4 hover:bg-gray-50">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <h4 className="text-xl font-bold">{segment.title}</h4>
+                                <Badge variant="outline" className="text-xs">{segment.duration} min</Badge>
+                              </div>
+                              
+                              {segment.data?.leader && (
+                                <p className="text-sm text-pdv-green mb-1"><strong>Líder:</strong> {segment.data.leader}</p>
+                              )}
+                              
+                              {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
+                                <div className="bg-green-50 p-2 rounded border border-green-200 text-sm mb-2">
+                                  <p className="font-semibold text-green-800 mb-1">Canciones:</p>
+                                  {segment.songs.filter(s => s.title).map((song, sIdx) => (
+                                    <div key={sIdx} className="text-xs">• {song.title} {song.lead && `(${song.lead})`}</div>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {segment.data?.ministry_leader && (
+                                <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
+                                  <strong>Ministración (5 min):</strong> {segment.data.ministry_leader}
+                                </div>
+                              )}
+                              
+                              {segment.data?.presenter && (
+                                <p className="text-sm text-blue-600 mb-1"><strong>Presentador:</strong> {segment.data.presenter}</p>
+                              )}
+                              
+                              {segment.data?.preacher && (
+                                <p className="text-sm text-blue-600 mb-1"><strong>Predicador:</strong> {segment.data.preacher}</p>
+                              )}
+                              
+                              {segment.data?.title && (
+                                <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
+                              )}
+                              
+                              {segment.data?.verse && (
+                                <p className="text-xs text-gray-600 mb-1">📖 {segment.data.verse}</p>
+                              )}
+                              
+                              {segment.data?.description && (
+                                <p className="text-xs text-gray-600 mt-2 italic">{segment.data.description}</p>
+                              )}
+                              
+                              {segment.data?.description_details && (
+                                <p className="text-xs text-gray-500 mt-2">{segment.data.description_details}</p>
+                              )}
+                              
+                              {segment.data?.projection_notes && (
+                                <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-dashed border-gray-200">
+                                  <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
+                                </div>
+                              )}
+                              
+                              {segment.data?.sound_notes && (
+                                <div className="text-xs text-gray-600 mt-1">
+                                  <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Receso */}
+                <div className="bg-gray-100 rounded-lg p-4 text-center border border-gray-300">
+                  <p className="font-bold text-gray-600">RECESO (30 min)</p>
+                  {actualServiceData.receso_notes?.["9:30am"] && (
+                    <p className="text-sm text-gray-600 mt-2">{actualServiceData.receso_notes["9:30am"]}</p>
+                  )}
+                </div>
+
+                {/* 11:30am Service */}
+                {actualServiceData["11:30am"] && (
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-blue-500">
+                    <div className="bg-gradient-to-r from-blue-50 to-white p-4 border-b">
+                      <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 a.m.</h3>
+                      {actualServiceData.pre_service_notes?.["11:30am"] && (
+                        <p className="text-sm text-gray-600 italic mt-2">{actualServiceData.pre_service_notes["11:30am"]}</p>
+                      )}
+                    </div>
+                    <div className="divide-y divide-gray-200">
+                      {actualServiceData["11:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
+                        <div key={idx} className="p-4 hover:bg-gray-50">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <h4 className="text-xl font-bold">{segment.title}</h4>
+                                <Badge variant="outline" className="text-xs">{segment.duration} min</Badge>
+                              </div>
+                              
+                              {segment.data?.leader && (
+                                <p className="text-sm text-pdv-green mb-1"><strong>Líder:</strong> {segment.data.leader}</p>
+                              )}
+                              
+                              {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
+                                <div className="bg-green-50 p-2 rounded border border-green-200 text-sm mb-2">
+                                  <p className="font-semibold text-green-800 mb-1">Canciones:</p>
+                                  {segment.songs.filter(s => s.title).map((song, sIdx) => (
+                                    <div key={sIdx} className="text-xs">• {song.title} {song.lead && `(${song.lead})`}</div>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {segment.data?.ministry_leader && (
+                                <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
+                                  <strong>Ministración (5 min):</strong> {segment.data.ministry_leader}
+                                </div>
+                              )}
+                              
+                              {segment.data?.translator && (
+                                <div className="text-sm text-blue-600 mb-1">
+                                  <strong>🌐 Traductor(a):</strong> {segment.data.translator}
+                                </div>
+                              )}
+                              
+                              {segment.data?.presenter && (
+                                <p className="text-sm text-blue-600 mb-1"><strong>Presentador:</strong> {segment.data.presenter}</p>
+                              )}
+                              
+                              {segment.data?.preacher && (
+                                <p className="text-sm text-blue-600 mb-1"><strong>Predicador:</strong> {segment.data.preacher}</p>
+                              )}
+                              
+                              {segment.data?.title && (
+                                <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
+                              )}
+                              
+                              {segment.data?.verse && (
+                                <p className="text-xs text-gray-600 mb-1">📖 {segment.data.verse}</p>
+                              )}
+                              
+                              {segment.data?.description && (
+                                <p className="text-xs text-gray-600 mt-2 italic">{segment.data.description}</p>
+                              )}
+                              
+                              {segment.data?.description_details && (
+                                <p className="text-xs text-gray-500 mt-2">{segment.data.description_details}</p>
+                              )}
+                              
+                              {segment.data?.projection_notes && (
+                                <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-dashed border-gray-200">
+                                  <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
+                                </div>
+                              )}
+                              
+                              {segment.data?.sound_notes && (
+                                <div className="text-xs text-gray-600 mt-1">
+                                  <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Sessions Display (for Event view type) */}
+            {viewType === "event" && (
             <div className="space-y-6">
               {filteredSessions.map((session) => {
                 const segments = getSessionSegments(session.id);
@@ -753,8 +943,9 @@ export default function PublicProgramView() {
                 );
               })}
             </div>
+            )}
 
-            {filteredSessions.length === 0 && (
+            {viewType === "event" && filteredSessions.length === 0 && (
               <Card className="p-12 text-center bg-white">
                 <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">No hay sesiones disponibles para este evento</p>
