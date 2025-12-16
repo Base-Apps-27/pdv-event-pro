@@ -976,11 +976,25 @@ export default function WeeklyServiceManager() {
                       <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
                     </div>
                   )}
-                </div>
-              );
-            })}
 
-            <div className="print-receso">
+                  {segment.actions && segment.actions.length > 0 && (
+                    <div className="print-coordinator-actions">
+                      <strong>⏰ Acciones:</strong>
+                      {segment.actions.map((action, aIdx) => (
+                        <div key={aIdx}>
+                          • {action.label}
+                          {action.timing === "before_end" && ` (${action.offset_min} min antes)`}
+                          {action.timing === "after_start" && action.offset_min > 0 && ` (+${action.offset_min} min)`}
+                          {action.timing === "before_start" && ` (antes)`}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  </div>
+                  );
+                  })}
+
+                  <div className="print-receso">
               11:00am a 11:30am - RECESO
             </div>
           </div>
