@@ -1081,61 +1081,71 @@ export default function WeeklyServiceManager() {
 
         const coordinatorActions = element.querySelectorAll('.print-coordinator-actions');
         coordinatorActions.forEach(el => {
-          el.style.marginTop = '6px';
-          el.style.padding = '4px 6px';
-          el.style.background = '#fffbeb';
-          el.style.borderLeft = '2px solid #fbbf24';
-          el.style.borderRadius = '2px';
+          el.style.marginTop = '4px';
+          el.style.marginBottom = '2px';
+          el.style.padding = '0';
+          el.style.background = 'transparent';
+          el.style.borderLeft = 'none';
+          el.style.borderRadius = '0';
         });
 
         const actionStrongs = element.querySelectorAll('.print-coordinator-actions strong');
         actionStrongs.forEach(el => {
-          el.style.color = '#92400e';
-          el.style.fontSize = '7px';
-          el.style.display = 'block';
-          el.style.marginBottom = '2px';
+          el.style.display = 'none';
         });
 
         const actionDivs = element.querySelectorAll('.print-coordinator-actions div');
         actionDivs.forEach(el => {
-          el.style.marginLeft = '10px';
-          el.style.fontSize = '6.5px';
-          el.style.color = '#78350f';
-          el.style.lineHeight = '1.3';
+          el.style.marginLeft = '0';
+          el.style.fontSize = '9.5px';
+          el.style.color = '#6b7280';
+          el.style.lineHeight = '1.25';
+          el.style.fontWeight = '400';
+          el.style.fontStyle = 'italic';
         });
 
         const segmentSongs = element.querySelectorAll('.print-segment-songs');
         segmentSongs.forEach(el => {
-          el.style.marginLeft = '8px';
-          el.style.fontSize = '8px';
-          el.style.lineHeight = '1.2';
+          el.style.marginLeft = '0';
+          el.style.fontSize = '11px';
+          el.style.lineHeight = '1.3';
+          el.style.marginTop = '3px';
+        });
+
+        const segmentSongsDivs = element.querySelectorAll('.print-segment-songs div');
+        segmentSongsDivs.forEach(el => {
+          el.style.color = '#374151';
         });
 
         const recesos = element.querySelectorAll('.print-receso');
         recesos.forEach(el => {
-          el.style.background = '#f9fafb';
-          el.style.padding = '6px';
-          el.style.margin = '6px 0';
+          el.style.background = 'transparent';
+          el.style.padding = '8px 0';
+          el.style.margin = '16px 0';
           el.style.textAlign = 'center';
-          el.style.fontSize = '9px';
+          el.style.fontSize = '13px';
           el.style.fontWeight = 'bold';
-          el.style.color = '#6b7280';
-          el.style.borderTop = '1px solid #d1d5db';
-          el.style.borderBottom = '1px solid #d1d5db';
+          el.style.color = '#1F5B8C';
+          el.style.textTransform = 'uppercase';
+          el.style.letterSpacing = '0.5px';
+          el.style.borderTop = '2px solid #1F5B8C';
+          el.style.borderBottom = '2px solid #1F5B8C';
         });
 
         const announcements = element.querySelectorAll('.print-announcements');
         announcements.forEach(el => {
           el.style.breakBefore = 'page';
           el.style.paddingTop = '0';
+          el.style.paddingLeft = '0';
+          el.style.paddingRight = '0';
         });
 
-        const announcementsHeaders = element.querySelectorAll('.print-announcements-header');
-        announcementsHeaders.forEach(el => {
+        const announcementsHeaderEls = element.querySelectorAll('.print-announcements-header');
+        announcementsHeaderEls.forEach(el => {
           el.style.textAlign = 'center';
-          el.style.marginBottom = '16px';
-          el.style.paddingBottom = '10px';
-          el.style.borderBottom = '1px solid #d1d5db';
+          el.style.marginBottom = '18px';
+          el.style.paddingBottom = '0';
+          el.style.borderBottom = 'none';
         });
 
         const announcementLists = element.querySelectorAll('.print-announcement-list');
