@@ -447,39 +447,32 @@ export default function WeeklyServiceManager() {
     const printContent = document.querySelector('.print-content');
     if (!printContent) return;
 
-    // Create a temporary container with print styles applied
-    const tempContainer = document.createElement('div');
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.left = '-9999px';
-    tempContainer.style.top = '0';
-    tempContainer.style.width = '8.5in';
-    tempContainer.style.backgroundColor = '#ffffff';
-    tempContainer.style.padding = '0.4in 0.5in 0.8in 0.5in';
-    tempContainer.innerHTML = printContent.innerHTML;
+    // Temporarily show the print content with all styles
+    const originalDisplay = printContent.style.display;
+    printContent.style.display = 'block';
     
-    // Apply print styles by adding a class
-    tempContainer.className = 'print-render-temp';
+    // Force a reflow to ensure styles are applied
+    printContent.offsetHeight;
     
-    // Add temporary print styles
-    const styleSheet = document.createElement('style');
-    styleSheet.textContent = `
-      .print-render-temp { font-size: 10pt; line-height: 1.4; color: #000; }
-      .print-render-temp * { box-shadow: none !important; }
-    `;
-    document.head.appendChild(styleSheet);
-    document.body.appendChild(tempContainer);
-
     try {
-      const canvas = await html2canvas(tempContainer, {
+      const canvas = await html2canvas(printContent, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        width: 816 // 8.5in at 96dpi
+        windowWidth: 816,
+        width: 816,
+        onclone: (clonedDoc) => {
+          const clonedContent = clonedDoc.querySelector('.print-content');
+          if (clonedContent) {
+            clonedContent.style.display = 'block';
+            clonedContent.style.width = '816px';
+          }
+        }
       });
 
-      const imgWidth = 216; // Letter width in mm
-      const pageHeight = 279; // Letter height in mm  
+      const imgWidth = 216; // Letter width in mm (8.5 inches)
+      const pageHeight = 279; // Letter height in mm (11 inches)
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       const pdf = new jsPDF('p', 'mm', 'letter');
@@ -501,8 +494,7 @@ export default function WeeklyServiceManager() {
       console.error('Error generating PDF:', error);
       alert('Error al generar PDF');
     } finally {
-      document.body.removeChild(tempContainer);
-      document.head.removeChild(styleSheet);
+      printContent.style.display = originalDisplay;
     }
   };
 
