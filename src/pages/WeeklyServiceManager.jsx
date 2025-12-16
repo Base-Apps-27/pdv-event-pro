@@ -606,8 +606,12 @@ export default function WeeklyServiceManager() {
     <div className="p-6 md:p-8 space-y-8 print:p-0">
       <style>{`
         @media print {
-          @page { size: letter; margin: 0.4in 0.5in; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          @page { size: letter; margin: 0.4in 0.5in 0.8in 0.5in; }
+          body { 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
+            padding-bottom: 50px;
+          }
 
           .print-header {
             display: flex;
@@ -852,10 +856,8 @@ export default function WeeklyServiceManager() {
           }
 
           .print-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            position: running(footer);
+            width: 100%;
             height: 35px;
             background: linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%);
             display: flex;
@@ -865,6 +867,13 @@ export default function WeeklyServiceManager() {
             font-size: 16px;
             font-weight: bold;
             text-transform: lowercase;
+            margin-top: 20px;
+          }
+          
+          @page {
+            @bottom-center {
+              content: element(footer);
+            }
           }
         }
       `}</style>
