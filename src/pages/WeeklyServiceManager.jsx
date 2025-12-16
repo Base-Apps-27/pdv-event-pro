@@ -1012,7 +1012,7 @@ export default function WeeklyServiceManager() {
                 </div>
               </div>
             )}
-            {serviceData?.["11:30am"]?.map((segment, idx) => {
+            {serviceData?.["11:30am"]?.filter(s => s.type !== 'break').map((segment, idx) => {
               let currentTime = parse("11:30am", "h:mma", new Date());
               for (let i = 0; i < idx; i++) {
                 if (serviceData["11:30am"][i].type !== 'break' && serviceData["11:30am"][i].type !== 'ministry') {
