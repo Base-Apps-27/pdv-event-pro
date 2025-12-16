@@ -449,7 +449,10 @@ export default function WeeklyServiceManager() {
 
   const handleDownloadPDF = async () => {
     const printContent = document.querySelector('.print-content');
-    if (!printContent) return;
+    if (!printContent) {
+      alert('No se encontró contenido para imprimir');
+      return;
+    }
 
     // Clone the print content
     const clone = printContent.cloneNode(true);
@@ -839,12 +842,16 @@ export default function WeeklyServiceManager() {
         }
       }
 
+      console.log('Saving PDF...');
       pdf.save(`Servicio-${selectedDate}.pdf`);
+      console.log('PDF saved successfully');
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Error al generar PDF');
+      alert('Error al generar PDF: ' + error.message);
     } finally {
-      document.body.removeChild(container);
+      if (document.body.contains(container)) {
+        document.body.removeChild(container);
+      }
     }
   };
 
