@@ -363,50 +363,50 @@ export default function WeeklyServiceManager() {
     window.print();
   };
 
-  const copyTo1130 = () => {
-    if (!window.confirm('¿Copiar datos de 9:30am a 11:30am?')) return;
+  // Auto-copy from 9:30am to 11:30am when 11:30am is still in blueprint state
+  useEffect(() => {
+    if (!serviceData) return;
     
-    setSavingField('copy-1130');
-    
-    const copied930Data = serviceData["9:30am"]
-      .filter(s => s.type !== 'break' && s.type !== 'special')
-      .map(seg => {
-        const newSeg = {
-          type: seg.type,
-          title: seg.title,
-          duration: seg.duration,
-          fields: [...seg.fields],
-          data: { ...seg.data },
-          actions: seg.actions ? seg.actions.map(a => ({ ...a })) : []
-        };
-        if (seg.songs) {
-          newSeg.songs = seg.songs.map(s => ({ title: s.title, lead: s.lead }));
-        }
-        return newSeg;
-      });
-    
-    const updatedData = {
-      ...serviceData,
-      "11:30am": copied930Data
-    };
-    
-    setServiceData(updatedData);
-    
-    const dataToSave = {
-      ...updatedData,
-      selected_announcements: selectedAnnouncements,
-      day_of_week: 'Sunday',
-      name: `Domingo - ${selectedDate}`,
-      status: 'active'
-    };
-    
-    saveServiceMutation.mutate(dataToSave, {
-      onSettled: () => {
-        setSavingField(null);
-        queryClient.invalidateQueries(['weeklyService', selectedDate]);
-      }
+    // Check if 11:30am is still in default blueprint state (empty data)
+    const is1130Default = serviceData["11:30am"]?.every(seg => {
+      const hasEmptyData = !seg.data || Object.keys(seg.data).length === 0 || 
+        Object.values(seg.data).every(v => !v || v === '');
+      const hasEmptySongs = !seg.songs || seg.songs.every(s => !s.title && !s.lead);
+      return hasEmptyData && hasEmptySongs;
     });
-  };
+    
+    // Check if 9:30am has any content
+    const has930Content = serviceData["9:30am"]?.some(seg => {
+      const hasData = seg.data && Object.values(seg.data).some(v => v && v !== '');
+      const hasSongs = seg.songs && seg.songs.some(s => s.title || s.lead);
+      return hasData || hasSongs;
+    });
+    
+    // Auto-copy if 11:30am is default and 9:30am has content
+    if (is1130Default && has930Content) {
+      const copied930Data = serviceData["9:30am"]
+        .filter(s => s.type !== 'break' && s.type !== 'special')
+        .map(seg => {
+          const newSeg = {
+            type: seg.type,
+            title: seg.title,
+            duration: seg.duration,
+            fields: [...seg.fields],
+            data: { ...seg.data },
+            actions: seg.actions ? seg.actions.map(a => ({ ...a })) : []
+          };
+          if (seg.songs) {
+            newSeg.songs = seg.songs.map(s => ({ title: s.title, lead: s.lead }));
+          }
+          return newSeg;
+        });
+      
+      setServiceData(prev => ({
+        ...prev,
+        "11:30am": copied930Data
+      }));
+    }
+  }, [serviceData?.["9:30am"]]);
 
   const addSpecialSegment = () => {
     setSavingField('add-special');
@@ -1124,29 +1124,18 @@ export default function WeeklyServiceManager() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-red-600">9:30 a.m.</h2>
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={copyTo1130}
-                  className="print:hidden"
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copiar a 11:30
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "9:30am" }));
-                    setShowSpecialDialog(true);
-                  }}
-                  className="print:hidden"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Especial
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "9:30am" }));
+                  setShowSpecialDialog(true);
+                }}
+                className="print:hidden"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Especial
+              </Button>
             </div>
             <div className="text-sm text-gray-600 flex items-center gap-3 flex-wrap">
               <Badge variant="outline" className={calculateServiceTimes("9:30am").isOverage ? "bg-amber-100 border-amber-400 text-amber-900 font-bold" : "bg-red-50"}>
