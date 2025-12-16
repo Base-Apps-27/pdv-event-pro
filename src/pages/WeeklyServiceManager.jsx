@@ -488,16 +488,16 @@ export default function WeeklyServiceManager() {
     try {
       setIsGeneratingPdf(true);
       
-      const pdfData = {
+      const payload = {
         service: {
-          '9:30am': serviceData['9:30am'] || [],
-          '11:30am': serviceData['11:30am'] || [],
-          coordinators: serviceData.coordinators,
-          ujieres: serviceData.ujieres,
-          sound: serviceData.sound,
-          luces: serviceData.luces,
-          pre_service_notes: serviceData.pre_service_notes,
-          receso_notes: serviceData.receso_notes
+          '9:30am': serviceData?.['9:30am'] || [],
+          '11:30am': serviceData?.['11:30am'] || [],
+          coordinators: serviceData?.coordinators,
+          ujieres: serviceData?.ujieres,
+          sound: serviceData?.sound,
+          luces: serviceData?.luces,
+          pre_service_notes: serviceData?.pre_service_notes,
+          receso_notes: serviceData?.receso_notes
         },
         announcements: [...fixedAnnouncements, ...dynamicAnnouncements].filter(a => 
           selectedAnnouncements.includes(a.id)
@@ -505,7 +505,7 @@ export default function WeeklyServiceManager() {
       };
 
       const response = await base44.functions.invoke('generateServicePdf', {
-        serviceData: pdfData,
+        serviceData: payload,
         selectedDate,
         includeAnnouncements: true
       });
@@ -531,16 +531,16 @@ export default function WeeklyServiceManager() {
     try {
       setIsGeneratingPdf(true);
 
-      const pdfData = {
+      const payload = {
         service: {
-          '9:30am': serviceData['9:30am'] || [],
-          '11:30am': serviceData['11:30am'] || [],
-          coordinators: serviceData.coordinators,
-          ujieres: serviceData.ujieres,
-          sound: serviceData.sound,
-          luces: serviceData.luces,
-          pre_service_notes: serviceData.pre_service_notes,
-          receso_notes: serviceData.receso_notes
+          '9:30am': serviceData?.['9:30am'] || [],
+          '11:30am': serviceData?.['11:30am'] || [],
+          coordinators: serviceData?.coordinators,
+          ujieres: serviceData?.ujieres,
+          sound: serviceData?.sound,
+          luces: serviceData?.luces,
+          pre_service_notes: serviceData?.pre_service_notes,
+          receso_notes: serviceData?.receso_notes
         },
         announcements: [...fixedAnnouncements, ...dynamicAnnouncements].filter(a => 
           selectedAnnouncements.includes(a.id)
@@ -548,7 +548,7 @@ export default function WeeklyServiceManager() {
       };
 
       const response = await base44.functions.invoke('generateServicePdf', {
-        serviceData: pdfData,
+        serviceData: payload,
         selectedDate,
         includeAnnouncements: true
       });
@@ -902,7 +902,61 @@ export default function WeeklyServiceManager() {
       setSendingEmail(true);
 
       try {
-      const printContent = document.querySelector('.print-content');
+      const payload = {
+        service: {
+          '9:30am': serviceData?.['9:30am'] || [],
+          '11:30am': serviceData?.['11:30am'] || [],
+          coordinators: serviceData?.coordinators,
+          ujieres: serviceData?.ujieres,
+          sound: serviceData?.sound,
+          luces: serviceData?.luces,
+          pre_service_notes: serviceData?.pre_service_notes,
+          receso_notes: serviceData?.receso_notes
+        },
+        announcements: [...fixedAnnouncements, ...dynamicAnnouncements].filter(a => 
+          selectedAnnouncements.includes(a.id)
+        )
+      };
+
+      const pdfResponse = await base44.functions.invoke('generateServicePdf', {
+        serviceData: payload,
+        selectedDate,
+        includeAnnouncements: true
+      });
+
+      const blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      
+      const pdfBase64 = await new Promise((resolve) => {
+        reader.onloadend = () => {
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+      });
+
+      await base44.functions.invoke('sendEmailWithPDF', {
+        to: emailAddress,
+        subject: `Orden de Servicio - ${selectedDate}`,
+        body: `Adjunto encontrarás la orden de servicio para ${selectedDate}.`,
+        pdfBase64,
+        filename: `servicio-${selectedDate}.pdf`
+      });
+
+      alert('Correo enviado exitosamente');
+      setShowEmailDialog(false);
+      setEmailAddress('');
+      } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Error al enviar correo: ' + error.message);
+      } finally {
+      setSendingEmail(false);
+      }
+      };
+
+
+
+  const addSpecialSegment = () => {
       if (!printContent) {
         alert('No se pudo encontrar el contenido');
         return;
