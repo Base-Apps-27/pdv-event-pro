@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
         subject: subject
       }],
       from: {
-        email: 'no-reply@palabrasdevida.org',
+        email: 'danny.sena@ccpvida.org',
         name: 'Palabras de Vida'
       },
       content: [{
