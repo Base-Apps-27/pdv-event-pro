@@ -353,9 +353,12 @@ export default function WeeklyServiceManager() {
 
   const handleFieldBlur = (service, segmentIndex, field) => {
     // Passive copy on blur: if updating 9:30am, copy to 11:30am if that field is empty
-    if (service === "9:30am" && serviceData["11:30am"] && serviceData["11:30am"][segmentIndex]) {
-      const source930 = serviceData["9:30am"][segmentIndex];
-      const target1130 = serviceData["11:30am"][segmentIndex];
+    if (service === "9:30am") {
+      const currentData = serviceDataRef.current;
+      if (!currentData || !currentData["11:30am"] || !currentData["11:30am"][segmentIndex]) return;
+      
+      const source930 = currentData["9:30am"][segmentIndex];
+      const target1130 = currentData["11:30am"][segmentIndex];
       
       if (field === 'songs') {
         const isEmpty = !target1130.songs || target1130.songs.every(s => !s.title && !s.lead);
