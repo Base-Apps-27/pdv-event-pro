@@ -298,17 +298,20 @@ export default function WeeklyServiceManager() {
     });
   };
 
-  const saveField = () => {
-    if (!serviceData) return;
-    const dataToSave = {
-      ...serviceData,
-      selected_announcements: selectedAnnouncements,
-      day_of_week: 'Sunday',
-      name: `Domingo - ${selectedDate}`,
-      status: 'active'
-    };
-    saveServiceMutation.mutate(dataToSave);
-  };
+  const saveField = React.useCallback(() => {
+    setServiceData(current => {
+      if (!current) return current;
+      const dataToSave = {
+        ...current,
+        selected_announcements: selectedAnnouncements,
+        day_of_week: 'Sunday',
+        name: `Domingo - ${selectedDate}`,
+        status: 'active'
+      };
+      saveServiceMutation.mutate(dataToSave);
+      return current;
+    });
+  }, [selectedDate, selectedAnnouncements, saveServiceMutation]);
 
   const updateTeamField = (field, service, value) => {
     setServiceData(prev => ({
@@ -334,16 +337,29 @@ export default function WeeklyServiceManager() {
 
   const copyTo1130 = () => {
     if (window.confirm('¿Copiar datos de 9:30am a 11:30am?')) {
-      setServiceData(prev => ({
-        ...prev,
-        "11:30am": prev["9:30am"].filter(s => s.type !== 'break' && s.type !== 'special').map(seg => ({
-          ...seg,
-          data: { ...seg.data },
-          songs: seg.songs ? seg.songs.map(s => ({ ...s })) : undefined,
-          actions: seg.actions ? [...seg.actions] : []
-        }))
-      }));
-      saveField();
+      setServiceData(prev => {
+        const copied = {
+          ...prev,
+          "11:30am": prev["9:30am"].filter(s => s.type !== 'break' && s.type !== 'special').map(seg => ({
+            ...seg,
+            data: { ...seg.data },
+            songs: seg.songs ? seg.songs.map(s => ({ ...s })) : undefined,
+            actions: seg.actions ? seg.actions.map(a => ({ ...a })) : []
+          }))
+        };
+        
+        // Save immediately with the updated data
+        const dataToSave = {
+          ...copied,
+          selected_announcements: selectedAnnouncements,
+          day_of_week: 'Sunday',
+          name: `Domingo - ${selectedDate}`,
+          status: 'active'
+        };
+        saveServiceMutation.mutate(dataToSave);
+        
+        return copied;
+      });
     }
   };
 
@@ -1008,7 +1024,7 @@ export default function WeeklyServiceManager() {
                   `}</style>
                   <Calendar
                     mode="single"
-                    selected={selectedDate ? new Date(selectedDate + 'T12:00:00') : undefined}
+                    selected={selectedDate ? new Date(selectedDate.split('-')[0], parseInt(selectedDate.split('-')[1]) - 1, parseInt(selectedDate.split('-')[2])) : undefined}
                     onSelect={(date) => {
                       if (date && date.getDay() === 0) {
                         const year = date.getFullYear();
@@ -1084,12 +1100,25 @@ export default function WeeklyServiceManager() {
                   placeholder="Instrucciones pre-servicio (opcional)..."
                   value={serviceData.pre_service_notes?.["9:30am"] || ""}
                   onChange={(e) => {
+                    const value = e.target.value;
                     setServiceData(prev => ({
                       ...prev,
-                      pre_service_notes: { ...prev.pre_service_notes, "9:30am": e.target.value }
+                      pre_service_notes: { ...prev.pre_service_notes, "9:30am": value }
                     }));
                   }}
-                  onBlur={saveField}
+                  onBlur={() => {
+                    setServiceData(current => {
+                      if (!current) return current;
+                      saveServiceMutation.mutate({
+                        ...current,
+                        selected_announcements: selectedAnnouncements,
+                        day_of_week: 'Sunday',
+                        name: `Domingo - ${selectedDate}`,
+                        status: 'active'
+                      });
+                      return current;
+                    });
+                  }}
                   className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
                   rows={2}
                 />
@@ -1367,12 +1396,25 @@ export default function WeeklyServiceManager() {
                 placeholder="Notas del receso (opcional)..."
                 value={serviceData.receso_notes?.["9:30am"] || ""}
                 onChange={(e) => {
+                  const value = e.target.value;
                   setServiceData(prev => ({
                     ...prev,
-                    receso_notes: { ...prev.receso_notes, "9:30am": e.target.value }
+                    receso_notes: { ...prev.receso_notes, "9:30am": value }
                   }));
                 }}
-                onBlur={saveField}
+                onBlur={() => {
+                  setServiceData(current => {
+                    if (!current) return current;
+                    saveServiceMutation.mutate({
+                      ...current,
+                      selected_announcements: selectedAnnouncements,
+                      day_of_week: 'Sunday',
+                      name: `Domingo - ${selectedDate}`,
+                      status: 'active'
+                    });
+                    return current;
+                  });
+                }}
                 className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
                 rows={2}
               />
@@ -1438,12 +1480,25 @@ export default function WeeklyServiceManager() {
                   placeholder="Instrucciones pre-servicio (opcional)..."
                   value={serviceData.pre_service_notes?.["11:30am"] || ""}
                   onChange={(e) => {
+                    const value = e.target.value;
                     setServiceData(prev => ({
                       ...prev,
-                      pre_service_notes: { ...prev.pre_service_notes, "11:30am": e.target.value }
+                      pre_service_notes: { ...prev.pre_service_notes, "11:30am": value }
                     }));
                   }}
-                  onBlur={saveField}
+                  onBlur={() => {
+                    setServiceData(current => {
+                      if (!current) return current;
+                      saveServiceMutation.mutate({
+                        ...current,
+                        selected_announcements: selectedAnnouncements,
+                        day_of_week: 'Sunday',
+                        name: `Domingo - ${selectedDate}`,
+                        status: 'active'
+                      });
+                      return current;
+                    });
+                  }}
                   className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
                   rows={2}
                 />
