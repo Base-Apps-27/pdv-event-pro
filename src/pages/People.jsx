@@ -218,6 +218,17 @@ export default function People() {
         </TabsContent>
 
         <TabsContent value="suggestions" className="mt-6">
+          <div className="mb-4">
+            <Button
+              onClick={handleRefreshSuggestions}
+              disabled={refreshing}
+              variant="outline"
+              className="bg-white"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Actualizando...' : 'Actualizar y Limpiar Sugerencias'}
+            </Button>
+          </div>
           <SuggestionsManager />
         </TabsContent>
       </Tabs>
