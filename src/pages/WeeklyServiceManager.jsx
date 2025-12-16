@@ -1190,6 +1190,15 @@ export default function WeeklyServiceManager() {
                 <Clock className="w-4 h-4" />
                 PRE-SERVICIO
                 <Badge variant="outline" className="ml-auto text-xs text-gray-500 border-gray-400">Antes de iniciar</Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={copyPreServiceNotesTo1130}
+                  className="print:hidden h-7 px-2 hover:bg-blue-50"
+                  title="Copiar a 11:30"
+                >
+                  <ArrowRight className="w-4 h-4 text-blue-600" />
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 pt-2">
