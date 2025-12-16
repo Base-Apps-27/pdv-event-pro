@@ -182,15 +182,16 @@ export default function WeeklyServiceManager() {
   // Mutations
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
+      console.log('About to save:', data);
       if (existingData?.id) {
         return await base44.entities.Service.update(existingData.id, data);
       } else {
         return await base44.entities.Service.create(data);
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['weeklyService']);
-      queryClient.invalidateQueries(['allAnnouncements']);
+    onSuccess: (result) => {
+      console.log('Save successful:', result);
+      // Don't invalidate queries to prevent refetch clearing state
     },
     onError: (error) => {
       console.error('Error saving service:', error);
@@ -240,7 +241,8 @@ export default function WeeklyServiceManager() {
       const loadedData = {
         ...existingData,
         pre_service_notes: existingData.pre_service_notes || { "9:30am": "", "11:30am": "" },
-        receso_notes: existingData.receso_notes || { "9:30am": "" }
+        receso_notes: existingData.receso_notes || { "9:30am": "" },
+        selected_announcements: existingData.selected_announcements || []
       };
       setServiceData(loadedData);
       setSelectedAnnouncements(existingData.selected_announcements || []);
@@ -274,7 +276,8 @@ export default function WeeklyServiceManager() {
         sound: { "9:30am": "", "11:30am": "" },
         luces: { "9:30am": "", "11:30am": "" },
         receso_notes: { "9:30am": "" },
-        pre_service_notes: { "9:30am": "", "11:30am": "" }
+        pre_service_notes: { "9:30am": "", "11:30am": "" },
+        selected_announcements: []
       };
       setServiceData(initialData);
     }
@@ -306,10 +309,13 @@ export default function WeeklyServiceManager() {
       
       const dataToSave = {
         ...currentData,
+        selected_announcements: currentData.selected_announcements || selectedAnnouncements,
         day_of_week: 'Sunday',
         name: `Domingo - ${selectedDate}`,
         status: 'active'
       };
+      
+      console.log('Saving data:', dataToSave);
       
       saveServiceMutation.mutate(dataToSave, {
         onSettled: () => {
@@ -317,7 +323,7 @@ export default function WeeklyServiceManager() {
         }
       });
     }, 800);
-  }, [selectedDate, saveServiceMutation]);
+  }, [selectedDate, selectedAnnouncements, saveServiceMutation]);
 
   // Update handlers
   const updateSegmentField = (service, segmentIndex, field, value) => {
@@ -1161,10 +1167,17 @@ export default function WeeklyServiceManager() {
                 value={serviceData.pre_service_notes?.["9:30am"] || ""}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setServiceData(prev => ({
-                    ...prev,
-                    pre_service_notes: { ...prev.pre_service_notes, "9:30am": value }
-                  }));
+                  setServiceData(prev => {
+                    const updated = {
+                      ...prev,
+                      pre_service_notes: { 
+                        ...prev.pre_service_notes, 
+                        "9:30am": value 
+                      }
+                    };
+                    console.log('Updated pre-service 9:30am:', updated.pre_service_notes);
+                    return updated;
+                  });
                   debouncedSave('pre-service-930');
                 }}
                 className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
@@ -1437,10 +1450,17 @@ export default function WeeklyServiceManager() {
                 value={serviceData.receso_notes?.["9:30am"] || ""}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setServiceData(prev => ({
-                    ...prev,
-                    receso_notes: { ...prev.receso_notes, "9:30am": value }
-                  }));
+                  setServiceData(prev => {
+                    const updated = {
+                      ...prev,
+                      receso_notes: { 
+                        ...prev.receso_notes, 
+                        "9:30am": value 
+                      }
+                    };
+                    console.log('Updated receso 9:30am:', updated.receso_notes);
+                    return updated;
+                  });
                   debouncedSave('receso-930');
                 }}
                 className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
@@ -1509,10 +1529,17 @@ export default function WeeklyServiceManager() {
                 value={serviceData.pre_service_notes?.["11:30am"] || ""}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setServiceData(prev => ({
-                    ...prev,
-                    pre_service_notes: { ...prev.pre_service_notes, "11:30am": value }
-                  }));
+                  setServiceData(prev => {
+                    const updated = {
+                      ...prev,
+                      pre_service_notes: { 
+                        ...prev.pre_service_notes, 
+                        "11:30am": value 
+                      }
+                    };
+                    console.log('Updated pre-service 11:30am:', updated.pre_service_notes);
+                    return updated;
+                  });
                   debouncedSave('pre-service-1130');
                 }}
                 className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
