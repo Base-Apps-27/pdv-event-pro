@@ -1518,12 +1518,12 @@ export default function WeeklyServiceManager() {
           }
 
           .print-service-time {
-            font-size: 18px;
+            font-size: 22px;
             font-weight: bold;
             color: #dc2626;
-            margin-bottom: 6px;
-            padding-bottom: 2px;
-            border-bottom: 1.5px solid #dc2626;
+            margin-bottom: 10px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #dc2626;
           }
 
           .print-service-column.right .print-service-time {
@@ -1532,11 +1532,13 @@ export default function WeeklyServiceManager() {
           }
 
           .print-segment {
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 10px;
-            line-height: 1.5;
+            margin-bottom: 16px;
+            padding: 10px;
+            background: #ffffff;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 4px;
+            font-size: 11px;
+            line-height: 1.6;
             break-inside: avoid;
             page-break-inside: avoid;
           }
@@ -1544,7 +1546,7 @@ export default function WeeklyServiceManager() {
           .print-segment-time {
             font-weight: bold;
             color: #dc2626;
-            font-size: 14px;
+            font-size: 16px;
           }
 
           .print-service-column.right .print-segment-time {
@@ -1554,58 +1556,65 @@ export default function WeeklyServiceManager() {
           .print-segment-title {
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 12px;
-            margin-left: 4px;
+            font-size: 14px;
+            margin-left: 6px;
             color: #000;
           }
 
           .print-segment-detail {
             margin-left: 8px;
-            font-size: 9px;
+            font-size: 11px;
             color: #374151;
-            line-height: 1.5;
-            margin-top: 3px;
-            margin-bottom: 3px;
+            line-height: 1.6;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            padding: 4px 6px;
+            background: #f9fafb;
+            border-radius: 3px;
             word-wrap: break-word;
             overflow-wrap: break-word;
           }
 
           .print-name {
-            color: #8DC63F;
+            color: #1F8A70;
             font-weight: bold;
-            font-size: 10px;
+            font-size: 12px;
           }
 
           .print-coordinator-actions {
-            margin-top: 4px;
-            margin-bottom: 3px;
-            padding: 4px 6px;
+            margin-top: 6px;
+            margin-bottom: 4px;
+            padding: 6px 8px;
             background: #fffbeb;
-            border-left: 2px solid #fbbf24;
-            border-radius: 2px;
+            border-left: 3px solid #f59e0b;
+            border-radius: 3px;
             break-inside: avoid;
           }
 
           .print-coordinator-actions strong {
             color: #92400e;
-            font-size: 7px;
+            font-size: 10px;
             display: block;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
           }
 
           .print-coordinator-actions div {
             margin-left: 10px;
-            font-size: 6.5px;
+            font-size: 10px;
             color: #78350f;
-            line-height: 1.3;
+            line-height: 1.5;
           }
 
           .print-segment-songs {
             margin-left: 8px;
-            font-size: 9px;
-            line-height: 1.4;
-            margin-top: 4px;
-            margin-bottom: 4px;
+            font-size: 11px;
+            line-height: 1.6;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            padding: 6px 8px;
+            background: #f0fdf4;
+            border-left: 3px solid #1F8A70;
+            border-radius: 3px;
           }
 
           .print-receso {
@@ -1906,20 +1915,20 @@ export default function WeeklyServiceManager() {
                   )}
 
                   {segment.data?.translator && (
-                    <div className="print-segment-detail" style={{ color: '#2563eb' }}>
-                      <strong>🌐 Trad:</strong> <span className="print-name">{segment.data.translator}</span>
+                    <div className="print-segment-detail" style={{ background: '#eff6ff', borderLeft: '3px solid #3b82f6', color: '#1e40af' }}>
+                      <strong>🌐 Trad:</strong> <span className="print-name" style={{ color: '#1e40af' }}>{segment.data.translator}</span>
                     </div>
                   )}
 
                   {segment.data?.presenter && (
-                    <div className="print-segment-detail">
-                      <strong>P:</strong> <span className="print-name">{segment.data.presenter}</span>
+                    <div className="print-segment-detail" style={{ background: '#f0fdf4', borderLeft: '3px solid #1F8A70' }}>
+                      <span className="print-name">{segment.data.presenter}</span>
                     </div>
                   )}
 
                   {segment.data?.preacher && (
-                    <div className="print-segment-detail">
-                      <strong>P:</strong> <span className="print-name">{segment.data.preacher}</span>
+                    <div className="print-segment-detail" style={{ background: '#f0fdf4', borderLeft: '3px solid #1F8A70' }}>
+                      <span className="print-name">{segment.data.preacher}</span>
                     </div>
                   )}
 
