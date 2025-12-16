@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
@@ -65,6 +65,9 @@ export default function WeeklyServiceManager() {
   const [expandedSegments, setExpandedSegments] = useState({});
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [savingField, setSavingField] = useState(null);
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [emailAddress, setEmailAddress] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
@@ -835,8 +838,418 @@ export default function WeeklyServiceManager() {
       alert('Error al generar PDF');
     } finally {
       document.body.removeChild(container);
-    }
-    };
+      }
+      };
+
+      const handleEmailPDF = async () => {
+      if (!emailAddress) return;
+
+      setSendingEmail(true);
+
+      try {
+      const printContent = document.querySelector('.print-content');
+      if (!printContent) {
+        alert('No se pudo encontrar el contenido');
+        return;
+      }
+
+      const clone = printContent.cloneNode(true);
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-99999px';
+      container.style.top = '0';
+      container.style.width = '816px';
+      container.style.background = 'white';
+      container.style.padding = '38px 48px 77px 48px';
+      container.style.fontFamily = 'Arial, sans-serif';
+      container.style.color = '#000';
+      container.style.wordWrap = 'break-word';
+      container.style.overflowWrap = 'break-word';
+      container.appendChild(clone);
+
+      const applyPrintStyles = (element) => {
+        const headers = element.querySelectorAll('.print-header');
+        headers.forEach(el => {
+          el.style.display = 'flex';
+          el.style.alignItems = 'flex-start';
+          el.style.justifyContent = 'space-between';
+          el.style.marginBottom = '12px';
+          el.style.paddingBottom = '8px';
+          el.style.borderBottom = '1px solid #d1d5db';
+        });
+
+        const logos = element.querySelectorAll('.print-logo');
+        logos.forEach(el => {
+          el.style.width = '50px';
+          el.style.height = '50px';
+          el.style.background = 'linear-gradient(135deg, #1F8A70 0%, #8DC63F 100%)';
+          el.style.borderRadius = '6px';
+          el.style.display = 'flex';
+          el.style.alignItems = 'center';
+          el.style.justifyContent = 'center';
+          el.style.color = 'white';
+          el.style.fontSize = '20px';
+          el.style.fontWeight = 'bold';
+        });
+
+        const titles = element.querySelectorAll('.print-title');
+        titles.forEach(el => {
+          el.style.textAlign = 'center';
+          el.style.flex = '1';
+          el.style.margin = '0 20px';
+        });
+
+        const titleH1 = element.querySelectorAll('.print-title h1');
+        titleH1.forEach(el => {
+          el.style.fontSize = '22px';
+          el.style.fontWeight = 'bold';
+          el.style.margin = '0 0 2px 0';
+          el.style.textTransform = 'uppercase';
+          el.style.letterSpacing = '0.5px';
+        });
+
+        const titleP = element.querySelectorAll('.print-title p');
+        titleP.forEach(el => {
+          el.style.fontSize = '13px';
+          el.style.color = '#2563eb';
+          el.style.fontWeight = 'bold';
+          el.style.margin = '0';
+        });
+
+        const teamBoxes = element.querySelectorAll('.print-team-box');
+        teamBoxes.forEach(el => {
+          el.style.textAlign = 'right';
+          el.style.fontSize = '10px';
+          el.style.lineHeight = '1.4';
+          el.style.minWidth = '140px';
+        });
+
+        const teamBoxDivs = element.querySelectorAll('.print-team-box div');
+        teamBoxDivs.forEach(el => {
+          el.style.marginBottom = '1px';
+        });
+
+        const teamLabels = element.querySelectorAll('.print-team-label');
+        teamLabels.forEach(el => {
+          el.style.fontWeight = 'bold';
+          el.style.color = '#000';
+        });
+
+        const twoColumns = element.querySelectorAll('.print-two-columns');
+        twoColumns.forEach(el => {
+          el.style.display = 'grid';
+          el.style.gridTemplateColumns = '1fr 1fr';
+          el.style.gap = '16px';
+          el.style.marginBottom = '0';
+        });
+
+        const serviceColumns = element.querySelectorAll('.print-service-column');
+        serviceColumns.forEach(el => {
+          el.style.breakInside = 'avoid';
+        });
+
+        const serviceTimes = element.querySelectorAll('.print-service-time');
+        serviceTimes.forEach(el => {
+          el.style.fontSize = '18px';
+          el.style.fontWeight = 'bold';
+          el.style.color = '#dc2626';
+          el.style.marginBottom = '6px';
+          el.style.paddingBottom = '2px';
+          el.style.borderBottom = '1.5px solid #dc2626';
+        });
+
+        const rightServiceTimes = element.querySelectorAll('.print-service-column.right .print-service-time');
+        rightServiceTimes.forEach(el => {
+          el.style.color = '#2563eb';
+          el.style.borderColor = '#2563eb';
+        });
+
+        const segments = element.querySelectorAll('.print-segment');
+        segments.forEach(el => {
+          el.style.marginBottom = '6px';
+          el.style.paddingBottom = '5px';
+          el.style.borderBottom = '1px solid #e5e7eb';
+          el.style.fontSize = '9px';
+          el.style.lineHeight = '1.3';
+        });
+
+        const segmentTimes = element.querySelectorAll('.print-segment-time');
+        segmentTimes.forEach(el => {
+          el.style.fontWeight = 'bold';
+          el.style.color = '#dc2626';
+          el.style.fontSize = '12px';
+        });
+
+        const rightSegmentTimes = element.querySelectorAll('.print-service-column.right .print-segment-time');
+        rightSegmentTimes.forEach(el => {
+          el.style.color = '#2563eb';
+        });
+
+        const segmentTitles = element.querySelectorAll('.print-segment-title');
+        segmentTitles.forEach(el => {
+          el.style.fontWeight = 'bold';
+          el.style.textTransform = 'uppercase';
+          el.style.fontSize = '11px';
+          el.style.marginLeft = '4px';
+          el.style.color = '#000';
+        });
+
+        const segmentDetails = element.querySelectorAll('.print-segment-detail');
+        segmentDetails.forEach(el => {
+          el.style.marginLeft = '8px';
+          el.style.fontSize = '8px';
+          el.style.color = '#374151';
+          el.style.lineHeight = '1.3';
+          el.style.marginTop = '2px';
+          el.style.whiteSpace = 'pre-wrap';
+          el.style.wordWrap = 'break-word';
+          el.style.overflowWrap = 'break-word';
+        });
+
+        const names = element.querySelectorAll('.print-name');
+        names.forEach(el => {
+          el.style.color = '#8DC63F';
+          el.style.fontWeight = 'bold';
+          el.style.fontSize = '9px';
+        });
+
+        const coordinatorActions = element.querySelectorAll('.print-coordinator-actions');
+        coordinatorActions.forEach(el => {
+          el.style.marginTop = '6px';
+          el.style.padding = '4px 6px';
+          el.style.background = '#fffbeb';
+          el.style.borderLeft = '2px solid #fbbf24';
+          el.style.borderRadius = '2px';
+        });
+
+        const actionStrongs = element.querySelectorAll('.print-coordinator-actions strong');
+        actionStrongs.forEach(el => {
+          el.style.color = '#92400e';
+          el.style.fontSize = '7px';
+          el.style.display = 'block';
+          el.style.marginBottom = '2px';
+        });
+
+        const actionDivs = element.querySelectorAll('.print-coordinator-actions div');
+        actionDivs.forEach(el => {
+          el.style.marginLeft = '10px';
+          el.style.fontSize = '6.5px';
+          el.style.color = '#78350f';
+          el.style.lineHeight = '1.3';
+        });
+
+        const segmentSongs = element.querySelectorAll('.print-segment-songs');
+        segmentSongs.forEach(el => {
+          el.style.marginLeft = '8px';
+          el.style.fontSize = '8px';
+          el.style.lineHeight = '1.2';
+        });
+
+        const recesos = element.querySelectorAll('.print-receso');
+        recesos.forEach(el => {
+          el.style.background = '#f9fafb';
+          el.style.padding = '6px';
+          el.style.margin = '6px 0';
+          el.style.textAlign = 'center';
+          el.style.fontSize = '9px';
+          el.style.fontWeight = 'bold';
+          el.style.color = '#6b7280';
+          el.style.borderTop = '1px solid #d1d5db';
+          el.style.borderBottom = '1px solid #d1d5db';
+        });
+
+        const announcements = element.querySelectorAll('.print-announcements');
+        announcements.forEach(el => {
+          el.style.breakBefore = 'page';
+          el.style.paddingTop = '0';
+        });
+
+        const announcementsHeaders = element.querySelectorAll('.print-announcements-header');
+        announcementsHeaders.forEach(el => {
+          el.style.textAlign = 'center';
+          el.style.marginBottom = '16px';
+          el.style.paddingBottom = '10px';
+          el.style.borderBottom = '1px solid #d1d5db';
+        });
+
+        const announcementsTitles = element.querySelectorAll('.print-announcements-title');
+        announcementsTitles.forEach(el => {
+          el.style.fontSize = '22px';
+          el.style.fontWeight = 'bold';
+          el.style.textTransform = 'uppercase';
+          el.style.marginBottom = '4px';
+          el.style.letterSpacing = '0.5px';
+        });
+
+        const announcementLists = element.querySelectorAll('.print-announcement-list');
+        announcementLists.forEach(el => {
+          el.style.paddingLeft = '30px';
+          el.style.display = 'grid';
+          el.style.gridTemplateColumns = '1fr 1fr';
+          el.style.gap = '12px';
+        });
+
+        const announcementItems = element.querySelectorAll('.print-announcement-item');
+        announcementItems.forEach(el => {
+          el.style.marginBottom = '12px';
+          el.style.paddingBottom = '10px';
+          el.style.borderBottom = '1px solid #e5e7eb';
+          el.style.breakInside = 'avoid';
+          el.style.fontSize = '10px';
+          el.style.lineHeight = '1.4';
+        });
+
+        const announcementHeaders = element.querySelectorAll('.print-announcement-header');
+        announcementHeaders.forEach(el => {
+          el.style.display = 'flex';
+          el.style.alignItems = 'baseline';
+          el.style.gap = '8px';
+          el.style.marginBottom = '4px';
+        });
+
+        const announcementTitles = element.querySelectorAll('.print-announcement-title');
+        announcementTitles.forEach(el => {
+          el.style.fontSize = '11px';
+          el.style.fontWeight = 'bold';
+          el.style.color = '#000';
+          el.style.textTransform = 'uppercase';
+        });
+
+        const announcementDates = element.querySelectorAll('.print-announcement-date');
+        announcementDates.forEach(el => {
+          el.style.fontSize = '9px';
+          el.style.fontWeight = 'bold';
+          el.style.color = '#2563eb';
+        });
+
+        const announcementContents = element.querySelectorAll('.print-announcement-content');
+        announcementContents.forEach(el => {
+          el.style.fontSize = '9px';
+          el.style.lineHeight = '1.3';
+          el.style.color = '#374151';
+          el.style.marginBottom = '3px';
+          el.style.whiteSpace = 'pre-wrap';
+          el.style.wordWrap = 'break-word';
+          el.style.overflowWrap = 'break-word';
+        });
+
+        const announcementInstructions = element.querySelectorAll('.print-announcement-instructions');
+        announcementInstructions.forEach(el => {
+          el.style.fontSize = '8px';
+          el.style.background = '#fef3c7';
+          el.style.padding = '4px 6px';
+          el.style.marginTop = '4px';
+          el.style.fontStyle = 'italic';
+          el.style.borderLeft = '2px solid #f59e0b';
+        });
+
+        const footers = element.querySelectorAll('.print-footer');
+        footers.forEach(el => {
+          el.style.width = '100%';
+          el.style.height = '35px';
+          el.style.background = 'linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%)';
+          el.style.display = 'flex';
+          el.style.alignItems = 'center';
+          el.style.justifyContent = 'center';
+          el.style.color = 'white';
+          el.style.fontSize = '16px';
+          el.style.fontWeight = 'bold';
+          el.style.textTransform = 'lowercase';
+          el.style.marginTop = '20px';
+        });
+      };
+
+      clone.style.display = 'block';
+      applyPrintStyles(container);
+      document.body.appendChild(container);
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const announcementsEl = clone.querySelector('.print-announcements');
+      if (announcementsEl) {
+        announcementsEl.remove();
+      }
+
+      const servicesCanvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      const pdf = new jsPDF('p', 'mm', 'letter');
+      const imgWidth = 216;
+      const pageHeight = 279;
+
+      let imgHeight = (servicesCanvas.height * imgWidth) / servicesCanvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(servicesCanvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(servicesCanvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      if (announcementsEl) {
+        clone.innerHTML = '';
+        clone.appendChild(announcementsEl);
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        const announcementsCanvas = await html2canvas(container, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        pdf.addPage();
+        imgHeight = (announcementsCanvas.height * imgWidth) / announcementsCanvas.width;
+        heightLeft = imgHeight;
+        position = 0;
+
+        pdf.addImage(announcementsCanvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(announcementsCanvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+      }
+
+      document.body.removeChild(container);
+
+      // Convert PDF to blob
+      const pdfBlob = pdf.output('blob');
+      const file = new File([pdfBlob], `Servicio-${selectedDate}.pdf`, { type: 'application/pdf' });
+
+      // Upload file
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      // Send email
+      await base44.integrations.Core.SendEmail({
+        to: emailAddress,
+        subject: `Orden de Servicio - ${formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}`,
+        body: `Adjunto encontrarás la orden de servicio para el domingo ${formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}.\n\nPuedes descargar el archivo PDF aquí: ${file_url}`
+      });
+
+      alert('Email enviado exitosamente');
+      setShowEmailDialog(false);
+      setEmailAddress("");
+      } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Error al enviar el email: ' + error.message);
+      } finally {
+      setSendingEmail(false);
+      }
+      };
 
 
 
@@ -1588,6 +2001,10 @@ export default function WeeklyServiceManager() {
               <span>Guardando...</span>
             </div>
           )}
+          <Button variant="outline" onClick={() => setShowEmailDialog(true)}>
+            <Mail className="w-4 h-4 mr-2" />
+            Enviar Email
+          </Button>
           <Button className="bg-pdv-teal text-white" onClick={handleDownloadPDF}>
             <Printer className="w-4 h-4 mr-2" />
             Descargar PDF
@@ -2734,6 +3151,49 @@ export default function WeeklyServiceManager() {
             >
               Eliminar
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Dialog */}
+      <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+        <DialogContent className="max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle>Enviar Orden de Servicio por Email</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Email del destinatario</Label>
+              <Input
+                type="email"
+                placeholder="ejemplo@email.com"
+                value={emailAddress}
+                onChange={(e) => setEmailAddress(e.target.value)}
+                disabled={sendingEmail}
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowEmailDialog(false)} disabled={sendingEmail}>
+                Cancelar
+              </Button>
+              <Button 
+                className="bg-pdv-teal text-white" 
+                onClick={handleEmailPDF}
+                disabled={!emailAddress || sendingEmail}
+              >
+                {sendingEmail ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Enviar
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
