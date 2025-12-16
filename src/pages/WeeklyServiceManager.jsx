@@ -515,22 +515,22 @@ export default function WeeklyServiceManager() {
 
       const headers = element.querySelectorAll('.print-header');
       headers.forEach(el => {
-        el.style.textAlign = 'center';
-        el.style.marginBottom = '16px';
+        el.style.marginBottom = '14px';
         el.style.paddingBottom = '0';
         el.style.borderBottom = 'none';
       });
 
       const logos = element.querySelectorAll('.print-logo');
       logos.forEach(el => {
-        el.style.width = '52px';
-        el.style.height = '52px';
-        el.style.margin = '0 auto 10px auto';
+        el.style.width = '72px';
+        el.style.height = '72px';
         el.style.background = 'none';
+        el.style.flexShrink = '0';
       });
 
       const titles = element.querySelectorAll('.print-title');
       titles.forEach(el => {
+        el.style.flex = '1';
         el.style.textAlign = 'center';
       });
 
@@ -557,11 +557,11 @@ export default function WeeklyServiceManager() {
         el.style.display = 'flex';
         el.style.justifyContent = 'center';
         el.style.alignItems = 'center';
-        el.style.gap = '20px';
+        el.style.gap = '16px';
         el.style.flexWrap = 'wrap';
-        el.style.marginTop = '0';
-        el.style.paddingTop = '10px';
-        el.style.borderTop = '1.5px solid #e5e7eb';
+        el.style.marginTop = '6px';
+        el.style.paddingTop = '6px';
+        el.style.borderTop = '1px solid #d1d5db';
         el.style.fontSize = '9px';
         el.style.color = '#374151';
       });
@@ -831,22 +831,22 @@ export default function WeeklyServiceManager() {
       const applyPrintStyles = (element) => {
         const headers = element.querySelectorAll('.print-header');
         headers.forEach(el => {
-          el.style.textAlign = 'center';
-          el.style.marginBottom = '16px';
+          el.style.marginBottom = '14px';
           el.style.paddingBottom = '0';
           el.style.borderBottom = 'none';
         });
 
         const logos = element.querySelectorAll('.print-logo');
         logos.forEach(el => {
-          el.style.width = '62px';
-          el.style.height = '62px';
-          el.style.margin = '0 auto 8px auto';
+          el.style.width = '72px';
+          el.style.height = '72px';
           el.style.background = 'none';
+          el.style.flexShrink = '0';
         });
 
         const titles = element.querySelectorAll('.print-title');
         titles.forEach(el => {
+          el.style.flex = '1';
           el.style.textAlign = 'center';
         });
 
@@ -873,14 +873,13 @@ export default function WeeklyServiceManager() {
           el.style.display = 'flex';
           el.style.justifyContent = 'center';
           el.style.alignItems = 'center';
-          el.style.gap = '18px';
+          el.style.gap = '16px';
           el.style.flexWrap = 'wrap';
-          el.style.padding = '8px 0';
+          el.style.padding = '6px 0';
           el.style.borderTop = '1px solid #d1d5db';
-          el.style.borderBottom = '1px solid #d1d5db';
-          el.style.marginTop = '8px';
+          el.style.marginTop = '6px';
           el.style.fontSize = '9px';
-          el.style.color = '#6b7280';
+          el.style.color = '#374151';
         });
 
         const teamLabels = element.querySelectorAll('.print-team-label');
@@ -1107,10 +1106,10 @@ export default function WeeklyServiceManager() {
 
         const announcementsLogoEls = element.querySelectorAll('.print-announcements-logo');
         announcementsLogoEls.forEach(el => {
-          el.style.width = '68px';
-          el.style.height = '68px';
-          el.style.margin = '0 auto 8px auto';
+          el.style.width = '72px';
+          el.style.height = '72px';
           el.style.background = 'none';
+          el.style.flexShrink = '0';
         });
 
         const announcementsTitleEls = element.querySelectorAll('.print-announcements-title');
@@ -1143,15 +1142,15 @@ export default function WeeklyServiceManager() {
         const footers = element.querySelectorAll('.print-footer');
         footers.forEach(el => {
           el.style.width = '100%';
-          el.style.height = '40px';
-          el.style.background = 'linear-gradient(90deg, #1F5B8C 0%, #8DC63F 100%)';
+          el.style.height = '32px';
+          el.style.background = 'linear-gradient(90deg, #8DC63F 0%, #1F8A70 100%)';
           el.style.display = 'flex';
           el.style.alignItems = 'center';
           el.style.justifyContent = 'center';
           el.style.color = 'white';
-          el.style.fontSize = '14pt';
+          el.style.fontSize = '11pt';
           el.style.fontWeight = '600';
-          el.style.letterSpacing = '0.75pt';
+          el.style.letterSpacing = '0.5pt';
         });
       };
 
@@ -1461,17 +1460,16 @@ export default function WeeklyServiceManager() {
           }
 
           .print-header {
-            text-align: center;
-            margin-bottom: 16pt;
+            margin-bottom: 14pt;
             padding-bottom: 0;
             border-bottom: none;
           }
 
           .print-logo {
-            width: 62px;
-            height: 62px;
-            margin: 0 auto 8pt auto;
+            width: 72px;
+            height: 72px;
             background: none;
+            flex-shrink: 0;
           }
 
           .print-logo img {
@@ -1481,7 +1479,7 @@ export default function WeeklyServiceManager() {
           }
 
           .print-title {
-            text-align: center;
+            flex: 1;
           }
 
           .print-title h1 {
@@ -1504,12 +1502,11 @@ export default function WeeklyServiceManager() {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 18pt;
+            gap: 16pt;
             flex-wrap: wrap;
-            padding: 8pt 0;
+            padding: 6pt 0;
             border-top: 1pt solid #d1d5db;
-            border-bottom: 1pt solid #d1d5db;
-            margin-top: 8pt;
+            margin-top: 6pt;
             font-size: 9pt;
             color: #6b7280;
           }
@@ -1673,14 +1670,14 @@ export default function WeeklyServiceManager() {
             padding-top: 0;
             padding-left: 0;
             padding-right: 0;
-            padding-bottom: 60pt;
+            padding-bottom: 40pt;
           }
 
           .print-announcements-logo {
-            width: 68px;
-            height: 68px;
-            margin: 0 auto 8pt auto;
+            width: 72px;
+            height: 72px;
             background: none;
+            flex-shrink: 0;
           }
 
           .print-announcements-logo img {
@@ -1690,8 +1687,7 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcements-header {
-            text-align: center;
-            margin-bottom: 18pt;
+            margin-bottom: 14pt;
             padding-bottom: 0;
             border-bottom: none;
           }
@@ -1785,7 +1781,7 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcement-instructions::before {
-            content: "CUE";
+            content: "CUE: ";
             display: inline;
             font-size: 8pt;
             font-weight: bold;
@@ -1793,7 +1789,7 @@ export default function WeeklyServiceManager() {
             text-transform: uppercase;
             letter-spacing: 0.5pt;
             color: #f59e0b;
-            margin-right: 6pt;
+            margin-right: 4pt;
           }
 
           .print-footer {
@@ -1802,19 +1798,19 @@ export default function WeeklyServiceManager() {
             left: 0;
             right: 0;
             width: 100%;
-            height: 54pt;
-            background: linear-gradient(90deg, #1F5B8C 0%, #8DC63F 100%);
+            height: 32pt;
+            background: linear-gradient(90deg, #8DC63F 0%, #1F8A70 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 14pt;
+            font-size: 11pt;
             font-weight: 600;
-            letter-spacing: 0.75pt;
+            letter-spacing: 0.5pt;
           }
 
           .print-content {
-            padding-bottom: 60pt;
+            padding-bottom: 40pt;
           }
         }
       `}</style>
@@ -1822,18 +1818,20 @@ export default function WeeklyServiceManager() {
       {/* Print Layout */}
       <div className="hidden print:block print-content">
         <div className="print-header">
-          <div className="print-logo">
-            <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
-          </div>
-          <div className="print-title">
-            <h1>Orden de Servicio</h1>
-            <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
-          </div>
-          <div className="print-team-info">
-            <div><span className="print-team-label">Coordinador:</span> {serviceData?.coordinators?.["9:30am"] || serviceData?.coordinators?.["11:30am"] || ""}</div>
-            <div><span className="print-team-label">Ujier:</span> {serviceData?.ujieres?.["9:30am"] || serviceData?.ujieres?.["11:30am"] || ""}</div>
-            <div><span className="print-team-label">Sonido:</span> {serviceData?.sound?.["9:30am"] || ""}</div>
-            <div><span className="print-team-label">Luces:</span> {serviceData?.luces?.["9:30am"] || serviceData?.luces?.["11:30am"] || ""}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
+            <div className="print-logo">
+              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
+            </div>
+            <div className="print-title" style={{ flex: 1, textAlign: 'center' }}>
+              <h1>Orden de Servicio</h1>
+              <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
+              <div className="print-team-info">
+                <div><span className="print-team-label">Coordinador:</span> {serviceData?.coordinators?.["9:30am"] || serviceData?.coordinators?.["11:30am"] || ""}</div>
+                <div><span className="print-team-label">Ujier:</span> {serviceData?.ujieres?.["9:30am"] || serviceData?.ujieres?.["11:30am"] || ""}</div>
+                <div><span className="print-team-label">Sonido:</span> {serviceData?.sound?.["9:30am"] || ""}</div>
+                <div><span className="print-team-label">Luces:</span> {serviceData?.luces?.["9:30am"] || serviceData?.luces?.["11:30am"] || ""}</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2079,40 +2077,48 @@ export default function WeeklyServiceManager() {
 
         <div className="print-announcements">
           <div className="print-announcements-header">
-            <div className="print-announcements-logo">
-              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
+              <div className="print-announcements-logo">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
+              </div>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <div className="print-announcements-title">ANUNCIOS</div>
+                <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
+                <div className="print-announcements-divider"></div>
+              </div>
             </div>
-            <div className="print-announcements-title">ANUNCIOS</div>
-            <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
-            <div className="print-announcements-divider"></div>
           </div>
 
           <div className="print-announcement-list">
             {[...fixedAnnouncements, ...dynamicAnnouncements]
               .filter(ann => selectedAnnouncements.includes(ann.id))
-              .map((ann, idx) => (
-                <div key={ann.id} className="print-announcement-item">
-                  <div className="print-announcement-header">
-                    <div className="print-announcement-title">
-                      {ann.isEvent ? ann.name : ann.title}
+              .map((ann, idx) => {
+                const titleColors = ['#8DC63F', '#B53737', '#1a1a1a'];
+                const titleColor = titleColors[idx % 3];
+                return (
+                  <div key={ann.id} className="print-announcement-item">
+                    <div className="print-announcement-header">
+                      <div className="print-announcement-title" style={{ color: titleColor }}>
+                        {ann.isEvent ? ann.name : ann.title}
+                      </div>
+                      {(ann.date_of_occurrence || ann.start_date) && (
+                        <div className="print-announcement-date">
+                          {ann.date_of_occurrence || ann.start_date}
+                          {ann.end_date && ` - ${ann.end_date}`}
+                        </div>
+                      )}
                     </div>
-                    {(ann.date_of_occurrence || ann.start_date) && (
-                      <div className="print-announcement-date">
-                        {ann.date_of_occurrence || ann.start_date}
-                        {ann.end_date && ` - ${ann.end_date}`}
+                    <div className="print-announcement-content">
+                      {ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content}
+                    </div>
+                    {ann.instructions && (
+                      <div className="print-announcement-instructions">
+                        {ann.instructions}
                       </div>
                     )}
                   </div>
-                  <div className="print-announcement-content">
-                    {ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content}
-                  </div>
-                  {ann.instructions && (
-                    <div className="print-announcement-instructions">
-                      {ann.instructions}
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
           </div>
         </div>
 
