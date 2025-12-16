@@ -1510,17 +1510,15 @@ export default function WeeklyServiceManager() {
           }
 
           .print-logo {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #1F8A70 0%, #8DC63F 100%);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24pt;
-            font-weight: bold;
+            width: 50px;
+            height: 50px;
             flex-shrink: 0;
+          }
+
+          .print-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
           }
 
           .print-title {
@@ -1718,7 +1716,15 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcements-logo {
-            display: none;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 12pt auto;
+          }
+
+          .print-announcements-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
           }
 
           .print-announcements-title {
@@ -1840,7 +1846,9 @@ export default function WeeklyServiceManager() {
       {/* Print Layout */}
       <div className="hidden print:block print-content">
         <div className="print-header">
-          <div className="print-logo">P</div>
+          <div className="print-logo">
+            <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
+          </div>
           <div className="print-title">
             <h1>Orden de Servicio</h1>
             <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es }).toUpperCase()}</p>
@@ -2095,6 +2103,9 @@ export default function WeeklyServiceManager() {
 
         <div className="print-announcements">
           <div className="print-announcements-header">
+            <div className="print-announcements-logo">
+              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
+            </div>
             <div className="print-announcements-title">ANUNCIOS</div>
             <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
             <div className="print-announcements-divider"></div>
