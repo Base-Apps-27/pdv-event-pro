@@ -231,7 +231,10 @@ export default function WeeklyServiceManager() {
   // Initialize service data from existing or blueprint
   useEffect(() => {
     if (existingData) {
-      setServiceData(existingData);
+      setServiceData({
+        ...existingData,
+        pre_service_notes: existingData.pre_service_notes || { "9:30am": "", "11:30am": "" }
+      });
       setSelectedAnnouncements(existingData.selected_announcements || []);
     } else {
       // Initialize from blueprint
