@@ -1206,8 +1206,7 @@ export default function WeeklyServiceManager() {
                     />
                   )}
                   {segment.fields.includes("title") && (
-                    <AutocompleteInput
-                      type="messageTitle"
+                    <Input
                       placeholder="Título del Mensaje"
                       value={segment.data?.title || ""}
                       onChange={(e) => updateSegmentField("9:30am", idx, "title", e.target.value)}
@@ -1560,8 +1559,7 @@ export default function WeeklyServiceManager() {
                     />
                   )}
                   {segment.fields.includes("title") && (
-                    <AutocompleteInput
-                      type="messageTitle"
+                    <Input
                       placeholder="Título del Mensaje"
                       value={segment.data?.title || ""}
                       onChange={(e) => updateSegmentField("11:30am", idx, "title", e.target.value)}
