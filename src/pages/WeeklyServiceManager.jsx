@@ -1407,6 +1407,39 @@ export default function WeeklyServiceManager() {
     }));
   };
 
+  // Line estimation helpers
+  const estimateLines = (text, charsPerLine = 32) => {
+    if (!text) return 0;
+    const lines = text.split('\n');
+    let totalLines = 0;
+    lines.forEach(line => {
+      if (line.trim().startsWith('•')) {
+        totalLines += Math.ceil((line.length - 2) / (charsPerLine * 0.8)) || 1;
+      } else {
+        totalLines += Math.ceil(line.length / charsPerLine) || 1;
+      }
+    });
+    return totalLines;
+  };
+
+  const calculatePDFRisk = () => {
+    const selected = [...fixedAnnouncements, ...dynamicAnnouncements]
+      .filter(ann => selectedAnnouncements.includes(ann.id));
+    
+    let totalLines = 0;
+    selected.forEach(ann => {
+      const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
+      const instructions = ann.instructions || "";
+      totalLines += estimateLines(content, 35);
+      totalLines += estimateLines(instructions, 35);
+      totalLines += 2; // Title + spacing
+    });
+
+    if (totalLines < 40) return { level: 'low', label: 'Se ajusta', color: 'bg-green-100 text-green-800 border-green-300' };
+    if (totalLines < 50) return { level: 'medium', label: 'Riesgo Moderado', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' };
+    return { level: 'high', label: 'Sobrecarga', color: 'bg-red-100 text-red-800 border-red-300' };
+  };
+
   const calculateServiceTimes = (timeSlot) => {
     const segments = serviceData?.[timeSlot] || [];
     const totalDuration = segments
@@ -2953,9 +2986,76 @@ export default function WeeklyServiceManager() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* PDF Risk Indicator */}
+          <Card className={`border-2 ${calculatePDFRisk().color}`}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-sm">Ajuste para PDF de Una Página</div>
+                  <div className="text-xs mt-1">
+                    {selectedAnnouncements.length} anuncios seleccionados
+                  </div>
+                </div>
+                <Badge className={calculatePDFRisk().color + ' text-sm px-3 py-1'}>
+                  {calculatePDFRisk().label}
+                </Badge>
+              </div>
+              {calculatePDFRisk().level === 'high' && (
+                <div className="mt-2 text-xs text-red-700">
+                  ⚠ El contenido puede exceder una página. Se aplicará compresión automática al generar el PDF.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Bulk Selection Controls */}
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const allFixed = fixedAnnouncements.map(a => a.id);
+                setSelectedAnnouncements(prev => [...new Set([...prev, ...allFixed])]);
+                debouncedSave('announcement-selection');
+              }}
+            >
+              ✓ Seleccionar todos los fijos
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const allDynamic = dynamicAnnouncements.map(a => a.id);
+                setSelectedAnnouncements(prev => [...new Set([...prev, ...allDynamic])]);
+                debouncedSave('announcement-selection');
+              }}
+            >
+              ✓ Seleccionar dinámicos relevantes
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const defaultSelection = [
+                  ...fixedAnnouncements.map(a => a.id),
+                  ...dynamicAnnouncements.map(a => a.id)
+                ];
+                setSelectedAnnouncements(defaultSelection);
+                debouncedSave('announcement-selection');
+              }}
+            >
+              ⟲ Restaurar selección por defecto
+            </Button>
+          </div>
+
           {/* Fixed Announcements */}
           <div className="space-y-3">
-            <Label className="text-base font-bold text-gray-900">Anuncios Fijos</Label>
+            <div>
+              <Label className="text-base font-bold text-gray-900">Anuncios Fijos</Label>
+              <p className="text-xs text-gray-600 mt-1">
+                Anuncios generales activos que siempre se muestran primero.
+              </p>
+            </div>
             <div className="grid md:grid-cols-2 gap-3">
               {fixedAnnouncements.map(ann => (
                 <div key={ann.id} className="flex items-start gap-2 p-3 border-2 rounded-lg bg-white hover:shadow-md transition-shadow">
@@ -3012,9 +3112,9 @@ export default function WeeklyServiceManager() {
                     </div>
                     <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap mb-2">{ann.content}</p>
                     {ann.instructions && (
-                      <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
-                        <p className="text-xs text-amber-900 font-semibold mb-1">Instrucciones:</p>
-                        <p className="text-xs text-amber-800 whitespace-pre-wrap">{ann.instructions}</p>
+                      <div className="bg-gray-100 border border-gray-300 rounded p-2 mt-2">
+                        <p className="text-[10px] text-gray-600 font-semibold mb-1">📋 Instrucciones (solo presentador):</p>
+                        <p className="text-[10px] text-gray-600 italic whitespace-pre-wrap">{ann.instructions}</p>
                       </div>
                     )}
                     {ann.has_video && (
@@ -3030,7 +3130,12 @@ export default function WeeklyServiceManager() {
 
           {/* Dynamic Announcements */}
           <div className="space-y-3">
-            <Label className="text-base font-bold text-gray-900">Anuncios Dinámicos</Label>
+            <div>
+              <Label className="text-base font-bold text-gray-900">Anuncios Dinámicos</Label>
+              <p className="text-xs text-gray-600 mt-1">
+                Anuncios de Eventos, Ministerios o Urgentes activos. Expiran automáticamente después de su Fecha de Ocurrencia.
+              </p>
+            </div>
             <div className="grid md:grid-cols-2 gap-3">
               {dynamicAnnouncements.map(ann => (
                 <div key={ann.id} className="flex items-start gap-2 p-3 border-2 rounded-lg bg-blue-50 hover:shadow-md transition-shadow">
@@ -3045,12 +3150,13 @@ export default function WeeklyServiceManager() {
                     className="mt-1"
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-sm leading-tight">{ann.isEvent ? ann.name : ann.title}</h3>
-                          {ann.isEvent && <Badge className="bg-purple-200 text-purple-800 text-[10px]">Evento</Badge>}
-                        </div>
+                   <div className="flex items-start justify-between gap-2 mb-2">
+                     <div className="flex-1">
+                       <div className="flex items-center gap-2 mb-1">
+                         <h3 className="font-bold text-sm leading-tight">{ann.isEvent ? ann.name : ann.title}</h3>
+                         {ann.isEvent && <Badge className="bg-purple-200 text-purple-800 text-[10px]">Evento</Badge>}
+                         {!ann.isEvent && ann.category === 'Urgent' && <Badge className="bg-red-100 text-red-700 text-[10px] border border-red-300">⚡ URGENTE</Badge>}
+                       </div>
                         {(ann.date_of_occurrence || ann.start_date) && (
                           <p className="text-xs font-semibold text-blue-600 mb-1">
                             📅 {ann.date_of_occurrence || ann.start_date} {ann.end_date && `- ${ann.end_date}`}
@@ -3115,9 +3221,9 @@ export default function WeeklyServiceManager() {
                       {ann.isEvent ? ann.announcement_blurb || ann.description : ann.content}
                     </p>
                     {ann.instructions && (
-                      <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
-                        <p className="text-xs text-amber-900 font-semibold mb-1">Instrucciones:</p>
-                        <p className="text-xs text-amber-800 whitespace-pre-wrap">{ann.instructions}</p>
+                      <div className="bg-gray-100 border border-gray-300 rounded p-2 mt-2">
+                        <p className="text-[10px] text-gray-600 font-semibold mb-1">📋 Instrucciones (solo presentador):</p>
+                        <p className="text-[10px] text-gray-600 italic whitespace-pre-wrap">{ann.instructions}</p>
                       </div>
                     )}
                     {(ann.has_video || ann.announcement_has_video) && (
@@ -3335,41 +3441,116 @@ export default function WeeklyServiceManager() {
               />
             </div>
             {announcementForm.category !== "General" && (
-              <div className="space-y-2">
-                <Label>Fecha de Ocurrencia</Label>
-                <Input
-                  type="date"
-                  value={announcementForm.date_of_occurrence}
-                  onChange={(e) => setAnnouncementForm(prev => ({ ...prev, date_of_occurrence: e.target.value }))}
-                />
-                <p className="text-xs text-gray-500">El anuncio se mostrará hasta esta fecha (inclusive)</p>
-              </div>
+            <div className="space-y-2">
+              <Label>Fecha de Ocurrencia</Label>
+              <Input
+                type="date"
+                value={announcementForm.date_of_occurrence}
+                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, date_of_occurrence: e.target.value }))}
+              />
+              <p className="text-xs text-gray-500">El anuncio se mostrará hasta esta fecha (inclusive)</p>
+              {!announcementForm.date_of_occurrence && (
+                <p className="text-xs text-amber-600 flex items-center gap-1">
+                  ⚠ Sin fecha: este anuncio no expirará automáticamente.
+                </p>
+              )}
+            </div>
             )}
             <div className="space-y-2">
-              <Label>Contenido (Texto principal con contexto, fechas, horarios)</Label>
+              <div className="flex items-center justify-between">
+                <Label>Contenido (Texto principal con contexto, fechas, horarios)</Label>
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      const cursorPos = document.querySelector('textarea[placeholder*="Contenido completo"]')?.selectionStart || announcementForm.content.length;
+                      const before = announcementForm.content.substring(0, cursorPos);
+                      const after = announcementForm.content.substring(cursorPos);
+                      setAnnouncementForm(prev => ({ ...prev, content: before + '\n• \n• \n• ' + after }));
+                    }}
+                  >
+                    • Lista
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      const cursorPos = document.querySelector('textarea[placeholder*="Contenido completo"]')?.selectionStart || announcementForm.content.length;
+                      const before = announcementForm.content.substring(0, cursorPos);
+                      const after = announcementForm.content.substring(cursorPos);
+                      setAnnouncementForm(prev => ({ ...prev, content: before + '\nETIQUETA: ' + after }));
+                    }}
+                  >
+                    ⫶ Etiqueta
+                  </Button>
+                </div>
+              </div>
               <Textarea
                 value={announcementForm.content}
                 onChange={(e) => setAnnouncementForm(prev => ({ ...prev, content: e.target.value }))}
                 placeholder="Contenido completo del anuncio con todos los detalles necesarios..."
                 rows={6}
               />
+              <div className="flex items-center gap-4 text-xs">
+                <span className={estimateLines(announcementForm.content, 35) > 12 ? 'text-red-600 font-semibold' : estimateLines(announcementForm.content, 35) > 10 ? 'text-yellow-600' : 'text-gray-500'}>
+                  ~{estimateLines(announcementForm.content, 35)} líneas estimadas
+                </span>
+                {estimateLines(announcementForm.content, 35) > 12 && (
+                  <span className="text-red-600">⚠ Contenido largo</span>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
-              <Label>Instrucciones para el Presentador (Opcional)</Label>
+              <div className="flex items-center justify-between">
+                <Label>Instrucciones para el Presentador (Opcional)</Label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    const cursorPos = document.querySelector('textarea[placeholder*="Instrucciones especiales"]')?.selectionStart || announcementForm.instructions.length;
+                    const before = announcementForm.instructions.substring(0, cursorPos);
+                    const after = announcementForm.instructions.substring(cursorPos);
+                    setAnnouncementForm(prev => ({ ...prev, instructions: before + '\nCUE: ' + after }));
+                  }}
+                >
+                  + CUE
+                </Button>
+              </div>
               <Textarea
                 value={announcementForm.instructions}
                 onChange={(e) => setAnnouncementForm(prev => ({ ...prev, instructions: e.target.value }))}
                 placeholder="Instrucciones especiales, notas de tono, recordatorios para el presentador..."
                 rows={3}
               />
+              <div className="flex items-center gap-4 text-xs">
+                <span className={estimateLines(announcementForm.instructions, 35) > 8 ? 'text-red-600 font-semibold' : estimateLines(announcementForm.instructions, 35) > 7 ? 'text-yellow-600' : 'text-gray-500'}>
+                  ~{estimateLines(announcementForm.instructions, 35)} líneas estimadas
+                </span>
+                {estimateLines(announcementForm.instructions, 35) > 8 && (
+                  <span className="text-red-600">⚠ Instrucciones largas</span>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Prioridad (menor = más arriba)</Label>
               <Input
                 type="number"
                 value={announcementForm.priority}
-                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, priority: parseInt(e.target.value) }))}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val)) {
+                    setAnnouncementForm(prev => ({ ...prev, priority: val }));
+                  }
+                }}
               />
+              <p className="text-xs text-gray-500">Los anuncios se ordenan por prioridad (menor número = aparece primero)</p>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
