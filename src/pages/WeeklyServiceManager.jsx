@@ -1280,10 +1280,10 @@ export default function WeeklyServiceManager() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => copySegmentTo1130(idx)}
-                                  className="print:hidden h-7 px-2"
+                                  className="print:hidden h-7 px-2 hover:bg-blue-50"
                                   title="Copiar a 11:30"
                                 >
-                                  <ArrowRight className="w-4 h-4 text-red-600" />
+                                  <ArrowRight className="w-4 h-4 text-blue-600" />
                                 </Button>
                               </CardTitle>
                             </CardHeader>
