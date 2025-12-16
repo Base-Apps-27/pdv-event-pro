@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
@@ -1283,7 +1283,7 @@ export default function WeeklyServiceManager() {
                                   className="print:hidden h-7 px-2"
                                   title="Copiar a 11:30"
                                 >
-                                  <Copy className="w-3 h-3 text-red-600" />
+                                  <ArrowRight className="w-4 h-4 text-red-600" />
                                 </Button>
                               </CardTitle>
                             </CardHeader>
