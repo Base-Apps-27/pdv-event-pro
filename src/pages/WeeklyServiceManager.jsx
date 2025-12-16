@@ -724,27 +724,7 @@ export default function WeeklyServiceManager() {
     });
   };
 
-  const removeSpecialSegment = (timeSlot, index) => {
-    setSavingField('remove-special');
-    const updatedData = { ...serviceData };
-    const targetArray = [...updatedData[timeSlot]];
-    targetArray.splice(index, 1);
-    updatedData[timeSlot] = targetArray;
-    
-    setServiceData(updatedData);
-    
-    const dataToSave = {
-      ...updatedData,
-      selected_announcements: selectedAnnouncements,
-      day_of_week: 'Sunday',
-      name: `Domingo - ${selectedDate}`,
-      status: 'active'
-    };
-    
-    saveServiceMutation.mutate(dataToSave, {
-      onSettled: () => setSavingField(null)
-    });
-  };
+
 
   const handleDragEnd = (result, timeSlot) => {
     if (!result.destination) return;
