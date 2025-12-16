@@ -771,15 +771,15 @@ export default function WeeklyServiceManager() {
       const footers = element.querySelectorAll('.print-footer');
       footers.forEach(el => {
         el.style.width = '100%';
-        el.style.height = '35px';
+        el.style.height = '40px';
         el.style.background = 'linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%)';
         el.style.display = 'flex';
         el.style.alignItems = 'center';
         el.style.justifyContent = 'center';
         el.style.color = 'white';
-        el.style.fontSize = '20px';
-        el.style.fontWeight = 'bold';
-        el.style.textTransform = 'lowercase';
+        el.style.fontSize = '14pt';
+        el.style.fontWeight = '600';
+        el.style.letterSpacing = '0.5pt';
         el.style.marginTop = '20px';
       });
     };
@@ -1168,15 +1168,15 @@ export default function WeeklyServiceManager() {
         const footers = element.querySelectorAll('.print-footer');
         footers.forEach(el => {
           el.style.width = '100%';
-          el.style.height = '35px';
+          el.style.height = '40px';
           el.style.background = 'linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%)';
           el.style.display = 'flex';
           el.style.alignItems = 'center';
           el.style.justifyContent = 'center';
           el.style.color = 'white';
-          el.style.fontSize = '16px';
-          el.style.fontWeight = 'bold';
-          el.style.textTransform = 'lowercase';
+          el.style.fontSize = '14pt';
+          el.style.fontWeight = '600';
+          el.style.letterSpacing = '0.5pt';
           el.style.marginTop = '20px';
         });
       };
@@ -2132,7 +2132,7 @@ export default function WeeklyServiceManager() {
         </div>
 
         <div className="print-footer">
-          ¡atrévete a cambiar!
+          ¡Atrévete a cambiar!
         </div>
       </div>
 
