@@ -1226,19 +1226,20 @@ export default function WeeklyServiceManager() {
 
       document.body.removeChild(container);
 
-      // Convert PDF to blob
-      const pdfBlob = pdf.output('blob');
-      const file = new File([pdfBlob], `Servicio-${selectedDate}.pdf`, { type: 'application/pdf' });
+      // Convert PDF to base64
+      const pdfBase64 = pdf.output('dataurlstring');
 
-      // Upload file
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-
-      // Send email
-      await base44.integrations.Core.SendEmail({
+      // Send email via backend function
+      const response = await base44.functions.invoke('sendEmailWithPDF', {
         to: emailAddress,
         subject: `Orden de Servicio - ${formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}`,
-        body: `Adjunto encontrarás la orden de servicio para el domingo ${formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}.\n\nPuedes descargar el archivo PDF aquí: ${file_url}`
+        body: `Adjunto encontrarás la orden de servicio para el domingo ${formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}.`,
+        pdfBlob: pdfBase64
       });
+
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
 
       alert('Email enviado exitosamente');
       setShowEmailDialog(false);
