@@ -251,16 +251,9 @@ export default function WeeklyServiceManager() {
     }
   });
 
-  // Initialize service data and handle announcement selection
+  // Initialize service data
   useEffect(() => {
-    // Get all currently active announcement IDs
-    const allActiveAnnouncementIds = [
-      ...fixedAnnouncements.map(a => a.id),
-      ...dynamicAnnouncements.map(a => a.id)
-    ];
-
     if (existingData) {
-      // Loading existing service - filter out ghost announcements
       const loadedData = {
         ...existingData,
         pre_service_notes: existingData.pre_service_notes || { "9:30am": "", "11:30am": "" },
@@ -268,14 +261,8 @@ export default function WeeklyServiceManager() {
         selected_announcements: existingData.selected_announcements || []
       };
       setServiceData(loadedData);
-      
-      // Only keep announcements that are currently active
-      const filteredSelections = (existingData.selected_announcements || [])
-        .filter(id => allActiveAnnouncementIds.includes(id));
-      
-      setSelectedAnnouncements(filteredSelections);
+      setSelectedAnnouncements(existingData.selected_announcements || []);
     } else {
-      // New service - initialize and auto-select all active announcements
       const initialData = {
         date: selectedDate,
         "9:30am": BLUEPRINT["9:30am"].map(seg => ({
@@ -309,11 +296,37 @@ export default function WeeklyServiceManager() {
         selected_announcements: []
       };
       setServiceData(initialData);
-      
-      // Auto-select all currently active announcements for new services
-      setSelectedAnnouncements(allActiveAnnouncementIds);
     }
-  }, [existingData, fixedAnnouncements, dynamicAnnouncements, selectedDate]);
+  }, [existingData]);
+
+  // Auto-select announcements for new services only
+  useEffect(() => {
+    // Only run when we have a new service (no existing data) and announcements are loaded
+    if (!existingData && !isLoading && (fixedAnnouncements.length > 0 || dynamicAnnouncements.length > 0)) {
+      const allActiveIds = [
+        ...fixedAnnouncements.map(a => a.id),
+        ...dynamicAnnouncements.map(a => a.id)
+      ];
+      setSelectedAnnouncements(allActiveIds);
+    }
+  }, [existingData, isLoading, fixedAnnouncements.length, dynamicAnnouncements.length]);
+
+  // Filter out inactive announcements from loaded selections
+  useEffect(() => {
+    if (existingData && selectedAnnouncements.length > 0) {
+      const allActiveIds = [
+        ...fixedAnnouncements.map(a => a.id),
+        ...dynamicAnnouncements.map(a => a.id)
+      ];
+      
+      const filtered = selectedAnnouncements.filter(id => allActiveIds.includes(id));
+      
+      // Only update if there were ghost announcements to remove
+      if (filtered.length !== selectedAnnouncements.length) {
+        setSelectedAnnouncements(filtered);
+      }
+    }
+  }, [existingData, fixedAnnouncements, dynamicAnnouncements]);
 
   // Debounced save
   const debouncedSave = useCallback((fieldKey) => {
