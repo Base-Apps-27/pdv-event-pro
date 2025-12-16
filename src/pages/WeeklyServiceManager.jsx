@@ -510,14 +510,7 @@ export default function WeeklyServiceManager() {
       logos.forEach(el => {
         el.style.width = '50px';
         el.style.height = '50px';
-        el.style.background = 'linear-gradient(135deg, #1F8A70 0%, #8DC63F 100%)';
-        el.style.borderRadius = '6px';
-        el.style.display = 'flex';
-        el.style.alignItems = 'center';
-        el.style.justifyContent = 'center';
-        el.style.color = 'white';
-        el.style.fontSize = '20px';
-        el.style.fontWeight = 'bold';
+        el.style.background = 'none';
       });
 
       const titles = element.querySelectorAll('.print-title');
@@ -918,14 +911,7 @@ export default function WeeklyServiceManager() {
         logos.forEach(el => {
           el.style.width = '50px';
           el.style.height = '50px';
-          el.style.background = 'linear-gradient(135deg, #1F8A70 0%, #8DC63F 100%)';
-          el.style.borderRadius = '6px';
-          el.style.display = 'flex';
-          el.style.alignItems = 'center';
-          el.style.justifyContent = 'center';
-          el.style.color = 'white';
-          el.style.fontSize = '25px';
-          el.style.fontWeight = 'bold';
+          el.style.background = 'none';
         });
 
         const titles = element.querySelectorAll('.print-title');
@@ -1513,6 +1499,7 @@ export default function WeeklyServiceManager() {
             width: 50px;
             height: 50px;
             flex-shrink: 0;
+            background: none;
           }
 
           .print-logo img {
