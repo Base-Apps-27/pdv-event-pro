@@ -251,9 +251,16 @@ export default function WeeklyServiceManager() {
     }
   });
 
-  // Initialize service data
+  // Initialize service data and handle announcement selection
   useEffect(() => {
+    // Get all currently active announcement IDs
+    const allActiveAnnouncementIds = [
+      ...fixedAnnouncements.map(a => a.id),
+      ...dynamicAnnouncements.map(a => a.id)
+    ];
+
     if (existingData) {
+      // Loading existing service - filter out ghost announcements
       const loadedData = {
         ...existingData,
         pre_service_notes: existingData.pre_service_notes || { "9:30am": "", "11:30am": "" },
@@ -261,8 +268,14 @@ export default function WeeklyServiceManager() {
         selected_announcements: existingData.selected_announcements || []
       };
       setServiceData(loadedData);
-      setSelectedAnnouncements(existingData.selected_announcements || []);
+      
+      // Only keep announcements that are currently active
+      const filteredSelections = (existingData.selected_announcements || [])
+        .filter(id => allActiveAnnouncementIds.includes(id));
+      
+      setSelectedAnnouncements(filteredSelections);
     } else {
+      // New service - initialize and auto-select all active announcements
       const initialData = {
         date: selectedDate,
         "9:30am": BLUEPRINT["9:30am"].map(seg => ({
@@ -296,29 +309,11 @@ export default function WeeklyServiceManager() {
         selected_announcements: []
       };
       setServiceData(initialData);
+      
+      // Auto-select all currently active announcements for new services
+      setSelectedAnnouncements(allActiveAnnouncementIds);
     }
-  }, [existingData]);
-
-  // Auto-select announcements only for brand new services
-  const hasAutoSelectedRef = useRef(false);
-  
-  useEffect(() => {
-    // Reset flag when date changes
-    hasAutoSelectedRef.current = false;
-  }, [selectedDate]);
-
-  useEffect(() => {
-    // Only auto-select if:
-    // 1. No existing service data
-    // 2. Haven't already auto-selected for this date
-    // 3. Have announcements to select
-    if (!existingData && !hasAutoSelectedRef.current && (fixedAnnouncements.length > 0 || dynamicAnnouncements.length > 0)) {
-      const fixed = fixedAnnouncements.map(a => a.id);
-      const dynamic = dynamicAnnouncements.map(a => a.id);
-      setSelectedAnnouncements([...new Set([...fixed, ...dynamic])]);
-      hasAutoSelectedRef.current = true;
-    }
-  }, [dynamicAnnouncements, fixedAnnouncements, existingData]);
+  }, [existingData, fixedAnnouncements, dynamicAnnouncements, selectedDate]);
 
   // Debounced save
   const debouncedSave = useCallback((fieldKey) => {
