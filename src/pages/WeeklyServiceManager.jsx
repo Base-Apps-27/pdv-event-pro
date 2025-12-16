@@ -1145,25 +1145,51 @@ export default function WeeklyServiceManager() {
         });
 
         const announcementItems = element.querySelectorAll('.print-announcement-item');
-        announcementItems.forEach(el => {
-          el.style.marginBottom = '0';
+        announcementItems.forEach((el, idx) => {
+          el.style.marginBottom = '18px';
           el.style.padding = '0';
           el.style.border = 'none';
           el.style.breakInside = 'avoid';
+          el.style.position = 'relative';
+        });
+
+        // Alternating header strips
+        const announcementHeaderStrips = element.querySelectorAll('.print-announcement-header-strip');
+        announcementHeaderStrips.forEach((el, idx) => {
+          el.style.height = '4px';
+          el.style.width = '100%';
+          el.style.marginBottom = '8px';
+          
+          const colorIndex = idx % 3;
+          if (colorIndex === 0) {
+            el.style.background = 'linear-gradient(90deg, #2563eb 0%, rgba(37, 99, 235, 0) 100%)';
+          } else if (colorIndex === 1) {
+            el.style.background = 'linear-gradient(90deg, #1F8A70 0%, rgba(31, 138, 112, 0) 100%)';
+          } else {
+            el.style.background = 'linear-gradient(90deg, #dc2626 0%, rgba(220, 38, 38, 0) 100%)';
+          }
         });
 
         const announcementHeaders = element.querySelectorAll('.print-announcement-header');
-        announcementHeaders.forEach(el => {
+        announcementHeaders.forEach((el, idx) => {
           el.style.display = 'block';
-          el.style.marginBottom = '10px';
-          el.style.paddingLeft = '8px';
-          el.style.borderLeft = '3px solid #8DC63F';
+          el.style.marginBottom = '8px';
+          el.style.paddingLeft = '10px';
+          
+          const colorIndex = idx % 3;
+          if (colorIndex === 0) {
+            el.style.borderLeft = '5px solid #2563eb';
+          } else if (colorIndex === 1) {
+            el.style.borderLeft = '5px solid #1F8A70';
+          } else {
+            el.style.borderLeft = '5px solid #dc2626';
+          }
         });
 
         const announcementTitles = element.querySelectorAll('.print-announcement-title');
         announcementTitles.forEach(el => {
           el.style.fontSize = '13px';
-          el.style.fontWeight = '600';
+          el.style.fontWeight = '700';
           el.style.color = '#1a1a1a';
           el.style.textTransform = 'capitalize';
           el.style.display = 'block';
@@ -1171,12 +1197,25 @@ export default function WeeklyServiceManager() {
         });
 
         const announcementDates = element.querySelectorAll('.print-announcement-date');
-        announcementDates.forEach(el => {
-          el.style.fontSize = '11px';
-          el.style.fontWeight = '400';
-          el.style.color = '#1F8A70';
-          el.style.display = 'block';
+        announcementDates.forEach((el, idx) => {
+          el.style.fontSize = '10px';
+          el.style.fontWeight = '600';
+          el.style.display = 'inline-block';
           el.style.marginTop = '4px';
+          el.style.padding = '2px 8px';
+          el.style.borderRadius = '3px';
+          
+          const colorIndex = idx % 3;
+          if (colorIndex === 0) {
+            el.style.background = 'rgba(37, 99, 235, 0.15)';
+            el.style.color = '#2563eb';
+          } else if (colorIndex === 1) {
+            el.style.background = 'rgba(31, 138, 112, 0.15)';
+            el.style.color = '#1F8A70';
+          } else {
+            el.style.background = 'rgba(220, 38, 38, 0.15)';
+            el.style.color = '#dc2626';
+          }
         });
 
         const announcementContents = element.querySelectorAll('.print-announcement-content');
@@ -1194,14 +1233,13 @@ export default function WeeklyServiceManager() {
 
         const announcementInstructions = element.querySelectorAll('.print-announcement-instructions');
         announcementInstructions.forEach(el => {
-          el.style.fontSize = '10px';
-          el.style.background = '#fffbeb';
-          el.style.padding = '6px 10px';
-          el.style.marginTop = '10px';
+          el.style.fontSize = '9.5px';
+          el.style.background = 'transparent';
+          el.style.padding = '6px 0 6px 10px';
+          el.style.marginTop = '8px';
           el.style.fontStyle = 'italic';
-          el.style.borderLeft = '3px solid #f59e0b';
+          el.style.borderLeft = '2px dashed #f59e0b';
           el.style.color = '#78350f';
-          el.style.borderRadius = '2px';
         });
 
         const footers = element.querySelectorAll('.print-footer');
@@ -1786,23 +1824,54 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcement-item {
-            margin-bottom: 0;
+            margin-bottom: 18pt;
             padding: 0;
             border: none;
             break-inside: avoid;
             page-break-inside: avoid;
+            position: relative;
+          }
+
+          .print-announcement-item:nth-child(3n+1) .print-announcement-header {
+            border-left-color: #2563eb;
+          }
+
+          .print-announcement-item:nth-child(3n+1) .print-announcement-header-strip {
+            background: linear-gradient(90deg, #2563eb 0%, rgba(37, 99, 235, 0) 100%);
+          }
+
+          .print-announcement-item:nth-child(3n+2) .print-announcement-header {
+            border-left-color: #1F8A70;
+          }
+
+          .print-announcement-item:nth-child(3n+2) .print-announcement-header-strip {
+            background: linear-gradient(90deg, #1F8A70 0%, rgba(31, 138, 112, 0) 100%);
+          }
+
+          .print-announcement-item:nth-child(3n+3) .print-announcement-header {
+            border-left-color: #dc2626;
+          }
+
+          .print-announcement-item:nth-child(3n+3) .print-announcement-header-strip {
+            background: linear-gradient(90deg, #dc2626 0%, rgba(220, 38, 38, 0) 100%);
+          }
+
+          .print-announcement-header-strip {
+            height: 4pt;
+            width: 100%;
+            margin-bottom: 8pt;
           }
 
           .print-announcement-header {
             display: block;
-            margin-bottom: 10pt;
-            padding-left: 8pt;
-            border-left: 3pt solid #8DC63F;
+            margin-bottom: 8pt;
+            padding-left: 10pt;
+            border-left: 5pt solid #8DC63F;
           }
 
           .print-announcement-title {
             font-size: 13pt;
-            font-weight: 600;
+            font-weight: 700;
             color: #1a1a1a;
             text-transform: capitalize;
             display: block;
@@ -1810,11 +1879,14 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcement-date {
-            font-size: 11pt;
-            font-weight: 400;
-            color: #1F8A70;
-            display: block;
+            font-size: 10pt;
+            font-weight: 600;
+            display: inline-block;
             margin-top: 4pt;
+            padding: 2pt 8pt;
+            background: rgba(31, 138, 112, 0.15);
+            border-radius: 3pt;
+            color: #1F8A70;
           }
 
           .print-announcement-content {
@@ -1829,26 +1901,24 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcement-instructions {
-            font-size: 10pt;
-            background: #fffbeb;
-            padding: 6pt 10pt;
-            margin-top: 10pt;
+            font-size: 9.5pt;
+            background: transparent;
+            padding: 6pt 0 6pt 10pt;
+            margin-top: 8pt;
             font-style: italic;
-            border-left: 3pt solid #f59e0b;
+            border-left: 2pt dashed #f59e0b;
             color: #78350f;
-            border-radius: 2pt;
           }
 
           .print-announcement-instructions::before {
-            content: "CUE";
-            display: block;
-            font-size: 8pt;
+            content: "CUE: ";
+            display: inline;
+            font-size: 9pt;
             font-weight: 700;
             font-style: normal;
             text-transform: uppercase;
-            letter-spacing: 0.5pt;
+            letter-spacing: 0.3pt;
             color: #92400e;
-            margin-bottom: 4pt;
           }
 
           .print-footer {
@@ -2147,6 +2217,7 @@ export default function WeeklyServiceManager() {
               .filter(ann => selectedAnnouncements.includes(ann.id))
               .map((ann, idx) => (
                 <div key={ann.id} className="print-announcement-item">
+                  <div className="print-announcement-header-strip"></div>
                   <div className="print-announcement-header">
                     <div className="print-announcement-title">
                       {ann.isEvent ? ann.name : ann.title}
