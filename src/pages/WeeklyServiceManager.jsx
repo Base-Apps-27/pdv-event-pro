@@ -354,35 +354,40 @@ export default function WeeklyServiceManager() {
   const handleFieldBlur = (service, segmentIndex, field) => {
     // Passive copy on blur: if updating 9:30am, copy to 11:30am if that field is empty
     if (service === "9:30am") {
-      const currentData = serviceDataRef.current;
-      if (!currentData || !currentData["11:30am"] || !currentData["11:30am"][segmentIndex]) return;
-      
-      const source930 = currentData["9:30am"][segmentIndex];
-      const target1130 = currentData["11:30am"][segmentIndex];
-      
-      if (field === 'songs') {
-        const isEmpty = !target1130.songs || target1130.songs.every(s => !s.title && !s.lead);
-        if (isEmpty && source930.songs) {
-          setServiceData(prev => {
-            const updated = { ...prev };
-            updated["11:30am"][segmentIndex].songs = source930.songs.map(s => ({ ...s }));
-            return updated;
-          });
+      // Small delay to ensure state is current
+      setTimeout(() => {
+        const currentData = serviceDataRef.current;
+        if (!currentData || !currentData["11:30am"] || !currentData["11:30am"][segmentIndex]) return;
+        
+        const source930 = currentData["9:30am"][segmentIndex];
+        const target1130 = currentData["11:30am"][segmentIndex];
+        
+        if (field === 'songs') {
+          const isEmpty = !target1130.songs || target1130.songs.every(s => !s.title && !s.lead);
+          if (isEmpty && source930.songs && source930.songs.some(s => s.title || s.lead)) {
+            setServiceData(prev => {
+              const updated = { ...prev };
+              updated["11:30am"][segmentIndex].songs = source930.songs.map(s => ({ ...s }));
+              return updated;
+            });
+            debouncedSave(`copy-songs-${segmentIndex}`);
+          }
+        } else {
+          const currentValue = target1130.data?.[field];
+          const sourceValue = source930.data?.[field];
+          if ((!currentValue || currentValue === '') && sourceValue && sourceValue !== '') {
+            setServiceData(prev => {
+              const updated = { ...prev };
+              updated["11:30am"][segmentIndex].data = {
+                ...updated["11:30am"][segmentIndex].data,
+                [field]: sourceValue
+              };
+              return updated;
+            });
+            debouncedSave(`copy-${field}-${segmentIndex}`);
+          }
         }
-      } else {
-        const currentValue = target1130.data?.[field];
-        const sourceValue = source930.data?.[field];
-        if ((!currentValue || currentValue === '') && sourceValue) {
-          setServiceData(prev => {
-            const updated = { ...prev };
-            updated["11:30am"][segmentIndex].data = {
-              ...updated["11:30am"][segmentIndex].data,
-              [field]: sourceValue
-            };
-            return updated;
-          });
-        }
-      }
+      }, 100);
     }
   };
 
