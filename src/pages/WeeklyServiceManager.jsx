@@ -791,19 +791,20 @@ export default function WeeklyServiceManager() {
       const pdf = new jsPDF('p', 'mm', 'letter');
       const imgWidth = 216;
       const pageHeight = 279;
+      const margin = 5; // Small margin to prevent edge cutoff
 
       // Add services pages
       let imgHeight = (servicesCanvas.height * imgWidth) / servicesCanvas.width;
       let heightLeft = imgHeight;
       let position = 0;
 
-      pdf.addImage(servicesCanvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(servicesCanvas.toDataURL('image/png'), 'PNG', margin, position + margin, imgWidth - (margin * 2), imgHeight);
       heightLeft -= pageHeight;
 
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(servicesCanvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(servicesCanvas.toDataURL('image/png'), 'PNG', margin, position + margin, imgWidth - (margin * 2), imgHeight);
         heightLeft -= pageHeight;
       }
 
@@ -812,13 +813,14 @@ export default function WeeklyServiceManager() {
         clone.innerHTML = '';
         clone.appendChild(announcementsEl);
 
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         const announcementsCanvas = await html2canvas(container, {
           scale: 2,
           useCORS: true,
           logging: false,
-          backgroundColor: '#ffffff'
+          backgroundColor: '#ffffff',
+          windowWidth: 900
         });
 
         pdf.addPage();
@@ -826,13 +828,13 @@ export default function WeeklyServiceManager() {
         heightLeft = imgHeight;
         position = 0;
 
-        pdf.addImage(announcementsCanvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(announcementsCanvas.toDataURL('image/png'), 'PNG', margin, position + margin, imgWidth - (margin * 2), imgHeight);
         heightLeft -= pageHeight;
 
         while (heightLeft >= 0) {
           position = heightLeft - imgHeight;
           pdf.addPage();
-          pdf.addImage(announcementsCanvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+          pdf.addImage(announcementsCanvas.toDataURL('image/png'), 'PNG', margin, position + margin, imgWidth - (margin * 2), imgHeight);
           heightLeft -= pageHeight;
         }
       }
@@ -863,13 +865,14 @@ export default function WeeklyServiceManager() {
       container.style.position = 'absolute';
       container.style.left = '-99999px';
       container.style.top = '0';
-      container.style.width = '816px';
+      container.style.width = '900px'; // Increased width for better rendering
       container.style.background = 'white';
-      container.style.padding = '38px 48px 77px 48px';
+      container.style.padding = '32px 40px 60px 40px'; // Reduced padding for more space
       container.style.fontFamily = 'Arial, sans-serif';
       container.style.color = '#000';
       container.style.wordWrap = 'break-word';
       container.style.overflowWrap = 'break-word';
+      container.style.boxSizing = 'border-box';
       container.appendChild(clone);
 
       const applyPrintStyles = (element) => {
@@ -1179,24 +1182,26 @@ export default function WeeklyServiceManager() {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        windowWidth: 900
       });
 
       const pdf = new jsPDF('p', 'mm', 'letter');
       const imgWidth = 216;
       const pageHeight = 279;
+      const margin = 5; // Small margin to prevent edge cutoff
 
       let imgHeight = (servicesCanvas.height * imgWidth) / servicesCanvas.width;
       let heightLeft = imgHeight;
       let position = 0;
 
-      pdf.addImage(servicesCanvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(servicesCanvas.toDataURL('image/png'), 'PNG', margin, position + margin, imgWidth - (margin * 2), imgHeight);
       heightLeft -= pageHeight;
 
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(servicesCanvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(servicesCanvas.toDataURL('image/png'), 'PNG', margin, position + margin, imgWidth - (margin * 2), imgHeight);
         heightLeft -= pageHeight;
       }
 
@@ -1204,13 +1209,14 @@ export default function WeeklyServiceManager() {
         clone.innerHTML = '';
         clone.appendChild(announcementsEl);
 
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         const announcementsCanvas = await html2canvas(container, {
           scale: 2,
           useCORS: true,
           logging: false,
-          backgroundColor: '#ffffff'
+          backgroundColor: '#ffffff',
+          windowWidth: 900
         });
 
         pdf.addPage();
@@ -1218,13 +1224,13 @@ export default function WeeklyServiceManager() {
         heightLeft = imgHeight;
         position = 0;
 
-        pdf.addImage(announcementsCanvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(announcementsCanvas.toDataURL('image/png'), 'PNG', margin, position + margin, imgWidth - (margin * 2), imgHeight);
         heightLeft -= pageHeight;
 
         while (heightLeft >= 0) {
           position = heightLeft - imgHeight;
           pdf.addPage();
-          pdf.addImage(announcementsCanvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+          pdf.addImage(announcementsCanvas.toDataURL('image/png'), 'PNG', margin, position + margin, imgWidth - (margin * 2), imgHeight);
           heightLeft -= pageHeight;
         }
       }
