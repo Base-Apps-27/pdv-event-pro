@@ -1691,16 +1691,13 @@ export default function WeeklyServiceManager() {
             padding-top: 24pt;
             padding-left: 72pt;
             padding-right: 72pt;
-            padding-bottom: 48pt;
-            position: relative;
+            padding-bottom: 60pt;
           }
 
           .print-announcements-logo {
-            position: absolute;
-            top: 24pt;
-            left: 72pt;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 10pt auto;
             background: none;
           }
 
@@ -1712,11 +1709,9 @@ export default function WeeklyServiceManager() {
 
           .print-announcements-header {
             text-align: center;
-            margin-bottom: 20pt;
-            margin-top: 0;
-            padding-bottom: 12pt;
+            margin-bottom: 24pt;
+            padding-bottom: 0;
             border-bottom: none;
-            position: relative;
           }
 
           .print-announcements-title {
@@ -1822,15 +1817,19 @@ export default function WeeklyServiceManager() {
             left: 0;
             right: 0;
             width: 100%;
-            height: 30px;
+            height: 54pt;
             background: linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-size: 14pt;
-            font-weight: bold;
-            text-transform: lowercase;
+            font-weight: 600;
+            letter-spacing: 0.5pt;
+          }
+
+          .print-content {
+            padding-bottom: 60pt;
           }
         }
       `}</style>
@@ -1843,10 +1842,10 @@ export default function WeeklyServiceManager() {
           </div>
           <div className="print-title">
             <h1>Orden de Servicio</h1>
-            <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es }).toUpperCase()}</p>
+            <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
           </div>
-          <div className="print-team-box">
-            <div><span className="print-team-label">Coordinador(a):</span> {serviceData?.coordinators?.["9:30am"] || serviceData?.coordinators?.["11:30am"] || ""}</div>
+          <div className="print-team-info">
+            <div><span className="print-team-label">Coordinador:</span> {serviceData?.coordinators?.["9:30am"] || serviceData?.coordinators?.["11:30am"] || ""}</div>
             <div><span className="print-team-label">Ujier:</span> {serviceData?.ujieres?.["9:30am"] || serviceData?.ujieres?.["11:30am"] || ""}</div>
             <div><span className="print-team-label">Sonido:</span> {serviceData?.sound?.["9:30am"] || ""}</div>
             <div><span className="print-team-label">Luces:</span> {serviceData?.luces?.["9:30am"] || serviceData?.luces?.["11:30am"] || ""}</div>
