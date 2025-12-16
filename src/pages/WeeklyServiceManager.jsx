@@ -488,16 +488,16 @@ export default function WeeklyServiceManager() {
     try {
       setIsGeneratingPdf(true);
       
-      const serviceData = {
+      const pdfData = {
         service: {
-          '9:30am': formData['9:30am'] || [],
-          '11:30am': formData['11:30am'] || [],
-          coordinators: formData.coordinators,
-          ujieres: formData.ujieres,
-          sound: formData.sound,
-          luces: formData.luces,
-          pre_service_notes: formData.pre_service_notes,
-          receso_notes: formData.receso_notes
+          '9:30am': serviceData['9:30am'] || [],
+          '11:30am': serviceData['11:30am'] || [],
+          coordinators: serviceData.coordinators,
+          ujieres: serviceData.ujieres,
+          sound: serviceData.sound,
+          luces: serviceData.luces,
+          pre_service_notes: serviceData.pre_service_notes,
+          receso_notes: serviceData.receso_notes
         },
         announcements: [...fixedAnnouncements, ...dynamicAnnouncements].filter(a => 
           selectedAnnouncements.includes(a.id)
@@ -505,7 +505,7 @@ export default function WeeklyServiceManager() {
       };
 
       const response = await base44.functions.invoke('generateServicePdf', {
-        serviceData,
+        serviceData: pdfData,
         selectedDate,
         includeAnnouncements: true
       });
@@ -531,7 +531,7 @@ export default function WeeklyServiceManager() {
     try {
       setIsGeneratingPdf(true);
 
-      const serviceData = {
+      const pdfData = {
         service: {
           '9:30am': serviceData['9:30am'] || [],
           '11:30am': serviceData['11:30am'] || [],
@@ -548,7 +548,7 @@ export default function WeeklyServiceManager() {
       };
 
       const response = await base44.functions.invoke('generateServicePdf', {
-        serviceData,
+        serviceData: pdfData,
         selectedDate,
         includeAnnouncements: true
       });
