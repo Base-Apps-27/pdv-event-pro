@@ -444,8 +444,66 @@ export default function WeeklyServiceManager() {
   };
 
   const handleDownloadPDF = async () => {
-    // Trigger print dialog which will use the native print styles
-    window.print();
+    const printContent = document.querySelector('.print-content');
+    if (!printContent) return;
+
+    // Create a temporary container with print styles applied
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '0';
+    tempContainer.style.width = '8.5in';
+    tempContainer.style.backgroundColor = '#ffffff';
+    tempContainer.style.padding = '0.4in 0.5in 0.8in 0.5in';
+    tempContainer.innerHTML = printContent.innerHTML;
+    
+    // Apply print styles by adding a class
+    tempContainer.className = 'print-render-temp';
+    
+    // Add temporary print styles
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+      .print-render-temp { font-size: 10pt; line-height: 1.4; color: #000; }
+      .print-render-temp * { box-shadow: none !important; }
+    `;
+    document.head.appendChild(styleSheet);
+    document.body.appendChild(tempContainer);
+
+    try {
+      const canvas = await html2canvas(tempContainer, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        width: 816 // 8.5in at 96dpi
+      });
+
+      const imgWidth = 216; // Letter width in mm
+      const pageHeight = 279; // Letter height in mm  
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      const pdf = new jsPDF('p', 'mm', 'letter');
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`Servicio-${selectedDate}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error al generar PDF');
+    } finally {
+      document.body.removeChild(tempContainer);
+      document.head.removeChild(styleSheet);
+    }
   };
 
 
