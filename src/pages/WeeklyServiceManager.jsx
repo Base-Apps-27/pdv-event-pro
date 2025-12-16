@@ -1532,11 +1532,11 @@ export default function WeeklyServiceManager() {
           }
 
           .print-segment {
-            margin-bottom: 8px;
-            padding-bottom: 6px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
             border-bottom: 1px solid #e5e7eb;
-            font-size: 9px;
-            line-height: 1.4;
+            font-size: 10px;
+            line-height: 1.5;
             break-inside: avoid;
             page-break-inside: avoid;
           }
@@ -1544,7 +1544,7 @@ export default function WeeklyServiceManager() {
           .print-segment-time {
             font-weight: bold;
             color: #dc2626;
-            font-size: 12px;
+            font-size: 14px;
           }
 
           .print-service-column.right .print-segment-time {
@@ -1554,18 +1554,18 @@ export default function WeeklyServiceManager() {
           .print-segment-title {
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 11px;
+            font-size: 12px;
             margin-left: 4px;
             color: #000;
           }
 
           .print-segment-detail {
             margin-left: 8px;
-            font-size: 8px;
+            font-size: 9px;
             color: #374151;
-            line-height: 1.4;
-            margin-top: 2px;
-            margin-bottom: 2px;
+            line-height: 1.5;
+            margin-top: 3px;
+            margin-bottom: 3px;
             word-wrap: break-word;
             overflow-wrap: break-word;
           }
@@ -1573,7 +1573,7 @@ export default function WeeklyServiceManager() {
           .print-name {
             color: #8DC63F;
             font-weight: bold;
-            font-size: 9px;
+            font-size: 10px;
           }
 
           .print-coordinator-actions {
@@ -1602,10 +1602,10 @@ export default function WeeklyServiceManager() {
 
           .print-segment-songs {
             margin-left: 8px;
-            font-size: 8px;
-            line-height: 1.3;
-            margin-top: 3px;
-            margin-bottom: 3px;
+            font-size: 9px;
+            line-height: 1.4;
+            margin-top: 4px;
+            margin-bottom: 4px;
           }
 
           .print-receso {
