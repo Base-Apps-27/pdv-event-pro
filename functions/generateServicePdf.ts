@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import puppeteer from "npm:puppeteer@21.6.0";
 
 Deno.serve(async (req) => {
   try {
@@ -14,30 +15,27 @@ Deno.serve(async (req) => {
     // Generate HTML content for PDF
     const htmlContent = generateServiceHTML(serviceData, selectedDate, includeAnnouncements);
 
-    // Use external PDF service (PDFShift or similar)
-    const pdfApiResponse = await fetch('https://api.html2pdf.app/v1/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        html: htmlContent,
-        format: 'Letter',
-        printBackground: true,
-        margin: {
-          top: '0.5in',
-          right: '0.5in',
-          bottom: '0.5in',
-          left: '0.5in'
-        }
-      })
+    // Use Puppeteer for PDF generation
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
-
-    if (!pdfApiResponse.ok) {
-      throw new Error(`PDF service error: ${pdfApiResponse.status}`);
-    }
-
-    const pdfBuffer = await pdfApiResponse.arrayBuffer();
+    
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    
+    const pdfBuffer = await page.pdf({
+      format: 'Letter',
+      printBackground: true,
+      margin: {
+        top: '0.5in',
+        right: '0.5in',
+        bottom: '0.5in',
+        left: '0.5in'
+      }
+    });
+    
+    await browser.close();
 
     // Return PDF as binary response
     return new Response(pdfBuffer, {
