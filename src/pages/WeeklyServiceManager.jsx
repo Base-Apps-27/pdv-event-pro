@@ -16,6 +16,8 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 
 export default function WeeklyServiceManager() {
@@ -440,6 +442,354 @@ export default function WeeklyServiceManager() {
     setTimeout(() => {
       window.print();
     }, 100);
+  };
+
+  const handleDownloadPDF = async () => {
+    const printContent = document.querySelector('.print-content');
+    if (!printContent) return;
+
+    // Clone the print content
+    const clone = printContent.cloneNode(true);
+
+    // Create a container with exact print dimensions and styling
+    const container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-99999px';
+    container.style.top = '0';
+    container.style.width = '816px'; // 8.5in at 96dpi
+    container.style.background = 'white';
+    container.style.padding = '38px 48px 77px 48px'; // 0.4in 0.5in 0.8in 0.5in
+    container.style.fontFamily = 'Arial, sans-serif';
+    container.style.color = '#000';
+    container.appendChild(clone);
+
+    // Apply all print styles inline
+    const applyPrintStyles = (element) => {
+      // Header styles
+      const headers = element.querySelectorAll('.print-header');
+      headers.forEach(el => {
+        el.style.display = 'flex';
+        el.style.alignItems = 'flex-start';
+        el.style.justifyContent = 'space-between';
+        el.style.marginBottom = '12px';
+        el.style.paddingBottom = '8px';
+        el.style.borderBottom = '1px solid #d1d5db';
+      });
+
+      const logos = element.querySelectorAll('.print-logo');
+      logos.forEach(el => {
+        el.style.width = '50px';
+        el.style.height = '50px';
+        el.style.background = 'linear-gradient(135deg, #1F8A70 0%, #8DC63F 100%)';
+        el.style.borderRadius = '6px';
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.color = 'white';
+        el.style.fontSize = '20px';
+        el.style.fontWeight = 'bold';
+      });
+
+      const titles = element.querySelectorAll('.print-title');
+      titles.forEach(el => {
+        el.style.textAlign = 'center';
+        el.style.flex = '1';
+        el.style.margin = '0 20px';
+      });
+
+      const titleH1 = element.querySelectorAll('.print-title h1');
+      titleH1.forEach(el => {
+        el.style.fontSize = '22px';
+        el.style.fontWeight = 'bold';
+        el.style.margin = '0 0 2px 0';
+        el.style.textTransform = 'uppercase';
+        el.style.letterSpacing = '0.5px';
+      });
+
+      const titleP = element.querySelectorAll('.print-title p');
+      titleP.forEach(el => {
+        el.style.fontSize = '13px';
+        el.style.color = '#2563eb';
+        el.style.fontWeight = 'bold';
+        el.style.margin = '0';
+      });
+
+      const teamBoxes = element.querySelectorAll('.print-team-box');
+      teamBoxes.forEach(el => {
+        el.style.textAlign = 'right';
+        el.style.fontSize = '10px';
+        el.style.lineHeight = '1.4';
+        el.style.minWidth = '140px';
+      });
+
+      const teamBoxDivs = element.querySelectorAll('.print-team-box div');
+      teamBoxDivs.forEach(el => {
+        el.style.marginBottom = '1px';
+      });
+
+      const teamLabels = element.querySelectorAll('.print-team-label');
+      teamLabels.forEach(el => {
+        el.style.fontWeight = 'bold';
+        el.style.color = '#000';
+      });
+
+      const twoColumns = element.querySelectorAll('.print-two-columns');
+      twoColumns.forEach(el => {
+        el.style.display = 'grid';
+        el.style.gridTemplateColumns = '1fr 1fr';
+        el.style.gap = '16px';
+        el.style.marginBottom = '0';
+      });
+
+      const serviceColumns = element.querySelectorAll('.print-service-column');
+      serviceColumns.forEach(el => {
+        el.style.breakInside = 'avoid';
+      });
+
+      const serviceTimes = element.querySelectorAll('.print-service-time');
+      serviceTimes.forEach(el => {
+        el.style.fontSize = '18px';
+        el.style.fontWeight = 'bold';
+        el.style.color = '#dc2626';
+        el.style.marginBottom = '6px';
+        el.style.paddingBottom = '2px';
+        el.style.borderBottom = '1.5px solid #dc2626';
+      });
+
+      const rightServiceTimes = element.querySelectorAll('.print-service-column.right .print-service-time');
+      rightServiceTimes.forEach(el => {
+        el.style.color = '#2563eb';
+        el.style.borderColor = '#2563eb';
+      });
+
+      const segments = element.querySelectorAll('.print-segment');
+      segments.forEach(el => {
+        el.style.marginBottom = '6px';
+        el.style.paddingBottom = '5px';
+        el.style.borderBottom = '1px solid #e5e7eb';
+        el.style.fontSize = '9px';
+        el.style.lineHeight = '1.3';
+      });
+
+      const segmentTimes = element.querySelectorAll('.print-segment-time');
+      segmentTimes.forEach(el => {
+        el.style.fontWeight = 'bold';
+        el.style.color = '#dc2626';
+        el.style.fontSize = '12px';
+      });
+
+      const rightSegmentTimes = element.querySelectorAll('.print-service-column.right .print-segment-time');
+      rightSegmentTimes.forEach(el => {
+        el.style.color = '#2563eb';
+      });
+
+      const segmentTitles = element.querySelectorAll('.print-segment-title');
+      segmentTitles.forEach(el => {
+        el.style.fontWeight = 'bold';
+        el.style.textTransform = 'uppercase';
+        el.style.fontSize = '11px';
+        el.style.marginLeft = '4px';
+        el.style.color = '#000';
+      });
+
+      const segmentDetails = element.querySelectorAll('.print-segment-detail');
+      segmentDetails.forEach(el => {
+        el.style.marginLeft = '8px';
+        el.style.fontSize = '8px';
+        el.style.color = '#374151';
+        el.style.lineHeight = '1.3';
+        el.style.marginTop = '2px';
+      });
+
+      const names = element.querySelectorAll('.print-name');
+      names.forEach(el => {
+        el.style.color = '#8DC63F';
+        el.style.fontWeight = 'bold';
+        el.style.fontSize = '9px';
+      });
+
+      const coordinatorActions = element.querySelectorAll('.print-coordinator-actions');
+      coordinatorActions.forEach(el => {
+        el.style.marginTop = '6px';
+        el.style.padding = '4px 6px';
+        el.style.background = '#fffbeb';
+        el.style.borderLeft = '2px solid #fbbf24';
+        el.style.borderRadius = '2px';
+      });
+
+      const actionStrongs = element.querySelectorAll('.print-coordinator-actions strong');
+      actionStrongs.forEach(el => {
+        el.style.color = '#92400e';
+        el.style.fontSize = '7px';
+        el.style.display = 'block';
+        el.style.marginBottom = '2px';
+      });
+
+      const actionDivs = element.querySelectorAll('.print-coordinator-actions div');
+      actionDivs.forEach(el => {
+        el.style.marginLeft = '10px';
+        el.style.fontSize = '6.5px';
+        el.style.color = '#78350f';
+        el.style.lineHeight = '1.3';
+      });
+
+      const segmentSongs = element.querySelectorAll('.print-segment-songs');
+      segmentSongs.forEach(el => {
+        el.style.marginLeft = '8px';
+        el.style.fontSize = '8px';
+        el.style.lineHeight = '1.2';
+      });
+
+      const recesos = element.querySelectorAll('.print-receso');
+      recesos.forEach(el => {
+        el.style.background = '#f9fafb';
+        el.style.padding = '6px';
+        el.style.margin = '6px 0';
+        el.style.textAlign = 'center';
+        el.style.fontSize = '9px';
+        el.style.fontWeight = 'bold';
+        el.style.color = '#6b7280';
+        el.style.borderTop = '1px solid #d1d5db';
+        el.style.borderBottom = '1px solid #d1d5db';
+      });
+
+      const announcements = element.querySelectorAll('.print-announcements');
+      announcements.forEach(el => {
+        el.style.breakBefore = 'page';
+        el.style.paddingTop = '0';
+      });
+
+      const announcementsHeaders = element.querySelectorAll('.print-announcements-header');
+      announcementsHeaders.forEach(el => {
+        el.style.textAlign = 'center';
+        el.style.marginBottom = '16px';
+        el.style.paddingBottom = '10px';
+        el.style.borderBottom = '1px solid #d1d5db';
+      });
+
+      const announcementsTitles = element.querySelectorAll('.print-announcements-title');
+      announcementsTitles.forEach(el => {
+        el.style.fontSize = '22px';
+        el.style.fontWeight = 'bold';
+        el.style.textTransform = 'uppercase';
+        el.style.marginBottom = '4px';
+        el.style.letterSpacing = '0.5px';
+      });
+
+      const announcementLists = element.querySelectorAll('.print-announcement-list');
+      announcementLists.forEach(el => {
+        el.style.paddingLeft = '30px';
+        el.style.display = 'grid';
+        el.style.gridTemplateColumns = '1fr 1fr';
+        el.style.gap = '12px';
+      });
+
+      const announcementItems = element.querySelectorAll('.print-announcement-item');
+      announcementItems.forEach(el => {
+        el.style.marginBottom = '12px';
+        el.style.paddingBottom = '10px';
+        el.style.borderBottom = '1px solid #e5e7eb';
+        el.style.breakInside = 'avoid';
+        el.style.fontSize = '10px';
+        el.style.lineHeight = '1.4';
+      });
+
+      const announcementHeaders = element.querySelectorAll('.print-announcement-header');
+      announcementHeaders.forEach(el => {
+        el.style.display = 'flex';
+        el.style.alignItems = 'baseline';
+        el.style.gap = '8px';
+        el.style.marginBottom = '4px';
+      });
+
+      const announcementTitles = element.querySelectorAll('.print-announcement-title');
+      announcementTitles.forEach(el => {
+        el.style.fontSize = '11px';
+        el.style.fontWeight = 'bold';
+        el.style.color = '#000';
+        el.style.textTransform = 'uppercase';
+      });
+
+      const announcementDates = element.querySelectorAll('.print-announcement-date');
+      announcementDates.forEach(el => {
+        el.style.fontSize = '9px';
+        el.style.fontWeight = 'bold';
+        el.style.color = '#2563eb';
+      });
+
+      const announcementContents = element.querySelectorAll('.print-announcement-content');
+      announcementContents.forEach(el => {
+        el.style.fontSize = '9px';
+        el.style.lineHeight = '1.3';
+        el.style.color = '#374151';
+        el.style.marginBottom = '3px';
+      });
+
+      const announcementInstructions = element.querySelectorAll('.print-announcement-instructions');
+      announcementInstructions.forEach(el => {
+        el.style.fontSize = '8px';
+        el.style.background = '#fef3c7';
+        el.style.padding = '4px 6px';
+        el.style.marginTop = '4px';
+        el.style.fontStyle = 'italic';
+        el.style.borderLeft = '2px solid #f59e0b';
+      });
+
+      const footers = element.querySelectorAll('.print-footer');
+      footers.forEach(el => {
+        el.style.width = '100%';
+        el.style.height = '35px';
+        el.style.background = 'linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D9DF32 100%)';
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.color = 'white';
+        el.style.fontSize = '16px';
+        el.style.fontWeight = 'bold';
+        el.style.textTransform = 'lowercase';
+        el.style.marginTop = '20px';
+      });
+    };
+
+    clone.style.display = 'block';
+    applyPrintStyles(container);
+    document.body.appendChild(container);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgWidth = 216;
+      const pageHeight = 279;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      const pdf = new jsPDF('p', 'mm', 'letter');
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`Servicio-${selectedDate}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error al generar PDF');
+    } finally {
+      document.body.removeChild(container);
+    }
   };
 
 
@@ -1192,9 +1542,13 @@ export default function WeeklyServiceManager() {
               <span>Guardando...</span>
             </div>
           )}
-          <Button className="bg-pdv-teal text-white" onClick={handlePrint}>
+          <Button className="bg-pdv-teal text-white" onClick={handleDownloadPDF}>
             <Printer className="w-4 h-4 mr-2" />
-            Imprimir / Guardar PDF
+            Descargar PDF
+          </Button>
+          <Button variant="outline" onClick={handlePrint}>
+            <Printer className="w-4 h-4 mr-2" />
+            Imprimir
           </Button>
         </div>
       </div>
