@@ -1584,7 +1584,7 @@ export default function WeeklyServiceManager() {
           .print-two-columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16pt;
+            gap: 20pt;
             margin-bottom: 0;
           }
 
@@ -1593,48 +1593,50 @@ export default function WeeklyServiceManager() {
           }
 
           .print-service-time {
-            font-size: 14pt;
+            font-size: 16pt;
             font-weight: bold;
-            color: #FF0000;
-            margin-bottom: 8pt;
-            padding-bottom: 0;
-            border-bottom: none;
+            color: #1F5B8C;
+            margin-bottom: 10pt;
+            padding-bottom: 4pt;
+            border-bottom: 2pt solid #1F5B8C;
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
           }
 
           .print-service-column.right .print-service-time {
-            color: #0000FF;
+            color: #1F5B8C;
           }
 
           .print-segment {
-            margin-bottom: 8pt;
+            margin-bottom: 12pt;
             padding: 0;
             background: transparent;
             border: none;
             font-size: 11pt;
-            line-height: 1.2;
+            line-height: 1.35;
             break-inside: avoid;
             page-break-inside: avoid;
           }
 
           .print-segment-time {
             font-weight: bold;
-            color: #FF0000;
-            font-size: 14pt;
+            color: #B53737;
+            font-size: 11pt;
             display: inline;
-            margin-right: 4pt;
+            margin-right: 6pt;
           }
 
           .print-service-column.right .print-segment-time {
-            color: #0000FF;
+            color: #B53737;
           }
 
           .print-segment-title {
-            font-weight: 600;
-            text-transform: capitalize;
-            font-size: 12pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 11pt;
             margin-left: 0;
-            color: #000;
-            letter-spacing: 0;
+            color: #1a1a1a;
+            letter-spacing: 0.25pt;
             display: inline;
             padding-bottom: 0;
             border-bottom: none;
@@ -1644,8 +1646,8 @@ export default function WeeklyServiceManager() {
           .print-segment-detail {
             margin-left: 0;
             font-size: 11pt;
-            color: #000;
-            line-height: 1.2;
+            color: #374151;
+            line-height: 1.35;
             margin-top: 2pt;
             margin-bottom: 2pt;
             padding: 0;
@@ -1655,7 +1657,7 @@ export default function WeeklyServiceManager() {
           }
 
           .print-name {
-            color: #000;
+            color: #8DC63F;
             font-weight: bold;
             font-size: 11pt;
           }
@@ -1663,12 +1665,12 @@ export default function WeeklyServiceManager() {
           .print-duration {
             font-size: 11pt;
             font-weight: 400;
-            color: #000;
+            color: #6b7280;
           }
 
           .print-note-text {
             font-size: 10pt;
-            color: #000;
+            color: #6b7280;
             font-style: italic;
           }
 
