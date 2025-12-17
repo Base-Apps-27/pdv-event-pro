@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Bold, Italic, List, AlertTriangle, Loader2, Wand2 } from "lucide-react";
+import { List, AlertTriangle, Loader2, Wand2 } from "lucide-react";
 
 // Character limits - static only enforces hard limits
 const LIMITS = {
@@ -13,44 +13,57 @@ const LIMITS = {
   date: 50
 };
 
-// Simple rich text editor with limited formatting
+// Simple rich text editor with limited formatting - uses plain text with bullet points
 function RichTextArea({ value, onChange, placeholder, maxLength, rows = 4, id }) {
   const [charCount, setCharCount] = useState(0);
   const textareaRef = React.useRef(null);
   
   useEffect(() => {
-    // Strip HTML tags for character count
-    const plainText = (value || '').replace(/<[^>]*>/g, '');
-    setCharCount(plainText.length);
+    // Count characters directly (no HTML)
+    setCharCount((value || '').length);
   }, [value]);
   
   const isOverLimit = charCount > maxLength;
   const isNearLimit = charCount > maxLength * 0.85;
   
-  const applyFormatting = (tag) => {
+  const insertAtCursor = (textToInsert) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const selectedText = value.substring(start, end);
+    const newValue = (value || '').substring(0, start) + textToInsert + (value || '').substring(end);
+    onChange(newValue);
     
-    let formattedText = '';
-    if (tag === 'b') {
-      formattedText = `<b>${selectedText}</b>`;
-    } else if (tag === 'i') {
-      formattedText = `<i>${selectedText}</i>`;
-    } else if (tag === 'ul') {
+    // Set cursor position after inserted text
+    setTimeout(() => {
+      textarea.selectionStart = textarea.selectionEnd = start + textToInsert.length;
+      textarea.focus();
+    }, 0);
+  };
+  
+  const addBulletPoints = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = (value || '').substring(start, end);
+    
+    if (selectedText) {
+      // Convert selected lines to bullet points
       const lines = selectedText.split('\n').filter(l => l.trim());
       if (lines.length > 3) {
-        alert('Máximo 3 puntos de lista permitidos / Maximum 3 bullet points allowed');
+        alert('Máximo 3 puntos de lista / Maximum 3 bullet points');
         return;
       }
-      formattedText = lines.map(line => `• ${line.replace(/^[•\-]\s*/, '')}`).join('\n');
+      const bulleted = lines.map(line => `• ${line.replace(/^[•\-]\s*/, '')}`).join('\n');
+      const newValue = (value || '').substring(0, start) + bulleted + (value || '').substring(end);
+      onChange(newValue);
+    } else {
+      // Insert empty bullet point at cursor
+      insertAtCursor('• ');
     }
-    
-    const newValue = value.substring(0, start) + formattedText + value.substring(end);
-    onChange(newValue);
   };
   
   return (
@@ -60,32 +73,16 @@ function RichTextArea({ value, onChange, placeholder, maxLength, rows = 4, id })
           type="button"
           variant="outline"
           size="sm"
-          className="h-7 w-7 p-0"
-          onClick={() => applyFormatting('b')}
-          title="Negrita / Bold"
+          className="h-7 px-2 text-xs"
+          onClick={addBulletPoints}
+          title="Lista / List"
         >
-          <Bold className="w-3 h-3" />
+          <List className="w-3 h-3 mr-1" />
+          Lista
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 w-7 p-0"
-          onClick={() => applyFormatting('i')}
-          title="Itálica / Italic"
-        >
-          <Italic className="w-3 h-3" />
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 w-7 p-0"
-          onClick={() => applyFormatting('ul')}
-          title="Lista (máx 3) / List (max 3)"
-        >
-          <List className="w-3 h-3" />
-        </Button>
+        <span className="text-xs text-gray-400 self-center ml-2">
+          Use • para viñetas / Use • for bullets
+        </span>
       </div>
       <textarea
         ref={textareaRef}
