@@ -11,6 +11,8 @@ import ServicePdfPage1 from "./ServicePdfPage1";
 import ServicePdfPage2 from "./ServicePdfPage2";
 import PdfStyles from "./PdfStyles";
 import { base44 } from "@/api/base44Client";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 // US Letter at 96 DPI: 816 x 1056px, content area with 48px margins
 const PAGE_HEIGHT = 1056;
@@ -93,6 +95,8 @@ export default function ServicePdfPreview({
     setAutoFitting(false);
   }, [checkPageFit]);
 
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
   const handlePrint = () => {
     if (!canOutput) {
       alert('El contenido excede los límites de página. Ajuste la escala o reduzca el contenido.\n\nContent exceeds page limits. Adjust scale or reduce content.');
@@ -110,14 +114,75 @@ export default function ServicePdfPreview({
       return;
     }
     
-    // Save scales
-    onSaveScales({ page1: page1Scale, page2: page2Scale });
+    setIsGeneratingPDF(true);
     
-    // For now, use print dialog with "Save as PDF" - true PDF generation requires server-side
-    onOpenChange(false);
-    setTimeout(() => {
-      window.print();
-    }, 200);
+    try {
+      // Save scales
+      onSaveScales({ page1: page1Scale, page2: page2Scale });
+      
+      // Create PDF using jsPDF - US Letter size in points (612 x 792)
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'letter'
+      });
+      
+      // Capture Page 1
+      const page1Element = page1Ref.current;
+      if (page1Element) {
+        const canvas1 = await html2canvas(page1Element, {
+          scale: 2, // Higher quality
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          width: 816,
+          height: 1056
+        });
+        
+        const imgData1 = canvas1.toDataURL('image/png');
+        // Add image to fit US Letter (612 x 792 points)
+        pdf.addImage(imgData1, 'PNG', 0, 0, 612, 792);
+      }
+      
+      // Add second page
+      pdf.addPage();
+      
+      // Temporarily switch to page 2 to capture it
+      const currentTab = activeTab;
+      setActiveTab('page2');
+      
+      // Wait for render
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Capture Page 2
+      const page2Element = page2Ref.current;
+      if (page2Element) {
+        const canvas2 = await html2canvas(page2Element, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          width: 816,
+          height: 1056
+        });
+        
+        const imgData2 = canvas2.toDataURL('image/png');
+        pdf.addImage(imgData2, 'PNG', 0, 0, 612, 792);
+      }
+      
+      // Restore original tab
+      setActiveTab(currentTab);
+      
+      // Download the PDF
+      const fileName = `Orden-de-Servicio-${selectedDate}.pdf`;
+      pdf.save(fileName);
+      
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert('Error al generar PDF / Error generating PDF: ' + error.message);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
   
   const handleSendEmail = async () => {
@@ -212,12 +277,20 @@ export default function ServicePdfPreview({
               <Button 
                 onClick={handleDownloadPDF}
                 variant="outline"
-                disabled={!canOutput}
+                disabled={!canOutput || isGeneratingPDF}
                 className={!canOutput ? 'opacity-50 cursor-not-allowed' : ''}
-                title="Usar 'Guardar como PDF' en el diálogo / Use 'Save as PDF' in the dialog"
               >
-                <Download className="w-4 h-4 mr-2" />
-                Descargar / Download
+                {isGeneratingPDF ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generando... / Generating...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Descargar / Download
+                  </>
+                )}
               </Button>
               <Button 
                 onClick={handlePrint} 
