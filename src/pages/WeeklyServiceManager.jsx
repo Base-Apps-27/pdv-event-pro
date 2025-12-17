@@ -483,53 +483,12 @@ export default function WeeklyServiceManager() {
     debouncedSave(`team-${field}-${service}`);
   };
 
-  const handlePrint = async () => {
-    try {
-      setIsGeneratingPdf(true);
-      
-      const pdfData = await generatePdf({
-        page1Ref,
-        page2Ref: selectedAnnouncements.length > 0 ? page2Ref : null,
-        selectedDate,
-        onProgress: setPdfProgress
-      });
-
-      const blob = new Blob([pdfData], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const printWindow = window.open(url, '_blank');
-      
-      if (!printWindow) {
-        alert('No se pudo abrir la ventana de impresión');
-      }
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error al generar PDF: ' + error.message);
-    } finally {
-      setIsGeneratingPdf(false);
-      setPdfProgress('');
-    }
+  const handlePrint = () => {
+    window.print();
   };
 
-  const handleDownloadPDF = async () => {
-    try {
-      setIsGeneratingPdf(true);
-
-      const pdfData = await generatePdf({
-        page1Ref,
-        page2Ref: selectedAnnouncements.length > 0 ? page2Ref : null,
-        selectedDate,
-        onProgress: setPdfProgress
-      });
-
-      await downloadPdf(pdfData, `servicio-${selectedDate}.pdf`);
-      
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error al generar PDF: ' + error.message);
-    } finally {
-      setIsGeneratingPdf(false);
-      setPdfProgress('');
-    }
+  const handleDownloadPDF = () => {
+    window.print();
   };
 
 
