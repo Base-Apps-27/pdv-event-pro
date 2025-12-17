@@ -14,40 +14,54 @@ export default function ServicePdfPage2({
   // Scale affects font size of content only, not page dimensions
   const fontScale = scale / 100;
   
-  // Get all selected announcements in order
-  const allAnnouncements = [...fixedAnnouncements, ...dynamicAnnouncements]
-    .filter(ann => selectedAnnouncements.includes(ann.id));
+  // Separate fixed (verbose scripts) from dynamic (compact events)
+  const selectedFixed = fixedAnnouncements.filter(ann => selectedAnnouncements.includes(ann.id));
+  const selectedDynamic = dynamicAnnouncements.filter(ann => selectedAnnouncements.includes(ann.id));
   
-  // Split into two columns for balanced layout
-  const midpoint = Math.ceil(allAnnouncements.length / 2);
-  const leftColumn = allAnnouncements.slice(0, midpoint);
-  const rightColumn = allAnnouncements.slice(midpoint);
-  
-  const renderAnnouncement = (ann, idx) => {
+  // Left column: fixed announcements (full format with CUE)
+  const renderFullAnnouncement = (ann) => {
     const title = ann.isEvent ? ann.name : ann.title;
     const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
-    const date = ann.date_of_occurrence || ann.start_date;
-    const endDate = ann.end_date;
     const instructions = ann.instructions;
     
     return (
       <div key={ann.id} className="pdf-announcement">
         <div className="pdf-announcement-header">
           <span className="pdf-announcement-title">{title}</span>
-          {date && (
-            <span className="pdf-announcement-date">
-              {date}{endDate && ` — ${endDate}`}
-            </span>
-          )}
         </div>
-        <div className="pdf-announcement-content">
-          {content}
-        </div>
+        {content && (
+          <div className="pdf-announcement-content">
+            {content}
+          </div>
+        )}
         {instructions && (
           <div className="pdf-announcement-cue">
             <span className="pdf-cue-label">CUE:</span> {instructions}
           </div>
         )}
+      </div>
+    );
+  };
+  
+  // Right column: dynamic events (compact format - title + date only)
+  const renderCompactEvent = (ann) => {
+    const title = ann.isEvent ? ann.name : ann.title;
+    const date = ann.date_of_occurrence || ann.start_date;
+    const endDate = ann.end_date;
+    // For events, show a brief one-liner if available
+    const brief = ann.isEvent 
+      ? (ann.theme || ann.location || '') 
+      : '';
+    
+    return (
+      <div key={ann.id} className="pdf-event-compact">
+        <span className="pdf-event-title">{title}</span>
+        {date && (
+          <span className="pdf-event-date">
+            {date}{endDate && ` — ${endDate}`}
+          </span>
+        )}
+        {brief && <span className="pdf-event-brief">{brief}</span>}
       </div>
     );
   };
@@ -65,13 +79,17 @@ export default function ServicePdfPage2({
         </div>
       </div>
       
-      {/* Two Column Announcements - scalable content */}
+      {/* Two Column Layout - scalable content */}
       <div className="pdf-announcements-grid" style={{ fontSize: `${10 * fontScale}pt` }}>
+        {/* Left: Full announcements with scripts/CUEs */}
         <div className="pdf-announcements-column">
-          {leftColumn.map((ann, idx) => renderAnnouncement(ann, idx))}
+          {selectedFixed.map(ann => renderFullAnnouncement(ann))}
         </div>
-        <div className="pdf-announcements-column">
-          {rightColumn.map((ann, idx) => renderAnnouncement(ann, idx + midpoint))}
+        
+        {/* Right: Compact event list */}
+        <div className="pdf-events-column">
+          <div className="pdf-events-header">Próximos Eventos / Upcoming Events</div>
+          {selectedDynamic.map(ann => renderCompactEvent(ann))}
         </div>
       </div>
       
