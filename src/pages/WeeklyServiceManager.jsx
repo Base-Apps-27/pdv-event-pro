@@ -716,13 +716,18 @@ export default function WeeklyServiceManager() {
   return (
     <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
         @media print {
-          @page { size: letter; margin: 0.6in 0.5in; }
+          @page { size: letter; margin: 0.5in; }
           body { 
             -webkit-print-color-adjust: exact; 
             print-color-adjust: exact;
-            font-family: Calibri, Arial, sans-serif;
+            font-family: 'Inter', Helvetica, Arial, sans-serif;
             background: white;
+            font-size: 10.5pt;
+            line-height: 1.3;
+            color: #374151;
           }
           
           * {
@@ -731,19 +736,18 @@ export default function WeeklyServiceManager() {
 
           .print-header {
             position: relative;
-            margin-bottom: 16pt;
-            padding-bottom: 0;
-            border-bottom: none;
+            text-align: center;
+            margin-bottom: 14pt;
+            padding-bottom: 8pt;
+            border-bottom: 1pt solid #e5e7eb;
           }
 
           .print-logo {
             position: absolute;
             left: 0;
             top: 0;
-            width: 60px;
-            height: 60px;
-            background: none;
-            flex-shrink: 0;
+            width: 50px;
+            height: 50px;
           }
 
           .print-logo img {
@@ -754,52 +758,44 @@ export default function WeeklyServiceManager() {
 
           .print-title {
             text-align: center;
-            padding-left: 0;
-            padding-right: 0;
+            padding: 0 60px;
           }
 
           .print-title h1 {
-            font-size: 20pt;
-            font-weight: bold;
-            margin: 0 0 3pt 0;
+            font-size: 18pt;
+            font-weight: 600;
+            margin: 0 0 4pt 0;
             text-transform: uppercase;
             color: #000000;
-            letter-spacing: 0.5pt;
+            letter-spacing: 0.5px;
           }
 
           .print-title p {
             font-size: 11pt;
-            color: #374151;
-            font-weight: 500;
-            margin: 0 0 6pt 0;
+            color: #4b5563;
+            font-weight: 400;
+            margin: 0 0 8pt 0;
           }
 
           .print-team-info {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 12pt;
+            gap: 4pt;
             flex-wrap: wrap;
-            padding: 4pt 0 0 0;
-            border-top: 1pt solid #d1d5db;
-            margin-top: 4pt;
-            font-size: 8.5pt;
-            color: #374151;
-          }
-
-          .print-team-info > div {
-            white-space: nowrap;
+            font-size: 9pt;
+            color: #4b5563;
           }
 
           .print-team-label {
-            font-weight: 700;
-            color: #1a1a1a;
+            font-weight: 600;
+            color: #1f2937;
           }
 
           .print-two-columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20pt;
+            gap: 24pt;
             margin-bottom: 0;
           }
 
@@ -808,94 +804,75 @@ export default function WeeklyServiceManager() {
           }
 
           .print-service-time {
-            font-size: 16pt;
-            font-weight: bold;
-            color: #1F5B8C;
+            font-size: 14pt;
+            font-weight: 600;
+            color: #000000;
             margin-bottom: 10pt;
-            padding-bottom: 4pt;
-            border-bottom: 2pt solid #1F5B8C;
+            padding-bottom: 6pt;
+            border-bottom: 2pt solid #1f2937;
             text-transform: uppercase;
-            letter-spacing: 0.5pt;
-          }
-
-          .print-service-column.right .print-service-time {
-            color: #1F5B8C;
+            letter-spacing: 0.5px;
           }
 
           .print-segment {
-            margin-bottom: 12pt;
-            padding: 0;
-            background: transparent;
-            border: none;
-            font-size: 11pt;
-            line-height: 1.35;
+            margin-bottom: 10pt;
+            padding-bottom: 8pt;
+            border-bottom: 1pt solid #f3f4f6;
+            font-size: 10.5pt;
+            line-height: 1.3;
             break-inside: avoid;
             page-break-inside: avoid;
           }
 
+          .print-segment:last-child {
+            border-bottom: none;
+          }
+
           .print-segment-time {
-            font-weight: bold;
-            color: #B53737;
-            font-size: 11pt;
+            font-weight: 600;
+            color: #dc2626;
+            font-size: 10.5pt;
             display: inline;
             margin-right: 6pt;
           }
 
-          .print-service-column.right .print-segment-time {
-            color: #B53737;
-          }
-
           .print-segment-title {
-            font-weight: bold;
+            font-weight: 600;
             text-transform: uppercase;
             font-size: 11pt;
-            margin-left: 0;
-            color: #1a1a1a;
-            letter-spacing: 0.25pt;
+            color: #000000;
+            letter-spacing: 0.25px;
             display: inline;
-            padding-bottom: 0;
-            border-bottom: none;
-            margin-bottom: 0;
           }
 
           .print-segment-detail {
-            margin-left: 0;
-            font-size: 11pt;
+            font-size: 10.5pt;
             color: #374151;
-            line-height: 1.35;
+            line-height: 1.3;
             margin-top: 2pt;
-            margin-bottom: 2pt;
-            padding: 0;
-            background: transparent;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
+            padding-left: 4pt;
           }
 
           .print-name {
-            color: #8DC63F;
-            font-weight: bold;
-            font-size: 11pt;
+            color: #16a34a;
+            font-weight: 600;
           }
 
           .print-duration {
-            font-size: 11pt;
+            font-size: 10pt;
             font-weight: 400;
             color: #6b7280;
           }
 
           .print-note-text {
-            font-size: 10pt;
+            font-size: 9.5pt;
             color: #6b7280;
             font-style: italic;
           }
 
           .print-coordinator-actions {
             margin-top: 4pt;
-            margin-bottom: 2pt;
-            padding: 0;
-            background: transparent;
-            border-left: none;
-            break-inside: avoid;
+            padding-left: 4pt;
           }
 
           .print-coordinator-actions strong {
@@ -903,60 +880,54 @@ export default function WeeklyServiceManager() {
           }
 
           .print-coordinator-actions div {
-            margin-left: 0;
             font-size: 9.5pt;
             color: #6b7280;
             line-height: 1.25;
-            font-weight: 400;
             font-style: italic;
           }
 
           .print-segment-songs {
-            margin-left: 0;
-            margin-top: 3pt;
-            margin-bottom: 2pt;
-            padding: 0;
-            font-size: 11pt;
-            line-height: 1.3;
-            background: transparent;
-            border-left: none;
+            margin-top: 4pt;
+            padding-left: 4pt;
+            font-size: 10pt;
+            line-height: 1.35;
           }
 
           .print-segment-songs div {
-            font-weight: 400;
             color: #374151;
           }
 
           .print-receso {
-            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12pt;
             padding: 8pt 0;
-            margin: 16pt 0;
-            text-align: center;
-            font-size: 13pt;
-            font-weight: bold;
-            color: #1F5B8C;
-            text-transform: uppercase;
-            letter-spacing: 0.5pt;
-            border-top: 2pt solid #1F5B8C;
-            border-bottom: 2pt solid #1F5B8C;
+            margin: 14pt 0;
+            font-size: 11pt;
+            font-weight: 600;
+            color: #1f2937;
+          }
+
+          .print-receso::before,
+          .print-receso::after {
+            content: '';
+            flex: 1;
+            height: 1pt;
+            background: #d1d5db;
           }
 
           .print-announcements {
             break-before: page;
-            padding-top: 0;
-            padding-left: 0;
-            padding-right: 0;
-            padding-bottom: 40pt;
+            padding-bottom: 28pt;
           }
 
           .print-announcements-logo {
             position: absolute;
             left: 0;
             top: 0;
-            width: 60px;
-            height: 60px;
-            background: none;
-            flex-shrink: 0;
+            width: 50px;
+            height: 50px;
           }
 
           .print-announcements-logo img {
@@ -967,100 +938,95 @@ export default function WeeklyServiceManager() {
 
           .print-announcements-header {
             position: relative;
+            text-align: center;
             margin-bottom: 14pt;
-            padding-bottom: 0;
-            border-bottom: none;
+            padding-bottom: 8pt;
+            border-bottom: 1pt solid #e5e7eb;
           }
 
           .print-announcements-title {
-            font-size: 20pt;
-            font-weight: bold;
+            font-size: 18pt;
+            font-weight: 600;
             text-transform: uppercase;
-            margin-bottom: 3pt;
+            margin: 0 0 4pt 0;
             color: #000000;
-            letter-spacing: 0.5pt;
+            letter-spacing: 0.5px;
           }
 
           .print-announcements-header p {
             font-size: 11pt;
-            font-weight: 500;
-            color: #374151;
+            font-weight: 400;
+            color: #4b5563;
             margin: 0;
           }
 
           .print-announcement-list {
-            padding-left: 0;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20pt;
             margin: 0;
+            padding: 0;
           }
 
           .print-announcement-item {
             margin-bottom: 10pt;
-            padding: 0;
-            border: none;
+            padding-bottom: 10pt;
+            border-bottom: 1pt solid #e5e7eb;
             break-inside: avoid;
             page-break-inside: avoid;
           }
 
+          .print-announcement-item:last-child {
+            border-bottom: none;
+          }
+
           .print-announcement-header {
-            display: block;
-            margin-bottom: 6pt;
-            padding-bottom: 4pt;
-            border-bottom: 1pt solid #d1d5db;
+            margin-bottom: 4pt;
           }
 
           .print-announcement-title {
-            font-size: 10pt;
-            font-weight: bold;
-            color: #1a1a1a;
+            font-size: 10.5pt;
+            font-weight: 600;
+            color: #000000;
             text-transform: uppercase;
+            letter-spacing: 0.25px;
             display: block;
-            line-height: 1.2;
-            letter-spacing: 0.25pt;
+            line-height: 1.3;
           }
 
           .print-announcement-date {
             font-size: 9.5pt;
-            font-weight: 600;
-            color: #B53737;
+            font-weight: 400;
+            color: #4b5563;
             display: block;
-            margin-top: 4pt;
+            margin-top: 2pt;
           }
 
           .print-announcement-content {
             font-size: 10pt;
-            line-height: 1.3;
+            line-height: 1.35;
             color: #374151;
-            margin-bottom: 0;
-            margin-top: 0;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            font-weight: 400;
+            white-space: pre-wrap;
           }
 
           .print-announcement-instructions {
+            margin-top: 6pt;
             font-size: 9pt;
-            background: transparent;
-            padding: 0;
-            margin-top: 4pt;
             font-style: italic;
-            border: none;
             color: #6b7280;
+            padding-left: 8pt;
+            border-left: 2pt solid #fbbf24;
             line-height: 1.25;
           }
 
           .print-announcement-instructions::before {
             content: "CUE: ";
-            display: inline;
-            font-size: 8pt;
-            font-weight: bold;
+            font-weight: 700;
             font-style: normal;
+            color: #1f2937;
             text-transform: uppercase;
-            letter-spacing: 0.5pt;
-            color: #1a1a1a;
-            margin-right: 4pt;
+            font-size: 8pt;
+            letter-spacing: 0.5px;
           }
 
           .print-footer {
@@ -1070,14 +1036,14 @@ export default function WeeklyServiceManager() {
             right: 0;
             width: 100%;
             height: 20pt;
-            background: linear-gradient(90deg, #8DC63F 0%, #1F8A70 100%);
+            background: linear-gradient(90deg, #16a34a 0%, #059669 100%) !important;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-size: 9pt;
             font-weight: 600;
-            letter-spacing: 0.5pt;
+            letter-spacing: 0.5px;
           }
 
           .print-content {
