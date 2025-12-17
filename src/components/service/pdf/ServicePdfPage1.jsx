@@ -5,7 +5,8 @@ import { es } from "date-fns/locale";
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png";
 
 export default function ServicePdfPage1({ serviceData, selectedDate, scale = 100 }) {
-  const scaleFactor = scale / 100;
+  // Scale affects font size of content only, not page dimensions
+  const fontScale = scale / 100;
   
   const renderServiceColumn = (timeSlot, isRight = false) => {
     const segments = serviceData?.[timeSlot]?.filter(s => s.type !== 'break') || [];
@@ -112,11 +113,8 @@ export default function ServicePdfPage1({ serviceData, selectedDate, scale = 100
   };
   
   return (
-    <div 
-      className="pdf-page pdf-page-1"
-      style={{ transform: `scale(${scaleFactor})`, transformOrigin: 'top left' }}
-    >
-      {/* Header */}
+    <div className="pdf-page pdf-page-1">
+      {/* Header - fixed size */}
       <div className="pdf-header">
         <img src={LOGO_URL} alt="Logo" className="pdf-logo" />
         <div className="pdf-header-content">
@@ -136,8 +134,8 @@ export default function ServicePdfPage1({ serviceData, selectedDate, scale = 100
         </div>
       </div>
       
-      {/* Two Column Grid */}
-      <div className="pdf-two-columns">
+      {/* Two Column Grid - scalable content */}
+      <div className="pdf-two-columns" style={{ fontSize: `${10.5 * fontScale}pt` }}>
         {renderServiceColumn("9:30am", false)}
         {renderServiceColumn("11:30am", true)}
       </div>

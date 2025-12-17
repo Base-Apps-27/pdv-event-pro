@@ -11,7 +11,8 @@ export default function ServicePdfPage2({
   selectedAnnouncements = [],
   scale = 100 
 }) {
-  const scaleFactor = scale / 100;
+  // Scale affects font size of content only, not page dimensions
+  const fontScale = scale / 100;
   
   // Get all selected announcements in order
   const allAnnouncements = [...fixedAnnouncements, ...dynamicAnnouncements]
@@ -52,11 +53,8 @@ export default function ServicePdfPage2({
   };
   
   return (
-    <div 
-      className="pdf-page pdf-page-2"
-      style={{ transform: `scale(${scaleFactor})`, transformOrigin: 'top left' }}
-    >
-      {/* Header */}
+    <div className="pdf-page pdf-page-2">
+      {/* Header - fixed size */}
       <div className="pdf-header">
         <img src={LOGO_URL} alt="Logo" className="pdf-logo" />
         <div className="pdf-header-content">
@@ -67,8 +65,8 @@ export default function ServicePdfPage2({
         </div>
       </div>
       
-      {/* Two Column Announcements */}
-      <div className="pdf-announcements-grid">
+      {/* Two Column Announcements - scalable content */}
+      <div className="pdf-announcements-grid" style={{ fontSize: `${10 * fontScale}pt` }}>
         <div className="pdf-announcements-column">
           {leftColumn.map((ann, idx) => renderAnnouncement(ann, idx))}
         </div>
