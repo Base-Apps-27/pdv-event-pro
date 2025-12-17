@@ -67,7 +67,6 @@ export default function WeeklyServiceManager() {
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [emailAddress, setEmailAddress] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
