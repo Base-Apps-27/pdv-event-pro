@@ -217,9 +217,10 @@ export default function ServicePdfPreview({
                 variant="outline"
                 disabled={!canOutput}
                 className={!canOutput ? 'opacity-50 cursor-not-allowed' : ''}
+                title="Abre el diálogo de impresión - seleccione 'Guardar como PDF' / Opens print dialog - select 'Save as PDF'"
               >
                 <Download className="w-4 h-4 mr-2" />
-                Descargar / Download
+                Guardar PDF / Save PDF
               </Button>
               <Button 
                 onClick={handlePrint} 
