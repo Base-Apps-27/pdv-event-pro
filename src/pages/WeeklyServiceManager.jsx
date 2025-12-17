@@ -16,9 +16,6 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
-import html2canvas from "html2canvas";
-import { ServiceOrderPage, AnnouncementsPage } from "@/components/service/ServicePdfRenderer";
-import { usePdfGenerator } from "@/components/service/usePdfGenerator";
 
 
 export default function WeeklyServiceManager() {
