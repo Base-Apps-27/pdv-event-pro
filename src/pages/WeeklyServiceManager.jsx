@@ -1106,12 +1106,6 @@ export default function WeeklyServiceManager() {
                     </div>
                   )}
 
-                  {segment.data?.projection_notes && (
-                    <div className="print-segment-detail print-note-text">
-                      - {segment.data.projection_notes}
-                    </div>
-                  )}
-
                   {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
                     <div className="print-segment-songs">
                       {segment.songs.filter(s => s.title).map((song, sIdx) => (
@@ -1212,13 +1206,7 @@ export default function WeeklyServiceManager() {
 
                   {segment.data?.translator && (
                     <div className="print-segment-detail">
-                      / traduce: <span className="print-name">{segment.data.translator}</span>
-                    </div>
-                  )}
-
-                  {segment.data?.projection_notes && (
-                    <div className="print-segment-detail print-note-text">
-                      - {segment.data.projection_notes}
+                      Traduce: <span className="print-name">{segment.data.translator}</span>
                     </div>
                   )}
 
