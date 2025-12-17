@@ -71,10 +71,15 @@ export default function WeeklyServiceManager() {
   const [emailAddress, setEmailAddress] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState('');
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
+  const page1Ref = useRef(null);
+  const page2Ref = useRef(null);
   const queryClient = useQueryClient();
+  
+  const { generatePdf, downloadPdf } = usePdfGenerator();
 
   // Keep ref in sync with state
   useEffect(() => {
