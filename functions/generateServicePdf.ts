@@ -3,131 +3,76 @@ import { jsPDF } from 'npm:jspdf@2.5.1';
 
 // ===== UTILITIES =====
 
-// Sanitize text for PDF (handle Spanish chars with Helvetica limitations)
-function sanitize(text) {
-  if (!text) return '';
-  return String(text)
-    .replace(/á/g, 'a').replace(/Á/g, 'A')
-    .replace(/é/g, 'e').replace(/É/g, 'E')
-    .replace(/í/g, 'i').replace(/Í/g, 'I')
-    .replace(/ó/g, 'o').replace(/Ó/g, 'O')
-    .replace(/ú/g, 'u').replace(/Ú/g, 'U')
-    .replace(/ñ/g, 'n').replace(/Ñ/g, 'N')
-    .replace(/¡/g, '!').replace(/¿/g, '?')
-    .replace(/ü/g, 'u').replace(/Ü/g, 'U');
-}
-
-// Fetch image as base64
 async function fetchImageAsBase64(url) {
   try {
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-    return `data:image/png;base64,${base64}`;
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return `data:image/png;base64,${btoa(binary)}`;
   } catch (e) {
     return null;
   }
 }
 
-// Format date in Spanish
 function formatDateSpanish(dateStr) {
   const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const date = new Date(dateStr + 'T12:00:00');
-  return `${date.getDate()} de ${months[date.getMonth()]}, ${date.getFullYear()}`;
+  return `Domingo ${date.getDate()} de ${months[date.getMonth()]}, ${date.getFullYear()}`;
 }
 
-// Calculate segment time
-function calculateSegmentTime(segments, index, startTime) {
+function calculateSegmentTime(segments, index, startHour, startMin) {
   let totalMinutes = 0;
   for (let i = 0; i < index; i++) {
-    if (segments[i].type !== 'break' && segments[i].type !== 'ministry') {
+    if (segments[i] && segments[i].type !== 'break') {
       totalMinutes += segments[i].duration || 0;
     }
   }
-  const [hours, minutes] = startTime.split(':').map(Number);
-  const segmentMinutes = hours * 60 + minutes + totalMinutes;
-  const h = Math.floor(segmentMinutes / 60);
-  const m = segmentMinutes % 60;
-  const period = h >= 12 ? 'p.m.' : 'a.m.';
+  const totalMins = startHour * 60 + startMin + totalMinutes;
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
   const h12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-  return `${h12}:${m.toString().padStart(2, '0')} ${period}`;
+  const suffix = h >= 12 ? 'PM' : 'AM';
+  return `${h12}:${m.toString().padStart(2, '0')} ${suffix}`;
 }
 
-// Strip "CUE:" prefix if already present
 function stripCuePrefix(text) {
   if (!text) return '';
-  return text.replace(/^CUE:\s*/i, '').trim();
+  return text.replace(/^CUE[:\s]*/gi, '').trim();
 }
 
-// ===== STYLES =====
-const STYLES = {
-  pageTitle: { size: 20, style: 'bold' },
-  sectionTitle: { size: 13, style: 'bold' },
-  segmentTitle: { size: 9.5, style: 'bold' },
-  body: { size: 8.5, style: 'normal' },
-  bodySmall: { size: 8, style: 'normal' },
-  cue: { size: 7.5, style: 'italic' },
-  footer: { size: 8, style: 'bold' }
-};
+// ASCII-safe text for Helvetica (jsPDF default font doesn't support full Unicode)
+function safeText(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/[áàâä]/gi, (c) => c.toLowerCase() === c ? 'a' : 'A')
+    .replace(/[éèêë]/gi, (c) => c.toLowerCase() === c ? 'e' : 'E')
+    .replace(/[íìîï]/gi, (c) => c.toLowerCase() === c ? 'i' : 'I')
+    .replace(/[óòôö]/gi, (c) => c.toLowerCase() === c ? 'o' : 'O')
+    .replace(/[úùûü]/gi, (c) => c.toLowerCase() === c ? 'u' : 'U')
+    .replace(/ñ/g, 'n').replace(/Ñ/g, 'N')
+    .replace(/¡/g, '!').replace(/¿/g, '?')
+    .replace(/[""]/g, '"').replace(/['']/g, "'");
+}
 
+// ===== COLORS =====
 const COLORS = {
   black: [26, 26, 26],
-  gray: [55, 65, 81],
+  gray: [75, 85, 99],
   grayLight: [107, 114, 128],
-  red: [181, 55, 55],
+  grayBorder: [229, 231, 235],
+  red: [185, 28, 28],
   green: [141, 198, 63],
-  blue: [31, 95, 140],
+  greenDark: [34, 139, 34],
+  teal: [31, 138, 112],
   white: [255, 255, 255],
-  border: [209, 213, 219]
+  cueBoxBg: [254, 243, 199],
+  cueBoxBorder: [251, 191, 36],
+  cueBoxText: [146, 64, 14]
 };
-
-// ===== TWO-COLUMN ENGINE =====
-class TwoColumnLayout {
-  constructor(doc, config) {
-    this.doc = doc;
-    this.pageWidth = doc.internal.pageSize.getWidth();
-    this.pageHeight = doc.internal.pageSize.getHeight();
-    this.margin = config.margin || 36;
-    this.gutter = config.gutter || 16;
-    this.headerHeight = config.headerHeight || 0;
-    this.footerHeight = config.footerHeight || 25;
-    this.colWidth = (this.pageWidth - this.margin * 2 - this.gutter) / 2;
-    this.col1X = this.margin;
-    this.col2X = this.margin + this.colWidth + this.gutter;
-    this.maxY = this.pageHeight - this.margin - this.footerHeight;
-    this.y = [this.headerHeight, this.headerHeight]; // [col0, col1]
-    this.scaleFactor = 1;
-  }
-
-  getX(col) {
-    return col === 0 ? this.col1X : this.col2X;
-  }
-
-  getY(col) {
-    return this.y[col];
-  }
-
-  addHeight(col, height) {
-    this.y[col] += height * this.scaleFactor;
-  }
-
-  setY(col, val) {
-    this.y[col] = val;
-  }
-
-  needsScale() {
-    return Math.max(this.y[0], this.y[1]) > this.maxY;
-  }
-
-  calculateScale(contentHeights) {
-    const maxContent = Math.max(...contentHeights);
-    const available = this.maxY - this.headerHeight;
-    if (maxContent > available) {
-      return Math.max(0.7, available / maxContent);
-    }
-    return 1;
-  }
-}
 
 // ===== MAIN HANDLER =====
 Deno.serve(async (req) => {
@@ -147,348 +92,352 @@ Deno.serve(async (req) => {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 36;
+    const margin = 40;
+    const contentWidth = pageWidth - margin * 2;
+    const colWidth = (contentWidth - 24) / 2;
+    const col1X = margin;
+    const col2X = margin + colWidth + 24;
+    const footerHeight = 28;
+    const maxContentY = pageHeight - footerHeight - 20;
 
-    // ===== PAGE 1: SERVICE ORDER =====
-    let headerY = margin;
+    // ==================== PAGE 1: SERVICE ORDER ====================
+    let y = margin;
 
     // Logo
     if (logoBase64) {
-      doc.addImage(logoBase64, 'PNG', margin, headerY, 45, 45);
+      doc.addImage(logoBase64, 'PNG', margin, y - 5, 28, 28);
     }
 
     // Title
-    doc.setFontSize(STYLES.pageTitle.size);
-    doc.setFont('helvetica', STYLES.pageTitle.style);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(...COLORS.black);
-    doc.text(sanitize('ORDEN DE SERVICIO'), pageWidth / 2, headerY + 18, { align: 'center' });
+    doc.text('ORDEN DE SERVICIO', pageWidth / 2, y + 10, { align: 'center' });
 
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...COLORS.gray);
-    doc.text(sanitize(`Domingo ${formatDateSpanish(selectedDate)}`), pageWidth / 2, headerY + 32, { align: 'center' });
+    doc.text(safeText(formatDateSpanish(selectedDate)), pageWidth / 2, y + 24, { align: 'center' });
 
-    // Team info
-    headerY += 50;
-    doc.setDrawColor(...COLORS.border);
-    doc.line(margin, headerY, pageWidth - margin, headerY);
-    headerY += 10;
+    y += 38;
 
-    doc.setFontSize(7.5);
-    const teamParts = [
-      `Coordinador: ${service.coordinators?.['9:30am'] || service.coordinators?.['11:30am'] || '-'}`,
-      `Ujier: ${service.ujieres?.['9:30am'] || service.ujieres?.['11:30am'] || '-'}`,
-      `Sonido: ${service.sound?.['9:30am'] || '-'}`,
-      `Luces: ${service.luces?.['9:30am'] || service.luces?.['11:30am'] || '-'}`
+    // Team info bar
+    doc.setDrawColor(...COLORS.grayBorder);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 12;
+
+    doc.setFontSize(8);
+    doc.setTextColor(...COLORS.gray);
+    const coord = service.coordinators?.['9:30am'] || service.coordinators?.['11:30am'] || '';
+    const ujier = service.ujieres?.['9:30am'] || service.ujieres?.['11:30am'] || '';
+    const sonido = service.sound?.['9:30am'] || '';
+    const luces = service.luces?.['9:30am'] || service.luces?.['11:30am'] || '';
+
+    let teamX = margin;
+    const teamItems = [
+      { label: 'Coordinador:', value: coord },
+      { label: 'Ujier:', value: ujier },
+      { label: 'Sonido:', value: sonido },
+      { label: 'Luces:', value: luces }
     ];
-    doc.text(sanitize(teamParts.join('  |  ')), pageWidth / 2, headerY, { align: 'center' });
-    headerY += 16;
+    teamItems.forEach((item, i) => {
+      doc.setFont('helvetica', 'bold');
+      doc.text(safeText(item.label), teamX, y);
+      const labelW = doc.getTextWidth(safeText(item.label));
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...COLORS.teal);
+      doc.text(safeText(item.value || '-'), teamX + labelW + 3, y);
+      doc.setTextColor(...COLORS.gray);
+      teamX += labelW + doc.getTextWidth(safeText(item.value || '-')) + 20;
+    });
+
+    y += 20;
 
     // Column headers
-    const layout = new TwoColumnLayout(doc, { margin, gutter: 16, headerHeight: headerY + 20, footerHeight: 50 });
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.black);
+    doc.text('9:30 A.M.', col1X, y);
+    doc.text('11:30 A.M.', col2X, y);
+    y += 6;
 
-    doc.setFontSize(STYLES.sectionTitle.size);
-    doc.setFont('helvetica', STYLES.sectionTitle.style);
-    doc.setTextColor(...COLORS.blue);
-    doc.text('9:30 A.M.', layout.col1X, headerY);
-    doc.text('11:30 A.M.', layout.col2X, headerY);
-
-    doc.setDrawColor(...COLORS.blue);
-    doc.setLineWidth(1.5);
-    doc.line(layout.col1X, headerY + 4, layout.col1X + 60, headerY + 4);
-    doc.line(layout.col2X, headerY + 4, layout.col2X + 65, headerY + 4);
-
-    // Pre-calculate content height for scaling
+    // Segment rendering
     const segments930 = (service['9:30am'] || []).filter(s => s.type !== 'break');
     const segments1130 = (service['11:30am'] || []).filter(s => s.type !== 'break');
 
-    // Estimate heights
-    const estimateSegmentHeight = (seg) => {
-      let h = 14; // title
-      if (seg.data?.leader) h += 10;
-      if (seg.data?.translator) h += 10;
-      if (seg.songs) h += seg.songs.filter(s => s.title).length * 9;
-      if (seg.data?.ministry_leader) h += 10;
-      if (seg.data?.presenter && !seg.data?.ministry_leader) h += 10;
-      if (seg.data?.preacher) h += 10;
-      if (seg.data?.title) h += 10;
-      if (seg.data?.verse) h += 9;
-      if (seg.actions?.length) h += seg.actions.length * 8;
-      return h + 5;
-    };
+    let y1 = y;
+    let y2 = y;
 
-    const height1 = segments930.reduce((sum, seg) => sum + estimateSegmentHeight(seg), 0);
-    const height2 = segments1130.reduce((sum, seg) => sum + estimateSegmentHeight(seg), 0);
-    const scale = layout.calculateScale([height1, height2]);
+    const renderSegment = (seg, x, startY, colW, allSegs, idx, startH, startM) => {
+      let cy = startY;
+      const time = calculateSegmentTime(allSegs, idx, startH, startM);
 
-    // Render segment helper
-    const renderSegment = (seg, col, segments, idx, startTimeStr) => {
-      const x = layout.getX(col);
-      let y = layout.getY(col);
-      const segTime = calculateSegmentTime(segments, idx, startTimeStr);
-      const lineH = 10 * scale;
-      const smallLineH = 8 * scale;
-
-      // Time
-      doc.setFontSize(STYLES.segmentTitle.size * scale);
-      doc.setFont('helvetica', STYLES.segmentTitle.style);
+      // Time + Title line
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'bold');
       doc.setTextColor(...COLORS.red);
-      doc.text(segTime, x, y);
+      doc.text(time, x, cy);
 
-      // Title
       doc.setTextColor(...COLORS.black);
-      const titleX = x + 48;
-      doc.text(sanitize((seg.title || '').toUpperCase()), titleX, y);
+      const timeW = doc.getTextWidth(time);
+      const title = safeText((seg.title || '').toUpperCase());
+      doc.text(title, x + timeW + 6, cy);
 
-      // Duration
       if (seg.duration) {
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(...COLORS.grayLight);
-        doc.setFontSize(STYLES.bodySmall.size * scale);
-        const titleWidth = doc.getTextWidth(sanitize((seg.title || '').toUpperCase()));
-        doc.text(`(${seg.duration} min)`, titleX + titleWidth + 4, y);
+        doc.setFontSize(8);
+        const titleW = doc.getTextWidth(title);
+        doc.text(`(${seg.duration} mins)`, x + timeW + titleW + 12, cy);
       }
 
-      y += lineH + 2;
-      doc.setFontSize(STYLES.body.size * scale);
+      cy += 11;
+
+      // Details
+      doc.setFontSize(8.5);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...COLORS.gray);
 
-      // Leader
+      // Leader with "Dirige: P. Name" format
       if (seg.data?.leader) {
-        doc.text(sanitize('Dirige: '), x, y);
-        doc.setTextColor(...COLORS.green);
+        doc.text('Dirige: ', x, cy);
+        doc.setTextColor(...COLORS.teal);
         doc.setFont('helvetica', 'bold');
-        doc.text(sanitize(seg.data.leader), x + 32, y);
-        doc.setTextColor(...COLORS.gray);
+        doc.text(safeText('P. ' + seg.data.leader), x + doc.getTextWidth('Dirige: '), cy);
         doc.setFont('helvetica', 'normal');
-        y += lineH;
+        doc.setTextColor(...COLORS.gray);
+        cy += 10;
       }
 
-      // Translator
-      if (seg.data?.translator) {
-        doc.text(sanitize('Traduce: '), x, y);
-        doc.setTextColor(...COLORS.green);
-        doc.setFont('helvetica', 'bold');
-        doc.text(sanitize(seg.data.translator), x + 38, y);
-        doc.setTextColor(...COLORS.gray);
+      // Sub-notes (projection notes, etc)
+      if (seg.data?.projection_notes) {
+        doc.setFontSize(8);
+        doc.setTextColor(...COLORS.grayLight);
+        doc.setFont('helvetica', 'italic');
+        doc.text(safeText('- ' + seg.data.projection_notes), x, cy);
         doc.setFont('helvetica', 'normal');
-        y += lineH;
+        cy += 9;
       }
 
       // Songs
       if (seg.songs) {
+        doc.setFontSize(8);
+        doc.setTextColor(...COLORS.gray);
         seg.songs.filter(s => s.title).forEach(s => {
-          doc.text(sanitize(`- ${s.title}${s.lead ? ` (${s.lead})` : ''}`), x, y);
-          y += smallLineH + 1;
+          const songLine = `- ${s.title}${s.lead ? ` (${s.lead})` : ''}`;
+          doc.text(safeText(songLine), x, cy);
+          cy += 9;
         });
       }
 
-      // Ministry leader
+      // Ministry section
       if (seg.data?.ministry_leader) {
-        doc.text(sanitize('Ministracion: '), x, y);
-        doc.setTextColor(...COLORS.green);
+        doc.setFontSize(8.5);
         doc.setFont('helvetica', 'bold');
-        doc.text(sanitize(seg.data.ministry_leader), x + 52, y);
-        doc.setTextColor(...COLORS.gray);
+        doc.setTextColor(...COLORS.black);
+        doc.text(safeText('Ministracion de Sanidad y Milagros'), x, cy);
+        cy += 10;
+        doc.setTextColor(...COLORS.teal);
+        doc.text(safeText('P. ' + seg.data.ministry_leader), x, cy);
         doc.setFont('helvetica', 'normal');
-        y += lineH;
+        doc.setTextColor(...COLORS.grayLight);
+        doc.setFontSize(7.5);
+        doc.text(' (4 mins.)', x + doc.getTextWidth(safeText('P. ' + seg.data.ministry_leader)), cy);
+        cy += 9;
+        doc.setFont('helvetica', 'italic');
+        doc.text(safeText('(Debe estar listo (a) desde que inicia la adoracion)'), x, cy);
+        doc.setFont('helvetica', 'normal');
+        cy += 9;
       }
 
       // Presenter
       if (seg.data?.presenter && !seg.data?.ministry_leader) {
-        doc.setTextColor(...COLORS.green);
+        doc.setFontSize(8.5);
+        doc.setTextColor(...COLORS.teal);
         doc.setFont('helvetica', 'bold');
-        doc.text(sanitize(seg.data.presenter), x, y);
-        doc.setTextColor(...COLORS.gray);
+        doc.text(safeText('P. ' + seg.data.presenter), x, cy);
         doc.setFont('helvetica', 'normal');
-        y += lineH;
+        doc.setTextColor(...COLORS.gray);
+        cy += 10;
       }
 
       // Preacher
       if (seg.data?.preacher) {
-        doc.setTextColor(...COLORS.green);
+        doc.setFontSize(8.5);
+        doc.setTextColor(...COLORS.teal);
         doc.setFont('helvetica', 'bold');
-        doc.text(sanitize(seg.data.preacher), x, y);
-        doc.setTextColor(...COLORS.gray);
+        doc.text(safeText('A. ' + seg.data.preacher), x, cy);
         doc.setFont('helvetica', 'normal');
-        y += lineH;
+        doc.setTextColor(...COLORS.gray);
+        cy += 10;
       }
 
       // Message title
       if (seg.data?.title) {
-        doc.text(sanitize(seg.data.title), x, y);
-        y += lineH;
-      }
-
-      // Verse
-      if (seg.data?.verse) {
-        doc.setFontSize(STYLES.bodySmall.size * scale);
-        doc.setTextColor(...COLORS.grayLight);
-        doc.text(sanitize(seg.data.verse), x, y);
-        doc.setFontSize(STYLES.body.size * scale);
+        doc.setFontSize(8);
         doc.setTextColor(...COLORS.gray);
-        y += smallLineH;
+        doc.text(safeText(seg.data.title), x, cy);
+        cy += 9;
       }
 
-      // Actions (cues)
-      if (seg.actions?.length) {
-        doc.setFontSize(STYLES.cue.size * scale);
+      // Notes/instructions
+      if (seg.data?.sound_notes) {
+        doc.setFontSize(7.5);
+        doc.setTextColor(...COLORS.grayLight);
+        doc.setFont('helvetica', 'italic');
+        doc.text(safeText(seg.data.sound_notes), x, cy);
+        doc.setFont('helvetica', 'normal');
+        cy += 8;
+      }
+
+      // Actions (italicized cues)
+      if (seg.actions && seg.actions.length > 0) {
+        doc.setFontSize(7.5);
         doc.setTextColor(...COLORS.grayLight);
         doc.setFont('helvetica', 'italic');
         seg.actions.forEach(action => {
-          let actionText = stripCuePrefix(action.label);
-          if (action.timing === 'before_end') actionText += ` (${action.offset_min} min antes)`;
-          doc.text(sanitize(actionText), x, y);
-          y += smallLineH;
+          let txt = stripCuePrefix(action.label);
+          if (action.timing === 'before_end' && action.offset_min) {
+            txt += ` (${action.offset_min} min antes)`;
+          }
+          doc.text(safeText(txt), x, cy);
+          cy += 8;
         });
         doc.setFont('helvetica', 'normal');
       }
 
-      layout.setY(col, y + 4);
+      return cy + 6;
     };
 
-    // Render both columns
-    segments930.forEach((seg, idx) => renderSegment(seg, 0, service['9:30am'], idx, '9:30'));
-    segments1130.forEach((seg, idx) => renderSegment(seg, 1, service['11:30am'], idx, '11:30'));
+    // Render 9:30 column
+    segments930.forEach((seg, idx) => {
+      y1 = renderSegment(seg, col1X, y1, colWidth, segments930, idx, 9, 30);
+    });
 
-    // Receso
-    const recesoY = Math.max(layout.getY(0), layout.getY(1)) + 10;
-    doc.setFillColor(...COLORS.blue);
-    doc.rect(margin, recesoY, pageWidth - margin * 2, 26, 'F');
-    doc.setTextColor(...COLORS.white);
-    doc.setFontSize(10);
+    // Render 11:30 column
+    segments1130.forEach((seg, idx) => {
+      y2 = renderSegment(seg, col2X, y2, colWidth, segments1130, idx, 11, 30);
+    });
+
+    // Receso section
+    const recesoY = Math.max(y1, y2) + 8;
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text('11:00am a 11:30am  -  RECESO', pageWidth / 2, recesoY + 16, { align: 'center' });
+    doc.setTextColor(...COLORS.black);
+    doc.text('11:00AM A 11:30AM', pageWidth / 2, recesoY, { align: 'center' });
+    doc.text('RECESO', pageWidth / 2, recesoY + 14, { align: 'center' });
 
-    // Footer
+    // Footer gradient bar
     doc.setFillColor(...COLORS.green);
-    doc.rect(0, pageHeight - 22, pageWidth, 22, 'F');
+    doc.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, 'F');
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(...COLORS.white);
-    doc.setFontSize(STYLES.footer.size);
-    doc.text(sanitize('!Atrevete a cambiar!'), pageWidth / 2, pageHeight - 8, { align: 'center' });
+    doc.text(safeText('!Atrevete a cambiar!'), pageWidth / 2, pageHeight - 10, { align: 'center' });
 
-    // ===== PAGE 2: ANNOUNCEMENTS =====
-    if (includeAnnouncements && announcements?.length > 0) {
+    // ==================== PAGE 2: ANNOUNCEMENTS ====================
+    if (includeAnnouncements && announcements && announcements.length > 0) {
       doc.addPage();
-      let y = margin;
+      let ay = margin;
 
       // Logo
       if (logoBase64) {
-        doc.addImage(logoBase64, 'PNG', margin, y, 45, 45);
+        doc.addImage(logoBase64, 'PNG', pageWidth / 2 - 14, ay - 5, 28, 28);
       }
 
-      // Title
-      doc.setFontSize(STYLES.pageTitle.size);
-      doc.setFont('helvetica', STYLES.pageTitle.style);
-      doc.setTextColor(...COLORS.black);
-      doc.text('ANUNCIOS', pageWidth / 2, y + 18, { align: 'center' });
+      ay += 30;
 
-      doc.setFontSize(10);
+      // Title
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...COLORS.black);
+      doc.text('ANUNCIOS', pageWidth / 2, ay, { align: 'center' });
+
+      doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...COLORS.gray);
-      doc.text(sanitize(`Domingo ${formatDateSpanish(selectedDate)}`), pageWidth / 2, y + 32, { align: 'center' });
+      doc.text(safeText(formatDateSpanish(selectedDate)), pageWidth / 2, ay + 14, { align: 'center' });
 
-      y += 55;
+      ay += 30;
 
-      // Two-column layout for announcements
-      const annLayout = new TwoColumnLayout(doc, { margin, gutter: 16, headerHeight: y, footerHeight: 30 });
+      // Two-column announcements
+      let ay1 = ay;
+      let ay2 = ay;
+      const annColWidth = colWidth;
 
-      // Estimate announcement heights for scaling
-      const estimateAnnHeight = (ann) => {
-        let h = 16; // title + separator
-        if (ann.date_of_occurrence || ann.start_date) h += 12;
-        const content = ann.content || ann.announcement_blurb || ann.description || '';
-        if (content) {
-          const lines = doc.splitTextToSize(sanitize(content), annLayout.colWidth - 10);
-          h += lines.length * 10;
-        }
-        if (ann.instructions) {
-          const instrLines = doc.splitTextToSize(sanitize(stripCuePrefix(ann.instructions)), annLayout.colWidth - 30);
-          h += instrLines.length * 9 + 4;
-        }
-        return h + 12;
-      };
+      const renderAnnouncement = (ann, x, startY, colW) => {
+        let cy = startY;
+        const title = safeText(ann.title || ann.name || '');
 
-      // Distribute announcements to columns
-      const col0Anns = [];
-      const col1Anns = [];
-      announcements.forEach((ann, i) => {
-        if (i % 2 === 0) col0Anns.push(ann);
-        else col1Anns.push(ann);
-      });
+        // Title with left border accent
+        doc.setDrawColor(...COLORS.teal);
+        doc.setLineWidth(3);
+        doc.line(x, cy - 2, x, cy + 10);
 
-      const height0 = col0Anns.reduce((sum, ann) => sum + estimateAnnHeight(ann), 0);
-      const height1 = col1Anns.reduce((sum, ann) => sum + estimateAnnHeight(ann), 0);
-      const annScale = annLayout.calculateScale([height0, height1]);
-
-      // Render announcement helper
-      const renderAnnouncement = (ann, col) => {
-        const x = annLayout.getX(col);
-        let cy = annLayout.getY(col);
-        const lineH = 10 * annScale;
-        const smallLineH = 9 * annScale;
-
-        // Title
-        doc.setFontSize(STYLES.segmentTitle.size * annScale);
-        doc.setFont('helvetica', STYLES.segmentTitle.style);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
         doc.setTextColor(...COLORS.black);
-        doc.text(sanitize((ann.title || ann.name || '').toUpperCase()), x, cy);
-        cy += 10 * annScale;
-
-        // Separator
-        doc.setDrawColor(...COLORS.border);
-        doc.line(x, cy - 2, x + annLayout.colWidth - 10, cy - 2);
-        cy += 4;
-
-        // Date
-        if (ann.date_of_occurrence || ann.start_date) {
-          doc.setFontSize(STYLES.body.size * annScale);
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(...COLORS.red);
-          doc.text(sanitize(ann.date_of_occurrence || ann.start_date), x, cy);
-          cy += lineH;
-        }
+        doc.text(title, x + 8, cy + 6);
+        cy += 18;
 
         // Content
         const content = ann.content || ann.announcement_blurb || ann.description || '';
         if (content) {
-          doc.setFontSize(STYLES.body.size * annScale);
+          doc.setFontSize(8.5);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(...COLORS.gray);
-          const lines = doc.splitTextToSize(sanitize(content), annLayout.colWidth - 10);
+          const lines = doc.splitTextToSize(safeText(content), colW - 10);
           doc.text(lines, x, cy);
-          cy += lines.length * smallLineH;
+          cy += lines.length * 10;
         }
 
-        // Instructions (CUE)
+        // CUE box
         if (ann.instructions) {
-          cy += 3;
-          doc.setFontSize(STYLES.cue.size * annScale);
-          doc.setTextColor(...COLORS.grayLight);
-          doc.setFont('helvetica', 'bold');
-          doc.text('CUE:', x, cy);
-          doc.setFont('helvetica', 'italic');
+          cy += 4;
           const instrText = stripCuePrefix(ann.instructions);
-          const instrLines = doc.splitTextToSize(sanitize(instrText), annLayout.colWidth - 30);
-          doc.text(instrLines, x + 24, cy);
-          cy += instrLines.length * (8 * annScale);
+          const instrLines = doc.splitTextToSize(safeText(instrText), colW - 45);
+          const boxHeight = instrLines.length * 9 + 12;
+
+          // Yellow background box
+          doc.setFillColor(...COLORS.cueBoxBg);
+          doc.setDrawColor(...COLORS.cueBoxBorder);
+          doc.setLineWidth(1);
+          doc.roundedRect(x, cy, colW - 5, boxHeight, 3, 3, 'FD');
+
+          // CUE label
+          doc.setFontSize(7);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...COLORS.cueBoxText);
+          doc.text('CUE PARA EL ANUNCIADOR', x + 6, cy + 10);
+
+          // CUE content
+          doc.setFontSize(7.5);
+          doc.setFont('helvetica', 'italic');
+          doc.text(instrLines, x + 6, cy + 20);
+
+          cy += boxHeight + 6;
         }
 
-        annLayout.setY(col, cy + 10);
+        return cy + 10;
       };
 
-      // Render announcements
-      col0Anns.forEach(ann => renderAnnouncement(ann, 0));
-      col1Anns.forEach(ann => renderAnnouncement(ann, 1));
+      // Distribute announcements alternating columns
+      announcements.forEach((ann, i) => {
+        if (i % 2 === 0) {
+          ay1 = renderAnnouncement(ann, col1X, ay1, annColWidth);
+        } else {
+          ay2 = renderAnnouncement(ann, col2X, ay2, annColWidth);
+        }
+      });
 
       // Footer
       doc.setFillColor(...COLORS.green);
-      doc.rect(0, pageHeight - 22, pageWidth, 22, 'F');
-      doc.setTextColor(...COLORS.white);
-      doc.setFontSize(STYLES.footer.size);
+      doc.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, 'F');
+      doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
-      doc.text(sanitize('!Atrevete a cambiar!'), pageWidth / 2, pageHeight - 8, { align: 'center' });
+      doc.setTextColor(...COLORS.white);
+      doc.text(safeText('!Atrevete a cambiar!'), pageWidth / 2, pageHeight - 10, { align: 'center' });
     }
 
     // Output
