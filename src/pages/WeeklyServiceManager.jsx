@@ -1292,31 +1292,45 @@ export default function WeeklyServiceManager() {
           </div>
 
           <div className="print-announcement-list">
-            {[...fixedAnnouncements, ...dynamicAnnouncements]
-              .filter(ann => selectedAnnouncements.includes(ann.id))
-              .map((ann, idx) => (
+            {/* Left Column: Fixed announcements with full content + CUEs */}
+            <div className="print-announcements-column-left">
+              {fixedAnnouncements
+                .filter(ann => selectedAnnouncements.includes(ann.id))
+                .map((ann) => (
                   <div key={ann.id} className="print-announcement-item">
                     <div className="print-announcement-header">
-                      <div className="print-announcement-title">
-                        {ann.isEvent ? ann.name : ann.title}
-                      </div>
-                      {(ann.date_of_occurrence || ann.start_date) && (
-                        <div className="print-announcement-date">
-                          {ann.date_of_occurrence || ann.start_date}
-                          {ann.end_date && ` — ${ann.end_date}`}
-                        </div>
-                      )}
+                      <div className="print-announcement-title">{ann.title}</div>
                     </div>
-                    <div className="print-announcement-content">
-                      {ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content}
-                    </div>
+                    {ann.content && (
+                      <div className="print-announcement-content">{ann.content}</div>
+                    )}
                     {ann.instructions && (
-                      <div className="print-announcement-instructions">
-                        {ann.instructions}
-                      </div>
+                      <div className="print-announcement-instructions">{ann.instructions}</div>
                     )}
                   </div>
-              ))}
+                ))}
+            </div>
+            
+            {/* Right Column: Compact event list */}
+            <div className="print-events-column-right">
+              <div className="print-events-header">Próximos Eventos</div>
+              {dynamicAnnouncements
+                .filter(ann => selectedAnnouncements.includes(ann.id))
+                .map((ann) => (
+                  <div key={ann.id} className="print-event-compact">
+                    <div className="print-event-title">{ann.isEvent ? ann.name : ann.title}</div>
+                    {(ann.date_of_occurrence || ann.start_date) && (
+                      <div className="print-event-date">
+                        {ann.date_of_occurrence || ann.start_date}
+                        {ann.end_date && ` — ${ann.end_date}`}
+                      </div>
+                    )}
+                    {ann.isEvent && (ann.theme || ann.location) && (
+                      <div className="print-event-brief">{ann.theme || ann.location}</div>
+                    )}
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
 
