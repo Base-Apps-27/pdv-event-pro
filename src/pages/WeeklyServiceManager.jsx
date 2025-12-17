@@ -799,14 +799,28 @@ Return ONLY valid JSON:
 
         @media print {
           @page { size: letter; margin: 0.5in; }
+          
+          :root {
+            --pdf-page1-scale: 1;
+            --pdf-page2-scale: 1;
+          }
+          
           body { 
             -webkit-print-color-adjust: exact; 
             print-color-adjust: exact;
             font-family: 'Inter', Helvetica, Arial, sans-serif;
             background: white;
-            font-size: 10.5pt;
+            font-size: calc(10.5pt * var(--pdf-page1-scale, 1));
             line-height: 1.3;
             color: #374151;
+          }
+          
+          .print-content {
+            font-size: calc(10.5pt * var(--pdf-page1-scale, 1));
+          }
+          
+          .print-announcements {
+            font-size: calc(10.5pt * var(--pdf-page2-scale, 1));
           }
           
           * {
