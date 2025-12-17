@@ -1062,6 +1062,14 @@ Return ONLY valid JSON with these exact fields:
             border-bottom: none;
           }
 
+          .print-event-compact.print-event-emphasized {
+            background: #fef3c7 !important;
+            border: 2pt solid #f59e0b !important;
+            border-radius: 4pt;
+            padding: 4pt 6pt;
+            margin-bottom: 4pt;
+          }
+
           .print-event-title {
             font-size: 10pt;
             font-weight: 600;
@@ -1074,6 +1082,14 @@ Return ONLY valid JSON with these exact fields:
             color: #4b5563;
             font-weight: 500;
             margin-top: 2pt;
+          }
+
+          .print-event-content {
+            font-size: 9pt;
+            color: #374151;
+            line-height: 1.3;
+            margin-top: 2pt;
+            white-space: pre-wrap;
           }
 
           .print-event-brief {
@@ -1411,40 +1427,74 @@ Return ONLY valid JSON with these exact fields:
             <div className="print-announcements-column-left">
               {fixedAnnouncements
                 .filter(ann => selectedAnnouncements.includes(ann.id))
-                .map((ann) => (
-                  <div key={ann.id} className="print-announcement-item">
-                    <div className="print-announcement-header">
-                      <div className="print-announcement-title">{ann.title}</div>
+                .map((ann) => {
+                  // Sanitize HTML for print - only allow safe tags
+                  const sanitize = (html) => {
+                    if (!html) return '';
+                    return html
+                      .replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '')
+                      .replace(/&nbsp;/g, ' ');
+                  };
+                  return (
+                    <div key={ann.id} className="print-announcement-item">
+                      <div className="print-announcement-header">
+                        <div className="print-announcement-title">{ann.title}</div>
+                      </div>
+                      {ann.content && (
+                        <div 
+                          className="print-announcement-content"
+                          dangerouslySetInnerHTML={{ __html: sanitize(ann.content) }}
+                        />
+                      )}
+                      {ann.instructions && (
+                        <div 
+                          className="print-announcement-instructions"
+                          dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }}
+                        />
+                      )}
                     </div>
-                    {ann.content && (
-                      <div className="print-announcement-content">{ann.content}</div>
-                    )}
-                    {ann.instructions && (
-                      <div className="print-announcement-instructions">{ann.instructions}</div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
             </div>
             
-            {/* Right Column: Compact event list */}
+            {/* Right Column: Dynamic events with full details */}
             <div className="print-events-column-right">
-              <div className="print-events-header">Próximos Eventos</div>
+              <div className="print-events-header">Próximos Eventos / Upcoming Events</div>
               {dynamicAnnouncements
                 .filter(ann => selectedAnnouncements.includes(ann.id))
-                .map((ann) => (
-                  <div key={ann.id} className="print-event-compact">
-                    <div className="print-event-title">{ann.isEvent ? ann.name : ann.title}</div>
-                    {(ann.date_of_occurrence || ann.start_date) && (
-                      <div className="print-event-date">
-                        {ann.date_of_occurrence || ann.start_date}
-                        {ann.end_date && ` — ${ann.end_date}`}
-                      </div>
-                    )}
-                    {ann.isEvent && (ann.theme || ann.location) && (
-                      <div className="print-event-brief">{ann.theme || ann.location}</div>
-                    )}
-                  </div>
-                ))}
+                .map((ann) => {
+                  const sanitize = (html) => {
+                    if (!html) return '';
+                    return html
+                      .replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '')
+                      .replace(/&nbsp;/g, ' ');
+                  };
+                  const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
+                  const isEmphasized = ann.emphasize || ann.category === 'Urgent';
+                  return (
+                    <div key={ann.id} className={`print-event-compact ${isEmphasized ? 'print-event-emphasized' : ''}`}>
+                      <div className="print-event-title">{ann.isEvent ? ann.name : ann.title}</div>
+                      {(ann.date_of_occurrence || ann.start_date) && (
+                        <div className="print-event-date">
+                          {ann.date_of_occurrence || ann.start_date}
+                          {ann.end_date && ` — ${ann.end_date}`}
+                        </div>
+                      )}
+                      {content && (
+                        <div 
+                          className="print-event-content"
+                          dangerouslySetInnerHTML={{ __html: sanitize(content) }}
+                        />
+                      )}
+                      {ann.instructions && (
+                        <div 
+                          className="print-announcement-instructions"
+                          dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
             </div>
           </div>
         </div>
