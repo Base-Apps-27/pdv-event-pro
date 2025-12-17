@@ -88,26 +88,26 @@ export const PDF_STYLES = `
   }
 
   .pdf-column-header {
-    font-size: 14pt;
+    font-size: 1.35em;
     font-weight: 600;
     color: #000000;
-    padding-bottom: 6px;
-    margin-bottom: 10px;
+    padding-bottom: 0.5em;
+    margin-bottom: 0.85em;
     border-bottom: 2px solid #1f2937;
   }
 
   .pdf-pre-service-note {
-    font-size: 9.5pt;
+    font-size: 0.9em;
     font-style: italic;
     color: #6b7280;
-    margin-bottom: 10px;
-    padding-left: 4px;
+    margin-bottom: 0.85em;
+    padding-left: 0.35em;
   }
 
-  /* Segment */
+  /* Segment - all sizes use em so they inherit from parent font-size */
   .pdf-segment {
-    margin-bottom: 12px;
-    padding-bottom: 8px;
+    margin-bottom: 1em;
+    padding-bottom: 0.7em;
     border-bottom: 1px solid #f3f4f6;
   }
 
@@ -118,19 +118,19 @@ export const PDF_STYLES = `
   .pdf-segment-header {
     display: flex;
     align-items: baseline;
-    gap: 6px;
+    gap: 0.5em;
     flex-wrap: wrap;
-    margin-bottom: 3px;
+    margin-bottom: 0.25em;
   }
 
   .pdf-time {
-    font-size: 10.5pt;
+    font-size: 1em;
     font-weight: 600;
     color: #dc2626;
   }
 
   .pdf-segment-title {
-    font-size: 11pt;
+    font-size: 1.05em;
     font-weight: 600;
     color: #000000;
     text-transform: uppercase;
@@ -138,16 +138,16 @@ export const PDF_STYLES = `
   }
 
   .pdf-duration {
-    font-size: 10pt;
+    font-size: 0.95em;
     color: #6b7280;
     font-weight: 400;
   }
 
   .pdf-detail {
-    font-size: 10.5pt;
+    font-size: 1em;
     color: #374151;
-    margin-top: 2px;
-    padding-left: 4px;
+    margin-top: 0.15em;
+    padding-left: 0.4em;
   }
 
   .pdf-name {
@@ -156,7 +156,7 @@ export const PDF_STYLES = `
   }
 
   .pdf-ministry {
-    margin-top: 4px;
+    margin-top: 0.35em;
   }
 
   .pdf-message-title {
@@ -164,31 +164,31 @@ export const PDF_STYLES = `
   }
 
   .pdf-note {
-    font-size: 9.5pt;
+    font-size: 0.9em;
     font-style: italic;
     color: #6b7280;
-    margin-top: 2px;
-    padding-left: 4px;
+    margin-top: 0.15em;
+    padding-left: 0.4em;
   }
 
   .pdf-songs {
-    margin-top: 4px;
-    padding-left: 4px;
+    margin-top: 0.35em;
+    padding-left: 0.4em;
   }
 
   .pdf-song-item {
-    font-size: 10pt;
+    font-size: 0.95em;
     color: #374151;
     line-height: 1.4;
   }
 
   .pdf-actions {
-    margin-top: 4px;
-    padding-left: 4px;
+    margin-top: 0.35em;
+    padding-left: 0.4em;
   }
 
   .pdf-action-item {
-    font-size: 9.5pt;
+    font-size: 0.9em;
     font-style: italic;
     color: #6b7280;
   }
@@ -256,7 +256,7 @@ export const PDF_STYLES = `
   }
 
   .pdf-announcement-title {
-    font-size: 10.5pt;
+    font-size: 1.05em;
     font-weight: 600;
     color: #000000;
     text-transform: uppercase;
@@ -266,25 +266,25 @@ export const PDF_STYLES = `
   }
 
   .pdf-announcement-date {
-    font-size: 9.5pt;
+    font-size: 0.95em;
     color: #4b5563;
     display: block;
-    margin-top: 2px;
+    margin-top: 0.15em;
   }
 
   .pdf-announcement-content {
-    font-size: 10pt;
+    font-size: 1em;
     color: #374151;
     line-height: 1.35;
     white-space: pre-wrap;
   }
 
   .pdf-announcement-cue {
-    margin-top: 6px;
-    font-size: 9pt;
+    margin-top: 0.5em;
+    font-size: 0.9em;
     font-style: italic;
     color: #6b7280;
-    padding-left: 4px;
+    padding-left: 0.4em;
     border-left: 2px solid #fbbf24;
   }
 
@@ -293,7 +293,7 @@ export const PDF_STYLES = `
     font-style: normal;
     color: #1f2937;
     text-transform: uppercase;
-    font-size: 8pt;
+    font-size: 0.8em;
     letter-spacing: 0.5px;
   }
 
