@@ -1062,10 +1062,13 @@ export default function WeeklyServiceManager() {
             <h1>Orden de Servicio</h1>
             <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
             <div className="print-team-info">
-              <div><span className="print-team-label">Coordinador:</span> {serviceData?.coordinators?.["9:30am"] || serviceData?.coordinators?.["11:30am"] || ""}</div>
-              <div><span className="print-team-label">Ujier:</span> {serviceData?.ujieres?.["9:30am"] || serviceData?.ujieres?.["11:30am"] || ""}</div>
-              <div><span className="print-team-label">Sonido:</span> {serviceData?.sound?.["9:30am"] || ""}</div>
-              <div><span className="print-team-label">Luces:</span> {serviceData?.luces?.["9:30am"] || serviceData?.luces?.["11:30am"] || ""}</div>
+              <span><span className="print-team-label">Coordinador:</span> {serviceData?.coordinators?.["9:30am"] || serviceData?.coordinators?.["11:30am"] || "—"}</span>
+              <span style={{ color: '#9ca3af' }}>/</span>
+              <span><span className="print-team-label">Ujier:</span> {serviceData?.ujieres?.["9:30am"] || serviceData?.ujieres?.["11:30am"] || "—"}</span>
+              <span style={{ color: '#9ca3af' }}>/</span>
+              <span><span className="print-team-label">Sonido:</span> {serviceData?.sound?.["9:30am"] || "—"}</span>
+              <span style={{ color: '#9ca3af' }}>/</span>
+              <span><span className="print-team-label">Luces:</span> {serviceData?.luces?.["9:30am"] || serviceData?.luces?.["11:30am"] || "—"}</span>
             </div>
           </div>
         </div>
