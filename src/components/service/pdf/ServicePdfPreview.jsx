@@ -84,64 +84,10 @@ export default function ServicePdfPreview({
   }, [checkPageFit]);
 
   const handlePrint = () => {
-    // Create a new window with both pages for printing
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Por favor permite popups para imprimir');
-      return;
-    }
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Orden de Servicio - ${selectedDate}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-          
-          @page {
-            size: letter;
-            margin: 0;
-          }
-          
-          @media print {
-            body {
-              margin: 0;
-              padding: 0;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            
-            .pdf-page {
-              page-break-after: always;
-              page-break-inside: avoid;
-            }
-            
-            .pdf-page:last-child {
-              page-break-after: auto;
-            }
-          }
-          
-          body {
-            margin: 0;
-            padding: 0;
-            background: white;
-          }
-        </style>
-      </head>
-      <body>
-        <div id="print-root"></div>
-      </body>
-      </html>
-    `);
-    
-    // We'll need to render React content - for now, trigger browser print
-    printWindow.document.close();
-    printWindow.focus();
-    
-    // Use the main window's print with our existing print styles
+    // Close the preview dialog and trigger the main window print
+    // which uses the existing print styles in WeeklyServiceManager
     onOpenChange(false);
-    setTimeout(() => window.print(), 100);
+    setTimeout(() => window.print(), 150);
   };
 
   const handleSaveAndClose = () => {
