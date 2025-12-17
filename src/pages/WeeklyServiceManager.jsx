@@ -968,9 +968,66 @@ export default function WeeklyServiceManager() {
             padding: 0;
           }
 
+          .print-announcements-column-left {
+            display: flex;
+            flex-direction: column;
+            gap: 8pt;
+          }
+
+          .print-events-column-right {
+            display: flex;
+            flex-direction: column;
+            gap: 6pt;
+            border-left: 2pt solid #e5e7eb;
+            padding-left: 12pt;
+          }
+
+          .print-events-header {
+            font-size: 9pt;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4pt;
+            padding-bottom: 4pt;
+            border-bottom: 1pt solid #e5e7eb;
+          }
+
+          .print-event-compact {
+            display: flex;
+            flex-direction: column;
+            padding: 4pt 0;
+            border-bottom: 1pt solid #f3f4f6;
+          }
+
+          .print-event-compact:last-child {
+            border-bottom: none;
+          }
+
+          .print-event-title {
+            font-size: 10pt;
+            font-weight: 600;
+            color: #16a34a;
+            line-height: 1.2;
+          }
+
+          .print-event-date {
+            font-size: 9pt;
+            color: #4b5563;
+            font-weight: 500;
+            margin-top: 2pt;
+          }
+
+          .print-event-brief {
+            font-size: 8.5pt;
+            color: #6b7280;
+            font-style: italic;
+            margin-top: 1pt;
+          }
+
           .print-announcement-item {
-            margin-bottom: 10pt;
-            padding-bottom: 10pt;
+            margin-bottom: 8pt;
+            padding-bottom: 8pt;
             border-bottom: 1pt solid #e5e7eb;
             break-inside: avoid;
             page-break-inside: avoid;
@@ -981,21 +1038,21 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcement-header {
-            margin-bottom: 4pt;
+            margin-bottom: 3pt;
           }
 
           .print-announcement-title {
-            font-size: 10.5pt;
+            font-size: 10pt;
             font-weight: 600;
             color: #000000;
             text-transform: uppercase;
             letter-spacing: 0.25px;
             display: block;
-            line-height: 1.3;
+            line-height: 1.25;
           }
 
           .print-announcement-date {
-            font-size: 9.5pt;
+            font-size: 9pt;
             font-weight: 400;
             color: #4b5563;
             display: block;
@@ -1003,20 +1060,20 @@ export default function WeeklyServiceManager() {
           }
 
           .print-announcement-content {
-            font-size: 10pt;
-            line-height: 1.35;
+            font-size: 9.5pt;
+            line-height: 1.3;
             color: #374151;
             white-space: pre-wrap;
           }
 
           .print-announcement-instructions {
-            margin-top: 6pt;
-            font-size: 9pt;
+            margin-top: 4pt;
+            font-size: 8.5pt;
             font-style: italic;
             color: #6b7280;
-            padding-left: 8pt;
+            padding-left: 6pt;
             border-left: 2pt solid #fbbf24;
-            line-height: 1.25;
+            line-height: 1.2;
           }
 
           .print-announcement-instructions::before {
@@ -1025,7 +1082,7 @@ export default function WeeklyServiceManager() {
             font-style: normal;
             color: #1f2937;
             text-transform: uppercase;
-            font-size: 8pt;
+            font-size: 7.5pt;
             letter-spacing: 0.5px;
           }
 
