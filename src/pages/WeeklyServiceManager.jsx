@@ -637,38 +637,59 @@ export default function WeeklyServiceManager() {
   };
 
   const optimizeAnnouncementWithAI = async (formData, setResult) => {
-    if (formData?.category !== "General") return;
-    
     setOptimizingAnnouncement(true);
+    
+    const isStatic = formData?.category === "General";
+    
+    // Different limits for static vs dynamic
+    const limits = isStatic 
+      ? { title: 60, body: 420, cue: 200 }
+      : { title: 80, body: 600, cue: 300 };
     
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a church communications editor. Rewrite this static announcement to be clear, concise, and impactful while fitting strict character limits.
+        prompt: `You are a church communications editor optimizing an announcement for print and presentation.
 
-CURRENT ANNOUNCEMENT:
+ANNOUNCEMENT TYPE: ${isStatic ? 'STATIC (appears every week)' : 'DYNAMIC (event/ministry promotion)'}
+CATEGORY: ${formData?.category || 'General'}
+
+CURRENT CONTENT:
 Title: ${formData?.title || '(empty)'}
 Body: ${formData?.content || '(empty)'}
 CUE/Instructions: ${formData?.instructions || '(empty)'}
+${!isStatic && formData?.date_of_occurrence ? `Event Date: ${formData.date_of_occurrence}` : ''}
+${formData?.emphasize ? 'EMPHASIZED: Yes (important announcement)' : ''}
 
-STRICT LIMITS:
-- Title: max 60 characters (currently ${formData?.title?.length || 0})
-- Body: max 420 characters (currently ${formData?.content?.length || 0})
-- CUE: max 200 characters (currently ${formData?.instructions?.length || 0})
+STRICT CHARACTER LIMITS:
+- Title: max ${limits.title} characters (currently ${(formData?.title || '').length})
+- Body: max ${limits.body} characters (currently ${(formData?.content || '').replace(/<[^>]*>/g, '').length})
+- CUE: max ${limits.cue} characters (currently ${(formData?.instructions || '').replace(/<[^>]*>/g, '').length})
 
-RULES:
-1. Keep the core message and all essential information
-2. Use bullet points (•) for lists (max 3 bullets)
-3. Be warm but direct - this is for a church community
-4. Title should be action-oriented or attention-grabbing
-5. CUE should be brief stage directions for the presenter
+FORMATTING OPTIONS (use HTML tags):
+- <b>bold</b> for emphasis on key words/phrases
+- <i>italic</i> for dates, times, locations
+- Use bullet points (•) for lists (max 3-4 bullets)
+- Use line breaks for paragraph separation
+
+OPTIMIZATION RULES:
+1. PRESERVE all essential information (dates, times, locations, contact info)
+2. ${isStatic ? 'Keep it brief and punchy - this repeats weekly' : 'Include WHO, WHAT, WHEN, WHERE if applicable'}
+3. Title: Action-oriented, attention-grabbing, NO formatting tags
+4. Body: 
+   - Lead with the most important info
+   - Use <b>bold</b> for key action items or highlights
+   - Use <i>italic</i> for dates/times/locations
+   - Bullet points for multiple items
+5. CUE: Brief presenter instructions (tone, gestures, emphasis points)
 6. Output in the SAME LANGUAGE as the input (Spanish or English)
-7. If content is already within limits, improve clarity without expanding
+7. If content is good, improve clarity/formatting without major rewrites
+8. ${formData?.emphasize ? 'This is EMPHASIZED - make it impactful and urgent' : ''}
 
-Return ONLY valid JSON with these exact fields:
+Return ONLY valid JSON:
 {
-  "title": "optimized title here",
-  "content": "optimized body here", 
-  "instructions": "optimized CUE here or empty string"
+  "title": "optimized title (plain text, no HTML)",
+  "content": "optimized body with HTML formatting",
+  "instructions": "optimized CUE with HTML formatting or empty string"
 }`,
         response_json_schema: {
           type: "object",
@@ -683,9 +704,9 @@ Return ONLY valid JSON with these exact fields:
 
       if (result && setResult) {
         setResult({
-          title: (result.title || formData.title).substring(0, 60),
-          content: (result.content || formData.content).substring(0, 420),
-          instructions: (result.instructions || formData.instructions || "").substring(0, 200)
+          title: (result.title || formData.title).substring(0, limits.title),
+          content: (result.content || formData.content).substring(0, limits.body + 100), // Allow extra for HTML tags
+          instructions: (result.instructions || formData.instructions || "").substring(0, limits.cue + 50)
         });
       }
     } catch (error) {

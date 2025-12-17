@@ -5,13 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { List, AlertTriangle, Loader2, Wand2 } from "lucide-react";
 
-// Character limits - static only enforces hard limits
-const LIMITS = {
-  title: 60,
-  body: 420,
-  cue: 200,
-  date: 50
-};
+// Character limits - different for static vs dynamic
+const STATIC_LIMITS = { title: 60, body: 420, cue: 200, date: 50 };
+const DYNAMIC_LIMITS = { title: 80, body: 600, cue: 300, date: 50 };
 
 // Rich text editor using contenteditable for real-time formatting display
 function RichTextArea({ value, onChange, placeholder, maxLength, rows = 4, id }) {
@@ -157,6 +153,7 @@ export default function StaticAnnouncementForm({
   
   const [errors, setErrors] = useState({});
   const isStatic = form.category === 'General';
+  const LIMITS = isStatic ? STATIC_LIMITS : DYNAMIC_LIMITS;
   
   const updateField = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -181,12 +178,12 @@ export default function StaticAnnouncementForm({
       newErrors.title = `Máximo ${LIMITS.title} caracteres / Max ${LIMITS.title} characters`;
     }
     
-    // Only enforce body/cue limits for static announcements
-    if (isStatic && bodyLength > LIMITS.body) {
+    // Enforce body/cue limits for both types (different limits)
+    if (bodyLength > LIMITS.body) {
       newErrors.content = `Máximo ${LIMITS.body} caracteres / Max ${LIMITS.body} characters`;
     }
     
-    if (isStatic && cueLength > LIMITS.cue) {
+    if (cueLength > LIMITS.cue) {
       newErrors.instructions = `Máximo ${LIMITS.cue} caracteres / Max ${LIMITS.cue} characters`;
     }
     
@@ -207,56 +204,49 @@ export default function StaticAnnouncementForm({
   const titleLength = (form.title || '').length;
   const isTitleOverLimit = titleLength > LIMITS.title;
   const isTitleNearLimit = titleLength > LIMITS.title * 0.85;
+  const titleLimit = LIMITS.title;
   
   return (
     <div className="space-y-4">
-      {/* Helper text - different for static vs dynamic */}
-      {isStatic ? (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="text-xs text-blue-800">
-              <strong>Anuncios Fijos / Static Announcements:</strong>
-              <p className="mt-1">
-                Los anuncios fijos aparecen cada semana. Manténgalos cortos y use el formato para claridad.
-              </p>
-              <p className="mt-1 text-blue-600">
-                Static announcements appear every week. Keep them short and use formatting for clarity.
-              </p>
-            </div>
-            {onOptimize && (
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => onOptimize(form, (result) => setForm(prev => ({ ...prev, ...result })))}
-                disabled={optimizing || (!form.title && !form.content)}
-                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-shrink-0"
-              >
-                {optimizing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Optimizando...
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="w-4 h-4 mr-2" />
-                    Optimizar con IA
-                  </>
-                )}
-              </Button>
-            )}
+      {/* Helper text with AI optimize button - works for both static and dynamic */}
+      <div className={`${isStatic ? 'bg-blue-50 border-blue-200' : 'bg-amber-50 border-amber-200'} border rounded-lg p-3`}>
+        <div className="flex items-start justify-between gap-3">
+          <div className={`text-xs ${isStatic ? 'text-blue-800' : 'text-amber-800'}`}>
+            <strong>{isStatic ? 'Anuncios Fijos / Static Announcements:' : 'Anuncios Dinámicos / Dynamic Announcements:'}</strong>
+            <p className="mt-1">
+              {isStatic 
+                ? 'Los anuncios fijos aparecen cada semana. Manténgalos cortos y use el formato para claridad.'
+                : 'Los anuncios dinámicos expiran después de su fecha. Incluya detalles como lugar, boletos, y audiencia.'}
+            </p>
+            <p className={`mt-1 ${isStatic ? 'text-blue-600' : 'text-amber-600'}`}>
+              {isStatic
+                ? 'Static announcements appear every week. Keep them short and use formatting for clarity.'
+                : 'Dynamic announcements expire after their date. Include details like venue, tickets, and audience.'}
+            </p>
           </div>
+          {onOptimize && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => onOptimize(form, (result) => setForm(prev => ({ ...prev, ...result })))}
+              disabled={optimizing || (!form.title && !form.content)}
+              className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-shrink-0"
+            >
+              {optimizing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Optimizando...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  Optimizar con IA
+                </>
+              )}
+            </Button>
+          )}
         </div>
-      ) : (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-          <strong>Anuncios Dinámicos / Dynamic Announcements:</strong>
-          <p className="mt-1">
-            Los anuncios dinámicos expiran después de su fecha. Incluya detalles como lugar, boletos, y audiencia.
-          </p>
-          <p className="mt-1 text-amber-600">
-            Dynamic announcements expire after their date. Include details like venue, tickets, and audience.
-          </p>
-        </div>
-      )}
+      </div>
       
       {/* Category selector */}
       <div className="space-y-1">
@@ -310,17 +300,15 @@ export default function StaticAnnouncementForm({
           value={form.title || ''}
           onChange={(e) => updateField('title', e.target.value)}
           placeholder="Título del anuncio / Announcement title"
-          className={errors.title || (isStatic && isTitleOverLimit) ? 'border-red-500 bg-red-50' : ''}
-          maxLength={isStatic ? LIMITS.title + 10 : undefined}
-        />
-        {isStatic && (
+          className={errors.title || isTitleOverLimit ? 'border-red-500 bg-red-50' : ''}
+          maxLength={titleLimit + 10}
+          />
           <div className={`flex justify-between text-xs ${
-            isTitleOverLimit ? 'text-red-600 font-semibold' : isTitleNearLimit ? 'text-amber-600' : 'text-gray-500'
+          isTitleOverLimit ? 'text-red-600 font-semibold' : isTitleNearLimit ? 'text-amber-600' : 'text-gray-500'
           }`}>
-            <span>{titleLength} / {LIMITS.title}</span>
-            {errors.title && <span className="text-red-600">{errors.title}</span>}
+          <span>{titleLength} / {titleLimit}</span>
+          {errors.title && <span className="text-red-600">{errors.title}</span>}
           </div>
-        )}
       </div>
       
       {/* Date of Occurrence - for dynamic only */}
@@ -349,7 +337,7 @@ export default function StaticAnnouncementForm({
       {/* Body */}
       <div className="space-y-1">
         <Label htmlFor="content" className="font-semibold">
-          Contenido / Body {isStatic && <span className="text-xs text-gray-500">(máx {LIMITS.body})</span>}
+          Contenido / Body <span className="text-xs text-gray-500">(máx {LIMITS.body})</span>
         </Label>
         <RichTextArea
           id="content"
@@ -359,25 +347,25 @@ export default function StaticAnnouncementForm({
             ? "Contenido principal del anuncio / Main announcement content" 
             : "Detalles del evento: lugar, boletos, audiencia / Event details: venue, tickets, audience"
           }
-          maxLength={isStatic ? LIMITS.body : 1000}
+          maxLength={LIMITS.body}
           rows={isStatic ? 5 : 6}
         />
         {errors.content && (
           <span className="text-xs text-red-600">{errors.content}</span>
         )}
       </div>
-      
+
       {/* CUE (optional) */}
       <div className="space-y-1">
         <Label htmlFor="instructions" className="font-semibold">
-          CUE / Instrucciones (Opcional) {isStatic && <span className="text-xs text-gray-500">(máx {LIMITS.cue})</span>}
+          CUE / Instrucciones (Opcional) <span className="text-xs text-gray-500">(máx {LIMITS.cue})</span>
         </Label>
         <RichTextArea
           id="instructions"
           value={form.instructions || ''}
           onChange={(value) => updateField('instructions', value)}
           placeholder="Instrucciones para el presentador / Instructions for presenter"
-          maxLength={isStatic ? LIMITS.cue : 500}
+          maxLength={LIMITS.cue}
           rows={3}
         />
         {errors.instructions && (
