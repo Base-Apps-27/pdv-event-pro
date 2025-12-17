@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail, Eye } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
@@ -70,6 +70,7 @@ export default function WeeklyServiceManager() {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
   const [pdfScales, setPdfScales] = useState({ page1: 100, page2: 100 });
+  const [optimizingAnnouncement, setOptimizingAnnouncement] = useState(false);
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
@@ -632,6 +633,67 @@ export default function WeeklyServiceManager() {
       emphasize: ann.emphasize || false
     });
     setShowAnnouncementDialog(true);
+  };
+
+  const optimizeAnnouncementWithAI = async () => {
+    if (announcementForm.category !== "General") return;
+    
+    setOptimizingAnnouncement(true);
+    
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a church communications editor. Rewrite this static announcement to be clear, concise, and impactful while fitting strict character limits.
+
+CURRENT ANNOUNCEMENT:
+Title: ${announcementForm.title || '(empty)'}
+Body: ${announcementForm.content || '(empty)'}
+CUE/Instructions: ${announcementForm.instructions || '(empty)'}
+
+STRICT LIMITS:
+- Title: max 60 characters (currently ${announcementForm.title?.length || 0})
+- Body: max 420 characters (currently ${announcementForm.content?.length || 0})
+- CUE: max 200 characters (currently ${announcementForm.instructions?.length || 0})
+
+RULES:
+1. Keep the core message and all essential information
+2. Use bullet points (•) for lists (max 3 bullets)
+3. Be warm but direct - this is for a church community
+4. Title should be action-oriented or attention-grabbing
+5. CUE should be brief stage directions for the presenter
+6. Output in the SAME LANGUAGE as the input (Spanish or English)
+7. If content is already within limits, improve clarity without expanding
+
+Return ONLY valid JSON with these exact fields:
+{
+  "title": "optimized title here",
+  "content": "optimized body here", 
+  "instructions": "optimized CUE here or empty string"
+}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            content: { type: "string" },
+            instructions: { type: "string" }
+          },
+          required: ["title", "content"]
+        }
+      });
+
+      if (result) {
+        setAnnouncementForm(prev => ({
+          ...prev,
+          title: (result.title || prev.title).substring(0, 60),
+          content: (result.content || prev.content).substring(0, 420),
+          instructions: (result.instructions || prev.instructions || "").substring(0, 200)
+        }));
+      }
+    } catch (error) {
+      console.error('AI optimization error:', error);
+      alert('Error al optimizar / Error optimizing: ' + error.message);
+    } finally {
+      setOptimizingAnnouncement(false);
+    }
   };
 
   const moveAnnouncementPriority = (ann, direction) => {
@@ -2710,14 +2772,37 @@ export default function WeeklyServiceManager() {
           <div className="space-y-4">
             {/* Helper text for static announcements */}
             {announcementForm.category === "General" && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
-                <strong>Anuncios Fijos / Static Announcements:</strong>
-                <p className="mt-1">
-                  Los anuncios fijos aparecen cada semana. Manténgalos cortos y use el formato para claridad, no para longitud.
-                </p>
-                <p className="mt-1 text-blue-600">
-                  Static announcements appear every week. Keep them short and use formatting for clarity, not length.
-                </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="text-xs text-blue-800">
+                    <strong>Anuncios Fijos / Static Announcements:</strong>
+                    <p className="mt-1">
+                      Los anuncios fijos aparecen cada semana. Manténgalos cortos y use el formato para claridad.
+                    </p>
+                    <p className="mt-1 text-blue-600">
+                      Static announcements appear every week. Keep them short and use formatting for clarity.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={optimizeAnnouncementWithAI}
+                    disabled={optimizingAnnouncement || (!announcementForm.title && !announcementForm.content)}
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-shrink-0"
+                  >
+                    {optimizingAnnouncement ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Optimizando...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="w-4 h-4 mr-2" />
+                        Optimizar con IA / AI Optimize
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             )}
             
