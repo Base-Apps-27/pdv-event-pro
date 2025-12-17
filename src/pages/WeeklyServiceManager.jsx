@@ -1295,9 +1295,7 @@ export default function WeeklyServiceManager() {
         </div>
 
         <div className="print-receso">
-          11:00am a 11:30am
-          <br />
-          RECESO
+          11:00 A.M. — 11:30 A.M. • RECESO
         </div>
 
         <div className="print-announcements">
