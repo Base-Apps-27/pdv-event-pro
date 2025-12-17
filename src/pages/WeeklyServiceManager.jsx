@@ -692,30 +692,12 @@ export default function WeeklyServiceManager() {
     };
   };
 
-  // Prepare announcements for PDF
-  const pdfAnnouncements = [...fixedAnnouncements, ...dynamicAnnouncements].filter(a => 
-    selectedAnnouncements.includes(a.id)
-  );
-
   if (!serviceData || isLoading) {
     return <div className="p-8">Cargando...</div>;
   }
 
   return (
     <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
-      {/* Hidden PDF Render Containers */}
-      <ServiceOrderPage 
-        ref={page1Ref} 
-        service={serviceData} 
-        selectedDate={selectedDate} 
-      />
-      {pdfAnnouncements.length > 0 && (
-        <AnnouncementsPage 
-          ref={page2Ref} 
-          announcements={pdfAnnouncements} 
-          selectedDate={selectedDate} 
-        />
-      )}
       <style>{`
         @media print {
           @page { size: letter; margin: 0.6in 0.5in; }
