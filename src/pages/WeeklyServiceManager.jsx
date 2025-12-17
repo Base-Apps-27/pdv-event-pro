@@ -68,6 +68,8 @@ export default function WeeklyServiceManager() {
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [emailAddress, setEmailAddress] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [pdfScales, setPdfScales] = useState({ page1: 100, page2: 100 });
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
