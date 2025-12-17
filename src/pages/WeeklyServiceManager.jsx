@@ -494,6 +494,9 @@ export default function WeeklyServiceManager() {
 
   const handleSavePdfScales = (scales) => {
     setPdfScales(scales);
+    // Apply CSS variables immediately for print
+    document.documentElement.style.setProperty('--pdf-page1-scale', scales.page1 / 100);
+    document.documentElement.style.setProperty('--pdf-page2-scale', scales.page2 / 100);
     // Save to database
     const dataToSave = {
       ...serviceDataRef.current,
@@ -505,6 +508,12 @@ export default function WeeklyServiceManager() {
     };
     saveServiceMutation.mutate(dataToSave);
   };
+
+  // Apply PDF scales on mount and when they change
+  useEffect(() => {
+    document.documentElement.style.setProperty('--pdf-page1-scale', pdfScales.page1 / 100);
+    document.documentElement.style.setProperty('--pdf-page2-scale', pdfScales.page2 / 100);
+  }, [pdfScales]);
 
 
 
@@ -800,27 +809,24 @@ Return ONLY valid JSON:
         @media print {
           @page { size: letter; margin: 0.5in; }
           
-          :root {
-            --pdf-page1-scale: 1;
-            --pdf-page2-scale: 1;
-          }
-          
           body { 
             -webkit-print-color-adjust: exact; 
             print-color-adjust: exact;
             font-family: 'Inter', Helvetica, Arial, sans-serif;
             background: white;
-            font-size: calc(10.5pt * var(--pdf-page1-scale, 1));
+            font-size: 10.5pt;
             line-height: 1.3;
             color: #374151;
           }
           
           .print-content {
-            font-size: calc(10.5pt * var(--pdf-page1-scale, 1));
+            transform: scale(var(--pdf-page1-scale, 1));
+            transform-origin: top left;
           }
           
           .print-announcements {
-            font-size: calc(10.5pt * var(--pdf-page2-scale, 1));
+            transform: scale(var(--pdf-page2-scale, 1));
+            transform-origin: top left;
           }
           
           * {

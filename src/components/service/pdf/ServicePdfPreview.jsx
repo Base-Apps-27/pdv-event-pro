@@ -100,27 +100,24 @@ export default function ServicePdfPreview({
     }
     // Save scales and set CSS variables for print
     onSaveScales({ page1: page1Scale, page2: page2Scale });
-    document.documentElement.style.setProperty('--pdf-page1-scale', page1Scale / 100);
-    document.documentElement.style.setProperty('--pdf-page2-scale', page2Scale / 100);
     onOpenChange(false);
-    setTimeout(() => window.print(), 150);
+    setTimeout(() => window.print(), 200);
   };
   
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!canOutput) {
       alert('El contenido excede los límites de página. Ajuste la escala o reduzca el contenido.\n\nContent exceeds page limits. Adjust scale or reduce content.');
       return;
     }
-    // Save scales and set CSS variables, then open print dialog (user selects "Save as PDF")
+    
+    // Save scales
     onSaveScales({ page1: page1Scale, page2: page2Scale });
-    document.documentElement.style.setProperty('--pdf-page1-scale', page1Scale / 100);
-    document.documentElement.style.setProperty('--pdf-page2-scale', page2Scale / 100);
+    
+    // For now, use print dialog with "Save as PDF" - true PDF generation requires server-side
     onOpenChange(false);
-    // Show helpful message about saving as PDF
     setTimeout(() => {
-      alert('En el diálogo de impresión, seleccione "Guardar como PDF" como destino.\n\nIn the print dialog, select "Save as PDF" as the destination.');
       window.print();
-    }, 150);
+    }, 200);
   };
   
   const handleSendEmail = async () => {
@@ -217,10 +214,10 @@ export default function ServicePdfPreview({
                 variant="outline"
                 disabled={!canOutput}
                 className={!canOutput ? 'opacity-50 cursor-not-allowed' : ''}
-                title="Abre el diálogo de impresión - seleccione 'Guardar como PDF' / Opens print dialog - select 'Save as PDF'"
+                title="Usar 'Guardar como PDF' en el diálogo / Use 'Save as PDF' in the dialog"
               >
                 <Download className="w-4 h-4 mr-2" />
-                Guardar PDF / Save PDF
+                Descargar / Download
               </Button>
               <Button 
                 onClick={handlePrint} 
