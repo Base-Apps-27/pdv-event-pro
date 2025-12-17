@@ -2662,6 +2662,19 @@ export default function WeeklyServiceManager() {
         </DialogContent>
       </Dialog>
 
+      {/* PDF Preview Dialog */}
+      <ServicePdfPreview
+        open={showPdfPreview}
+        onOpenChange={setShowPdfPreview}
+        serviceData={serviceData}
+        selectedDate={selectedDate}
+        fixedAnnouncements={fixedAnnouncements}
+        dynamicAnnouncements={dynamicAnnouncements}
+        selectedAnnouncements={selectedAnnouncements}
+        pdfScales={pdfScales}
+        onSaveScales={handleSavePdfScales}
+      />
+
       {/* Announcement Dialog */}
       <Dialog open={showAnnouncementDialog} onOpenChange={setShowAnnouncementDialog}>
         <DialogContent className="max-w-2xl bg-white max-h-[90vh] overflow-y-auto">
