@@ -542,35 +542,20 @@ export default function WeeklyServiceManager() {
 
 
 
-      const handleEmailPDF = async () => {
-      if (!emailAddress) return;
+  const handleEmailPDF = async () => {
+    if (!emailAddress) return;
 
-      setSendingEmail(true);
+    setSendingEmail(true);
 
-      try {
-      const payload = {
-        service: {
-          '9:30am': serviceData?.['9:30am'] || [],
-          '11:30am': serviceData?.['11:30am'] || [],
-          coordinators: serviceData?.coordinators,
-          ujieres: serviceData?.ujieres,
-          sound: serviceData?.sound,
-          luces: serviceData?.luces,
-          pre_service_notes: serviceData?.pre_service_notes,
-          receso_notes: serviceData?.receso_notes
-        },
-        announcements: [...fixedAnnouncements, ...dynamicAnnouncements].filter(a => 
-          selectedAnnouncements.includes(a.id)
-        )
-      };
-
-      const pdfResponse = await base44.functions.invoke('generateServicePdf', {
-        serviceData: payload,
+    try {
+      const pdfData = await generatePdf({
+        page1Ref,
+        page2Ref: selectedAnnouncements.length > 0 ? page2Ref : null,
         selectedDate,
-        includeAnnouncements: true
+        onProgress: setPdfProgress
       });
 
-      const blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+      const blob = new Blob([pdfData], { type: 'application/pdf' });
       const reader = new FileReader();
       reader.readAsDataURL(blob);
       
@@ -597,6 +582,7 @@ export default function WeeklyServiceManager() {
       alert('Error al enviar correo: ' + error.message);
     } finally {
       setSendingEmail(false);
+      setPdfProgress('');
     }
   };
 
