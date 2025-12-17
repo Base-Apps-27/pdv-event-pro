@@ -1378,18 +1378,8 @@ export default function WeeklyServiceManager() {
             </div>
           )}
           <Button 
-            variant="outline" 
-            onClick={() => setShowEmailDialog(true)} 
-            disabled={isGeneratingPdf}
-            className="border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:border-gray-500 disabled:opacity-50"
-          >
-            <Mail className="w-4 h-4 mr-2" />
-            Enviar Email
-          </Button>
-          <Button 
-            className="bg-pdv-teal text-white border-2 border-pdv-teal font-semibold hover:bg-pdv-teal/90 disabled:opacity-50" 
+            className="bg-pdv-teal text-white border-2 border-pdv-teal font-semibold hover:bg-pdv-teal/90" 
             onClick={handleDownloadPDF}
-            disabled={isGeneratingPdf}
           >
             <Printer className="w-4 h-4 mr-2" />
             Imprimir / PDF
