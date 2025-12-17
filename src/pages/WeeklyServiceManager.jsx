@@ -10,12 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, Printer, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail, Eye } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
+import ServicePdfPreview from "@/components/service/pdf/ServicePdfPreview";
 
 
 export default function WeeklyServiceManager() {
