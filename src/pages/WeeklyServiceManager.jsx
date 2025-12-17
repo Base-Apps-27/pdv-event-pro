@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import StaticAnnouncementForm from "@/components/announcements/StaticAnnouncementForm";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -611,11 +612,11 @@ export default function WeeklyServiceManager() {
     });
   };
 
-  const handleAnnouncementSubmit = () => {
+  const handleAnnouncementSubmit = (formData) => {
     if (editingAnnouncement) {
-      updateAnnouncementMutation.mutate({ id: editingAnnouncement.id, data: announcementForm });
+      updateAnnouncementMutation.mutate({ id: editingAnnouncement.id, data: formData });
     } else {
-      createAnnouncementMutation.mutate(announcementForm);
+      createAnnouncementMutation.mutate(formData);
     }
   };
 
@@ -635,8 +636,8 @@ export default function WeeklyServiceManager() {
     setShowAnnouncementDialog(true);
   };
 
-  const optimizeAnnouncementWithAI = async () => {
-    if (announcementForm.category !== "General") return;
+  const optimizeAnnouncementWithAI = async (formData, setResult) => {
+    if (formData?.category !== "General") return;
     
     setOptimizingAnnouncement(true);
     
@@ -645,14 +646,14 @@ export default function WeeklyServiceManager() {
         prompt: `You are a church communications editor. Rewrite this static announcement to be clear, concise, and impactful while fitting strict character limits.
 
 CURRENT ANNOUNCEMENT:
-Title: ${announcementForm.title || '(empty)'}
-Body: ${announcementForm.content || '(empty)'}
-CUE/Instructions: ${announcementForm.instructions || '(empty)'}
+Title: ${formData?.title || '(empty)'}
+Body: ${formData?.content || '(empty)'}
+CUE/Instructions: ${formData?.instructions || '(empty)'}
 
 STRICT LIMITS:
-- Title: max 60 characters (currently ${announcementForm.title?.length || 0})
-- Body: max 420 characters (currently ${announcementForm.content?.length || 0})
-- CUE: max 200 characters (currently ${announcementForm.instructions?.length || 0})
+- Title: max 60 characters (currently ${formData?.title?.length || 0})
+- Body: max 420 characters (currently ${formData?.content?.length || 0})
+- CUE: max 200 characters (currently ${formData?.instructions?.length || 0})
 
 RULES:
 1. Keep the core message and all essential information
@@ -680,13 +681,12 @@ Return ONLY valid JSON with these exact fields:
         }
       });
 
-      if (result) {
-        setAnnouncementForm(prev => ({
-          ...prev,
-          title: (result.title || prev.title).substring(0, 60),
-          content: (result.content || prev.content).substring(0, 420),
-          instructions: (result.instructions || prev.instructions || "").substring(0, 200)
-        }));
+      if (result && setResult) {
+        setResult({
+          title: (result.title || formData.title).substring(0, 60),
+          content: (result.content || formData.content).substring(0, 420),
+          instructions: (result.instructions || formData.instructions || "").substring(0, 200)
+        });
       }
     } catch (error) {
       console.error('AI optimization error:', error);
@@ -2769,223 +2769,15 @@ Return ONLY valid JSON with these exact fields:
               )}
             </div>
           </DialogHeader>
-          <div className="space-y-4">
-            {/* Helper text for static announcements */}
-            {announcementForm.category === "General" && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="text-xs text-blue-800">
-                    <strong>Anuncios Fijos / Static Announcements:</strong>
-                    <p className="mt-1">
-                      Los anuncios fijos aparecen cada semana. Manténgalos cortos y use el formato para claridad.
-                    </p>
-                    <p className="mt-1 text-blue-600">
-                      Static announcements appear every week. Keep them short and use formatting for clarity.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={optimizeAnnouncementWithAI}
-                    disabled={optimizingAnnouncement || (!announcementForm.title && !announcementForm.content)}
-                    className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 flex-shrink-0"
-                  >
-                    {optimizingAnnouncement ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Optimizando...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="w-4 h-4 mr-2" />
-                        Optimizar con IA / AI Optimize
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-            
-            <div className="flex gap-6 p-3 bg-gray-50 rounded-lg border flex-wrap">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={announcementForm.has_video}
-                  onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, has_video: checked }))}
-                />
-                <Label className="font-semibold">📹 Incluye Video / Has Video</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={announcementForm.is_active}
-                  onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, is_active: checked }))}
-                />
-                <Label className="font-semibold">👁️ Visible</Label>
-              </div>
-              {announcementForm.category !== "General" && (
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={announcementForm.emphasize}
-                    onCheckedChange={(checked) => setAnnouncementForm(prev => ({ ...prev, emphasize: checked }))}
-                  />
-                  <Label className="font-semibold">⭐ Destacar / Emphasize</Label>
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label>Categoría / Category</Label>
-              <select
-                className="w-full border rounded-md p-2 text-sm"
-                value={announcementForm.category}
-                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, category: e.target.value }))}
-              >
-                <option value="General">General (Fijo / Static)</option>
-                <option value="Event">Evento / Event</option>
-                <option value="Ministry">Ministerio / Ministry</option>
-                <option value="Urgent">Urgente / Urgent</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label>Título / Title <span className="text-red-500">*</span></Label>
-              <Input
-                value={announcementForm.title}
-                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Título del anuncio / Announcement title"
-                maxLength={announcementForm.category === "General" ? 60 : undefined}
-              />
-              {announcementForm.category === "General" && (
-                <div className={`text-xs ${(announcementForm.title?.length || 0) > 50 ? 'text-amber-600' : 'text-gray-500'}`}>
-                  {announcementForm.title?.length || 0} / 60 caracteres / characters
-                </div>
-              )}
-            </div>
-            {announcementForm.category !== "General" && (
-            <div className="space-y-2">
-              <Label>Fecha de Ocurrencia / Date of Occurrence</Label>
-              <Input
-                type="date"
-                value={announcementForm.date_of_occurrence}
-                onChange={(e) => setAnnouncementForm(prev => ({ ...prev, date_of_occurrence: e.target.value }))}
-              />
-              <p className="text-xs text-gray-500">
-                El anuncio se mostrará hasta esta fecha / Announcement will show until this date
-              </p>
-              {!announcementForm.date_of_occurrence && (
-                <p className="text-xs text-amber-600 flex items-center gap-1">
-                  ⚠ Sin fecha: este anuncio no expirará / Without date: won't expire automatically.
-                </p>
-              )}
-            </div>
-            )}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Contenido / Body {announcementForm.category === "General" && <span className="text-xs text-gray-500">(máx 420 / max 420)</span>}</Label>
-                <div className="flex gap-1">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs"
-                    onClick={() => {
-                      setAnnouncementForm(prev => ({ ...prev, content: prev.content + '\n• \n• \n• ' }));
-                    }}
-                  >
-                    • Lista / List
-                  </Button>
-                </div>
-              </div>
-              <Textarea
-                value={announcementForm.content}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  // Enforce limit for static announcements
-                  if (announcementForm.category === "General" && value.length > 420) {
-                    return; // Don't update if over limit
-                  }
-                  setAnnouncementForm(prev => ({ ...prev, content: value }));
-                }}
-                placeholder="Contenido del anuncio / Announcement content..."
-                rows={6}
-              />
-              <div className={`flex items-center gap-4 text-xs ${
-                announcementForm.category === "General" 
-                  ? ((announcementForm.content?.length || 0) > 400 ? 'text-red-600 font-semibold' : (announcementForm.content?.length || 0) > 350 ? 'text-amber-600' : 'text-gray-500')
-                  : (estimateLines(announcementForm.content, 35) > 12 ? 'text-red-600 font-semibold' : estimateLines(announcementForm.content, 35) > 10 ? 'text-amber-600' : 'text-gray-500')
-              }`}>
-                {announcementForm.category === "General" ? (
-                  <span>{announcementForm.content?.length || 0} / 420 caracteres / characters</span>
-                ) : (
-                  <span>~{estimateLines(announcementForm.content, 35)} líneas / lines</span>
-                )}
-                {announcementForm.category === "General" && (announcementForm.content?.length || 0) > 400 && (
-                  <span className="text-red-600">⚠ Cerca del límite / Near limit</span>
-                )}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>CUE / Instrucciones (Opcional) {announcementForm.category === "General" && <span className="text-xs text-gray-500">(máx 200 / max 200)</span>}</Label>
-              </div>
-              <Textarea
-                value={announcementForm.instructions}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  // Enforce limit for static announcements
-                  if (announcementForm.category === "General" && value.length > 200) {
-                    return; // Don't update if over limit
-                  }
-                  setAnnouncementForm(prev => ({ ...prev, instructions: value }));
-                }}
-                placeholder="Instrucciones para el presentador / Instructions for presenter..."
-                rows={3}
-              />
-              <div className={`text-xs ${
-                announcementForm.category === "General"
-                  ? ((announcementForm.instructions?.length || 0) > 180 ? 'text-red-600 font-semibold' : (announcementForm.instructions?.length || 0) > 150 ? 'text-amber-600' : 'text-gray-500')
-                  : (estimateLines(announcementForm.instructions, 35) > 8 ? 'text-red-600 font-semibold' : 'text-gray-500')
-              }`}>
-                {announcementForm.category === "General" ? (
-                  <span>{announcementForm.instructions?.length || 0} / 200 caracteres / characters</span>
-                ) : (
-                  <span>~{estimateLines(announcementForm.instructions, 35)} líneas / lines</span>
-                )}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Prioridad / Priority</Label>
-              <Input
-                type="number"
-                value={announcementForm.priority}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  if (!isNaN(val)) {
-                    setAnnouncementForm(prev => ({ ...prev, priority: val }));
-                  }
-                }}
-                className="w-24"
-              />
-              <p className="text-xs text-gray-500">Menor número = aparece primero / Lower number = appears first</p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t">
-              <Button variant="outline" onClick={() => setShowAnnouncementDialog(false)} className="w-full sm:w-auto">
-                Cancelar / Cancel
-              </Button>
-              <Button 
-                onClick={handleAnnouncementSubmit} 
-                className="bg-pdv-teal text-white w-full sm:w-auto"
-                disabled={
-                  !announcementForm.title?.trim() ||
-                  (announcementForm.category === "General" && (
-                    (announcementForm.title?.length || 0) > 60 ||
-                    (announcementForm.content?.length || 0) > 420 ||
-                    (announcementForm.instructions?.length || 0) > 200
-                  ))
-                }
-              >
-                {editingAnnouncement ? "Guardar / Save" : "Crear / Create"}
-              </Button>
-            </div>
-          </div>
+          <StaticAnnouncementForm
+            announcement={announcementForm}
+            onChange={setAnnouncementForm}
+            onSave={handleAnnouncementSubmit}
+            onCancel={() => setShowAnnouncementDialog(false)}
+            isEditing={!!editingAnnouncement}
+            onOptimize={optimizeAnnouncementWithAI}
+            optimizing={optimizingAnnouncement}
+          />
         </DialogContent>
       </Dialog>
     </div>
