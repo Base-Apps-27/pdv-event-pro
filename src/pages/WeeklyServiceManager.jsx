@@ -263,6 +263,7 @@ export default function WeeklyServiceManager() {
       };
       setServiceData(loadedData);
       setSelectedAnnouncements(existingData.selected_announcements || []);
+      setPdfScales(existingData.pdf_scales || { page1: 100, page2: 100 });
     } else {
       const initialData = {
         date: selectedDate,
