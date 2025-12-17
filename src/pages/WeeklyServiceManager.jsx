@@ -491,7 +491,21 @@ export default function WeeklyServiceManager() {
   };
 
   const handleDownloadPDF = () => {
-    window.print();
+    setShowPdfPreview(true);
+  };
+
+  const handleSavePdfScales = (scales) => {
+    setPdfScales(scales);
+    // Save to database
+    const dataToSave = {
+      ...serviceDataRef.current,
+      pdf_scales: scales,
+      selected_announcements: selectedAnnouncements,
+      day_of_week: 'Sunday',
+      name: `Domingo - ${selectedDate}`,
+      status: 'active'
+    };
+    saveServiceMutation.mutate(dataToSave);
   };
 
 
