@@ -43,25 +43,35 @@ export default function ServicePdfPage2({
     );
   };
   
-  // Right column: dynamic events (compact format - title + date only)
-  const renderCompactEvent = (ann) => {
+  // Right column: dynamic events with full details
+  const renderDynamicEvent = (ann) => {
     const title = ann.isEvent ? ann.name : ann.title;
     const date = ann.date_of_occurrence || ann.start_date;
     const endDate = ann.end_date;
-    // For events, show a brief one-liner if available
-    const brief = ann.isEvent 
-      ? (ann.theme || ann.location || '') 
-      : '';
+    const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
+    const instructions = ann.instructions;
+    const isEmphasized = ann.emphasize || ann.category === 'Urgent';
     
     return (
-      <div key={ann.id} className="pdf-event-compact">
-        <span className="pdf-event-title">{title}</span>
-        {date && (
-          <span className="pdf-event-date">
-            {date}{endDate && ` — ${endDate}`}
-          </span>
+      <div key={ann.id} className={`pdf-dynamic-event ${isEmphasized ? 'pdf-emphasized' : ''}`}>
+        <div className="pdf-dynamic-event-header">
+          <span className="pdf-event-title">{title}</span>
+          {date && (
+            <span className="pdf-event-date">
+              {date}{endDate && ` — ${endDate}`}
+            </span>
+          )}
+        </div>
+        {content && (
+          <div className="pdf-dynamic-event-content">
+            {content}
+          </div>
         )}
-        {brief && <span className="pdf-event-brief">{brief}</span>}
+        {instructions && (
+          <div className="pdf-announcement-cue">
+            <span className="pdf-cue-label">CUE:</span> {instructions}
+          </div>
+        )}
       </div>
     );
   };
@@ -86,10 +96,10 @@ export default function ServicePdfPage2({
           {selectedFixed.map(ann => renderFullAnnouncement(ann))}
         </div>
         
-        {/* Right: Compact event list */}
+        {/* Right: Dynamic events with details */}
         <div className="pdf-events-column">
           <div className="pdf-events-header">Próximos Eventos / Upcoming Events</div>
-          {selectedDynamic.map(ann => renderCompactEvent(ann))}
+          {selectedDynamic.map(ann => renderDynamicEvent(ann))}
         </div>
       </div>
       

@@ -317,15 +317,28 @@ export const PDF_STYLES = `
     border-bottom: 1px solid #e5e7eb;
   }
 
-  .pdf-event-compact {
+  /* Dynamic Event - Full Format */
+  .pdf-dynamic-event {
     display: flex;
     flex-direction: column;
-    padding: 0.4em 0;
-    border-bottom: 1px solid #f3f4f6;
+    padding: 0.5em 0;
+    border-bottom: 1px solid #e5e7eb;
   }
 
-  .pdf-event-compact:last-child {
+  .pdf-dynamic-event:last-child {
     border-bottom: none;
+  }
+
+  .pdf-dynamic-event.pdf-emphasized {
+    background: #fef3c7;
+    border: 2px solid #f59e0b;
+    border-radius: 4px;
+    padding: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .pdf-dynamic-event-header {
+    margin-bottom: 0.25em;
   }
 
   .pdf-event-title {
@@ -333,6 +346,7 @@ export const PDF_STYLES = `
     font-weight: 600;
     color: #16a34a;
     line-height: 1.2;
+    display: block;
   }
 
   .pdf-event-date {
@@ -340,6 +354,15 @@ export const PDF_STYLES = `
     color: #4b5563;
     font-weight: 500;
     margin-top: 0.15em;
+    display: block;
+  }
+
+  .pdf-dynamic-event-content {
+    font-size: 0.9em;
+    color: #374151;
+    line-height: 1.3;
+    white-space: pre-wrap;
+    margin-top: 0.25em;
   }
 
   .pdf-event-brief {
