@@ -1396,21 +1396,11 @@ export default function WeeklyServiceManager() {
           </Button>
           <Button 
             variant="outline" 
-            onClick={handlePrint} 
-            disabled={isGeneratingPdf}
-            className="border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:border-gray-500 disabled:opacity-50"
+            onClick={handlePrint}
+            className="border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:border-gray-500"
           >
-            {isGeneratingPdf ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Preparando...
-              </>
-            ) : (
-              <>
-                <Printer className="w-4 h-4 mr-2" />
-                Imprimir
-              </>
-            )}
+            <Printer className="w-4 h-4 mr-2" />
+            Imprimir
           </Button>
         </div>
       </div>
