@@ -297,6 +297,58 @@ export const PDF_STYLES = `
     letter-spacing: 0.5px;
   }
 
+  /* Right Column - Compact Events List */
+  .pdf-events-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    border-left: 2px solid #e5e7eb;
+    padding-left: 12px;
+  }
+
+  .pdf-events-header {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .pdf-event-compact {
+    display: flex;
+    flex-direction: column;
+    padding: 0.4em 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .pdf-event-compact:last-child {
+    border-bottom: none;
+  }
+
+  .pdf-event-title {
+    font-size: 1em;
+    font-weight: 600;
+    color: #16a34a;
+    line-height: 1.2;
+  }
+
+  .pdf-event-date {
+    font-size: 0.85em;
+    color: #4b5563;
+    font-weight: 500;
+    margin-top: 0.15em;
+  }
+
+  .pdf-event-brief {
+    font-size: 0.85em;
+    color: #6b7280;
+    font-style: italic;
+    margin-top: 0.1em;
+  }
+
   /* Preview container styles */
   .pdf-preview-container {
     background: #e5e7eb;
