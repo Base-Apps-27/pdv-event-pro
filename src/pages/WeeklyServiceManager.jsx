@@ -1303,7 +1303,7 @@ export default function WeeklyServiceManager() {
                       {(ann.date_of_occurrence || ann.start_date) && (
                         <div className="print-announcement-date">
                           {ann.date_of_occurrence || ann.start_date}
-                          {ann.end_date && ` - ${ann.end_date}`}
+                          {ann.end_date && ` — ${ann.end_date}`}
                         </div>
                       )}
                     </div>
