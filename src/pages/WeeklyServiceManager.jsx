@@ -495,46 +495,10 @@ export default function WeeklyServiceManager() {
 
   const handleEmailPDF = async () => {
     if (!emailAddress) return;
-
-    setSendingEmail(true);
-
-    try {
-      const pdfData = await generatePdf({
-        page1Ref,
-        page2Ref: selectedAnnouncements.length > 0 ? page2Ref : null,
-        selectedDate,
-        onProgress: setPdfProgress
-      });
-
-      const blob = new Blob([pdfData], { type: 'application/pdf' });
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      
-      const pdfBase64 = await new Promise((resolve) => {
-        reader.onloadend = () => {
-          const base64 = reader.result.split(',')[1];
-          resolve(base64);
-        };
-      });
-
-      await base44.functions.invoke('sendEmailWithPDF', {
-        to: emailAddress,
-        subject: `Orden de Servicio - ${selectedDate}`,
-        body: `Adjunto encontrarás la orden de servicio para ${selectedDate}.`,
-        pdfBase64,
-        filename: `servicio-${selectedDate}.pdf`
-      });
-
-      alert('Correo enviado exitosamente');
-      setShowEmailDialog(false);
-      setEmailAddress('');
-    } catch (error) {
-      console.error('Error sending email:', error);
-      alert('Error al enviar correo: ' + error.message);
-    } finally {
-      setSendingEmail(false);
-      setPdfProgress('');
-    }
+    
+    // Email functionality requires PDF generation - use browser print to PDF and manually attach
+    alert('Para enviar por correo, usa "Imprimir" y guarda como PDF, luego adjúntalo manualmente.');
+    setShowEmailDialog(false);
   };
 
 
