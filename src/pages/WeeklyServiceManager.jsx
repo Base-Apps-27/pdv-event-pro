@@ -486,10 +486,6 @@ export default function WeeklyServiceManager() {
     debouncedSave(`team-${field}-${service}`);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const handleDownloadPDF = () => {
     setShowPdfPreview(true);
   };
@@ -1402,13 +1398,13 @@ export default function WeeklyServiceManager() {
           <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">
             Servicios Dominicales
           </h1>
-          <p className="text-gray-500 mt-1">Gestión semanal unificada</p>
+          <p className="text-gray-500 mt-1">Gestión semanal unificada / Unified weekly management</p>
         </div>
         <div className="flex gap-3 items-center">
           {savingField && (
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Loader2 className="w-4 h-4 animate-spin text-pdv-teal" />
-              <span>Guardando...</span>
+              <span>Guardando... / Saving...</span>
             </div>
           )}
           <Button 
@@ -1417,14 +1413,6 @@ export default function WeeklyServiceManager() {
           >
             <Eye className="w-4 h-4 mr-2" />
             Vista Previa PDF / PDF Preview
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handlePrint}
-            className="border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:border-gray-500"
-          >
-            <Printer className="w-4 h-4 mr-2" />
-            Imprimir / Print
           </Button>
         </div>
       </div>
@@ -2351,10 +2339,13 @@ export default function WeeklyServiceManager() {
 
           {/* Fixed Announcements */}
           <div className="space-y-3">
-            <div>
-              <Label className="text-base font-bold text-gray-900">Anuncios Fijos</Label>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <Label className="text-base font-bold text-gray-900">Anuncios Fijos / Static Announcements</Label>
               <p className="text-xs text-gray-600 mt-1">
-                Anuncios generales activos que siempre se muestran primero.
+                Los anuncios fijos aparecen cada semana. Manténgalos cortos y use el formato para claridad, no para longitud.
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                Static announcements appear every week. Keep them short and use formatting for clarity, not length.
               </p>
             </div>
             <div className="grid md:grid-cols-2 gap-3">
