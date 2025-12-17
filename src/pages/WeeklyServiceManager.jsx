@@ -1184,7 +1184,7 @@ export default function WeeklyServiceManager() {
           </div>
 
           <div className="print-service-column right">
-            <div className="print-service-time">11:30 a.m.</div>
+            <div className="print-service-time">11:30 A.M.</div>
             {serviceData?.pre_service_notes?.["11:30am"] && (
               <div className="print-segment">
                 <div className="print-segment-detail" style={{ fontStyle: 'italic', color: '#6b7280' }}>
