@@ -1398,8 +1398,8 @@ export default function WeeklyServiceManager() {
             className="bg-pdv-teal text-white border-2 border-pdv-teal font-semibold hover:bg-pdv-teal/90" 
             onClick={handleDownloadPDF}
           >
-            <Printer className="w-4 h-4 mr-2" />
-            Imprimir / PDF
+            <Eye className="w-4 h-4 mr-2" />
+            Vista Previa PDF / PDF Preview
           </Button>
           <Button 
             variant="outline" 
@@ -1407,7 +1407,7 @@ export default function WeeklyServiceManager() {
             className="border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:border-gray-500"
           >
             <Printer className="w-4 h-4 mr-2" />
-            Imprimir
+            Imprimir / Print
           </Button>
         </div>
       </div>
