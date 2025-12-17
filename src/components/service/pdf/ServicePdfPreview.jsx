@@ -120,6 +120,20 @@ export default function ServicePdfPreview({
       // Save scales
       onSaveScales({ page1: page1Scale, page2: page2Scale });
       
+      // Store original scale styles and temporarily remove them for clean capture
+      const page1Element = page1Ref.current;
+      const page2Element = page2Ref.current;
+      
+      const originalPage1Style = page1Element?.style.transform;
+      const originalPage2Style = page2Element?.style.transform;
+      
+      // Remove scale transforms temporarily
+      if (page1Element) page1Element.style.transform = `scale(${page1Scale / 100})`;
+      if (page2Element) page2Element.style.transform = `scale(${page2Scale / 100})`;
+      
+      // Wait for style application
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
       // Create PDF using jsPDF - US Letter size in points (612 x 792)
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -128,15 +142,20 @@ export default function ServicePdfPreview({
       });
       
       // Capture Page 1
-      const page1Element = page1Ref.current;
       if (page1Element) {
+        // Calculate actual dimensions after scale
+        const scaledWidth = 816 * (page1Scale / 100);
+        const scaledHeight = 1056 * (page1Scale / 100);
+        
         const canvas1 = await html2canvas(page1Element, {
           scale: 2, // Higher quality
           useCORS: true,
           allowTaint: true,
           backgroundColor: '#ffffff',
-          width: 816,
-          height: 1056
+          width: scaledWidth,
+          height: scaledHeight,
+          windowWidth: scaledWidth,
+          windowHeight: scaledHeight
         });
         
         const imgData1 = canvas1.toDataURL('image/png');
@@ -155,15 +174,19 @@ export default function ServicePdfPreview({
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Capture Page 2
-      const page2Element = page2Ref.current;
       if (page2Element) {
+        const scaledWidth = 816 * (page2Scale / 100);
+        const scaledHeight = 1056 * (page2Scale / 100);
+        
         const canvas2 = await html2canvas(page2Element, {
           scale: 2,
           useCORS: true,
           allowTaint: true,
           backgroundColor: '#ffffff',
-          width: 816,
-          height: 1056
+          width: scaledWidth,
+          height: scaledHeight,
+          windowWidth: scaledWidth,
+          windowHeight: scaledHeight
         });
         
         const imgData2 = canvas2.toDataURL('image/png');
@@ -172,6 +195,14 @@ export default function ServicePdfPreview({
       
       // Restore original tab
       setActiveTab(currentTab);
+      
+      // Restore original scale styles
+      if (page1Element && originalPage1Style !== undefined) {
+        page1Element.style.transform = originalPage1Style;
+      }
+      if (page2Element && originalPage2Style !== undefined) {
+        page2Element.style.transform = originalPage2Style;
+      }
       
       // Download the PDF
       const fileName = `Orden-de-Servicio-${selectedDate}.pdf`;
@@ -244,7 +275,7 @@ export default function ServicePdfPreview({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden bg-white p-0">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden bg-white p-0 print:hidden">
         <PdfStyles />
         
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
