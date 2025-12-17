@@ -1122,12 +1122,7 @@ export default function WeeklyServiceManager() {
 
                   {segment.data?.ministry_leader && (
                     <div className="print-segment-detail">
-                      Ministración de Sanidad y Milagros: <span className="print-name">{segment.data.ministry_leader}</span> <span className="print-duration">(4 mins.)</span>
-                    </div>
-                  )}
-                  {segment.data?.ministry_leader && (
-                    <div className="print-segment-detail print-note-text">
-                      (Debe estar listo (a) desde que inicia la adoración)
+                      • Ministración: <span className="print-name">{segment.data.ministry_leader}</span> <span className="print-duration">(5 min)</span>
                     </div>
                   )}
 
