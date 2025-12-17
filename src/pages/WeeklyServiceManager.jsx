@@ -1391,17 +1391,8 @@ export default function WeeklyServiceManager() {
             onClick={handleDownloadPDF}
             disabled={isGeneratingPdf}
           >
-            {isGeneratingPdf ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                {pdfProgress || 'Generando...'}
-              </>
-            ) : (
-              <>
-                <Printer className="w-4 h-4 mr-2" />
-                Descargar PDF
-              </>
-            )}
+            <Printer className="w-4 h-4 mr-2" />
+            Imprimir / PDF
           </Button>
           <Button 
             variant="outline" 
