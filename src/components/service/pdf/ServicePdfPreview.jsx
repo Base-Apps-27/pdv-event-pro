@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Minus, Plus, Wand2, Printer, Check, AlertTriangle, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Minus, Plus, Wand2, Printer, Check, AlertTriangle, Download, Mail, Loader2, X } from "lucide-react";
 import ServicePdfPage1 from "./ServicePdfPage1";
 import ServicePdfPage2 from "./ServicePdfPage2";
 import PdfStyles from "./PdfStyles";
+import { base44 } from "@/api/base44Client";
 
 // US Letter at 96 DPI: 816 x 1056px, content area with 48px margins
 const PAGE_HEIGHT = 1056;
@@ -30,9 +33,16 @@ export default function ServicePdfPreview({
   const [page1Fits, setPage1Fits] = useState(true);
   const [page2Fits, setPage2Fits] = useState(true);
   const [autoFitting, setAutoFitting] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emailAddress, setEmailAddress] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   
   const page1Ref = useRef(null);
   const page2Ref = useRef(null);
+  
+  // Check if both pages fit (required for output actions)
+  const canOutput = page1Fits && page2Fits;
 
   // Check if content fits within page bounds
   const checkPageFit = useCallback((pageRef, scale) => {
@@ -84,10 +94,69 @@ export default function ServicePdfPreview({
   }, [checkPageFit]);
 
   const handlePrint = () => {
-    // Close the preview dialog and trigger the main window print
-    // which uses the existing print styles in WeeklyServiceManager
+    if (!canOutput) {
+      alert('El contenido excede los límites de página. Ajuste la escala o reduzca el contenido.\n\nContent exceeds page limits. Adjust scale or reduce content.');
+      return;
+    }
+    // Save scales first, then close and print
+    onSaveScales({ page1: page1Scale, page2: page2Scale });
     onOpenChange(false);
     setTimeout(() => window.print(), 150);
+  };
+  
+  const handleDownloadPDF = () => {
+    if (!canOutput) {
+      alert('El contenido excede los límites de página. Ajuste la escala o reduzca el contenido.\n\nContent exceeds page limits. Adjust scale or reduce content.');
+      return;
+    }
+    // Save scales, close, and trigger print (user can save as PDF from print dialog)
+    onSaveScales({ page1: page1Scale, page2: page2Scale });
+    onOpenChange(false);
+    setTimeout(() => window.print(), 150);
+  };
+  
+  const handleSendEmail = async () => {
+    if (!canOutput) {
+      alert('El contenido excede los límites de página. Ajuste la escala o reduzca el contenido.\n\nContent exceeds page limits. Adjust scale or reduce content.');
+      return;
+    }
+    
+    if (!emailAddress || !emailAddress.includes('@')) {
+      alert('Por favor ingrese un email válido / Please enter a valid email');
+      return;
+    }
+    
+    setSendingEmail(true);
+    
+    try {
+      // Send email notification (actual PDF would need to be generated server-side)
+      await base44.integrations.Core.SendEmail({
+        to: emailAddress,
+        subject: `Orden de Servicio - Domingo ${selectedDate}`,
+        body: `
+          <h2>Orden de Servicio / Service Order</h2>
+          <p>Fecha / Date: ${selectedDate}</p>
+          <p>Este documento fue generado desde el sistema de gestión de servicios de Palabras de Vida.</p>
+          <p>This document was generated from the Palabras de Vida service management system.</p>
+          <hr/>
+          <p><em>Para ver el documento completo, por favor imprima desde la vista previa del sistema.</em></p>
+          <p><em>To view the full document, please print from the system preview.</em></p>
+        `
+      });
+      
+      setEmailSent(true);
+      setTimeout(() => {
+        setEmailSent(false);
+        setShowEmailForm(false);
+        setEmailAddress("");
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Email error:', error);
+      alert('Error al enviar email / Error sending email: ' + error.message);
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const handleSaveAndClose = () => {
@@ -109,24 +178,113 @@ export default function ServicePdfPreview({
         <PdfStyles />
         
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <DialogTitle className="text-xl font-bold">
               Vista Previa del PDF / PDF Preview
             </DialogTitle>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar / Cancel
+                <X className="w-4 h-4 mr-2" />
+                Cerrar / Close
               </Button>
-              <Button onClick={handleSaveAndClose} className="bg-pdv-teal text-white">
+              <Button 
+                onClick={handleSaveAndClose} 
+                variant="outline"
+                className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+              >
                 <Check className="w-4 h-4 mr-2" />
-                Guardar / Save
+                Guardar Escala / Save Scale
               </Button>
-              <Button onClick={handlePrint} className="bg-gray-900 text-white">
+              <Button 
+                onClick={() => setShowEmailForm(!showEmailForm)}
+                variant="outline"
+                disabled={!canOutput}
+                className={!canOutput ? 'opacity-50 cursor-not-allowed' : ''}
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Email
+              </Button>
+              <Button 
+                onClick={handleDownloadPDF}
+                variant="outline"
+                disabled={!canOutput}
+                className={!canOutput ? 'opacity-50 cursor-not-allowed' : ''}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Descargar / Download
+              </Button>
+              <Button 
+                onClick={handlePrint} 
+                className={`bg-gray-900 text-white ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!canOutput}
+              >
                 <Printer className="w-4 h-4 mr-2" />
                 Imprimir / Print
               </Button>
             </div>
           </div>
+          
+          {/* Overall fit status */}
+          {!canOutput && (
+            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-sm text-red-800">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+              <div>
+                <strong>El contenido excede los límites de página.</strong> Ajuste la escala o reduzca el contenido antes de imprimir o enviar.
+                <br/>
+                <span className="text-red-600">Content exceeds page limits. Adjust scale or reduce content before printing or sending.</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Email form */}
+          {showEmailForm && (
+            <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-end gap-3">
+                <div className="flex-1">
+                  <Label className="text-sm font-semibold text-blue-900">
+                    Enviar a / Send to:
+                  </Label>
+                  <Input
+                    type="email"
+                    placeholder="email@example.com"
+                    value={emailAddress}
+                    onChange={(e) => setEmailAddress(e.target.value)}
+                    className="mt-1"
+                    disabled={sendingEmail}
+                  />
+                </div>
+                <Button
+                  onClick={handleSendEmail}
+                  disabled={sendingEmail || !emailAddress || emailSent}
+                  className={emailSent ? 'bg-green-600 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}
+                >
+                  {sendingEmail ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : emailSent ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      ¡Enviado! / Sent!
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4 mr-2" />
+                      Enviar / Send
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowEmailForm(false)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogHeader>
 
         <div className="flex h-[calc(95vh-140px)]">

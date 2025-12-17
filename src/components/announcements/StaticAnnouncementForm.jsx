@@ -1,0 +1,326 @@
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Bold, Italic, List, AlertTriangle } from "lucide-react";
+
+// Character limits
+const LIMITS = {
+  title: 60,
+  body: 420,
+  cue: 200,
+  date: 50
+};
+
+// Simple rich text editor with limited formatting
+function RichTextArea({ value, onChange, placeholder, maxLength, rows = 4, id }) {
+  const [charCount, setCharCount] = useState(0);
+  const textareaRef = React.useRef(null);
+  
+  useEffect(() => {
+    // Strip HTML tags for character count
+    const plainText = (value || '').replace(/<[^>]*>/g, '');
+    setCharCount(plainText.length);
+  }, [value]);
+  
+  const isOverLimit = charCount > maxLength;
+  const isNearLimit = charCount > maxLength * 0.85;
+  
+  const applyFormatting = (tag) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = value.substring(start, end);
+    
+    let formattedText = '';
+    if (tag === 'b') {
+      formattedText = `<b>${selectedText}</b>`;
+    } else if (tag === 'i') {
+      formattedText = `<i>${selectedText}</i>`;
+    } else if (tag === 'ul') {
+      const lines = selectedText.split('\n').filter(l => l.trim());
+      if (lines.length > 3) {
+        alert('Máximo 3 puntos de lista permitidos / Maximum 3 bullet points allowed');
+        return;
+      }
+      formattedText = lines.map(line => `• ${line.replace(/^[•\-]\s*/, '')}`).join('\n');
+    }
+    
+    const newValue = value.substring(0, start) + formattedText + value.substring(end);
+    onChange(newValue);
+  };
+  
+  return (
+    <div className="space-y-1">
+      <div className="flex gap-1 mb-1">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0"
+          onClick={() => applyFormatting('b')}
+          title="Negrita / Bold"
+        >
+          <Bold className="w-3 h-3" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0"
+          onClick={() => applyFormatting('i')}
+          title="Itálica / Italic"
+        >
+          <Italic className="w-3 h-3" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0"
+          onClick={() => applyFormatting('ul')}
+          title="Lista (máx 3) / List (max 3)"
+        >
+          <List className="w-3 h-3" />
+        </Button>
+      </div>
+      <textarea
+        ref={textareaRef}
+        id={id}
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        rows={rows}
+        className={`w-full px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-pdv-teal ${
+          isOverLimit ? 'border-red-500 bg-red-50' : 'border-gray-300'
+        }`}
+      />
+      <div className={`flex justify-between text-xs ${
+        isOverLimit ? 'text-red-600 font-semibold' : isNearLimit ? 'text-amber-600' : 'text-gray-500'
+      }`}>
+        <span>
+          {isOverLimit && <AlertTriangle className="w-3 h-3 inline mr-1" />}
+          {charCount} / {maxLength}
+        </span>
+        {isOverLimit && (
+          <span className="text-red-600">
+            Excede el límite / Over limit
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function StaticAnnouncementForm({ 
+  announcement, 
+  onChange, 
+  onSave, 
+  onCancel,
+  isEditing = false 
+}) {
+  const [form, setForm] = useState({
+    title: '',
+    content: '',
+    instructions: '',
+    date_label: '',
+    has_video: false,
+    is_active: true,
+    category: 'General',
+    priority: 10,
+    ...announcement
+  });
+  
+  const [errors, setErrors] = useState({});
+  
+  const updateField = (field, value) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+    // Clear error when user types
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }));
+    }
+  };
+  
+  const validate = () => {
+    const newErrors = {};
+    
+    // Strip HTML for validation
+    const titleLength = (form.title || '').length;
+    const bodyLength = (form.content || '').replace(/<[^>]*>/g, '').length;
+    const cueLength = (form.instructions || '').replace(/<[^>]*>/g, '').length;
+    const dateLength = (form.date_label || '').length;
+    
+    if (!form.title?.trim()) {
+      newErrors.title = 'Título requerido / Title required';
+    } else if (titleLength > LIMITS.title) {
+      newErrors.title = `Máximo ${LIMITS.title} caracteres / Max ${LIMITS.title} characters`;
+    }
+    
+    if (bodyLength > LIMITS.body) {
+      newErrors.content = `Máximo ${LIMITS.body} caracteres / Max ${LIMITS.body} characters`;
+    }
+    
+    if (cueLength > LIMITS.cue) {
+      newErrors.instructions = `Máximo ${LIMITS.cue} caracteres / Max ${LIMITS.cue} characters`;
+    }
+    
+    if (dateLength > LIMITS.date) {
+      newErrors.date_label = `Máximo ${LIMITS.date} caracteres / Max ${LIMITS.date} characters`;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  
+  const handleSave = () => {
+    if (validate()) {
+      onSave(form);
+    }
+  };
+  
+  const titleLength = (form.title || '').length;
+  const isTitleOverLimit = titleLength > LIMITS.title;
+  const isTitleNearLimit = titleLength > LIMITS.title * 0.85;
+  
+  return (
+    <div className="space-y-4">
+      {/* Helper text */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+        <strong>Anuncios Fijos / Static Announcements:</strong>
+        <p className="mt-1">
+          Los anuncios fijos aparecen cada semana. Manténgalos cortos y use el formato para claridad, no para longitud.
+        </p>
+        <p className="mt-1 text-blue-600">
+          Static announcements appear every week. Keep them short and use formatting for clarity, not length.
+        </p>
+      </div>
+      
+      {/* Quick toggles */}
+      <div className="flex gap-6 p-3 bg-gray-50 rounded-lg border">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={form.has_video}
+            onCheckedChange={(checked) => updateField('has_video', checked)}
+          />
+          <Label className="font-semibold text-sm">📹 Video</Label>
+        </div>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={form.is_active}
+            onCheckedChange={(checked) => updateField('is_active', checked)}
+          />
+          <Label className="font-semibold text-sm">👁️ Visible</Label>
+        </div>
+      </div>
+      
+      {/* Title */}
+      <div className="space-y-1">
+        <Label htmlFor="title" className="font-semibold">
+          Título / Title <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id="title"
+          value={form.title || ''}
+          onChange={(e) => updateField('title', e.target.value)}
+          placeholder="Título del anuncio / Announcement title"
+          className={errors.title || isTitleOverLimit ? 'border-red-500 bg-red-50' : ''}
+          maxLength={LIMITS.title + 10} // Allow slight overage for UX
+        />
+        <div className={`flex justify-between text-xs ${
+          isTitleOverLimit ? 'text-red-600 font-semibold' : isTitleNearLimit ? 'text-amber-600' : 'text-gray-500'
+        }`}>
+          <span>{titleLength} / {LIMITS.title}</span>
+          {errors.title && <span className="text-red-600">{errors.title}</span>}
+        </div>
+      </div>
+      
+      {/* Body */}
+      <div className="space-y-1">
+        <Label htmlFor="content" className="font-semibold">
+          Contenido / Body
+        </Label>
+        <RichTextArea
+          id="content"
+          value={form.content || ''}
+          onChange={(value) => updateField('content', value)}
+          placeholder="Contenido principal del anuncio / Main announcement content"
+          maxLength={LIMITS.body}
+          rows={5}
+        />
+        {errors.content && (
+          <span className="text-xs text-red-600">{errors.content}</span>
+        )}
+      </div>
+      
+      {/* CUE (optional) */}
+      <div className="space-y-1">
+        <Label htmlFor="instructions" className="font-semibold">
+          CUE / Instrucciones (Opcional / Optional)
+        </Label>
+        <RichTextArea
+          id="instructions"
+          value={form.instructions || ''}
+          onChange={(value) => updateField('instructions', value)}
+          placeholder="Instrucciones para el presentador / Instructions for presenter"
+          maxLength={LIMITS.cue}
+          rows={3}
+        />
+        {errors.instructions && (
+          <span className="text-xs text-red-600">{errors.instructions}</span>
+        )}
+      </div>
+      
+      {/* Date label (optional) */}
+      <div className="space-y-1">
+        <Label htmlFor="date_label" className="font-semibold">
+          Fecha (Opcional) / Date (Optional)
+        </Label>
+        <Input
+          id="date_label"
+          value={form.date_label || ''}
+          onChange={(e) => updateField('date_label', e.target.value)}
+          placeholder="Ej: Todos los domingos / Every Sunday"
+          className={errors.date_label ? 'border-red-500 bg-red-50' : ''}
+        />
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>{(form.date_label || '').length} / {LIMITS.date}</span>
+          {errors.date_label && <span className="text-red-600">{errors.date_label}</span>}
+        </div>
+      </div>
+      
+      {/* Priority */}
+      <div className="space-y-1">
+        <Label htmlFor="priority" className="font-semibold">
+          Prioridad / Priority
+        </Label>
+        <Input
+          id="priority"
+          type="number"
+          value={form.priority || 10}
+          onChange={(e) => updateField('priority', parseInt(e.target.value) || 10)}
+          className="w-24"
+        />
+        <p className="text-xs text-gray-500">
+          Menor número = aparece primero / Lower number = appears first
+        </p>
+      </div>
+      
+      {/* Actions */}
+      <div className="flex justify-end gap-3 pt-4 border-t">
+        <Button variant="outline" onClick={onCancel}>
+          Cancelar / Cancel
+        </Button>
+        <Button 
+          onClick={handleSave} 
+          className="bg-pdv-teal text-white"
+          disabled={Object.keys(errors).some(k => errors[k])}
+        >
+          {isEditing ? 'Guardar / Save' : 'Crear / Create'}
+        </Button>
+      </div>
+    </div>
+  );
+}
