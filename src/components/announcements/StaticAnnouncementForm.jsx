@@ -13,58 +13,58 @@ const LIMITS = {
   date: 50
 };
 
-// Simple rich text editor with limited formatting - uses plain text with bullet points
+// Rich text editor using contenteditable for real-time formatting display
 function RichTextArea({ value, onChange, placeholder, maxLength, rows = 4, id }) {
   const [charCount, setCharCount] = useState(0);
-  const textareaRef = React.useRef(null);
+  const editorRef = React.useRef(null);
+  const [isFocused, setIsFocused] = useState(false);
+  
+  // Get plain text length from HTML
+  const getTextLength = (html) => {
+    const temp = document.createElement('div');
+    temp.innerHTML = html || '';
+    return temp.textContent?.length || 0;
+  };
   
   useEffect(() => {
-    // Count characters directly (no HTML)
-    setCharCount((value || '').length);
+    setCharCount(getTextLength(value));
   }, [value]);
+  
+  // Sync value to editor on mount and when value changes externally
+  useEffect(() => {
+    if (editorRef.current && !isFocused) {
+      editorRef.current.innerHTML = value || '';
+    }
+  }, [value, isFocused]);
   
   const isOverLimit = charCount > maxLength;
   const isNearLimit = charCount > maxLength * 0.85;
   
-  const insertAtCursor = (textToInsert) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const newValue = (value || '').substring(0, start) + textToInsert + (value || '').substring(end);
-    onChange(newValue);
-    
-    // Set cursor position after inserted text
-    setTimeout(() => {
-      textarea.selectionStart = textarea.selectionEnd = start + textToInsert.length;
-      textarea.focus();
-    }, 0);
-  };
-  
-  const addBulletPoints = () => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = (value || '').substring(start, end);
-    
-    if (selectedText) {
-      // Convert selected lines to bullet points
-      const lines = selectedText.split('\n').filter(l => l.trim());
-      if (lines.length > 3) {
-        alert('Máximo 3 puntos de lista / Maximum 3 bullet points');
-        return;
-      }
-      const bulleted = lines.map(line => `• ${line.replace(/^[•\-]\s*/, '')}`).join('\n');
-      const newValue = (value || '').substring(0, start) + bulleted + (value || '').substring(end);
-      onChange(newValue);
-    } else {
-      // Insert empty bullet point at cursor
-      insertAtCursor('• ');
+  const handleInput = () => {
+    if (editorRef.current) {
+      const html = editorRef.current.innerHTML;
+      // Replace <div> and <br> with proper line breaks for consistency
+      const cleaned = html
+        .replace(/<div>/gi, '<br>')
+        .replace(/<\/div>/gi, '')
+        .replace(/^<br>/, '');
+      onChange(cleaned);
     }
   };
+  
+  const applyFormat = (command) => {
+    document.execCommand(command, false, null);
+    editorRef.current?.focus();
+    handleInput();
+  };
+  
+  const insertBullet = () => {
+    document.execCommand('insertText', false, '• ');
+    editorRef.current?.focus();
+    handleInput();
+  };
+  
+  const minHeight = rows * 24; // Approximate line height
   
   return (
     <div className="space-y-1">
@@ -73,27 +73,47 @@ function RichTextArea({ value, onChange, placeholder, maxLength, rows = 4, id })
           type="button"
           variant="outline"
           size="sm"
+          className="h-7 w-7 p-0 font-bold"
+          onClick={() => applyFormat('bold')}
+          title="Negrita / Bold"
+        >
+          B
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0 italic"
+          onClick={() => applyFormat('italic')}
+          title="Itálica / Italic"
+        >
+          I
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
           className="h-7 px-2 text-xs"
-          onClick={addBulletPoints}
-          title="Lista / List"
+          onClick={insertBullet}
+          title="Viñeta / Bullet"
         >
           <List className="w-3 h-3 mr-1" />
-          Lista
+          •
         </Button>
-        <span className="text-xs text-gray-400 self-center ml-2">
-          Use • para viñetas / Use • for bullets
-        </span>
       </div>
-      <textarea
-        ref={textareaRef}
+      <div
+        ref={editorRef}
         id={id}
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={rows}
-        className={`w-full px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-pdv-teal ${
-          isOverLimit ? 'border-red-500 bg-red-50' : 'border-gray-300'
-        }`}
+        contentEditable
+        onInput={handleInput}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        data-placeholder={placeholder}
+        style={{ minHeight: `${minHeight}px` }}
+        className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-pdv-teal overflow-auto
+          ${isOverLimit ? 'border-red-500 bg-red-50' : 'border-gray-300'}
+          empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400
+        `}
       />
       <div className={`flex justify-between text-xs ${
         isOverLimit ? 'text-red-600 font-semibold' : isNearLimit ? 'text-amber-600' : 'text-gray-500'

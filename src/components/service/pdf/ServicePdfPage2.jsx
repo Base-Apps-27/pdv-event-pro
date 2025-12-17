@@ -18,6 +18,15 @@ export default function ServicePdfPage2({
   const selectedFixed = fixedAnnouncements.filter(ann => selectedAnnouncements.includes(ann.id));
   const selectedDynamic = dynamicAnnouncements.filter(ann => selectedAnnouncements.includes(ann.id));
   
+  // Sanitize HTML - only allow safe tags
+  const sanitizeHtml = (html) => {
+    if (!html) return '';
+    // Allow only b, i, strong, em, br tags
+    return html
+      .replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '')
+      .replace(/&nbsp;/g, ' ');
+  };
+  
   // Left column: fixed announcements (full format with CUE)
   const renderFullAnnouncement = (ann) => {
     const title = ann.isEvent ? ann.name : ann.title;
@@ -30,13 +39,15 @@ export default function ServicePdfPage2({
           <span className="pdf-announcement-title">{title}</span>
         </div>
         {content && (
-          <div className="pdf-announcement-content">
-            {content}
-          </div>
+          <div 
+            className="pdf-announcement-content"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
+          />
         )}
         {instructions && (
           <div className="pdf-announcement-cue">
-            <span className="pdf-cue-label">CUE:</span> {instructions}
+            <span className="pdf-cue-label">CUE:</span>{' '}
+            <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(instructions) }} />
           </div>
         )}
       </div>
@@ -63,13 +74,15 @@ export default function ServicePdfPage2({
           )}
         </div>
         {content && (
-          <div className="pdf-dynamic-event-content">
-            {content}
-          </div>
+          <div 
+            className="pdf-dynamic-event-content"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
+          />
         )}
         {instructions && (
           <div className="pdf-announcement-cue">
-            <span className="pdf-cue-label">CUE:</span> {instructions}
+            <span className="pdf-cue-label">CUE:</span>{' '}
+            <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(instructions) }} />
           </div>
         )}
       </div>
