@@ -495,29 +495,14 @@ export default function WeeklyServiceManager() {
     try {
       setIsGeneratingPdf(true);
       
-      const payload = {
-        service: {
-          '9:30am': serviceData?.['9:30am'] || [],
-          '11:30am': serviceData?.['11:30am'] || [],
-          coordinators: serviceData?.coordinators,
-          ujieres: serviceData?.ujieres,
-          sound: serviceData?.sound,
-          luces: serviceData?.luces,
-          pre_service_notes: serviceData?.pre_service_notes,
-          receso_notes: serviceData?.receso_notes
-        },
-        announcements: [...fixedAnnouncements, ...dynamicAnnouncements].filter(a => 
-          selectedAnnouncements.includes(a.id)
-        )
-      };
-
-      const response = await base44.functions.invoke('generateServicePdf', {
-        serviceData: payload,
+      const pdfData = await generatePdf({
+        page1Ref,
+        page2Ref: selectedAnnouncements.length > 0 ? page2Ref : null,
         selectedDate,
-        includeAnnouncements: true
+        onProgress: setPdfProgress
       });
 
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blob = new Blob([pdfData], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const printWindow = window.open(url, '_blank');
       
@@ -529,6 +514,7 @@ export default function WeeklyServiceManager() {
       alert('Error al generar PDF: ' + error.message);
     } finally {
       setIsGeneratingPdf(false);
+      setPdfProgress('');
     }
   };
 
@@ -536,44 +522,21 @@ export default function WeeklyServiceManager() {
     try {
       setIsGeneratingPdf(true);
 
-      const payload = {
-        service: {
-          '9:30am': serviceData?.['9:30am'] || [],
-          '11:30am': serviceData?.['11:30am'] || [],
-          coordinators: serviceData?.coordinators,
-          ujieres: serviceData?.ujieres,
-          sound: serviceData?.sound,
-          luces: serviceData?.luces,
-          pre_service_notes: serviceData?.pre_service_notes,
-          receso_notes: serviceData?.receso_notes
-        },
-        announcements: [...fixedAnnouncements, ...dynamicAnnouncements].filter(a => 
-          selectedAnnouncements.includes(a.id)
-        )
-      };
-
-      const response = await base44.functions.invoke('generateServicePdf', {
-        serviceData: payload,
+      const pdfData = await generatePdf({
+        page1Ref,
+        page2Ref: selectedAnnouncements.length > 0 ? page2Ref : null,
         selectedDate,
-        includeAnnouncements: true
+        onProgress: setPdfProgress
       });
 
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `servicio-${selectedDate}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      await downloadPdf(pdfData, `servicio-${selectedDate}.pdf`);
       
-      alert('PDF descargado exitosamente');
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error al generar PDF: ' + error.message);
     } finally {
       setIsGeneratingPdf(false);
+      setPdfProgress('');
     }
   };
 
