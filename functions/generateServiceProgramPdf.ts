@@ -123,9 +123,6 @@ Deno.serve(async (req) => {
 });
 
 function generateServiceProgramHtml(serviceData, selectedDate, announcements, page1Scale, page2Scale) {
-  // Inline logo as data URI (base64) - eliminates external dependency
-  const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-  // Note: Replace above with actual logo base64 if needed, or use external URL with timeout handling
   const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png';
   
   // Validate serviceData
@@ -141,24 +138,31 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
   const luces = serviceData.luces?.['9:30am'] || serviceData.luces?.['11:30am'] || '';
   
   const roles = [];
-  if (coord) roles.push(`Coordinador: ${coord}`);
-  if (ujier) roles.push(`Ujier: ${ujier}`);
-  if (sound) roles.push(`Sonido: ${sound}`);
-  if (luces) roles.push(`Luces: ${luces}`);
+  if (coord) roles.push(`Coordinador: ${escapeHtml(coord)}`);
+  if (ujier) roles.push(`Ujier: ${escapeHtml(ujier)}`);
+  if (sound) roles.push(`Sonido: ${escapeHtml(sound)}`);
+  if (luces) roles.push(`Luces: ${escapeHtml(luces)}`);
   const rolesLine = roles.join(' • ');
 
   // Validate announcements
   const announcementsList = Array.isArray(announcements) ? announcements : [];
+  
+  // Split announcements into two columns
+  const midpoint = Math.ceil(announcementsList.length / 2);
+  const leftAnnouncements = announcementsList.slice(0, midpoint);
+  const rightAnnouncements = announcementsList.slice(midpoint);
 
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Orden de Servicio - ${selectedDate}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     @page {
-      size: letter;
+      size: letter portrait;
       margin: 0.5in;
     }
     
@@ -169,253 +173,296 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
     }
     
     body {
-      font-family: 'Helvetica', 'Arial', sans-serif;
-      font-size: 10pt;
-      line-height: 1.4;
-      color: #1A1A1A;
-      background: #fff;
-    }
-    
-    /* Ensure content is visible */
-    .page {
-      background: #fff;
-      color: #1A1A1A;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica', 'Arial', sans-serif;
+      font-size: 11pt;
+      line-height: 1.3;
+      color: #333333;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     
     .page {
-      page-break-after: always;
+      background: #ffffff;
       position: relative;
-      min-height: 9in;
+      min-height: 9.5in;
+      page-break-after: always;
+    }
+    
+    .page:last-child {
+      page-break-after: auto;
     }
     
     .logo {
       position: absolute;
-      left: 0;
-      top: 0;
-      width: 72px;
-      height: 72px;
+      left: -0.25in;
+      top: -0.25in;
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
     }
     
     .header {
       text-align: center;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
+      padding-top: 4px;
     }
     
     .title {
-      font-size: 24pt;
-      font-weight: bold;
+      font-size: 20pt;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 4px;
+      color: #1A1A1A;
+      margin-bottom: 6px;
     }
     
     .date {
-      font-size: 14pt;
-      color: #1F8A70;
-      margin-bottom: 6px;
+      font-size: 13pt;
+      color: #333333;
+      margin-bottom: 4px;
+      font-weight: 600;
     }
     
     .roles-line {
       font-size: 9.5pt;
-      color: #666;
+      color: #666666;
       margin-top: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 90%;
+      margin-left: auto;
+      margin-right: auto;
     }
     
     .columns {
-      display: flex;
-      gap: 16px;
-      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 0.3in;
     }
     
     .column {
-      flex: 1;
-      border: 1px solid #D1D5DB;
-      border-radius: 4px;
-      padding: 8px;
+      break-inside: avoid;
     }
     
     .column-header {
       font-size: 12pt;
-      font-weight: bold;
-      margin-bottom: 8px;
-      padding-bottom: 4px;
-      border-bottom: 2px solid #1F8A70;
+      font-weight: 700;
+      color: #1A1A1A;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #E6E6E6;
+    }
+    
+    .time-accent {
+      color: #C0392B;
+      font-weight: 600;
     }
     
     .segment {
-      margin-bottom: 8px;
-      padding-bottom: 6px;
-      border-bottom: 0.5px solid #E5E7EB;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 0.5px solid #F0F0F0;
+      break-inside: avoid;
     }
     
     .segment:last-child {
       border-bottom: none;
     }
     
-    .segment-title {
-      font-size: 10pt;
-      font-weight: bold;
-    }
-    
     .segment-time {
-      font-size: 8pt;
-      color: #6B7280;
+      font-size: 10pt;
+      color: #C0392B;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    
+    .segment-title {
+      font-size: 10.5pt;
+      font-weight: 600;
+      color: #1A1A1A;
+      margin-bottom: 3px;
+    }
+    
+    .segment-detail {
+      font-size: 10pt;
+      color: #333333;
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+    
+    .segment-name {
+      color: #1FBA70;
+      font-weight: 600;
+    }
+    
+    .segment-note {
+      font-size: 9.5pt;
+      color: #666666;
+      font-style: italic;
       margin-top: 2px;
     }
     
-    .segment-details {
-      font-size: 8pt;
-      color: #374151;
-      margin-top: 2px;
-    }
-    
-    .footer {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
+    .receso-block {
+      margin: 16px 0;
+      padding: 10px 0;
+      border-top: 1px solid #E6E6E6;
+      border-bottom: 1px solid #E6E6E6;
       text-align: center;
-      font-size: 7pt;
-      color: #9CA3AF;
     }
     
-    /* Page 2 styles */
-    .announcements-columns {
-      display: flex;
-      gap: 16px;
-      margin-top: 16px;
-    }
-    
-    .announcements-column {
-      flex: 1;
-    }
-    
-    .announcement-item {
-      margin-bottom: 12px;
-      padding: 8px;
-      border: 1px solid #E5E7EB;
-      border-radius: 4px;
-      background: #F9FAFB;
-      page-break-inside: avoid;
-    }
-    
-    .announcement-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .receso-title {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #1A1A1A;
       margin-bottom: 4px;
     }
     
-    .announcement-icon {
-      width: 16px;
-      height: 16px;
-      background: #1F8A70;
-      border-radius: 50%;
-      flex-shrink: 0;
+    .receso-note {
+      font-size: 9.5pt;
+      color: #666666;
+      font-style: italic;
+    }
+    
+    .footer {
+      margin-top: 20px;
+      padding-top: 8px;
+      border-top: 1px solid #E6E6E6;
+      text-align: center;
+      font-size: 9pt;
+      color: #666666;
+    }
+    
+    .footer-accent {
+      color: #1FBA70;
+      font-weight: 600;
+    }
+    
+    /* Page 2 - Announcements */
+    .announcements-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 0.3in;
+    }
+    
+    .announcements-column {
+      break-inside: avoid-column;
+    }
+    
+    .announcement-item {
+      margin-bottom: 14px;
+      break-inside: avoid;
+    }
+    
+    .announcement-marker {
+      width: 3px;
+      height: 12px;
+      background: #1FBA70;
+      display: inline-block;
+      margin-right: 6px;
+      vertical-align: middle;
     }
     
     .announcement-title {
-      font-size: 10pt;
-      font-weight: bold;
+      font-size: 10.5pt;
+      font-weight: 600;
       color: #1A1A1A;
+      margin-bottom: 4px;
     }
     
     .announcement-content {
-      font-size: 9pt;
-      color: #374151;
+      font-size: 10pt;
+      color: #333333;
       line-height: 1.3;
       margin-top: 4px;
     }
     
     .announcement-cue {
-      font-size: 8pt;
-      color: #6B7280;
+      font-size: 9.5pt;
+      color: #666666;
       font-style: italic;
-      margin-top: 4px;
-      padding-left: 8px;
-      border-left: 2px solid #D1D5DB;
+      margin-top: 6px;
+      padding-left: 10px;
+      border-left: 2px solid #E6E6E6;
+    }
+    
+    .cue-label {
+      font-weight: 600;
+      font-style: normal;
+      text-transform: uppercase;
+      font-size: 8.5pt;
+      letter-spacing: 0.5px;
     }
     
     .announcement-date {
-      font-size: 8pt;
-      color: #1F8A70;
-      font-weight: 600;
+      font-size: 9pt;
+      color: #666666;
       margin-top: 4px;
     }
     
-    .event-item {
-      margin-bottom: 10px;
-      padding: 6px;
-      border-left: 3px solid #4DC15F;
-      background: #F0F9FF;
-      page-break-inside: avoid;
-    }
-    
-    .event-title {
-      font-size: 10pt;
-      font-weight: bold;
-      color: #1A1A1A;
-    }
-    
-    .event-date {
-      font-size: 9pt;
-      color: #1F8A70;
-      font-weight: 600;
-      margin-top: 2px;
-    }
-    
-    .event-description {
-      font-size: 8.5pt;
-      color: #374151;
-      margin-top: 3px;
-      line-height: 1.3;
+    .announcement-divider {
+      height: 1px;
+      background: #F0F0F0;
+      margin: 12px 0;
     }
   </style>
 </head>
 <body>
   <!-- Page 1: Service Program -->
-  <div class="page page1">
-    <img src="${logoUrl}" class="logo" />
+  <div class="page">
+    <img src="${logoUrl}" class="logo" alt="Logo" />
     
     <div class="header">
       <div class="title">ORDEN DE SERVICIO</div>
-      <div class="date">Domingo ${selectedDate}</div>
+      <div class="date">Domingo ${escapeHtml(selectedDate)}</div>
       ${rolesLine ? `<div class="roles-line">${rolesLine}</div>` : ''}
     </div>
     
     <div class="columns">
-      ${renderServiceColumn('9:30 AM', serviceData['9:30am'])}
-      ${renderServiceColumn('11:30 AM', serviceData['11:30am'])}
+      ${renderServiceColumn('9:30 A.M.', serviceData['9:30am'])}
+      ${renderServiceColumn('11:30 A.M.', serviceData['11:30am'])}
     </div>
     
-    <div class="footer">Palabras de Vida • ¡Atrévete a Cambiar!</div>
+    ${serviceData.receso_notes?.['9:30am'] ? `
+      <div class="receso-block">
+        <div class="receso-title">Receso</div>
+        <div class="receso-note">${escapeHtml(serviceData.receso_notes['9:30am'])}</div>
+      </div>
+    ` : ''}
+    
+    <div class="footer">
+      Palabras de Vida • <span class="footer-accent">¡Atrévete a cambiar!</span>
+    </div>
   </div>
   
   <!-- Page 2: Announcements -->
-  <div class="page page2">
-    <img src="${logoUrl}" class="logo" />
+  <div class="page">
+    <img src="${logoUrl}" class="logo" alt="Logo" />
     
     <div class="header">
       <div class="title">ANUNCIOS</div>
-      <div class="date">Domingo ${selectedDate}</div>
+      <div class="date">Domingo ${escapeHtml(selectedDate)}</div>
     </div>
     
     ${announcementsList.length > 0 ? `
-      <div class="announcements-columns">
+      <div class="announcements-grid">
         <div class="announcements-column">
-          ${announcementsList.slice(0, Math.ceil(announcementsList.length / 2)).map(renderAnnouncement).join('')}
+          ${leftAnnouncements.map((ann, i) => renderAnnouncement(ann, i, leftAnnouncements.length)).join('')}
         </div>
         <div class="announcements-column">
-          ${announcementsList.slice(Math.ceil(announcementsList.length / 2)).map(renderAnnouncement).join('')}
+          ${rightAnnouncements.map((ann, i) => renderAnnouncement(ann, i, rightAnnouncements.length)).join('')}
         </div>
       </div>
     ` : `
-      <div style="padding: 20px; text-align: center; color: #6B7280;">
+      <div style="padding: 30px; text-align: center; color: #666666; font-size: 10pt;">
         No hay anuncios seleccionados / No announcements selected
       </div>
     `}
     
-    <div class="footer">Palabras de Vida • ¡Atrévete a Cambiar!</div>
+    <div class="footer">
+      Palabras de Vida • <span class="footer-accent">¡Atrévete a cambiar!</span>
+    </div>
   </div>
 </body>
 </html>
@@ -426,20 +473,19 @@ function renderServiceColumn(timeSlot, segments) {
   if (!segments || segments.length === 0) {
     return `
       <div class="column">
-        <div class="column-header">${timeSlot}</div>
-        <div class="segment-details" style="padding: 12px; color: #666;">No hay segmentos / No segments</div>
+        <div class="column-header"><span class="time-accent">${escapeHtml(timeSlot)}</span></div>
+        <div style="padding: 12px; color: #666666; font-size: 10pt;">No hay segmentos</div>
       </div>
     `;
   }
   
-  // Filter and validate segments
   const validSegments = segments.filter(s => s && s.type !== 'break');
   
   if (validSegments.length === 0) {
     return `
       <div class="column">
-        <div class="column-header">${timeSlot}</div>
-        <div class="segment-details" style="padding: 12px; color: #666;">No hay segmentos visibles</div>
+        <div class="column-header"><span class="time-accent">${escapeHtml(timeSlot)}</span></div>
+        <div style="padding: 12px; color: #666666; font-size: 10pt;">No hay segmentos</div>
       </div>
     `;
   }
@@ -449,44 +495,73 @@ function renderServiceColumn(timeSlot, segments) {
     const duration = segment.duration || '';
     const data = segment.data || {};
     
-    return `
-      <div class="segment">
-        <div class="segment-title">${escapeHtml(title)}</div>
-        ${duration ? `<div class="segment-time">${escapeHtml(String(duration))} min</div>` : ''}
-        ${data.leader ? `<div class="segment-details">Dirige: ${escapeHtml(data.leader)}</div>` : ''}
-        ${data.presenter ? `<div class="segment-details">${escapeHtml(data.presenter)}</div>` : ''}
-        ${data.preacher ? `<div class="segment-details">${escapeHtml(data.preacher)}</div>` : ''}
-        ${data.title ? `<div class="segment-details">${escapeHtml(data.title)}</div>` : ''}
-      </div>
-    `;
+    let html = '<div class="segment">';
+    
+    // Time marker (if present)
+    if (duration) {
+      html += `<div class="segment-time">${escapeHtml(String(duration))} min</div>`;
+    }
+    
+    // Title
+    html += `<div class="segment-title">${escapeHtml(title)}</div>`;
+    
+    // Leader (with name styling)
+    if (data.leader) {
+      html += `<div class="segment-detail">Dirige: <span class="segment-name">${escapeHtml(data.leader)}</span></div>`;
+    }
+    
+    // Presenter
+    if (data.presenter) {
+      html += `<div class="segment-detail"><span class="segment-name">${escapeHtml(data.presenter)}</span></div>`;
+    }
+    
+    // Preacher
+    if (data.preacher) {
+      html += `<div class="segment-detail"><span class="segment-name">${escapeHtml(data.preacher)}</span></div>`;
+    }
+    
+    // Message title
+    if (data.title) {
+      html += `<div class="segment-detail">${escapeHtml(data.title)}</div>`;
+    }
+    
+    // Notes
+    if (data.notes) {
+      html += `<div class="segment-note">${escapeHtml(data.notes)}</div>`;
+    }
+    
+    html += '</div>';
+    return html;
   }).join('');
   
   return `
     <div class="column">
-      <div class="column-header">${timeSlot}</div>
+      <div class="column-header"><span class="time-accent">${escapeHtml(timeSlot)}</span></div>
       ${segmentsHtml}
     </div>
   `;
 }
 
-function renderAnnouncement(ann) {
+function renderAnnouncement(ann, index, total) {
   if (!ann) return '';
   
   const title = ann.title || ann.announcement_title || 'Sin título';
-  const content = sanitizeText(ann.content || ann.announcement_description || '');
+  const content = renderRichText(ann.content || ann.announcement_description || '');
   const cue = ann.instructions ? sanitizeText(stripCuePrefix(ann.instructions)) : '';
   const date = ann.date_of_occurrence || '';
   
+  const showDivider = index < total - 1;
+  
   return `
     <div class="announcement-item">
-      <div class="announcement-header">
-        <div class="announcement-icon"></div>
-        <div class="announcement-title">${escapeHtml(title)}</div>
+      <div class="announcement-title">
+        <span class="announcement-marker"></span>${escapeHtml(title)}
       </div>
-      ${content ? `<div class="announcement-content">${escapeHtml(content)}</div>` : ''}
-      ${cue ? `<div class="announcement-cue">CUE: ${escapeHtml(cue)}</div>` : ''}
+      ${content ? `<div class="announcement-content">${content}</div>` : ''}
+      ${cue ? `<div class="announcement-cue"><span class="cue-label">CUE:</span> ${escapeHtml(cue)}</div>` : ''}
       ${date ? `<div class="announcement-date">${escapeHtml(date)}</div>` : ''}
     </div>
+    ${showDivider ? '<div class="announcement-divider"></div>' : ''}
   `;
 }
 
@@ -513,6 +588,33 @@ function sanitizeText(text) {
     .replace(/&nbsp;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function renderRichText(text) {
+  if (!text) return '';
+  
+  // Support basic rich text: <strong>, <em>, <ul>, <li>, <br>
+  let html = text;
+  
+  // Convert line breaks
+  html = html.replace(/<br\s*\/?>/gi, '<br>');
+  
+  // Handle bold
+  html = html.replace(/<strong>(.*?)<\/strong>/gi, '<strong>$1</strong>');
+  html = html.replace(/<b>(.*?)<\/b>/gi, '<strong>$1</strong>');
+  
+  // Handle italic
+  html = html.replace(/<em>(.*?)<\/em>/gi, '<em>$1</em>');
+  html = html.replace(/<i>(.*?)<\/i>/gi, '<em>$1</em>');
+  
+  // Handle lists (simple bullets)
+  html = html.replace(/<ul>(.*?)<\/ul>/gis, '<ul style="margin: 4px 0; padding-left: 18px;">$1</ul>');
+  html = html.replace(/<li>(.*?)<\/li>/gi, '<li style="margin: 2px 0;">$1</li>');
+  
+  // Strip any other tags
+  html = html.replace(/<(?!\/?(?:strong|em|br|ul|li|b|i)\b)[^>]+>/gi, '');
+  
+  return html;
 }
 
 function stripCuePrefix(text) {
