@@ -44,8 +44,45 @@ export default function ServicePdfPreview({
         processorVersion: '116'
       });
 
+      console.log("--- PDF INTEGRITY CHECK (PRINT) ---");
+      console.log("HTTP Status:", response.status);
+      console.log("Content-Type Header:", response.headers?.['content-type']);
+      console.log("Response Data Type:", typeof response.data);
+      console.log("Response Data Length (bytes):", response.data?.byteLength);
+
+      if (response.data instanceof ArrayBuffer) {
+        const uint8 = new Uint8Array(response.data);
+        if (uint8.byteLength >= 5) {
+          const first5Bytes = String.fromCharCode(...uint8.slice(0, 5));
+          console.log("First 5 bytes:", first5Bytes);
+          if (!first5Bytes.startsWith('%PDF-')) {
+            console.error("CRITICAL: Response data does NOT start with %PDF-. This is not a valid PDF ArrayBuffer.");
+            alert("Error: Received data is not a valid PDF. Check backend function's response headers/type.");
+            setIsGeneratingPDF(false);
+            return;
+          } else {
+            console.log("✓ First 5 bytes confirm PDF signature: %PDF-");
+          }
+        } else {
+          console.error("CRITICAL: Response data (ArrayBuffer) is too small to be a PDF.");
+          alert("Error: Received PDF data is too small.");
+          setIsGeneratingPDF(false);
+          return;
+        }
+      } else {
+        console.error("CRITICAL: Response data is not an ArrayBuffer. Expected binary PDF data.");
+        alert("Error: Expected binary PDF data, but received another type. Ensure backend function returns ArrayBuffer.");
+        setIsGeneratingPDF(false);
+        return;
+      }
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
+      console.log("Generated Object URL:", url);
+
+      // Test direct render in new tab
+      window.open(url, '_blank');
+
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
       iframe.src = url;
@@ -80,8 +117,45 @@ export default function ServicePdfPreview({
         processorVersion: '116'
       });
 
+      console.log("--- PDF INTEGRITY CHECK (DOWNLOAD) ---");
+      console.log("HTTP Status:", response.status);
+      console.log("Content-Type Header:", response.headers?.['content-type']);
+      console.log("Response Data Type:", typeof response.data);
+      console.log("Response Data Length (bytes):", response.data?.byteLength);
+
+      if (response.data instanceof ArrayBuffer) {
+        const uint8 = new Uint8Array(response.data);
+        if (uint8.byteLength >= 5) {
+          const first5Bytes = String.fromCharCode(...uint8.slice(0, 5));
+          console.log("First 5 bytes:", first5Bytes);
+          if (!first5Bytes.startsWith('%PDF-')) {
+            console.error("CRITICAL: Response data does NOT start with %PDF-. This is not a valid PDF ArrayBuffer.");
+            alert("Error: Received data is not a valid PDF. Check backend function's response headers/type.");
+            setIsGeneratingPDF(false);
+            return;
+          } else {
+            console.log("✓ First 5 bytes confirm PDF signature: %PDF-");
+          }
+        } else {
+          console.error("CRITICAL: Response data (ArrayBuffer) is too small to be a PDF.");
+          alert("Error: Received PDF data is too small.");
+          setIsGeneratingPDF(false);
+          return;
+        }
+      } else {
+        console.error("CRITICAL: Response data is not an ArrayBuffer. Expected binary PDF data.");
+        alert("Error: Expected binary PDF data, but received another type. Ensure backend function returns ArrayBuffer.");
+        setIsGeneratingPDF(false);
+        return;
+      }
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
+      console.log("Generated Object URL:", url);
+
+      // Test direct render in new tab
+      window.open(url, '_blank');
+
       const link = document.createElement('a');
       link.href = url;
       link.download = `Orden-de-Servicio-${selectedDate}.pdf`;
