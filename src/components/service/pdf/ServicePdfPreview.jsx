@@ -7,8 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Minus, Plus, Wand2, Printer, Check, AlertTriangle, Download, Mail, Loader2, X, ChevronDown, ChevronUp } from "lucide-react";
-import { PDFViewer, PDFDownloadLink, pdf } from '@react-pdf/renderer';
-import ServiceProgramPdf from "./ServiceProgramPdf";
 import { base44 } from "@/api/base44Client";
 
 const MOBILE_BREAKPOINT = 768;
@@ -35,19 +33,17 @@ export default function ServicePdfPreview({
     try {
       onSaveScales({ page1: page1Scale, page2: page2Scale });
       
-      const doc = (
-        <ServiceProgramPdf
-          serviceData={serviceData}
-          selectedDate={selectedDate}
-          fixedAnnouncements={fixedAnnouncements}
-          dynamicAnnouncements={dynamicAnnouncements}
-          selectedAnnouncements={selectedAnnouncements}
-          page1Scale={page1Scale}
-          page2Scale={page2Scale}
-        />
-      );
+      const response = await base44.functions.invoke('generateServiceProgramPdf', {
+        serviceData,
+        selectedDate,
+        fixedAnnouncements,
+        dynamicAnnouncements,
+        selectedAnnouncements,
+        page1Scale,
+        page2Scale
+      });
       
-      const blob = await pdf(doc).toBlob();
+      const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
@@ -73,19 +69,17 @@ export default function ServicePdfPreview({
     try {
       onSaveScales({ page1: page1Scale, page2: page2Scale });
       
-      const doc = (
-        <ServiceProgramPdf
-          serviceData={serviceData}
-          selectedDate={selectedDate}
-          fixedAnnouncements={fixedAnnouncements}
-          dynamicAnnouncements={dynamicAnnouncements}
-          selectedAnnouncements={selectedAnnouncements}
-          page1Scale={page1Scale}
-          page2Scale={page2Scale}
-        />
-      );
+      const response = await base44.functions.invoke('generateServiceProgramPdf', {
+        serviceData,
+        selectedDate,
+        fixedAnnouncements,
+        dynamicAnnouncements,
+        selectedAnnouncements,
+        page1Scale,
+        page2Scale
+      });
       
-      const blob = await pdf(doc).toBlob();
+      const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -368,23 +362,48 @@ export default function ServicePdfPreview({
             )}
 
             {/* Preview Area */}
-            <div className="flex-1 bg-gray-200 overflow-auto">
-              <div className="h-full w-full">
-                <PDFViewer 
-                  width="100%" 
-                  height="100%"
-                  showToolbar={false}
-                >
-                  <ServiceProgramPdf
-                    serviceData={serviceData}
-                    selectedDate={selectedDate}
-                    fixedAnnouncements={fixedAnnouncements}
-                    dynamicAnnouncements={dynamicAnnouncements}
-                    selectedAnnouncements={selectedAnnouncements}
-                    page1Scale={page1Scale}
-                    page2Scale={page2Scale}
-                  />
-                </PDFViewer>
+            <div className="flex-1 bg-gray-200 overflow-auto p-4">
+              <div className="max-w-4xl mx-auto bg-white shadow-lg p-8">
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold">ORDEN DE SERVICIO</h2>
+                  <p className="text-lg text-pdv-teal mt-2">Domingo {selectedDate}</p>
+                  <p className="text-xs text-gray-500 mt-4">
+                    Esta es una vista previa simplificada. El PDF final tendrá formato completo.
+                  </p>
+                </div>
+
+                {isGeneratingPDF && (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-pdv-teal" />
+                    <span className="ml-3">Generando PDF...</span>
+                  </div>
+                )}
+
+                {!isGeneratingPDF && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="border rounded p-3">
+                        <h3 className="font-bold mb-2">9:30 AM</h3>
+                        <p className="text-sm text-gray-600">
+                          {serviceData?.['9:30am']?.length || 0} segmentos
+                        </p>
+                      </div>
+                      <div className="border rounded p-3">
+                        <h3 className="font-bold mb-2">11:30 AM</h3>
+                        <p className="text-sm text-gray-600">
+                          {serviceData?.['11:30am']?.length || 0} segmentos
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <h3 className="font-bold mb-2">Anuncios Seleccionados</h3>
+                      <p className="text-sm text-gray-600">
+                        {selectedAnnouncements?.length || 0} anuncios incluidos en el PDF
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
         </div>
