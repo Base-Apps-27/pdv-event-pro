@@ -7,12 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Minus, Plus, Wand2, Printer, Check, AlertTriangle, Download, Mail, Loader2, X, ChevronDown, ChevronUp } from "lucide-react";
-import ServicePdfPage1 from "./ServicePdfPage1";
-import ServicePdfPage2 from "./ServicePdfPage2";
-import PdfStyles from "./PdfStyles";
+import { PDFViewer, PDFDownloadLink, pdf } from '@react-pdf/renderer';
+import ServiceProgramPdf from "./ServiceProgramPdf";
 import { base44 } from "@/api/base44Client";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 
 // US Letter at 96 DPI: 816 x 1056px, content area with 48px margins
 const PAGE_HEIGHT = 1056;
@@ -134,15 +131,47 @@ export default function ServicePdfPreview({
 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (!canOutput) {
       alert('El contenido excede los límites de página. Ajuste la escala o reduzca el contenido.\n\nContent exceeds page limits. Adjust scale or reduce content.');
       return;
     }
-    // Save scales and set CSS variables for print
-    onSaveScales({ page1: page1Scale, page2: page2Scale });
-    onOpenChange(false);
-    setTimeout(() => window.print(), 200);
+    
+    setIsGeneratingPDF(true);
+    try {
+      onSaveScales({ page1: page1Scale, page2: page2Scale });
+      
+      const doc = (
+        <ServiceProgramPdf
+          serviceData={serviceData}
+          selectedDate={selectedDate}
+          fixedAnnouncements={fixedAnnouncements}
+          dynamicAnnouncements={dynamicAnnouncements}
+          selectedAnnouncements={selectedAnnouncements}
+          page1Scale={page1Scale}
+          page2Scale={page2Scale}
+        />
+      );
+      
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = url;
+      document.body.appendChild(iframe);
+      iframe.onload = () => {
+        iframe.contentWindow.print();
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+          URL.revokeObjectURL(url);
+        }, 100);
+      };
+    } catch (error) {
+      console.error('Print error:', error);
+      alert('Error al imprimir / Error printing: ' + error.message);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
   
   const handleDownloadPDF = async () => {
@@ -152,106 +181,28 @@ export default function ServicePdfPreview({
     }
     
     setIsGeneratingPDF(true);
-    
     try {
-      // Save scales
       onSaveScales({ page1: page1Scale, page2: page2Scale });
       
-      // Get the page elements
-      const page1Element = page1Ref.current;
-      const page2Element = page2Ref.current;
+      const doc = (
+        <ServiceProgramPdf
+          serviceData={serviceData}
+          selectedDate={selectedDate}
+          fixedAnnouncements={fixedAnnouncements}
+          dynamicAnnouncements={dynamicAnnouncements}
+          selectedAnnouncements={selectedAnnouncements}
+          page1Scale={page1Scale}
+          page2Scale={page2Scale}
+        />
+      );
       
-      if (!page1Element || !page2Element) {
-        throw new Error('Page elements not found');
-      }
-      
-      // Find all elements with gradients and replace with solid color
-      const gradientElements = [];
-      [page1Element, page2Element].forEach(pageEl => {
-        const els = pageEl.querySelectorAll('[style*="gradient"], .brand-gradient, .gradient-pdv, .sidebar-active-gradient, .gradient-pdv-vertical');
-        els.forEach(el => {
-          gradientElements.push({
-            element: el,
-            originalBackground: el.style.background,
-            originalBackgroundImage: el.style.backgroundImage
-          });
-          el.style.background = '#1F8A70'; // Solid brand teal
-          el.style.backgroundImage = 'none';
-        });
-      });
-      
-      // Get preview wrapper parents and store their transforms
-      const page1Wrapper = page1Element.closest('.pdf-preview-page-wrapper');
-      const page2Wrapper = page2Element.closest('.pdf-preview-page-wrapper');
-      
-      const originalPage1WrapperTransform = page1Wrapper?.style.transform;
-      const originalPage2WrapperTransform = page2Wrapper?.style.transform;
-      
-      // Temporarily remove preview wrapper transforms for clean capture
-      if (page1Wrapper) page1Wrapper.style.transform = 'none';
-      if (page2Wrapper) page2Wrapper.style.transform = 'none';
-      
-      // Wait for style application
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Create PDF using jsPDF - US Letter size in points (612 x 792)
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'pt',
-        format: 'letter'
-      });
-      
-      // Capture Page 1 at its actual scaled size
-      const canvas1 = await html2canvas(page1Element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: 816,
-        height: 1056,
-        windowWidth: 816,
-        windowHeight: 1056
-      });
-      
-      const imgData1 = canvas1.toDataURL('image/png');
-      pdf.addImage(imgData1, 'PNG', 0, 0, 612, 792);
-      
-      // Add second page
-      pdf.addPage();
-      
-      // Capture Page 2 at its actual scaled size
-      const canvas2 = await html2canvas(page2Element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: 816,
-        height: 1056,
-        windowWidth: 816,
-        windowHeight: 1056
-      });
-      
-      const imgData2 = canvas2.toDataURL('image/png');
-      pdf.addImage(imgData2, 'PNG', 0, 0, 612, 792);
-      
-      // Restore gradients
-      gradientElements.forEach(({ element, originalBackground, originalBackgroundImage }) => {
-        if (originalBackground) element.style.background = originalBackground;
-        if (originalBackgroundImage) element.style.backgroundImage = originalBackgroundImage;
-      });
-      
-      // Restore preview wrapper transforms
-      if (page1Wrapper && originalPage1WrapperTransform !== undefined) {
-        page1Wrapper.style.transform = originalPage1WrapperTransform;
-      }
-      if (page2Wrapper && originalPage2WrapperTransform !== undefined) {
-        page2Wrapper.style.transform = originalPage2WrapperTransform;
-      }
-      
-      // Download the PDF
-      const fileName = `Orden-de-Servicio-${selectedDate}.pdf`;
-      pdf.save(fileName);
-      
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Orden-de-Servicio-${selectedDate}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error('PDF generation error:', error);
       alert('Error al generar PDF / Error generating PDF: ' + error.message);
@@ -320,7 +271,6 @@ export default function ServicePdfPreview({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl h-[95vh] max-h-[95vh] w-[95vw] md:w-full p-0 print:hidden flex flex-col">
-        <PdfStyles />
         
         <DialogHeader className="flex-shrink-0 px-3 md:px-6 py-2 md:py-3 border-b bg-white">
           <div className="flex items-center justify-between gap-2">
@@ -595,48 +545,22 @@ export default function ServicePdfPreview({
               ref={previewContainerRef} 
               className="flex-1 bg-gray-200 overflow-auto"
             >
-              <div className="flex justify-center items-start p-2 md:p-6">
-                {/* Page 1 - Always rendered */}
-                <div 
-                  className={`pdf-preview-page-wrapper relative ${activeTab !== "page1" ? "hidden" : ""}`}
-                  style={{ 
-                    transform: `scale(${previewScale})`,
-                    transformOrigin: 'top center',
-                    marginBottom: `${(1 - previewScale) * 1056}px`
-                  }}
+              <div className="h-full w-full">
+                <PDFViewer 
+                  width="100%" 
+                  height="100%"
+                  showToolbar={false}
                 >
-                  <div className="pdf-preview-safe-area hidden md:block" />
-                  <div ref={page1Ref}>
-                    <ServicePdfPage1
-                      serviceData={serviceData}
-                      selectedDate={selectedDate}
-                      scale={page1Scale}
-                    />
-                  </div>
-                  {!page1Fits && <div className="pdf-preview-overflow-indicator" />}
-                </div>
-
-                {/* Page 2 - Always rendered */}
-                <div 
-                  className={`pdf-preview-page-wrapper relative ${activeTab !== "page2" ? "hidden" : ""}`}
-                  style={{ 
-                    transform: `scale(${previewScale})`,
-                    transformOrigin: 'top center',
-                    marginBottom: `${(1 - previewScale) * 1056}px`
-                  }}
-                >
-                  <div className="pdf-preview-safe-area hidden md:block" />
-                  <div ref={page2Ref}>
-                    <ServicePdfPage2
-                      selectedDate={selectedDate}
-                      fixedAnnouncements={fixedAnnouncements}
-                      dynamicAnnouncements={dynamicAnnouncements}
-                      selectedAnnouncements={selectedAnnouncements}
-                      scale={page2Scale}
-                    />
-                  </div>
-                  {!page2Fits && <div className="pdf-preview-overflow-indicator" />}
-                </div>
+                  <ServiceProgramPdf
+                    serviceData={serviceData}
+                    selectedDate={selectedDate}
+                    fixedAnnouncements={fixedAnnouncements}
+                    dynamicAnnouncements={dynamicAnnouncements}
+                    selectedAnnouncements={selectedAnnouncements}
+                    page1Scale={page1Scale}
+                    page2Scale={page2Scale}
+                  />
+                </PDFViewer>
               </div>
             </div>
         </div>
