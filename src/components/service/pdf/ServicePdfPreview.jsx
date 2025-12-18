@@ -27,6 +27,7 @@ export default function ServicePdfPreview({
   const [page2Scale, setPage2Scale] = useState(pdfScales?.page2 || 100);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT);
+  const [debugResults, setDebugResults] = useState(null);
 
   const handlePrint = async () => {
     setIsGeneratingPDF(true);
@@ -143,6 +144,40 @@ export default function ServicePdfPreview({
     onOpenChange(false);
   };
 
+  const handleDebugLadder = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      const response = await base44.functions.invoke('generateServiceProgramPdf', {
+        serviceData,
+        selectedDate,
+        selectedAnnouncements,
+        page1Scale,
+        page2Scale,
+        debug: true,
+        processorVersion: '116'
+      });
+
+      console.log('=== DEBUG LADDER RESULTS ===');
+      console.log(response.data);
+      setDebugResults(response.data);
+
+      // Log PNGs as clickable URLs
+      if (response.data.pngs) {
+        console.log('\n=== PNG PREVIEWS (click to view) ===');
+        Object.entries(response.data.pngs).forEach(([stage, dataUrl]) => {
+          console.log(`${stage}:`, dataUrl);
+        });
+      }
+
+      alert('Debug complete! Check browser console for results and PNG previews.');
+    } catch (error) {
+      console.error('Debug error:', error);
+      alert('Debug failed: ' + error.message);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   const adjustScale = (pageNum, delta) => {
     if (pageNum === 1) {
       setPage1Scale(prev => Math.min(110, Math.max(85, prev + delta)));
@@ -185,6 +220,7 @@ export default function ServicePdfPreview({
                 disabled={isGeneratingPDF}
                 className="h-8 w-8 p-0"
                 size="sm"
+                title="Download PDF"
               >
                 {isGeneratingPDF ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -193,10 +229,21 @@ export default function ServicePdfPreview({
                 )}
               </Button>
               <Button 
+                onClick={handleDebugLadder}
+                variant="outline"
+                disabled={isGeneratingPDF}
+                className="h-8 px-2 text-xs border-orange-500 text-orange-600 hover:bg-orange-50"
+                size="sm"
+                title="Run debug template ladder"
+              >
+                🔍 Debug
+              </Button>
+              <Button 
                 onClick={handlePrint} 
                 className="bg-gray-900 text-white h-8 w-8 p-0 hidden md:inline-flex"
                 disabled={isGeneratingPDF}
                 size="sm"
+                title="Print PDF"
               >
                 <Printer className="w-4 h-4" />
               </Button>
