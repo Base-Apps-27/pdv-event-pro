@@ -65,7 +65,10 @@ Deno.serve(async (req) => {
         source: html,
         landscape: false,
         use_print: true,
-        format: 'Letter'
+        format: 'Letter',
+        sandbox: false,
+        delay: 1000,
+        no_javascript: true
       })
     });
 
@@ -157,9 +160,6 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
 <head>
   <meta charset="UTF-8">
   <title>Orden de Servicio - ${selectedDate}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     @page {
       size: letter portrait;
@@ -173,7 +173,7 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
     }
     
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica', 'Arial', sans-serif;
+      font-family: 'Helvetica', 'Arial', sans-serif;
       font-size: 11pt;
       line-height: 1.3;
       color: #333333;
@@ -194,12 +194,7 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
     }
     
     .logo {
-      position: absolute;
-      left: -0.25in;
-      top: -0.25in;
-      width: 60px;
-      height: 60px;
-      object-fit: contain;
+      display: none; /* Temporarily disabled for debugging */
     }
     
     .header {
@@ -237,9 +232,21 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
     }
     
     .columns {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      column-gap: 0.3in;
+      width: 100%;
+      display: table;
+      table-layout: fixed;
+    }
+    
+    .column {
+      display: table-cell;
+      width: 48%;
+      padding-right: 2%;
+      vertical-align: top;
+    }
+    
+    .column:last-child {
+      padding-right: 0;
+      padding-left: 2%;
     }
     
     .column {
@@ -341,13 +348,21 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
     
     /* Page 2 - Announcements */
     .announcements-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      column-gap: 0.3in;
+      width: 100%;
+      display: table;
+      table-layout: fixed;
     }
     
     .announcements-column {
-      break-inside: avoid-column;
+      display: table-cell;
+      width: 48%;
+      padding-right: 2%;
+      vertical-align: top;
+    }
+    
+    .announcements-column:last-child {
+      padding-right: 0;
+      padding-left: 2%;
     }
     
     .announcement-item {
@@ -411,12 +426,13 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
 <body>
   <!-- Page 1: Service Program -->
   <div class="page">
-    <img src="${logoUrl}" class="logo" alt="Logo" />
+    <!-- Logo temporarily disabled for debugging -->
     
     <div class="header">
       <div class="title">ORDEN DE SERVICIO</div>
       <div class="date">Domingo ${escapeHtml(selectedDate)}</div>
       ${rolesLine ? `<div class="roles-line">${rolesLine}</div>` : ''}
+      <!-- DEBUG: Segments 930=${serviceData['9:30am']?.length || 0}, 1130=${serviceData['11:30am']?.length || 0} -->
     </div>
     
     <div class="columns">
@@ -438,7 +454,7 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
   
   <!-- Page 2: Announcements -->
   <div class="page">
-    <img src="${logoUrl}" class="logo" alt="Logo" />
+    <!-- Logo temporarily disabled for debugging -->
     
     <div class="header">
       <div class="title">ANUNCIOS</div>
