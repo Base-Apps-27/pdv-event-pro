@@ -42,7 +42,7 @@ export default function ServicePdfPreview({
         page2Scale,
         debug: false,
         processorVersion: '116'
-      });
+      }, { responseType: 'arraybuffer' });
 
       console.log("--- PDF INTEGRITY CHECK (PRINT) ---");
       console.log("HTTP Status:", response.status);
