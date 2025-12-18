@@ -9,7 +9,15 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { serviceData, selectedDate, selectedAnnouncements, page1Scale = 100, page2Scale = 100 } = await req.json();
+    const { 
+      serviceData, 
+      selectedDate, 
+      selectedAnnouncements, 
+      page1Scale = 100, 
+      page2Scale = 100,
+      debug = false,
+      processorVersion = '116'
+    } = await req.json();
 
     console.log('PDF Generation Request:', {
       hasServiceData: !!serviceData,
@@ -40,157 +48,60 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'PDFShift API key not configured' }, { status: 500 });
     }
 
-    // TEST 1: Try minimal HTML first to verify PDFShift works
-    const testMinimalHtml = `<!DOCTYPE html>
-    <html>
-    <head><meta charset="UTF-8"><title>Test</title></head>
-    <body><h1>Test PDF</h1><p>This is a test.</p></body>
-    </html>`;
+    console.log('=== PDF GENERATION START ===');
+    console.log('Debug mode:', debug);
+    console.log('Processor version:', processorVersion);
 
-    console.log('=== TESTING MINIMAL HTML FIRST ===');
-    console.log('Attempting minimal HTML test...');
-
-    const testAuth = btoa(`api:${apiKey}`);
-    const testResponse = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${testAuth}`
-      },
-      body: JSON.stringify({
-        source: testMinimalHtml,
-        format: 'Letter'
-      })
-    });
-
-    console.log('Minimal test status:', testResponse.status);
-    if (!testResponse.ok) {
-      const testError = await testResponse.text();
-      console.error('MINIMAL TEST FAILED:', testError);
-      return Response.json({ 
-        error: 'PDFShift API not working - minimal test failed', 
-        details: testError,
-        status: testResponse.status
-      }, { status: 500 });
+    // DEBUG MODE: Template Ladder
+    if (debug) {
+      console.log('=== DEBUG MODE: TEMPLATE LADDER ===');
+      const results = await runTemplateLadder(apiKey, processorVersion, serviceData, selectedDate, announcements);
+      return Response.json(results, { status: 200 });
     }
 
-    console.log('✓ Minimal test passed - PDFShift API is working');
-
-    // Generate actual HTML for both pages
+    // PRODUCTION MODE: Generate full template
     const html = generateServiceProgramHtml(serviceData, selectedDate, announcements, page1Scale, page2Scale);
 
-    console.log('=== HTML GENERATION DEBUG ===');
+    console.log('=== HTML GENERATION ===');
     console.log('HTML length:', html.length);
     console.log('9:30am segments:', serviceData['9:30am']?.length || 0);
     console.log('11:30am segments:', serviceData['11:30am']?.length || 0);
     console.log('Announcements:', announcements.length);
 
-    // Save HTML to temp file for inspection (only in dev/testing)
-    try {
-      await Deno.writeTextFile('/tmp/debug-service-pdf.html', html);
-      console.log('✓ HTML saved to /tmp/debug-service-pdf.html');
-    } catch (e) {
-      console.log('Could not save debug HTML (normal in production):', e.message);
-    }
-
-    // Validate HTML structure
-    const hasDoctype = html.includes('<!DOCTYPE html>');
-    const hasHtmlClose = html.includes('</html>');
-    const hasBodyClose = html.includes('</body>');
-    const hasStyleClose = html.includes('</style>');
-    const hasHeadClose = html.includes('</head>');
-
-    console.log('HTML structure validation:', { 
-      hasDoctype, 
-      hasStyleClose, 
-      hasHeadClose, 
-      hasBodyClose, 
-      hasHtmlClose 
-    });
-
-    if (!hasDoctype || !hasHtmlClose || !hasBodyClose) {
-      console.error('INVALID HTML STRUCTURE - missing critical tags');
-      return Response.json({ 
-        error: 'Generated HTML is malformed',
-        validation: { hasDoctype, hasStyleClose, hasHeadClose, hasBodyClose, hasHtmlClose }
-      }, { status: 500 });
-    }
-
-    console.log('HTML preview (first 800 chars):', html.substring(0, 800));
-    console.log('HTML preview (last 500 chars):', html.substring(html.length - 500));
-
-    // Call PDFShift API - encode API key as base64
-    const auth = btoa(`api:${apiKey}`);
-    
-    console.log('Calling PDFShift API...');
-    const pdfResponse = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${auth}`
-      },
-      body: JSON.stringify({
-        source: html,
-        landscape: false,
-        use_print: true,
-        format: 'Letter',
-        sandbox: false,
-        delay: 500
-      })
-    });
+    // Call PDFShift API with hardened options
+    console.log('Calling PDFShift API (production)...');
+    const pdfResponse = await callPDFShift(apiKey, processorVersion, html, false);
 
     if (!pdfResponse.ok) {
       const errorText = await pdfResponse.text();
       console.error('=== PDFSHIFT API ERROR ===');
       console.error('Status:', pdfResponse.status);
       console.error('Error body:', errorText);
-      console.error('Headers:', JSON.stringify([...pdfResponse.headers.entries()]));
-      
-      // Try to parse error as JSON
-      let errorDetails = errorText;
-      try {
-        const errorJson = JSON.parse(errorText);
-        console.error('Parsed error:', JSON.stringify(errorJson, null, 2));
-        errorDetails = errorJson.error || errorJson.message || errorText;
-      } catch (e) {
-        console.error('Error response is not JSON');
-      }
       
       return Response.json({ 
         error: 'PDF generation failed', 
         status: pdfResponse.status,
-        details: errorDetails,
-        htmlLength: html.length
+        details: errorText
       }, { status: 500 });
     }
-    
-    console.log('PDF generated successfully');
+
+    // Log response headers
+    logPDFShiftHeaders(pdfResponse);
 
     const pdfBlob = await pdfResponse.arrayBuffer();
     
-    // Binary validation
-    console.log('=== PDF BINARY VALIDATION ===');
+    console.log('=== PDF VALIDATION ===');
     console.log('PDF byte length:', pdfBlob.byteLength);
     
     const uint8 = new Uint8Array(pdfBlob);
     const first8 = Array.from(uint8.slice(0, 8))
       .map(b => String.fromCharCode(b))
       .join('');
-    console.log('First 8 bytes:', first8);
-    console.log('Is valid PDF (starts with %PDF-):', first8.startsWith('%PDF-'));
+    console.log('Starts with %PDF-:', first8.startsWith('%PDF-'));
     
     if (!first8.startsWith('%PDF-')) {
-      console.error('INVALID PDF: Does not start with %PDF-');
-      const textSample = new TextDecoder().decode(uint8.slice(0, 500));
-      console.error('Response content (first 500 chars):', textSample);
-      return Response.json({ 
-        error: 'Invalid PDF returned', 
-        details: textSample 
-      }, { status: 500 });
-    }
-    
-    if (pdfBlob.byteLength < 10000) {
-      console.warn('WARNING: PDF is suspiciously small (<10KB)');
+      console.error('INVALID PDF');
+      return Response.json({ error: 'Invalid PDF returned' }, { status: 500 });
     }
 
     return new Response(pdfBlob, {
@@ -206,6 +117,243 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+// Helper: Call PDFShift API with standardized options
+async function callPDFShift(apiKey, processorVersion, html, isSandbox = true) {
+  return await fetch('https://api.pdfshift.io/v3/convert/pdf', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': apiKey,
+      'X-Processor-Version': processorVersion
+    },
+    body: JSON.stringify({
+      source: html,
+      format: 'Letter',
+      use_print: true,
+      delay: 250,
+      disable_javascript: true,
+      wait_for_network: false,
+      sandbox: isSandbox,
+      log_request: true
+    })
+  });
+}
+
+// Helper: Call PDFShift PNG endpoint
+async function callPDFShiftPNG(apiKey, processorVersion, html, isSandbox = true) {
+  return await fetch('https://api.pdfshift.io/v3/convert/png', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': apiKey,
+      'X-Processor-Version': processorVersion
+    },
+    body: JSON.stringify({
+      source: html,
+      format: 'Letter',
+      use_print: true,
+      delay: 250,
+      disable_javascript: true,
+      wait_for_network: false,
+      sandbox: isSandbox
+    })
+  });
+}
+
+// Helper: Log PDFShift response headers
+function logPDFShiftHeaders(response) {
+  console.log('=== PDFSHIFT RESPONSE HEADERS ===');
+  console.log('X-PDFShift-Processor:', response.headers.get('X-PDFShift-Processor'));
+  console.log('X-PDFShift-Duration:', response.headers.get('X-PDFShift-Duration'));
+  console.log('X-Response-Duration:', response.headers.get('X-Response-Duration'));
+  console.log('X-Credits-Used:', response.headers.get('X-Credits-Used'));
+  console.log('X-Credits-Cost:', response.headers.get('X-Credits-Cost'));
+  console.log('X-Request-Id:', response.headers.get('X-Request-Id'));
+}
+
+// DEBUG: Template Ladder
+async function runTemplateLadder(apiKey, processorVersion, serviceData, selectedDate, announcements) {
+  const results = { ladder: [] };
+
+  // T0: Minimal HTML
+  console.log('\n=== T0: MINIMAL HTML ===');
+  const t0Html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>T0</title></head>
+<body style="font-family:Arial;padding:1in;"><h1 style="color:#000;">T0 VISIBLE</h1><p style="color:#000;">Minimal test passed.</p></body></html>`;
+  
+  const t0Pdf = await callPDFShift(apiKey, processorVersion, t0Html, true);
+  const t0Png = await callPDFShiftPNG(apiKey, processorVersion, t0Html, true);
+  
+  logPDFShiftHeaders(t0Pdf);
+  
+  results.ladder.push({
+    stage: 'T0',
+    pdfOk: t0Pdf.ok,
+    pdfStatus: t0Pdf.status,
+    pngOk: t0Png.ok,
+    pngStatus: t0Png.status,
+    htmlLength: t0Html.length
+  });
+
+  // T1: Full CSS but simple content
+  console.log('\n=== T1: FULL CSS, SIMPLE CONTENT ===');
+  const t1Html = generateT1Html();
+  
+  const t1Pdf = await callPDFShift(apiKey, processorVersion, t1Html, true);
+  const t1Png = await callPDFShiftPNG(apiKey, processorVersion, t1Html, true);
+  
+  logPDFShiftHeaders(t1Pdf);
+  
+  results.ladder.push({
+    stage: 'T1',
+    pdfOk: t1Pdf.ok,
+    pdfStatus: t1Pdf.status,
+    pngOk: t1Png.ok,
+    pngStatus: t1Png.status,
+    htmlLength: t1Html.length
+  });
+
+  // T2: Full layout with static dummy data
+  console.log('\n=== T2: FULL LAYOUT, STATIC DATA ===');
+  const t2Html = generateT2Html(selectedDate);
+  
+  const t2Pdf = await callPDFShift(apiKey, processorVersion, t2Html, true);
+  const t2Png = await callPDFShiftPNG(apiKey, processorVersion, t2Html, true);
+  
+  logPDFShiftHeaders(t2Pdf);
+  
+  results.ladder.push({
+    stage: 'T2',
+    pdfOk: t2Pdf.ok,
+    pdfStatus: t2Pdf.status,
+    pngOk: t2Png.ok,
+    pngStatus: t2Png.status,
+    htmlLength: t2Html.length
+  });
+
+  // T3: Full template with real data
+  console.log('\n=== T3: FULL TEMPLATE, REAL DATA ===');
+  const t3Html = generateServiceProgramHtml(serviceData, selectedDate, announcements, 100, 100);
+  
+  const t3Pdf = await callPDFShift(apiKey, processorVersion, t3Html, true);
+  const t3Png = await callPDFShiftPNG(apiKey, processorVersion, t3Html, true);
+  
+  logPDFShiftHeaders(t3Pdf);
+  
+  results.ladder.push({
+    stage: 'T3',
+    pdfOk: t3Pdf.ok,
+    pdfStatus: t3Pdf.status,
+    pngOk: t3Png.ok,
+    pngStatus: t3Png.status,
+    htmlLength: t3Html.length
+  });
+
+  console.log('\n=== LADDER RESULTS ===');
+  results.ladder.forEach(r => {
+    console.log(`${r.stage}: PDF=${r.pdfStatus} PNG=${r.pngStatus} HTML=${r.htmlLength}bytes`);
+  });
+
+  return results;
+}
+
+// T1: Full CSS but simple visible content
+function generateT1Html() {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>T1 Test</title>
+  <style>
+    @page {
+      size: letter portrait;
+      margin: 0.5in;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12pt;
+      color: #000000;
+      background: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div style="break-after: page;">
+    <h1 style="font-size: 24pt; color: #000000; text-align: center; margin: 1in 0;">T1 VISIBLE - PAGE 1</h1>
+    <p style="font-size: 14pt; color: #000000; text-align: center;">This is page 1 with simple black text. No columns, no floats.</p>
+  </div>
+  <div>
+    <h1 style="font-size: 24pt; color: #000000; text-align: center; margin: 1in 0;">T1 VISIBLE - PAGE 2</h1>
+    <p style="font-size: 14pt; color: #000000; text-align: center;">This is page 2 with simple black text. No columns, no floats.</p>
+  </div>
+</body>
+</html>`;
+}
+
+// T2: Full layout with static dummy segments
+function generateT2Html(selectedDate) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>T2 Test</title>
+  <style>
+    @page { size: letter portrait; margin: 0.5in; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; font-size: 11pt; color: #000000; background: #ffffff; }
+    .page { break-after: page; }
+    .page:last-child { break-after: auto; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .title { font-size: 20pt; font-weight: 700; color: #000000; }
+    .date { font-size: 13pt; color: #000000; }
+    .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0.3in; }
+    .column { min-width: 0; }
+    .column-header { font-size: 12pt; font-weight: 700; color: #000000; margin-bottom: 10px; border-bottom: 1px solid #CCCCCC; }
+    .segment { margin-bottom: 10px; padding-bottom: 8px; border-bottom: 0.5px solid #EEEEEE; }
+    .segment-title { font-size: 10.5pt; font-weight: 600; color: #000000; }
+    .footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #CCCCCC; text-align: center; font-size: 9pt; color: #666666; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="title">ORDEN DE SERVICIO</div>
+      <div class="date">Domingo ${escapeHtml(selectedDate)}</div>
+    </div>
+    <div class="columns">
+      <div class="column">
+        <div class="column-header">9:30 A.M.</div>
+        <div class="segment"><div class="segment-title">Segment 1 Dummy</div></div>
+        <div class="segment"><div class="segment-title">Segment 2 Dummy</div></div>
+      </div>
+      <div class="column">
+        <div class="column-header">11:30 A.M.</div>
+        <div class="segment"><div class="segment-title">Segment 1 Dummy</div></div>
+        <div class="segment"><div class="segment-title">Segment 2 Dummy</div></div>
+      </div>
+    </div>
+    <div class="footer">Test Footer</div>
+  </div>
+  <div class="page">
+    <div class="header">
+      <div class="title">ANUNCIOS</div>
+      <div class="date">Domingo ${escapeHtml(selectedDate)}</div>
+    </div>
+    <div class="columns">
+      <div class="column">
+        <div class="segment"><div class="segment-title">Announcement 1 Dummy</div></div>
+      </div>
+      <div class="column">
+        <div class="segment"><div class="segment-title">Announcement 2 Dummy</div></div>
+      </div>
+    </div>
+    <div class="footer">Test Footer</div>
+  </div>
+</body>
+</html>`;
+}
 
 function generateServiceProgramHtml(serviceData, selectedDate, announcements, page1Scale, page2Scale) {
   const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png';
@@ -267,12 +415,11 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
     .page {
       background: #ffffff;
       position: relative;
-      min-height: 9.5in;
-      page-break-after: always;
+      break-after: page;
     }
     
     .page:last-child {
-      page-break-after: auto;
+      break-after: auto;
     }
     
     .logo {
@@ -314,23 +461,13 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
     }
     
     .columns {
-      width: 100%;
-      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.3in;
     }
     
     .column {
-      width: 48%;
-      float: left;
-      margin-right: 4%;
-      min-height: 200px;
-    }
-    
-    .column:last-child {
-      margin-right: 0;
-    }
-    
-    .column {
-      break-inside: avoid;
+      min-width: 0;
     }
     
     .column-header {
@@ -351,7 +488,6 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
       margin-bottom: 10px;
       padding-bottom: 8px;
       border-bottom: 0.5px solid #F0F0F0;
-      break-inside: avoid;
     }
     
     .segment:last-child {
@@ -428,24 +564,17 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
     
     /* Page 2 - Announcements */
     .announcements-grid {
-      width: 100%;
-      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.3in;
     }
     
     .announcements-column {
-      width: 48%;
-      float: left;
-      margin-right: 4%;
-      min-height: 200px;
-    }
-    
-    .announcements-column:last-child {
-      margin-right: 0;
+      min-width: 0;
     }
     
     .announcement-item {
       margin-bottom: 14px;
-      break-inside: avoid;
     }
     
     .announcement-marker {
@@ -514,7 +643,6 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
       ${renderServiceColumn('9:30 A.M.', serviceData['9:30am'])}
       ${renderServiceColumn('11:30 A.M.', serviceData['11:30am'])}
     </div>
-    <div style="clear: both;"></div>
     
     ${serviceData.receso_notes?.['9:30am'] ? `
       <div class="receso-block">
@@ -544,7 +672,6 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
           ${rightAnnouncements.map((ann, i) => renderAnnouncement(ann, i, rightAnnouncements.length)).join('')}
         </div>
       </div>
-      <div style="clear: both;"></div>
     ` : `
       <div style="padding: 30px; text-align: center; color: #666666; font-size: 10pt;">
         No hay anuncios seleccionados / No announcements selected
