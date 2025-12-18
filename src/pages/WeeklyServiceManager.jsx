@@ -18,6 +18,8 @@ import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import ServicePdfPreview from "@/components/service/pdf/ServicePdfPreview";
+import { pdf } from '@react-pdf/renderer';
+import ServiceProgramPdf from '@/components/service/pdf/ServiceProgramPdf';
 
 
 export default function WeeklyServiceManager() {
@@ -496,18 +498,17 @@ export default function WeeklyServiceManager() {
   const handlePrintPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      const { pdf } = await import('@react-pdf/renderer');
-      const ServiceProgramPdf = (await import('@/components/service/pdf/ServiceProgramPdf')).default;
-      
-      const doc = React.createElement(ServiceProgramPdf, {
-        serviceData,
-        selectedDate,
-        fixedAnnouncements,
-        dynamicAnnouncements,
-        selectedAnnouncements,
-        page1Scale: pdfScales.page1,
-        page2Scale: pdfScales.page2
-      });
+      const doc = (
+        <ServiceProgramPdf
+          serviceData={serviceData}
+          selectedDate={selectedDate}
+          fixedAnnouncements={fixedAnnouncements}
+          dynamicAnnouncements={dynamicAnnouncements}
+          selectedAnnouncements={selectedAnnouncements}
+          page1Scale={pdfScales.page1}
+          page2Scale={pdfScales.page2}
+        />
+      );
       
       const blob = await pdf(doc).toBlob();
       const url = URL.createObjectURL(blob);
