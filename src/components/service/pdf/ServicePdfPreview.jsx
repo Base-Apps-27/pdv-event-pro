@@ -32,17 +32,17 @@ export default function ServicePdfPreview({
     setIsGeneratingPDF(true);
     try {
       onSaveScales({ page1: page1Scale, page2: page2Scale });
-      
+
       const response = await base44.functions.invoke('generateServiceProgramPdf', {
         serviceData,
         selectedDate,
-        fixedAnnouncements,
-        dynamicAnnouncements,
         selectedAnnouncements,
         page1Scale,
-        page2Scale
+        page2Scale,
+        debug: false,
+        processorVersion: '116'
       });
-      
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const iframe = document.createElement('iframe');
@@ -68,17 +68,17 @@ export default function ServicePdfPreview({
     setIsGeneratingPDF(true);
     try {
       onSaveScales({ page1: page1Scale, page2: page2Scale });
-      
+
       const response = await base44.functions.invoke('generateServiceProgramPdf', {
         serviceData,
         selectedDate,
-        fixedAnnouncements,
-        dynamicAnnouncements,
         selectedAnnouncements,
         page1Scale,
-        page2Scale
+        page2Scale,
+        debug: false,
+        processorVersion: '116'
       });
-      
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');

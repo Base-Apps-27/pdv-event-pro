@@ -174,7 +174,7 @@ function logPDFShiftHeaders(response) {
 
 // DEBUG: Template Ladder
 async function runTemplateLadder(apiKey, processorVersion, serviceData, selectedDate, announcements) {
-  const results = { ladder: [] };
+  const results = { ladder: [], pngs: {} };
 
   // T0: Minimal HTML
   console.log('\n=== T0: MINIMAL HTML ===');
@@ -187,6 +187,13 @@ async function runTemplateLadder(apiKey, processorVersion, serviceData, selected
   
   logPDFShiftHeaders(t0Pdf);
   
+  // Capture PNG as base64 for inspection
+  if (t0Png.ok) {
+    const t0PngBlob = await t0Png.arrayBuffer();
+    const t0PngBase64 = btoa(String.fromCharCode(...new Uint8Array(t0PngBlob)));
+    results.pngs['T0'] = `data:image/png;base64,${t0PngBase64}`;
+  }
+  
   results.ladder.push({
     stage: 'T0',
     pdfOk: t0Pdf.ok,
@@ -196,7 +203,7 @@ async function runTemplateLadder(apiKey, processorVersion, serviceData, selected
     htmlLength: t0Html.length
   });
 
-  // T1: Full CSS but simple content
+  // T1: Full CSS but simple content WITH SENTINEL
   console.log('\n=== T1: FULL CSS, SIMPLE CONTENT ===');
   const t1Html = generateT1Html();
   
@@ -204,6 +211,13 @@ async function runTemplateLadder(apiKey, processorVersion, serviceData, selected
   const t1Png = await callPDFShiftPNG(apiKey, processorVersion, t1Html, true);
   
   logPDFShiftHeaders(t1Pdf);
+  
+  // Capture PNG as base64
+  if (t1Png.ok) {
+    const t1PngBlob = await t1Png.arrayBuffer();
+    const t1PngBase64 = btoa(String.fromCharCode(...new Uint8Array(t1PngBlob)));
+    results.pngs['T1'] = `data:image/png;base64,${t1PngBase64}`;
+  }
   
   results.ladder.push({
     stage: 'T1',
@@ -223,6 +237,13 @@ async function runTemplateLadder(apiKey, processorVersion, serviceData, selected
   
   logPDFShiftHeaders(t2Pdf);
   
+  // Capture PNG as base64
+  if (t2Png.ok) {
+    const t2PngBlob = await t2Png.arrayBuffer();
+    const t2PngBase64 = btoa(String.fromCharCode(...new Uint8Array(t2PngBlob)));
+    results.pngs['T2'] = `data:image/png;base64,${t2PngBase64}`;
+  }
+  
   results.ladder.push({
     stage: 'T2',
     pdfOk: t2Pdf.ok,
@@ -232,7 +253,7 @@ async function runTemplateLadder(apiKey, processorVersion, serviceData, selected
     htmlLength: t2Html.length
   });
 
-  // T3: Full template with real data
+  // T3: Full template with real data (T4 in your numbering)
   console.log('\n=== T3: FULL TEMPLATE, REAL DATA ===');
   const t3Html = generateServiceProgramHtml(serviceData, selectedDate, announcements, 100, 100);
   
@@ -240,6 +261,13 @@ async function runTemplateLadder(apiKey, processorVersion, serviceData, selected
   const t3Png = await callPDFShiftPNG(apiKey, processorVersion, t3Html, true);
   
   logPDFShiftHeaders(t3Pdf);
+  
+  // Capture PNG as base64
+  if (t3Png.ok) {
+    const t3PngBlob = await t3Png.arrayBuffer();
+    const t3PngBase64 = btoa(String.fromCharCode(...new Uint8Array(t3PngBlob)));
+    results.pngs['T3'] = `data:image/png;base64,${t3PngBase64}`;
+  }
   
   results.ladder.push({
     stage: 'T3',
@@ -254,11 +282,21 @@ async function runTemplateLadder(apiKey, processorVersion, serviceData, selected
   results.ladder.forEach(r => {
     console.log(`${r.stage}: PDF=${r.pdfStatus} PNG=${r.pngStatus} HTML=${r.htmlLength}bytes`);
   });
+  
+  console.log('\n=== DIAGNOSTIC ===');
+  const firstBlank = results.ladder.find(r => !r.pngOk || r.pngStatus !== 200);
+  if (firstBlank) {
+    console.log(`⚠️  FIRST FAILURE AT ${firstBlank.stage}`);
+  } else {
+    console.log('✓ All stages generated PNG/PDF successfully');
+    console.log('⚠️  If PDFs are blank but PNGs have content: print-specific CSS issue');
+    console.log('⚠️  If both PNG and PDF are blank at same stage: layout/CSS rendering issue');
+  }
 
   return results;
 }
 
-// T1: Full CSS but simple visible content
+// T1: Full CSS but simple visible content WITH SENTINEL
 function generateT1Html() {
   return `<!DOCTYPE html>
 <html lang="es">
@@ -276,13 +314,26 @@ function generateT1Html() {
       font-size: 12pt;
       color: #000000;
       background: #ffffff;
+      position: relative;
+    }
+    .sentinel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      font-size: 18px;
+      color: #000;
+      background: #FFFF00;
+      padding: 4px 8px;
+      z-index: 9999;
     }
   </style>
 </head>
 <body>
+  <div class="sentinel">SENTINEL OK</div>
   <div style="break-after: page;">
-    <h1 style="font-size: 24pt; color: #000000; text-align: center; margin: 1in 0;">T1 VISIBLE - PAGE 1</h1>
-    <p style="font-size: 14pt; color: #000000; text-align: center;">This is page 1 with simple black text. No columns, no floats.</p>
+    <div style="margin-top: 40px; font-size: 48px; font-weight: 700; color: #000000; text-align: center;">T1 VISIBLE</div>
+    <h1 style="font-size: 24pt; color: #000000; text-align: center; margin-top: 40px;">PAGE 1</h1>
+    <p style="font-size: 14pt; color: #000000; text-align: center; margin-top: 20px;">This is page 1 with simple black text. No columns, no floats.</p>
   </div>
   <div>
     <h1 style="font-size: 24pt; color: #000000; text-align: center; margin: 1in 0;">T1 VISIBLE - PAGE 2</h1>
