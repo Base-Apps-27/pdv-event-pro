@@ -379,6 +379,7 @@ function generateT1Html() {
   </style>
 </head>
 <body>
+  <div style="position: fixed; top: 10px; left: 10px; z-index: 999999; font-size: 24px; color: black; background: white;">VISIBLE SENTINEL</div>
   <div class="sentinel">SENTINEL OK</div>
   <div style="break-after: page;">
     <div style="margin-top: 40px; font-size: 48px; font-weight: 700; color: #000000; text-align: center;">T1 VISIBLE</div>
@@ -418,6 +419,7 @@ function generateT2Html(selectedDate) {
   </style>
 </head>
 <body>
+  <div style="position: fixed; top: 10px; left: 10px; z-index: 999999; font-size: 24px; color: black; background: white;">VISIBLE SENTINEL</div>
   <div class="page">
     <div class="header">
       <div class="title">ORDEN DE SERVICIO</div>
@@ -732,6 +734,7 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
   </style>
 </head>
 <body>
+  <div style="position: fixed; top: 10px; left: 10px; z-index: 999999; font-size: 24px; color: black; background: white;">VISIBLE SENTINEL</div>
   <!-- Page 1: Service Program -->
   <div class="page">
     <div class="header">
