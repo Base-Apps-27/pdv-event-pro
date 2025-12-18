@@ -575,47 +575,47 @@ export default function ServicePdfPreview({
               className="flex-1 bg-gray-200 overflow-auto"
             >
               <div className="flex justify-center items-start p-2 md:p-6">
-                {activeTab === "page1" ? (
-                  <div 
-                    className="pdf-preview-page-wrapper relative" 
-                    style={{ 
-                      transform: `scale(${previewScale})`,
-                      transformOrigin: 'top center',
-                      marginBottom: `${(1 - previewScale) * 1056}px`
-                    }}
-                  >
-                    <div className="pdf-preview-safe-area hidden md:block" />
-                    <div ref={page1Ref}>
-                      <ServicePdfPage1
-                        serviceData={serviceData}
-                        selectedDate={selectedDate}
-                        scale={page1Scale}
-                      />
-                    </div>
-                    {!page1Fits && <div className="pdf-preview-overflow-indicator" />}
+                {/* Page 1 - Always rendered */}
+                <div 
+                  className={`pdf-preview-page-wrapper relative ${activeTab !== "page1" ? "hidden" : ""}`}
+                  style={{ 
+                    transform: `scale(${previewScale})`,
+                    transformOrigin: 'top center',
+                    marginBottom: `${(1 - previewScale) * 1056}px`
+                  }}
+                >
+                  <div className="pdf-preview-safe-area hidden md:block" />
+                  <div ref={page1Ref}>
+                    <ServicePdfPage1
+                      serviceData={serviceData}
+                      selectedDate={selectedDate}
+                      scale={page1Scale}
+                    />
                   </div>
-                ) : (
-                  <div 
-                    className="pdf-preview-page-wrapper relative" 
-                    style={{ 
-                      transform: `scale(${previewScale})`,
-                      transformOrigin: 'top center',
-                      marginBottom: `${(1 - previewScale) * 1056}px`
-                    }}
-                  >
-                    <div className="pdf-preview-safe-area hidden md:block" />
-                    <div ref={page2Ref}>
-                      <ServicePdfPage2
-                        selectedDate={selectedDate}
-                        fixedAnnouncements={fixedAnnouncements}
-                        dynamicAnnouncements={dynamicAnnouncements}
-                        selectedAnnouncements={selectedAnnouncements}
-                        scale={page2Scale}
-                      />
-                    </div>
-                    {!page2Fits && <div className="pdf-preview-overflow-indicator" />}
+                  {!page1Fits && <div className="pdf-preview-overflow-indicator" />}
+                </div>
+
+                {/* Page 2 - Always rendered */}
+                <div 
+                  className={`pdf-preview-page-wrapper relative ${activeTab !== "page2" ? "hidden" : ""}`}
+                  style={{ 
+                    transform: `scale(${previewScale})`,
+                    transformOrigin: 'top center',
+                    marginBottom: `${(1 - previewScale) * 1056}px`
+                  }}
+                >
+                  <div className="pdf-preview-safe-area hidden md:block" />
+                  <div ref={page2Ref}>
+                    <ServicePdfPage2
+                      selectedDate={selectedDate}
+                      fixedAnnouncements={fixedAnnouncements}
+                      dynamicAnnouncements={dynamicAnnouncements}
+                      selectedAnnouncements={selectedAnnouncements}
+                      scale={page2Scale}
+                    />
                   </div>
-                )}
+                  {!page2Fits && <div className="pdf-preview-overflow-indicator" />}
+                </div>
               </div>
             </div>
         </div>
