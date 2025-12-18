@@ -42,14 +42,23 @@ Deno.serve(async (req) => {
 
     // Generate HTML for both pages
     const html = generateServiceProgramHtml(serviceData, selectedDate, announcements, page1Scale, page2Scale);
-    
+
     console.log('=== HTML GENERATION DEBUG ===');
     console.log('HTML length:', html.length);
     console.log('9:30am segments:', serviceData['9:30am']?.length || 0);
     console.log('11:30am segments:', serviceData['11:30am']?.length || 0);
     console.log('Announcements:', announcements.length);
-    console.log('HTML preview (first 800 chars):', html.substring(0, 800));
+    console.log('HTML preview (first 1000 chars):', html.substring(0, 1000));
+    console.log('HTML preview (middle):', html.substring(Math.floor(html.length/2) - 200, Math.floor(html.length/2) + 200));
     console.log('HTML preview (last 500 chars):', html.substring(html.length - 500));
+
+    // Validate basic HTML structure
+    const hasDoctype = html.includes('<!DOCTYPE html>');
+    const hasHtmlOpen = html.includes('<html');
+    const hasHtmlClose = html.includes('</html>');
+    const hasBodyOpen = html.includes('<body>');
+    const hasBodyClose = html.includes('</body>');
+    console.log('HTML validation:', { hasDoctype, hasHtmlOpen, hasHtmlClose, hasBodyOpen, hasBodyClose });
 
     // Call PDFShift API - encode API key as base64
     const auth = btoa(`api:${apiKey}`);
@@ -74,11 +83,26 @@ Deno.serve(async (req) => {
 
     if (!pdfResponse.ok) {
       const errorText = await pdfResponse.text();
-      console.error('PDFShift API error:', pdfResponse.status, errorText);
+      console.error('=== PDFSHIFT API ERROR ===');
+      console.error('Status:', pdfResponse.status);
+      console.error('Error body:', errorText);
+      console.error('Headers:', JSON.stringify([...pdfResponse.headers.entries()]));
+      
+      // Try to parse error as JSON
+      let errorDetails = errorText;
+      try {
+        const errorJson = JSON.parse(errorText);
+        console.error('Parsed error:', JSON.stringify(errorJson, null, 2));
+        errorDetails = errorJson.error || errorJson.message || errorText;
+      } catch (e) {
+        console.error('Error response is not JSON');
+      }
+      
       return Response.json({ 
         error: 'PDF generation failed', 
         status: pdfResponse.status,
-        details: errorText 
+        details: errorDetails,
+        htmlLength: html.length
       }, { status: 500 });
     }
     
@@ -432,7 +456,6 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
       <div class="title">ORDEN DE SERVICIO</div>
       <div class="date">Domingo ${escapeHtml(selectedDate)}</div>
       ${rolesLine ? `<div class="roles-line">${rolesLine}</div>` : ''}
-      <!-- DEBUG: Segments 930=${serviceData['9:30am']?.length || 0}, 1130=${serviceData['11:30am']?.length || 0} -->
     </div>
     
     <div class="columns">
