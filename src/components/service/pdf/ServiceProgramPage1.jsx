@@ -98,12 +98,16 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
     if (!serviceData) return '';
     
     const roles = [];
-    const rolesData = serviceData.roles || {};
     
-    if (rolesData.coordinadores) roles.push(`Coordinador: ${rolesData.coordinadores}`);
-    if (rolesData.ujieres) roles.push(`Ujier: ${rolesData.ujieres}`);
-    if (rolesData.sound) roles.push(`Sonido: ${rolesData.sound}`);
-    if (rolesData.luces) roles.push(`Luces: ${rolesData.luces}`);
+    const coord = serviceData.coordinators?.['9:30am'] || serviceData.coordinators?.['11:30am'];
+    const ujier = serviceData.ujieres?.['9:30am'] || serviceData.ujieres?.['11:30am'];
+    const sound = serviceData.sound?.['9:30am'] || serviceData.sound?.['11:30am'];
+    const luces = serviceData.luces?.['9:30am'] || serviceData.luces?.['11:30am'];
+    
+    if (coord) roles.push(`Coordinador: ${coord}`);
+    if (ujier) roles.push(`Ujier: ${ujier}`);
+    if (sound) roles.push(`Sonido: ${sound}`);
+    if (luces) roles.push(`Luces: ${luces}`);
     
     return roles.join(' • ');
   };
