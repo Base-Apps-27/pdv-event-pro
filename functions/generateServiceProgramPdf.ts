@@ -23,12 +23,15 @@ Deno.serve(async (req) => {
     // Generate HTML for both pages
     const html = generateServiceProgramHtml(serviceData, selectedDate, fixedAnnouncements, dynamicAnnouncements, selectedAnnouncements, page1Scale, page2Scale);
 
-    // Call PDFShift API
+    // Call PDFShift API - encode API key as base64
+    const auth = btoa(`api:${apiKey}`);
+    
+    console.log('Calling PDFShift API...');
     const pdfResponse = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${btoa(apiKey + ':')}`
+        'Authorization': `Basic ${auth}`
       },
       body: JSON.stringify({
         source: html,
@@ -40,9 +43,15 @@ Deno.serve(async (req) => {
 
     if (!pdfResponse.ok) {
       const errorText = await pdfResponse.text();
-      console.error('PDFShift error:', errorText);
-      return Response.json({ error: 'PDF generation failed', details: errorText }, { status: 500 });
+      console.error('PDFShift API error:', pdfResponse.status, errorText);
+      return Response.json({ 
+        error: 'PDF generation failed', 
+        status: pdfResponse.status,
+        details: errorText 
+      }, { status: 500 });
     }
+    
+    console.log('PDF generated successfully');
 
     const pdfBlob = await pdfResponse.arrayBuffer();
 
