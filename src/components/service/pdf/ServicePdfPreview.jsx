@@ -312,23 +312,22 @@ export default function ServicePdfPreview({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl sm:max-w-full sm:h-[100dvh] sm:max-h-[100dvh] md:max-w-6xl md:max-h-[95vh] overflow-hidden bg-white p-0 print:hidden">
+      <DialogContent className="max-w-6xl h-[95vh] max-h-[95vh] w-[95vw] md:w-full p-0 print:hidden flex flex-col">
         <PdfStyles />
         
-        <DialogHeader className="flex-shrink-0 px-3 md:px-6 py-3 md:py-4 border-b bg-white">
+        <DialogHeader className="flex-shrink-0 px-3 md:px-6 py-2 md:py-3 border-b bg-white">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <DialogTitle className="text-base md:text-xl font-bold">
+            <div className="flex items-center gap-2 min-w-0">
+              <DialogTitle className="text-sm md:text-xl font-bold truncate">
                 Vista Previa
               </DialogTitle>
               {!canOutput && (
-                <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
-                  <AlertTriangle className="w-3 h-3 mr-1" />
-                  Excede
+                <Badge variant="destructive" className="text-[10px] px-1.5 py-0 flex-shrink-0">
+                  <AlertTriangle className="w-3 h-3" />
                 </Badge>
               )}
             </div>
-            <div className="flex gap-1 md:gap-2">
+            <div className="flex gap-1 flex-shrink-0">
               <Button 
                 variant="outline" 
                 onClick={() => onOpenChange(false)}
@@ -360,7 +359,7 @@ export default function ServicePdfPreview({
               </Button>
               <Button 
                 onClick={handlePrint} 
-                className={`bg-gray-900 text-white h-8 w-8 p-0 hidden md:flex ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`bg-gray-900 text-white h-8 w-8 p-0 hidden md:inline-flex ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={!canOutput}
                 size="sm"
               >
@@ -368,10 +367,9 @@ export default function ServicePdfPreview({
               </Button>
             </div>
           </div>
-          
-          </DialogHeader>
+        </DialogHeader>
 
-          <div className="flex flex-col md:flex-row flex-1 min-h-0">
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
             {/* Mobile Controls - Always Visible, Compact */}
             {isMobile && (
               <div className="flex-shrink-0 border-b bg-gray-50 px-3 py-2">
