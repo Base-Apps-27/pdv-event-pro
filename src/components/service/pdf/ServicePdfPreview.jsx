@@ -275,73 +275,74 @@ export default function ServicePdfPreview({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden bg-white p-0 print:hidden">
+      <DialogContent className="max-w-6xl sm:max-w-full sm:h-full sm:max-h-full md:max-w-6xl md:max-h-[95vh] overflow-hidden bg-white p-0 print:hidden">
         <PdfStyles />
         
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+        <DialogHeader className="px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 pb-3 sm:pb-4 border-b">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <DialogTitle className="text-xl font-bold">
-              Vista Previa del PDF / PDF Preview
+            <DialogTitle className="text-base sm:text-lg md:text-xl font-bold">
+              Vista Previa / Preview
             </DialogTitle>
-            <div className="flex gap-2 flex-wrap">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                <X className="w-4 h-4 mr-2" />
-                Cerrar / Close
+            <div className="flex gap-1 sm:gap-2 flex-wrap">
+              <Button 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                className="h-9 sm:h-10 px-2 sm:px-4"
+              >
+                <X className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Cerrar</span>
               </Button>
               <Button 
                 onClick={handleSaveAndClose} 
                 variant="outline"
-                className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+                className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white h-9 sm:h-10 px-2 sm:px-4"
               >
-                <Check className="w-4 h-4 mr-2" />
-                Guardar Escala / Save Scale
+                <Check className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Guardar</span>
               </Button>
               <Button 
                 onClick={() => setShowEmailForm(!showEmailForm)}
                 variant="outline"
                 disabled={!canOutput}
-                className={!canOutput ? 'opacity-50 cursor-not-allowed' : ''}
+                className={`h-9 sm:h-10 px-2 sm:px-4 hidden md:flex ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <Mail className="w-4 h-4 mr-2" />
-                Email
+                <Mail className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Email</span>
               </Button>
               <Button 
                 onClick={handleDownloadPDF}
                 variant="outline"
                 disabled={!canOutput || isGeneratingPDF}
-                className={!canOutput ? 'opacity-50 cursor-not-allowed' : ''}
+                className={`h-9 sm:h-10 px-2 sm:px-4 ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {isGeneratingPDF ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Generando... / Generating...
-                  </>
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    <Download className="w-4 h-4 mr-2" />
-                    Descargar / Download
+                    <Download className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Descargar</span>
                   </>
                 )}
               </Button>
               <Button 
                 onClick={handlePrint} 
-                className={`bg-gray-900 text-white ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`bg-gray-900 text-white h-9 sm:h-10 px-2 sm:px-4 ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={!canOutput}
               >
-                <Printer className="w-4 h-4 mr-2" />
-                Imprimir / Print
+                <Printer className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Imprimir</span>
               </Button>
             </div>
           </div>
           
           {/* Overall fit status */}
           {!canOutput && (
-            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-sm text-red-800">
-              <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+            <div className="mt-2 p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 text-xs sm:text-sm text-red-800">
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5" />
               <div>
-                <strong>El contenido excede los límites de página.</strong> Ajuste la escala o reduzca el contenido antes de imprimir o enviar.
-                <br/>
-                <span className="text-red-600">Content exceeds page limits. Adjust scale or reduce content before printing or sending.</span>
+                <strong>Excede límites.</strong> Ajuste escala.
+                <br className="sm:hidden" />
+                <span className="hidden sm:inline">Ajuste la escala o reduzca el contenido antes de imprimir o enviar.</span>
               </div>
             </div>
           )}
@@ -397,51 +398,51 @@ export default function ServicePdfPreview({
           )}
         </DialogHeader>
 
-        <div className="flex h-[calc(95vh-140px)]">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-120px)] sm:h-[calc(100vh-140px)] md:h-[calc(95vh-140px)]">
           {/* Controls Panel */}
-          <div className="w-72 border-r bg-gray-50 p-4 space-y-6 overflow-y-auto">
+          <div className="w-full md:w-72 border-b md:border-b-0 md:border-r bg-gray-50 p-3 sm:p-4 space-y-3 sm:space-y-6 overflow-y-auto max-h-48 md:max-h-none">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="page1" className="text-xs">
-                  Página 1 / Page 1
+                <TabsTrigger value="page1" className="text-xs sm:text-sm">
+                  Página 1
                 </TabsTrigger>
-                <TabsTrigger value="page2" className="text-xs">
-                  Página 2 / Page 2
+                <TabsTrigger value="page2" className="text-xs sm:text-sm">
+                  Página 2
                 </TabsTrigger>
               </TabsList>
             </Tabs>
 
             {/* Page 1 Controls */}
             {activeTab === "page1" && (
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-4">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold">Escala / Scale</span>
+                    <span className="text-xs sm:text-sm font-semibold">Escala</span>
                     <Badge 
                       className={page1Fits 
-                        ? "bg-green-100 text-green-800" 
-                        : "bg-red-100 text-red-800"
+                        ? "bg-green-100 text-green-800 text-xs" 
+                        : "bg-red-100 text-red-800 text-xs"
                       }
                     >
                       {page1Fits ? (
-                        <><Check className="w-3 h-3 mr-1" />Ajusta / Fits</>
+                        <><Check className="w-3 h-3 mr-1" />Ajusta</>
                       ) : (
-                        <><AlertTriangle className="w-3 h-3 mr-1" />Desborda / Overflow</>
+                        <><AlertTriangle className="w-3 h-3 mr-1" />Excede</>
                       )}
                     </Badge>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-9 w-9 sm:h-8 sm:w-8 flex-shrink-0"
                       onClick={() => adjustScale(1, -5)}
                       disabled={page1Scale <= 85}
                     >
                       <Minus className="w-4 h-4" />
                     </Button>
-                    
+
                     <div className="flex-1">
                       <Slider
                         value={[page1Scale]}
@@ -452,18 +453,18 @@ export default function ServicePdfPreview({
                         className="w-full"
                       />
                     </div>
-                    
+
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-9 w-9 sm:h-8 sm:w-8 flex-shrink-0"
                       onClick={() => adjustScale(1, 5)}
                       disabled={page1Scale >= 110}
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
-                  
+
                   <div className="text-center text-sm text-gray-600 mt-1">
                     {page1Scale}%
                   </div>
@@ -471,55 +472,52 @@ export default function ServicePdfPreview({
 
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="w-full h-9"
                   onClick={() => autoFitPage(1)}
                   disabled={autoFitting}
                 >
                   <Wand2 className="w-4 h-4 mr-2" />
-                  {autoFitting ? "Ajustando..." : "Auto-Ajustar / Auto-Fit"}
+                  <span className="text-xs sm:text-sm">{autoFitting ? "Ajustando..." : "Auto-Ajustar"}</span>
                 </Button>
 
-                <div className="text-xs text-gray-500 p-3 bg-gray-100 rounded">
+                <div className="text-xs text-gray-500 p-2 sm:p-3 bg-gray-100 rounded hidden sm:block">
                   <strong>Orden de Servicio</strong><br/>
-                  Horarios de 9:30 A.M. y 11:30 A.M. en dos columnas.
-                  <br/><br/>
-                  <strong>Service Order</strong><br/>
-                  9:30 A.M. and 11:30 A.M. schedules in two columns.
+                  Horarios 9:30 y 11:30 en dos columnas.
                 </div>
               </div>
             )}
 
             {/* Page 2 Controls */}
             {activeTab === "page2" && (
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-4">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold">Escala / Scale</span>
+                    <span className="text-xs sm:text-sm font-semibold">Escala</span>
                     <Badge 
                       className={page2Fits 
-                        ? "bg-green-100 text-green-800" 
-                        : "bg-red-100 text-red-800"
+                        ? "bg-green-100 text-green-800 text-xs" 
+                        : "bg-red-100 text-red-800 text-xs"
                       }
                     >
                       {page2Fits ? (
-                        <><Check className="w-3 h-3 mr-1" />Ajusta / Fits</>
+                        <><Check className="w-3 h-3 mr-1" />Ajusta</>
                       ) : (
-                        <><AlertTriangle className="w-3 h-3 mr-1" />Desborda / Overflow</>
+                        <><AlertTriangle className="w-3 h-3 mr-1" />Excede</>
                       )}
                     </Badge>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-9 w-9 sm:h-8 sm:w-8 flex-shrink-0"
                       onClick={() => adjustScale(2, -5)}
                       disabled={page2Scale <= 85}
                     >
                       <Minus className="w-4 h-4" />
                     </Button>
-                    
+
                     <div className="flex-1">
                       <Slider
                         value={[page2Scale]}
@@ -530,18 +528,18 @@ export default function ServicePdfPreview({
                         className="w-full"
                       />
                     </div>
-                    
+
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-9 w-9 sm:h-8 sm:w-8 flex-shrink-0"
                       onClick={() => adjustScale(2, 5)}
                       disabled={page2Scale >= 110}
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
-                  
+
                   <div className="text-center text-sm text-gray-600 mt-1">
                     {page2Scale}%
                   </div>
@@ -549,45 +547,42 @@ export default function ServicePdfPreview({
 
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="w-full h-9"
                   onClick={() => autoFitPage(2)}
                   disabled={autoFitting}
                 >
                   <Wand2 className="w-4 h-4 mr-2" />
-                  {autoFitting ? "Ajustando..." : "Auto-Ajustar / Auto-Fit"}
+                  <span className="text-xs sm:text-sm">{autoFitting ? "Ajustando..." : "Auto-Ajustar"}</span>
                 </Button>
 
-                <div className="text-xs text-gray-500 p-3 bg-gray-100 rounded">
+                <div className="text-xs text-gray-500 p-2 sm:p-3 bg-gray-100 rounded hidden sm:block">
                   <strong>Anuncios</strong><br/>
-                  {selectedAnnouncements.length} anuncios seleccionados en dos columnas.
-                  <br/><br/>
-                  <strong>Announcements</strong><br/>
-                  {selectedAnnouncements.length} selected announcements in two columns.
+                  {selectedAnnouncements.length} anuncios en dos columnas.
                 </div>
               </div>
             )}
 
-            {/* Legend */}
-            <div className="border-t pt-4">
-              <div className="text-xs font-semibold mb-2">Leyenda / Legend</div>
+            {/* Legend - hide on mobile */}
+            <div className="border-t pt-4 hidden md:block">
+              <div className="text-xs font-semibold mb-2">Leyenda</div>
               <div className="space-y-1 text-xs">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 border border-dashed border-blue-500 opacity-50" />
-                  <span>Área segura / Safe area</span>
+                  <span>Área segura</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-0.5 bg-red-500" />
-                  <span>Límite de página / Page limit</span>
+                  <span>Límite de página</span>
                 </div>
               </div>
             </div>
-          </div>
+            </div>
 
-          {/* Preview Area */}
-          <div className="flex-1 bg-gray-200 overflow-auto p-6">
-            <div className="flex justify-center">
+            {/* Preview Area */}
+            <div className="flex-1 bg-gray-200 overflow-auto p-2 sm:p-4 md:p-6">
+            <div className="flex justify-center items-start">
               {activeTab === "page1" ? (
-                <div className="pdf-preview-page-wrapper relative">
+                <div className="pdf-preview-page-wrapper relative" style={{ transform: 'scale(0.5)', transformOrigin: 'top center' }}>
                   <div className="pdf-preview-safe-area" />
                   <div ref={page1Ref}>
                     <ServicePdfPage1
@@ -599,7 +594,7 @@ export default function ServicePdfPreview({
                   {!page1Fits && <div className="pdf-preview-overflow-indicator" />}
                 </div>
               ) : (
-                <div className="pdf-preview-page-wrapper relative">
+                <div className="pdf-preview-page-wrapper relative" style={{ transform: 'scale(0.5)', transformOrigin: 'top center' }}>
                   <div className="pdf-preview-safe-area" />
                   <div ref={page2Ref}>
                     <ServicePdfPage2
