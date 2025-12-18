@@ -134,9 +134,7 @@ Deno.serve(async (req) => {
         landscape: false,
         use_print: true,
         format: 'Letter',
-        sandbox: false,
-        delay: 1000,
-        no_javascript: true
+        sandbox: false
       })
     });
 
