@@ -115,7 +115,7 @@ export default function ServicePdfPreview({
         page2Scale,
         debug: false,
         processorVersion: '116'
-      });
+      }, { responseType: 'arraybuffer' });
 
       console.log("--- PDF INTEGRITY CHECK (DOWNLOAD) ---");
       console.log("HTTP Status:", response.status);
@@ -231,7 +231,7 @@ export default function ServicePdfPreview({
         page2Scale,
         debug: false,
         processorVersion: '116'
-      });
+      }, { responseType: 'arraybuffer' });
 
       console.log('=== RAW RESPONSE INSPECTION ===');
       console.log('Response object keys:', Object.keys(response));
