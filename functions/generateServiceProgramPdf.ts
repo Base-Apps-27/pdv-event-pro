@@ -108,9 +108,8 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
   if (luces) roles.push(`Luces: ${luces}`);
   const rolesLine = roles.join(' • ');
 
-  // Filter selected announcements
-  const selectedFixed = (fixedAnnouncements || []).filter(a => (selectedAnnouncements || []).includes(a.id));
-  const selectedDynamic = (dynamicAnnouncements || []).filter(a => (selectedAnnouncements || []).includes(a.id));
+  // Use fetched announcements directly
+  const announcementsList = announcements || [];
 
   return `
 <!DOCTYPE html>
@@ -354,30 +353,20 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
       <div class="date">Domingo ${selectedDate}</div>
     </div>
     
-    <div class="announcements-columns">
-      <div class="announcements-column">
-        ${selectedFixed.slice(0, Math.ceil(selectedFixed.length / 2)).map(renderAnnouncement).join('')}
-      </div>
-      <div class="announcements-column">
-        ${selectedFixed.slice(Math.ceil(selectedFixed.length / 2)).map(renderAnnouncement).join('')}
-      </div>
-    </div>
-    
-    ${selectedDynamic.length > 0 ? `
-      <div style="margin-top: 20px;">
-        <div style="font-size: 11pt; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid #1F8A70; padding-bottom: 4px;">
-          PRÓXIMOS EVENTOS
+    ${announcementsList.length > 0 ? `
+      <div class="announcements-columns">
+        <div class="announcements-column">
+          ${announcementsList.slice(0, Math.ceil(announcementsList.length / 2)).map(renderAnnouncement).join('')}
         </div>
-        <div class="announcements-columns">
-          <div class="announcements-column">
-            ${selectedDynamic.slice(0, Math.ceil(selectedDynamic.length / 2)).map(renderEvent).join('')}
-          </div>
-          <div class="announcements-column">
-            ${selectedDynamic.slice(Math.ceil(selectedDynamic.length / 2)).map(renderEvent).join('')}
-          </div>
+        <div class="announcements-column">
+          ${announcementsList.slice(Math.ceil(announcementsList.length / 2)).map(renderAnnouncement).join('')}
         </div>
       </div>
-    ` : ''}
+    ` : `
+      <div style="padding: 20px; text-align: center; color: #6B7280;">
+        No hay anuncios seleccionados / No announcements selected
+      </div>
+    `}
     
     <div class="footer">Palabras de Vida • ¡Atrévete a Cambiar!</div>
   </div>
