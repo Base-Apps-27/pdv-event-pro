@@ -136,8 +136,8 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
     },
   });
 
-  const renderServiceColumn = (timeSlot, data) => {
-    if (!data?.segments || data.segments.length === 0) {
+  const renderServiceColumn = (timeSlot, segments) => {
+    if (!segments || segments.length === 0) {
       return (
         <View style={styles.column}>
           <Text style={[styles.columnHeader, scaledStyles.scaledColumnHeader]}>{timeSlot}</Text>
@@ -151,25 +151,34 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
     return (
       <View style={styles.column}>
         <Text style={[styles.columnHeader, scaledStyles.scaledColumnHeader]}>{timeSlot}</Text>
-        {data.segments.map((segment, idx) => (
+        {segments.filter(s => s.type !== 'break').map((segment, idx) => (
           <View key={idx} style={styles.segment}>
             <Text style={[styles.segmentTitle, scaledStyles.scaledSegmentTitle]}>
-              {segment.title || segment.segment_type}
+              {segment.title}
             </Text>
-            {segment.start_time && (
+            {segment.duration && (
               <Text style={[styles.segmentTime, scaledStyles.scaledSegmentTime]}>
-                {segment.start_time}
-                {segment.duration_min && ` (${segment.duration_min} min)`}
+                {segment.duration} min
               </Text>
             )}
-            {segment.presenter && (
+            {segment.data?.leader && (
               <Text style={[styles.segmentDetails, scaledStyles.scaledSegmentDetails]}>
-                {segment.presenter}
+                Dirige: {segment.data.leader}
               </Text>
             )}
-            {segment.description_details && (
+            {segment.data?.presenter && (
               <Text style={[styles.segmentDetails, scaledStyles.scaledSegmentDetails]}>
-                {segment.description_details}
+                {segment.data.presenter}
+              </Text>
+            )}
+            {segment.data?.preacher && (
+              <Text style={[styles.segmentDetails, scaledStyles.scaledSegmentDetails]}>
+                {segment.data.preacher}
+              </Text>
+            )}
+            {segment.data?.title && (
+              <Text style={[styles.segmentDetails, scaledStyles.scaledSegmentDetails]}>
+                {segment.data.title}
               </Text>
             )}
           </View>
