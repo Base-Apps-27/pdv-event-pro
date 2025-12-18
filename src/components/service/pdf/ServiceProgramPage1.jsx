@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
 
-// Placeholder logo URL - replace with actual logo
-const LOGO_URL = 'https://via.placeholder.com/72x72/1F8A70/FFFFFF?text=PDV';
+const LOGO_URL = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png';
 
 const styles = StyleSheet.create({
   container: {
