@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
+import { sanitizeText, stripCuePrefix } from './textSanitization';
 
-// Placeholder logo URL - replace with actual logo
-const LOGO_URL = 'https://via.placeholder.com/72x72/1F8A70/FFFFFF?text=PDV';
+const LOGO_URL = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png';
 
 const styles = StyleSheet.create({
   container: {
@@ -139,14 +139,7 @@ export default function ServiceProgramPage2({
     selectedAnnouncements?.includes(a.id)
   );
 
-  // Strip HTML tags for PDF rendering
-  const stripHtml = (html) => {
-    if (!html) return '';
-    return html
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<[^>]+>/g, '')
-      .trim();
-  };
+
 
   const renderAnnouncement = (announcement) => {
     const isEmphasized = announcement.emphasize;
@@ -157,21 +150,21 @@ export default function ServiceProgramPage2({
     return (
       <View key={announcement.id} style={containerStyle}>
         <Text style={[styles.announcementTitle, scaledStyles.scaledAnnouncementTitle]}>
-          {announcement.title}
+          {sanitizeText(announcement.title)}
         </Text>
         {announcement.content && (
           <Text style={[styles.announcementBody, scaledStyles.scaledAnnouncementBody]}>
-            {stripHtml(announcement.content)}
+            {sanitizeText(announcement.content)}
           </Text>
         )}
         {announcement.instructions && (
           <Text style={[styles.announcementCue, scaledStyles.scaledAnnouncementCue]}>
-            CUE: {stripHtml(announcement.instructions)}
+            CUE: {sanitizeText(stripCuePrefix(announcement.instructions))}
           </Text>
         )}
         {announcement.date_label && (
           <Text style={[styles.announcementDate, scaledStyles.scaledAnnouncementDate]}>
-            📅 {announcement.date_label}
+            {sanitizeText(announcement.date_label)}
           </Text>
         )}
       </View>
@@ -187,16 +180,16 @@ export default function ServiceProgramPage2({
     return (
       <View key={event.id} style={containerStyle}>
         <Text style={[styles.announcementTitle, scaledStyles.scaledAnnouncementTitle]}>
-          {event.title}
+          {sanitizeText(event.title)}
         </Text>
         {event.content && (
           <Text style={[styles.announcementBody, scaledStyles.scaledAnnouncementBody]}>
-            {stripHtml(event.content)}
+            {sanitizeText(event.content)}
           </Text>
         )}
         {event.date_of_occurrence && (
           <Text style={[styles.announcementDate, scaledStyles.scaledAnnouncementDate]}>
-            📅 {new Date(event.date_of_occurrence).toLocaleDateString('es-ES', {
+            {new Date(event.date_of_occurrence).toLocaleDateString('es-ES', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
@@ -206,7 +199,7 @@ export default function ServiceProgramPage2({
         )}
         {event.instructions && (
           <Text style={[styles.announcementCue, scaledStyles.scaledAnnouncementCue]}>
-            CUE: {stripHtml(event.instructions)}
+            CUE: {sanitizeText(stripCuePrefix(event.instructions))}
           </Text>
         )}
       </View>
