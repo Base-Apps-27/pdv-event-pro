@@ -134,7 +134,8 @@ Deno.serve(async (req) => {
         landscape: false,
         use_print: true,
         format: 'Letter',
-        sandbox: false
+        sandbox: false,
+        delay: 500
       })
     });
 
@@ -314,20 +315,18 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
     
     .columns {
       width: 100%;
-      display: table;
-      table-layout: fixed;
+      overflow: hidden;
     }
     
     .column {
-      display: table-cell;
       width: 48%;
-      padding-right: 2%;
-      vertical-align: top;
+      float: left;
+      margin-right: 4%;
+      min-height: 200px;
     }
     
     .column:last-child {
-      padding-right: 0;
-      padding-left: 2%;
+      margin-right: 0;
     }
     
     .column {
@@ -430,20 +429,18 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
     /* Page 2 - Announcements */
     .announcements-grid {
       width: 100%;
-      display: table;
-      table-layout: fixed;
+      overflow: hidden;
     }
     
     .announcements-column {
-      display: table-cell;
       width: 48%;
-      padding-right: 2%;
-      vertical-align: top;
+      float: left;
+      margin-right: 4%;
+      min-height: 200px;
     }
     
     .announcements-column:last-child {
-      padding-right: 0;
-      padding-left: 2%;
+      margin-right: 0;
     }
     
     .announcement-item {
@@ -507,8 +504,6 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
 <body>
   <!-- Page 1: Service Program -->
   <div class="page">
-    <!-- Logo temporarily disabled for debugging -->
-    
     <div class="header">
       <div class="title">ORDEN DE SERVICIO</div>
       <div class="date">Domingo ${escapeHtml(selectedDate)}</div>
@@ -519,6 +514,7 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
       ${renderServiceColumn('9:30 A.M.', serviceData['9:30am'])}
       ${renderServiceColumn('11:30 A.M.', serviceData['11:30am'])}
     </div>
+    <div style="clear: both;"></div>
     
     ${serviceData.receso_notes?.['9:30am'] ? `
       <div class="receso-block">
@@ -534,8 +530,6 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
   
   <!-- Page 2: Announcements -->
   <div class="page">
-    <!-- Logo temporarily disabled for debugging -->
-    
     <div class="header">
       <div class="title">ANUNCIOS</div>
       <div class="date">Domingo ${escapeHtml(selectedDate)}</div>
@@ -550,6 +544,7 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
           ${rightAnnouncements.map((ann, i) => renderAnnouncement(ann, i, rightAnnouncements.length)).join('')}
         </div>
       </div>
+      <div style="clear: both;"></div>
     ` : `
       <div style="padding: 30px; text-align: center; color: #666666; font-size: 10pt;">
         No hay anuncios seleccionados / No announcements selected
