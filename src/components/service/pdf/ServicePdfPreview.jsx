@@ -11,9 +11,6 @@ import { PDFViewer, PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import ServiceProgramPdf from "./ServiceProgramPdf";
 import { base44 } from "@/api/base44Client";
 
-// US Letter at 96 DPI: 816 x 1056px, content area with 48px margins
-const PAGE_HEIGHT = 1056;
-const CONTENT_HEIGHT = 960; // 1056 - 96 (48px top + 48px bottom margins)
 const MOBILE_BREAKPOINT = 768;
 
 export default function ServicePdfPreview({
@@ -30,113 +27,27 @@ export default function ServicePdfPreview({
   const [activeTab, setActiveTab] = useState("page1");
   const [page1Scale, setPage1Scale] = useState(pdfScales?.page1 || 100);
   const [page2Scale, setPage2Scale] = useState(pdfScales?.page2 || 100);
-  const [page1Fits, setPage1Fits] = useState(true);
-  const [page2Fits, setPage2Fits] = useState(true);
-  const [autoFitting, setAutoFitting] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailAddress, setEmailAddress] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const [previewScale, setPreviewScale] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
-  const [controlsExpanded, setControlsExpanded] = useState(false);
-  
-  const page1Ref = useRef(null);
-  const page2Ref = useRef(null);
-  const previewContainerRef = useRef(null);
-  
-  // Check if both pages fit (required for output actions)
-  const canOutput = page1Fits && page2Fits;
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
-  // Detect mobile and calculate preview scale
+  // Detect mobile
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < MOBILE_BREAKPOINT;
       setIsMobile(mobile);
-      
-      if (!previewContainerRef.current) return;
-      
-      const container = previewContainerRef.current;
-      const availableWidth = container.clientWidth - 16; // padding
-      const availableHeight = container.clientHeight - 16;
-      
-      // Calculate scale to fit 816x1056 page in available space
-      const scaleByWidth = availableWidth / 816;
-      const scaleByHeight = availableHeight / 1056;
-      const optimalScale = Math.min(scaleByWidth, scaleByHeight, 1);
-      
-      setPreviewScale(Math.max(0.25, optimalScale));
     };
     
     handleResize();
     window.addEventListener('resize', handleResize);
     
-    // Recalculate when dialog opens
-    const timer = setTimeout(handleResize, 100);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timer);
-    };
-  }, [open]);
-
-  // Check if content fits within page bounds
-  const checkPageFit = useCallback((pageRef, scale) => {
-    if (!pageRef.current) return true;
-    const scaledHeight = pageRef.current.scrollHeight;
-    const maxHeight = PAGE_HEIGHT * (scale / 100);
-    return scaledHeight <= maxHeight;
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Update fit status when scales change
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPage1Fits(checkPageFit(page1Ref, page1Scale));
-      setPage2Fits(checkPageFit(page2Ref, page2Scale));
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [page1Scale, page2Scale, checkPageFit, serviceData, selectedAnnouncements]);
-
-  // Auto-fit algorithm: binary search for max scale that fits
-  const autoFitPage = useCallback(async (pageNum) => {
-    setAutoFitting(true);
-    const pageRef = pageNum === 1 ? page1Ref : page2Ref;
-    const setScale = pageNum === 1 ? setPage1Scale : setPage2Scale;
-    
-    let low = 85;
-    let high = 110;
-    let bestScale = 100;
-    
-    // Binary search for optimal scale
-    for (let i = 0; i < 10; i++) {
-      const mid = Math.round((low + high) / 2);
-      setScale(mid);
-      
-      // Wait for render
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
-      const fits = checkPageFit(pageRef, mid);
-      
-      if (fits) {
-        bestScale = mid;
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
-    }
-    
-    setScale(bestScale);
-    setAutoFitting(false);
-  }, [checkPageFit]);
-
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-
   const handlePrint = async () => {
-    if (!canOutput) {
-      alert('El contenido excede los límites de página. Ajuste la escala o reduzca el contenido.\n\nContent exceeds page limits. Adjust scale or reduce content.');
-      return;
-    }
-    
     setIsGeneratingPDF(true);
     try {
       onSaveScales({ page1: page1Scale, page2: page2Scale });
@@ -175,11 +86,6 @@ export default function ServicePdfPreview({
   };
   
   const handleDownloadPDF = async () => {
-    if (!canOutput) {
-      alert('El contenido excede los límites de página. Ajuste la escala o reduzca el contenido.\n\nContent exceeds page limits. Adjust scale or reduce content.');
-      return;
-    }
-    
     setIsGeneratingPDF(true);
     try {
       onSaveScales({ page1: page1Scale, page2: page2Scale });
@@ -276,13 +182,8 @@ export default function ServicePdfPreview({
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <DialogTitle className="text-sm md:text-xl font-bold truncate">
-                Vista Previa
+                Vista Previa / Preview
               </DialogTitle>
-              {!canOutput && (
-                <Badge variant="destructive" className="text-[10px] px-1.5 py-0 flex-shrink-0">
-                  <AlertTriangle className="w-3 h-3" />
-                </Badge>
-              )}
             </div>
             <div className="flex gap-1 flex-shrink-0">
               <Button 
@@ -304,8 +205,8 @@ export default function ServicePdfPreview({
               <Button 
                 onClick={handleDownloadPDF}
                 variant="outline"
-                disabled={!canOutput || isGeneratingPDF}
-                className={`h-8 w-8 p-0 ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isGeneratingPDF}
+                className="h-8 w-8 p-0"
                 size="sm"
               >
                 {isGeneratingPDF ? (
@@ -316,8 +217,8 @@ export default function ServicePdfPreview({
               </Button>
               <Button 
                 onClick={handlePrint} 
-                className={`bg-gray-900 text-white h-8 w-8 p-0 hidden md:inline-flex ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={!canOutput}
+                className="bg-gray-900 text-white h-8 w-8 p-0 hidden md:inline-flex"
+                disabled={isGeneratingPDF}
                 size="sm"
               >
                 <Printer className="w-4 h-4" />
@@ -333,11 +234,11 @@ export default function ServicePdfPreview({
                 <div className="flex items-center gap-2 mb-2">
                   <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
                     <TabsList className="grid w-full grid-cols-2 h-8">
-                      <TabsTrigger value="page1" className="text-xs">P1</TabsTrigger>
-                      <TabsTrigger value="page2" className="text-xs">P2</TabsTrigger>
+                      <TabsTrigger value="page1" className="text-xs">Página 1</TabsTrigger>
+                      <TabsTrigger value="page2" className="text-xs">Página 2</TabsTrigger>
                     </TabsList>
                   </Tabs>
-                  <Badge className={activeTab === "page1" ? (page1Fits ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800") : (page2Fits ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")}>
+                  <Badge variant="outline">
                     {activeTab === "page1" ? `${page1Scale}%` : `${page2Scale}%`}
                   </Badge>
                 </div>
@@ -368,15 +269,7 @@ export default function ServicePdfPreview({
                   >
                     <Plus className="w-3 h-3" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2 text-xs"
-                    onClick={() => autoFitPage(activeTab === "page1" ? 1 : 2)}
-                    disabled={autoFitting}
-                  >
-                    <Wand2 className="w-3 h-3" />
-                  </Button>
+
                 </div>
               </div>
             )}
@@ -396,15 +289,7 @@ export default function ServicePdfPreview({
               <div className="space-y-3">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold">Escala</span>
-                    <Badge 
-                      className={page1Fits 
-                        ? "bg-green-100 text-green-800" 
-                        : "bg-red-100 text-red-800"
-                      }
-                    >
-                      {page1Fits ? <><Check className="w-3 h-3 mr-1" />OK</> : <><AlertTriangle className="w-3 h-3 mr-1" />Excede</>}
-                    </Badge>
+                    <span className="text-sm font-semibold">Escala / Scale</span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -445,32 +330,15 @@ export default function ServicePdfPreview({
                   </div>
                 </div>
 
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => autoFitPage(1)}
-                  disabled={autoFitting}
-                >
-                  <Wand2 className="w-4 h-4 mr-2" />
-                  {autoFitting ? "Ajustando..." : "Auto-Ajustar"}
-                </Button>
-              </div>
-              )}
+                </div>
+                )}
 
             {/* Page 2 Controls */}
             {activeTab === "page2" && (
               <div className="space-y-3">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold">Escala</span>
-                    <Badge 
-                      className={page2Fits 
-                        ? "bg-green-100 text-green-800" 
-                        : "bg-red-100 text-red-800"
-                      }
-                    >
-                      {page2Fits ? <><Check className="w-3 h-3 mr-1" />OK</> : <><AlertTriangle className="w-3 h-3 mr-1" />Excede</>}
-                    </Badge>
+                    <span className="text-sm font-semibold">Escala / Scale</span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -511,32 +379,8 @@ export default function ServicePdfPreview({
                   </div>
                 </div>
 
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => autoFitPage(2)}
-                  disabled={autoFitting}
-                >
-                  <Wand2 className="w-4 h-4 mr-2" />
-                  {autoFitting ? "Ajustando..." : "Auto-Ajustar"}
-                </Button>
-              </div>
-            )}
-
-            {/* Legend */}
-            <div className="border-t pt-4">
-              <div className="text-xs font-semibold mb-2">Leyenda</div>
-              <div className="space-y-1 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border border-dashed border-blue-500 opacity-50" />
-                  <span>Área segura</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-0.5 bg-red-500" />
-                  <span>Límite de página</span>
-                </div>
-              </div>
-            </div>
+                )}
             </div>
             )}
 
