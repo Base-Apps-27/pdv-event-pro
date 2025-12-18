@@ -372,119 +372,57 @@ export default function ServicePdfPreview({
           </DialogHeader>
 
           <div className="flex flex-col md:flex-row flex-1 min-h-0">
-            {/* Mobile Controls - Collapsible */}
+            {/* Mobile Controls - Always Visible, Compact */}
             {isMobile && (
-              <div className="flex-shrink-0 border-b bg-gray-50">
-                <button
-                  onClick={() => setControlsExpanded(!controlsExpanded)}
-                  className="w-full px-3 py-2 flex items-center justify-between text-sm font-medium"
-                >
-                  <span>Controles / Controls</span>
-                  {controlsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </button>
-
-                {controlsExpanded && (
-                  <div className="px-3 pb-3 space-y-3">
-                    <Tabs value={activeTab} onValueChange={setActiveTab}>
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="page1">Página 1</TabsTrigger>
-                        <TabsTrigger value="page2">Página 2</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-
-                    {activeTab === "page1" ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold">Escala P1</span>
-                          <Badge className={page1Fits ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                            {page1Scale}%
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => adjustScale(1, -5)}
-                            disabled={page1Scale <= 85}
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
-                          <Slider
-                            value={[page1Scale]}
-                            onValueChange={([v]) => setPage1Scale(v)}
-                            min={85}
-                            max={110}
-                            step={1}
-                            className="flex-1"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => adjustScale(1, 5)}
-                            disabled={page1Scale >= 110}
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => autoFitPage(1)}
-                          disabled={autoFitting}
-                        >
-                          <Wand2 className="w-3 h-3 mr-2" />
-                          {autoFitting ? "Ajustando..." : "Auto-Ajustar"}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold">Escala P2</span>
-                          <Badge className={page2Fits ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                            {page2Scale}%
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => adjustScale(2, -5)}
-                            disabled={page2Scale <= 85}
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
-                          <Slider
-                            value={[page2Scale]}
-                            onValueChange={([v]) => setPage2Scale(v)}
-                            min={85}
-                            max={110}
-                            step={1}
-                            className="flex-1"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => adjustScale(2, 5)}
-                            disabled={page2Scale >= 110}
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => autoFitPage(2)}
-                          disabled={autoFitting}
-                        >
-                          <Wand2 className="w-3 h-3 mr-2" />
-                          {autoFitting ? "Ajustando..." : "Auto-Ajustar"}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
+              <div className="flex-shrink-0 border-b bg-gray-50 px-3 py-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+                    <TabsList className="grid w-full grid-cols-2 h-8">
+                      <TabsTrigger value="page1" className="text-xs">P1</TabsTrigger>
+                      <TabsTrigger value="page2" className="text-xs">P2</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  <Badge className={activeTab === "page1" ? (page1Fits ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800") : (page2Fits ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")}>
+                    {activeTab === "page1" ? `${page1Scale}%` : `${page2Scale}%`}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => adjustScale(activeTab === "page1" ? 1 : 2, -5)}
+                    disabled={activeTab === "page1" ? page1Scale <= 85 : page2Scale <= 85}
+                  >
+                    <Minus className="w-3 h-3" />
+                  </Button>
+                  <Slider
+                    value={activeTab === "page1" ? [page1Scale] : [page2Scale]}
+                    onValueChange={([v]) => activeTab === "page1" ? setPage1Scale(v) : setPage2Scale(v)}
+                    min={85}
+                    max={110}
+                    step={1}
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => adjustScale(activeTab === "page1" ? 1 : 2, 5)}
+                    disabled={activeTab === "page1" ? page1Scale >= 110 : page2Scale >= 110}
+                  >
+                    <Plus className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => autoFitPage(activeTab === "page1" ? 1 : 2)}
+                    disabled={autoFitting}
+                  >
+                    <Wand2 className="w-3 h-3" />
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -650,15 +588,16 @@ export default function ServicePdfPreview({
             {/* Preview Area */}
             <div 
               ref={previewContainerRef} 
-              className="flex-1 bg-gray-200 overflow-auto min-h-0"
+              className="flex-1 bg-gray-200 overflow-auto"
             >
-              <div className="flex justify-center items-start p-2 md:p-6 min-h-full">
+              <div className="flex justify-center items-start p-2 md:p-6">
                 {activeTab === "page1" ? (
                   <div 
                     className="pdf-preview-page-wrapper relative" 
                     style={{ 
                       transform: `scale(${previewScale})`,
-                      transformOrigin: 'top center'
+                      transformOrigin: 'top center',
+                      marginBottom: `${(1 - previewScale) * 1056}px`
                     }}
                   >
                     <div className="pdf-preview-safe-area hidden md:block" />
@@ -676,7 +615,8 @@ export default function ServicePdfPreview({
                     className="pdf-preview-page-wrapper relative" 
                     style={{ 
                       transform: `scale(${previewScale})`,
-                      transformOrigin: 'top center'
+                      transformOrigin: 'top center',
+                      marginBottom: `${(1 - previewScale) * 1056}px`
                     }}
                   >
                     <div className="pdf-preview-safe-area hidden md:block" />
