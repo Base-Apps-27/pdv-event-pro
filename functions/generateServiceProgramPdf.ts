@@ -11,6 +11,16 @@ Deno.serve(async (req) => {
 
     const { serviceData, selectedDate, fixedAnnouncements, dynamicAnnouncements, selectedAnnouncements, page1Scale = 100, page2Scale = 100 } = await req.json();
 
+    console.log('PDF Generation Request:', {
+      hasServiceData: !!serviceData,
+      selectedDate,
+      fixedAnnouncementsCount: fixedAnnouncements?.length || 0,
+      dynamicAnnouncementsCount: dynamicAnnouncements?.length || 0,
+      selectedAnnouncementsCount: selectedAnnouncements?.length || 0,
+      page1Scale,
+      page2Scale
+    });
+
     if (!serviceData || !selectedDate) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -22,6 +32,9 @@ Deno.serve(async (req) => {
 
     // Generate HTML for both pages
     const html = generateServiceProgramHtml(serviceData, selectedDate, fixedAnnouncements, dynamicAnnouncements, selectedAnnouncements, page1Scale, page2Scale);
+    
+    console.log('Generated HTML length:', html.length);
+    console.log('HTML preview:', html.substring(0, 500));
 
     // Call PDFShift API - encode API key as base64
     const auth = btoa(`api:${apiKey}`);
@@ -116,18 +129,7 @@ function generateServiceProgramHtml(serviceData, selectedDate, fixedAnnouncement
     .page {
       page-break-after: always;
       position: relative;
-      min-height: 10in;
-      padding: 0.5in;
-    }
-    
-    .page:last-child {
-      page-break-after: auto;
-    }
-    
-    /* Page 1 styles */
-    .page1 {
-      transform: scale(${page1Scale / 100});
-      transform-origin: top left;
+      min-height: 9in;
     }
     
     .logo {
@@ -222,11 +224,6 @@ function generateServiceProgramHtml(serviceData, selectedDate, fixedAnnouncement
     }
     
     /* Page 2 styles */
-    .page2 {
-      transform: scale(${page2Scale / 100});
-      transform-origin: top left;
-    }
-    
     .announcements-columns {
       display: flex;
       gap: 16px;
