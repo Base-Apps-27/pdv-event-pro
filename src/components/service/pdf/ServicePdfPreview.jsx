@@ -582,8 +582,8 @@ export default function ServicePdfPreview({
             <div className="flex-1 bg-gray-200 overflow-auto p-2 sm:p-4 md:p-6">
             <div className="flex justify-center items-start">
               {activeTab === "page1" ? (
-                <div className="pdf-preview-page-wrapper relative" style={{ transform: 'scale(0.5)', transformOrigin: 'top center' }}>
-                  <div className="pdf-preview-safe-area" />
+                <div className="pdf-preview-page-wrapper relative w-full md:w-auto" style={{ transform: 'scale(0.75) translateX(-50%)', transformOrigin: 'top left', left: '50%' }}>
+                  <div className="pdf-preview-safe-area md:block" />
                   <div ref={page1Ref}>
                     <ServicePdfPage1
                       serviceData={serviceData}
@@ -594,8 +594,8 @@ export default function ServicePdfPreview({
                   {!page1Fits && <div className="pdf-preview-overflow-indicator" />}
                 </div>
               ) : (
-                <div className="pdf-preview-page-wrapper relative" style={{ transform: 'scale(0.5)', transformOrigin: 'top center' }}>
-                  <div className="pdf-preview-safe-area" />
+                <div className="pdf-preview-page-wrapper relative w-full md:w-auto" style={{ transform: 'scale(0.75) translateX(-50%)', transformOrigin: 'top left', left: '50%' }}>
+                  <div className="pdf-preview-safe-area md:block" />
                   <div ref={page2Ref}>
                     <ServicePdfPage2
                       selectedDate={selectedDate}
