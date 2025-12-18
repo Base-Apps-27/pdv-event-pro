@@ -27,25 +27,8 @@ export default function ServicePdfPreview({
   const [activeTab, setActiveTab] = useState("page1");
   const [page1Scale, setPage1Scale] = useState(pdfScales?.page1 || 100);
   const [page2Scale, setPage2Scale] = useState(pdfScales?.page2 || 100);
-  const [showEmailForm, setShowEmailForm] = useState(false);
-  const [emailAddress, setEmailAddress] = useState("");
-  const [sendingEmail, setSendingEmail] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-
-  // Detect mobile
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < MOBILE_BREAKPOINT;
-      setIsMobile(mobile);
-    };
-    
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT);
 
   const handlePrint = async () => {
     setIsGeneratingPDF(true);
@@ -385,10 +368,7 @@ export default function ServicePdfPreview({
             )}
 
             {/* Preview Area */}
-            <div 
-              ref={previewContainerRef} 
-              className="flex-1 bg-gray-200 overflow-auto"
-            >
+            <div className="flex-1 bg-gray-200 overflow-auto">
               <div className="h-full w-full">
                 <PDFViewer 
                   width="100%" 
