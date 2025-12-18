@@ -39,12 +39,35 @@ export default function ServicePdfPreview({
   const [emailAddress, setEmailAddress] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [mobilePreviewScale, setMobilePreviewScale] = useState(0.4);
   
   const page1Ref = useRef(null);
   const page2Ref = useRef(null);
+  const previewContainerRef = useRef(null);
   
   // Check if both pages fit (required for output actions)
   const canOutput = page1Fits && page2Fits;
+
+  // Calculate optimal mobile preview scale based on available viewport
+  useEffect(() => {
+    const calculateMobileScale = () => {
+      if (!previewContainerRef.current) return;
+      
+      // Get available height for preview (viewport - header - controls)
+      const viewportHeight = window.innerHeight;
+      const headerHeight = 60; // Approximate header height on mobile
+      const controlsHeight = 140; // Approximate controls panel height
+      const availableHeight = viewportHeight - headerHeight - controlsHeight - 20; // 20px padding
+      
+      // Calculate scale to fit 1056px document in available space
+      const calculatedScale = Math.min(0.5, Math.max(0.3, availableHeight / 1056));
+      setMobilePreviewScale(calculatedScale);
+    };
+    
+    calculateMobileScale();
+    window.addEventListener('resize', calculateMobileScale);
+    return () => window.removeEventListener('resize', calculateMobileScale);
+  }, []);
 
   // Check if content fits within page bounds
   const checkPageFit = useCallback((pageRef, scale) => {
@@ -546,10 +569,17 @@ export default function ServicePdfPreview({
             </div>
 
             {/* Preview Area */}
-            <div className="flex-1 bg-gray-200 overflow-auto p-1 md:p-6">
+            <div ref={previewContainerRef} className="flex-1 bg-gray-200 overflow-auto p-1 md:p-6">
               <div className="flex justify-center items-start">
                 {activeTab === "page1" ? (
-                  <div className="pdf-preview-page-wrapper relative w-full md:w-auto" style={{ transform: 'scale(0.4) translateX(-50%)', transformOrigin: 'top left', left: '50%' }}>
+                  <div 
+                    className="pdf-preview-page-wrapper relative w-full md:w-auto" 
+                    style={{ 
+                      transform: `scale(${mobilePreviewScale}) translateX(-50%)`, 
+                      transformOrigin: 'top left', 
+                      left: '50%' 
+                    }}
+                  >
                     <div className="pdf-preview-safe-area hidden md:block" />
                     <div ref={page1Ref}>
                       <ServicePdfPage1
@@ -561,7 +591,14 @@ export default function ServicePdfPreview({
                     {!page1Fits && <div className="pdf-preview-overflow-indicator" />}
                   </div>
                 ) : (
-                  <div className="pdf-preview-page-wrapper relative w-full md:w-auto" style={{ transform: 'scale(0.4) translateX(-50%)', transformOrigin: 'top left', left: '50%' }}>
+                  <div 
+                    className="pdf-preview-page-wrapper relative w-full md:w-auto" 
+                    style={{ 
+                      transform: `scale(${mobilePreviewScale}) translateX(-50%)`, 
+                      transformOrigin: 'top left', 
+                      left: '50%' 
+                    }}
+                  >
                     <div className="pdf-preview-safe-area hidden md:block" />
                     <div ref={page2Ref}>
                       <ServicePdfPage2
