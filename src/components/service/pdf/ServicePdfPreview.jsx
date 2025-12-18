@@ -165,6 +165,21 @@ export default function ServicePdfPreview({
         throw new Error('Page elements not found');
       }
       
+      // Find all elements with gradients and replace with solid color
+      const gradientElements = [];
+      [page1Element, page2Element].forEach(pageEl => {
+        const els = pageEl.querySelectorAll('[style*="gradient"], .brand-gradient, .gradient-pdv, .sidebar-active-gradient, .gradient-pdv-vertical');
+        els.forEach(el => {
+          gradientElements.push({
+            element: el,
+            originalBackground: el.style.background,
+            originalBackgroundImage: el.style.backgroundImage
+          });
+          el.style.background = '#1F8A70'; // Solid brand teal
+          el.style.backgroundImage = 'none';
+        });
+      });
+      
       // Get preview wrapper parents and store their transforms
       const page1Wrapper = page1Element.closest('.pdf-preview-page-wrapper');
       const page2Wrapper = page2Element.closest('.pdf-preview-page-wrapper');
@@ -218,6 +233,12 @@ export default function ServicePdfPreview({
       
       const imgData2 = canvas2.toDataURL('image/png');
       pdf.addImage(imgData2, 'PNG', 0, 0, 612, 792);
+      
+      // Restore gradients
+      gradientElements.forEach(({ element, originalBackground, originalBackgroundImage }) => {
+        if (originalBackground) element.style.background = originalBackground;
+        if (originalBackgroundImage) element.style.backgroundImage = originalBackgroundImage;
+      });
       
       // Restore preview wrapper transforms
       if (page1Wrapper && originalPage1WrapperTransform !== undefined) {
