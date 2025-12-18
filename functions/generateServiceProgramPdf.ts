@@ -9,13 +9,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { serviceData, selectedDate, fixedAnnouncements, dynamicAnnouncements, selectedAnnouncements, page1Scale = 100, page2Scale = 100 } = await req.json();
+    const { serviceData, selectedDate, selectedAnnouncements, page1Scale = 100, page2Scale = 100 } = await req.json();
 
     console.log('PDF Generation Request:', {
       hasServiceData: !!serviceData,
       selectedDate,
-      fixedAnnouncementsCount: fixedAnnouncements?.length || 0,
-      dynamicAnnouncementsCount: dynamicAnnouncements?.length || 0,
       selectedAnnouncementsCount: selectedAnnouncements?.length || 0,
       page1Scale,
       page2Scale
@@ -25,13 +23,25 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Fetch announcement objects if we have IDs
+    let announcements = [];
+    if (selectedAnnouncements && selectedAnnouncements.length > 0) {
+      try {
+        const allAnnouncements = await base44.asServiceRole.entities.AnnouncementItem.list();
+        announcements = allAnnouncements.filter(a => selectedAnnouncements.includes(a.id));
+        console.log('Fetched announcements:', announcements.length);
+      } catch (error) {
+        console.error('Error fetching announcements:', error);
+      }
+    }
+
     const apiKey = Deno.env.get('PDFSHIFT_API_KEY');
     if (!apiKey) {
       return Response.json({ error: 'PDFShift API key not configured' }, { status: 500 });
     }
 
     // Generate HTML for both pages
-    const html = generateServiceProgramHtml(serviceData, selectedDate, fixedAnnouncements, dynamicAnnouncements, selectedAnnouncements, page1Scale, page2Scale);
+    const html = generateServiceProgramHtml(serviceData, selectedDate, announcements, page1Scale, page2Scale);
     
     console.log('Generated HTML length:', html.length);
     console.log('HTML preview:', html.substring(0, 500));
@@ -82,7 +92,7 @@ Deno.serve(async (req) => {
   }
 });
 
-function generateServiceProgramHtml(serviceData, selectedDate, fixedAnnouncements, dynamicAnnouncements, selectedAnnouncements, page1Scale, page2Scale) {
+function generateServiceProgramHtml(serviceData, selectedDate, announcements, page1Scale, page2Scale) {
   const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png';
   
   // Build roles line
