@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Minus, Plus, Wand2, Printer, Check, AlertTriangle, Download, Mail, Loader2, X } from "lucide-react";
+import { Minus, Plus, Wand2, Printer, Check, AlertTriangle, Download, Mail, Loader2, X, ChevronDown, ChevronUp } from "lucide-react";
 import ServicePdfPage1 from "./ServicePdfPage1";
 import ServicePdfPage2 from "./ServicePdfPage2";
 import PdfStyles from "./PdfStyles";
@@ -17,6 +17,7 @@ import { jsPDF } from "jspdf";
 // US Letter at 96 DPI: 816 x 1056px, content area with 48px margins
 const PAGE_HEIGHT = 1056;
 const CONTENT_HEIGHT = 960; // 1056 - 96 (48px top + 48px bottom margins)
+const MOBILE_BREAKPOINT = 768;
 
 export default function ServicePdfPreview({
   open,
@@ -39,7 +40,9 @@ export default function ServicePdfPreview({
   const [emailAddress, setEmailAddress] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const [mobilePreviewScale, setMobilePreviewScale] = useState(0.4);
+  const [previewScale, setPreviewScale] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+  const [controlsExpanded, setControlsExpanded] = useState(false);
   
   const page1Ref = useRef(null);
   const page2Ref = useRef(null);
@@ -48,26 +51,37 @@ export default function ServicePdfPreview({
   // Check if both pages fit (required for output actions)
   const canOutput = page1Fits && page2Fits;
 
-  // Calculate optimal mobile preview scale based on available viewport
+  // Detect mobile and calculate preview scale
   useEffect(() => {
-    const calculateMobileScale = () => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < MOBILE_BREAKPOINT;
+      setIsMobile(mobile);
+      
       if (!previewContainerRef.current) return;
       
-      // Get available height for preview (viewport - header - controls)
-      const viewportHeight = window.innerHeight;
-      const headerHeight = 60; // Approximate header height on mobile
-      const controlsHeight = 140; // Approximate controls panel height
-      const availableHeight = viewportHeight - headerHeight - controlsHeight - 20; // 20px padding
+      const container = previewContainerRef.current;
+      const availableWidth = container.clientWidth - 16; // padding
+      const availableHeight = container.clientHeight - 16;
       
-      // Calculate scale to fit 1056px document in available space
-      const calculatedScale = Math.min(0.5, Math.max(0.3, availableHeight / 1056));
-      setMobilePreviewScale(calculatedScale);
+      // Calculate scale to fit 816x1056 page in available space
+      const scaleByWidth = availableWidth / 816;
+      const scaleByHeight = availableHeight / 1056;
+      const optimalScale = Math.min(scaleByWidth, scaleByHeight, 1);
+      
+      setPreviewScale(Math.max(0.25, optimalScale));
     };
     
-    calculateMobileScale();
-    window.addEventListener('resize', calculateMobileScale);
-    return () => window.removeEventListener('resize', calculateMobileScale);
-  }, []);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    
+    // Recalculate when dialog opens
+    const timer = setTimeout(handleResize, 100);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timer);
+    };
+  }, [open]);
 
   // Check if content fits within page bounds
   const checkPageFit = useCallback((pageRef, scale) => {
@@ -298,19 +312,27 @@ export default function ServicePdfPreview({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl sm:max-w-full sm:h-screen sm:max-h-screen md:max-w-6xl md:max-h-[95vh] overflow-hidden bg-white p-0 print:hidden">
+      <DialogContent className="max-w-6xl sm:max-w-full sm:h-[100dvh] sm:max-h-[100dvh] md:max-w-6xl md:max-h-[95vh] overflow-hidden bg-white p-0 print:hidden">
         <PdfStyles />
         
-        <DialogHeader className="px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-6 pb-2 sm:pb-3 md:pb-4 border-b">
+        <DialogHeader className="flex-shrink-0 px-3 md:px-6 py-3 md:py-4 border-b bg-white">
           <div className="flex items-center justify-between gap-2">
-            <DialogTitle className="text-sm sm:text-base md:text-xl font-bold">
-              Vista Previa
-            </DialogTitle>
-            <div className="flex gap-1 sm:gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <DialogTitle className="text-base md:text-xl font-bold">
+                Vista Previa
+              </DialogTitle>
+              {!canOutput && (
+                <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                  <AlertTriangle className="w-3 h-3 mr-1" />
+                  Excede
+                </Badge>
+              )}
+            </div>
+            <div className="flex gap-1 md:gap-2">
               <Button 
                 variant="outline" 
                 onClick={() => onOpenChange(false)}
-                className="h-8 px-2"
+                className="h-8 w-8 p-0"
                 size="sm"
               >
                 <X className="w-4 h-4" />
@@ -318,7 +340,7 @@ export default function ServicePdfPreview({
               <Button 
                 onClick={handleSaveAndClose} 
                 variant="outline"
-                className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white h-8 px-2"
+                className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white h-8 w-8 p-0"
                 size="sm"
               >
                 <Check className="w-4 h-4" />
@@ -327,7 +349,7 @@ export default function ServicePdfPreview({
                 onClick={handleDownloadPDF}
                 variant="outline"
                 disabled={!canOutput || isGeneratingPDF}
-                className={`h-8 px-2 ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`h-8 w-8 p-0 ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
                 size="sm"
               >
                 {isGeneratingPDF ? (
@@ -338,7 +360,7 @@ export default function ServicePdfPreview({
               </Button>
               <Button 
                 onClick={handlePrint} 
-                className={`bg-gray-900 text-white h-8 px-2 hidden sm:flex ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`bg-gray-900 text-white h-8 w-8 p-0 hidden md:flex ${!canOutput ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={!canOutput}
                 size="sm"
               >
@@ -347,104 +369,160 @@ export default function ServicePdfPreview({
             </div>
           </div>
           
-          {/* Overall fit status */}
-          {!canOutput && (
-            <div className="mt-1 p-1.5 bg-red-50 border border-red-200 rounded flex items-center gap-1.5 text-xs text-red-800">
-              <AlertTriangle className="w-3 h-3 flex-shrink-0" />
-              <span className="font-semibold">Excede límites - Ajuste escala</span>
-            </div>
-          )}
-          
-          {/* Email form */}
-          {showEmailForm && (
-            <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-end gap-3">
-                <div className="flex-1">
-                  <Label className="text-sm font-semibold text-blue-900">
-                    Enviar a / Send to:
-                  </Label>
-                  <Input
-                    type="email"
-                    placeholder="email@example.com"
-                    value={emailAddress}
-                    onChange={(e) => setEmailAddress(e.target.value)}
-                    className="mt-1"
-                    disabled={sendingEmail}
-                  />
-                </div>
-                <Button
-                  onClick={handleSendEmail}
-                  disabled={sendingEmail || !emailAddress || emailSent}
-                  className={emailSent ? 'bg-green-600 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}
-                >
-                  {sendingEmail ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : emailSent ? (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      ¡Enviado! / Sent!
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="w-4 h-4 mr-2" />
-                      Enviar / Send
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowEmailForm(false)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogHeader>
+          </DialogHeader>
 
-        <div className="flex flex-col md:flex-row h-[calc(100vh-80px)] sm:h-[calc(100vh-90px)] md:h-[calc(95vh-140px)]">
-          {/* Controls Panel */}
-          <div className="w-full md:w-72 border-b md:border-b-0 md:border-r bg-gray-50 p-2 md:p-4 space-y-2 md:space-y-4 overflow-y-auto max-h-32 md:max-h-none">
+          <div className="flex flex-col md:flex-row flex-1 min-h-0">
+            {/* Mobile Controls - Collapsible */}
+            {isMobile && (
+              <div className="flex-shrink-0 border-b bg-gray-50">
+                <button
+                  onClick={() => setControlsExpanded(!controlsExpanded)}
+                  className="w-full px-3 py-2 flex items-center justify-between text-sm font-medium"
+                >
+                  <span>Controles / Controls</span>
+                  {controlsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+
+                {controlsExpanded && (
+                  <div className="px-3 pb-3 space-y-3">
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="page1">Página 1</TabsTrigger>
+                        <TabsTrigger value="page2">Página 2</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+
+                    {activeTab === "page1" ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold">Escala P1</span>
+                          <Badge className={page1Fits ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                            {page1Scale}%
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => adjustScale(1, -5)}
+                            disabled={page1Scale <= 85}
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <Slider
+                            value={[page1Scale]}
+                            onValueChange={([v]) => setPage1Scale(v)}
+                            min={85}
+                            max={110}
+                            step={1}
+                            className="flex-1"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => adjustScale(1, 5)}
+                            disabled={page1Scale >= 110}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => autoFitPage(1)}
+                          disabled={autoFitting}
+                        >
+                          <Wand2 className="w-3 h-3 mr-2" />
+                          {autoFitting ? "Ajustando..." : "Auto-Ajustar"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold">Escala P2</span>
+                          <Badge className={page2Fits ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                            {page2Scale}%
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => adjustScale(2, -5)}
+                            disabled={page2Scale <= 85}
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <Slider
+                            value={[page2Scale]}
+                            onValueChange={([v]) => setPage2Scale(v)}
+                            min={85}
+                            max={110}
+                            step={1}
+                            className="flex-1"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => adjustScale(2, 5)}
+                            disabled={page2Scale >= 110}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => autoFitPage(2)}
+                          disabled={autoFitting}
+                        >
+                          <Wand2 className="w-3 h-3 mr-2" />
+                          {autoFitting ? "Ajustando..." : "Auto-Ajustar"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Desktop Controls Panel */}
+            {!isMobile && (
+              <div className="w-72 border-r bg-gray-50 p-4 space-y-4 overflow-y-auto">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 h-8">
-                <TabsTrigger value="page1" className="text-xs py-1">
-                  P1
-                </TabsTrigger>
-                <TabsTrigger value="page2" className="text-xs py-1">
-                  P2
-                </TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="page1">Página 1</TabsTrigger>
+                <TabsTrigger value="page2">Página 2</TabsTrigger>
               </TabsList>
             </Tabs>
 
             {/* Page 1 Controls */}
             {activeTab === "page1" && (
-              <div className="space-y-1.5">
+              <div className="space-y-3">
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-semibold">Escala</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold">Escala</span>
                     <Badge 
                       className={page1Fits 
-                        ? "bg-green-100 text-green-800 text-[10px] px-1.5 py-0" 
-                        : "bg-red-100 text-red-800 text-[10px] px-1.5 py-0"
+                        ? "bg-green-100 text-green-800" 
+                        : "bg-red-100 text-red-800"
                       }
                     >
-                      {page1Fits ? <><Check className="w-2.5 h-2.5 mr-0.5" />OK</> : <><AlertTriangle className="w-2.5 h-2.5 mr-0.5" />!</>}
+                      {page1Fits ? <><Check className="w-3 h-3 mr-1" />OK</> : <><AlertTriangle className="w-3 h-3 mr-1" />Excede</>}
                     </Badge>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-7 w-7 flex-shrink-0"
+                      className="h-8 w-8 flex-shrink-0"
                       onClick={() => adjustScale(1, -5)}
                       disabled={page1Scale <= 85}
                     >
-                      <Minus className="w-3 h-3" />
+                      <Minus className="w-4 h-4" />
                     </Button>
 
                     <div className="flex-1">
@@ -461,56 +539,56 @@ export default function ServicePdfPreview({
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-7 w-7 flex-shrink-0"
+                      className="h-8 w-8 flex-shrink-0"
                       onClick={() => adjustScale(1, 5)}
                       disabled={page1Scale >= 110}
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-4 h-4" />
                     </Button>
                   </div>
 
-                  <div className="text-center text-xs text-gray-600 mt-0.5">
+                  <div className="text-center text-sm text-gray-600 mt-1">
                     {page1Scale}%
                   </div>
                 </div>
 
                 <Button
                   variant="outline"
-                  className="w-full h-7 text-xs"
+                  className="w-full"
                   onClick={() => autoFitPage(1)}
                   disabled={autoFitting}
                 >
-                  <Wand2 className="w-3 h-3 mr-1.5" />
-                  {autoFitting ? "..." : "Auto"}
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  {autoFitting ? "Ajustando..." : "Auto-Ajustar"}
                 </Button>
               </div>
-            )}
+              )}
 
             {/* Page 2 Controls */}
             {activeTab === "page2" && (
-              <div className="space-y-1.5">
+              <div className="space-y-3">
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-semibold">Escala</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold">Escala</span>
                     <Badge 
                       className={page2Fits 
-                        ? "bg-green-100 text-green-800 text-[10px] px-1.5 py-0" 
-                        : "bg-red-100 text-red-800 text-[10px] px-1.5 py-0"
+                        ? "bg-green-100 text-green-800" 
+                        : "bg-red-100 text-red-800"
                       }
                     >
-                      {page2Fits ? <><Check className="w-2.5 h-2.5 mr-0.5" />OK</> : <><AlertTriangle className="w-2.5 h-2.5 mr-0.5" />!</>}
+                      {page2Fits ? <><Check className="w-3 h-3 mr-1" />OK</> : <><AlertTriangle className="w-3 h-3 mr-1" />Excede</>}
                     </Badge>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-7 w-7 flex-shrink-0"
+                      className="h-8 w-8 flex-shrink-0"
                       onClick={() => adjustScale(2, -5)}
                       disabled={page2Scale <= 85}
                     >
-                      <Minus className="w-3 h-3" />
+                      <Minus className="w-4 h-4" />
                     </Button>
 
                     <div className="flex-1">
@@ -527,33 +605,33 @@ export default function ServicePdfPreview({
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-7 w-7 flex-shrink-0"
+                      className="h-8 w-8 flex-shrink-0"
                       onClick={() => adjustScale(2, 5)}
                       disabled={page2Scale >= 110}
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-4 h-4" />
                     </Button>
                   </div>
 
-                  <div className="text-center text-xs text-gray-600 mt-0.5">
+                  <div className="text-center text-sm text-gray-600 mt-1">
                     {page2Scale}%
                   </div>
                 </div>
 
                 <Button
                   variant="outline"
-                  className="w-full h-7 text-xs"
+                  className="w-full"
                   onClick={() => autoFitPage(2)}
                   disabled={autoFitting}
                 >
-                  <Wand2 className="w-3 h-3 mr-1.5" />
-                  {autoFitting ? "..." : "Auto"}
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  {autoFitting ? "Ajustando..." : "Auto-Ajustar"}
                 </Button>
               </div>
             )}
 
-            {/* Legend - hide on mobile */}
-            <div className="border-t pt-4 hidden md:block">
+            {/* Legend */}
+            <div className="border-t pt-4">
               <div className="text-xs font-semibold mb-2">Leyenda</div>
               <div className="space-y-1 text-xs">
                 <div className="flex items-center gap-2">
@@ -567,17 +645,20 @@ export default function ServicePdfPreview({
               </div>
             </div>
             </div>
+            )}
 
             {/* Preview Area */}
-            <div ref={previewContainerRef} className="flex-1 bg-gray-200 overflow-auto p-1 md:p-6">
-              <div className="flex justify-center items-start">
+            <div 
+              ref={previewContainerRef} 
+              className="flex-1 bg-gray-200 overflow-auto min-h-0"
+            >
+              <div className="flex justify-center items-start p-2 md:p-6 min-h-full">
                 {activeTab === "page1" ? (
                   <div 
-                    className="pdf-preview-page-wrapper relative w-full md:w-auto" 
+                    className="pdf-preview-page-wrapper relative" 
                     style={{ 
-                      transform: `scale(${mobilePreviewScale}) translateX(-50%)`, 
-                      transformOrigin: 'top left', 
-                      left: '50%' 
+                      transform: `scale(${previewScale})`,
+                      transformOrigin: 'top center'
                     }}
                   >
                     <div className="pdf-preview-safe-area hidden md:block" />
@@ -592,11 +673,10 @@ export default function ServicePdfPreview({
                   </div>
                 ) : (
                   <div 
-                    className="pdf-preview-page-wrapper relative w-full md:w-auto" 
+                    className="pdf-preview-page-wrapper relative" 
                     style={{ 
-                      transform: `scale(${mobilePreviewScale}) translateX(-50%)`, 
-                      transformOrigin: 'top left', 
-                      left: '50%' 
+                      transform: `scale(${previewScale})`,
+                      transformOrigin: 'top center'
                     }}
                   >
                     <div className="pdf-preview-safe-area hidden md:block" />
