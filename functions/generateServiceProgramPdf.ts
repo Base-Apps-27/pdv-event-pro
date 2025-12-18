@@ -31,6 +31,65 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    const apiKey = Deno.env.get('PDFSHIFT_API_KEY');
+    if (!apiKey) {
+      return Response.json({ error: 'PDFShift API key not configured' }, { status: 500 });
+    }
+
+    console.log('=== PDF GENERATION START ===');
+    console.log('Debug mode:', debug);
+    console.log('Processor version:', processorVersion);
+
+    // MANDATORY: Hello World test runs FIRST (even in production)
+    console.log('\n=== HELLO WORLD TEST (MANDATORY) ===');
+    const helloHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hello PDFShift</title>
+  <style>
+    @page { size: Letter; margin: 0.5in; }
+    body { font-family: Arial, sans-serif; background: #fff; color: #000; }
+  </style>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <p>If you can see this, PDFShift is rendering correctly.</p>
+</body>
+</html>`;
+
+    const helloResponse = await callPDFShift(apiKey, processorVersion, helloHtml, true);
+    
+    if (!helloResponse.ok) {
+      const errorText = await helloResponse.text();
+      console.error('HELLO WORLD TEST FAILED:', helloResponse.status, errorText);
+      return Response.json({ 
+        error: 'PDFShift Hello World test failed - API is not operational',
+        status: helloResponse.status,
+        details: errorText
+      }, { status: 500 });
+    }
+
+    const helloBlob = await helloResponse.arrayBuffer();
+    const helloBytes = new Uint8Array(helloBlob);
+    const helloPdfHeader = Array.from(helloBytes.slice(0, 8))
+      .map(b => String.fromCharCode(b))
+      .join('');
+    
+    if (!helloPdfHeader.startsWith('%PDF-') || helloBlob.byteLength < 10000) {
+      console.error('HELLO WORLD TEST FAILED: Invalid or suspiciously small PDF');
+      console.error('Byte length:', helloBlob.byteLength);
+      console.error('Header:', helloPdfHeader);
+      return Response.json({ 
+        error: 'Hello World test produced invalid PDF',
+        byteLength: helloBlob.byteLength,
+        header: helloPdfHeader
+      }, { status: 500 });
+    }
+
+    logPDFShiftHeaders(helloResponse);
+    console.log('✓ HELLO WORLD TEST PASSED - PDFShift operational');
+
     // Fetch announcement objects if we have IDs
     let announcements = [];
     if (selectedAnnouncements && selectedAnnouncements.length > 0) {
@@ -42,15 +101,6 @@ Deno.serve(async (req) => {
         console.error('Error fetching announcements:', error);
       }
     }
-
-    const apiKey = Deno.env.get('PDFSHIFT_API_KEY');
-    if (!apiKey) {
-      return Response.json({ error: 'PDFShift API key not configured' }, { status: 500 });
-    }
-
-    console.log('=== PDF GENERATION START ===');
-    console.log('Debug mode:', debug);
-    console.log('Processor version:', processorVersion);
 
     // DEBUG MODE: Template Ladder
     if (debug) {
