@@ -43,8 +43,13 @@ Deno.serve(async (req) => {
     // Generate HTML for both pages
     const html = generateServiceProgramHtml(serviceData, selectedDate, announcements, page1Scale, page2Scale);
     
-    console.log('Generated HTML length:', html.length);
-    console.log('HTML preview:', html.substring(0, 500));
+    console.log('=== HTML GENERATION DEBUG ===');
+    console.log('HTML length:', html.length);
+    console.log('9:30am segments:', serviceData['9:30am']?.length || 0);
+    console.log('11:30am segments:', serviceData['11:30am']?.length || 0);
+    console.log('Announcements:', announcements.length);
+    console.log('HTML preview (first 800 chars):', html.substring(0, 800));
+    console.log('HTML preview (last 500 chars):', html.substring(html.length - 500));
 
     // Call PDFShift API - encode API key as base64
     const auth = btoa(`api:${apiKey}`);
@@ -77,6 +82,31 @@ Deno.serve(async (req) => {
     console.log('PDF generated successfully');
 
     const pdfBlob = await pdfResponse.arrayBuffer();
+    
+    // Binary validation
+    console.log('=== PDF BINARY VALIDATION ===');
+    console.log('PDF byte length:', pdfBlob.byteLength);
+    
+    const uint8 = new Uint8Array(pdfBlob);
+    const first8 = Array.from(uint8.slice(0, 8))
+      .map(b => String.fromCharCode(b))
+      .join('');
+    console.log('First 8 bytes:', first8);
+    console.log('Is valid PDF (starts with %PDF-):', first8.startsWith('%PDF-'));
+    
+    if (!first8.startsWith('%PDF-')) {
+      console.error('INVALID PDF: Does not start with %PDF-');
+      const textSample = new TextDecoder().decode(uint8.slice(0, 500));
+      console.error('Response content (first 500 chars):', textSample);
+      return Response.json({ 
+        error: 'Invalid PDF returned', 
+        details: textSample 
+      }, { status: 500 });
+    }
+    
+    if (pdfBlob.byteLength < 10000) {
+      console.warn('WARNING: PDF is suspiciously small (<10KB)');
+    }
 
     return new Response(pdfBlob, {
       status: 200,
@@ -93,7 +123,16 @@ Deno.serve(async (req) => {
 });
 
 function generateServiceProgramHtml(serviceData, selectedDate, announcements, page1Scale, page2Scale) {
+  // Inline logo as data URI (base64) - eliminates external dependency
+  const logoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  // Note: Replace above with actual logo base64 if needed, or use external URL with timeout handling
   const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png';
+  
+  // Validate serviceData
+  if (!serviceData) {
+    console.error('ERROR: serviceData is null/undefined');
+    serviceData = { '9:30am': [], '11:30am': [] };
+  }
   
   // Build roles line
   const coord = serviceData.coordinators?.['9:30am'] || serviceData.coordinators?.['11:30am'] || '';
@@ -108,14 +147,15 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
   if (luces) roles.push(`Luces: ${luces}`);
   const rolesLine = roles.join(' • ');
 
-  // Use fetched announcements directly
-  const announcementsList = announcements || [];
+  // Validate announcements
+  const announcementsList = Array.isArray(announcements) ? announcements : [];
 
-  return `
-<!DOCTYPE html>
-<html>
+  return `<!DOCTYPE html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orden de Servicio - ${selectedDate}</title>
   <style>
     @page {
       size: letter;
@@ -132,6 +172,13 @@ function generateServiceProgramHtml(serviceData, selectedDate, announcements, pa
       font-family: 'Helvetica', 'Arial', sans-serif;
       font-size: 10pt;
       line-height: 1.4;
+      color: #1A1A1A;
+      background: #fff;
+    }
+    
+    /* Ensure content is visible */
+    .page {
+      background: #fff;
       color: #1A1A1A;
     }
     
@@ -380,23 +427,39 @@ function renderServiceColumn(timeSlot, segments) {
     return `
       <div class="column">
         <div class="column-header">${timeSlot}</div>
-        <div class="segment-details">No hay segmentos</div>
+        <div class="segment-details" style="padding: 12px; color: #666;">No hay segmentos / No segments</div>
       </div>
     `;
   }
   
-  const segmentsHtml = segments
-    .filter(s => s.type !== 'break')
-    .map(segment => `
-      <div class="segment">
-        <div class="segment-title">${escapeHtml(segment.title)}</div>
-        ${segment.duration ? `<div class="segment-time">${segment.duration} min</div>` : ''}
-        ${segment.data?.leader ? `<div class="segment-details">Dirige: ${escapeHtml(segment.data.leader)}</div>` : ''}
-        ${segment.data?.presenter ? `<div class="segment-details">${escapeHtml(segment.data.presenter)}</div>` : ''}
-        ${segment.data?.preacher ? `<div class="segment-details">${escapeHtml(segment.data.preacher)}</div>` : ''}
-        ${segment.data?.title ? `<div class="segment-details">${escapeHtml(segment.data.title)}</div>` : ''}
+  // Filter and validate segments
+  const validSegments = segments.filter(s => s && s.type !== 'break');
+  
+  if (validSegments.length === 0) {
+    return `
+      <div class="column">
+        <div class="column-header">${timeSlot}</div>
+        <div class="segment-details" style="padding: 12px; color: #666;">No hay segmentos visibles</div>
       </div>
-    `).join('');
+    `;
+  }
+  
+  const segmentsHtml = validSegments.map(segment => {
+    const title = segment.title || 'Sin título';
+    const duration = segment.duration || '';
+    const data = segment.data || {};
+    
+    return `
+      <div class="segment">
+        <div class="segment-title">${escapeHtml(title)}</div>
+        ${duration ? `<div class="segment-time">${escapeHtml(String(duration))} min</div>` : ''}
+        ${data.leader ? `<div class="segment-details">Dirige: ${escapeHtml(data.leader)}</div>` : ''}
+        ${data.presenter ? `<div class="segment-details">${escapeHtml(data.presenter)}</div>` : ''}
+        ${data.preacher ? `<div class="segment-details">${escapeHtml(data.preacher)}</div>` : ''}
+        ${data.title ? `<div class="segment-details">${escapeHtml(data.title)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
   
   return `
     <div class="column">
@@ -407,29 +470,37 @@ function renderServiceColumn(timeSlot, segments) {
 }
 
 function renderAnnouncement(ann) {
-  const content = sanitizeText(ann.content || '');
+  if (!ann) return '';
+  
+  const title = ann.title || ann.announcement_title || 'Sin título';
+  const content = sanitizeText(ann.content || ann.announcement_description || '');
   const cue = ann.instructions ? sanitizeText(stripCuePrefix(ann.instructions)) : '';
+  const date = ann.date_of_occurrence || '';
   
   return `
     <div class="announcement-item">
       <div class="announcement-header">
         <div class="announcement-icon"></div>
-        <div class="announcement-title">${escapeHtml(ann.title)}</div>
+        <div class="announcement-title">${escapeHtml(title)}</div>
       </div>
       ${content ? `<div class="announcement-content">${escapeHtml(content)}</div>` : ''}
       ${cue ? `<div class="announcement-cue">CUE: ${escapeHtml(cue)}</div>` : ''}
-      ${ann.date_of_occurrence ? `<div class="announcement-date">${ann.date_of_occurrence}</div>` : ''}
+      ${date ? `<div class="announcement-date">${escapeHtml(date)}</div>` : ''}
     </div>
   `;
 }
 
 function renderEvent(event) {
+  if (!event) return '';
+  
+  const name = event.name || 'Evento sin nombre';
   const description = sanitizeText(event.announcement_blurb || event.description || '');
+  const date = event.start_date || '';
   
   return `
     <div class="event-item">
-      <div class="event-title">${escapeHtml(event.name)}</div>
-      ${event.start_date ? `<div class="event-date">${event.start_date}</div>` : ''}
+      <div class="event-title">${escapeHtml(name)}</div>
+      ${date ? `<div class="event-date">${escapeHtml(date)}</div>` : ''}
       ${description ? `<div class="event-description">${escapeHtml(description)}</div>` : ''}
     </div>
   `;
