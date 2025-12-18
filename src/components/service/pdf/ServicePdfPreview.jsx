@@ -218,6 +218,79 @@ export default function ServicePdfPreview({
     onOpenChange(false);
   };
 
+  const handleSaveBytesToDisk = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      console.log('=== SAVING RAW PDF BYTES TO DISK ===');
+
+      const response = await base44.functions.invoke('generateServiceProgramPdf', {
+        serviceData,
+        selectedDate,
+        selectedAnnouncements,
+        page1Scale,
+        page2Scale,
+        debug: false,
+        processorVersion: '116'
+      });
+
+      console.log('=== RAW RESPONSE INSPECTION ===');
+      console.log('Response object keys:', Object.keys(response));
+      console.log('Response.data type:', typeof response.data);
+      console.log('Response.data constructor:', response.data?.constructor?.name);
+      console.log('Response.data instanceof ArrayBuffer:', response.data instanceof ArrayBuffer);
+      console.log('Response.data instanceof Uint8Array:', response.data instanceof Uint8Array);
+      console.log('Response.data instanceof Blob:', response.data instanceof Blob);
+      console.log('Response.data byteLength:', response.data?.byteLength);
+      console.log('Response.data length:', response.data?.length);
+      console.log('Response.headers:', response.headers);
+      console.log('Response.status:', response.status);
+
+      // Extract bytes regardless of format
+      let bytes;
+      if (response.data instanceof ArrayBuffer) {
+        bytes = new Uint8Array(response.data);
+      } else if (response.data instanceof Uint8Array) {
+        bytes = response.data;
+      } else if (response.data instanceof Blob) {
+        const arrayBuffer = await response.data.arrayBuffer();
+        bytes = new Uint8Array(arrayBuffer);
+      } else if (typeof response.data === 'string') {
+        // Base64 encoded
+        const binaryString = atob(response.data);
+        bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+      } else {
+        console.error('CRITICAL: Unknown response.data type');
+        alert('Error: Response data is in an unexpected format. Check console.');
+        setIsGeneratingPDF(false);
+        return;
+      }
+
+      console.log('Extracted bytes length:', bytes.length);
+      console.log('First 10 bytes:', Array.from(bytes.slice(0, 10)).map(b => String.fromCharCode(b)).join(''));
+      console.log('First 10 bytes (hex):', Array.from(bytes.slice(0, 10)).map(b => b.toString(16).padStart(2, '0')).join(' '));
+
+      // Save to disk
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `raw-bytes-test-${Date.now()}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      console.log('✓ Saved raw bytes to disk. Open in local PDF viewer (Preview/Adobe/Chrome file://)');
+      alert('Raw PDF bytes saved to disk. Open the file in your local PDF viewer to verify content.');
+    } catch (error) {
+      console.error('Save bytes error:', error);
+      alert('Error saving bytes: ' + error.message);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   const handleDebugLadder = async () => {
     setIsGeneratingPDF(true);
     try {
@@ -311,6 +384,16 @@ export default function ServicePdfPreview({
                 title="Run debug template ladder"
               >
                 🔍 Debug
+              </Button>
+              <Button 
+                onClick={handleSaveBytesToDisk}
+                variant="outline"
+                disabled={isGeneratingPDF}
+                className="h-8 px-2 text-xs border-purple-500 text-purple-600 hover:bg-purple-50"
+                size="sm"
+                title="Save raw PDF bytes to disk for local inspection"
+              >
+                💾 Save Bytes
               </Button>
               <Button 
                 onClick={handlePrint} 
