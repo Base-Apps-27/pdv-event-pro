@@ -40,7 +40,43 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'PDFShift API key not configured' }, { status: 500 });
     }
 
-    // Generate HTML for both pages
+    // TEST 1: Try minimal HTML first to verify PDFShift works
+    const testMinimalHtml = `<!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><title>Test</title></head>
+    <body><h1>Test PDF</h1><p>This is a test.</p></body>
+    </html>`;
+
+    console.log('=== TESTING MINIMAL HTML FIRST ===');
+    console.log('Attempting minimal HTML test...');
+
+    const testAuth = btoa(`api:${apiKey}`);
+    const testResponse = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${testAuth}`
+      },
+      body: JSON.stringify({
+        source: testMinimalHtml,
+        format: 'Letter'
+      })
+    });
+
+    console.log('Minimal test status:', testResponse.status);
+    if (!testResponse.ok) {
+      const testError = await testResponse.text();
+      console.error('MINIMAL TEST FAILED:', testError);
+      return Response.json({ 
+        error: 'PDFShift API not working - minimal test failed', 
+        details: testError,
+        status: testResponse.status
+      }, { status: 500 });
+    }
+
+    console.log('✓ Minimal test passed - PDFShift API is working');
+
+    // Generate actual HTML for both pages
     const html = generateServiceProgramHtml(serviceData, selectedDate, announcements, page1Scale, page2Scale);
 
     console.log('=== HTML GENERATION DEBUG ===');
@@ -48,17 +84,40 @@ Deno.serve(async (req) => {
     console.log('9:30am segments:', serviceData['9:30am']?.length || 0);
     console.log('11:30am segments:', serviceData['11:30am']?.length || 0);
     console.log('Announcements:', announcements.length);
-    console.log('HTML preview (first 1000 chars):', html.substring(0, 1000));
-    console.log('HTML preview (middle):', html.substring(Math.floor(html.length/2) - 200, Math.floor(html.length/2) + 200));
-    console.log('HTML preview (last 500 chars):', html.substring(html.length - 500));
 
-    // Validate basic HTML structure
+    // Save HTML to temp file for inspection (only in dev/testing)
+    try {
+      await Deno.writeTextFile('/tmp/debug-service-pdf.html', html);
+      console.log('✓ HTML saved to /tmp/debug-service-pdf.html');
+    } catch (e) {
+      console.log('Could not save debug HTML (normal in production):', e.message);
+    }
+
+    // Validate HTML structure
     const hasDoctype = html.includes('<!DOCTYPE html>');
-    const hasHtmlOpen = html.includes('<html');
     const hasHtmlClose = html.includes('</html>');
-    const hasBodyOpen = html.includes('<body>');
     const hasBodyClose = html.includes('</body>');
-    console.log('HTML validation:', { hasDoctype, hasHtmlOpen, hasHtmlClose, hasBodyOpen, hasBodyClose });
+    const hasStyleClose = html.includes('</style>');
+    const hasHeadClose = html.includes('</head>');
+
+    console.log('HTML structure validation:', { 
+      hasDoctype, 
+      hasStyleClose, 
+      hasHeadClose, 
+      hasBodyClose, 
+      hasHtmlClose 
+    });
+
+    if (!hasDoctype || !hasHtmlClose || !hasBodyClose) {
+      console.error('INVALID HTML STRUCTURE - missing critical tags');
+      return Response.json({ 
+        error: 'Generated HTML is malformed',
+        validation: { hasDoctype, hasStyleClose, hasHeadClose, hasBodyClose, hasHtmlClose }
+      }, { status: 500 });
+    }
+
+    console.log('HTML preview (first 800 chars):', html.substring(0, 800));
+    console.log('HTML preview (last 500 chars):', html.substring(html.length - 500));
 
     // Call PDFShift API - encode API key as base64
     const auth = btoa(`api:${apiKey}`);
