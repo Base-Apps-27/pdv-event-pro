@@ -157,19 +157,27 @@ export default function ServicePdfPreview({
       // Save scales
       onSaveScales({ page1: page1Scale, page2: page2Scale });
       
-      // Store original scale styles and temporarily remove them for clean capture
+      // Get the page elements
       const page1Element = page1Ref.current;
       const page2Element = page2Ref.current;
       
-      const originalPage1Style = page1Element?.style.transform;
-      const originalPage2Style = page2Element?.style.transform;
+      if (!page1Element || !page2Element) {
+        throw new Error('Page elements not found');
+      }
       
-      // Remove scale transforms temporarily
-      if (page1Element) page1Element.style.transform = `scale(${page1Scale / 100})`;
-      if (page2Element) page2Element.style.transform = `scale(${page2Scale / 100})`;
+      // Get preview wrapper parents and store their transforms
+      const page1Wrapper = page1Element.closest('.pdf-preview-page-wrapper');
+      const page2Wrapper = page2Element.closest('.pdf-preview-page-wrapper');
+      
+      const originalPage1WrapperTransform = page1Wrapper?.style.transform;
+      const originalPage2WrapperTransform = page2Wrapper?.style.transform;
+      
+      // Temporarily remove preview wrapper transforms for clean capture
+      if (page1Wrapper) page1Wrapper.style.transform = 'none';
+      if (page2Wrapper) page2Wrapper.style.transform = 'none';
       
       // Wait for style application
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Create PDF using jsPDF - US Letter size in points (612 x 792)
       const pdf = new jsPDF({
@@ -178,67 +186,45 @@ export default function ServicePdfPreview({
         format: 'letter'
       });
       
-      // Capture Page 1
-      if (page1Element) {
-        // Calculate actual dimensions after scale
-        const scaledWidth = 816 * (page1Scale / 100);
-        const scaledHeight = 1056 * (page1Scale / 100);
-        
-        const canvas1 = await html2canvas(page1Element, {
-          scale: 2, // Higher quality
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          width: scaledWidth,
-          height: scaledHeight,
-          windowWidth: scaledWidth,
-          windowHeight: scaledHeight
-        });
-        
-        const imgData1 = canvas1.toDataURL('image/png');
-        // Add image to fit US Letter (612 x 792 points)
-        pdf.addImage(imgData1, 'PNG', 0, 0, 612, 792);
-      }
+      // Capture Page 1 at its actual scaled size
+      const canvas1 = await html2canvas(page1Element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: 816,
+        height: 1056,
+        windowWidth: 816,
+        windowHeight: 1056
+      });
+      
+      const imgData1 = canvas1.toDataURL('image/png');
+      pdf.addImage(imgData1, 'PNG', 0, 0, 612, 792);
       
       // Add second page
       pdf.addPage();
       
-      // Temporarily switch to page 2 to capture it
-      const currentTab = activeTab;
-      setActiveTab('page2');
+      // Capture Page 2 at its actual scaled size
+      const canvas2 = await html2canvas(page2Element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: 816,
+        height: 1056,
+        windowWidth: 816,
+        windowHeight: 1056
+      });
       
-      // Wait for render
-      await new Promise(resolve => setTimeout(resolve, 100));
+      const imgData2 = canvas2.toDataURL('image/png');
+      pdf.addImage(imgData2, 'PNG', 0, 0, 612, 792);
       
-      // Capture Page 2
-      if (page2Element) {
-        const scaledWidth = 816 * (page2Scale / 100);
-        const scaledHeight = 1056 * (page2Scale / 100);
-        
-        const canvas2 = await html2canvas(page2Element, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          width: scaledWidth,
-          height: scaledHeight,
-          windowWidth: scaledWidth,
-          windowHeight: scaledHeight
-        });
-        
-        const imgData2 = canvas2.toDataURL('image/png');
-        pdf.addImage(imgData2, 'PNG', 0, 0, 612, 792);
+      // Restore preview wrapper transforms
+      if (page1Wrapper && originalPage1WrapperTransform !== undefined) {
+        page1Wrapper.style.transform = originalPage1WrapperTransform;
       }
-      
-      // Restore original tab
-      setActiveTab(currentTab);
-      
-      // Restore original scale styles
-      if (page1Element && originalPage1Style !== undefined) {
-        page1Element.style.transform = originalPage1Style;
-      }
-      if (page2Element && originalPage2Style !== undefined) {
-        page2Element.style.transform = originalPage2Style;
+      if (page2Wrapper && originalPage2WrapperTransform !== undefined) {
+        page2Wrapper.style.transform = originalPage2WrapperTransform;
       }
       
       // Download the PDF
