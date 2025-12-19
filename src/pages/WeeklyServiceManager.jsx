@@ -254,8 +254,26 @@ export default function WeeklyServiceManager() {
   // Initialize service data
   useEffect(() => {
     if (existingData) {
+      // Merge blueprint fields with existing segments to ensure backward compatibility
+      const mergeSegmentsWithBlueprint = (existingSegments, timeSlot) => {
+        return existingSegments.map((savedSeg, idx) => {
+          const blueprintSeg = BLUEPRINT[timeSlot]?.find(b => b.type === savedSeg.type) || 
+                               BLUEPRINT[timeSlot]?.[idx];
+          
+          if (blueprintSeg) {
+            return {
+              ...savedSeg,
+              fields: blueprintSeg.fields || savedSeg.fields,
+            };
+          }
+          return savedSeg;
+        });
+      };
+
       const loadedData = {
         ...existingData,
+        "9:30am": mergeSegmentsWithBlueprint(existingData["9:30am"] || [], "9:30am"),
+        "11:30am": mergeSegmentsWithBlueprint(existingData["11:30am"] || [], "11:30am"),
         pre_service_notes: existingData.pre_service_notes || { "9:30am": "", "11:30am": "" },
         receso_notes: existingData.receso_notes || { "9:30am": "" },
         selected_announcements: existingData.selected_announcements || []
