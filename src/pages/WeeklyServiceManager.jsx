@@ -19,8 +19,6 @@ import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import ServicePdfPreview from "@/components/service/pdf/ServicePdfPreview";
-import { pdf } from '@react-pdf/renderer';
-import ServiceProgramPdf from '@/components/service/pdf/ServiceProgramPdf';
 
 
 export default function WeeklyServiceManager() {
