@@ -15,7 +15,6 @@ import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, Ch
 import { Calendar } from "@/components/ui/calendar";
 import { createPageUrl } from "@/utils";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { createPageUrl } from "@/utils";
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
