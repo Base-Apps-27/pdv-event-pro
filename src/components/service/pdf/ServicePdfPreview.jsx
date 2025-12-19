@@ -1,17 +1,15 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect } from "react";
+import { PDFViewer, pdf } from '@react-pdf/renderer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus, Printer, Check, Download, Mail, Loader2, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
-
-// Dynamic imports to avoid SSR issues with @react-pdf/renderer
-let PDFViewer, pdf, ServiceProgramPdf;
+import ServiceProgramPdf from './ServiceProgramPdf';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -29,65 +27,36 @@ export default function ServicePdfPreview({
   const [page2Scale, setPage2Scale] = useState(pdfScales?.page2 || 100);
   const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT);
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
-  const [pdfLoading, setPdfLoading] = useState(true);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [emailAddress, setEmailAddress] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const [pdfModulesLoaded, setPdfModulesLoaded] = useState(false);
 
-  // Dynamically load PDF modules only in browser
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      Promise.all([
-        import('@react-pdf/renderer'),
-        import('./ServiceProgramPdf')
-      ]).then(async ([reactPdf, servicePdfModule]) => {
-        PDFViewer = reactPdf.PDFViewer;
-        pdf = reactPdf.pdf;
-        // ServiceProgramPdf is now an async factory
-        ServiceProgramPdf = await servicePdfModule.default();
-        setPdfModulesLoaded(true);
-      }).catch(err => {
-        console.error('Failed to load PDF modules:', err);
-      });
-    }
-  }, []);
-
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    };
+    const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Generate PDF blob whenever parameters change
   useEffect(() => {
     const generatePdf = async () => {
-      if (!pdfModulesLoaded || !pdf || !ServiceProgramPdf) {
-        return;
-      }
+      if (!open || isMobile) return;
       
       setPdfLoading(true);
       try {
-        const pdfDoc = React.createElement(ServiceProgramPdf, {
-          serviceData,
-          selectedDate,
-          selectedAnnouncements,
-          page1Scale,
-          page2Scale
-        });
-        const blob = await pdf(pdfDoc).toBlob();
+        const blob = await pdf(
+          <ServiceProgramPdf
+            serviceData={serviceData}
+            selectedDate={selectedDate}
+            selectedAnnouncements={selectedAnnouncements}
+            page1Scale={page1Scale}
+            page2Scale={page2Scale}
+          />
+        ).toBlob();
         
-        // Revoke previous blob URL
-        if (pdfBlobUrl) {
-          URL.revokeObjectURL(pdfBlobUrl);
-        }
-        
-        const newBlobUrl = URL.createObjectURL(blob);
-        setPdfBlobUrl(newBlobUrl);
+        if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+        setPdfBlobUrl(URL.createObjectURL(blob));
       } catch (error) {
         console.error('PDF generation error:', error);
       } finally {
@@ -95,24 +64,13 @@ export default function ServicePdfPreview({
       }
     };
 
-    if (open && !isMobile) {
-      generatePdf();
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (pdfBlobUrl) {
-        URL.revokeObjectURL(pdfBlobUrl);
-      }
-    };
+    generatePdf();
+    return () => { if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl); };
   }, [serviceData, selectedDate, selectedAnnouncements, page1Scale, page2Scale, open]);
 
   const handlePrint = () => {
-    if (pdfBlobUrl) {
-      window.open(pdfBlobUrl, '_blank');
-    } else {
-      alert('PDF no está listo / PDF not ready.');
-    }
+    if (pdfBlobUrl) window.open(pdfBlobUrl, '_blank');
+    else alert('PDF no está listo / PDF not ready.');
   };
 
   const handleDownloadPDF = () => {
@@ -181,10 +139,7 @@ export default function ServicePdfPreview({
     }
   };
 
-  // Don't render dialog on mobile
-  if (isMobile) {
-    return null;
-  }
+  if (isMobile) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -293,7 +248,6 @@ export default function ServicePdfPreview({
         </DialogHeader>
 
         <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-          {/* Desktop Controls Panel */}
           <div className="w-72 border-r bg-gray-50 p-4 space-y-4 overflow-y-auto">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
@@ -302,7 +256,6 @@ export default function ServicePdfPreview({
               </TabsList>
             </Tabs>
 
-            {/* Page 1 Controls */}
             {activeTab === "page1" && (
               <div className="space-y-3">
                 <div>
@@ -347,7 +300,6 @@ export default function ServicePdfPreview({
               </div>
             )}
 
-            {/* Page 2 Controls */}
             {activeTab === "page2" && (
               <div className="space-y-3">
                 <div>
@@ -393,27 +345,22 @@ export default function ServicePdfPreview({
             )}
           </div>
 
-          {/* PDF Viewer Area */}
           <div className="flex-1 bg-gray-200 overflow-hidden">
-            {!pdfModulesLoaded || pdfLoading ? (
+            {pdfLoading ? (
               <div className="flex items-center justify-center h-full">
                 <Loader2 className="w-8 h-8 animate-spin text-pdv-teal" />
-                <span className="ml-3">{!pdfModulesLoaded ? 'Cargando módulos PDF...' : 'Generando PDF...'}</span>
+                <span className="ml-3">Generando PDF...</span>
               </div>
-            ) : PDFViewer && ServiceProgramPdf ? (
-              React.createElement(PDFViewer, { style: { width: '100%', height: '100%', border: 'none' } },
-                React.createElement(ServiceProgramPdf, {
-                  serviceData,
-                  selectedDate,
-                  selectedAnnouncements,
-                  page1Scale,
-                  page2Scale
-                })
-              )
             ) : (
-              <div className="flex items-center justify-center h-full">
-                <span className="text-red-600">Error cargando PDF. Intente refrescar la página.</span>
-              </div>
+              <PDFViewer style={{ width: '100%', height: '100%', border: 'none' }}>
+                <ServiceProgramPdf
+                  serviceData={serviceData}
+                  selectedDate={selectedDate}
+                  selectedAnnouncements={selectedAnnouncements}
+                  page1Scale={page1Scale}
+                  page2Scale={page2Scale}
+                />
+              </PDFViewer>
             )}
           </div>
         </div>
