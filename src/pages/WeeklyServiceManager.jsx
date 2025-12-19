@@ -1528,18 +1528,16 @@ Return ONLY valid JSON:
             className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold"
           >
             <ExternalLink className="w-4 h-4 mr-2" />
-            Vista en Vivo
+            Vista en Vivo / Live View
           </Button>
           
-          {!isMobile && (
-            <Button 
-              onClick={() => setShowPdfPreview(true)}
-              className="bg-gray-900 text-white hover:bg-gray-800 font-semibold"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Vista Previa PDF
-            </Button>
-          )}
+          <Button 
+            onClick={() => window.print()}
+            className="bg-gray-900 text-white hover:bg-gray-800 font-semibold"
+          >
+            <Printer className="w-4 h-4 mr-2" />
+            Imprimir / Print
+          </Button>
         </div>
       </div>
 
@@ -2759,49 +2757,6 @@ Return ONLY valid JSON:
             >
               Eliminar
             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Email Dialog */}
-      <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
-        <DialogContent className="max-w-md bg-white">
-          <DialogHeader>
-            <DialogTitle>Enviar Orden de Servicio por Email</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Email del destinatario</Label>
-              <Input
-                type="email"
-                placeholder="ejemplo@email.com"
-                value={emailAddress}
-                onChange={(e) => setEmailAddress(e.target.value)}
-                disabled={sendingEmail}
-              />
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowEmailDialog(false)} disabled={sendingEmail}>
-                Cancelar
-              </Button>
-              <Button 
-                className="bg-pdv-teal text-white" 
-                onClick={handleEmailPDF}
-                disabled={!emailAddress || sendingEmail}
-              >
-                {sendingEmail ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Enviando...
-                  </>
-                ) : (
-                  <>
-                    <Mail className="w-4 h-4 mr-2" />
-                    Enviar
-                  </>
-                )}
-              </Button>
-            </div>
           </div>
         </DialogContent>
       </Dialog>
