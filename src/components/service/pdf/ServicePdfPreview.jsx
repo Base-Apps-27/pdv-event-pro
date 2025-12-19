@@ -1,13 +1,16 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Minus, Plus, Wand2, Printer, Check, AlertTriangle, Download, Mail, Loader2, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Minus, Plus, Printer, Check, Download, Mail, Loader2, X } from "lucide-react";
+import { PDFViewer, pdf } from '@react-pdf/renderer';
+import ServiceProgramPdf from './ServiceProgramPdf';
 import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -16,8 +19,6 @@ export default function ServicePdfPreview({
   onOpenChange,
   serviceData,
   selectedDate,
-  fixedAnnouncements,
-  dynamicAnnouncements,
   selectedAnnouncements,
   pdfScales,
   onSaveScales
@@ -25,156 +26,86 @@ export default function ServicePdfPreview({
   const [activeTab, setActiveTab] = useState("page1");
   const [page1Scale, setPage1Scale] = useState(pdfScales?.page1 || 100);
   const [page2Scale, setPage2Scale] = useState(pdfScales?.page2 || 100);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT);
-  const [debugResults, setDebugResults] = useState(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(true);
+  const [emailAddress, setEmailAddress] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
-  const handlePrint = async () => {
-    setIsGeneratingPDF(true);
-    try {
-      onSaveScales({ page1: page1Scale, page2: page2Scale });
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-      const response = await base44.functions.invoke('generateServiceProgramPdf', {
-        serviceData,
-        selectedDate,
-        selectedAnnouncements,
-        page1Scale,
-        page2Scale,
-        debug: false,
-        processorVersion: '116'
-      }, { responseType: 'arraybuffer' });
-
-      console.log("--- PDF INTEGRITY CHECK (PRINT) ---");
-      console.log("HTTP Status:", response.status);
-      console.log("Content-Type Header:", response.headers?.['content-type']);
-      console.log("Response Data Type:", typeof response.data);
-      console.log("Response Data Length (bytes):", response.data?.byteLength);
-
-      if (response.data instanceof ArrayBuffer) {
-        const uint8 = new Uint8Array(response.data);
-        if (uint8.byteLength >= 5) {
-          const first5Bytes = String.fromCharCode(...uint8.slice(0, 5));
-          console.log("First 5 bytes:", first5Bytes);
-          if (!first5Bytes.startsWith('%PDF-')) {
-            console.error("CRITICAL: Response data does NOT start with %PDF-. This is not a valid PDF ArrayBuffer.");
-            alert("Error: Received data is not a valid PDF. Check backend function's response headers/type.");
-            setIsGeneratingPDF(false);
-            return;
-          } else {
-            console.log("✓ First 5 bytes confirm PDF signature: %PDF-");
-          }
-        } else {
-          console.error("CRITICAL: Response data (ArrayBuffer) is too small to be a PDF.");
-          alert("Error: Received PDF data is too small.");
-          setIsGeneratingPDF(false);
-          return;
+  // Generate PDF blob whenever parameters change
+  useEffect(() => {
+    const generatePdf = async () => {
+      setPdfLoading(true);
+      try {
+        const blob = await pdf(
+          <ServiceProgramPdf
+            serviceData={serviceData}
+            selectedDate={selectedDate}
+            selectedAnnouncements={selectedAnnouncements}
+            page1Scale={page1Scale}
+            page2Scale={page2Scale}
+          />
+        ).toBlob();
+        
+        // Revoke previous blob URL
+        if (pdfBlobUrl) {
+          URL.revokeObjectURL(pdfBlobUrl);
         }
-      } else {
-        console.error("CRITICAL: Response data is not an ArrayBuffer. Expected binary PDF data.");
-        alert("Error: Expected binary PDF data, but received another type. Ensure backend function returns ArrayBuffer.");
-        setIsGeneratingPDF(false);
-        return;
+        
+        const newBlobUrl = URL.createObjectURL(blob);
+        setPdfBlobUrl(newBlobUrl);
+      } catch (error) {
+        console.error('PDF generation error:', error);
+      } finally {
+        setPdfLoading(false);
       }
+    };
 
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      console.log("Generated Object URL:", url);
+    if (open && !isMobile) {
+      generatePdf();
+    }
 
-      // Test direct render in new tab
-      window.open(url, '_blank');
+    // Cleanup on unmount
+    return () => {
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+  }, [serviceData, selectedDate, selectedAnnouncements, page1Scale, page2Scale, open]);
 
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = url;
-      document.body.appendChild(iframe);
-      iframe.onload = () => {
-        iframe.contentWindow.print();
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-          URL.revokeObjectURL(url);
-        }, 100);
-      };
-    } catch (error) {
-      console.error('Print error:', error);
-      alert('Error al imprimir / Error printing: ' + error.message);
-    } finally {
-      setIsGeneratingPDF(false);
+  const handlePrint = () => {
+    if (pdfBlobUrl) {
+      window.open(pdfBlobUrl, '_blank');
+    } else {
+      alert('PDF no está listo / PDF not ready.');
     }
   };
-  
-  const handleDownloadPDF = async () => {
-    setIsGeneratingPDF(true);
-    try {
-      onSaveScales({ page1: page1Scale, page2: page2Scale });
 
-      const response = await base44.functions.invoke('generateServiceProgramPdf', {
-        serviceData,
-        selectedDate,
-        selectedAnnouncements,
-        page1Scale,
-        page2Scale,
-        debug: false,
-        processorVersion: '116'
-      }, { responseType: 'arraybuffer' });
-
-      console.log("--- PDF INTEGRITY CHECK (DOWNLOAD) ---");
-      console.log("HTTP Status:", response.status);
-      console.log("Content-Type Header:", response.headers?.['content-type']);
-      console.log("Response Data Type:", typeof response.data);
-      console.log("Response Data Length (bytes):", response.data?.byteLength);
-
-      if (response.data instanceof ArrayBuffer) {
-        const uint8 = new Uint8Array(response.data);
-        if (uint8.byteLength >= 5) {
-          const first5Bytes = String.fromCharCode(...uint8.slice(0, 5));
-          console.log("First 5 bytes:", first5Bytes);
-          if (!first5Bytes.startsWith('%PDF-')) {
-            console.error("CRITICAL: Response data does NOT start with %PDF-. This is not a valid PDF ArrayBuffer.");
-            alert("Error: Received data is not a valid PDF. Check backend function's response headers/type.");
-            setIsGeneratingPDF(false);
-            return;
-          } else {
-            console.log("✓ First 5 bytes confirm PDF signature: %PDF-");
-          }
-        } else {
-          console.error("CRITICAL: Response data (ArrayBuffer) is too small to be a PDF.");
-          alert("Error: Received PDF data is too small.");
-          setIsGeneratingPDF(false);
-          return;
-        }
-      } else {
-        console.error("CRITICAL: Response data is not an ArrayBuffer. Expected binary PDF data.");
-        alert("Error: Expected binary PDF data, but received another type. Ensure backend function returns ArrayBuffer.");
-        setIsGeneratingPDF(false);
-        return;
-      }
-
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      console.log("Generated Object URL:", url);
-
-      // Test direct render in new tab
-      window.open(url, '_blank');
-
+  const handleDownloadPDF = () => {
+    if (pdfBlobUrl) {
       const link = document.createElement('a');
-      link.href = url;
+      link.href = pdfBlobUrl;
       link.download = `Orden-de-Servicio-${selectedDate}.pdf`;
+      document.body.appendChild(link);
       link.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      alert('Error al generar PDF / Error generating PDF: ' + error.message);
-    } finally {
-      setIsGeneratingPDF(false);
+      document.body.removeChild(link);
+    } else {
+      alert('PDF no está listo para descargar / PDF not ready for download.');
     }
   };
-  
+
   const handleSendEmail = async () => {
-    if (!canOutput) {
-      alert('El contenido excede los límites de página. Ajuste la escala o reduzca el contenido.\n\nContent exceeds page limits. Adjust scale or reduce content.');
-      return;
-    }
-    
     if (!emailAddress || !emailAddress.includes('@')) {
       alert('Por favor ingrese un email válido / Please enter a valid email');
       return;
@@ -183,18 +114,19 @@ export default function ServicePdfPreview({
     setSendingEmail(true);
     
     try {
-      // Send email notification (actual PDF would need to be generated server-side)
+      const liveViewUrl = window.location.origin + createPageUrl('PublicProgramView') + `?date=${selectedDate}`;
+      
       await base44.integrations.Core.SendEmail({
         to: emailAddress,
         subject: `Orden de Servicio - Domingo ${selectedDate}`,
         body: `
           <h2>Orden de Servicio / Service Order</h2>
-          <p>Fecha / Date: ${selectedDate}</p>
-          <p>Este documento fue generado desde el sistema de gestión de servicios de Palabras de Vida.</p>
-          <p>This document was generated from the Palabras de Vida service management system.</p>
-          <hr/>
-          <p><em>Para ver el documento completo, por favor imprima desde la vista previa del sistema.</em></p>
-          <p><em>To view the full document, please print from the system preview.</em></p>
+          <p><strong>Fecha / Date:</strong> ${selectedDate}</p>
+          <p>Puede ver el programa de servicio completo en línea aquí:</p>
+          <p><a href="${liveViewUrl}" style="color: #1FBA70; font-weight: 600;">${liveViewUrl}</a></p>
+          <hr style="margin: 20px 0; border: none; border-top: 1px solid #E6E6E6;"/>
+          <p style="color: #666666; font-size: 14px;">Este documento fue generado desde el sistema de gestión de servicios de Palabras de Vida.</p>
+          <p style="color: #666666; font-size: 14px;">This document was generated from the Palabras de Vida service management system.</p>
         `
       });
       
@@ -218,113 +150,6 @@ export default function ServicePdfPreview({
     onOpenChange(false);
   };
 
-  const handleSaveBytesToDisk = async () => {
-    setIsGeneratingPDF(true);
-    try {
-      console.log('=== SAVING RAW PDF BYTES TO DISK ===');
-
-      const response = await base44.functions.invoke('generateServiceProgramPdf', {
-        serviceData,
-        selectedDate,
-        selectedAnnouncements,
-        page1Scale,
-        page2Scale,
-        debug: false,
-        processorVersion: '116'
-      }, { responseType: 'arraybuffer' });
-
-      console.log('=== RAW RESPONSE INSPECTION ===');
-      console.log('Response object keys:', Object.keys(response));
-      console.log('Response.data type:', typeof response.data);
-      console.log('Response.data constructor:', response.data?.constructor?.name);
-      console.log('Response.data instanceof ArrayBuffer:', response.data instanceof ArrayBuffer);
-      console.log('Response.data instanceof Uint8Array:', response.data instanceof Uint8Array);
-      console.log('Response.data instanceof Blob:', response.data instanceof Blob);
-      console.log('Response.data byteLength:', response.data?.byteLength);
-      console.log('Response.data length:', response.data?.length);
-      console.log('Response.headers:', response.headers);
-      console.log('Response.status:', response.status);
-
-      // Extract bytes regardless of format
-      let bytes;
-      if (response.data instanceof ArrayBuffer) {
-        bytes = new Uint8Array(response.data);
-      } else if (response.data instanceof Uint8Array) {
-        bytes = response.data;
-      } else if (response.data instanceof Blob) {
-        const arrayBuffer = await response.data.arrayBuffer();
-        bytes = new Uint8Array(arrayBuffer);
-      } else if (typeof response.data === 'string') {
-        // Base64 encoded
-        const binaryString = atob(response.data);
-        bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-      } else {
-        console.error('CRITICAL: Unknown response.data type');
-        alert('Error: Response data is in an unexpected format. Check console.');
-        setIsGeneratingPDF(false);
-        return;
-      }
-
-      console.log('Extracted bytes length:', bytes.length);
-      console.log('First 10 bytes:', Array.from(bytes.slice(0, 10)).map(b => String.fromCharCode(b)).join(''));
-      console.log('First 10 bytes (hex):', Array.from(bytes.slice(0, 10)).map(b => b.toString(16).padStart(2, '0')).join(' '));
-
-      // Save to disk
-      const blob = new Blob([bytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `raw-bytes-test-${Date.now()}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-
-      console.log('✓ Saved raw bytes to disk. Open in local PDF viewer (Preview/Adobe/Chrome file://)');
-      alert('Raw PDF bytes saved to disk. Open the file in your local PDF viewer to verify content.');
-    } catch (error) {
-      console.error('Save bytes error:', error);
-      alert('Error saving bytes: ' + error.message);
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  };
-
-  const handleDebugLadder = async () => {
-    setIsGeneratingPDF(true);
-    try {
-      const response = await base44.functions.invoke('generateServiceProgramPdf', {
-        serviceData,
-        selectedDate,
-        selectedAnnouncements,
-        page1Scale,
-        page2Scale,
-        debug: true,
-        processorVersion: '116'
-      });
-
-      console.log('=== DEBUG LADDER RESULTS ===');
-      console.log(response.data);
-      setDebugResults(response.data);
-
-      // Log PNGs as clickable URLs
-      if (response.data.pngs) {
-        console.log('\n=== PNG PREVIEWS (click to view) ===');
-        Object.entries(response.data.pngs).forEach(([stage, dataUrl]) => {
-          console.log(`${stage}:`, dataUrl);
-        });
-      }
-
-      alert('Debug complete! Check browser console for results and PNG previews.');
-    } catch (error) {
-      console.error('Debug error:', error);
-      alert('Debug failed: ' + error.message);
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  };
-
   const adjustScale = (pageNum, delta) => {
     if (pageNum === 1) {
       setPage1Scale(prev => Math.min(110, Math.max(85, prev + delta)));
@@ -333,15 +158,20 @@ export default function ServicePdfPreview({
     }
   };
 
+  // Don't render dialog on mobile
+  if (isMobile) {
+    return null;
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl h-[95vh] max-h-[95vh] w-[95vw] md:w-full p-0 print:hidden flex flex-col">
         
-        <DialogHeader className="flex-shrink-0 px-3 md:px-6 py-2 md:py-3 border-b bg-white">
+        <DialogHeader className="flex-shrink-0 px-6 py-3 border-b bg-white">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <DialogTitle className="text-sm md:text-xl font-bold truncate">
-                Vista Previa / Preview
+              <DialogTitle className="text-xl font-bold truncate">
+                Vista Previa PDF / PDF Preview
               </DialogTitle>
             </div>
             <div className="flex gap-1 flex-shrink-0">
@@ -361,103 +191,87 @@ export default function ServicePdfPreview({
               >
                 <Check className="w-4 h-4" />
               </Button>
-              <Button 
-                onClick={handleDownloadPDF}
-                variant="outline"
-                disabled={isGeneratingPDF}
-                className="h-8 w-8 p-0"
-                size="sm"
-                title="Download PDF"
-              >
-                {isGeneratingPDF ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Download className="w-4 h-4" />
-                )}
-              </Button>
-              <Button 
-                onClick={handleDebugLadder}
-                variant="outline"
-                disabled={isGeneratingPDF}
-                className="h-8 px-2 text-xs border-orange-500 text-orange-600 hover:bg-orange-50"
-                size="sm"
-                title="Run debug template ladder"
-              >
-                🔍 Debug
-              </Button>
-              <Button 
-                onClick={handleSaveBytesToDisk}
-                variant="outline"
-                disabled={isGeneratingPDF}
-                className="h-8 px-2 text-xs border-purple-500 text-purple-600 hover:bg-purple-50"
-                size="sm"
-                title="Save raw PDF bytes to disk for local inspection"
-              >
-                💾 Save Bytes
-              </Button>
-              <Button 
-                onClick={handlePrint} 
-                className="bg-gray-900 text-white h-8 w-8 p-0 hidden md:inline-flex"
-                disabled={isGeneratingPDF}
-                size="sm"
-                title="Print PDF"
-              >
-                <Printer className="w-4 h-4" />
-              </Button>
+              {!showEmailForm && (
+                <>
+                  <Button 
+                    onClick={handleDownloadPDF}
+                    variant="outline"
+                    disabled={pdfLoading}
+                    className="h-8 px-3 text-sm"
+                    size="sm"
+                    title="Download PDF"
+                  >
+                    {pdfLoading ? (
+                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-1" />
+                    )}
+                    Descargar
+                  </Button>
+                  <Button 
+                    onClick={() => setShowEmailForm(true)}
+                    variant="outline"
+                    disabled={pdfLoading}
+                    className="h-8 px-3 text-sm"
+                    size="sm"
+                    title="Email PDF"
+                  >
+                    <Mail className="w-4 h-4 mr-1" />
+                    Email
+                  </Button>
+                  <Button 
+                    onClick={handlePrint} 
+                    className="bg-gray-900 text-white h-8 px-3 text-sm"
+                    disabled={pdfLoading}
+                    size="sm"
+                    title="Print PDF"
+                  >
+                    <Printer className="w-4 h-4 mr-1" />
+                    Imprimir
+                  </Button>
+                </>
+              )}
             </div>
           </div>
+          
+          {showEmailForm && (
+            <div className="flex items-center gap-2 mt-3">
+              <Input
+                type="email"
+                placeholder="email@ejemplo.com"
+                value={emailAddress}
+                onChange={(e) => setEmailAddress(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSendEmail}
+                disabled={sendingEmail || emailSent}
+                className="bg-pdv-teal hover:bg-pdv-green"
+              >
+                {sendingEmail ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : emailSent ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  'Enviar'
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowEmailForm(false);
+                  setEmailAddress("");
+                }}
+              >
+                Cancelar
+              </Button>
+            </div>
+          )}
         </DialogHeader>
 
         <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-            {/* Mobile Controls - Always Visible, Compact */}
-            {isMobile && (
-              <div className="flex-shrink-0 border-b bg-gray-50 px-3 py-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-                    <TabsList className="grid w-full grid-cols-2 h-8">
-                      <TabsTrigger value="page1" className="text-xs">Página 1</TabsTrigger>
-                      <TabsTrigger value="page2" className="text-xs">Página 2</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                  <Badge variant="outline">
-                    {activeTab === "page1" ? `${page1Scale}%` : `${page2Scale}%`}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={() => adjustScale(activeTab === "page1" ? 1 : 2, -5)}
-                    disabled={activeTab === "page1" ? page1Scale <= 85 : page2Scale <= 85}
-                  >
-                    <Minus className="w-3 h-3" />
-                  </Button>
-                  <Slider
-                    value={activeTab === "page1" ? [page1Scale] : [page2Scale]}
-                    onValueChange={([v]) => activeTab === "page1" ? setPage1Scale(v) : setPage2Scale(v)}
-                    min={85}
-                    max={110}
-                    step={1}
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={() => adjustScale(activeTab === "page1" ? 1 : 2, 5)}
-                    disabled={activeTab === "page1" ? page1Scale >= 110 : page2Scale >= 110}
-                  >
-                    <Plus className="w-3 h-3" />
-                  </Button>
-
-                </div>
-              </div>
-            )}
-
-            {/* Desktop Controls Panel */}
-            {!isMobile && (
-              <div className="w-72 border-r bg-gray-50 p-4 space-y-4 overflow-y-auto">
+          {/* Desktop Controls Panel */}
+          <div className="w-72 border-r bg-gray-50 p-4 space-y-4 overflow-y-auto">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="page1">Página 1</TabsTrigger>
@@ -471,6 +285,7 @@ export default function ServicePdfPreview({
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold">Escala / Scale</span>
+                    <Badge variant="outline">{page1Scale}%</Badge>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -505,14 +320,9 @@ export default function ServicePdfPreview({
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
-
-                  <div className="text-center text-sm text-gray-600 mt-1">
-                    {page1Scale}%
-                  </div>
                 </div>
-
-                </div>
-                )}
+              </div>
+            )}
 
             {/* Page 2 Controls */}
             {activeTab === "page2" && (
@@ -520,6 +330,7 @@ export default function ServicePdfPreview({
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold">Escala / Scale</span>
+                    <Badge variant="outline">{page2Scale}%</Badge>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -554,62 +365,30 @@ export default function ServicePdfPreview({
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
-
-                  <div className="text-center text-sm text-gray-600 mt-1">
-                    {page2Scale}%
-                  </div>
                 </div>
-
-                </div>
-                )}
-            </div>
-            )}
-
-            {/* Preview Area */}
-            <div className="flex-1 bg-gray-200 overflow-auto p-4">
-              <div className="max-w-4xl mx-auto bg-white shadow-lg p-8">
-                <div className="text-center mb-6">
-                  <h2 className="text-2xl font-bold">ORDEN DE SERVICIO</h2>
-                  <p className="text-lg text-pdv-teal mt-2">Domingo {selectedDate}</p>
-                  <p className="text-xs text-gray-500 mt-4">
-                    Esta es una vista previa simplificada. El PDF final tendrá formato completo.
-                  </p>
-                </div>
-
-                {isGeneratingPDF && (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-pdv-teal" />
-                    <span className="ml-3">Generando PDF...</span>
-                  </div>
-                )}
-
-                {!isGeneratingPDF && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="border rounded p-3">
-                        <h3 className="font-bold mb-2">9:30 AM</h3>
-                        <p className="text-sm text-gray-600">
-                          {serviceData?.['9:30am']?.length || 0} segmentos
-                        </p>
-                      </div>
-                      <div className="border rounded p-3">
-                        <h3 className="font-bold mb-2">11:30 AM</h3>
-                        <p className="text-sm text-gray-600">
-                          {serviceData?.['11:30am']?.length || 0} segmentos
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="border-t pt-4">
-                      <h3 className="font-bold mb-2">Anuncios Seleccionados</h3>
-                      <p className="text-sm text-gray-600">
-                        {selectedAnnouncements?.length || 0} anuncios incluidos en el PDF
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
+            )}
+          </div>
+
+          {/* PDF Viewer Area */}
+          <div className="flex-1 bg-gray-200 overflow-hidden">
+            {pdfLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-8 h-8 animate-spin text-pdv-teal" />
+                <span className="ml-3">Generando PDF...</span>
+              </div>
+            ) : (
+              <PDFViewer style={{ width: '100%', height: '100%', border: 'none' }}>
+                <ServiceProgramPdf
+                  serviceData={serviceData}
+                  selectedDate={selectedDate}
+                  selectedAnnouncements={selectedAnnouncements}
+                  page1Scale={page1Scale}
+                  page2Scale={page2Scale}
+                />
+              </PDFViewer>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
