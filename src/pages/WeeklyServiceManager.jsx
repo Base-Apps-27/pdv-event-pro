@@ -2352,11 +2352,6 @@ Return ONLY valid JSON:
                                     onChange={(e) => updateSegmentField("11:30am", idx, "ministry_leader", e.target.value)}
                                     className="text-sm"
                                   />
-                                  {segment.data?.translator && (
-                                    <div className="text-xs text-blue-600 italic flex items-center gap-1 mt-2">
-                                      🌐 Traduce: {segment.data.translator}
-                                    </div>
-                                  )}
                                 </div>
                               )}
 
