@@ -14,8 +14,9 @@ export default function PublicProgramView() {
   const preloadedSlug = urlParams.get('slug');
   const preloadedEventId = urlParams.get('eventId') || "";
   const preloadedServiceId = urlParams.get('serviceId') || "";
+  const preloadedDate = urlParams.get('date') || "";
   
-  const [viewType, setViewType] = useState(preloadedServiceId ? "service" : "event"); // "event" or "service"
+  const [viewType, setViewType] = useState(preloadedServiceId || preloadedDate ? "service" : "event");
   const [selectedEventId, setSelectedEventId] = useState(preloadedEventId);
   const [selectedServiceId, setSelectedServiceId] = useState(preloadedServiceId);
   const [selectedSessionId, setSelectedSessionId] = useState("all");
@@ -54,6 +55,17 @@ export default function PublicProgramView() {
     queryFn: () => base44.entities.Service.list(),
   });
 
+  // Handle preloaded date parameter
+  useEffect(() => {
+    if (preloadedDate && services.length > 0 && !selectedServiceId) {
+      const serviceForDate = services.find(s => s.date === preloadedDate && s.status === 'active');
+      if (serviceForDate) {
+        setSelectedServiceId(serviceForDate.id);
+        setViewType("service");
+      }
+    }
+  }, [preloadedDate, services, selectedServiceId]);
+
   // If slug is provided, find the event and set the ID
   useEffect(() => {
     if (preloadedSlug && publicEvents.length > 0 && !selectedEventId) {
@@ -67,7 +79,7 @@ export default function PublicProgramView() {
 
   // Auto-select next upcoming event or service
   useEffect(() => {
-    if (!preloadedEventId && !preloadedServiceId && publicEvents.length > 0 && services.length > 0) {
+    if (!preloadedEventId && !preloadedServiceId && !preloadedDate && publicEvents.length > 0 && services.length > 0) {
       const today = new Date();
       
       // Find next event
