@@ -42,10 +42,11 @@ export default function ServicePdfPreview({
       Promise.all([
         import('@react-pdf/renderer'),
         import('./ServiceProgramPdf')
-      ]).then(([reactPdf, servicePdf]) => {
+      ]).then(async ([reactPdf, servicePdfModule]) => {
         PDFViewer = reactPdf.PDFViewer;
         pdf = reactPdf.pdf;
-        ServiceProgramPdf = servicePdf.default;
+        // ServiceProgramPdf is now an async factory
+        ServiceProgramPdf = await servicePdfModule.default();
         setPdfModulesLoaded(true);
       }).catch(err => {
         console.error('Failed to load PDF modules:', err);
