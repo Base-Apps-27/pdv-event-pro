@@ -1384,8 +1384,8 @@ Return ONLY valid JSON:
                   )}
 
                   {segment.data?.translator && (
-                    <div className="print-segment-detail" style={{ marginTop: '2pt' }}>
-                      🌐 Traduce: <span className="print-name">{segment.data.translator}</span>
+                    <div className="print-segment-detail" style={{ marginTop: '2pt', color: '#3b82f6' }}>
+                      🌐 Traduce: {segment.data.translator}
                     </div>
                   )}
 
