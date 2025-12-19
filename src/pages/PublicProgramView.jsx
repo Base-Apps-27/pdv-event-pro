@@ -427,73 +427,78 @@ export default function PublicProgramView() {
                       )}
                     </div>
                     <div className="divide-y divide-gray-200">
-                      {actualServiceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
-                        <div key={idx} className="p-4 hover:bg-gray-50">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                <h4 className="text-xl font-bold">{segment.title}</h4>
-                                <Badge variant="outline" className="text-xs">{segment.duration} min</Badge>
-                              </div>
-                              
-                              {segment.data?.leader && (
-                                <p className="text-lg font-bold text-pdv-green mb-2">Dirige: {segment.data.leader}</p>
-                              )}
-                              
-                              {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
-                                <div className="bg-green-50 p-2 rounded border border-green-200 text-sm mb-2">
-                                  <p className="font-semibold text-green-800 mb-1">Canciones:</p>
-                                  {segment.songs.filter(s => s.title).map((song, sIdx) => (
-                                    <div key={sIdx} className="text-xs">• {song.title} {song.lead && `(${song.lead})`}</div>
-                                  ))}
-                                </div>
-                              )}
-                              
-                              {segment.data?.ministry_leader && (
-                                <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
-                                  <strong>Ministración (5 min):</strong> <span className="font-bold text-purple-900">{segment.data.ministry_leader}</span>
-                                </div>
-                              )}
-                              
-                              {segment.data?.presenter && !segment.data?.ministry_leader && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
-                              )}
-                              
-                              {segment.data?.preacher && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
-                              )}
-                              
-                              {segment.data?.title && (
-                                <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
-                              )}
-                              
-                              {segment.data?.verse && (
-                                <p className="text-xs text-gray-600 mb-1">📖 {segment.data.verse}</p>
-                              )}
-                              
-                              {segment.data?.description && (
-                                <p className="text-xs text-gray-600 mt-2 italic">{segment.data.description}</p>
-                              )}
-                              
-                              {segment.data?.description_details && (
-                                <p className="text-xs text-gray-500 mt-2">{segment.data.description_details}</p>
-                              )}
-                              
-                              {segment.data?.projection_notes && (
-                                <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-dashed border-gray-200">
-                                  <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
-                                </div>
-                              )}
-                              
-                              {segment.data?.sound_notes && (
-                                <div className="text-xs text-gray-600 mt-1">
-                                  <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                     {actualServiceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
+                       <div key={idx} className="p-4 hover:bg-gray-50">
+                         <div className="flex items-start justify-between gap-4">
+                           <div className="flex-1">
+                             <div className="flex items-center gap-2 mb-2 flex-wrap">
+                               <h4 className="text-xl font-bold">{segment.title}</h4>
+                               <Badge variant="outline" className="text-xs">{segment.duration} min</Badge>
+                             </div>
+
+                             {segment.data?.leader && (
+                               <p className="text-lg font-bold text-pdv-green mb-2">Dirige: {segment.data.leader}</p>
+                             )}
+
+                             {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
+                               <div className="bg-green-50 p-2 rounded border border-green-200 text-sm mb-2">
+                                 <p className="font-semibold text-green-800 mb-1">Canciones:</p>
+                                 {segment.songs.filter(s => s.title).map((song, sIdx) => (
+                                   <div key={sIdx} className="text-xs">• {song.title} {song.lead && `(${song.lead})`}</div>
+                                 ))}
+                               </div>
+                             )}
+
+                             {segment.data?.ministry_leader && (
+                               <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
+                                 <strong>Ministración (5 min):</strong> <span className="font-bold text-purple-900">{segment.data.ministry_leader}</span>
+                               </div>
+                             )}
+
+                             {segment.data?.presenter && !segment.data?.ministry_leader && (
+                               <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
+                             )}
+
+                             {segment.data?.preacher && (
+                               <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
+                             )}
+
+                             {segment.data?.title && (
+                               <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
+                             )}
+
+                             {segment.data?.verse && (
+                               <p className="text-xs text-gray-600 mb-1">📖 {segment.data.verse}</p>
+                             )}
+
+                             {segment.data?.description && (
+                               <p className="text-xs text-gray-600 mt-2 italic">{segment.data.description}</p>
+                             )}
+
+                             {segment.data?.description_details && (
+                               <div className="bg-gray-50 p-2 rounded border border-gray-200 text-xs mt-2">
+                                 <strong className="text-gray-700">Notas:</strong>
+                                 <p className="mt-1 text-gray-600">{segment.data.description_details}</p>
+                               </div>
+                             )}
+
+                             {segment.data?.projection_notes && (
+                               <div className="bg-purple-50 p-2 rounded border border-purple-200 text-xs mt-2">
+                                 <strong className="text-purple-800">📽️ Proyección:</strong>
+                                 <p className="mt-1 text-purple-700">{segment.data.projection_notes}</p>
+                               </div>
+                             )}
+
+                             {segment.data?.sound_notes && (
+                               <div className="bg-red-50 p-2 rounded border border-red-200 text-xs mt-2">
+                                 <strong className="text-red-800">🔊 Sonido:</strong>
+                                 <p className="mt-1 text-red-700">{segment.data.sound_notes}</p>
+                               </div>
+                             )}
+                           </div>
+                         </div>
+                       </div>
+                     ))}
                     </div>
                   </div>
                 )}
