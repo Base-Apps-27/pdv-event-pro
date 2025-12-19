@@ -934,7 +934,8 @@ Return ONLY valid JSON:
 
           .print-name {
             color: #16a34a;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 11pt;
           }
 
           .print-duration {
@@ -1407,9 +1408,21 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.sound_notes && (
+                  {segment.data?.description_details && (
                     <div className="print-segment-detail print-note-text">
-                      {segment.data.sound_notes}
+                      {segment.data.description_details}
+                    </div>
+                  )}
+
+                  {segment.data?.projection_notes && (
+                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#7c3aed', marginTop: '2pt' }}>
+                      <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.sound_notes && (
+                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#dc2626', marginTop: '2pt' }}>
+                      <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
                     </div>
                   )}
 
