@@ -18,8 +18,9 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
-import ServicePdfPreview from "@/components/service/pdf/ServicePdfPreview";
 
+// Lazy load PDF preview to avoid SSR issues with @react-pdf/renderer
+const ServicePdfPreview = React.lazy(() => import("@/components/service/pdf/ServicePdfPreview"));
 
 export default function WeeklyServiceManager() {
   // State
@@ -2857,16 +2858,18 @@ Return ONLY valid JSON:
       </Dialog>
 
       {/* PDF Preview Dialog - Desktop only */}
-      {!isMobile && (
-        <ServicePdfPreview
-          open={showPdfPreview}
-          onOpenChange={setShowPdfPreview}
-          serviceData={serviceData}
-          selectedDate={selectedDate}
-          selectedAnnouncements={selectedAnnouncements}
-          pdfScales={pdfScales}
-          onSaveScales={handleSavePdfScales}
-        />
+      {!isMobile && showPdfPreview && (
+        <React.Suspense fallback={<div>Cargando...</div>}>
+          <ServicePdfPreview
+            open={showPdfPreview}
+            onOpenChange={setShowPdfPreview}
+            serviceData={serviceData}
+            selectedDate={selectedDate}
+            selectedAnnouncements={selectedAnnouncements}
+            pdfScales={pdfScales}
+            onSaveScales={handleSavePdfScales}
+          />
+        </React.Suspense>
       )}
 
       {/* Announcement Dialog */}
