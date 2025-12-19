@@ -547,9 +547,9 @@ export default function PublicProgramView() {
                               )}
                               
                               {segment.data?.translator && (
-                                <div className="text-base font-bold text-blue-600 mb-2">
+                                <p className="text-xs text-blue-600 mt-1">
                                   🌐 Traduce: {segment.data.translator}
-                                </div>
+                                </p>
                               )}
                               
                               {segment.data?.presenter && !segment.data?.ministry_leader && (
