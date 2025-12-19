@@ -1396,12 +1396,6 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.translator && (
-                    <div className="print-segment-detail">
-                      Traduce: <span className="print-name">{segment.data.translator}</span>
-                    </div>
-                  )}
-
                   {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
                     <div className="print-segment-songs">
                       {segment.songs.filter(s => s.title).map((song, sIdx) => (
@@ -1414,6 +1408,12 @@ Return ONLY valid JSON:
                     <div className="print-segment-detail">
                       • Ministración: <span className="print-name">{segment.data.ministry_leader}</span> <span className="print-duration">(5 min)</span>
                       {segment.data?.translator && <> / traduce: <span className="print-name">{segment.data.translator}</span></>}
+                    </div>
+                  )}
+
+                  {segment.data?.translator && !segment.data?.ministry_leader && (
+                    <div className="print-segment-detail">
+                      🌐 Traduce: <span className="print-name">{segment.data.translator}</span>
                     </div>
                   )}
 
@@ -1470,6 +1470,11 @@ Return ONLY valid JSON:
 
         <div className="print-receso">
           11:00 A.M. — 11:30 A.M. • RECESO
+          {serviceData?.receso_notes?.["9:30am"] && (
+            <span style={{ fontSize: '9pt', fontWeight: 400, marginLeft: '8pt', fontStyle: 'italic', color: '#6b7280' }}>
+              ({serviceData.receso_notes["9:30am"]})
+            </span>
+          )}
         </div>
 
         <div className="print-announcements">
@@ -2306,18 +2311,6 @@ Return ONLY valid JSON:
                                   ))}
                                 </div>
                               )}
-                              {segment.fields.includes("ministry_leader") && (
-                                <div className="bg-purple-50 border border-purple-200 rounded p-2">
-                                  <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
-                                  <AutocompleteInput
-                                    type="ministryLeader"
-                                    placeholder="Líder de Ministración"
-                                    value={segment.data?.ministry_leader || ""}
-                                    onChange={(e) => updateSegmentField("11:30am", idx, "ministry_leader", e.target.value)}
-                                    className="text-sm"
-                                  />
-                                </div>
-                              )}
                               {segment.fields.includes("translator") && segment.type === "worship" && (
                                 <div className="bg-blue-50 border border-blue-200 rounded p-2">
                                   <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) - Ministración, Anuncios, Ofrenda</Label>
@@ -2331,9 +2324,34 @@ Return ONLY valid JSON:
                                 </div>
                               )}
 
+                              {segment.fields.includes("ministry_leader") && (
+                                <div className="bg-purple-50 border border-purple-200 rounded p-2">
+                                  <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
+                                  <AutocompleteInput
+                                    type="ministryLeader"
+                                    placeholder="Líder de Ministración"
+                                    value={segment.data?.ministry_leader || ""}
+                                    onChange={(e) => updateSegmentField("11:30am", idx, "ministry_leader", e.target.value)}
+                                    className="text-sm"
+                                  />
+                                  {segment.data?.translator && (
+                                    <div className="text-xs text-blue-600 italic flex items-center gap-1 mt-2">
+                                      🌐 Traduce: {segment.data.translator}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
                               {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
-                                <div className="text-xs text-blue-600 italic flex items-center gap-1 mt-1">
-                                  🌐 Traductor(a): {segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || "Por definir"}
+                                <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                                  <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
+                                  <AutocompleteInput
+                                    type="translator"
+                                    placeholder="Nombre del traductor"
+                                    value={segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || ""}
+                                    onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
+                                    className="text-sm"
+                                  />
                                 </div>
                               )}
 
