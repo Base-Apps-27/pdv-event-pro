@@ -425,7 +425,7 @@ export default function PublicProgramView() {
                               </div>
                               
                               {segment.data?.leader && (
-                                <p className="text-sm text-pdv-green mb-1"><strong>Líder:</strong> {segment.data.leader}</p>
+                                <p className="text-lg font-bold text-pdv-green mb-2">Dirige: {segment.data.leader}</p>
                               )}
                               
                               {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
@@ -439,16 +439,16 @@ export default function PublicProgramView() {
                               
                               {segment.data?.ministry_leader && (
                                 <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
-                                  <strong>Ministración (5 min):</strong> {segment.data.ministry_leader}
+                                  <strong>Ministración (5 min):</strong> <span className="font-bold text-purple-900">{segment.data.ministry_leader}</span>
                                 </div>
                               )}
                               
-                              {segment.data?.presenter && (
-                                <p className="text-sm text-blue-600 mb-1"><strong>Presentador:</strong> {segment.data.presenter}</p>
+                              {segment.data?.presenter && !segment.data?.ministry_leader && (
+                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
                               )}
                               
                               {segment.data?.preacher && (
-                                <p className="text-sm text-blue-600 mb-1"><strong>Predicador:</strong> {segment.data.preacher}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
                               )}
                               
                               {segment.data?.title && (
@@ -514,7 +514,7 @@ export default function PublicProgramView() {
                               </div>
                               
                               {segment.data?.leader && (
-                                <p className="text-sm text-pdv-green mb-1"><strong>Líder:</strong> {segment.data.leader}</p>
+                                <p className="text-lg font-bold text-pdv-green mb-2">Dirige: {segment.data.leader}</p>
                               )}
                               
                               {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
@@ -528,22 +528,22 @@ export default function PublicProgramView() {
                               
                               {segment.data?.ministry_leader && (
                                 <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
-                                  <strong>Ministración (5 min):</strong> {segment.data.ministry_leader}
+                                  <strong>Ministración (5 min):</strong> <span className="font-bold text-purple-900">{segment.data.ministry_leader}</span>
                                 </div>
                               )}
                               
                               {segment.data?.translator && (
-                                <div className="text-sm text-blue-600 mb-1">
-                                  <strong>🌐 Traductor(a):</strong> {segment.data.translator}
+                                <div className="text-base font-bold text-blue-600 mb-2">
+                                  🌐 Traduce: {segment.data.translator}
                                 </div>
                               )}
                               
-                              {segment.data?.presenter && (
-                                <p className="text-sm text-blue-600 mb-1"><strong>Presentador:</strong> {segment.data.presenter}</p>
+                              {segment.data?.presenter && !segment.data?.ministry_leader && (
+                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
                               )}
                               
                               {segment.data?.preacher && (
-                                <p className="text-sm text-blue-600 mb-1"><strong>Predicador:</strong> {segment.data.preacher}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
                               )}
                               
                               {segment.data?.title && (

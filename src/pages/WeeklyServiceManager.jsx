@@ -1368,12 +1368,11 @@ Return ONLY valid JSON:
                   {segment.data?.ministry_leader && (
                     <div className="print-segment-detail">
                       • Ministración: <span className="print-name">{segment.data.ministry_leader}</span> <span className="print-duration">(5 min)</span>
-                      {segment.data?.translator && <> / traduce: <span className="print-name">{segment.data.translator}</span></>}
                     </div>
                   )}
 
-                  {segment.data?.translator && !segment.data?.ministry_leader && (
-                    <div className="print-segment-detail">
+                  {segment.data?.translator && (
+                    <div className="print-segment-detail" style={{ marginTop: '2pt' }}>
                       🌐 Traduce: <span className="print-name">{segment.data.translator}</span>
                     </div>
                   )}
