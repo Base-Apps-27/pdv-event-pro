@@ -476,24 +476,21 @@ export default function PublicProgramView() {
                              )}
 
                              {segment.data?.description_details && (
-                               <div className="bg-gray-50 p-2 rounded border border-gray-200 text-xs mt-2">
-                                 <strong className="text-gray-700">Notas:</strong>
-                                 <p className="mt-1 text-gray-600">{segment.data.description_details}</p>
-                               </div>
+                               <p className="text-xs text-gray-600 mt-2">
+                                 <strong>📝 Notas:</strong> {segment.data.description_details}
+                               </p>
                              )}
 
                              {segment.data?.projection_notes && (
-                               <div className="bg-purple-50 p-2 rounded border border-purple-200 text-xs mt-2">
-                                 <strong className="text-purple-800">📽️ Proyección:</strong>
-                                 <p className="mt-1 text-purple-700">{segment.data.projection_notes}</p>
-                               </div>
+                               <p className="text-xs text-purple-700 mt-1">
+                                 <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
+                               </p>
                              )}
 
                              {segment.data?.sound_notes && (
-                               <div className="bg-red-50 p-2 rounded border border-red-200 text-xs mt-2">
-                                 <strong className="text-red-800">🔊 Sonido:</strong>
-                                 <p className="mt-1 text-red-700">{segment.data.sound_notes}</p>
-                               </div>
+                               <p className="text-xs text-red-600 mt-1">
+                                 <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
+                               </p>
                              )}
                            </div>
                          </div>
