@@ -14,13 +14,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: -12,
     top: -12,
-    width: 60,
-    height: 60,
+    width: 48,
+    height: 48,
     objectFit: 'contain',
   },
   header: {
-    textAlign: 'center',
-    marginBottom: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E6E6E6',
   },
   title: {
     fontSize: 20,
@@ -28,24 +31,24 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     color: '#1A1A1A',
+    textAlign: 'center',
   },
   date: {
     fontSize: 13,
-    fontWeight: 600,
     color: '#333333',
     marginTop: 4,
+    fontWeight: 500,
+    textAlign: 'center',
   },
   rolesLine: {
     fontSize: 9.5,
     color: '#666666',
     textAlign: 'center',
     marginTop: 6,
-    maxWidth: '90%',
-    alignSelf: 'center',
   },
   columnsContainer: {
     flexDirection: 'row',
-    gap: 22, // ~0.30in gutter
+    gap: 22,
     flex: 1,
   },
   column: {
@@ -53,10 +56,10 @@ const styles = StyleSheet.create({
   },
   columnHeader: {
     fontSize: 12,
-    fontWeight: 700,
+    fontWeight: 600,
     color: '#1A1A1A',
-    marginBottom: 10,
-    paddingBottom: 6,
+    marginBottom: 8,
+    paddingBottom: 4,
     borderBottomWidth: 1,
     borderBottomColor: '#E6E6E6',
   },
@@ -65,8 +68,8 @@ const styles = StyleSheet.create({
     fontWeight: 600,
   },
   segment: {
-    marginBottom: 10,
-    paddingBottom: 8,
+    marginBottom: 8,
+    paddingBottom: 6,
     borderBottomWidth: 0.5,
     borderBottomColor: '#F0F0F0',
   },
@@ -74,13 +77,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#C0392B',
     fontWeight: 600,
-    marginBottom: 3,
+    marginBottom: 2,
   },
   segmentTitle: {
     fontSize: 10.5,
     fontWeight: 600,
     color: '#1A1A1A',
-    marginBottom: 3,
+    marginBottom: 2,
   },
   segmentDetail: {
     fontSize: 10,
@@ -99,10 +102,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   recesoBlock: {
-    marginTop: 16,
-    marginBottom: 16,
-    paddingTop: 10,
-    paddingBottom: 10,
+    marginTop: 12,
+    paddingTop: 8,
+    paddingBottom: 8,
     borderTopWidth: 1,
     borderTopColor: '#E6E6E6',
     borderBottomWidth: 1,
@@ -113,24 +115,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 600,
     color: '#1A1A1A',
-    marginBottom: 4,
   },
   recesoNote: {
     fontSize: 9.5,
     color: '#666666',
     fontStyle: 'italic',
+    marginTop: 2,
   },
   footer: {
     position: 'absolute',
-    bottom: -24,
-    left: 0,
-    right: 0,
+    bottom: -28,
+    left: -12,
+    right: -12,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#E6E6E6',
     textAlign: 'center',
     fontSize: 9,
     color: '#666666',
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#E6E6E6',
   },
   footerAccent: {
     color: '#1FBA70',
@@ -139,9 +141,6 @@ const styles = StyleSheet.create({
 });
 
 export default function ServiceProgramPage1({ serviceData, selectedDate, scale = 100 }) {
-  const scaleFactor = scale / 100;
-
-  // Build dynamic roles line
   const buildRolesLine = () => {
     if (!serviceData) return '';
     
@@ -161,18 +160,29 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
   };
 
   const rolesLine = buildRolesLine();
+  const scaleFactor = scale / 100;
 
-  // Apply scale to dynamic font sizes (keeping header/footer fixed)
-  const getScaledSize = (baseSize) => baseSize * scaleFactor;
+  const scaledStyles = StyleSheet.create({
+    scaledTitle: { fontSize: 20 * scaleFactor },
+    scaledDate: { fontSize: 13 * scaleFactor },
+    scaledRolesLine: { fontSize: 9.5 * scaleFactor },
+    scaledColumnHeader: { fontSize: 12 * scaleFactor },
+    scaledSegmentTime: { fontSize: 10 * scaleFactor },
+    scaledSegmentTitle: { fontSize: 10.5 * scaleFactor },
+    scaledSegmentDetail: { fontSize: 10 * scaleFactor },
+    scaledSegmentNote: { fontSize: 9.5 * scaleFactor },
+    scaledRecesoTitle: { fontSize: 11 * scaleFactor },
+    scaledRecesoNote: { fontSize: 9.5 * scaleFactor },
+  });
 
-  const renderServiceColumn = (timeSlot, segments) => {
+  const renderServiceColumn = (timeSlot, timeLabel, segments) => {
     if (!segments || segments.length === 0) {
       return (
         <View style={styles.column}>
-          <Text style={[styles.columnHeader, { fontSize: getScaledSize(12) }]}>
-            <Text style={styles.timeAccent}>{timeSlot}</Text>
+          <Text style={[styles.columnHeader, scaledStyles.scaledColumnHeader]}>
+            <Text style={styles.timeAccent}>{timeLabel}</Text>
           </Text>
-          <Text style={{ fontSize: getScaledSize(10), color: '#666666' }}>
+          <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
             No hay segmentos
           </Text>
         </View>
@@ -184,10 +194,10 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
     if (validSegments.length === 0) {
       return (
         <View style={styles.column}>
-          <Text style={[styles.columnHeader, { fontSize: getScaledSize(12) }]}>
-            <Text style={styles.timeAccent}>{timeSlot}</Text>
+          <Text style={[styles.columnHeader, scaledStyles.scaledColumnHeader]}>
+            <Text style={styles.timeAccent}>{timeLabel}</Text>
           </Text>
-          <Text style={{ fontSize: getScaledSize(10), color: '#666666' }}>
+          <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
             No hay segmentos
           </Text>
         </View>
@@ -196,89 +206,132 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
 
     return (
       <View style={styles.column}>
-        <Text style={[styles.columnHeader, { fontSize: getScaledSize(12) }]}>
-          <Text style={styles.timeAccent}>{timeSlot}</Text>
+        <Text style={[styles.columnHeader, scaledStyles.scaledColumnHeader]}>
+          <Text style={styles.timeAccent}>{timeLabel}</Text>
         </Text>
-        {validSegments.map((segment, idx) => {
-          const title = segment.title || 'Sin título';
-          const duration = segment.duration || '';
-          const data = segment.data || {};
-
-          return (
-            <View key={idx} style={styles.segment}>
-              {duration && (
-                <Text style={[styles.segmentTime, { fontSize: getScaledSize(10) }]}>
-                  {duration} min
-                </Text>
-              )}
-              <Text style={[styles.segmentTitle, { fontSize: getScaledSize(10.5) }]}>
-                {title}
+        {validSegments.map((segment, idx) => (
+          <View key={idx} style={styles.segment}>
+            {segment.duration && (
+              <Text style={[styles.segmentTime, scaledStyles.scaledSegmentTime]}>
+                {segment.duration} min
               </Text>
-              {data.leader && (
-                <Text style={[styles.segmentDetail, { fontSize: getScaledSize(10) }]}>
-                  Dirige: <Text style={styles.segmentName}>{data.leader}</Text>
-                </Text>
-              )}
-              {data.presenter && (
-                <Text style={[styles.segmentDetail, { fontSize: getScaledSize(10) }]}>
-                  <Text style={styles.segmentName}>{data.presenter}</Text>
-                </Text>
-              )}
-              {data.preacher && (
-                <Text style={[styles.segmentDetail, { fontSize: getScaledSize(10) }]}>
-                  <Text style={styles.segmentName}>{data.preacher}</Text>
-                </Text>
-              )}
-              {data.title && (
-                <Text style={[styles.segmentDetail, { fontSize: getScaledSize(10) }]}>
-                  {data.title}
-                </Text>
-              )}
-              {data.notes && (
-                <Text style={[styles.segmentNote, { fontSize: getScaledSize(9.5) }]}>
-                  {data.notes}
-                </Text>
-              )}
-            </View>
-          );
-        })}
+            )}
+            
+            <Text style={[styles.segmentTitle, scaledStyles.scaledSegmentTitle]}>
+              {segment.title}
+            </Text>
+            
+            {segment.data?.leader && (
+              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                Dirige: <Text style={styles.segmentName}>{segment.data.leader}</Text>
+              </Text>
+            )}
+
+            {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
+              <View style={{ marginTop: 3 }}>
+                {segment.songs.filter(s => s.title).map((song, sIdx) => (
+                  <Text key={sIdx} style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                    • {song.title} {song.lead && `(${song.lead})`}
+                  </Text>
+                ))}
+              </View>
+            )}
+
+            {segment.data?.ministry_leader && (
+              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                • Ministración: <Text style={styles.segmentName}>{segment.data.ministry_leader}</Text> (5 min)
+              </Text>
+            )}
+
+            {segment.data?.translator && (
+              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                Traduce: <Text style={styles.segmentName}>{segment.data.translator}</Text>
+              </Text>
+            )}
+
+            {segment.data?.presenter && !segment.data?.ministry_leader && (
+              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                <Text style={styles.segmentName}>{segment.data.presenter}</Text>
+              </Text>
+            )}
+
+            {segment.data?.preacher && (
+              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                <Text style={styles.segmentName}>{segment.data.preacher}</Text>
+              </Text>
+            )}
+
+            {segment.data?.title && (
+              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                {segment.data.title}
+              </Text>
+            )}
+
+            {segment.data?.verse && (
+              <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
+                {segment.data.verse}
+              </Text>
+            )}
+
+            {segment.data?.notes && (
+              <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
+                {segment.data.notes}
+              </Text>
+            )}
+
+            {segment.actions && segment.actions.length > 0 && (
+              <View style={{ marginTop: 3 }}>
+                {segment.actions.map((action, aIdx) => (
+                  <Text key={aIdx} style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
+                    • {action.label}
+                    {action.timing === "before_end" && ` (${action.offset_min} min antes)`}
+                  </Text>
+                ))}
+              </View>
+            )}
+          </View>
+        ))}
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <Image src={LOGO_URL} style={styles.logo} />
-      
-      <View style={styles.header}>
-        <Text style={styles.title}>ORDEN DE SERVICIO</Text>
-        <Text style={styles.date}>Domingo {selectedDate}</Text>
-        {rolesLine && (
-          <Text style={styles.rolesLine}>{rolesLine}</Text>
-        )}
-      </View>
+    <Document>
+      <Page size="LETTER" style={styles.page}>
+        <View style={styles.container}>
+          <Image src={LOGO_URL} style={styles.logo} />
+          
+          <View style={styles.header}>
+            <Text style={[styles.title, scaledStyles.scaledTitle]}>ORDEN DE SERVICIO</Text>
+            <Text style={[styles.date, scaledStyles.scaledDate]}>
+              Domingo {selectedDate}
+            </Text>
+            {rolesLine && (
+              <Text style={[styles.rolesLine, scaledStyles.scaledRolesLine]}>
+                {rolesLine}
+              </Text>
+            )}
+          </View>
 
-      <View style={styles.columnsContainer}>
-        {renderServiceColumn('9:30 A.M.', serviceData?.['9:30am'])}
-        {renderServiceColumn('11:30 A.M.', serviceData?.['11:30am'])}
-      </View>
+          <View style={styles.columnsContainer}>
+            {renderServiceColumn('9:30am', '9:30 A.M.', serviceData?.['9:30am'])}
+            {renderServiceColumn('11:30am', '11:30 A.M.', serviceData?.['11:30am'])}
+          </View>
 
-      {serviceData?.receso_notes?.['9:30am'] && (
-        <View style={styles.recesoBlock}>
-          <Text style={[styles.recesoTitle, { fontSize: getScaledSize(11) }]}>
-            Receso
-          </Text>
-          <Text style={[styles.recesoNote, { fontSize: getScaledSize(9.5) }]}>
-            {serviceData.receso_notes['9:30am']}
+          {serviceData?.receso_notes?.['9:30am'] && (
+            <View style={styles.recesoBlock}>
+              <Text style={[styles.recesoTitle, scaledStyles.scaledRecesoTitle]}>Receso</Text>
+              <Text style={[styles.recesoNote, scaledStyles.scaledRecesoNote]}>
+                {serviceData.receso_notes['9:30am']}
+              </Text>
+            </View>
+          )}
+
+          <Text style={styles.footer}>
+            Palabras de Vida • <Text style={styles.footerAccent}>¡Atrévete a cambiar!</Text>
           </Text>
         </View>
-      )}
-
-      <View style={styles.footer}>
-        <Text>
-          Palabras de Vida • <Text style={styles.footerAccent}>¡Atrévete a cambiar!</Text>
-        </Text>
-      </View>
-    </View>
+      </Page>
+    </Document>
   );
 }

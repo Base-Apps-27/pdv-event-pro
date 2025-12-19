@@ -3,10 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Minus, Plus, Printer, Check, Download, Mail, Loader2, X } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Minus, Plus, Printer, Download, Mail, Loader2, X, Check, AlertTriangle } from "lucide-react";
 import { PDFViewer, pdf } from '@react-pdf/renderer';
 import ServiceProgramPdf from './ServiceProgramPdf';
 import { base44 } from "@/api/base44Client";
@@ -19,6 +18,8 @@ export default function ServicePdfPreview({
   onOpenChange,
   serviceData,
   selectedDate,
+  fixedAnnouncements,
+  dynamicAnnouncements,
   selectedAnnouncements,
   pdfScales,
   onSaveScales
@@ -26,25 +27,25 @@ export default function ServicePdfPreview({
   const [activeTab, setActiveTab] = useState("page1");
   const [page1Scale, setPage1Scale] = useState(pdfScales?.page1 || 100);
   const [page2Scale, setPage2Scale] = useState(pdfScales?.page2 || 100);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT);
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT);
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailAddress, setEmailAddress] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const [showEmailForm, setShowEmailForm] = useState(false);
 
-  // Handle window resize
+  // Monitor window resize
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    };
+    const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Generate PDF blob whenever parameters change
+  // Generate PDF client-side whenever inputs change
   useEffect(() => {
+    if (!open) return; // Don't generate if dialog is closed
+    
     const generatePdf = async () => {
       setPdfLoading(true);
       try {
@@ -52,19 +53,21 @@ export default function ServicePdfPreview({
           <ServiceProgramPdf
             serviceData={serviceData}
             selectedDate={selectedDate}
+            fixedAnnouncements={fixedAnnouncements}
+            dynamicAnnouncements={dynamicAnnouncements}
             selectedAnnouncements={selectedAnnouncements}
             page1Scale={page1Scale}
             page2Scale={page2Scale}
           />
         ).toBlob();
         
-        // Revoke previous blob URL
+        // Revoke previous URL
         if (pdfBlobUrl) {
           URL.revokeObjectURL(pdfBlobUrl);
         }
         
-        const newBlobUrl = URL.createObjectURL(blob);
-        setPdfBlobUrl(newBlobUrl);
+        const url = URL.createObjectURL(blob);
+        setPdfBlobUrl(url);
       } catch (error) {
         console.error('PDF generation error:', error);
       } finally {
@@ -72,9 +75,7 @@ export default function ServicePdfPreview({
       }
     };
 
-    if (open && !isMobile) {
-      generatePdf();
-    }
+    generatePdf();
 
     // Cleanup on unmount
     return () => {
@@ -82,27 +83,28 @@ export default function ServicePdfPreview({
         URL.revokeObjectURL(pdfBlobUrl);
       }
     };
-  }, [serviceData, selectedDate, selectedAnnouncements, page1Scale, page2Scale, open]);
+  }, [open, serviceData, selectedDate, fixedAnnouncements, dynamicAnnouncements, selectedAnnouncements, page1Scale, page2Scale]);
 
   const handlePrint = () => {
-    if (pdfBlobUrl) {
-      window.open(pdfBlobUrl, '_blank');
-    } else {
+    if (!pdfBlobUrl) {
       alert('PDF no está listo / PDF not ready.');
+      return;
     }
+    window.open(pdfBlobUrl, '_blank');
   };
 
   const handleDownloadPDF = () => {
-    if (pdfBlobUrl) {
-      const link = document.createElement('a');
-      link.href = pdfBlobUrl;
-      link.download = `Orden-de-Servicio-${selectedDate}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
+    if (!pdfBlobUrl) {
       alert('PDF no está listo para descargar / PDF not ready for download.');
+      return;
     }
+    
+    const link = document.createElement('a');
+    link.href = pdfBlobUrl;
+    link.download = `Orden-de-Servicio-${selectedDate}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleSendEmail = async () => {
@@ -110,7 +112,7 @@ export default function ServicePdfPreview({
       alert('Por favor ingrese un email válido / Please enter a valid email');
       return;
     }
-    
+
     setSendingEmail(true);
     
     try {
@@ -121,12 +123,12 @@ export default function ServicePdfPreview({
         subject: `Orden de Servicio - Domingo ${selectedDate}`,
         body: `
           <h2>Orden de Servicio / Service Order</h2>
-          <p><strong>Fecha / Date:</strong> ${selectedDate}</p>
+          <p>Fecha / Date: ${selectedDate}</p>
           <p>Puede ver el programa de servicio completo en línea aquí:</p>
-          <p><a href="${liveViewUrl}" style="color: #1FBA70; font-weight: 600;">${liveViewUrl}</a></p>
-          <hr style="margin: 20px 0; border: none; border-top: 1px solid #E6E6E6;"/>
-          <p style="color: #666666; font-size: 14px;">Este documento fue generado desde el sistema de gestión de servicios de Palabras de Vida.</p>
-          <p style="color: #666666; font-size: 14px;">This document was generated from the Palabras de Vida service management system.</p>
+          <p><a href="${liveViewUrl}" style="color: #1F8A70; font-weight: bold;">${liveViewUrl}</a></p>
+          <hr style="margin: 20px 0;"/>
+          <p style="color: #666; font-size: 12px;">Este documento fue generado desde el sistema de gestión de servicios de Palabras de Vida.</p>
+          <p style="color: #666; font-size: 12px;">This document was generated from the Palabras de Vida service management system.</p>
         `
       });
       
@@ -158,23 +160,19 @@ export default function ServicePdfPreview({
     }
   };
 
-  // Don't render dialog on mobile
-  if (isMobile) {
-    return null;
-  }
+  // Desktop only - mobile never shows this dialog
+  if (isMobile) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl h-[95vh] max-h-[95vh] w-[95vw] md:w-full p-0 print:hidden flex flex-col">
+      <DialogContent className="max-w-6xl h-[95vh] max-h-[95vh] w-[95vw] p-0 flex flex-col">
         
         <DialogHeader className="flex-shrink-0 px-6 py-3 border-b bg-white">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <DialogTitle className="text-xl font-bold truncate">
-                Vista Previa PDF / PDF Preview
-              </DialogTitle>
-            </div>
-            <div className="flex gap-1 flex-shrink-0">
+            <DialogTitle className="text-xl font-bold">
+              Vista Previa PDF / PDF Preview
+            </DialogTitle>
+            <div className="flex gap-2 flex-shrink-0">
               <Button 
                 variant="outline" 
                 onClick={() => onOpenChange(false)}
@@ -191,197 +189,205 @@ export default function ServicePdfPreview({
               >
                 <Check className="w-4 h-4" />
               </Button>
-              {!showEmailForm && (
-                <>
-                  <Button 
-                    onClick={handleDownloadPDF}
-                    variant="outline"
-                    disabled={pdfLoading}
-                    className="h-8 px-3 text-sm"
-                    size="sm"
-                    title="Download PDF"
-                  >
-                    {pdfLoading ? (
-                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                    ) : (
-                      <Download className="w-4 h-4 mr-1" />
-                    )}
-                    Descargar
-                  </Button>
-                  <Button 
-                    onClick={() => setShowEmailForm(true)}
-                    variant="outline"
-                    disabled={pdfLoading}
-                    className="h-8 px-3 text-sm"
-                    size="sm"
-                    title="Email PDF"
-                  >
-                    <Mail className="w-4 h-4 mr-1" />
-                    Email
-                  </Button>
-                  <Button 
-                    onClick={handlePrint} 
-                    className="bg-gray-900 text-white h-8 px-3 text-sm"
-                    disabled={pdfLoading}
-                    size="sm"
-                    title="Print PDF"
-                  >
-                    <Printer className="w-4 h-4 mr-1" />
-                    Imprimir
-                  </Button>
-                </>
-              )}
             </div>
           </div>
-          
-          {showEmailForm && (
-            <div className="flex items-center gap-2 mt-3">
-              <Input
-                type="email"
-                placeholder="email@ejemplo.com"
-                value={emailAddress}
-                onChange={(e) => setEmailAddress(e.target.value)}
-                className="flex-1"
-              />
-              <Button
-                onClick={handleSendEmail}
-                disabled={sendingEmail || emailSent}
-                className="bg-pdv-teal hover:bg-pdv-green"
-              >
-                {sendingEmail ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : emailSent ? (
-                  <Check className="w-4 h-4" />
-                ) : (
-                  'Enviar'
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowEmailForm(false);
-                  setEmailAddress("");
-                }}
-              >
-                Cancelar
-              </Button>
-            </div>
-          )}
         </DialogHeader>
 
-        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-          {/* Desktop Controls Panel */}
-          <div className="w-72 border-r bg-gray-50 p-4 space-y-4 overflow-y-auto">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="page1">Página 1</TabsTrigger>
-                <TabsTrigger value="page2">Página 2</TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            {/* Page 1 Controls */}
-            {activeTab === "page1" && (
-              <div className="space-y-3">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold">Escala / Scale</span>
-                    <Badge variant="outline">{page1Scale}%</Badge>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 flex-shrink-0"
-                      onClick={() => adjustScale(1, -5)}
-                      disabled={page1Scale <= 85}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-
-                    <div className="flex-1">
-                      <Slider
-                        value={[page1Scale]}
-                        onValueChange={([v]) => setPage1Scale(v)}
-                        min={85}
-                        max={110}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 flex-shrink-0"
-                      onClick={() => adjustScale(1, 5)}
-                      disabled={page1Scale >= 110}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+        <div className="flex flex-1 overflow-hidden">
+          {/* Controls Panel */}
+          <div className="w-72 border-r bg-gray-50 p-4 space-y-4 overflow-y-auto flex-shrink-0">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold">Página 1 / Page 1</span>
+                <Badge variant="outline">{page1Scale}%</Badge>
               </div>
-            )}
 
-            {/* Page 2 Controls */}
-            {activeTab === "page2" && (
-              <div className="space-y-3">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold">Escala / Scale</span>
-                    <Badge variant="outline">{page2Scale}%</Badge>
-                  </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0"
+                  onClick={() => adjustScale(1, -5)}
+                  disabled={page1Scale <= 85}
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
 
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 flex-shrink-0"
-                      onClick={() => adjustScale(2, -5)}
-                      disabled={page2Scale <= 85}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-
-                    <div className="flex-1">
-                      <Slider
-                        value={[page2Scale]}
-                        onValueChange={([v]) => setPage2Scale(v)}
-                        min={85}
-                        max={110}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 flex-shrink-0"
-                      onClick={() => adjustScale(2, 5)}
-                      disabled={page2Scale >= 110}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
+                <div className="flex-1">
+                  <Slider
+                    value={[page1Scale]}
+                    onValueChange={([v]) => setPage1Scale(v)}
+                    min={85}
+                    max={110}
+                    step={1}
+                    className="w-full"
+                  />
                 </div>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0"
+                  onClick={() => adjustScale(1, 5)}
+                  disabled={page1Scale >= 110}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
               </div>
-            )}
+            </div>
+
+            <div className="border-t pt-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold">Página 2 / Page 2</span>
+                <Badge variant="outline">{page2Scale}%</Badge>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0"
+                  onClick={() => adjustScale(2, -5)}
+                  disabled={page2Scale <= 85}
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+
+                <div className="flex-1">
+                  <Slider
+                    value={[page2Scale]}
+                    onValueChange={([v]) => setPage2Scale(v)}
+                    min={85}
+                    max={110}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0"
+                  onClick={() => adjustScale(2, 5)}
+                  disabled={page2Scale >= 110}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="border-t pt-4 space-y-2">
+              <h3 className="text-sm font-bold text-gray-700 uppercase">Acciones / Actions</h3>
+              
+              <Button 
+                onClick={handlePrint}
+                disabled={pdfLoading}
+                className="w-full bg-gray-900 text-white hover:bg-gray-800"
+              >
+                {pdfLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Printer className="w-4 h-4 mr-2" />
+                )}
+                Imprimir / Print
+              </Button>
+
+              <Button 
+                onClick={handleDownloadPDF}
+                disabled={pdfLoading}
+                variant="outline"
+                className="w-full"
+              >
+                {pdfLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
+                Descargar / Download
+              </Button>
+
+              {!showEmailForm && (
+                <Button
+                  onClick={() => setShowEmailForm(true)}
+                  disabled={pdfLoading}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Enviar Email / Send Email
+                </Button>
+              )}
+
+              {showEmailForm && (
+                <div className="space-y-2 pt-2 border-t">
+                  <Label className="text-xs">Email del destinatario</Label>
+                  <Input
+                    type="email"
+                    placeholder="ejemplo@email.com"
+                    value={emailAddress}
+                    onChange={(e) => setEmailAddress(e.target.value)}
+                    disabled={sendingEmail}
+                    className="text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setShowEmailForm(false);
+                        setEmailAddress("");
+                      }}
+                      disabled={sendingEmail}
+                      className="flex-1"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleSendEmail}
+                      disabled={!emailAddress || sendingEmail || emailSent}
+                      className="bg-pdv-teal text-white flex-1"
+                    >
+                      {sendingEmail ? (
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      ) : emailSent ? (
+                        <Check className="w-3 h-3 mr-1" />
+                      ) : (
+                        <Mail className="w-3 h-3 mr-1" />
+                      )}
+                      {emailSent ? '✓ Enviado' : 'Enviar'}
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-gray-500 italic">
+                    Se enviará un enlace a la vista en vivo del programa
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t pt-3">
+              <p className="text-xs text-gray-500 leading-relaxed">
+                💡 Ajuste la escala si el contenido no cabe en la página. El encabezado y pie de página permanecen fijos.
+              </p>
+            </div>
           </div>
 
-          {/* PDF Viewer Area */}
-          <div className="flex-1 bg-gray-200 overflow-hidden">
+          {/* PDF Viewer */}
+          <div className="flex-1 bg-gray-200 overflow-hidden relative">
             {pdfLoading ? (
               <div className="flex items-center justify-center h-full">
-                <Loader2 className="w-8 h-8 animate-spin text-pdv-teal" />
-                <span className="ml-3">Generando PDF...</span>
+                <div className="text-center">
+                  <Loader2 className="w-12 h-12 animate-spin text-pdv-teal mx-auto mb-3" />
+                  <p className="text-gray-600">Generando PDF...</p>
+                </div>
               </div>
             ) : (
               <PDFViewer style={{ width: '100%', height: '100%', border: 'none' }}>
                 <ServiceProgramPdf
                   serviceData={serviceData}
                   selectedDate={selectedDate}
+                  fixedAnnouncements={fixedAnnouncements}
+                  dynamicAnnouncements={dynamicAnnouncements}
                   selectedAnnouncements={selectedAnnouncements}
                   page1Scale={page1Scale}
                   page2Scale={page2Scale}

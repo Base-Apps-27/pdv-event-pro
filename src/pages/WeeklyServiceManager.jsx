@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer } from "lucide-react";
+import { createPageUrl } from "@/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
@@ -72,10 +73,9 @@ export default function WeeklyServiceManager() {
   const [emailAddress, setEmailAddress] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [pdfScales, setPdfScales] = useState({ page1: 100, page2: 100 });
   const [optimizingAnnouncement, setOptimizingAnnouncement] = useState(false);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT);
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
@@ -85,6 +85,13 @@ export default function WeeklyServiceManager() {
   useEffect(() => {
     serviceDataRef.current = serviceData;
   }, [serviceData]);
+
+  // Monitor window resize for responsive UI
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Blueprint structure
   const BLUEPRINT = {
@@ -492,46 +499,6 @@ export default function WeeklyServiceManager() {
     debouncedSave(`team-${field}-${service}`);
   };
 
-  const handleDownloadPDF = () => {
-    setShowPdfPreview(true);
-  };
-
-  const handlePrintPDF = async () => {
-    setIsGeneratingPDF(true);
-    try {
-      const doc = (
-        <ServiceProgramPdf
-          serviceData={serviceData}
-          selectedDate={selectedDate}
-          fixedAnnouncements={fixedAnnouncements}
-          dynamicAnnouncements={dynamicAnnouncements}
-          selectedAnnouncements={selectedAnnouncements}
-          page1Scale={pdfScales.page1}
-          page2Scale={pdfScales.page2}
-        />
-      );
-      
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = url;
-      document.body.appendChild(iframe);
-      iframe.onload = () => {
-        iframe.contentWindow.print();
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-          URL.revokeObjectURL(url);
-        }, 100);
-      };
-    } catch (error) {
-      console.error('Print error:', error);
-      alert('Error al imprimir / Error printing: ' + error.message);
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  };
-
   const handleSavePdfScales = (scales) => {
     setPdfScales(scales);
     // Apply CSS variables immediately for print
@@ -549,21 +516,7 @@ export default function WeeklyServiceManager() {
     saveServiceMutation.mutate(dataToSave);
   };
 
-  // Apply PDF scales on mount and when they change
-  useEffect(() => {
-    document.documentElement.style.setProperty('--pdf-page1-scale', pdfScales.page1 / 100);
-    document.documentElement.style.setProperty('--pdf-page2-scale', pdfScales.page2 / 100);
-  }, [pdfScales]);
 
-
-
-  const handleEmailPDF = async () => {
-    if (!emailAddress) return;
-    
-    // Email functionality requires PDF generation - use browser print to PDF and manually attach
-    alert('Para enviar por correo, usa "Imprimir" y guarda como PDF, luego adjúntalo manualmente.');
-    setShowEmailDialog(false);
-  };
 
 
 
@@ -1602,28 +1555,20 @@ Return ONLY valid JSON:
           )}
           <Button 
             className="bg-white text-gray-900 border-2 border-gray-400 font-semibold hover:bg-gray-50" 
-            onClick={handleDownloadPDF}
+            onClick={() => window.open(createPageUrl('PublicProgramView') + `?date=${selectedDate}`, '_blank')}
           >
             <Eye className="w-4 h-4 mr-2" />
-            Vista Previa / Preview
+            Vista en Vivo / Live View
           </Button>
-          <Button 
-            className="bg-pdv-teal text-white border-2 border-pdv-teal font-semibold hover:bg-pdv-teal/90" 
-            onClick={handlePrintPDF}
-            disabled={isGeneratingPDF}
-          >
-            {isGeneratingPDF ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Imprimiendo...
-              </>
-            ) : (
-              <>
-                <Printer className="w-4 h-4 mr-2" />
-                Imprimir / Print
-              </>
-            )}
-          </Button>
+          {!isMobile && (
+            <Button 
+              className="bg-pdv-teal text-white border-2 border-pdv-teal font-semibold hover:bg-pdv-teal/90" 
+              onClick={() => setShowPdfPreview(true)}
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Vista Previa PDF / PDF Preview
+            </Button>
+          )}
         </div>
       </div>
 
