@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tantml/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const PdfPreviewModal = React.lazy(() => import('@/components/service/pdf/ServicePdfPreview'));
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,21 +65,6 @@ export default function WeeklyServiceManager() {
   const [expandedSegments, setExpandedSegments] = useState({});
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [savingField, setSavingField] = useState(null);
-  const [showEmailDialog, setShowEmailDialog] = useState(false);
-  const [emailAddress, setEmailAddress] = useState("");
-  const [sendingEmail, setSendingEmail] = useState(false);
-  const [showPdfPreview, setShowPdfPreview] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [pdfScales, setPdfScales] = useState({ page1: 100, page2: 100 });
-  
-  // Handle window resize for mobile detection
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
   const [optimizingAnnouncement, setOptimizingAnnouncement] = useState(false);
   
   const saveTimeoutRef = useRef(null);
@@ -276,7 +259,6 @@ export default function WeeklyServiceManager() {
       };
       setServiceData(loadedData);
       setSelectedAnnouncements(existingData.selected_announcements || []);
-      setPdfScales(existingData.pdf_scales || { page1: 100, page2: 100 });
     } else {
       const initialData = {
         date: selectedDate,
@@ -501,38 +483,7 @@ export default function WeeklyServiceManager() {
 
 
 
-  const handleSavePdfScales = (scales) => {
-    setPdfScales(scales);
-    // Apply CSS variables immediately for print
-    document.documentElement.style.setProperty('--pdf-page1-scale', scales.page1 / 100);
-    document.documentElement.style.setProperty('--pdf-page2-scale', scales.page2 / 100);
-    // Save to database
-    const dataToSave = {
-      ...serviceDataRef.current,
-      pdf_scales: scales,
-      selected_announcements: selectedAnnouncements,
-      day_of_week: 'Sunday',
-      name: `Domingo - ${selectedDate}`,
-      status: 'active'
-    };
-    saveServiceMutation.mutate(dataToSave);
-  };
 
-  // Apply PDF scales on mount and when they change
-  useEffect(() => {
-    document.documentElement.style.setProperty('--pdf-page1-scale', pdfScales.page1 / 100);
-    document.documentElement.style.setProperty('--pdf-page2-scale', pdfScales.page2 / 100);
-  }, [pdfScales]);
-
-
-
-  const handleEmailPDF = async () => {
-    if (!emailAddress) return;
-    
-    // Email functionality requires PDF generation - use browser print to PDF and manually attach
-    alert('Para enviar por correo, usa "Imprimir" y guarda como PDF, luego adjúntalo manualmente.');
-    setShowEmailDialog(false);
-  };
 
 
 
@@ -2854,21 +2805,6 @@ Return ONLY valid JSON:
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* PDF Preview */}
-      {showPdfPreview && !isMobile && (
-        <React.Suspense fallback={null}>
-          <PdfPreviewModal
-            open={showPdfPreview}
-            onOpenChange={setShowPdfPreview}
-            serviceData={serviceData}
-            selectedDate={selectedDate}
-            selectedAnnouncements={selectedAnnouncements}
-            pdfScales={pdfScales}
-            onSaveScales={handleSavePdfScales}
-          />
-        </React.Suspense>
-      )}
 
       {/* Announcement Dialog */}
       <Dialog open={showAnnouncementDialog} onOpenChange={setShowAnnouncementDialog}>
