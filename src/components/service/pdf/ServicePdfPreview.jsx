@@ -46,14 +46,17 @@ export default function ServicePdfPreview({
 
     const loadPdfLibraries = async () => {
       try {
-        const [reactPdfRenderer, pdfComponent] = await Promise.all([
+        const [reactPdfRenderer, pdfFactoryModule] = await Promise.all([
           import('@react-pdf/renderer'),
           import('./ServiceProgramPdf')
         ]);
         
         setPDFViewer(() => reactPdfRenderer.PDFViewer);
         setPdfLib(reactPdfRenderer);
-        setServiceProgramPdf(() => pdfComponent.default);
+        
+        // Call the async factory to get the actual component
+        const PdfComponent = await pdfFactoryModule.default();
+        setServiceProgramPdf(() => PdfComponent);
       } catch (error) {
         console.error('Error loading PDF libraries:', error);
       }
