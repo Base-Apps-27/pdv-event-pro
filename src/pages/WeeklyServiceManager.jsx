@@ -72,6 +72,7 @@ export default function WeeklyServiceManager() {
   const [emailAddress, setEmailAddress] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [pdfScales, setPdfScales] = useState({ page1: 100, page2: 100 });
   const [optimizingAnnouncement, setOptimizingAnnouncement] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
