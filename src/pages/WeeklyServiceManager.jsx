@@ -1582,7 +1582,7 @@ Return ONLY valid JSON:
           
           {!isMobile && (
             <Button 
-              onClick={handleOpenPdfPreview}
+              onClick={() => setShowPdfPreview(true)}
               className="bg-gray-900 text-white hover:bg-gray-800 font-semibold"
             >
               <Eye className="w-4 h-4 mr-2" />
