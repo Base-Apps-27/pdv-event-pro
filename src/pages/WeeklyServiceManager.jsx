@@ -12,8 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer } from "lucide-react";
-import { createPageUrl } from "@/utils";
 import { Calendar } from "@/components/ui/calendar";
+import { createPageUrl } from "@/utils";
+
+const MOBILE_BREAKPOINT = 768;
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
@@ -2792,48 +2794,7 @@ Return ONLY valid JSON:
         </DialogContent>
       </Dialog>
 
-      {/* Email Dialog */}
-      <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
-        <DialogContent className="max-w-md bg-white">
-          <DialogHeader>
-            <DialogTitle>Enviar Orden de Servicio por Email</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Email del destinatario</Label>
-              <Input
-                type="email"
-                placeholder="ejemplo@email.com"
-                value={emailAddress}
-                onChange={(e) => setEmailAddress(e.target.value)}
-                disabled={sendingEmail}
-              />
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowEmailDialog(false)} disabled={sendingEmail}>
-                Cancelar
-              </Button>
-              <Button 
-                className="bg-pdv-teal text-white" 
-                onClick={handleEmailPDF}
-                disabled={!emailAddress || sendingEmail}
-              >
-                {sendingEmail ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Enviando...
-                  </>
-                ) : (
-                  <>
-                    <Mail className="w-4 h-4 mr-2" />
-                    Enviar
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+
 
       {/* PDF Preview Dialog */}
       <ServicePdfPreview
