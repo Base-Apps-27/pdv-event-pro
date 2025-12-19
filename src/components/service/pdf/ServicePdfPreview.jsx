@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { PDFViewer, pdf } from '@react-pdf/renderer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -9,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Minus, Plus, Printer, Check, Download, Mail, Loader2, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
-import ServiceProgramPdf from './ServiceProgramPdf';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -32,6 +30,9 @@ export default function ServicePdfPreview({
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [PDFViewer, setPDFViewer] = useState(null);
+  const [pdfLib, setPdfLib] = useState(null);
+  const [ServiceProgramPdf, setServiceProgramPdf] = useState(null);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
@@ -39,20 +40,42 @@ export default function ServicePdfPreview({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Dynamically load PDF libraries when modal opens
+  useEffect(() => {
+    if (!open || isMobile) return;
+
+    const loadPdfLibraries = async () => {
+      try {
+        const [reactPdfRenderer, pdfComponent] = await Promise.all([
+          import('@react-pdf/renderer'),
+          import('./ServiceProgramPdf')
+        ]);
+        
+        setPDFViewer(() => reactPdfRenderer.PDFViewer);
+        setPdfLib(reactPdfRenderer);
+        setServiceProgramPdf(() => pdfComponent.default);
+      } catch (error) {
+        console.error('Error loading PDF libraries:', error);
+      }
+    };
+
+    loadPdfLibraries();
+  }, [open, isMobile]);
+
   useEffect(() => {
     const generatePdf = async () => {
-      if (!open || isMobile) return;
+      if (!open || isMobile || !pdfLib || !ServiceProgramPdf) return;
       
       setPdfLoading(true);
       try {
-        const blob = await pdf(
-          <ServiceProgramPdf
-            serviceData={serviceData}
-            selectedDate={selectedDate}
-            selectedAnnouncements={selectedAnnouncements}
-            page1Scale={page1Scale}
-            page2Scale={page2Scale}
-          />
+        const blob = await pdfLib.pdf(
+          React.createElement(ServiceProgramPdf, {
+            serviceData,
+            selectedDate,
+            selectedAnnouncements,
+            page1Scale,
+            page2Scale
+          })
         ).toBlob();
         
         if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
@@ -66,7 +89,7 @@ export default function ServicePdfPreview({
 
     generatePdf();
     return () => { if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl); };
-  }, [serviceData, selectedDate, selectedAnnouncements, page1Scale, page2Scale, open]);
+  }, [serviceData, selectedDate, selectedAnnouncements, page1Scale, page2Scale, open, pdfLib, ServiceProgramPdf]);
 
   const handlePrint = () => {
     if (pdfBlobUrl) window.open(pdfBlobUrl, '_blank');
@@ -346,20 +369,20 @@ export default function ServicePdfPreview({
           </div>
 
           <div className="flex-1 bg-gray-200 overflow-hidden">
-            {pdfLoading ? (
+            {pdfLoading || !PDFViewer || !ServiceProgramPdf ? (
               <div className="flex items-center justify-center h-full">
                 <Loader2 className="w-8 h-8 animate-spin text-pdv-teal" />
                 <span className="ml-3">Generando PDF...</span>
               </div>
             ) : (
               <PDFViewer style={{ width: '100%', height: '100%', border: 'none' }}>
-                <ServiceProgramPdf
-                  serviceData={serviceData}
-                  selectedDate={selectedDate}
-                  selectedAnnouncements={selectedAnnouncements}
-                  page1Scale={page1Scale}
-                  page2Scale={page2Scale}
-                />
+                {React.createElement(ServiceProgramPdf, {
+                  serviceData,
+                  selectedDate,
+                  selectedAnnouncements,
+                  page1Scale,
+                  page2Scale
+                })}
               </PDFViewer>
             )}
           </div>
