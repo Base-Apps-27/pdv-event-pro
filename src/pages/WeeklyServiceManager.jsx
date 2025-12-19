@@ -2343,15 +2343,8 @@ Return ONLY valid JSON:
                               )}
 
                               {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
-                                <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                                  <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
-                                  <AutocompleteInput
-                                    type="translator"
-                                    placeholder="Nombre del traductor"
-                                    value={segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || ""}
-                                    onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
-                                    className="text-sm"
-                                  />
+                                <div className="text-xs text-gray-600 italic flex items-center gap-1 mt-1">
+                                  🌐 {segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || "Traductor por definir"}
                                 </div>
                               )}
 
