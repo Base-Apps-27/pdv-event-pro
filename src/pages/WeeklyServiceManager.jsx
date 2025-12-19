@@ -1557,27 +1557,8 @@ Return ONLY valid JSON:
           </Button>
           
           <Button 
-            onClick={downloadPDF}
-            disabled={generatingPdf}
-            className="bg-pdv-green text-white hover:bg-pdv-teal font-semibold"
-          >
-            {generatingPdf ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generando...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4 mr-2" />
-                Descargar PDF / Download PDF
-              </>
-            )}
-          </Button>
-          
-          <Button 
             onClick={() => window.print()}
-            variant="outline"
-            className="border-gray-400 text-gray-700 hover:bg-gray-100 font-semibold"
+            className="bg-pdv-green text-white hover:bg-pdv-teal font-semibold"
           >
             <Printer className="w-4 h-4 mr-2" />
             Imprimir / Print
