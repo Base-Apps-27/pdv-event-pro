@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+const PdfPreviewModal = React.lazy(() => import('@/components/service/pdf/ServicePdfPreview'));
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1578,10 +1580,9 @@ Return ONLY valid JSON:
             Vista en Vivo
           </Button>
           
-          {/* PDF Preview - Desktop only */}
           {!isMobile && (
             <Button 
-              onClick={() => setShowPdfPreview(true)}
+              onClick={handleOpenPdfPreview}
               className="bg-gray-900 text-white hover:bg-gray-800 font-semibold"
             >
               <Eye className="w-4 h-4 mr-2" />
@@ -2854,7 +2855,20 @@ Return ONLY valid JSON:
         </DialogContent>
       </Dialog>
 
-      {/* PDF Preview will be loaded dynamically */}
+      {/* PDF Preview */}
+      {showPdfPreview && !isMobile && (
+        <React.Suspense fallback={null}>
+          <PdfPreviewModal
+            open={showPdfPreview}
+            onOpenChange={setShowPdfPreview}
+            serviceData={serviceData}
+            selectedDate={selectedDate}
+            selectedAnnouncements={selectedAnnouncements}
+            pdfScales={pdfScales}
+            onSaveScales={handleSavePdfScales}
+          />
+        </React.Suspense>
+      )}
 
       {/* Announcement Dialog */}
       <Dialog open={showAnnouncementDialog} onOpenChange={setShowAnnouncementDialog}>
