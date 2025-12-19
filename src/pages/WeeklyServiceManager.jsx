@@ -13,9 +13,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
-import { createPageUrl } from "@/utils";
-
-const MOBILE_BREAKPOINT = 768;
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
@@ -23,6 +20,7 @@ import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import ServicePdfPreview from "@/components/service/pdf/ServicePdfPreview";
 import { pdf } from '@react-pdf/renderer';
 import ServiceProgramPdf from '@/components/service/pdf/ServiceProgramPdf';
+import { createPageUrl } from "@/utils";
 
 
 export default function WeeklyServiceManager() {
@@ -75,9 +73,18 @@ export default function WeeklyServiceManager() {
   const [emailAddress, setEmailAddress] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [pdfScales, setPdfScales] = useState({ page1: 100, page2: 100 });
+  
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [optimizingAnnouncement, setOptimizingAnnouncement] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT);
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
@@ -87,13 +94,6 @@ export default function WeeklyServiceManager() {
   useEffect(() => {
     serviceDataRef.current = serviceData;
   }, [serviceData]);
-
-  // Monitor window resize for responsive UI
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // Blueprint structure
   const BLUEPRINT = {
@@ -501,6 +501,8 @@ export default function WeeklyServiceManager() {
     debouncedSave(`team-${field}-${service}`);
   };
 
+
+
   const handleSavePdfScales = (scales) => {
     setPdfScales(scales);
     // Apply CSS variables immediately for print
@@ -518,7 +520,21 @@ export default function WeeklyServiceManager() {
     saveServiceMutation.mutate(dataToSave);
   };
 
+  // Apply PDF scales on mount and when they change
+  useEffect(() => {
+    document.documentElement.style.setProperty('--pdf-page1-scale', pdfScales.page1 / 100);
+    document.documentElement.style.setProperty('--pdf-page2-scale', pdfScales.page2 / 100);
+  }, [pdfScales]);
 
+
+
+  const handleEmailPDF = async () => {
+    if (!emailAddress) return;
+    
+    // Email functionality requires PDF generation - use browser print to PDF and manually attach
+    alert('Para enviar por correo, usa "Imprimir" y guarda como PDF, luego adjúntalo manualmente.');
+    setShowEmailDialog(false);
+  };
 
 
 
@@ -1555,20 +1571,25 @@ Return ONLY valid JSON:
               <span>Guardando... / Saving...</span>
             </div>
           )}
+          
+          {/* Live View Link - Always visible */}
           <Button 
-            className="bg-white text-gray-900 border-2 border-gray-400 font-semibold hover:bg-gray-50" 
             onClick={() => window.open(createPageUrl('PublicProgramView') + `?date=${selectedDate}`, '_blank')}
+            variant="outline"
+            className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold"
           >
-            <Eye className="w-4 h-4 mr-2" />
-            Vista en Vivo / Live View
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Vista en Vivo
           </Button>
+          
+          {/* PDF Preview - Desktop only */}
           {!isMobile && (
             <Button 
-              className="bg-pdv-teal text-white border-2 border-pdv-teal font-semibold hover:bg-pdv-teal/90" 
               onClick={() => setShowPdfPreview(true)}
+              className="bg-gray-900 text-white hover:bg-gray-800 font-semibold"
             >
-              <Printer className="w-4 h-4 mr-2" />
-              Vista Previa PDF / PDF Preview
+              <Eye className="w-4 h-4 mr-2" />
+              Vista Previa PDF
             </Button>
           )}
         </div>
@@ -2794,20 +2815,61 @@ Return ONLY valid JSON:
         </DialogContent>
       </Dialog>
 
+      {/* Email Dialog */}
+      <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+        <DialogContent className="max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle>Enviar Orden de Servicio por Email</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Email del destinatario</Label>
+              <Input
+                type="email"
+                placeholder="ejemplo@email.com"
+                value={emailAddress}
+                onChange={(e) => setEmailAddress(e.target.value)}
+                disabled={sendingEmail}
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowEmailDialog(false)} disabled={sendingEmail}>
+                Cancelar
+              </Button>
+              <Button 
+                className="bg-pdv-teal text-white" 
+                onClick={handleEmailPDF}
+                disabled={!emailAddress || sendingEmail}
+              >
+                {sendingEmail ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Enviar
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-
-      {/* PDF Preview Dialog */}
-      <ServicePdfPreview
-        open={showPdfPreview}
-        onOpenChange={setShowPdfPreview}
-        serviceData={serviceData}
-        selectedDate={selectedDate}
-        fixedAnnouncements={fixedAnnouncements}
-        dynamicAnnouncements={dynamicAnnouncements}
-        selectedAnnouncements={selectedAnnouncements}
-        pdfScales={pdfScales}
-        onSaveScales={handleSavePdfScales}
-      />
+      {/* PDF Preview Dialog - Desktop only */}
+      {!isMobile && (
+        <ServicePdfPreview
+          open={showPdfPreview}
+          onOpenChange={setShowPdfPreview}
+          serviceData={serviceData}
+          selectedDate={selectedDate}
+          selectedAnnouncements={selectedAnnouncements}
+          pdfScales={pdfScales}
+          onSaveScales={handleSavePdfScales}
+        />
+      )}
 
       {/* Announcement Dialog */}
       <Dialog open={showAnnouncementDialog} onOpenChange={setShowAnnouncementDialog}>
