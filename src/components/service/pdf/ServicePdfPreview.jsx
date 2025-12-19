@@ -71,15 +71,14 @@ export default function ServicePdfPreview({
       
       setPdfLoading(true);
       try {
-        const blob = await pdf(
-          <ServiceProgramPdf
-            serviceData={serviceData}
-            selectedDate={selectedDate}
-            selectedAnnouncements={selectedAnnouncements}
-            page1Scale={page1Scale}
-            page2Scale={page2Scale}
-          />
-        ).toBlob();
+        const pdfDoc = React.createElement(ServiceProgramPdf, {
+          serviceData,
+          selectedDate,
+          selectedAnnouncements,
+          page1Scale,
+          page2Scale
+        });
+        const blob = await pdf(pdfDoc).toBlob();
         
         // Revoke previous blob URL
         if (pdfBlobUrl) {
@@ -401,15 +400,15 @@ export default function ServicePdfPreview({
                 <span className="ml-3">{!pdfModulesLoaded ? 'Cargando módulos PDF...' : 'Generando PDF...'}</span>
               </div>
             ) : PDFViewer && ServiceProgramPdf ? (
-              <PDFViewer style={{ width: '100%', height: '100%', border: 'none' }}>
-                <ServiceProgramPdf
-                  serviceData={serviceData}
-                  selectedDate={selectedDate}
-                  selectedAnnouncements={selectedAnnouncements}
-                  page1Scale={page1Scale}
-                  page2Scale={page2Scale}
-                />
-              </PDFViewer>
+              React.createElement(PDFViewer, { style: { width: '100%', height: '100%', border: 'none' } },
+                React.createElement(ServiceProgramPdf, {
+                  serviceData,
+                  selectedDate,
+                  selectedAnnouncements,
+                  page1Scale,
+                  page2Scale
+                })
+              )
             ) : (
               <div className="flex items-center justify-center h-full">
                 <span className="text-red-600">Error cargando PDF. Intente refrescar la página.</span>
