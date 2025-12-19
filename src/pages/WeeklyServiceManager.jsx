@@ -11,7 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer, ExternalLink } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer, ExternalLink, Download } from "lucide-react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { Calendar } from "@/components/ui/calendar";
 import { createPageUrl } from "@/utils";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -66,6 +68,7 @@ export default function WeeklyServiceManager() {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [savingField, setSavingField] = useState(null);
   const [optimizingAnnouncement, setOptimizingAnnouncement] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
@@ -700,6 +703,63 @@ Return ONLY valid JSON:
       ...prev,
       [key]: !prev[key]
     }));
+  };
+
+  const downloadPDF = async () => {
+    setGeneratingPdf(true);
+    try {
+      const printContent = document.querySelector('.print-content');
+      const printAnnouncements = document.querySelector('.print-announcements');
+      
+      if (!printContent || !printAnnouncements) {
+        alert('Error: No se pudo encontrar el contenido para exportar');
+        return;
+      }
+
+      // Show print elements temporarily
+      printContent.style.display = 'block';
+      printAnnouncements.style.display = 'block';
+
+      const pdf = new jsPDF('p', 'pt', 'letter');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      // Capture page 1 (service program)
+      const canvas1 = await html2canvas(printContent, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      const imgData1 = canvas1.toDataURL('image/png');
+      const imgHeight1 = (canvas1.height * pdfWidth) / canvas1.width;
+      pdf.addImage(imgData1, 'PNG', 0, 0, pdfWidth, Math.min(imgHeight1, pdfHeight));
+
+      // Capture page 2 (announcements)
+      pdf.addPage();
+      const canvas2 = await html2canvas(printAnnouncements, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      const imgData2 = canvas2.toDataURL('image/png');
+      const imgHeight2 = (canvas2.height * pdfWidth) / canvas2.width;
+      pdf.addImage(imgData2, 'PNG', 0, 0, pdfWidth, Math.min(imgHeight2, pdfHeight));
+
+      // Hide print elements again
+      printContent.style.display = '';
+      printAnnouncements.style.display = '';
+
+      // Download with date-based filename
+      const filename = `Servicio-Domingo-${selectedDate}.pdf`;
+      pdf.save(filename);
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert('Error al generar PDF: ' + error.message);
+    } finally {
+      setGeneratingPdf(false);
+    }
   };
 
   // Line estimation helpers
@@ -1532,8 +1592,27 @@ Return ONLY valid JSON:
           </Button>
           
           <Button 
+            onClick={downloadPDF}
+            disabled={generatingPdf}
+            className="bg-pdv-green text-white hover:bg-pdv-teal font-semibold"
+          >
+            {generatingPdf ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generando...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-2" />
+                Descargar PDF / Download PDF
+              </>
+            )}
+          </Button>
+          
+          <Button 
             onClick={() => window.print()}
-            className="bg-gray-900 text-white hover:bg-gray-800 font-semibold"
+            variant="outline"
+            className="border-gray-400 text-gray-700 hover:bg-gray-100 font-semibold"
           >
             <Printer className="w-4 h-4 mr-2" />
             Imprimir / Print
