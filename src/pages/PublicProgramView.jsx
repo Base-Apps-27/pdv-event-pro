@@ -546,18 +546,18 @@ export default function PublicProgramView() {
                                 </div>
                               )}
                               
+                              {segment.data?.presenter && !segment.data?.ministry_leader && (
+                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
+                              )}
+
+                              {segment.data?.preacher && (
+                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
+                              )}
+
                               {segment.data?.translator && (
                                 <p className="text-xs text-blue-600 mt-1">
                                   🌐 Traduce: {segment.data.translator}
                                 </p>
-                              )}
-                              
-                              {segment.data?.presenter && !segment.data?.ministry_leader && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
-                              )}
-                              
-                              {segment.data?.preacher && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
                               )}
                               
                               {segment.data?.title && (
