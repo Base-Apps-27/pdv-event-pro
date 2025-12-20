@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer, ExternalLink } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer, ExternalLink, Settings } from "lucide-react";
+import PrintSettingsModal from "@/components/print/PrintSettingsModal";
 import { Calendar } from "@/components/ui/calendar";
 import { createPageUrl } from "@/utils";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -66,6 +67,8 @@ export default function WeeklyServiceManager() {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [savingField, setSavingField] = useState(null);
   const [optimizingAnnouncement, setOptimizingAnnouncement] = useState(false);
+  const [showPrintSettings, setShowPrintSettings] = useState(false);
+  const [printSettings, setPrintSettings] = useState(null);
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
@@ -277,6 +280,7 @@ export default function WeeklyServiceManager() {
       };
       setServiceData(loadedData);
       setSelectedAnnouncements(existingData.selected_announcements || []);
+      setPrintSettings(existingData.print_settings || null);
     } else {
       const initialData = {
         date: selectedDate,
@@ -312,6 +316,7 @@ export default function WeeklyServiceManager() {
       };
       setServiceData(initialData);
       setSelectedAnnouncements([]);
+      setPrintSettings(null);
     }
   }, [existingData, selectedDate]);
 
@@ -368,6 +373,7 @@ export default function WeeklyServiceManager() {
       const dataToSave = {
         ...currentData,
         selected_announcements: selectedAnnouncements,
+        print_settings: printSettings,
         day_of_week: 'Sunday',
         name: `Domingo - ${selectedDate}`,
         status: 'active'
@@ -781,13 +787,24 @@ Return ONLY valid JSON:
     return <div className="p-8">Cargando...</div>;
   }
 
+  // Apply print settings dynamically
+  const activePrintSettings = printSettings || {
+    globalScale: 1.0,
+    margins: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" },
+    bodyFontScale: 1.0,
+    titleFontScale: 1.0
+  };
+
   return (
     <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
         @media print {
-          @page { size: letter; margin: 0.5in; }
+          @page { 
+            size: letter; 
+            margin: ${activePrintSettings.margins.top} ${activePrintSettings.margins.right} ${activePrintSettings.margins.bottom} ${activePrintSettings.margins.left}; 
+          }
           
           body { 
             -webkit-print-color-adjust: exact; 
@@ -800,12 +817,12 @@ Return ONLY valid JSON:
           }
           
           .print-content {
-            transform: scale(var(--pdf-page1-scale, 1));
+            transform: scale(${activePrintSettings.globalScale});
             transform-origin: top left;
           }
           
           .print-announcements {
-            transform: scale(var(--pdf-page2-scale, 1));
+            transform: scale(${activePrintSettings.globalScale});
             transform-origin: top left;
           }
           
@@ -897,7 +914,7 @@ Return ONLY valid JSON:
             margin-bottom: 10pt;
             padding-bottom: 8pt;
             border-bottom: 1pt solid #f3f4f6;
-            font-size: 10.5pt;
+            font-size: calc(10.5pt * ${activePrintSettings.bodyFontScale});
             line-height: 1.3;
             break-inside: avoid;
             page-break-inside: avoid;
@@ -918,7 +935,7 @@ Return ONLY valid JSON:
           .print-segment-title {
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 11pt;
+            font-size: calc(11pt * ${activePrintSettings.titleFontScale});
             color: #000000;
             letter-spacing: 0.25px;
             display: inline;
@@ -1042,7 +1059,7 @@ Return ONLY valid JSON:
 
           .print-announcement-list {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 20pt;
             margin: 0;
             padding: 0;
@@ -1578,6 +1595,15 @@ Return ONLY valid JSON:
           >
             <ExternalLink className="w-4 h-4 mr-2" />
             Vista en Vivo / Live View
+          </Button>
+          
+          <Button 
+            onClick={() => setShowPrintSettings(true)}
+            variant="outline"
+            className="border-gray-400 text-gray-900 hover:bg-gray-50 border-2 font-semibold"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Config. Impresión / Print Settings
           </Button>
           
           <Button 
@@ -2810,6 +2836,15 @@ Return ONLY valid JSON:
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Print Settings Modal */}
+      <PrintSettingsModal
+        open={showPrintSettings}
+        onOpenChange={setShowPrintSettings}
+        settings={activePrintSettings}
+        onSave={handleSavePrintSettings}
+        language="es"
+      />
 
       {/* Announcement Dialog */}
       <Dialog open={showAnnouncementDialog} onOpenChange={setShowAnnouncementDialog}>
