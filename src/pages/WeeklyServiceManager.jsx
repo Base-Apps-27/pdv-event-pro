@@ -68,7 +68,8 @@ export default function WeeklyServiceManager() {
   const [savingField, setSavingField] = useState(null);
   const [optimizingAnnouncement, setOptimizingAnnouncement] = useState(false);
   const [showPrintSettings, setShowPrintSettings] = useState(false);
-  const [printSettings, setPrintSettings] = useState(null);
+  const [printSettingsPage1, setPrintSettingsPage1] = useState(null);
+  const [printSettingsPage2, setPrintSettingsPage2] = useState(null);
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
@@ -280,7 +281,8 @@ export default function WeeklyServiceManager() {
       };
       setServiceData(loadedData);
       setSelectedAnnouncements(existingData.selected_announcements || []);
-      setPrintSettings(existingData.print_settings || null);
+      setPrintSettingsPage1(existingData.print_settings_page1 || null);
+      setPrintSettingsPage2(existingData.print_settings_page2 || null);
     } else {
       const initialData = {
         date: selectedDate,
@@ -316,7 +318,8 @@ export default function WeeklyServiceManager() {
       };
       setServiceData(initialData);
       setSelectedAnnouncements([]);
-      setPrintSettings(null);
+      setPrintSettingsPage1(null);
+      setPrintSettingsPage2(null);
     }
   }, [existingData, selectedDate]);
 
@@ -373,7 +376,8 @@ export default function WeeklyServiceManager() {
       const dataToSave = {
         ...currentData,
         selected_announcements: selectedAnnouncements,
-        print_settings: printSettings,
+        print_settings_page1: printSettingsPage1,
+        print_settings_page2: printSettingsPage2,
         day_of_week: 'Sunday',
         name: `Domingo - ${selectedDate}`,
         status: 'active'
@@ -719,10 +723,12 @@ Return ONLY valid JSON:
   };
 
   const handleSavePrintSettings = (newSettings) => {
-    setPrintSettings(newSettings);
+    setPrintSettingsPage1(newSettings.page1);
+    setPrintSettingsPage2(newSettings.page2);
     setServiceData(prev => ({
       ...prev,
-      print_settings: newSettings
+      print_settings_page1: newSettings.page1,
+      print_settings_page2: newSettings.page2
     }));
     debouncedSave('print-settings');
   };
@@ -797,7 +803,14 @@ Return ONLY valid JSON:
   }
 
   // Apply print settings dynamically
-  const activePrintSettings = printSettings || {
+  const activePrintSettingsPage1 = printSettingsPage1 || {
+    globalScale: 1.0,
+    margins: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" },
+    bodyFontScale: 1.0,
+    titleFontScale: 1.0
+  };
+
+  const activePrintSettingsPage2 = printSettingsPage2 || {
     globalScale: 1.0,
     margins: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" },
     bodyFontScale: 1.0,
@@ -812,7 +825,7 @@ Return ONLY valid JSON:
         @media print {
           @page { 
             size: letter; 
-            margin: ${activePrintSettings.margins.top} ${activePrintSettings.margins.right} ${activePrintSettings.margins.bottom} ${activePrintSettings.margins.left}; 
+            margin: 0;
           }
           
           body { 
@@ -825,13 +838,21 @@ Return ONLY valid JSON:
             color: #374151;
           }
           
-          .print-content {
-            transform: scale(${activePrintSettings.globalScale});
+          .print-page-1-wrapper {
+            padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} ${activePrintSettingsPage1.margins.bottom} ${activePrintSettingsPage1.margins.left};
+          }
+
+          .print-page-2-wrapper {
+            padding: ${activePrintSettingsPage2.margins.top} ${activePrintSettingsPage2.margins.right} ${activePrintSettingsPage2.margins.bottom} ${activePrintSettingsPage2.margins.left};
+          }
+          
+          .print-body-content {
+            transform: scale(${activePrintSettingsPage1.globalScale});
             transform-origin: top left;
           }
           
-          .print-announcements {
-            transform: scale(${activePrintSettings.globalScale});
+          .print-announcements-body {
+            transform: scale(${activePrintSettingsPage2.globalScale});
             transform-origin: top left;
           }
           
@@ -923,7 +944,7 @@ Return ONLY valid JSON:
             margin-bottom: 10pt;
             padding-bottom: 8pt;
             border-bottom: 1pt solid #f3f4f6;
-            font-size: calc(10.5pt * ${activePrintSettings.bodyFontScale});
+            font-size: calc(10.5pt * ${activePrintSettingsPage1.bodyFontScale});
             line-height: 1.3;
             break-inside: avoid;
             page-break-inside: avoid;
@@ -944,7 +965,7 @@ Return ONLY valid JSON:
           .print-segment-title {
             font-weight: 600;
             text-transform: uppercase;
-            font-size: calc(11pt * ${activePrintSettings.titleFontScale});
+            font-size: calc(11pt * ${activePrintSettingsPage1.titleFontScale});
             color: #000000;
             letter-spacing: 0.25px;
             display: inline;
@@ -1153,6 +1174,7 @@ Return ONLY valid JSON:
             border-bottom: 1pt solid #e5e7eb;
             break-inside: avoid;
             page-break-inside: avoid;
+            font-size: calc(9.5pt * ${activePrintSettingsPage2.bodyFontScale});
           }
 
           .print-announcement-item:last-child {
@@ -1164,7 +1186,7 @@ Return ONLY valid JSON:
           }
 
           .print-announcement-title {
-            font-size: 10pt;
+            font-size: calc(10pt * ${activePrintSettingsPage2.titleFontScale});
             font-weight: 600;
             color: #000000;
             text-transform: uppercase;
@@ -1232,7 +1254,9 @@ Return ONLY valid JSON:
       `}</style>
 
       {/* Print Layout */}
-      <div className="hidden print:block print-content">
+      <div className="hidden print:block">
+        {/* PAGE 1 */}
+        <div className="print-page-1-wrapper">
         <div className="print-header" style={{ position: 'relative' }}>
           <div className="print-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
             <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
@@ -1252,6 +1276,7 @@ Return ONLY valid JSON:
           </div>
         </div>
 
+        <div className="print-body-content">
         <div className="print-two-columns">
           <div className="print-service-column left">
             <div className="print-service-time">9:30 A.M.</div>
@@ -1477,6 +1502,7 @@ Return ONLY valid JSON:
             })}
           </div>
         </div>
+        </div>
 
         <div className="print-receso">
           11:00 A.M. — 11:30 A.M. • RECESO
@@ -1486,7 +1512,10 @@ Return ONLY valid JSON:
             </span>
           )}
         </div>
+        </div>
 
+        {/* PAGE 2 */}
+        <div className="print-page-2-wrapper">
         <div className="print-announcements">
           <div className="print-announcements-header" style={{ position: 'relative' }}>
             <div className="print-announcements-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
@@ -1498,6 +1527,7 @@ Return ONLY valid JSON:
             </div>
           </div>
 
+          <div className="print-announcements-body">
           <div className="print-announcement-list">
             {/* Left Column: Fixed announcements with full content + CUEs */}
             <div className="print-announcements-column-left">
@@ -1573,10 +1603,12 @@ Return ONLY valid JSON:
                 })}
             </div>
           </div>
+          </div>
         </div>
 
         <div className="print-footer">
           ¡Atrévete a cambiar!
+        </div>
         </div>
       </div>
 
@@ -2850,7 +2882,8 @@ Return ONLY valid JSON:
       <PrintSettingsModal
         open={showPrintSettings}
         onOpenChange={setShowPrintSettings}
-        settings={activePrintSettings}
+        settingsPage1={activePrintSettingsPage1}
+        settingsPage2={activePrintSettingsPage2}
         onSave={handleSavePrintSettings}
         language="es"
       />

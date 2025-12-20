@@ -103,7 +103,7 @@ export default function CustomServiceBuilder() {
 
   const [expandedSegments, setExpandedSegments] = useState({});
   const [showPrintSettings, setShowPrintSettings] = useState(false);
-  const [printSettings, setPrintSettings] = useState(null);
+  const [printSettingsPage1, setPrintSettingsPage1] = useState(null);
 
   const getDefaultSegmentForm = () => ({
     title: "",
@@ -133,7 +133,7 @@ export default function CustomServiceBuilder() {
   useEffect(() => {
     if (existingService) {
       setServiceData(existingService);
-      setPrintSettings(existingService.print_settings || null);
+      setPrintSettingsPage1(existingService.print_settings_page1 || null);
     }
   }, [existingService]);
 
@@ -167,16 +167,16 @@ export default function CustomServiceBuilder() {
   const handleSave = () => {
     saveServiceMutation.mutate({
       ...serviceData,
-      print_settings: printSettings,
+      print_settings_page1: printSettingsPage1,
       status: 'active'
     });
   };
 
   const handleSavePrintSettings = (newSettings) => {
-    setPrintSettings(newSettings);
+    setPrintSettingsPage1(newSettings.page1);
     setServiceData(prev => ({
       ...prev,
-      print_settings: newSettings
+      print_settings_page1: newSettings.page1
     }));
   };
 
@@ -244,7 +244,7 @@ export default function CustomServiceBuilder() {
 
   const timeCalc = calculateTotalTime();
 
-  const activePrintSettings = printSettings || {
+  const activePrintSettingsPage1 = printSettingsPage1 || {
     globalScale: 1.0,
     margins: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" },
     bodyFontScale: 1.0,
@@ -257,7 +257,7 @@ export default function CustomServiceBuilder() {
         @media print {
           @page { 
             size: letter; 
-            margin: ${activePrintSettings.margins.top} ${activePrintSettings.margins.right} ${activePrintSettings.margins.bottom} ${activePrintSettings.margins.left}; 
+            margin: 0;
           }
           
           body { 
@@ -265,18 +265,24 @@ export default function CustomServiceBuilder() {
             print-color-adjust: exact;
             font-family: 'Inter', Helvetica, Arial, sans-serif;
             background: white;
-            font-size: calc(10.5pt * ${activePrintSettings.bodyFontScale});
-            line-height: 1.3;
             color: #374151;
           }
-          
-          .print-content {
-            transform: scale(${activePrintSettings.globalScale});
-            transform-origin: top left;
+
+          .print-page-wrapper {
+            padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} ${activePrintSettingsPage1.margins.bottom} ${activePrintSettingsPage1.margins.left};
           }
           
-          h1, h2, h3 {
-            font-size: calc(1em * ${activePrintSettings.titleFontScale});
+          .print-body-content {
+            transform: scale(${activePrintSettingsPage1.globalScale});
+            transform-origin: top left;
+            font-size: calc(10.5pt * ${activePrintSettingsPage1.bodyFontScale});
+            line-height: 1.3;
+          }
+          
+          .print-body-content h1, 
+          .print-body-content h2, 
+          .print-body-content h3 {
+            font-size: calc(1em * ${activePrintSettingsPage1.titleFontScale});
             page-break-after: avoid;
           }
           
@@ -318,19 +324,24 @@ export default function CustomServiceBuilder() {
       <PrintSettingsModal
         open={showPrintSettings}
         onOpenChange={setShowPrintSettings}
-        settings={activePrintSettings}
+        settingsPage1={activePrintSettingsPage1}
+        settingsPage2={activePrintSettingsPage1}
         onSave={handleSavePrintSettings}
         language="es"
       />
 
-      {/* Print Header */}
-      <div className="hidden print:block text-center mb-6 print-content">
+      {/* Print Layout */}
+      <div className="hidden print:block print-page-wrapper">
+      {/* FIXED Print Header */}
+      <div className="text-center mb-6">
         <div className="w-20 h-1 mx-auto mb-4" style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)' }} />
         <h1 className="text-3xl font-bold uppercase mb-1">{serviceData.name || 'Orden de Servicio'}</h1>
         <p className="text-lg text-gray-600">{serviceData.day_of_week} - {serviceData.date}</p>
         {serviceData.time && <p className="text-sm text-gray-500">{serviceData.time}</p>}
       </div>
 
+      {/* SCALABLE Body Content */}
+      <div className="print-body-content">
       {/* Service Details */}
       <Card className="print:hidden">
         <CardHeader>
