@@ -718,6 +718,15 @@ Return ONLY valid JSON:
     });
   };
 
+  const handleSavePrintSettings = (newSettings) => {
+    setPrintSettings(newSettings);
+    setServiceData(prev => ({
+      ...prev,
+      print_settings: newSettings
+    }));
+    debouncedSave('print-settings');
+  };
+
   const toggleSegmentExpanded = (timeSlot, idx) => {
     const key = `${timeSlot}-${idx}`;
     setExpandedSegments(prev => ({
