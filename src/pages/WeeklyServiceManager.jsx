@@ -1383,9 +1383,9 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.translator && (
-                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
-                      🌐 Traduce: {segment.data.translator}
+                  {segment.data?.preacher && (
+                    <div className="print-segment-detail">
+                      <span className="print-name">{segment.data.preacher}</span>
                     </div>
                   )}
 
@@ -1395,9 +1395,9 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.preacher && (
-                    <div className="print-segment-detail">
-                      <span className="print-name">{segment.data.preacher}</span>
+                  {segment.data?.translator && (
+                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
+                      🌐 Traduce: {segment.data.translator}
                     </div>
                   )}
 
