@@ -11,9 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
-import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, GripVertical, ChevronUp, ChevronDown, Sparkles } from "lucide-react";
+import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, GripVertical, ChevronUp, ChevronDown, Sparkles, Settings } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format } from "date-fns";
+import PrintSettingsModal from "@/components/print/PrintSettingsModal";
+import { formatDate as formatDateES } from "date-fns";
+import { es } from "date-fns/locale";
 
 export default function CustomServiceBuilder() {
   const navigate = useNavigate();
@@ -99,6 +102,8 @@ export default function CustomServiceBuilder() {
   });
 
   const [expandedSegments, setExpandedSegments] = useState({});
+  const [showPrintSettings, setShowPrintSettings] = useState(false);
+  const [printSettings, setPrintSettings] = useState(null);
 
   const getDefaultSegmentForm = () => ({
     title: "",
@@ -128,6 +133,7 @@ export default function CustomServiceBuilder() {
   useEffect(() => {
     if (existingService) {
       setServiceData(existingService);
+      setPrintSettings(existingService.print_settings || null);
     }
   }, [existingService]);
 
@@ -161,8 +167,17 @@ export default function CustomServiceBuilder() {
   const handleSave = () => {
     saveServiceMutation.mutate({
       ...serviceData,
+      print_settings: printSettings,
       status: 'active'
     });
+  };
+
+  const handleSavePrintSettings = (newSettings) => {
+    setPrintSettings(newSettings);
+    setServiceData(prev => ({
+      ...prev,
+      print_settings: newSettings
+    }));
   };
 
   const handlePrint = () => {
@@ -229,8 +244,48 @@ export default function CustomServiceBuilder() {
 
   const timeCalc = calculateTotalTime();
 
+  const activePrintSettings = printSettings || {
+    globalScale: 1.0,
+    margins: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" },
+    bodyFontScale: 1.0,
+    titleFontScale: 1.0
+  };
+
   return (
     <div className="p-6 md:p-8 space-y-8 print:p-2">
+      <style>{`
+        @media print {
+          @page { 
+            size: letter; 
+            margin: ${activePrintSettings.margins.top} ${activePrintSettings.margins.right} ${activePrintSettings.margins.bottom} ${activePrintSettings.margins.left}; 
+          }
+          
+          body { 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
+            font-family: 'Inter', Helvetica, Arial, sans-serif;
+            background: white;
+            font-size: calc(10.5pt * ${activePrintSettings.bodyFontScale});
+            line-height: 1.3;
+            color: #374151;
+          }
+          
+          .print-content {
+            transform: scale(${activePrintSettings.globalScale});
+            transform-origin: top left;
+          }
+          
+          h1, h2, h3 {
+            font-size: calc(1em * ${activePrintSettings.titleFontScale});
+            page-break-after: avoid;
+          }
+          
+          * {
+            box-shadow: none !important;
+            text-shadow: none !important;
+          }
+        }
+      `}</style>
       {/* Header */}
       <div className="flex justify-between items-center print:hidden">
         <div className="flex items-center gap-4">
@@ -249,6 +304,10 @@ export default function CustomServiceBuilder() {
             <Save className="w-4 h-4 mr-2" />
             Guardar
           </Button>
+          <Button variant="outline" onClick={() => setShowPrintSettings(true)} className="border-2 border-gray-400 font-semibold">
+            <Settings className="w-4 h-4 mr-2" />
+            Config. Impresión
+          </Button>
           <Button variant="outline" onClick={handlePrint}>
             <Printer className="w-4 h-4 mr-2" />
             Imprimir
@@ -256,8 +315,16 @@ export default function CustomServiceBuilder() {
         </div>
       </div>
 
+      <PrintSettingsModal
+        open={showPrintSettings}
+        onOpenChange={setShowPrintSettings}
+        settings={activePrintSettings}
+        onSave={handleSavePrintSettings}
+        language="es"
+      />
+
       {/* Print Header */}
-      <div className="hidden print:block text-center mb-6">
+      <div className="hidden print:block text-center mb-6 print-content">
         <div className="w-20 h-1 mx-auto mb-4" style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)' }} />
         <h1 className="text-3xl font-bold uppercase mb-1">{serviceData.name || 'Orden de Servicio'}</h1>
         <p className="text-lg text-gray-600">{serviceData.day_of_week} - {serviceData.date}</p>
