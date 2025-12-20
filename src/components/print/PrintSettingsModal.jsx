@@ -31,7 +31,7 @@ const unitToPx = (value) => {
   return num; // assume px
 };
 
-export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, settingsPage2, onSave, language = "es" }) {
+export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, settingsPage2, onSave, language = "es", serviceData = null }) {
   const [page1Settings, setPage1Settings] = useState(settingsPage1 || DEFAULT_SETTINGS);
   const [page2Settings, setPage2Settings] = useState(settingsPage2 || DEFAULT_SETTINGS);
   const [activeTab, setActiveTab] = useState("page1");
@@ -292,30 +292,56 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         overflow: 'hidden'
                       }}
                     >
-                      <div className="grid grid-cols-2 gap-1" style={{ padding: `${1 * previewScale}px` }}>
-                        <div>
-                          <div style={{ fontSize: `${2.5 * previewScale * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: `${1 * previewScale}px` }}>
-                            9:30 A.M.
+                      {serviceData && serviceData.segments ? (
+                        <div style={{ padding: `${1 * previewScale}px` }}>
+                          {serviceData.segments.slice(0, 4).map((seg, idx) => (
+                            <div key={idx} style={{ marginBottom: `${1 * previewScale}px` }}>
+                              <div style={{ fontSize: `${1.8 * previewScale * page1Settings.titleFontScale}px`, fontWeight: '600', marginBottom: `${0.3 * previewScale}px`, textTransform: 'uppercase' }}>
+                                {seg.title}
+                              </div>
+                              {seg.leader && (
+                                <div style={{ fontSize: `${1.4 * previewScale * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
+                                  Dirige: {seg.leader}
+                                </div>
+                              )}
+                              {seg.preacher && (
+                                <div style={{ fontSize: `${1.4 * previewScale * page1Settings.bodyFontScale}px`, color: '#2563eb' }}>
+                                  {seg.preacher}
+                                </div>
+                              )}
+                              {seg.presenter && !seg.leader && !seg.preacher && (
+                                <div style={{ fontSize: `${1.4 * previewScale * page1Settings.bodyFontScale}px`, color: '#374151' }}>
+                                  {seg.presenter}
+                                </div>
+                              )}
+                              {seg.songs && seg.songs.length > 0 && seg.songs.some(s => s.title) && (
+                                <div style={{ fontSize: `${1.2 * previewScale * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: `${0.3 * previewScale}px` }}>
+                                  {seg.songs.filter(s => s.title).slice(0, 2).map(s => s.title).join(', ')}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-1" style={{ padding: `${1 * previewScale}px` }}>
+                          <div>
+                            <div style={{ fontSize: `${1.8 * previewScale * page1Settings.titleFontScale}px`, fontWeight: '600', marginBottom: `${0.5 * previewScale}px` }}>
+                              ALABANZA
+                            </div>
+                            <div style={{ fontSize: `${1.5 * previewScale * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
+                              Dirige: Juan Pérez
+                            </div>
                           </div>
-                          <div style={{ fontSize: `${1.8 * previewScale * page1Settings.titleFontScale}px`, fontWeight: '600', marginBottom: `${0.5 * previewScale}px` }}>
-                            ALABANZA
-                          </div>
-                          <div style={{ fontSize: `${1.5 * previewScale * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
-                            Dirige: Juan Pérez
+                          <div>
+                            <div style={{ fontSize: `${1.8 * previewScale * page1Settings.titleFontScale}px`, fontWeight: '600', marginBottom: `${0.5 * previewScale}px` }}>
+                              MENSAJE
+                            </div>
+                            <div style={{ fontSize: `${1.5 * previewScale * page1Settings.bodyFontScale}px`, color: '#2563eb' }}>
+                              Pastor Juan
+                            </div>
                           </div>
                         </div>
-                        <div>
-                          <div style={{ fontSize: `${2.5 * previewScale * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: `${1 * previewScale}px` }}>
-                            11:30 A.M.
-                          </div>
-                          <div style={{ fontSize: `${1.8 * previewScale * page1Settings.titleFontScale}px`, fontWeight: '600', marginBottom: `${0.5 * previewScale}px` }}>
-                            ALABANZA
-                          </div>
-                          <div style={{ fontSize: `${1.5 * previewScale * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
-                            Dirige: Ana López
-                          </div>
-                        </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* FIXED Footer */}

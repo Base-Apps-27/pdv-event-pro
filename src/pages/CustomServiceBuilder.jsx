@@ -328,6 +328,7 @@ export default function CustomServiceBuilder() {
         settingsPage2={activePrintSettingsPage1}
         onSave={handleSavePrintSettings}
         language="es"
+        serviceData={serviceData}
       />
 
       {/* Print Layout */}
