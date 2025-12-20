@@ -245,9 +245,9 @@ export default function PublicProgramView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F0F1F3]">
+    <div className="min-h-screen bg-[#F0F1F3] overflow-x-hidden">
       {/* Hero Header */}
-      <div className="bg-gradient-to-r from-pdv-teal to-pdv-green text-white py-12 px-6">
+      <div className="bg-gradient-to-r from-pdv-teal to-pdv-green text-white py-6 md:py-12 px-4 md:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-4">
             <img 
@@ -264,7 +264,7 @@ export default function PublicProgramView() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-6xl mx-auto px-3 md:px-4 py-4 md:py-8 space-y-4 md:space-y-6">
         {((selectedEventId && selectedEvent) || (selectedServiceId && selectedService)) && (
           <>
             {/* Event/Service Info Card */}
@@ -416,7 +416,7 @@ export default function PublicProgramView() {
 
             {/* Weekly Services Display (for Service view type) */}
             {viewType === "service" && actualServiceData && (
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 {/* 9:30am Service */}
                 {actualServiceData["9:30am"] && (
                   <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500">
@@ -601,7 +601,7 @@ export default function PublicProgramView() {
 
             {/* Sessions Display (for Event view type) */}
             {viewType === "event" && (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {filteredSessions.map((session) => {
                 const segments = getSessionSegments(session.id);
                 if (segments.length === 0) return null;
@@ -847,7 +847,7 @@ export default function PublicProgramView() {
                                 )}
 
                                 {/* Team Notes */}
-                                <div className="grid md:grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                   {segment.projection_notes && (
                                     <div className="bg-purple-50 p-2 rounded border border-purple-200 text-xs">
                                       <span className="font-bold text-purple-800">PROYECCIÓN:</span>
@@ -989,8 +989,8 @@ export default function PublicProgramView() {
       </div>
 
       {/* Footer */}
-      <div className="mt-12 py-6 bg-gradient-to-r from-pdv-green to-pdv-teal">
-        <div className="max-w-6xl mx-auto px-6 text-center">
+      <div className="mt-8 md:mt-12 py-4 md:py-6 bg-gradient-to-r from-pdv-green to-pdv-teal">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 text-center">
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
             alt="Logo" 
