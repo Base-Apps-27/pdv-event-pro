@@ -245,9 +245,9 @@ export default function PublicProgramView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F0F1F3] overflow-x-hidden">
+    <div className="min-h-screen bg-[#F0F1F3]">
       {/* Hero Header */}
-      <div className="bg-gradient-to-r from-pdv-teal to-pdv-green text-white py-6 md:py-12 px-4 md:px-6">
+      <div className="bg-gradient-to-r from-pdv-teal to-pdv-green text-white py-12 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-4">
             <img 
@@ -264,7 +264,7 @@ export default function PublicProgramView() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-3 md:px-4 py-4 md:py-8 space-y-4 md:space-y-6">
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         {((selectedEventId && selectedEvent) || (selectedServiceId && selectedService)) && (
           <>
             {/* Event/Service Info Card */}
@@ -416,10 +416,10 @@ export default function PublicProgramView() {
 
             {/* Weekly Services Display (for Service view type) */}
             {viewType === "service" && actualServiceData && (
-              <div className="space-y-4 md:space-y-6">
+              <div className="space-y-6">
                 {/* 9:30am Service */}
                 {actualServiceData["9:30am"] && (
-                  <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500 max-w-full">
+                  <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500">
                     <div className="bg-gradient-to-r from-red-50 to-white p-4 border-b">
                       <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 a.m.</h3>
                       {actualServiceData.pre_service_notes?.["9:30am"] && (
@@ -428,23 +428,23 @@ export default function PublicProgramView() {
                     </div>
                     <div className="divide-y divide-gray-200">
                      {actualServiceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
-                       <div key={idx} className="p-3 md:p-4 hover:bg-gray-50">
-                         <div className="flex items-start justify-between gap-2 md:gap-4">
-                           <div className="flex-1 min-w-0 overflow-hidden">
+                       <div key={idx} className="p-4 hover:bg-gray-50">
+                         <div className="flex items-start justify-between gap-4">
+                           <div className="flex-1">
                              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                               <h4 className="text-lg md:text-xl font-bold break-words">{segment.title}</h4>
-                               <Badge variant="outline" className="text-xs whitespace-nowrap">{segment.duration} min</Badge>
+                               <h4 className="text-xl font-bold">{segment.title}</h4>
+                               <Badge variant="outline" className="text-xs">{segment.duration} min</Badge>
                              </div>
 
                              {segment.data?.leader && (
-                               <p className="text-base md:text-lg font-bold text-pdv-green mb-2 break-words">Dirige: {segment.data.leader}</p>
+                               <p className="text-lg font-bold text-pdv-green mb-2">Dirige: {segment.data.leader}</p>
                              )}
 
                              {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
-                               <div className="bg-green-50 p-2 rounded border border-green-200 text-sm mb-2 max-w-full overflow-hidden">
+                               <div className="bg-green-50 p-2 rounded border border-green-200 text-sm mb-2">
                                  <p className="font-semibold text-green-800 mb-1">Canciones:</p>
                                  {segment.songs.filter(s => s.title).map((song, sIdx) => (
-                                   <div key={sIdx} className="text-xs break-words">• {song.title} {song.lead && `(${song.lead})`}</div>
+                                   <div key={sIdx} className="text-xs">• {song.title} {song.lead && `(${song.lead})`}</div>
                                  ))}
                                </div>
                              )}
@@ -456,39 +456,39 @@ export default function PublicProgramView() {
                              )}
 
                              {segment.data?.presenter && !segment.data?.ministry_leader && (
-                               <p className="text-base md:text-lg font-bold text-blue-600 mb-2 break-words">{segment.data.presenter}</p>
+                               <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
                              )}
 
                              {segment.data?.preacher && (
-                               <p className="text-base md:text-lg font-bold text-blue-600 mb-2 break-words">{segment.data.preacher}</p>
+                               <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
                              )}
 
                              {segment.data?.title && (
-                               <p className="text-sm text-gray-700 mb-1 italic break-words">{segment.data.title}</p>
+                               <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
                              )}
 
                              {segment.data?.verse && (
-                               <p className="text-xs text-gray-600 mb-1 break-words">📖 {segment.data.verse}</p>
+                               <p className="text-xs text-gray-600 mb-1">📖 {segment.data.verse}</p>
                              )}
 
                              {segment.data?.description && (
-                               <p className="text-xs text-gray-600 mt-2 italic break-words">{segment.data.description}</p>
+                               <p className="text-xs text-gray-600 mt-2 italic">{segment.data.description}</p>
                              )}
 
                              {segment.data?.description_details && (
-                               <p className="text-xs text-gray-600 mt-2 break-words">
+                               <p className="text-xs text-gray-600 mt-2">
                                  <strong>📝 Notas:</strong> {segment.data.description_details}
                                </p>
                              )}
 
                              {segment.data?.projection_notes && (
-                               <p className="text-xs text-purple-700 mt-1 break-words">
+                               <p className="text-xs text-purple-700 mt-1">
                                  <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
                                </p>
                              )}
 
                              {segment.data?.sound_notes && (
-                               <p className="text-xs text-red-600 mt-1 break-words">
+                               <p className="text-xs text-red-600 mt-1">
                                  <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
                                </p>
                              )}
@@ -501,8 +501,8 @@ export default function PublicProgramView() {
                 )}
 
                 {/* Receso */}
-                <div className="bg-gray-100 rounded-lg p-3 md:p-4 text-center border border-gray-300 max-w-full">
-                  <p className="font-bold text-gray-600 text-sm md:text-base">RECESO (30 min)</p>
+                <div className="bg-gray-100 rounded-lg p-4 text-center border border-gray-300">
+                  <p className="font-bold text-gray-600">RECESO (30 min)</p>
                   {actualServiceData.receso_notes?.["9:30am"] && (
                     <p className="text-sm text-gray-600 mt-2">{actualServiceData.receso_notes["9:30am"]}</p>
                   )}
@@ -510,7 +510,7 @@ export default function PublicProgramView() {
 
                 {/* 11:30am Service */}
                 {actualServiceData["11:30am"] && (
-                  <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-blue-500 max-w-full">
+                  <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-blue-500">
                     <div className="bg-gradient-to-r from-blue-50 to-white p-4 border-b">
                       <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 a.m.</h3>
                       {actualServiceData.pre_service_notes?.["11:30am"] && (
@@ -519,23 +519,23 @@ export default function PublicProgramView() {
                     </div>
                     <div className="divide-y divide-gray-200">
                       {actualServiceData["11:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
-                        <div key={idx} className="p-3 md:p-4 hover:bg-gray-50">
-                          <div className="flex items-start justify-between gap-2 md:gap-4">
-                            <div className="flex-1 min-w-0 overflow-hidden">
+                        <div key={idx} className="p-4 hover:bg-gray-50">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2 flex-wrap">
                                 <h4 className="text-xl font-bold">{segment.title}</h4>
                                 <Badge variant="outline" className="text-xs">{segment.duration} min</Badge>
                               </div>
                               
                               {segment.data?.leader && (
-                                <p className="text-base md:text-lg font-bold text-pdv-green mb-2 break-words">Dirige: {segment.data.leader}</p>
+                                <p className="text-lg font-bold text-pdv-green mb-2">Dirige: {segment.data.leader}</p>
                               )}
                               
                               {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
-                                <div className="bg-green-50 p-2 rounded border border-green-200 text-sm mb-2 max-w-full overflow-hidden">
+                                <div className="bg-green-50 p-2 rounded border border-green-200 text-sm mb-2">
                                   <p className="font-semibold text-green-800 mb-1">Canciones:</p>
                                   {segment.songs.filter(s => s.title).map((song, sIdx) => (
-                                    <div key={sIdx} className="text-xs break-words overflow-wrap-anywhere">• {song.title} {song.lead && `(${song.lead})`}</div>
+                                    <div key={sIdx} className="text-xs">• {song.title} {song.lead && `(${song.lead})`}</div>
                                   ))}
                                 </div>
                               )}
@@ -547,15 +547,15 @@ export default function PublicProgramView() {
                               )}
                               
                               {segment.data?.presenter && !segment.data?.ministry_leader && (
-                                <p className="text-base md:text-lg font-bold text-blue-600 mb-2 break-words">{segment.data.presenter}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
                               )}
 
                               {segment.data?.preacher && (
-                                <p className="text-base md:text-lg font-bold text-blue-600 mb-2 break-words">{segment.data.preacher}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
                               )}
 
                               {segment.data?.translator && (
-                                <p className="text-xs text-blue-600 mt-1 break-words">
+                                <p className="text-xs text-blue-600 mt-1">
                                   🌐 Traduce: {segment.data.translator}
                                 </p>
                               )}
@@ -601,13 +601,13 @@ export default function PublicProgramView() {
 
             {/* Sessions Display (for Event view type) */}
             {viewType === "event" && (
-            <div className="space-y-4 md:space-y-6">
+            <div className="space-y-6">
               {filteredSessions.map((session) => {
                 const segments = getSessionSegments(session.id);
                 if (segments.length === 0) return null;
 
                 return (
-                  <div key={session.id} className={`bg-white rounded-lg border-2 border-gray-300 overflow-hidden max-w-full ${sessionColorClasses[session.session_color] || ''}`}>
+                  <div key={session.id} className={`bg-white rounded-lg border-2 border-gray-300 overflow-hidden ${sessionColorClasses[session.session_color] || ''}`}>
                     <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-4 border-b">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -847,7 +847,7 @@ export default function PublicProgramView() {
                                 )}
 
                                 {/* Team Notes */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <div className="grid md:grid-cols-2 gap-2">
                                   {segment.projection_notes && (
                                     <div className="bg-purple-50 p-2 rounded border border-purple-200 text-xs">
                                       <span className="font-bold text-purple-800">PROYECCIÓN:</span>
@@ -989,8 +989,8 @@ export default function PublicProgramView() {
       </div>
 
       {/* Footer */}
-      <div className="mt-8 md:mt-12 py-4 md:py-6 bg-gradient-to-r from-pdv-green to-pdv-teal">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 text-center">
+      <div className="mt-12 py-6 bg-gradient-to-r from-pdv-green to-pdv-teal">
+        <div className="max-w-6xl mx-auto px-6 text-center">
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
             alt="Logo" 
