@@ -1273,15 +1273,15 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.presenter && !segment.data?.ministry_leader && (
-                    <div className="print-segment-detail">
-                      <span className="print-name">{segment.data.presenter}</span>
-                    </div>
-                  )}
-
                   {segment.data?.preacher && (
                     <div className="print-segment-detail">
                       <span className="print-name">{segment.data.preacher}</span>
+                    </div>
+                  )}
+
+                  {segment.data?.presenter && !segment.data?.ministry_leader && (
+                    <div className="print-segment-detail">
+                      <span className="print-name">{segment.data.presenter}</span>
                     </div>
                   )}
 
