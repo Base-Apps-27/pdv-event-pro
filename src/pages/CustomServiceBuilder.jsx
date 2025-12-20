@@ -777,7 +777,8 @@ export default function CustomServiceBuilder() {
           </div>
         </CardContent>
       </Card>
-
+      </div>
+      </div>
 
     </div>
   );
