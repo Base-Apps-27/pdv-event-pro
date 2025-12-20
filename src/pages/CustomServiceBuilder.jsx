@@ -332,16 +332,22 @@ export default function CustomServiceBuilder() {
 
       {/* Print Layout */}
       <div className="hidden print:block print-page-wrapper">
-      {/* FIXED Print Header */}
-      <div className="text-center mb-6">
-        <div className="w-20 h-1 mx-auto mb-4" style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)' }} />
-        <h1 className="text-3xl font-bold uppercase mb-1">{serviceData.name || 'Orden de Servicio'}</h1>
-        <p className="text-lg text-gray-600">{serviceData.day_of_week} - {serviceData.date}</p>
-        {serviceData.time && <p className="text-sm text-gray-500">{serviceData.time}</p>}
+        {/* FIXED Print Header */}
+        <div className="text-center mb-6">
+          <div className="w-20 h-1 mx-auto mb-4" style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)' }} />
+          <h1 className="text-3xl font-bold uppercase mb-1">{serviceData.name || 'Orden de Servicio'}</h1>
+          <p className="text-lg text-gray-600">{serviceData.day_of_week} - {serviceData.date}</p>
+          {serviceData.time && <p className="text-sm text-gray-500">{serviceData.time}</p>}
+        </div>
+
+        {/* SCALABLE Body Content */}
+        <div className="print-body-content">
+          {/* Print content will be rendered here */}
+          <p>Print view placeholder</p>
+        </div>
       </div>
 
-      {/* SCALABLE Body Content */}
-      <div className="print-body-content">
+      {/* Screen UI */}
       {/* Service Details */}
       <Card className="print:hidden">
         <CardHeader>
@@ -777,10 +783,6 @@ export default function CustomServiceBuilder() {
           </div>
         </CardContent>
       </Card>
-      </div>
-      </div>
-      </div>
-
     </div>
   );
 }
