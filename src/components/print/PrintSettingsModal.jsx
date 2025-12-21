@@ -292,51 +292,115 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         overflow: 'hidden'
                       }}
                     >
-                      {serviceData && serviceData.segments ? (
-                        <div style={{ padding: `${1 * previewScale}px` }}>
-                          {serviceData.segments.slice(0, 4).map((seg, idx) => (
-                            <div key={idx} style={{ marginBottom: `${1 * previewScale}px` }}>
-                              <div style={{ fontSize: `${1.8 * previewScale * page1Settings.titleFontScale}px`, fontWeight: '600', marginBottom: `${0.3 * previewScale}px`, textTransform: 'uppercase' }}>
-                                {seg.title}
+                      {serviceData && serviceData.segments && serviceData.segments.length > 0 ? (
+                        <div style={{ padding: `${2 * previewScale}px`, fontSize: `${1.2 * previewScale * page1Settings.bodyFontScale}px` }}>
+                          {serviceData.segments.map((seg, idx) => (
+                            <div key={idx} style={{ marginBottom: `${2 * previewScale}px`, borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none', paddingBottom: `${1.5 * previewScale}px` }}>
+                              <div style={{ display: 'flex', alignItems: 'baseline', gap: `${1 * previewScale}px`, marginBottom: `${0.5 * previewScale}px` }}>
+                                <div style={{ fontSize: `${2.2 * previewScale * page1Settings.titleFontScale}px`, fontWeight: 'bold', textTransform: 'uppercase', lineHeight: 1 }}>
+                                  {seg.title || 'Sin título'}
+                                </div>
+                                {seg.duration && (
+                                  <div style={{ fontSize: `${1.2 * previewScale * page1Settings.bodyFontScale}px`, color: '#9ca3af', fontWeight: '500' }}>
+                                    {seg.duration}min
+                                  </div>
+                                )}
                               </div>
+
                               {seg.leader && (
-                                <div style={{ fontSize: `${1.4 * previewScale * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
+                                <div style={{ fontSize: `${1.6 * previewScale * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600', marginBottom: `${0.3 * previewScale}px` }}>
                                   Dirige: {seg.leader}
                                 </div>
                               )}
+
                               {seg.preacher && (
-                                <div style={{ fontSize: `${1.4 * previewScale * page1Settings.bodyFontScale}px`, color: '#2563eb' }}>
+                                <div style={{ fontSize: `${1.6 * previewScale * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '600', marginBottom: `${0.3 * previewScale}px` }}>
                                   {seg.preacher}
                                 </div>
                               )}
+
                               {seg.presenter && !seg.leader && !seg.preacher && (
-                                <div style={{ fontSize: `${1.4 * previewScale * page1Settings.bodyFontScale}px`, color: '#374151' }}>
+                                <div style={{ fontSize: `${1.6 * previewScale * page1Settings.bodyFontScale}px`, color: '#374151', fontWeight: '500', marginBottom: `${0.3 * previewScale}px` }}>
                                   {seg.presenter}
                                 </div>
                               )}
+
+                              {seg.messageTitle && (
+                                <div style={{ fontSize: `${1.4 * previewScale * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginBottom: `${0.3 * previewScale}px` }}>
+                                  {seg.messageTitle}
+                                </div>
+                              )}
+
+                              {seg.verse && (
+                                <div style={{ fontSize: `${1.3 * previewScale * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginBottom: `${0.3 * previewScale}px` }}>
+                                  📖 {seg.verse}
+                                </div>
+                              )}
+
                               {seg.songs && seg.songs.length > 0 && seg.songs.some(s => s.title) && (
-                                <div style={{ fontSize: `${1.2 * previewScale * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: `${0.3 * previewScale}px` }}>
-                                  {seg.songs.filter(s => s.title).slice(0, 2).map(s => s.title).join(', ')}
+                                <div style={{ marginTop: `${0.5 * previewScale}px`, paddingLeft: `${1.5 * previewScale}px`, borderLeft: '2px solid #16a34a' }}>
+                                  {seg.songs.filter(s => s.title).map((song, sIdx) => (
+                                    <div key={sIdx} style={{ fontSize: `${1.3 * previewScale * page1Settings.bodyFontScale}px`, color: '#16a34a', marginBottom: `${0.2 * previewScale}px` }}>
+                                      • {song.title} {song.lead && `(${song.lead})`}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {seg.description && (
+                                <div style={{ fontSize: `${1.2 * previewScale * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginTop: `${0.5 * previewScale}px`, fontStyle: 'italic' }}>
+                                  {seg.description}
                                 </div>
                               )}
                             </div>
                           ))}
+
+                          {/* Team Section */}
+                          {(serviceData.coordinators || serviceData.ujieres || serviceData.sound || serviceData.luces) && (
+                            <div style={{ marginTop: `${3 * previewScale}px`, paddingTop: `${2 * previewScale}px`, borderTop: '2px solid #1F8A70' }}>
+                              <div style={{ fontSize: `${2 * previewScale * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: `${1 * previewScale}px`, textTransform: 'uppercase' }}>
+                                EQUIPO
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: `${1 * previewScale}px` }}>
+                                {serviceData.coordinators && (
+                                  <div style={{ fontSize: `${1.3 * previewScale * page1Settings.bodyFontScale}px` }}>
+                                    <strong>Coordinador:</strong> {serviceData.coordinators}
+                                  </div>
+                                )}
+                                {serviceData.ujieres && (
+                                  <div style={{ fontSize: `${1.3 * previewScale * page1Settings.bodyFontScale}px` }}>
+                                    <strong>Ujieres:</strong> {serviceData.ujieres}
+                                  </div>
+                                )}
+                                {serviceData.sound && (
+                                  <div style={{ fontSize: `${1.3 * previewScale * page1Settings.bodyFontScale}px` }}>
+                                    <strong>Sonido:</strong> {serviceData.sound}
+                                  </div>
+                                )}
+                                {serviceData.luces && (
+                                  <div style={{ fontSize: `${1.3 * previewScale * page1Settings.bodyFontScale}px` }}>
+                                    <strong>Luces:</strong> {serviceData.luces}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 gap-1" style={{ padding: `${1 * previewScale}px` }}>
-                          <div>
-                            <div style={{ fontSize: `${1.8 * previewScale * page1Settings.titleFontScale}px`, fontWeight: '600', marginBottom: `${0.5 * previewScale}px` }}>
+                        <div style={{ padding: `${2 * previewScale}px`, fontSize: `${1.2 * previewScale * page1Settings.bodyFontScale}px` }}>
+                          <div style={{ marginBottom: `${2 * previewScale}px` }}>
+                            <div style={{ fontSize: `${2.2 * previewScale * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: `${0.5 * previewScale}px` }}>
                               ALABANZA
                             </div>
-                            <div style={{ fontSize: `${1.5 * previewScale * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
+                            <div style={{ fontSize: `${1.6 * previewScale * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
                               Dirige: Juan Pérez
                             </div>
                           </div>
-                          <div>
-                            <div style={{ fontSize: `${1.8 * previewScale * page1Settings.titleFontScale}px`, fontWeight: '600', marginBottom: `${0.5 * previewScale}px` }}>
+                          <div style={{ marginBottom: `${2 * previewScale}px` }}>
+                            <div style={{ fontSize: `${2.2 * previewScale * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: `${0.5 * previewScale}px` }}>
                               MENSAJE
                             </div>
-                            <div style={{ fontSize: `${1.5 * previewScale * page1Settings.bodyFontScale}px`, color: '#2563eb' }}>
+                            <div style={{ fontSize: `${1.6 * previewScale * page1Settings.bodyFontScale}px`, color: '#2563eb' }}>
                               Pastor Juan
                             </div>
                           </div>
