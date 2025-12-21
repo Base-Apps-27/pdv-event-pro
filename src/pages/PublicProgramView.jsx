@@ -479,7 +479,7 @@ export default function PublicProgramView() {
             {/* Weekly Services Display (for Service view type) */}
             {viewType === "service" && actualServiceData && (
               <div className="space-y-6">
-                {/* Countdown Timer - Only show if within 30 minutes */}
+                {/* Countdown Timer - Show up to 60 minutes before */}
                 {(() => {
                   const allServiceSegments = [
                     ...(actualServiceData?.['9:30am'] || []),
@@ -487,7 +487,7 @@ export default function PublicProgramView() {
                   ].filter(s => s.start_time);
                   
                   const countdown = getCountdownToNext(allServiceSegments);
-                  if (!countdown || countdown.minutes > 30) return null;
+                  if (!countdown || countdown.minutes > 60) return null;
                   
                   return (
                     <Card className={`mb-6 ${countdown.isNear ? 'border-blue-500 border-2' : ''}`}>
@@ -726,10 +726,10 @@ export default function PublicProgramView() {
             {/* Sessions Display (for Event view type) */}
             {viewType === "event" && (
             <div className="space-y-6">
-              {/* Countdown Timer for Events - Only show if within 30 minutes */}
+              {/* Countdown Timer for Events - Show up to 60 minutes before */}
               {(() => {
                 const countdown = getCountdownToNext(allSegments);
-                if (!countdown || countdown.minutes > 30) return null;
+                if (!countdown || countdown.minutes > 60) return null;
                 
                 return (
                   <Card className={`mb-6 ${countdown.isNear ? 'border-blue-500 border-2' : ''}`}>
