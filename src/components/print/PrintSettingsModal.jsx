@@ -68,7 +68,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     const ref = pageNumber === 1 ? page1BodyRef.current : page2BodyRef.current;
     if (!ref) return false;
     
-    const isOverflowing = ref.scrollHeight > ref.clientHeight;
+    const isOverflowing = ref.scrollHeight > ref.clientHeight + 1;
     if (pageNumber === 1) {
       setPage1Overflows(isOverflowing);
     } else {
@@ -97,13 +97,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
       const mid = (low + high) / 2;
       
       // Apply scale
-      await new Promise(resolve => {
-        setSettings(prev => ({ ...prev, globalScale: mid }));
-        setTimeout(resolve, 50); // Allow DOM to update
-      });
+      setSettings(prev => ({ ...prev, globalScale: mid }));
+      await new Promise(r => requestAnimationFrame(r));
       
       // Measure
-      const overflows = ref.scrollHeight > ref.clientHeight;
+      const overflows = ref.scrollHeight > ref.clientHeight + 1;
       
       if (overflows) {
         high = mid - 0.01;
@@ -117,12 +115,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     
     // Apply best fit
     setSettings(prev => ({ ...prev, globalScale: bestFit }));
+    await new Promise(r => requestAnimationFrame(r));
     
     // Re-measure
-    setTimeout(() => {
-      measureOverflow(pageNumber);
-      setIsFitting(false);
-    }, 100);
+    measureOverflow(pageNumber);
+    setIsFitting(false);
   };
 
   // Auto-fit only pages that overflow
@@ -152,15 +149,17 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
   const currentSettings = activeTab === "page1" ? page1Settings : page2Settings;
   const setCurrentSettings = activeTab === "page1" ? setPage1Settings : setPage2Settings;
 
-  // Preview calculations
-  const previewScale = 0.07;
-  const pageWidth = 8.5 * 96 * previewScale;
-  const pageHeight = 11 * 96 * previewScale;
+  // Preview calculations - Real Letter size, then zoom for UI
+  const PAGE_W = 8.5 * 96; // 816px
+  const PAGE_H = 11 * 96;  // 1056px
+  const HEADER_H = 40;
+  const FOOTER_H = 20;
+  const previewZoom = 0.35; // UI zoom only
   
-  const marginTopPx = unitToPx(currentSettings.margins.top) * previewScale;
-  const marginRightPx = unitToPx(currentSettings.margins.right) * previewScale;
-  const marginBottomPx = unitToPx(currentSettings.margins.bottom) * previewScale;
-  const marginLeftPx = unitToPx(currentSettings.margins.left) * previewScale;
+  const marginTopPx = unitToPx(currentSettings.margins.top);
+  const marginRightPx = unitToPx(currentSettings.margins.right);
+  const marginBottomPx = unitToPx(currentSettings.margins.bottom);
+  const marginLeftPx = unitToPx(currentSettings.margins.left);
 
   const t = {
     title: language === "es" ? "Configuración de Impresión" : "Print Settings",
@@ -362,8 +361,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                   <div 
                     className="bg-white shadow-2xl relative overflow-hidden"
                     style={{
-                      width: `${pageWidth}px`,
-                      height: `${pageHeight}px`,
+                      width: `${PAGE_W}px`,
+                      height: `${PAGE_H}px`,
+                      transform: `scale(${previewZoom})`,
+                      transformOrigin: 'top center'
                     }}
                   >
                     {/* Margin Overlays */}
@@ -379,13 +380,13 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         top: `${marginTopPx}px`,
                         left: `${marginLeftPx}px`,
                         right: `${marginRightPx}px`,
-                        height: `${10 * previewScale}px`,
+                        height: `${HEADER_H}px`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                       }}
                     >
-                      <div style={{ fontSize: `${3 * previewScale}px`, fontWeight: 'bold', textAlign: 'center' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>
                         ORDEN DE SERVICIO
                       </div>
                     </div>
@@ -395,64 +396,63 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       ref={page1BodyRef}
                       className="absolute"
                       style={{
-                        top: `${marginTopPx + 10 * previewScale}px`,
+                        top: `${marginTopPx + HEADER_H}px`,
                         left: `${marginLeftPx}px`,
                         right: `${marginRightPx}px`,
-                        bottom: `${marginBottomPx + 4 * previewScale}px`,
-                        transform: `scale(${page1Settings.globalScale})`,
-                        transformOrigin: 'top left',
+                        bottom: `${marginBottomPx + FOOTER_H}px`,
+                        zoom: page1Settings.globalScale,
                         overflow: 'hidden'
                       }}
                     >
                       {serviceData && serviceData.segments && serviceData.segments.length > 0 ? (
-                        <div style={{ padding: `${2 * previewScale}px`, fontSize: `${1.2 * previewScale * page1Settings.bodyFontScale}px` }}>
+                        <div style={{ padding: '8px', fontSize: `${10.5 * page1Settings.bodyFontScale}px` }}>
                           {serviceData.segments.map((seg, idx) => (
-                            <div key={idx} style={{ marginBottom: `${2 * previewScale}px`, borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none', paddingBottom: `${1.5 * previewScale}px` }}>
-                              <div style={{ display: 'flex', alignItems: 'baseline', gap: `${1 * previewScale}px`, marginBottom: `${0.5 * previewScale}px` }}>
-                                <div style={{ fontSize: `${2.2 * previewScale * page1Settings.titleFontScale}px`, fontWeight: 'bold', textTransform: 'uppercase', lineHeight: 1 }}>
+                            <div key={idx} style={{ marginBottom: '8px', borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none', paddingBottom: '6px' }}>
+                              <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '2px' }}>
+                                <div style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: 'bold', textTransform: 'uppercase', lineHeight: 1 }}>
                                   {seg.title || 'Sin título'}
                                 </div>
                                 {seg.duration && (
-                                  <div style={{ fontSize: `${1.2 * previewScale * page1Settings.bodyFontScale}px`, color: '#9ca3af', fontWeight: '500' }}>
+                                  <div style={{ fontSize: `${9 * page1Settings.bodyFontScale}px`, color: '#9ca3af', fontWeight: '500' }}>
                                     {seg.duration}min
                                   </div>
                                 )}
                               </div>
 
                               {seg.leader && (
-                                <div style={{ fontSize: `${1.6 * previewScale * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600', marginBottom: `${0.3 * previewScale}px` }}>
+                                <div style={{ fontSize: `${10 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600', marginBottom: '2px' }}>
                                   Dirige: {seg.leader}
                                 </div>
                               )}
 
                               {seg.preacher && (
-                                <div style={{ fontSize: `${1.6 * previewScale * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '600', marginBottom: `${0.3 * previewScale}px` }}>
+                                <div style={{ fontSize: `${10 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '600', marginBottom: '2px' }}>
                                   {seg.preacher}
                                 </div>
                               )}
 
                               {seg.presenter && !seg.leader && !seg.preacher && (
-                                <div style={{ fontSize: `${1.6 * previewScale * page1Settings.bodyFontScale}px`, color: '#374151', fontWeight: '500', marginBottom: `${0.3 * previewScale}px` }}>
+                                <div style={{ fontSize: `${10 * page1Settings.bodyFontScale}px`, color: '#374151', fontWeight: '500', marginBottom: '2px' }}>
                                   {seg.presenter}
                                 </div>
                               )}
 
                               {seg.messageTitle && (
-                                <div style={{ fontSize: `${1.4 * previewScale * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginBottom: `${0.3 * previewScale}px` }}>
+                                <div style={{ fontSize: `${9.5 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginBottom: '2px' }}>
                                   {seg.messageTitle}
                                 </div>
                               )}
 
                               {seg.verse && (
-                                <div style={{ fontSize: `${1.3 * previewScale * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginBottom: `${0.3 * previewScale}px` }}>
+                                <div style={{ fontSize: `${9 * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginBottom: '2px' }}>
                                   📖 {seg.verse}
                                 </div>
                               )}
 
                               {seg.songs && seg.songs.length > 0 && seg.songs.some(s => s.title) && (
-                                <div style={{ marginTop: `${0.5 * previewScale}px`, paddingLeft: `${1.5 * previewScale}px`, borderLeft: '2px solid #16a34a' }}>
+                                <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
                                   {seg.songs.filter(s => s.title).map((song, sIdx) => (
-                                    <div key={sIdx} style={{ fontSize: `${1.3 * previewScale * page1Settings.bodyFontScale}px`, color: '#16a34a', marginBottom: `${0.2 * previewScale}px` }}>
+                                    <div key={sIdx} style={{ fontSize: `${9 * page1Settings.bodyFontScale}px`, color: '#16a34a', marginBottom: '2px' }}>
                                       • {song.title} {song.lead && `(${song.lead})`}
                                     </div>
                                   ))}
@@ -460,7 +460,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                               )}
 
                               {seg.description && (
-                                <div style={{ fontSize: `${1.2 * previewScale * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginTop: `${0.5 * previewScale}px`, fontStyle: 'italic' }}>
+                                <div style={{ fontSize: `${9 * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginTop: '3px', fontStyle: 'italic' }}>
                                   {seg.description}
                                 </div>
                               )}
@@ -469,28 +469,28 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
                           {/* Team Section */}
                           {(serviceData.coordinators || serviceData.ujieres || serviceData.sound || serviceData.luces) && (
-                            <div style={{ marginTop: `${3 * previewScale}px`, paddingTop: `${2 * previewScale}px`, borderTop: '2px solid #1F8A70' }}>
-                              <div style={{ fontSize: `${2 * previewScale * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: `${1 * previewScale}px`, textTransform: 'uppercase' }}>
+                            <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '2px solid #1F8A70' }}>
+                              <div style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase' }}>
                                 EQUIPO
                               </div>
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: `${1 * previewScale}px` }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
                                 {serviceData.coordinators && (
-                                  <div style={{ fontSize: `${1.3 * previewScale * page1Settings.bodyFontScale}px` }}>
+                                  <div style={{ fontSize: `${9 * page1Settings.bodyFontScale}px` }}>
                                     <strong>Coordinador:</strong> {serviceData.coordinators}
                                   </div>
                                 )}
                                 {serviceData.ujieres && (
-                                  <div style={{ fontSize: `${1.3 * previewScale * page1Settings.bodyFontScale}px` }}>
+                                  <div style={{ fontSize: `${9 * page1Settings.bodyFontScale}px` }}>
                                     <strong>Ujieres:</strong> {serviceData.ujieres}
                                   </div>
                                 )}
                                 {serviceData.sound && (
-                                  <div style={{ fontSize: `${1.3 * previewScale * page1Settings.bodyFontScale}px` }}>
+                                  <div style={{ fontSize: `${9 * page1Settings.bodyFontScale}px` }}>
                                     <strong>Sonido:</strong> {serviceData.sound}
                                   </div>
                                 )}
                                 {serviceData.luces && (
-                                  <div style={{ fontSize: `${1.3 * previewScale * page1Settings.bodyFontScale}px` }}>
+                                  <div style={{ fontSize: `${9 * page1Settings.bodyFontScale}px` }}>
                                     <strong>Luces:</strong> {serviceData.luces}
                                   </div>
                                 )}
@@ -499,20 +499,20 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                           )}
                         </div>
                       ) : (
-                        <div style={{ padding: `${2 * previewScale}px`, fontSize: `${1.2 * previewScale * page1Settings.bodyFontScale}px` }}>
-                          <div style={{ marginBottom: `${2 * previewScale}px` }}>
-                            <div style={{ fontSize: `${2.2 * previewScale * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: `${0.5 * previewScale}px` }}>
+                        <div style={{ padding: '8px', fontSize: `${10 * page1Settings.bodyFontScale}px` }}>
+                          <div style={{ marginBottom: '8px' }}>
+                            <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: '3px' }}>
                               ALABANZA
                             </div>
-                            <div style={{ fontSize: `${1.6 * previewScale * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
+                            <div style={{ fontSize: `${10 * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
                               Dirige: Juan Pérez
                             </div>
                           </div>
-                          <div style={{ marginBottom: `${2 * previewScale}px` }}>
-                            <div style={{ fontSize: `${2.2 * previewScale * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: `${0.5 * previewScale}px` }}>
+                          <div style={{ marginBottom: '8px' }}>
+                            <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: '3px' }}>
                               MENSAJE
                             </div>
-                            <div style={{ fontSize: `${1.6 * previewScale * page1Settings.bodyFontScale}px`, color: '#2563eb' }}>
+                            <div style={{ fontSize: `${10 * page1Settings.bodyFontScale}px`, color: '#2563eb' }}>
                               Pastor Juan
                             </div>
                           </div>
@@ -714,8 +714,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                   <div 
                     className="bg-white shadow-2xl relative overflow-hidden"
                     style={{
-                      width: `${pageWidth}px`,
-                      height: `${pageHeight}px`,
+                      width: `${PAGE_W}px`,
+                      height: `${PAGE_H}px`,
+                      transform: `scale(${previewZoom})`,
+                      transformOrigin: 'top center'
                     }}
                   >
                     {/* Margin Overlays */}
@@ -731,13 +733,13 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         top: `${marginTopPx}px`,
                         left: `${marginLeftPx}px`,
                         right: `${marginRightPx}px`,
-                        height: `${10 * previewScale}px`,
+                        height: `${HEADER_H}px`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                       }}
                     >
-                      <div style={{ fontSize: `${3 * previewScale}px`, fontWeight: 'bold', textAlign: 'center' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>
                         ANUNCIOS
                       </div>
                     </div>
@@ -747,32 +749,31 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       ref={page2BodyRef}
                       className="absolute"
                       style={{
-                        top: `${marginTopPx + 10 * previewScale}px`,
+                        top: `${marginTopPx + HEADER_H}px`,
                         left: `${marginLeftPx}px`,
                         right: `${marginRightPx}px`,
-                        bottom: `${marginBottomPx + 4 * previewScale}px`,
-                        transform: `scale(${page2Settings.globalScale})`,
-                        transformOrigin: 'top left',
+                        bottom: `${marginBottomPx + FOOTER_H}px`,
+                        zoom: page2Settings.globalScale,
                         overflow: 'hidden'
                       }}
                     >
-                      <div className="grid grid-cols-2 gap-2" style={{ padding: `${1 * previewScale}px` }}>
+                      <div className="grid grid-cols-2 gap-3" style={{ padding: '4px' }}>
                         <div>
-                          <div style={{ fontSize: `${1.8 * previewScale * page2Settings.titleFontScale}px`, fontWeight: '600', marginBottom: `${0.5 * previewScale}px` }}>
+                          <div style={{ fontSize: `${10 * page2Settings.titleFontScale}px`, fontWeight: '600', marginBottom: '3px' }}>
                             TÍTULO ANUNCIO
                           </div>
-                          <div style={{ fontSize: `${1.4 * previewScale * page2Settings.bodyFontScale}px`, color: '#374151', lineHeight: 1.2 }}>
+                          <div style={{ fontSize: `${9 * page2Settings.bodyFontScale}px`, color: '#374151', lineHeight: 1.2 }}>
                             Contenido del anuncio fijo que aparece cada semana...
                           </div>
                         </div>
                         <div>
-                          <div style={{ fontSize: `${1.8 * previewScale * page2Settings.titleFontScale}px`, fontWeight: '600', marginBottom: `${0.5 * previewScale}px` }}>
+                          <div style={{ fontSize: `${10 * page2Settings.titleFontScale}px`, fontWeight: '600', marginBottom: '3px' }}>
                             EVENTO PRÓXIMO
                           </div>
-                          <div style={{ fontSize: `${1.3 * previewScale * page2Settings.bodyFontScale}px`, color: '#6b7280', marginBottom: `${0.3 * previewScale}px` }}>
+                          <div style={{ fontSize: `${9 * page2Settings.bodyFontScale}px`, color: '#6b7280', marginBottom: '2px' }}>
                             25 de Diciembre
                           </div>
-                          <div style={{ fontSize: `${1.4 * previewScale * page2Settings.bodyFontScale}px`, color: '#374151', lineHeight: 1.2 }}>
+                          <div style={{ fontSize: `${9 * page2Settings.bodyFontScale}px`, color: '#374151', lineHeight: 1.2 }}>
                             Detalles del evento...
                           </div>
                         </div>
@@ -786,14 +787,14 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         bottom: `${marginBottomPx}px`,
                         left: 0,
                         right: 0,
-                        height: `${4 * previewScale}px`,
+                        height: `${FOOTER_H}px`,
                         background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                       }}
                     >
-                      <span style={{ fontSize: `${1.5 * previewScale}px`, color: 'white', fontWeight: 'bold' }}>
+                      <span style={{ fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
                         ¡Atrévete a cambiar!
                       </span>
                     </div>
