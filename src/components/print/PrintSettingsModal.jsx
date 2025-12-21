@@ -527,14 +527,14 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         bottom: `${marginBottomPx}px`,
                         left: 0,
                         right: 0,
-                        height: `${4 * previewScale}px`,
+                        height: `${FOOTER_H}px`,
                         background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                       }}
                     >
-                      <span style={{ fontSize: `${1.5 * previewScale}px`, color: 'white', fontWeight: 'bold' }}>
+                      <span style={{ fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
                         ¡Atrévete a cambiar!
                       </span>
                     </div>
