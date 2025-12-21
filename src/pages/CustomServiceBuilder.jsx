@@ -104,6 +104,9 @@ export default function CustomServiceBuilder() {
   const [expandedSegments, setExpandedSegments] = useState({});
   const [showPrintSettings, setShowPrintSettings] = useState(false);
   const [printSettingsPage1, setPrintSettingsPage1] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState(null);
+  const [autoSaveStatus, setAutoSaveStatus] = useState("idle"); // idle, saving, saved, error
 
   const getDefaultSegmentForm = () => ({
     title: "",
@@ -132,8 +135,36 @@ export default function CustomServiceBuilder() {
 
   useEffect(() => {
     if (existingService) {
+      console.log('[DATA LOAD] Service loaded from backend:', {
+        id: existingService.id,
+        name: existingService.name,
+        updated_date: existingService.updated_date,
+        segmentCount: existingService.segments?.length || 0,
+        fullData: existingService
+      });
       setServiceData(existingService);
+      setLastSavedData(JSON.parse(JSON.stringify(existingService)));
       setPrintSettingsPage1(existingService.print_settings_page1 || null);
+      setHasUnsavedChanges(false);
+      
+      // Load from localStorage backup if available and newer
+      const backupKey = `service_backup_${existingService.id}`;
+      const backup = localStorage.getItem(backupKey);
+      if (backup) {
+        try {
+          const { data, timestamp } = JSON.parse(backup);
+          const backupDate = new Date(timestamp);
+          const serverDate = existingService.updated_date ? new Date(existingService.updated_date) : new Date(0);
+          if (backupDate > serverDate) {
+            console.warn('[BACKUP RECOVERY] LocalStorage backup is newer than server data. Consider restoring.', {
+              backupTimestamp: timestamp,
+              serverTimestamp: existingService.updated_date
+            });
+          }
+        } catch (e) {
+          console.error('[BACKUP] Error parsing backup:', e);
+        }
+      }
     }
   }, [existingService]);
 
@@ -151,26 +182,121 @@ export default function CustomServiceBuilder() {
 
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
-      if (serviceId) {
-        return await base44.entities.Service.update(serviceId, data);
-      } else {
-        return await base44.entities.Service.create(data);
+      console.log('[SAVE START]', {
+        serviceId,
+        operation: serviceId ? 'UPDATE' : 'CREATE',
+        dataSnapshot: {
+          name: data.name,
+          date: data.date,
+          segmentCount: data.segments?.length || 0,
+          hasCoordinators: !!data.coordinators,
+          hasPrintSettings: !!data.print_settings_page1
+        },
+        fullPayload: data
+      });
+      
+      try {
+        let result;
+        if (serviceId) {
+          result = await base44.entities.Service.update(serviceId, data);
+        } else {
+          result = await base44.entities.Service.create(data);
+        }
+        
+        console.log('[SAVE SUCCESS]', {
+          resultId: result?.id,
+          resultUpdatedDate: result?.updated_date,
+          fullResult: result
+        });
+        
+        return result;
+      } catch (error) {
+        console.error('[SAVE ERROR]', {
+          error: error.message,
+          stack: error.stack,
+          payload: data
+        });
+        throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('[MUTATION SUCCESS] Invalidating queries and updating state');
       queryClient.invalidateQueries(['customService']);
       queryClient.invalidateQueries(['services']);
-      alert('Servicio guardado');
+      setLastSavedData(JSON.parse(JSON.stringify(serviceData)));
+      setHasUnsavedChanges(false);
+      setAutoSaveStatus("saved");
+      
+      // Save to localStorage backup
+      if (result?.id) {
+        const backupKey = `service_backup_${result.id}`;
+        localStorage.setItem(backupKey, JSON.stringify({
+          data: result,
+          timestamp: new Date().toISOString()
+        }));
+        console.log('[BACKUP] Saved to localStorage:', backupKey);
+      }
+      
+      alert('Servicio guardado exitosamente en ' + new Date().toLocaleTimeString());
+    },
+    onError: (error) => {
+      console.error('[MUTATION ERROR]', error);
+      setAutoSaveStatus("error");
+      alert('Error al guardar: ' + error.message);
     }
   });
 
   const handleSave = () => {
+    console.log('[USER ACTION] Manual save triggered');
     saveServiceMutation.mutate({
       ...serviceData,
       print_settings_page1: printSettingsPage1,
       status: 'active'
     });
   };
+
+  // Track unsaved changes
+  useEffect(() => {
+    if (!lastSavedData) return;
+    
+    const hasChanges = JSON.stringify(serviceData) !== JSON.stringify(lastSavedData);
+    setHasUnsavedChanges(hasChanges);
+    
+    if (hasChanges) {
+      console.log('[UNSAVED CHANGES] Detected differences from last saved state');
+    }
+  }, [serviceData, lastSavedData]);
+
+  // Auto-save with debouncing
+  useEffect(() => {
+    if (!hasUnsavedChanges || !serviceId) return;
+    
+    setAutoSaveStatus("saving");
+    const timer = setTimeout(() => {
+      console.log('[AUTO-SAVE] Triggering auto-save after 3 seconds of inactivity');
+      saveServiceMutation.mutate({
+        ...serviceData,
+        print_settings_page1: printSettingsPage1,
+        status: 'active'
+      });
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [serviceData, hasUnsavedChanges, serviceId]);
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?';
+        return e.returnValue;
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const handleSavePrintSettings = (newSettings) => {
     setPrintSettingsPage1(newSettings.page1);
@@ -303,6 +429,40 @@ export default function CustomServiceBuilder() {
               {serviceId ? 'Editar Servicio' : 'Nuevo Servicio Personalizado'}
             </h1>
             <p className="text-gray-500 mt-1">Crea servicios especiales con horarios y elementos personalizados</p>
+            {/* Last Updated & Status Indicators */}
+            <div className="flex items-center gap-3 mt-2">
+              {existingService?.updated_date && (
+                <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                  Última actualización: {new Date(existingService.updated_date).toLocaleString('es-ES', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </Badge>
+              )}
+              {hasUnsavedChanges && (
+                <Badge className="text-xs bg-yellow-500 text-white animate-pulse">
+                  Cambios sin guardar
+                </Badge>
+              )}
+              {autoSaveStatus === "saving" && (
+                <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">
+                  Guardando automáticamente...
+                </Badge>
+              )}
+              {autoSaveStatus === "saved" && !hasUnsavedChanges && (
+                <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                  ✓ Auto-guardado
+                </Badge>
+              )}
+              {autoSaveStatus === "error" && (
+                <Badge variant="outline" className="text-xs bg-red-50 border-red-200 text-red-700">
+                  ⚠ Error al guardar
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex gap-3">
