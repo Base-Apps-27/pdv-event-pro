@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, RotateCcw, FileText, Bell } from "lucide-react";
+import { Settings, RotateCcw, FileText, Bell, Zap, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 const DEFAULT_SETTINGS = {
   globalScale: 1.0,
@@ -35,6 +35,15 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
   const [page1Settings, setPage1Settings] = useState(settingsPage1 || DEFAULT_SETTINGS);
   const [page2Settings, setPage2Settings] = useState(settingsPage2 || DEFAULT_SETTINGS);
   const [activeTab, setActiveTab] = useState("page1");
+  
+  // Refs for body containers
+  const page1BodyRef = useRef(null);
+  const page2BodyRef = useRef(null);
+  
+  // Overflow state
+  const [page1Overflows, setPage1Overflows] = useState(false);
+  const [page2Overflows, setPage2Overflows] = useState(false);
+  const [isFitting, setIsFitting] = useState(false);
 
   useEffect(() => {
     setPage1Settings(settingsPage1 || DEFAULT_SETTINGS);
@@ -53,6 +62,92 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     onSave({ page1: page1Settings, page2: page2Settings });
     onOpenChange(false);
   };
+
+  // Measure overflow for a specific page
+  const measureOverflow = (pageNumber) => {
+    const ref = pageNumber === 1 ? page1BodyRef.current : page2BodyRef.current;
+    if (!ref) return false;
+    
+    const isOverflowing = ref.scrollHeight > ref.clientHeight;
+    if (pageNumber === 1) {
+      setPage1Overflows(isOverflowing);
+    } else {
+      setPage2Overflows(isOverflowing);
+    }
+    return isOverflowing;
+  };
+
+  // Auto-fit a single page using binary search
+  const autoFitPage = async (pageNumber) => {
+    setIsFitting(true);
+    const ref = pageNumber === 1 ? page1BodyRef.current : page2BodyRef.current;
+    const setSettings = pageNumber === 1 ? setPage1Settings : setPage2Settings;
+    
+    if (!ref) {
+      setIsFitting(false);
+      return;
+    }
+
+    let low = 0.70;
+    let high = 1.00;
+    let bestFit = 1.00;
+    
+    // Binary search for optimal scale
+    for (let i = 0; i < 10; i++) {
+      const mid = (low + high) / 2;
+      
+      // Apply scale
+      await new Promise(resolve => {
+        setSettings(prev => ({ ...prev, globalScale: mid }));
+        setTimeout(resolve, 50); // Allow DOM to update
+      });
+      
+      // Measure
+      const overflows = ref.scrollHeight > ref.clientHeight;
+      
+      if (overflows) {
+        high = mid - 0.01;
+      } else {
+        bestFit = mid;
+        low = mid + 0.01;
+      }
+      
+      if (high - low < 0.01) break;
+    }
+    
+    // Apply best fit
+    setSettings(prev => ({ ...prev, globalScale: bestFit }));
+    
+    // Re-measure
+    setTimeout(() => {
+      measureOverflow(pageNumber);
+      setIsFitting(false);
+    }, 100);
+  };
+
+  // Auto-fit only pages that overflow
+  const autoFitBothPages = async () => {
+    // Measure current state
+    const p1Overflows = measureOverflow(1);
+    const p2Overflows = measureOverflow(2);
+    
+    if (p1Overflows) {
+      await autoFitPage(1);
+    }
+    
+    if (p2Overflows) {
+      await autoFitPage(2);
+    }
+  };
+
+  // Measure overflow when settings change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      measureOverflow(1);
+      measureOverflow(2);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [page1Settings, page2Settings, serviceData]);
 
   const currentSettings = activeTab === "page1" ? page1Settings : page2Settings;
   const setCurrentSettings = activeTab === "page1" ? setPage1Settings : setPage2Settings;
@@ -83,6 +178,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     reset: language === "es" ? "Restaurar" : "Reset",
     cancel: language === "es" ? "Cancelar" : "Cancel",
     save: language === "es" ? "Guardar" : "Save",
+    autoFit: language === "es" ? "Ajuste Automático" : "Auto-Fit",
+    fits: language === "es" ? "Cabe" : "Fits",
+    overflow: language === "es" ? "Desborda" : "Overflow",
     noteP1: language === "es" 
       ? "Ajusta cómo se imprime el programa de servicio (horarios, segmentos, equipos)." 
       : "Adjust how the service program prints (schedules, segments, teams).",
@@ -244,7 +342,20 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-base font-semibold">{t.preview}</Label>
-                  <Badge variant="outline" className="text-xs">Letter</Badge>
+                  <div className="flex items-center gap-2">
+                    {page1Overflows ? (
+                      <Badge variant="destructive" className="text-xs gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        {t.overflow}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs gap-1 bg-green-50 text-green-700 border-green-200">
+                        <CheckCircle2 className="w-3 h-3" />
+                        {t.fits}
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-xs">Letter</Badge>
+                  </div>
                 </div>
                 
                 <div className="bg-gray-900 rounded-lg p-6 flex items-center justify-center min-h-[500px]">
@@ -281,6 +392,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
                     {/* SCALABLE Body Content */}
                     <div 
+                      ref={page1BodyRef}
                       className="absolute"
                       style={{
                         top: `${marginTopPx + 10 * previewScale}px`,
@@ -429,6 +541,19 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                   </div>
                 </div>
                 
+                <div className="flex justify-center">
+                  <Button
+                    onClick={() => autoFitPage(1)}
+                    disabled={!page1Overflows || isFitting}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Zap className="w-3 h-3" />
+                    {t.autoFit}
+                  </Button>
+                </div>
+                
                 <p className="text-xs text-gray-500 text-center">
                   {language === "es" 
                     ? "Azul = márgenes • Cabecera/pie fijos • Cuerpo escala" 
@@ -569,7 +694,20 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-base font-semibold">{t.preview}</Label>
-                  <Badge variant="outline" className="text-xs">Letter</Badge>
+                  <div className="flex items-center gap-2">
+                    {page2Overflows ? (
+                      <Badge variant="destructive" className="text-xs gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        {t.overflow}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs gap-1 bg-green-50 text-green-700 border-green-200">
+                        <CheckCircle2 className="w-3 h-3" />
+                        {t.fits}
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-xs">Letter</Badge>
+                  </div>
                 </div>
                 
                 <div className="bg-gray-900 rounded-lg p-6 flex items-center justify-center min-h-[500px]">
@@ -606,6 +744,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
                     {/* SCALABLE Body - 2 Column Announcements */}
                     <div 
+                      ref={page2BodyRef}
                       className="absolute"
                       style={{
                         top: `${marginTopPx + 10 * previewScale}px`,
@@ -659,6 +798,19 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       </span>
                     </div>
                   </div>
+                </div>
+                
+                <div className="flex justify-center">
+                  <Button
+                    onClick={() => autoFitPage(2)}
+                    disabled={!page2Overflows || isFitting}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Zap className="w-3 h-3" />
+                    {t.autoFit}
+                  </Button>
                 </div>
                 
                 <p className="text-xs text-gray-500 text-center">
