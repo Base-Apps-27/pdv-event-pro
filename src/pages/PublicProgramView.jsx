@@ -479,6 +479,38 @@ export default function PublicProgramView() {
             {/* Weekly Services Display (for Service view type) */}
             {viewType === "service" && actualServiceData && (
               <div className="space-y-6">
+                {/* Countdown Timer */}
+                {(() => {
+                  const allServiceSegments = [
+                    ...(actualServiceData?.['9:30am'] || []),
+                    ...(actualServiceData?.['11:30am'] || [])
+                  ].filter(s => s.start_time);
+                  
+                  const countdown = getCountdownToNext(allServiceSegments);
+                  if (!countdown) return null;
+                  
+                  return (
+                    <Card className={`mb-6 ${countdown.isNear ? 'border-blue-500 border-2' : ''}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600">Próximo Segmento</p>
+                            <p className="font-bold text-lg">{countdown.segment.title}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-3xl font-bold ${countdown.isNear ? 'text-blue-600' : 'text-gray-700'}`}>
+                              {countdown.minutes}:{countdown.seconds.toString().padStart(2, '0')}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {countdown.minutes === 0 ? 'segundos' : countdown.minutes === 1 ? 'minuto' : 'minutos'}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
+
                 {/* 9:30am Service */}
                 {actualServiceData["9:30am"] && (
                   <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500">
@@ -694,6 +726,33 @@ export default function PublicProgramView() {
             {/* Sessions Display (for Event view type) */}
             {viewType === "event" && (
             <div className="space-y-6">
+              {/* Countdown Timer for Events */}
+              {(() => {
+                const countdown = getCountdownToNext(allSegments);
+                if (!countdown) return null;
+                
+                return (
+                  <Card className={`mb-6 ${countdown.isNear ? 'border-blue-500 border-2' : ''}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Próximo Segmento</p>
+                          <p className="font-bold text-lg">{countdown.segment.title}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-3xl font-bold ${countdown.isNear ? 'text-blue-600' : 'text-gray-700'}`}>
+                            {countdown.minutes}:{countdown.seconds.toString().padStart(2, '0')}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {countdown.minutes === 0 ? 'segundos' : countdown.minutes === 1 ? 'minuto' : 'minutos'}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+
               {filteredSessions.map((session) => {
                 const segments = getSessionSegments(session.id);
                 if (segments.length === 0) return null;
