@@ -47,12 +47,14 @@ export default function PublicProgramView() {
       const events = await base44.entities.Event.list('-start_date');
       return events.filter(e => e.status === 'confirmed' || e.status === 'in_progress');
     },
+    refetchInterval: 5000, // Poll every 5 seconds
   });
 
   // Fetch services
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
     queryFn: () => base44.entities.Service.list(),
+    refetchInterval: 5000,
   });
 
   // Handle preloaded date parameter
@@ -130,6 +132,7 @@ export default function PublicProgramView() {
     queryKey: ['weeklyServiceData', selectedServiceId],
     queryFn: () => base44.entities.Service.filter({ id: selectedServiceId }),
     enabled: !!(viewType === "service" && selectedServiceId),
+    refetchInterval: 5000,
   });
 
   // Fetch sessions for selected event OR service
@@ -144,6 +147,7 @@ export default function PublicProgramView() {
       return [];
     },
     enabled: !!(selectedEventId || selectedServiceId),
+    refetchInterval: 5000,
   });
 
   // Fetch segments for selected sessions
@@ -162,12 +166,14 @@ export default function PublicProgramView() {
       );
     },
     enabled: !!(selectedEventId || selectedServiceId) && sessions.length > 0,
+    refetchInterval: 5000,
   });
 
   // Fetch rooms
   const { data: rooms = [] } = useQuery({
     queryKey: ['rooms'],
     queryFn: () => base44.entities.Room.list(),
+    refetchInterval: 30000, // Rooms change less frequently
   });
 
   const selectedEvent = publicEvents.find(e => e.id === selectedEventId);
@@ -194,6 +200,20 @@ export default function PublicProgramView() {
     endTime.setHours(endHours, endMinutes, 0);
     
     return now >= startTime && now <= endTime;
+  };
+
+  const isSegmentUpcoming = (segment) => {
+    if (!segment.start_time) return false;
+    
+    const now = currentTime;
+    const [startHours, startMinutes] = segment.start_time.split(':').map(Number);
+    
+    const startTime = new Date(now);
+    startTime.setHours(startHours, startMinutes, 0);
+    
+    const timeUntilStart = (startTime - now) / 1000 / 60; // minutes
+    
+    return timeUntilStart > 0 && timeUntilStart <= 15;
   };
 
   const getRoomName = (roomId) => {
@@ -226,7 +246,8 @@ export default function PublicProgramView() {
   };
 
   const getSegmentActions = (segment) => {
-    return segment?.segment_actions || [];
+    // CustomServiceBuilder stores in 'actions', Session entities use 'segment_actions'
+    return segment?.actions || segment?.segment_actions || [];
   };
 
   const departmentColors = {
@@ -722,13 +743,21 @@ export default function PublicProgramView() {
                         }
 
                         const isCurrent = isSegmentCurrent(segment);
+                        const isUpcoming = !isCurrent && isSegmentUpcoming(segment);
 
                         return (
-                          <div key={segment.id} className={`p-4 transition-colors border-b last:border-b-0 ${isCurrent ? 'bg-yellow-100 border-l-4 border-l-yellow-500' : 'hover:bg-gray-50'}`}>
+                          <div key={segment.id} className={`p-4 transition-colors border-b last:border-b-0 ${isCurrent ? 'bg-yellow-100 border-l-4 border-l-yellow-500' : isUpcoming ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50'}`}>
                             {/* Current Segment Indicator */}
                             {isCurrent && (
                               <div className="mb-2">
                                 <Badge className="bg-yellow-500 text-white animate-pulse">EN CURSO AHORA</Badge>
+                              </div>
+                            )}
+                            
+                            {/* Upcoming Segment Indicator */}
+                            {isUpcoming && (
+                              <div className="mb-2">
+                                <Badge className="bg-blue-500 text-white">PRÓXIMO (15 min)</Badge>
                               </div>
                             )}
 
@@ -813,35 +842,45 @@ export default function PublicProgramView() {
                                   </div>
                                 </div>
 
-                                {/* Prep Actions */}
+                                {/* Prep Actions (show for Coordinador too) */}
                                 {prepActions.length > 0 && (
                                   <div className="bg-amber-50 border border-amber-200 rounded p-3">
                                     <p className="font-bold text-amber-900 text-sm mb-2">⚠ PREPARACIÓN</p>
                                     <div className="space-y-1">
-                                      {prepActions.map((action, idx) => (
-                                        <div key={idx} className={`text-xs px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}>
-                                          <span className="font-bold">[{action.department}]</span> {action.label}
-                                          {action.offset_min !== undefined && (
-                                            <span className="italic ml-1">({action.offset_min}m antes)</span>
-                                          )}
-                                          {action.notes && <span className="ml-1">— {action.notes}</span>}
-                                        </div>
-                                      ))}
+                                      {prepActions.map((action, idx) => {
+                                        const showForCoord = viewMode === "simple" || action.department === "Coordinador" || action.department === "Admin";
+                                        if (viewMode === "simple" && !showForCoord) return null;
+                                        
+                                        return (
+                                          <div key={idx} className={`text-xs px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}>
+                                            <span className="font-bold">[{action.department}]</span> {action.label}
+                                            {action.offset_min !== undefined && (
+                                              <span className="italic ml-1">({action.offset_min}m antes)</span>
+                                            )}
+                                            {action.notes && <span className="ml-1">— {action.notes}</span>}
+                                          </div>
+                                        );
+                                      })}
                                     </div>
                                   </div>
                                 )}
 
-                                {/* During Actions */}
+                                {/* During Actions (show for Coordinador too) */}
                                 {duringActions.length > 0 && (
                                   <div className="bg-blue-50 border border-blue-200 rounded p-3">
                                     <p className="font-bold text-blue-900 text-sm mb-2">▶ DURANTE SEGMENTO</p>
                                     <div className="space-y-1">
-                                      {duringActions.map((action, idx) => (
-                                        <div key={idx} className={`text-xs px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}>
-                                          <span className="font-bold">[{action.department}]</span> {action.label}
-                                          {action.notes && <span className="ml-1">— {action.notes}</span>}
-                                        </div>
-                                      ))}
+                                      {duringActions.map((action, idx) => {
+                                        const showForCoord = viewMode === "simple" || action.department === "Coordinador" || action.department === "Admin";
+                                        if (viewMode === "simple" && !showForCoord) return null;
+                                        
+                                        return (
+                                          <div key={idx} className={`text-xs px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}>
+                                            <span className="font-bold">[{action.department}]</span> {action.label}
+                                            {action.notes && <span className="ml-1">— {action.notes}</span>}
+                                          </div>
+                                        );
+                                      })}
                                     </div>
                                   </div>
                                 )}
