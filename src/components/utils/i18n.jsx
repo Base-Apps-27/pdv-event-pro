@@ -52,6 +52,10 @@ const translations = {
     'btn.add': 'Agregar',
     'btn.edit': 'Editar',
     'btn.delete': 'Eliminar',
+    'btn.live_view': 'Vista en Vivo',
+    'btn.print_settings': 'Config. Impresión',
+    'btn.print': 'Imprimir',
+    'btn.saving': 'Guardando...',
     
     // Status
     'status.planning': 'EN PLANIFICACIÓN',
@@ -118,6 +122,10 @@ const translations = {
     'btn.add': 'Add',
     'btn.edit': 'Edit',
     'btn.delete': 'Delete',
+    'btn.live_view': 'Live View',
+    'btn.print_settings': 'Print Settings',
+    'btn.print': 'Print',
+    'btn.saving': 'Saving...',
     
     // Status
     'status.planning': 'PLANNING',

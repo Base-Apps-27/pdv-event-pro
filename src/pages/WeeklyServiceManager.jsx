@@ -19,8 +19,10 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
+import { useLanguage } from "@/components/utils/i18n";
 
 export default function WeeklyServiceManager() {
+  const { t } = useLanguage();
   // State
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
@@ -1728,7 +1730,7 @@ Return ONLY valid JSON:
           <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">
             Servicios Dominicales
           </h1>
-          <p className="text-gray-500 mt-1">Gestión semanal unificada / Unified weekly management</p>
+          <p className="text-gray-500 mt-1">{t('dashboard.services.subtitle')}</p>
           {/* Data Integrity Indicators */}
           <div className="flex items-center gap-3 mt-2">
             {existingData?.updated_date && (
@@ -1745,7 +1747,7 @@ Return ONLY valid JSON:
             )}
             {hasUnsavedChanges && (
               <Badge className="text-xs bg-yellow-500 text-white animate-pulse">
-                Cambios sin guardar / Unsaved changes
+                {t('btn.saving')}
               </Badge>
             )}
             {lastSaveTimestamp && !hasUnsavedChanges && (
@@ -1761,9 +1763,9 @@ Return ONLY valid JSON:
         </div>
         <div className="flex gap-3 items-center">
           {savingField && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Loader2 className="w-4 h-4 animate-spin text-pdv-teal" />
-              <span>Guardando... / Saving...</span>
+            <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
+              <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin text-pdv-teal" />
+              <span className="hidden md:inline">{t('btn.saving')}</span>
             </div>
           )}
           
@@ -1771,27 +1773,27 @@ Return ONLY valid JSON:
           <Button 
             onClick={() => window.open(createPageUrl('PublicProgramView') + `?date=${selectedDate}`, '_blank')}
             variant="outline"
-            className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold"
+            className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
           >
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Vista en Vivo / Live View
+            <ExternalLink className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+            <span className="hidden md:inline">{t('btn.live_view')}</span>
           </Button>
           
           <Button 
             onClick={() => setShowPrintSettings(true)}
             variant="outline"
-            className="border-gray-400 text-gray-900 hover:bg-gray-50 border-2 font-semibold"
+            className="border-gray-400 text-gray-900 hover:bg-gray-50 border-2 font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
           >
-            <Settings className="w-4 h-4 mr-2" />
-            Config. Impresión / Print Settings
+            <Settings className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+            <span className="hidden md:inline">{t('btn.print_settings')}</span>
           </Button>
           
           <Button 
             onClick={() => window.print()}
-            className="bg-pdv-green text-white hover:bg-pdv-teal font-semibold"
+            className="bg-pdv-green text-white hover:bg-pdv-teal font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
           >
-            <Printer className="w-4 h-4 mr-2" />
-            Imprimir / Print
+            <Printer className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+            <span className="hidden md:inline">{t('btn.print')}</span>
           </Button>
         </div>
       </div>
