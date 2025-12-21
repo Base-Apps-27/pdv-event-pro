@@ -479,7 +479,7 @@ export default function PublicProgramView() {
             {/* Weekly Services Display (for Service view type) */}
             {viewType === "service" && actualServiceData && (
               <div className="space-y-6">
-                {/* Countdown Timer - Show up to 60 minutes before */}
+                {/* Countdown Timer - 2 hours for first segment, 1 hour for others */}
                 {(() => {
                   const allServiceSegments = [
                     ...(actualServiceData?.['9:30am'] || []),
@@ -487,7 +487,18 @@ export default function PublicProgramView() {
                   ].filter(s => s.start_time);
                   
                   const countdown = getCountdownToNext(allServiceSegments);
-                  if (!countdown || countdown.minutes > 60) return null;
+                  if (!countdown) return null;
+                  
+                  // Check if this is the first segment
+                  const sortedSegments = allServiceSegments.sort((a, b) => {
+                    const [aH, aM] = a.start_time.split(':').map(Number);
+                    const [bH, bM] = b.start_time.split(':').map(Number);
+                    return (aH * 60 + aM) - (bH * 60 + bM);
+                  });
+                  const isFirstSegment = sortedSegments[0]?.title === countdown.segment.title;
+                  const maxMinutes = isFirstSegment ? 120 : 60;
+                  
+                  if (countdown.minutes > maxMinutes) return null;
                   
                   return (
                     <Card className={`mb-6 ${countdown.isNear ? 'border-blue-500 border-2' : ''}`}>
@@ -726,10 +737,21 @@ export default function PublicProgramView() {
             {/* Sessions Display (for Event view type) */}
             {viewType === "event" && (
             <div className="space-y-6">
-              {/* Countdown Timer for Events - Show up to 60 minutes before */}
+              {/* Countdown Timer for Events - 2 hours for first segment, 1 hour for others */}
               {(() => {
                 const countdown = getCountdownToNext(allSegments);
-                if (!countdown || countdown.minutes > 60) return null;
+                if (!countdown) return null;
+                
+                // Check if this is the first segment
+                const sortedSegments = allSegments.filter(s => s.start_time).sort((a, b) => {
+                  const [aH, aM] = a.start_time.split(':').map(Number);
+                  const [bH, bM] = b.start_time.split(':').map(Number);
+                  return (aH * 60 + aM) - (bH * 60 + bM);
+                });
+                const isFirstSegment = sortedSegments[0]?.id === countdown.segment.id;
+                const maxMinutes = isFirstSegment ? 120 : 60;
+                
+                if (countdown.minutes > maxMinutes) return null;
                 
                 return (
                   <Card className={`mb-6 ${countdown.isNear ? 'border-blue-500 border-2' : ''}`}>
