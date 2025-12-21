@@ -513,6 +513,21 @@ export default function PublicProgramView() {
                                  <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
                                </p>
                              )}
+
+                             {/* Coordinator Actions */}
+                             {segment.actions && segment.actions.length > 0 && (
+                               <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs mt-2">
+                                 <p className="font-bold text-amber-900 mb-1">📋 Acciones para Coordinador</p>
+                                 <div className="space-y-1">
+                                   {segment.actions.map((action, aIdx) => (
+                                     <div key={aIdx} className="text-amber-800">
+                                       • {action.label || action.description || action}
+                                       {action.notes && <span className="italic ml-1">— {action.notes}</span>}
+                                     </div>
+                                   ))}
+                                 </div>
+                               </div>
+                             )}
                            </div>
                          </div>
                        </div>
@@ -610,15 +625,30 @@ export default function PublicProgramView() {
                                   <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
                                 </p>
                               )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+
+                              {/* Coordinator Actions */}
+                              {segment.actions && segment.actions.length > 0 && (
+                                <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs mt-2">
+                                  <p className="font-bold text-amber-900 mb-1">📋 Acciones para Coordinador</p>
+                                  <div className="space-y-1">
+                                    {segment.actions.map((action, aIdx) => (
+                                      <div key={aIdx} className="text-amber-800">
+                                        • {action.label || action.description || action}
+                                        {action.notes && <span className="italic ml-1">— {action.notes}</span>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              </div>
+                              </div>
+                              </div>
+                              ))}
+                              </div>
+                              </div>
+                              )}
+                              </div>
+                              )}
 
             {/* Sessions Display (for Event view type) */}
             {viewType === "event" && (
