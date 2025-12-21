@@ -484,7 +484,11 @@ export default function PublicProgramView() {
                   const allServiceSegments = [
                     ...(actualServiceData?.['9:30am'] || []),
                     ...(actualServiceData?.['11:30am'] || [])
-                  ].filter(s => s.start_time);
+                  ].map(s => ({
+                    ...s,
+                    start_time: s.start_time || s.data?.start_time,
+                    title: s.title || s.data?.title || 'Untitled'
+                  })).filter(s => s.start_time);
                   
                   const countdown = getCountdownToNext(allServiceSegments);
                   if (!countdown) return null;
