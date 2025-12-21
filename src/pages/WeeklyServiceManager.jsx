@@ -70,6 +70,9 @@ export default function WeeklyServiceManager() {
   const [showPrintSettings, setShowPrintSettings] = useState(false);
   const [printSettingsPage1, setPrintSettingsPage1] = useState(null);
   const [printSettingsPage2, setPrintSettingsPage2] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState(null);
+  const [lastSaveTimestamp, setLastSaveTimestamp] = useState(null);
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
@@ -199,19 +202,62 @@ export default function WeeklyServiceManager() {
   // Mutations
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
-      console.log('About to save:', data);
-      if (existingData?.id) {
-        return await base44.entities.Service.update(existingData.id, data);
-      } else {
-        return await base44.entities.Service.create(data);
+      console.log('[WEEKLY SAVE START]', {
+        operation: existingData?.id ? 'UPDATE' : 'CREATE',
+        serviceId: existingData?.id,
+        date: data.date,
+        snapshot: {
+          hasCoordinators930: !!data.coordinators?.['9:30am'],
+          hasCoordinators1130: !!data.coordinators?.['11:30am'],
+          segments930Count: data['9:30am']?.length || 0,
+          segments1130Count: data['11:30am']?.length || 0,
+          selectedAnnouncementsCount: data.selected_announcements?.length || 0
+        },
+        fullPayload: data
+      });
+      
+      try {
+        let result;
+        if (existingData?.id) {
+          result = await base44.entities.Service.update(existingData.id, data);
+        } else {
+          result = await base44.entities.Service.create(data);
+        }
+        
+        console.log('[WEEKLY SAVE SUCCESS]', {
+          resultId: result?.id,
+          resultUpdatedDate: result?.updated_date,
+          fullResult: result
+        });
+        
+        return result;
+      } catch (error) {
+        console.error('[WEEKLY SAVE ERROR]', {
+          error: error.message,
+          stack: error.stack,
+          payload: data
+        });
+        throw error;
       }
     },
     onSuccess: (result) => {
-      console.log('Save successful:', result);
+      console.log('[WEEKLY MUTATION SUCCESS] Save completed');
+      setLastSavedData(JSON.parse(JSON.stringify(serviceData)));
+      setLastSaveTimestamp(new Date().toISOString());
+      setHasUnsavedChanges(false);
+      
+      // Save to localStorage backup
+      const backupKey = `service_backup_${selectedDate}`;
+      localStorage.setItem(backupKey, JSON.stringify({
+        data: result,
+        timestamp: new Date().toISOString()
+      }));
+      console.log('[BACKUP] Saved to localStorage:', backupKey);
+      
       // Don't invalidate queries to prevent refetch clearing state
     },
     onError: (error) => {
-      console.error('Error saving service:', error);
+      console.error('[WEEKLY MUTATION ERROR]', error);
       alert('Error al guardar: ' + error.message);
     }
   });
@@ -255,6 +301,15 @@ export default function WeeklyServiceManager() {
   // Initialize service data
   useEffect(() => {
     if (existingData) {
+      console.log('[WEEKLY DATA LOAD] Service loaded from backend:', {
+        id: existingData.id,
+        date: existingData.date,
+        updated_date: existingData.updated_date,
+        segments930Count: existingData['9:30am']?.length || 0,
+        segments1130Count: existingData['11:30am']?.length || 0,
+        fullData: existingData
+      });
+      
       // Merge blueprint fields with existing segments to ensure backward compatibility
       const mergeSegmentsWithBlueprint = (existingSegments, timeSlot) => {
         return existingSegments.map((savedSeg, idx) => {
@@ -280,9 +335,34 @@ export default function WeeklyServiceManager() {
         selected_announcements: existingData.selected_announcements || []
       };
       setServiceData(loadedData);
+      setLastSavedData(JSON.parse(JSON.stringify(loadedData)));
       setSelectedAnnouncements(existingData.selected_announcements || []);
       setPrintSettingsPage1(existingData.print_settings_page1 || null);
       setPrintSettingsPage2(existingData.print_settings_page2 || null);
+      setHasUnsavedChanges(false);
+      
+      // Check localStorage backup for recovery
+      const backupKey = `service_backup_${selectedDate}`;
+      const backup = localStorage.getItem(backupKey);
+      if (backup) {
+        try {
+          const { data, timestamp } = JSON.parse(backup);
+          const backupDate = new Date(timestamp);
+          const serverDate = existingData.updated_date ? new Date(existingData.updated_date) : new Date(0);
+          if (backupDate > serverDate) {
+            console.warn('[BACKUP RECOVERY] LocalStorage backup is newer than server data:', {
+              backupTimestamp: timestamp,
+              serverTimestamp: existingData.updated_date
+            });
+            if (window.confirm('Se encontró una versión más reciente en el navegador. ¿Restaurar datos del backup local?')) {
+              setServiceData(data);
+              setLastSavedData(JSON.parse(JSON.stringify(data)));
+            }
+          }
+        } catch (e) {
+          console.error('[BACKUP] Error parsing backup:', e);
+        }
+      }
     } else {
       const initialData = {
         date: selectedDate,
@@ -317,11 +397,41 @@ export default function WeeklyServiceManager() {
         selected_announcements: []
       };
       setServiceData(initialData);
+      setLastSavedData(null);
       setSelectedAnnouncements([]);
       setPrintSettingsPage1(null);
       setPrintSettingsPage2(null);
+      setHasUnsavedChanges(false);
+      
+      console.log('[WEEKLY DATA LOAD] New service initialized for:', selectedDate);
     }
   }, [existingData, selectedDate]);
+
+  // Track unsaved changes
+  useEffect(() => {
+    if (!lastSavedData || !serviceData) return;
+    
+    const hasChanges = JSON.stringify(serviceData) !== JSON.stringify(lastSavedData);
+    setHasUnsavedChanges(hasChanges);
+    
+    if (hasChanges) {
+      console.log('[UNSAVED CHANGES] Detected differences from last saved state');
+    }
+  }, [serviceData, lastSavedData]);
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?';
+        return e.returnValue;
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   // Auto-select announcements for new services AND existing services without selections
   useEffect(() => {
@@ -1619,6 +1729,35 @@ Return ONLY valid JSON:
             Servicios Dominicales
           </h1>
           <p className="text-gray-500 mt-1">Gestión semanal unificada / Unified weekly management</p>
+          {/* Data Integrity Indicators */}
+          <div className="flex items-center gap-3 mt-2">
+            {existingData?.updated_date && (
+              <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                Última actualización: {new Date(existingData.updated_date).toLocaleString('es-ES', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })}
+              </Badge>
+            )}
+            {hasUnsavedChanges && (
+              <Badge className="text-xs bg-yellow-500 text-white animate-pulse">
+                Cambios sin guardar / Unsaved changes
+              </Badge>
+            )}
+            {lastSaveTimestamp && !hasUnsavedChanges && (
+              <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                ✓ Guardado a las {new Date(lastSaveTimestamp).toLocaleTimeString('es-ES', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })}
+              </Badge>
+            )}
+          </div>
         </div>
         <div className="flex gap-3 items-center">
           {savingField && (
