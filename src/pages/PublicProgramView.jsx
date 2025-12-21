@@ -202,18 +202,59 @@ export default function PublicProgramView() {
     return now >= startTime && now <= endTime;
   };
 
-  const isSegmentUpcoming = (segment) => {
-    if (!segment.start_time) return false;
+  const getNextSegment = (segments) => {
+    if (!segments || segments.length === 0) return null;
+    
+    const now = currentTime;
+    const futureSegments = segments.filter(seg => {
+      if (!seg.start_time) return false;
+      const [hours, minutes] = seg.start_time.split(':').map(Number);
+      const startTime = new Date(now);
+      startTime.setHours(hours, minutes, 0);
+      return startTime > now;
+    });
+    
+    if (futureSegments.length === 0) return null;
+    
+    // Sort by start time and return first
+    return futureSegments.sort((a, b) => {
+      const [aH, aM] = a.start_time.split(':').map(Number);
+      const [bH, bM] = b.start_time.split(':').map(Number);
+      return (aH * 60 + aM) - (bH * 60 + bM);
+    })[0];
+  };
+
+  const isSegmentUpcoming = (segment, allSegments) => {
+    const nextSegment = getNextSegment(allSegments);
+    if (!nextSegment || nextSegment.id !== segment.id) return false;
     
     const now = currentTime;
     const [startHours, startMinutes] = segment.start_time.split(':').map(Number);
-    
     const startTime = new Date(now);
     startTime.setHours(startHours, startMinutes, 0);
-    
-    const timeUntilStart = (startTime - now) / 1000 / 60; // minutes
+    const timeUntilStart = (startTime - now) / 1000 / 60;
     
     return timeUntilStart > 0 && timeUntilStart <= 15;
+  };
+
+  const getCountdownToNext = (segments) => {
+    const nextSegment = getNextSegment(segments);
+    if (!nextSegment) return null;
+    
+    const now = currentTime;
+    const [hours, minutes] = nextSegment.start_time.split(':').map(Number);
+    const startTime = new Date(now);
+    startTime.setHours(hours, minutes, 0);
+    const diffMs = startTime - now;
+    const diffMin = Math.floor(diffMs / 1000 / 60);
+    const diffSec = Math.floor((diffMs / 1000) % 60);
+    
+    return {
+      segment: nextSegment,
+      minutes: diffMin,
+      seconds: diffSec,
+      isNear: diffMin <= 15
+    };
   };
 
   const getRoomName = (roomId) => {
@@ -773,7 +814,7 @@ export default function PublicProgramView() {
                         }
 
                         const isCurrent = isSegmentCurrent(segment);
-                        const isUpcoming = !isCurrent && isSegmentUpcoming(segment);
+                        const isUpcoming = !isCurrent && isSegmentUpcoming(segment, allSegments);
 
                         return (
                           <div key={segment.id} className={`p-4 transition-colors border-b last:border-b-0 ${isCurrent ? 'bg-yellow-100 border-l-4 border-l-yellow-500' : isUpcoming ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50'}`}>
