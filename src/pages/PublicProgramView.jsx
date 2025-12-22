@@ -614,7 +614,8 @@ export default function PublicProgramView() {
 
             {/* Weekly Services Display (for Service view type) */}
             {viewType === "service" && actualServiceData && (
-              actualServiceData["9:30am"] || actualServiceData["11:30am"] ? (
+              (actualServiceData["9:30am"] && actualServiceData["9:30am"].length > 0) || 
+              (actualServiceData["11:30am"] && actualServiceData["11:30am"].length > 0) ? (
               <div className="space-y-6">
                 {/* Countdown Timer - 2 hours for first segment, 1 hour for others */}
                 {(() => {
