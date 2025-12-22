@@ -37,12 +37,12 @@ const unitToPx = (value) => {
 export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, settingsPage2, onSave, language = "es", serviceData = null }) {
   const [page1Settings, setPage1Settings] = useState(settingsPage1 || DEFAULT_SETTINGS);
   const [page2Settings, setPage2Settings] = useState(settingsPage2 || DEFAULT_SETTINGS);
-  const [activeTab, setActiveTab] = useState("page1");
+  const [activePage, setActivePage] = useState("page1");
   const [pageFitScale, setPageFitScale] = useState(1);
   const [page1Overflows, setPage1Overflows] = useState(false);
   const [page2Overflows, setPage2Overflows] = useState(false);
   
-  const previewWrapRef = useRef(null);
+  const previewViewportRef = useRef(null);
   const page1BodyRef = useRef(null);
   const page2BodyRef = useRef(null);
 
@@ -84,20 +84,20 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
   // Responsive preview scaling
   useEffect(() => {
-    if (!previewWrapRef.current || !open) return;
+    if (!previewViewportRef.current || !open) return;
 
-    const element = previewWrapRef.current;
+    const element = previewViewportRef.current;
 
     const observer = new ResizeObserver((entries) => {
       const container = entries[0];
       if (!container) return;
 
-      const containerWidth = container.contentRect.width;
-      const containerHeight = container.contentRect.height;
+      const containerWidth = container.contentRect.width - 40; // padding
+      const containerHeight = container.contentRect.height - 40; // padding
 
       const scaleX = containerWidth / PAGE_W;
       const scaleY = containerHeight / PAGE_H;
-      const scale = Math.min(scaleX, scaleY) * 0.95;
+      const scale = Math.min(Math.min(scaleX, scaleY) * 0.95, 1.0); // clamp to max 1.0
 
       setPageFitScale(scale);
     });
@@ -126,7 +126,17 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     onOpenChange(false);
   };
 
-  const currentSettings = activeTab === "page1" ? page1Settings : page2Settings;
+  const handleReset = () => {
+    if (activePage === "page1") {
+      setPage1Settings(DEFAULT_SETTINGS);
+    } else {
+      setPage2Settings(DEFAULT_SETTINGS);
+    }
+  };
+
+  const currentSettings = activePage === "page1" ? page1Settings : page2Settings;
+  const setCurrentSettings = activePage === "page1" ? setPage1Settings : setPage2Settings;
+  const currentOverflows = activePage === "page1" ? page1Overflows : page2Overflows;
   const marginTopPx = unitToPx(currentSettings.margins.top);
   const marginRightPx = unitToPx(currentSettings.margins.right);
   const marginBottomPx = unitToPx(currentSettings.margins.bottom);
@@ -172,110 +182,170 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl bg-white max-h-[95vh] overflow-hidden p-6">
-        <DialogHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <Settings className="w-5 h-5 text-pdv-teal" />
-              {t.title}
-            </DialogTitle>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)} size="sm">
-                {t.cancel}
+      <DialogContent className="max-w-7xl bg-white max-h-[95vh] overflow-hidden p-0">
+        {/* TOOLBAR */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <Settings className="w-5 h-5 text-pdv-teal" />
+            <span className="font-semibold text-lg">{t.title}</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {/* Page Selector */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-md p-1">
+              <Button
+                variant={activePage === "page1" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActivePage("page1")}
+                className={activePage === "page1" ? "bg-white shadow-sm" : ""}
+              >
+                <FileText className="w-4 h-4 mr-1" />
+                {t.page1}
               </Button>
-              <Button onClick={handleSave} className="bg-pdv-teal text-white hover:bg-pdv-green" size="sm">
-                {t.save}
+              <Button
+                variant={activePage === "page2" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActivePage("page2")}
+                className={activePage === "page2" ? "bg-white shadow-sm" : ""}
+              >
+                <Bell className="w-4 h-4 mr-1" />
+                {t.page2}
               </Button>
             </div>
-          </div>
-        </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="page1" className="gap-2">
-              <FileText className="w-4 h-4" />
-              {t.page1}
-            </TabsTrigger>
-            <TabsTrigger value="page2" className="gap-2">
-              <Bell className="w-4 h-4" />
-              {t.page2}
-            </TabsTrigger>
-          </TabsList>
-
-          {/* PAGE 1 TAB */}
-          <TabsContent value="page1" className="mt-0 h-[calc(95vh-180px)]">
-            <div className="grid grid-cols-2 gap-6 h-full">
-              {/* Left: Controls */}
-              <div className="space-y-4 overflow-y-auto pr-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-                  {t.noteP1}
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-base font-semibold">{t.bodyFontScale}</Label>
-                    <span className="text-sm font-mono text-gray-600">{(page1Settings.bodyFontScale * 100).toFixed(0)}%</span>
-                  </div>
-                  <Slider
-                    value={[page1Settings.bodyFontScale]}
-                    onValueChange={([value]) => setPage1Settings(prev => ({ ...prev, bodyFontScale: value }))}
-                    min={0.7}
-                    max={1.6}
-                    step={0.1}
-                  />
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>70%</span><span>100%</span><span>160%</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-base font-semibold">{t.titleFontScale}</Label>
-                    <span className="text-sm font-mono text-gray-600">{(page1Settings.titleFontScale * 100).toFixed(0)}%</span>
-                  </div>
-                  <Slider
-                    value={[page1Settings.titleFontScale]}
-                    onValueChange={([value]) => setPage1Settings(prev => ({ ...prev, titleFontScale: value }))}
-                    min={0.7}
-                    max={1.6}
-                    step={0.1}
-                  />
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>70%</span><span>100%</span><span>160%</span>
-                  </div>
-                </div>
-
-                {page1Overflows && (
-                  <Badge variant="destructive" className="w-full justify-center gap-1 py-2">
-                    <AlertTriangle className="w-4 h-4" />
-                    {t.overflow}
-                  </Badge>
-                )}
-                {!page1Overflows && (
-                  <Badge variant="outline" className="w-full justify-center gap-1 py-2 bg-green-50 text-green-700 border-green-200">
-                    <CheckCircle2 className="w-4 h-4" />
-                    {t.fits}
-                  </Badge>
-                )}
+            {/* Body Font Scale */}
+            <div className="flex items-center gap-2">
+              <Label className="text-xs whitespace-nowrap">{t.bodyFontScale}</Label>
+              <div className="w-32">
+                <Slider
+                  value={[currentSettings.bodyFontScale]}
+                  onValueChange={([value]) => setCurrentSettings(prev => ({ ...prev, bodyFontScale: value }))}
+                  min={0.7}
+                  max={1.6}
+                  step={0.1}
+                  className="w-full"
+                />
               </div>
+              <span className="text-xs font-mono w-10 text-right">{(currentSettings.bodyFontScale * 100).toFixed(0)}%</span>
+            </div>
 
-              {/* Right: Page 1 Preview */}
-              <div ref={previewWrapRef} className="bg-gray-900 rounded-lg flex items-center justify-center overflow-hidden">
-                <div style={{ display: 'inline-block', transform: `scale(${pageFitScale})`, transformOrigin: 'top center' }}>
-                  <div 
-                    className="bg-white shadow-2xl relative"
-                    style={{
-                      width: `${PAGE_W}px`,
-                      height: `${PAGE_H}px`,
-                      display: 'inline-block',
-                      flexShrink: 0
-                    }}
-                  >
-                    {/* Margin Overlays */}
-                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
-                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
-                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, bottom: 0, width: `${marginLeftPx}px` }} />
-                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, right: 0, bottom: 0, width: `${marginRightPx}px` }} />
+            {/* Title Font Scale */}
+            <div className="flex items-center gap-2">
+              <Label className="text-xs whitespace-nowrap">{t.titleFontScale}</Label>
+              <div className="w-32">
+                <Slider
+                  value={[currentSettings.titleFontScale]}
+                  onValueChange={([value]) => setCurrentSettings(prev => ({ ...prev, titleFontScale: value }))}
+                  min={0.7}
+                  max={1.6}
+                  step={0.1}
+                  className="w-full"
+                />
+              </div>
+              <span className="text-xs font-mono w-10 text-right">{(currentSettings.titleFontScale * 100).toFixed(0)}%</span>
+            </div>
+
+            {/* Overflow Badge */}
+            {currentOverflows ? (
+              <Badge variant="destructive" className="gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {t.overflow}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="gap-1 bg-green-50 text-green-700 border-green-200">
+                <CheckCircle2 className="w-3 h-3" />
+                {t.fits}
+              </Badge>
+            )}
+
+            {/* Reset */}
+            <Button variant="outline" size="sm" onClick={handleReset}>
+              Reset
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} size="sm">
+              {t.cancel}
+            </Button>
+            <Button onClick={handleSave} className="bg-pdv-teal text-white hover:bg-pdv-green" size="sm">
+              {t.save}
+            </Button>
+          </div>
+        </div>
+
+        {/* VIEWER */}
+        <div className="flex h-[calc(95vh-80px)] min-h-0">
+          {/* LEFT SIDEBAR - Page Thumbnails */}
+          <div className="w-48 bg-gray-50 border-r border-gray-200 p-4 space-y-3 overflow-y-auto">
+            <button
+              onClick={() => setActivePage("page1")}
+              className={`w-full p-3 rounded-lg border-2 transition-all ${
+                activePage === "page1" 
+                  ? "border-pdv-teal bg-pdv-teal/5" 
+                  : "border-gray-300 hover:border-gray-400"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="w-4 h-4" />
+                <span className="font-semibold text-sm">Page 1</span>
+              </div>
+              <div className="text-xs text-gray-600">
+                {language === "es" ? "Programa del Servicio" : "Service Program"}
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActivePage("page2")}
+              className={`w-full p-3 rounded-lg border-2 transition-all ${
+                activePage === "page2" 
+                  ? "border-pdv-teal bg-pdv-teal/5" 
+                  : "border-gray-300 hover:border-gray-400"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Bell className="w-4 h-4" />
+                <span className="font-semibold text-sm">Page 2</span>
+              </div>
+              <div className="text-xs text-gray-600">
+                {language === "es" ? "Anuncios" : "Announcements"}
+              </div>
+            </button>
+          </div>
+
+          {/* CENTER PREVIEW */}
+          <div ref={previewViewportRef} className="flex-1 bg-gray-900 overflow-hidden flex items-center justify-center min-h-0">
+            <div style={{ transform: `scale(${pageFitScale})`, transformOrigin: "top center" }}>
+              {activePage === "page1" ? renderPage1() : renderPage2()}
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  function renderPage1() {
+    const marginTopPx = unitToPx(page1Settings.margins.top);
+    const marginRightPx = unitToPx(page1Settings.margins.right);
+    const marginBottomPx = unitToPx(page1Settings.margins.bottom);
+    const marginLeftPx = unitToPx(page1Settings.margins.left);
+
+    return (
+      <div 
+        className="bg-white shadow-2xl relative"
+        style={{
+          width: `${PAGE_W}px`,
+          height: `${PAGE_H}px`,
+          display: 'inline-block',
+          flexShrink: 0
+        }}
+      >
+        {/* Margin Overlays */}
+        <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
+        <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
+        <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, bottom: 0, width: `${marginLeftPx}px` }} />
+        <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, right: 0, bottom: 0, width: `${marginRightPx}px` }} />
+
 
                     {/* FIXED Header */}
                     <div 
@@ -682,127 +752,72 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                             </div>
                             </div>
 
-                    {/* FIXED Footer */}
-                    <div 
-                      style={{
-                        position: 'absolute',
-                        bottom: `${marginBottomPx}px`,
-                        left: 0,
-                        right: 0,
-                        height: `${FOOTER_H}px`,
-                        background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <span style={{ fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
-                        ¡Atrévete a cambiar!
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
+        {/* FIXED Footer */}
+        <div 
+          style={{
+            position: 'absolute',
+            bottom: `${marginBottomPx}px`,
+            left: 0,
+            right: 0,
+            height: `${FOOTER_H}px`,
+            background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <span style={{ fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
+            ¡Atrévete a cambiar!
+          </span>
+        </div>
+      </div>
+    );
+  }
 
-          {/* PAGE 2 TAB */}
-          <TabsContent value="page2" className="mt-0 h-[calc(95vh-180px)]">
-            <div className="grid grid-cols-2 gap-6 h-full">
-              {/* Left: Controls */}
-              <div className="space-y-4 overflow-y-auto pr-4">
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                  {t.noteP2}
-                </div>
+  function renderPage2() {
+    const marginTopPx = unitToPx(page2Settings.margins.top);
+    const marginRightPx = unitToPx(page2Settings.margins.right);
+    const marginBottomPx = unitToPx(page2Settings.margins.bottom);
+    const marginLeftPx = unitToPx(page2Settings.margins.left);
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-base font-semibold">{t.bodyFontScale}</Label>
-                    <span className="text-sm font-mono text-gray-600">{(page2Settings.bodyFontScale * 100).toFixed(0)}%</span>
-                  </div>
-                  <Slider
-                    value={[page2Settings.bodyFontScale]}
-                    onValueChange={([value]) => setPage2Settings(prev => ({ ...prev, bodyFontScale: value }))}
-                    min={0.7}
-                    max={1.6}
-                    step={0.1}
-                  />
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>70%</span><span>100%</span><span>160%</span>
-                  </div>
-                </div>
+    return (
+      <div 
+        className="bg-white shadow-2xl relative"
+        style={{
+          width: `${PAGE_W}px`,
+          height: `${PAGE_H}px`,
+          display: 'inline-block',
+          flexShrink: 0
+        }}
+      >
+        {/* Margin Overlays */}
+        <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
+        <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
+        <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, bottom: 0, width: `${marginLeftPx}px` }} />
+        <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, right: 0, bottom: 0, width: `${marginRightPx}px` }} />
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-base font-semibold">{t.titleFontScale}</Label>
-                    <span className="text-sm font-mono text-gray-600">{(page2Settings.titleFontScale * 100).toFixed(0)}%</span>
-                  </div>
-                  <Slider
-                    value={[page2Settings.titleFontScale]}
-                    onValueChange={([value]) => setPage2Settings(prev => ({ ...prev, titleFontScale: value }))}
-                    min={0.7}
-                    max={1.6}
-                    step={0.1}
-                  />
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>70%</span><span>100%</span><span>160%</span>
-                  </div>
-                </div>
-
-                {page2Overflows && (
-                  <Badge variant="destructive" className="w-full justify-center gap-1 py-2">
-                    <AlertTriangle className="w-4 h-4" />
-                    {t.overflow}
-                  </Badge>
-                )}
-                {!page2Overflows && (
-                  <Badge variant="outline" className="w-full justify-center gap-1 py-2 bg-green-50 text-green-700 border-green-200">
-                    <CheckCircle2 className="w-4 h-4" />
-                    {t.fits}
-                  </Badge>
-                )}
-              </div>
-
-              {/* Right: Page 2 Preview */}
-              <div className="bg-gray-900 rounded-lg flex items-center justify-center overflow-hidden">
-                <div style={{ display: 'inline-block', transform: `scale(${pageFitScale})`, transformOrigin: 'top center' }}>
-                  <div 
-                    className="bg-white shadow-2xl relative"
-                    style={{
-                      width: `${PAGE_W}px`,
-                      height: `${PAGE_H}px`,
-                      display: 'inline-block',
-                      flexShrink: 0
-                    }}
-                  >
-                    {/* Margin Overlays */}
-                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
-                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
-                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, bottom: 0, width: `${marginLeftPx}px` }} />
-                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, right: 0, bottom: 0, width: `${marginRightPx}px` }} />
-
-                    {/* FIXED Header */}
-                    <div 
-                      className="absolute bg-white"
-                      style={{
-                        top: `${marginTopPx}px`,
-                        left: `${marginLeftPx}px`,
-                        right: `${marginRightPx}px`,
-                        height: `${HEADER_H}px`,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderBottom: '1px solid #e5e7eb'
-                      }}
-                    >
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a' }}>
-                        Anuncios
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>
-                        Domingo {selectedDateFormatted}
-                      </div>
-                    </div>
+        {/* FIXED Header */}
+        <div 
+          className="absolute bg-white"
+          style={{
+            top: `${marginTopPx}px`,
+            left: `${marginLeftPx}px`,
+            right: `${marginRightPx}px`,
+            height: `${HEADER_H}px`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderBottom: '1px solid #e5e7eb'
+          }}
+        >
+          <div style={{ fontSize: '16px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a' }}>
+            Anuncios
+          </div>
+          <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>
+            Domingo {selectedDateFormatted}
+          </div>
+        </div>
 
                     {/* SCALABLE Body - 2 Column Announcements */}
                     <div 
@@ -898,31 +913,25 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       </div>
                     </div>
 
-                    {/* FIXED Footer */}
-                    <div 
-                      style={{
-                        position: 'absolute',
-                        bottom: `${marginBottomPx}px`,
-                        left: 0,
-                        right: 0,
-                        height: `${FOOTER_H}px`,
-                        background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <span style={{ fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
-                        ¡Atrévete a cambiar!
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
+        {/* FIXED Footer */}
+        <div 
+          style={{
+            position: 'absolute',
+            bottom: `${marginBottomPx}px`,
+            left: 0,
+            right: 0,
+            height: `${FOOTER_H}px`,
+            background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <span style={{ fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
+            ¡Atrévete a cambiar!
+          </span>
+        </div>
+      </div>
+    );
+  }
 }
