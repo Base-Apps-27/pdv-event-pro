@@ -227,6 +227,10 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                   <TableRow 
                     ref={provided.innerRef}
                     {...provided.draggableProps}
+                    style={{
+                      ...provided.draggableProps.style,
+                      display: snapshot.isDragging ? 'table' : undefined,
+                    }}
                     className={`hover:bg-slate-50 ${snapshot.isDragging ? 'bg-blue-50' : ''}`}
                   >
                     <TableCell>
