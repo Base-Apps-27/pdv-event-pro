@@ -54,10 +54,18 @@ export default function PublicProgramView() {
     refetchInterval: 5000, // Poll every 5 seconds
   });
 
-  // Fetch services
+  // Fetch services (only WeeklyServiceManager services - recurring with day_of_week)
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
-    queryFn: () => base44.entities.Service.list(),
+    queryFn: async () => {
+      const allServices = await base44.entities.Service.list();
+      // Filter to only weekly recurring services (not custom/deprecated ones)
+      return allServices.filter(s => 
+        s.status === 'active' && 
+        s.day_of_week && 
+        !s.date // Weekly services don't have specific dates, only day_of_week
+      );
+    },
     refetchInterval: 5000,
   });
 
@@ -158,7 +166,11 @@ export default function PublicProgramView() {
   // Fetch actual Service data for weekly services
   const { data: weeklyServiceData } = useQuery({
     queryKey: ['weeklyServiceData', selectedServiceId],
-    queryFn: () => base44.entities.Service.filter({ id: selectedServiceId }),
+    queryFn: async () => {
+      const data = await base44.entities.Service.filter({ id: selectedServiceId });
+      // Ensure we only work with weekly services
+      return data.filter(s => s.status === 'active' && s.day_of_week && !s.date);
+    },
     enabled: !!(viewType === "service" && selectedServiceId),
     refetchInterval: 5000,
   });
