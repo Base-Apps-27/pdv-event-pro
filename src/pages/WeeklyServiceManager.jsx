@@ -1907,51 +1907,65 @@ Return ONLY valid JSON:
                     const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
                     
                     if (segment.type === "special") {
-                      return (
-                        <Draggable key={`${timeSlot}-special-${idx}`} draggableId={`${timeSlot}-special-${idx}`} index={idx}>
-                          {(provided) => (
-                            <Card 
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className="border-2 border-gray-300 border-l-4 border-l-orange-500 bg-orange-50"
-                            >
-                              <CardHeader className="pb-2">
-                                <div className="flex items-center justify-between">
-                                  <CardTitle className="text-lg flex items-center gap-2">
-                                    <div {...provided.dragHandleProps} className="print:hidden">
-                                      <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
-                                    </div>
-                                    <Sparkles className="w-4 h-4 text-orange-600" />
-                                    {segment.title}
-                                    <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
-                                  </CardTitle>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeSpecialSegment(timeSlot, idx)}
-                                    className="print:hidden"
-                                  >
-                                    <Trash2 className="w-4 h-4 text-red-500" />
-                                  </Button>
-                                </div>
-                              </CardHeader>
-                              <CardContent className="space-y-2 pt-3">
-                                <AutocompleteInput
-                                  type="presenter"
-                                  placeholder="Presentador"
-                                  value={segment.data?.presenter || ""}
-                                  onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
-                                  className="text-sm"
-                                />
-                                <Textarea
-                                  placeholder="Descripción / Notas"
-                                  value={segment.data?.description || ""}
-                                  onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
-                                  className="text-sm"
-                                  rows={2}
-                                />
-                              </CardContent>
-                            </Card>
+                     return (
+                       <Card 
+                         key={`${timeSlot}-special-${idx}`}
+                         className="border-2 border-gray-300 border-l-4 border-l-orange-500 bg-orange-50"
+                       >
+                         <CardHeader className="pb-2">
+                           <div className="flex items-center justify-between">
+                             <CardTitle className="text-lg flex items-center gap-2">
+                               <div className="print:hidden flex flex-col gap-0.5">
+                                 <Button
+                                   variant="ghost"
+                                   size="sm"
+                                   onClick={() => handleMoveSegment(timeSlot, idx, 'up')}
+                                   disabled={idx === 0}
+                                   className="h-4 w-5 p-0 hover:bg-blue-100"
+                                 >
+                                   <ChevronUp className="w-3 h-3" />
+                                 </Button>
+                                 <Button
+                                   variant="ghost"
+                                   size="sm"
+                                   onClick={() => handleMoveSegment(timeSlot, idx, 'down')}
+                                   disabled={idx === serviceData[timeSlot].filter(s => s.type !== 'break').length - 1}
+                                   className="h-4 w-5 p-0 hover:bg-blue-100"
+                                 >
+                                   <ChevronDown className="w-3 h-3" />
+                                 </Button>
+                               </div>
+                               <Sparkles className="w-4 h-4 text-orange-600" />
+                               {segment.title}
+                               <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
+                             </CardTitle>
+                             <Button
+                               variant="ghost"
+                               size="sm"
+                               onClick={() => removeSpecialSegment(timeSlot, idx)}
+                               className="print:hidden"
+                             >
+                               <Trash2 className="w-4 h-4 text-red-500" />
+                             </Button>
+                           </div>
+                         </CardHeader>
+                         <CardContent className="space-y-2 pt-3">
+                           <AutocompleteInput
+                             type="presenter"
+                             placeholder="Presentador"
+                             value={segment.data?.presenter || ""}
+                             onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
+                             className="text-sm"
+                           />
+                           <Textarea
+                             placeholder="Descripción / Notas"
+                             value={segment.data?.description || ""}
+                             onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
+                             className="text-sm"
+                             rows={2}
+                           />
+                         </CardContent>
+                       </Card>
                       );
                     }
 
@@ -2294,58 +2308,72 @@ Return ONLY valid JSON:
                     const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
                     
                     if (segment.type === "special") {
-                      return (
-                        <Draggable key={`${timeSlot}-special-${idx}`} draggableId={`${timeSlot}-special-${idx}`} index={idx}>
-                          {(provided) => (
-                            <Card 
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className="border-2 border-gray-300 border-l-4 border-l-orange-500 bg-orange-50"
-                            >
-                              <CardHeader className="pb-2">
-                                <div className="flex items-center justify-between">
-                                  <CardTitle className="text-lg flex items-center gap-2">
-                                    <div {...provided.dragHandleProps} className="print:hidden">
-                                      <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
-                                    </div>
-                                    <Sparkles className="w-4 h-4 text-orange-600" />
-                                    {segment.title}
-                                    <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
-                                  </CardTitle>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeSpecialSegment(timeSlot, idx)}
-                                    className="print:hidden"
-                                  >
-                                    <Trash2 className="w-4 h-4 text-red-500" />
-                                  </Button>
-                                </div>
-                              </CardHeader>
-                              <CardContent className="space-y-2 pt-3">
-                                <AutocompleteInput
-                                  type="presenter"
-                                  placeholder="Presentador"
-                                  value={segment.data?.presenter || ""}
-                                  onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
-                                  className="text-sm"
-                                />
-                                <AutocompleteInput
-                                  type="translator"
-                                  placeholder="Traductor"
-                                  value={segment.data?.translator || ""}
-                                  onChange={(e) => updateSegmentField(timeSlot, idx, "translator", e.target.value)}
-                                  className="text-sm"
-                                />
-                                <Textarea
-                                  placeholder="Descripción / Notas"
-                                  value={segment.data?.description || ""}
-                                  onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
-                                  className="text-sm"
-                                  rows={2}
-                                />
-                              </CardContent>
-                            </Card>
+                     return (
+                       <Card 
+                         key={`${timeSlot}-special-${idx}`}
+                         className="border-2 border-gray-300 border-l-4 border-l-orange-500 bg-orange-50"
+                       >
+                         <CardHeader className="pb-2">
+                           <div className="flex items-center justify-between">
+                             <CardTitle className="text-lg flex items-center gap-2">
+                               <div className="print:hidden flex flex-col gap-0.5">
+                                 <Button
+                                   variant="ghost"
+                                   size="sm"
+                                   onClick={() => handleMoveSegment(timeSlot, idx, 'up')}
+                                   disabled={idx === 0}
+                                   className="h-4 w-5 p-0 hover:bg-blue-100"
+                                 >
+                                   <ChevronUp className="w-3 h-3" />
+                                 </Button>
+                                 <Button
+                                   variant="ghost"
+                                   size="sm"
+                                   onClick={() => handleMoveSegment(timeSlot, idx, 'down')}
+                                   disabled={idx === serviceData[timeSlot].length - 1}
+                                   className="h-4 w-5 p-0 hover:bg-blue-100"
+                                 >
+                                   <ChevronDown className="w-3 h-3" />
+                                 </Button>
+                               </div>
+                               <Sparkles className="w-4 h-4 text-orange-600" />
+                               {segment.title}
+                               <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
+                             </CardTitle>
+                             <Button
+                               variant="ghost"
+                               size="sm"
+                               onClick={() => removeSpecialSegment(timeSlot, idx)}
+                               className="print:hidden"
+                             >
+                               <Trash2 className="w-4 h-4 text-red-500" />
+                             </Button>
+                           </div>
+                         </CardHeader>
+                         <CardContent className="space-y-2 pt-3">
+                           <AutocompleteInput
+                             type="presenter"
+                             placeholder="Presentador"
+                             value={segment.data?.presenter || ""}
+                             onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
+                             className="text-sm"
+                           />
+                           <AutocompleteInput
+                             type="translator"
+                             placeholder="Traductor"
+                             value={segment.data?.translator || ""}
+                             onChange={(e) => updateSegmentField(timeSlot, idx, "translator", e.target.value)}
+                             className="text-sm"
+                           />
+                           <Textarea
+                             placeholder="Descripción / Notas"
+                             value={segment.data?.description || ""}
+                             onChange={(e) => updateSegmentField(timeSlot, idx, "description", e.target.value)}
+                             className="text-sm"
+                             rows={2}
+                           />
+                         </CardContent>
+                       </Card>
                       );
                     }
 
