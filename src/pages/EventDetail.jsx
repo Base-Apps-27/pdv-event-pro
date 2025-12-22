@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -16,11 +16,12 @@ import EventAIHelper from "../components/event/EventAIHelper";
 
 export default function EventDetail() {
   const navigate = useNavigate();
-  const urlParams = new URLSearchParams(window.location.search);
-  const eventId = urlParams.get('id');
+  const { search } = useLocation();
+  const eventId = React.useMemo(() => new URLSearchParams(search).get("id"), [search]);
   const queryClient = useQueryClient();
   const [showAIHelper, setShowAIHelper] = useState(false);
   const [headerEvent, setHeaderEvent] = useState(null);
+  const [wasValid, setWasValid] = React.useState(false);
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['event', eventId],
@@ -37,8 +38,17 @@ export default function EventDetail() {
   });
 
   React.useEffect(() => {
-    if (event?.name) setHeaderEvent(event);
+    if (event?.name) {
+      setHeaderEvent(event);
+      setWasValid(true);
+    }
   }, [event?.name]);
+
+  React.useEffect(() => {
+    if (wasValid && !event?.name) {
+      console.warn("Event became invalid after being valid (mutation/partial overwrite).", event);
+    }
+  }, [wasValid, event?.name]);
 
   const { data: sessions = [] } = useQuery({
     queryKey: ['sessions', eventId],
@@ -48,7 +58,10 @@ export default function EventDetail() {
     placeholderData: (previousData) => previousData,
   });
 
-  const sessionIdsKey = sessions.map(s => s.id).join(',');
+  const sessionIdsKey = React.useMemo(
+    () => sessions.map(s => s.id).sort().join(","),
+    [sessions]
+  );
 
   const { data: segments = [] } = useQuery({
     queryKey: ['segments', eventId, sessionIdsKey],
@@ -178,7 +191,7 @@ export default function EventDetail() {
         </TabsList>
 
         <TabsContent value="info" className="mt-6">
-          <EventInfo event={event} />
+          <EventInfo event={e} />
         </TabsContent>
 
         <TabsContent value="sessions" className="mt-6">
