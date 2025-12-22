@@ -536,7 +536,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                     {seg.data.preacher}
                                   </div>
                                 )}
-                                {seg.data?.presenter && !seg.data?.ministry_leader && !seg.data?.leader && (
+                                {seg.data?.presenter && !seg.data?.ministry_leader && !seg.data?.preacher && !seg.data?.leader && (
                                   <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
                                     {seg.data.presenter}
                                   </div>
