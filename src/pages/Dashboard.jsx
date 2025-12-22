@@ -15,6 +15,10 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   
+  const gradientStyle = {
+    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+  };
+  
   const { data: events = [] } = useQuery({
     queryKey: ['events'],
     queryFn: () => base44.entities.Event.list('-start_date')
@@ -51,7 +55,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="gradient-pdv text-white py-8 px-6 md:px-8 shadow-lg">
+      <div style={gradientStyle} className="text-white py-8 px-6 md:px-8 shadow-lg">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-wide mb-2">
             {t('dashboard.title')}
@@ -180,7 +184,8 @@ export default function Dashboard() {
                         </div>
                         <Button 
                           onClick={() => navigate(createPageUrl('EventDetail') + `?id=${event.id}`)}
-                          className="w-full mt-4 gradient-pdv text-white font-semibold"
+                          style={gradientStyle}
+                          className="w-full mt-4 text-white font-semibold"
                         >
                           Ver Detalles / View Details
                           <ArrowRight className="w-4 h-4 ml-2" />
@@ -199,7 +204,8 @@ export default function Dashboard() {
                 <p className="text-gray-600 text-sm mb-4">Crea tu primer evento / Create your first event</p>
                 <Button 
                   onClick={() => navigate(createPageUrl('Events'))}
-                  className="gradient-pdv text-white font-semibold"
+                  style={gradientStyle}
+                  className="text-white font-semibold"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Crear Evento / Create Event
