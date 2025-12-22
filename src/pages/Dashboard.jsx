@@ -49,7 +49,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" style={{color: '#111827'}}>
       {/* Hero Section */}
       <div className="gradient-pdv text-white py-8 px-6 md:px-8 shadow-lg">
         <div className="max-w-7xl mx-auto text-center">
