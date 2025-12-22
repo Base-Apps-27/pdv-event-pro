@@ -439,17 +439,17 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                           </div>
 
                           {/* 11:30 AM Column */}
-                          {serviceData?.['11:30am'] && (
+                          {serviceData?.['11:30am'] && Array.isArray(serviceData['11:30am']) && (
                           <div>
-                           <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
-                             11:30 A.M.
-                           </div>
-                           {serviceData?.pre_service_notes?.['11:30am'] && (
-                             <div style={{ marginBottom: '10px', fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
-                               {serviceData.pre_service_notes['11:30am']}
-                             </div>
-                           )}
-                           {Array.isArray(serviceData?.['11:30am']) && serviceData['11:30am'].filter(s => s?.type !== 'break').map((seg, idx) => (
+                            <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
+                              11:30 A.M.
+                            </div>
+                            {serviceData?.pre_service_notes?.['11:30am'] && (
+                              <div style={{ marginBottom: '10px', fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                                {serviceData.pre_service_notes['11:30am']}
+                              </div>
+                            )}
+                            {serviceData['11:30am'].filter(s => s?.type !== 'break').map((seg, idx) => (
                               <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
                                 <div style={{ marginBottom: '3px' }}>
                                   <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
