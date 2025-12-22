@@ -716,14 +716,15 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                 )}
                               </div>
                             </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>
-                          No hay datos de servicio
-                        </div>
-                      )}
-                    </div>
+                            )}
+                            </div>
+                            ) : (
+                            <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>
+                            No hay datos de servicio
+                            </div>
+                            )}
+                            </div>
+                            </div>
 
                     {/* FIXED Footer */}
                     <div 
