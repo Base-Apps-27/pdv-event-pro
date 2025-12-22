@@ -232,26 +232,6 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-base font-semibold">{t.margins}</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {['top', 'right', 'bottom', 'left'].map(side => (
-                      <div key={side} className="space-y-1">
-                        <Label className="text-sm">{t[side]}</Label>
-                        <Input
-                          value={page1Settings.margins[side]}
-                          onChange={(e) => setPage1Settings(prev => ({
-                            ...prev,
-                            margins: { ...prev.margins, [side]: e.target.value }
-                          }))}
-                          placeholder="0.5in"
-                          className="text-sm"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label className="text-base font-semibold">{t.bodyFontScale}</Label>
                     <span className="text-sm font-mono text-gray-600">{(page1Settings.bodyFontScale * 100).toFixed(0)}%</span>
@@ -773,26 +753,6 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                   />
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>70%</span><span>100%</span><span>120%</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-base font-semibold">{t.margins}</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {['top', 'right', 'bottom', 'left'].map(side => (
-                      <div key={side} className="space-y-1">
-                        <Label className="text-sm">{t[side]}</Label>
-                        <Input
-                          value={page2Settings.margins[side]}
-                          onChange={(e) => setPage2Settings(prev => ({
-                            ...prev,
-                            margins: { ...prev.margins, [side]: e.target.value }
-                          }))}
-                          placeholder="0.5in"
-                          className="text-sm"
-                        />
-                      </div>
-                    ))}
                   </div>
                 </div>
 
