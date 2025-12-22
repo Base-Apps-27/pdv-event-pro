@@ -26,7 +26,9 @@ export default function EventDetail() {
     queryFn: () => base44.entities.Event.filter({ id: eventId }).then(res => res[0]),
     enabled: !!eventId,
     staleTime: 5 * 60 * 1000,
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   const { data: sessions = [] } = useQuery({
@@ -34,7 +36,9 @@ export default function EventDetail() {
     queryFn: () => base44.entities.Session.filter({ event_id: eventId }, 'order'),
     enabled: !!eventId,
     staleTime: 5 * 60 * 1000,
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   const { data: segments = [] } = useQuery({
@@ -46,21 +50,27 @@ export default function EventDetail() {
     },
     enabled: sessions.length > 0,
     staleTime: 5 * 60 * 1000,
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   const { data: allSessions = [] } = useQuery({
     queryKey: ['allSessions'],
     queryFn: () => base44.entities.Session.list(),
     staleTime: 5 * 60 * 1000,
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   const { data: allSegments = [] } = useQuery({
     queryKey: ['allSegments'],
     queryFn: () => base44.entities.Segment.list(),
     staleTime: 5 * 60 * 1000,
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   if (isLoading) {
