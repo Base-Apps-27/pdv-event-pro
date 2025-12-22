@@ -16,6 +16,8 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function AnnouncementsReport() {
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [showDialog, setShowDialog] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -140,7 +142,7 @@ export default function AnnouncementsReport() {
           <p className="text-gray-500">Vista unificada de anuncios dinámicos, eventos y segmentos</p>
         </div>
         <div className="flex gap-2">
-            <Button onClick={() => openDialog()} className="bg-pdv-teal text-white">
+            <Button onClick={() => openDialog()} style={tealStyle}>
                 <Plus className="w-4 h-4 mr-2" /> Nuevo Anuncio
             </Button>
             <Button variant="outline" onClick={() => window.print()}>

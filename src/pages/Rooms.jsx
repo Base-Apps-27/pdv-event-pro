@@ -11,6 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Rooms() {
+  const gradientStyle = {
+    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+  };
+  
   const [showDialog, setShowDialog] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
   const queryClient = useQueryClient();
@@ -72,7 +76,7 @@ export default function Rooms() {
           <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-tight">Salas</h1>
           <p className="text-gray-600 mt-1">Administra las salas y sus capacidades técnicas</p>
         </div>
-        <Button onClick={() => { setEditingRoom(null); setShowDialog(true); }} className="gradient-pdv text-white font-bold uppercase">
+        <Button onClick={() => { setEditingRoom(null); setShowDialog(true); }} style={gradientStyle} className="text-white font-bold uppercase">
           <Plus className="w-4 h-4 mr-2" />
           Nueva Sala
         </Button>
@@ -212,7 +216,7 @@ export default function Rooms() {
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="gradient-pdv text-white font-bold uppercase">
+              <Button type="submit" style={gradientStyle} className="text-white font-bold uppercase">
                 {editingRoom ? 'Guardar' : 'Crear'}
               </Button>
             </div>

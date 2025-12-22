@@ -19,6 +19,8 @@ import { formatDate as formatDateES } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function CustomServiceBuilder() {
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const serviceId = searchParams.get('id');
@@ -466,7 +468,7 @@ export default function CustomServiceBuilder() {
           </div>
         </div>
         <div className="flex gap-3">
-          <Button onClick={handleSave} className="bg-pdv-teal text-white">
+          <Button onClick={handleSave} style={tealStyle}>
             <Save className="w-4 h-4 mr-2" />
             Guardar
           </Button>
@@ -592,7 +594,8 @@ export default function CustomServiceBuilder() {
           </div>
           <Button
             onClick={addSegment}
-            className="bg-pdv-teal text-white print:hidden"
+            style={tealStyle}
+            className="print:hidden"
           >
             <Plus className="w-4 h-4 mr-2" />
             Añadir Segmento

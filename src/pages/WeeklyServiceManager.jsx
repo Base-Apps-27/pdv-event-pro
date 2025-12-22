@@ -22,6 +22,9 @@ import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { useLanguage } from "@/components/utils/i18n";
 
 export default function WeeklyServiceManager() {
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  const greenStyle = { backgroundColor: '#8DC63F', color: '#ffffff' };
+  
   const { t } = useLanguage();
   // State
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -1756,7 +1759,8 @@ Return ONLY valid JSON:
           
           <Button 
             onClick={() => setShowPrintSettings(true)}
-            className="bg-pdv-green text-white hover:bg-pdv-teal font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
+            style={greenStyle}
+            className="font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
           >
             <Printer className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
             <span className="hidden md:inline">{t('btn.print')}</span>
@@ -2640,7 +2644,8 @@ Return ONLY valid JSON:
                 setShowAnnouncementDialog(true);
               }}
               size="sm"
-              className="bg-pdv-teal text-white print:hidden"
+              style={tealStyle}
+              className="print:hidden"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Anuncio
@@ -2975,7 +2980,7 @@ Return ONLY valid JSON:
               <Button variant="outline" onClick={() => setShowSpecialDialog(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
-              <Button onClick={addSpecialSegment} className="bg-pdv-teal text-white w-full sm:w-auto">
+              <Button onClick={addSpecialSegment} style={tealStyle} className="w-full sm:w-auto">
                 Añadir Segmento
               </Button>
             </div>
