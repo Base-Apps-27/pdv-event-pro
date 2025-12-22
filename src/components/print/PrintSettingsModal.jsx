@@ -857,18 +857,18 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         }}
       >
         {/* Logo - only for print */}
-        <div className="hidden print:block absolute" style={{ top: `${marginTopPx}px`, left: `${marginLeftPx}px` }}>
+        <div className="hidden print:block absolute" style={{ top: `${marginTopPx + 10}px`, left: `${marginLeftPx + 10}px`, zIndex: 10 }}>
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
             alt="Logo" 
             style={{ width: '60px', height: '60px' }}
           />
         </div>
-        {/* Margin Overlays */}
-        <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
-        <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
-        <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, bottom: 0, width: `${marginLeftPx}px` }} />
-        <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, right: 0, bottom: 0, width: `${marginRightPx}px` }} />
+        {/* Margin Overlays - hide in print */}
+        <div className="absolute bg-blue-400 opacity-20 pointer-events-none print:hidden" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
+        <div className="absolute bg-blue-400 opacity-20 pointer-events-none print:hidden" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
+        <div className="absolute bg-blue-400 opacity-20 pointer-events-none print:hidden" style={{ top: 0, left: 0, bottom: 0, width: `${marginLeftPx}px` }} />
+        <div className="absolute bg-blue-400 opacity-20 pointer-events-none print:hidden" style={{ top: 0, right: 0, bottom: 0, width: `${marginRightPx}px` }} />
 
         {/* FIXED Header */}
         <div 
