@@ -363,21 +363,15 @@ export default function PublicProgramView() {
               <div className="flex gap-2 w-full">
                 <button
                   onClick={() => setViewType("event")}
-                  className={`flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-                    viewType === "event" 
-                      ? "bg-pdv-teal text-white shadow-md" 
-                      : "bg-white border-2 border-gray-400 text-gray-900 hover:bg-gray-50"
-                  }`}
+                  className="flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all shadow-md"
+                  style={viewType === "event" ? { backgroundColor: '#1F8A70', color: '#ffffff' } : { backgroundColor: '#ffffff', border: '2px solid #9ca3af', color: '#111827' }}
                 >
                   Eventos
                 </button>
                 <button
                   onClick={() => setViewType("service")}
-                  className={`flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-                    viewType === "service" 
-                      ? "bg-pdv-green text-white shadow-md" 
-                      : "bg-white border-2 border-gray-400 text-gray-900 hover:bg-gray-50"
-                  }`}
+                  className="flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all shadow-md"
+                  style={viewType === "service" ? { backgroundColor: '#8DC63F', color: '#ffffff' } : { backgroundColor: '#ffffff', border: '2px solid #9ca3af', color: '#111827' }}
                 >
                   Servicios
                 </button>
