@@ -557,55 +557,55 @@ export default function PublicProgramView() {
               </CardContent>
             </Card>
 
-            {/* View Mode and Filters Card */}
-            <Card className="bg-white border-2 border-gray-300">
-              <CardHeader className="bg-gray-100 border-b-2 border-gray-300">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Filter className="w-5 h-5 text-pdv-teal" />
-                    <h3 className="text-lg font-bold uppercase text-gray-900">Vista y Filtros</h3>
+            {/* View Mode and Filters Card - Only show for Events */}
+            {viewType === "event" && (
+              <Card className="bg-white border-2 border-gray-300">
+                <CardHeader className="bg-gray-100 border-b-2 border-gray-300">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-5 h-5" style={{ color: '#1F8A70' }} />
+                      <h3 className="text-lg font-bold uppercase text-gray-900">Vista y Filtros</h3>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setViewMode("simple")}
+                        className="px-3 py-1.5 text-sm rounded-lg font-semibold flex items-center gap-2"
+                        style={viewMode === "simple" ? { backgroundColor: '#1F8A70', color: '#ffffff' } : { backgroundColor: '#ffffff', border: '2px solid #9ca3af', color: '#111827' }}
+                      >
+                        <List className="w-4 h-4" />
+                        Simple
+                      </button>
+                      <button
+                        onClick={() => setViewMode("full")}
+                        className="px-3 py-1.5 text-sm rounded-lg font-semibold flex items-center gap-2"
+                        style={viewMode === "full" ? { backgroundColor: '#1F8A70', color: '#ffffff' } : { backgroundColor: '#ffffff', border: '2px solid #9ca3af', color: '#111827' }}
+                      >
+                        <ListChecks className="w-4 h-4" />
+                        Run of Show
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={viewMode === "simple" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setViewMode("simple")}
-                      className={viewMode === "simple" ? "bg-pdv-teal text-white border-2 border-pdv-teal font-semibold" : "border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:bg-gray-50"}
-                    >
-                      <List className="w-4 h-4 mr-2 text-current" />
-                      Simple
-                    </Button>
-                    <Button
-                      variant={viewMode === "full" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setViewMode("full")}
-                      className={viewMode === "full" ? "bg-pdv-teal text-white border-2 border-pdv-teal font-semibold" : "border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:bg-gray-50"}
-                    >
-                      <ListChecks className="w-4 h-4 mr-2 text-current" />
-                      Run of Show
-                    </Button>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-900">Filtrar por Sesión</label>
+                    <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
+                      <SelectTrigger className="bg-white border-2 border-gray-400 text-gray-900">
+                        <SelectValue className="text-gray-900" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white text-gray-900">
+                        <SelectItem value="all" className="text-gray-900">Todas las Sesiones</SelectItem>
+                        {eventSessions.map((session) => (
+                          <SelectItem key={session.id} value={session.id} className="text-gray-900">
+                            {session.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-900">Filtrar por Sesión</label>
-                  <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
-                    <SelectTrigger className="bg-white border-2 border-gray-400 text-gray-900">
-                      <SelectValue className="text-gray-900" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white text-gray-900">
-                      <SelectItem value="all" className="text-gray-900">Todas las Sesiones</SelectItem>
-                      {eventSessions.map((session) => (
-                        <SelectItem key={session.id} value={session.id} className="text-gray-900">
-                          {session.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Weekly Services Display (for Service view type) */}
             {viewType === "service" && actualServiceData && (
