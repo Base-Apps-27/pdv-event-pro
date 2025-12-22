@@ -48,7 +48,7 @@ export default function EventDetail() {
       const sessionIds = sessions.map(s => s.id);
       return allSegments.filter(seg => sessionIds.includes(seg.session_id));
     },
-    enabled: sessions.length > 0,
+    enabled: !!eventId,
     staleTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
     refetchOnMount: false,
