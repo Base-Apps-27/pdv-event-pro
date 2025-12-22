@@ -1546,6 +1546,12 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
+                  {segment.data?.translator && segment.type === 'worship' && (
+                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
+                      🌐 Traduce: {segment.data.translator}
+                    </div>
+                  )}
+
                   {segment.data?.preacher && (
                     <div className="print-segment-detail">
                       <span className="print-name">{segment.data.preacher}</span>
@@ -1558,7 +1564,13 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.translator && (
+                  {segment.data?.translator && (segment.type === 'welcome' || segment.type === 'offering' || segment.type === 'message') && (
+                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
+                      🌐 Traduce: {segment.data.translator}
+                    </div>
+                  )}
+
+                  {segment.data?.translator && segment.type === 'special' && (
                     <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
                       🌐 Traduce: {segment.data.translator}
                     </div>
