@@ -104,7 +104,7 @@ export default function EventDetail() {
                 </TooltipProvider>
               )}
             </div>
-            {event.theme && <p className="text-xl text-pdv-teal font-medium italic">"{event.theme}"</p>}
+            {event.theme && <p className="text-xl font-medium italic" style={{ color: '#1F8A70' }}>"{event.theme}"</p>}
           </div>
           <div className="ml-auto flex gap-2">
             <Button 
@@ -118,7 +118,11 @@ export default function EventDetail() {
             <Button 
               onClick={() => setShowAIHelper(true)}
               variant="outline"
-              className="bg-gradient-to-r from-pdv-teal/10 to-pdv-green/10 border-pdv-teal/30 hover:border-pdv-teal text-pdv-teal"
+              style={{ 
+                background: 'linear-gradient(to right, rgba(31, 138, 112, 0.1), rgba(141, 198, 63, 0.1))',
+                borderColor: 'rgba(31, 138, 112, 0.3)',
+                color: '#1F8A70'
+              }}
             >
               <Sparkles className="w-4 h-4 mr-2" />
               Asistente IA

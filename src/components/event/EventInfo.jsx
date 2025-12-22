@@ -26,7 +26,7 @@ export default function EventInfo({ event }) {
     <Card className="border-none shadow-md overflow-hidden">
       <CardHeader className="bg-gray-50 border-b border-gray-100">
         <CardTitle className="text-gray-900 uppercase tracking-wide flex items-center gap-2">
-            <div className="w-2 h-6 bg-pdv-green rounded-full" />
+            <div className="w-2 h-6 rounded-full" style={{ backgroundColor: '#8DC63F' }} />
             Información del Evento
         </CardTitle>
       </CardHeader>
@@ -80,9 +80,9 @@ export default function EventInfo({ event }) {
 
         {event.promote_in_announcements && (
           <div className="flex items-start gap-3 pt-4 border-t border-gray-100">
-            <Megaphone className="w-5 h-5 text-pdv-teal mt-0.5" />
+            <Megaphone className="w-5 h-5 mt-0.5" style={{ color: '#1F8A70' }} />
             <div>
-              <p className="text-sm text-pdv-teal font-bold">Promoción Activa</p>
+              <p className="text-sm font-bold" style={{ color: '#1F8A70' }}>Promoción Activa</p>
               <p className="text-slate-600 mt-1 text-sm">
                 {event.announcement_blurb || "Sin texto definido"}
               </p>

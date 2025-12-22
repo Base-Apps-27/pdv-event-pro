@@ -23,6 +23,10 @@ import HospitalityTasksModal from "../session/HospitalityTasksModal";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 export default function SessionManager({ eventId, serviceId, sessions, segments }) {
+  const gradientStyle = {
+    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+  };
+  
   const [showDialog, setShowDialog] = useState(false);
   const [editingSession, setEditingSession] = useState(null);
   const [expandedSessionId, setExpandedSessionId] = useState(null);
@@ -860,7 +864,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments 
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="gradient-pdv text-white font-bold uppercase">
+              <Button type="submit" style={gradientStyle} className="text-white font-bold uppercase">
                 {editingSession ? 'Guardar Cambios' : 'Crear Sesión'}
               </Button>
             </div>

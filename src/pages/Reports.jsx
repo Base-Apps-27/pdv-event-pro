@@ -74,7 +74,7 @@ export default function Reports() {
   };
 
   const sessionColorClasses = {
-    green: 'border-l-8 border-pdv-green',
+    green: 'border-l-8',
     blue: 'border-l-8 border-blue-500',
     pink: 'border-l-8 border-pink-500',
     orange: 'border-l-8 border-orange-500',
@@ -84,7 +84,7 @@ export default function Reports() {
   };
 
   const eventColorClasses = {
-    green: 'border-t-8 border-pdv-green',
+    green: 'border-t-8',
     blue: 'border-t-8 border-blue-500',
     pink: 'border-t-8 border-pink-500',
     orange: 'border-t-8 border-orange-500',
@@ -183,9 +183,11 @@ export default function Reports() {
         const borderClass = selectedEvent?.print_color 
           ? `${eventColorClasses[selectedEvent.print_color] || 'border-t-8 border-blue-500'} border-l-2 border-r-2 border-b-2` 
           : `${sessionColorClasses[session.session_color] || ''} border-2`;
+        const leftBorderStyle = session.session_color === 'green' ? { borderLeftColor: '#8DC63F', borderLeftWidth: '8px' } : {};
+        const topBorderStyle = selectedEvent?.print_color === 'green' ? { borderTopColor: '#8DC63F', borderTopWidth: '8px' } : {};
 
         return (
-          <div key={session.id} className={`print-session border-gray-200 rounded-lg overflow-hidden ${borderClass}`}>
+          <div key={session.id} className={`print-session border-gray-200 rounded-lg overflow-hidden ${borderClass}`} style={{ ...leftBorderStyle, ...topBorderStyle }}>
             <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-2 border-b border-gray-200">
               <div className="flex justify-between items-center gap-4">
               <div className="flex-1">
@@ -346,7 +348,7 @@ export default function Reports() {
                           </tr>
                         )}
                         <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
-                        <td className="p-2 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
+                        <td className="p-2 font-bold text-center border-r border-gray-200 text-[10px] align-top" style={{ color: '#8DC63F' }}>
                             <div className="flex flex-col items-center leading-tight">
                               <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
                               {segment.end_time && (
@@ -451,7 +453,7 @@ export default function Reports() {
                         </tr>
                       )}
                       <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
-                      <td className="p-2 text-pdv-green font-bold text-center border-r border-gray-200 text-[10px] align-top">
+                      <td className="p-2 font-bold text-center border-r border-gray-200 text-[10px] align-top" style={{ color: '#8DC63F' }}>
                         <div className="flex flex-col items-center leading-tight">
                           <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
                           {segment.end_time && (
@@ -1046,7 +1048,8 @@ export default function Reports() {
               <DropdownMenuTrigger asChild>
                 <Button 
                   disabled={!selectedEventId}
-                  className="gradient-pdv text-white font-bold uppercase"
+                  style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', color: '#ffffff' }}
+                  className="font-bold uppercase"
                 >
                   <Printer className="w-4 h-4 mr-2" />
                   Imprimir/Exportar
@@ -1099,7 +1102,7 @@ export default function Reports() {
             <div className="text-center mb-3 border-b border-gray-300 pb-2 print:hidden">
               <h1 className="text-xl font-bold text-gray-900 inline">{selectedEvent.name}</h1>
               {selectedEvent.theme && (
-                <p className="text-sm text-pdv-green italic inline ml-2">"{selectedEvent.theme}"</p>
+                <p className="text-sm italic inline ml-2" style={{ color: '#8DC63F' }}>"{selectedEvent.theme}"</p>
               )}
             </div>
 

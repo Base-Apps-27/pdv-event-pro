@@ -13,6 +13,9 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 
 export default function ServiceTemplatesTab() {
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  const greenStyle = { color: '#8DC63F' };
+  
   const queryClient = useQueryClient();
   const [expandedSegments, setExpandedSegments] = useState({});
 
@@ -220,7 +223,7 @@ export default function ServiceTemplatesTab() {
                         <CardContent className="space-y-2 pt-3">
                           {segment.type === 'worship' && segment.songs && (
                             <div className="space-y-1">
-                              <Label className="text-xs font-semibold text-pdv-green">Estructura de Canciones</Label>
+                             <Label className="text-xs font-semibold" style={greenStyle}>Estructura de Canciones</Label>
                               {segment.songs.map((song, sIdx) => (
                                 <div key={sIdx} className="text-xs text-gray-500">
                                   Canción {sIdx + 1} (placeholder)
@@ -273,7 +276,7 @@ export default function ServiceTemplatesTab() {
           <h3 className="text-2xl font-bold">Blueprint: Servicios Dominicales</h3>
           <p className="text-sm text-gray-500 mt-1">Define la estructura fija que se aplicará cada semana</p>
         </div>
-        <Button onClick={handleSave} className="bg-pdv-teal hover:bg-pdv-teal/90 text-white">
+        <Button onClick={handleSave} style={tealStyle}>
           <Save className="w-4 h-4 mr-2" />
           Guardar Blueprint
         </Button>

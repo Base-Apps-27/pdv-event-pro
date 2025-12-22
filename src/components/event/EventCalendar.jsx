@@ -14,7 +14,7 @@ export default function EventCalendar({ eventId, sessions, allSessions, segments
   const [viewMode, setViewMode] = useState("month"); // month, week, day
 
   const sessionColorClasses = {
-    green: 'bg-pdv-green',
+    green: '',
     blue: 'bg-blue-500',
     pink: 'bg-pink-500',
     orange: 'bg-orange-500',
@@ -79,11 +79,13 @@ export default function EventCalendar({ eventId, sessions, allSessions, segments
             key={index}
             className={`min-h-24 p-2 border rounded-lg ${
               isCurrentMonth ? 'bg-white' : 'bg-gray-50'
-            } ${isToday ? 'ring-2 ring-pdv-green' : ''}`}
+            }`}
+            style={isToday ? { boxShadow: '0 0 0 2px #8DC63F' } : {}}
           >
             <div className={`text-sm font-semibold mb-1 ${
-              isToday ? 'text-pdv-green' : isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
-            }`}>
+              isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+            }`}
+            style={isToday ? { color: '#8DC63F' } : {}}>
               {format(day, 'd')}
             </div>
 
@@ -99,6 +101,7 @@ export default function EventCalendar({ eventId, sessions, allSessions, segments
                         ? `text-white ${sessionColorClasses[session.session_color] || 'bg-blue-500'}`
                         : 'bg-gray-200 text-gray-700'
                     }`}
+                    style={isCurrentEvent && session.session_color === 'green' ? { backgroundColor: '#8DC63F' } : {}}
                     title={session.name}
                   >
                     {session.planned_start_time && formatTimeToEST(session.planned_start_time)} {session.name}
@@ -120,10 +123,11 @@ export default function EventCalendar({ eventId, sessions, allSessions, segments
         const isToday = isSameDay(day, new Date());
 
         return (
-          <div key={day.toISOString()} className={`border rounded-lg overflow-hidden ${isToday ? 'ring-2 ring-pdv-green' : ''}`}>
+          <div key={day.toISOString()} className="border rounded-lg overflow-hidden" style={isToday ? { boxShadow: '0 0 0 2px #8DC63F' } : {}}>
             <div className={`p-2 text-center font-bold text-sm ${
-              isToday ? 'bg-pdv-green text-white' : 'bg-gray-100 text-gray-700'
-            }`}>
+              isToday ? 'text-white' : 'bg-gray-100 text-gray-700'
+            }`}
+            style={isToday ? { backgroundColor: '#8DC63F' } : {}}>
               <div>{format(day, 'EEE', { locale: es })}</div>
               <div className="text-lg">{format(day, 'd')}</div>
             </div>
@@ -241,10 +245,11 @@ export default function EventCalendar({ eventId, sessions, allSessions, segments
                               <div
                                 key={segment.id}
                                 className={`absolute left-0 right-0 rounded shadow-sm p-2 overflow-hidden cursor-pointer hover:shadow-md transition-shadow ${
-                                  isCurrentEvent
-                                    ? 'bg-white border-l-4 border-pdv-teal'
-                                    : 'bg-gray-100 border-l-4 border-gray-400'
+                                 isCurrentEvent
+                                   ? 'bg-white border-l-4'
+                                   : 'bg-gray-100 border-l-4 border-gray-400'
                                 }`}
+                                style={isCurrentEvent ? { borderLeftColor: '#1F8A70' } : {}}
                                 style={{
                                   top: `${top}px`,
                                   height: `${height}px`,
@@ -297,7 +302,7 @@ export default function EventCalendar({ eventId, sessions, allSessions, segments
             variant={viewMode === "month" ? "default" : "ghost"}
             size="sm"
             onClick={() => setViewMode("month")}
-            className={viewMode === "month" ? "bg-pdv-green hover:bg-pdv-green" : ""}
+            style={viewMode === "month" ? { backgroundColor: '#8DC63F', color: '#ffffff' } : {}}
           >
             Mes
           </Button>
@@ -305,7 +310,7 @@ export default function EventCalendar({ eventId, sessions, allSessions, segments
             variant={viewMode === "week" ? "default" : "ghost"}
             size="sm"
             onClick={() => setViewMode("week")}
-            className={viewMode === "week" ? "bg-pdv-green hover:bg-pdv-green" : ""}
+            style={viewMode === "week" ? { backgroundColor: '#8DC63F', color: '#ffffff' } : {}}
           >
             Semana
           </Button>
@@ -313,7 +318,7 @@ export default function EventCalendar({ eventId, sessions, allSessions, segments
             variant={viewMode === "day" ? "default" : "ghost"}
             size="sm"
             onClick={() => setViewMode("day")}
-            className={viewMode === "day" ? "bg-pdv-green hover:bg-pdv-green" : ""}
+            style={viewMode === "day" ? { backgroundColor: '#8DC63F', color: '#ffffff' } : {}}
           >
             Día
           </Button>

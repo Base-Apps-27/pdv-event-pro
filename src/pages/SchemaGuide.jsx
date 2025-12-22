@@ -294,7 +294,7 @@ ${jsonString}
             <FileJson className="w-4 h-4" />
             Download JSON
           </Button>
-          <Button onClick={downloadMarkdown} className="gap-2 bg-pdv-teal hover:bg-pdv-teal/90 text-white">
+          <Button onClick={downloadMarkdown} className="gap-2" style={{ backgroundColor: '#1F8A70', color: '#ffffff' }}>
             <BookText className="w-4 h-4" />
             Download Full Guide (MD)
           </Button>
@@ -302,10 +302,10 @@ ${jsonString}
       </div>
 
       {/* Full JSON Example */}
-      <Card className="border-pdv-teal/20 shadow-md">
+      <Card className="shadow-md" style={{ borderColor: 'rgba(31, 138, 112, 0.2)' }}>
         <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileJson className="w-5 h-5 text-pdv-teal" />
+              <FileJson className="w-5 h-5" style={{ color: '#1F8A70' }} />
               Master JSON Payload (With Examples)
             </CardTitle>
         </CardHeader>
