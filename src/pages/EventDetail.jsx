@@ -64,7 +64,7 @@ export default function EventDetail() {
   return (
     <div className="p-6 md:p-8 space-y-8">
       {/* Header Section with subtle gradient background */}
-      <div className="bg-gradient-to-r from-gray-50 to-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+      <div className="relative z-10 bg-gradient-to-r from-gray-50 to-white p-6 rounded-2xl border border-gray-100 shadow-sm">
         <div className="flex items-start gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate(createPageUrl("Events"))} className="hover:bg-gray-100 rounded-full">
             <ArrowLeft className="w-6 h-6 text-gray-500" />
