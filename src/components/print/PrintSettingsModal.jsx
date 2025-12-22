@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, FileText, Bell, AlertTriangle, CheckCircle2, Save, Printer, Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -48,10 +46,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
   const PAGE_W = 8.5 * 96; // 816px
   const PAGE_H = 11 * 96;  // 1056px
-  const HEADER_H = 120; // 2x for preview (was 60)
-  const FOOTER_H = 40; // 2x for preview (was 20)
-  const BASE_BODY = 21; // Base body font size in px (2x for preview readability)
-  const BASE_TITLE = 24; // Base title font size in px (2x for preview readability)
+  const HEADER_H = 120; // Preview header height (2x for readability)
+  const FOOTER_H = 40; // Preview footer height (2x for readability)
+  const BASE_BODY = 21; // Base body font size (2x for preview readability)
+  const BASE_TITLE = 24; // Base title font size (2x for preview readability)
 
   useEffect(() => {
     setPage1Settings(settingsPage1 || DEFAULT_SETTINGS);
@@ -94,20 +92,18 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
       const container = entries[0];
       if (!container) return;
 
-      const containerWidth = container.contentRect.width - 40; // padding
-      const containerHeight = container.contentRect.height - 40; // padding
+      const containerWidth = container.contentRect.width - 40;
+      const containerHeight = container.contentRect.height - 40;
 
       const scaleX = containerWidth / PAGE_W;
       const scaleY = containerHeight / PAGE_H;
-      const scale = Math.min(Math.min(scaleX, scaleY) * 0.95, 1.0); // clamp to max 1.0
+      const scale = Math.min(Math.min(scaleX, scaleY) * 0.95, 1.0);
 
       setPageFitScale(scale);
     });
 
     observer.observe(element);
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [open, serviceData]);
 
   // Measure overflow
@@ -159,7 +155,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     // Sort by average descending (largest text first)
     combinations.sort((a, b) => b.avg - a.avg);
 
-    // Test each combination
+    // Test each combination to find largest that fits
     for (const combo of combinations) {
       setCurrentSettings(prev => ({
         ...prev,
@@ -167,25 +163,20 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         titleFontScale: combo.titleFontScale
       }));
 
-      // Wait for render
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Check if it fits
       const overflows = bodyRef.current.scrollHeight > bodyRef.current.clientHeight + 2;
       if (!overflows) {
-        // Found the largest combo that fits!
         return;
       }
     }
+
+    // If nothing fits, smallest combo already set
   };
 
   const currentSettings = activePage === "page1" ? page1Settings : page2Settings;
   const setCurrentSettings = activePage === "page1" ? setPage1Settings : setPage2Settings;
   const currentOverflows = activePage === "page1" ? page1Overflows : page2Overflows;
-  const marginTopPx = unitToPx(currentSettings.margins.top);
-  const marginRightPx = unitToPx(currentSettings.margins.right);
-  const marginBottomPx = unitToPx(currentSettings.margins.bottom);
-  const marginLeftPx = unitToPx(currentSettings.margins.left);
 
   const t = {
     title: language === "es" ? "Configuración de Impresión" : "Print Settings",
