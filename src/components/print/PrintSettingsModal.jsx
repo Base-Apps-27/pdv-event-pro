@@ -33,6 +33,9 @@ const unitToPx = (value) => {
 };
 
 export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, settingsPage2, onSave, language = "es", serviceData = null }) {
+  const greenStyle = { backgroundColor: '#8DC63F', color: '#ffffff' };
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  
   const [page1Settings, setPage1Settings] = useState(settingsPage1 || DEFAULT_SETTINGS);
   const [page2Settings, setPage2Settings] = useState(settingsPage2 || DEFAULT_SETTINGS);
   const [activePage, setActivePage] = useState("page1");
@@ -239,7 +242,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
               variant="outline"
               size="sm"
               onClick={handleAutoScale}
-              className="gap-1 border-2 border-pdv-green text-pdv-green hover:bg-pdv-green hover:text-white font-semibold"
+              style={{ borderColor: '#8DC63F', color: '#8DC63F' }}
+              className="gap-1 border-2 hover:text-white font-semibold"
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#8DC63F'; e.currentTarget.style.color = '#ffffff'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ''; e.currentTarget.style.color = '#8DC63F'; }}
               title={language === "es" ? "Escalar automáticamente para ajustar" : "Auto-scale to fit"}
             >
               <Sparkles className="w-3 h-3" />
@@ -301,7 +307,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
               variant="default" 
               size="icon" 
               onClick={handlePrint} 
-              className="bg-pdv-green text-white hover:bg-pdv-teal"
+              style={greenStyle}
               title={language === "es" ? "Imprimir" : "Print"}
             >
               <Printer className="w-4 h-4" />
@@ -311,7 +317,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             <Button 
               onClick={handleSave} 
               size="icon"
-              className="bg-pdv-teal text-white hover:bg-pdv-green"
+              style={tealStyle}
               title={t.save}
             >
               <Save className="w-4 h-4" />
