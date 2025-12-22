@@ -1,11 +1,10 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, GripVertical, Music, MessageSquare, Languages, ListOrdered, Circle, Users, AlertTriangle, Bookmark, Copy, Clock } from "lucide-react";
+import { Edit, Trash2, Music, MessageSquare, Languages, ListOrdered, Circle, Users, AlertTriangle, Bookmark, Copy, Clock, ChevronUp, ChevronDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
@@ -49,25 +48,17 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
     },
   });
 
-  const handleDragEnd = async (result) => {
-    if (!result.destination) return;
-    
-    const sourceIndex = result.source.index;
-    const destIndex = result.destination.index;
-    
-    if (sourceIndex === destIndex) return;
+  const handleMoveSegment = async (index, direction) => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= segments.length) return;
 
-    const reorderedSegments = Array.from(segments);
-    const [movedSegment] = reorderedSegments.splice(sourceIndex, 1);
-    reorderedSegments.splice(destIndex, 0, movedSegment);
+    const currentSeg = segments[index];
+    const targetSeg = segments[targetIndex];
 
-    // Update orders only - don't recalculate times
-    const updates = reorderedSegments.map((seg, index) => ({
-      segmentId: seg.id,
-      newOrder: index + 1
-    }));
-
-    await Promise.all(updates.map(update => reorderMutation.mutateAsync(update)));
+    await Promise.all([
+      reorderMutation.mutateAsync({ segmentId: currentSeg.id, newOrder: targetSeg.order }),
+      reorderMutation.mutateAsync({ segmentId: targetSeg.id, newOrder: currentSeg.order })
+    ]);
   };
 
   const getSegmentActions = (segmentId) => {
@@ -126,7 +117,7 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
   const preSession = preSessionDetails.length > 0 ? preSessionDetails[0] : null;
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
+    <>
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
         <Table>
@@ -141,12 +132,10 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
               <TableHead className="w-24">Inicio</TableHead>
               <TableHead className="w-20">Dur.</TableHead>
               <TableHead className="w-12">Prep</TableHead>
-              <TableHead className="w-24">Acciones</TableHead>
+              <TableHead className="w-32">Acciones</TableHead>
             </TableRow>
           </TableHeader>
-          <Droppable droppableId="segments">
-            {(provided) => (
-              <TableBody ref={provided.innerRef} {...provided.droppableProps}>
+          <TableBody>
                 <TableRow className={`${preSession ? 'bg-blue-50 hover:bg-blue-100' : 'bg-gray-50 hover:bg-gray-100'} border-l-4 ${preSession ? 'border-blue-500' : 'border-gray-300'}`}>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -222,23 +211,32 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
             const timingIssues = checkTimingIssues(segment, index);
 
             return (
-              <Draggable key={segment.id} draggableId={segment.id} index={index}>
-                {(provided, snapshot) => (
-                  <TableRow 
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    style={{
-                      ...provided.draggableProps.style,
-                      display: snapshot.isDragging ? 'table' : undefined,
-                    }}
-                    className={`hover:bg-slate-50 ${snapshot.isDragging ? 'bg-blue-50' : ''}`}
-                  >
-                    <TableCell>
-                      <div className="flex items-center gap-2" {...provided.dragHandleProps}>
-                        <GripVertical className="w-4 h-4 text-slate-400 cursor-grab active:cursor-grabbing" />
-                        <span className="font-medium">{segment.order}</span>
-                      </div>
-                    </TableCell>
+              <TableRow key={segment.id} className="hover:bg-slate-50">
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <div className="flex flex-col">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleMoveSegment(index, 'up')}
+                        disabled={index === 0}
+                        className="h-4 w-5 p-0 hover:bg-blue-100"
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleMoveSegment(index, 'down')}
+                        disabled={index === segments.length - 1}
+                        className="h-4 w-5 p-0 hover:bg-blue-100"
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    <span className="font-medium text-sm">{segment.order}</span>
+                  </div>
+                </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
                     <Badge className={`${colorSchemes[segment.color_code || 'default']} border text-xs whitespace-nowrap`}>
@@ -389,15 +387,10 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                     </Button>
                   </div>
                 </TableCell>
-                  </TableRow>
-                )}
-              </Draggable>
+              </TableRow>
             );
           })}
-          {provided.placeholder}
-              </TableBody>
-            )}
-          </Droppable>
+          </TableBody>
         </Table>
       </div>
 
@@ -426,28 +419,37 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
         </div>
 
         {/* Segment Cards */}
-        <Droppable droppableId="segments-mobile">
-          {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
-              {segments.map((segment, index) => {
-                const actionCount = getSegmentActions(segment.id).length;
-                const hasProjectionNotes = !!segment.projection_notes;
-                const hasSoundNotes = !!segment.sound_notes;
-                const hasUshersNotes = !!segment.ushers_notes;
-                const timingIssues = checkTimingIssues(segment, index);
+        <div className="space-y-3">
+          {segments.map((segment, index) => {
+            const actionCount = getSegmentActions(segment.id).length;
+            const hasProjectionNotes = !!segment.projection_notes;
+            const hasSoundNotes = !!segment.sound_notes;
+            const hasUshersNotes = !!segment.ushers_notes;
+            const timingIssues = checkTimingIssues(segment, index);
 
-                return (
-                  <Draggable key={segment.id} draggableId={segment.id} index={index}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className={`p-3 bg-white rounded-lg border border-gray-200 ${snapshot.isDragging ? 'shadow-lg' : 'shadow-sm'}`}
-                      >
-                        <div className="flex gap-2">
-                          <div {...provided.dragHandleProps} className="pt-1">
-                            <GripVertical className="w-4 h-4 text-slate-400" />
-                          </div>
+            return (
+              <div key={segment.id} className="p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
+                <div className="flex gap-2">
+                  <div className="flex flex-col gap-0.5 pt-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleMoveSegment(index, 'up')}
+                      disabled={index === 0}
+                      className="h-5 w-6 p-0 hover:bg-blue-100"
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleMoveSegment(index, 'down')}
+                      disabled={index === segments.length - 1}
+                      className="h-5 w-6 p-0 hover:bg-blue-100"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </div>
                           
                           {/* Left Column - Main Info */}
                           <div className="flex-1 min-w-0">
@@ -552,15 +554,10 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                           </div>
                         </div>
                       </div>
-                    )}
-                  </Draggable>
                 );
               })}
-              {provided.placeholder}
             </div>
-          )}
-        </Droppable>
       </div>
-    </DragDropContext>
+    </>
   );
 }
