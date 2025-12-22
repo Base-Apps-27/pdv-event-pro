@@ -19,6 +19,8 @@ export default function Dashboard() {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
   
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  
   const { data: events = [] } = useQuery({
     queryKey: ['events'],
     queryFn: () => base44.entities.Event.list('-start_date')
@@ -246,7 +248,7 @@ export default function Dashboard() {
                             }
                           }}
                           size="sm"
-                          className="bg-pdv-teal text-white hover:bg-pdv-green"
+                          style={tealStyle}
                         >
                           Ver / View
                         </Button>
