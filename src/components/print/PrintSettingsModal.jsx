@@ -377,7 +377,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           width: `${PAGE_W}px`,
           height: `${PAGE_H}px`,
           display: 'inline-block',
-          flexShrink: 0
+          flexShrink: 0,
+          pageBreakAfter: 'always',
+          pageBreakInside: 'avoid'
         }}
       >
         {/* Logo - only for print */}
@@ -836,7 +838,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           width: `${PAGE_W}px`,
           height: `${PAGE_H}px`,
           display: 'inline-block',
-          flexShrink: 0
+          flexShrink: 0,
+          pageBreakAfter: 'auto',
+          pageBreakInside: 'avoid'
         }}
       >
         {/* Logo - only for print */}
