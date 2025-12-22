@@ -84,7 +84,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
   // Responsive preview scaling
   useEffect(() => {
-    if (!previewWrapRef.current) return;
+    if (!previewWrapRef.current || !open) return;
+
+    const element = previewWrapRef.current;
 
     const observer = new ResizeObserver((entries) => {
       const container = entries[0];
@@ -100,9 +102,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
       setPageFitScale(scale);
     });
 
-    observer.observe(previewWrapRef.current);
-    return () => observer.disconnect();
-  }, [open]);
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+    };
+  }, [open, serviceData]);
 
   // Measure overflow
   useEffect(() => {
@@ -371,7 +375,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         zoom: page1Settings.globalScale
                       }}
                     >
-                      {isWeeklyService ? (
+                      {isWeeklyService && serviceData?.['9:30am'] ? (
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
                           {/* 9:30 AM Column */}
                           <div>
@@ -383,7 +387,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                 {serviceData.pre_service_notes['9:30am']}
                               </div>
                             )}
-                            {serviceData?.['9:30am']?.filter(s => s.type !== 'break').map((seg, idx) => (
+                            {Array.isArray(serviceData?.['9:30am']) && serviceData['9:30am'].filter(s => s?.type !== 'break').map((seg, idx) => (
                               <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
                                 <div style={{ marginBottom: '3px' }}>
                                   <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
@@ -435,6 +439,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                           </div>
 
                           {/* 11:30 AM Column */}
+                          {serviceData?.['11:30am'] && (
                           <div>
                             <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
                               11:30 A.M.
