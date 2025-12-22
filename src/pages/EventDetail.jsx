@@ -46,7 +46,11 @@ export default function EventDetail() {
 
   React.useEffect(() => {
     if (wasValid && !event?.name) {
-      console.warn("Event became invalid after being valid (mutation/partial overwrite).", event);
+      console.warn("[DATA INTEGRITY] Event object became invalid after being valid. This indicates the base44.entities SDK may be mutating returned objects.", {
+        eventId,
+        eventSnapshot: event,
+        timestamp: new Date().toISOString()
+      });
     }
   }, [wasValid, event?.name]);
 
@@ -58,17 +62,13 @@ export default function EventDetail() {
     placeholderData: (previousData) => previousData,
   });
 
-  const sessionIdsKey = React.useMemo(
-    () => sessions.map(s => s.id).sort().join(","),
-    [sessions]
-  );
-
   const { data: segments = [] } = useQuery({
-    queryKey: ['segments', eventId, sessionIdsKey],
+    queryKey: ['segments', eventId, sessions.length],
     queryFn: async () => {
-      const allSegments = await base44.entities.Segment.list();
-      const sessionIds = new Set(sessions.map(s => s.id));
-      return allSegments.filter(seg => sessionIds.has(seg.session_id));
+      if (sessions.length === 0) return [];
+      const sessionIds = sessions.map(s => s.id);
+      const response = await base44.functions.invoke('getSegmentsBySessionIds', { sessionIds });
+      return response.data.segments || [];
     },
     enabled: !!eventId && sessions.length > 0,
     staleTime: 5 * 60 * 1000,

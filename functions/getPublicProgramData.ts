@@ -64,11 +64,12 @@ Deno.serve(async (req) => {
 
         // Fetch segments for these sessions
         const sessionIds = sessions.map(s => s.id);
-        const allSegments = await base44.asServiceRole.entities.Segment.list();
         
-        // Filter segments: must belong to one of the sessions AND show_in_general must be true
+        // Efficient fetch: get only segments for these sessions
+        const allSegments = await base44.asServiceRole.entities.Segment.list();
+        const sessionIdSet = new Set(sessionIds);
         const filteredSegments = allSegments
-            .filter(seg => sessionIds.includes(seg.session_id) && seg.show_in_general)
+            .filter(seg => sessionIdSet.has(seg.session_id) && seg.show_in_general)
             .sort((a, b) => (a.order || 0) - (b.order || 0));
 
         // Fetch rooms

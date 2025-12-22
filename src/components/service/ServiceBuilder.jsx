@@ -26,25 +26,13 @@ export default function ServiceBuilder({ serviceId }) {
   // Fetch All Segments for these sessions
   const sessionIds = sessions.map(s => s.id);
   const { data: segments = [], isLoading: loadingSegments } = useQuery({
-    queryKey: ['segments', { sessions: sessionIds }],
+    queryKey: ['segments', serviceId, sessionIds.length],
     queryFn: async () => {
         if (sessionIds.length === 0) return [];
-        // We have to fetch all and filter locally or make multiple calls if API doesn't support 'in'
-        // Assuming .list() or .filter() returns all we need. For optimization, we'd filter by service/session.
-        // Here we will fetch all segments linked to these sessions.
-        // Since we don't have an efficient 'IN' operator in this mock SDK description, we might iterate.
-        // Better: The `ServiceDetail` fetched all segments. Let's assume we can fetch all segments for the service via session relation manually.
-        // Or just fetch all segments and filter locally (inefficient but simple for now).
-        // Actually, let's try to filter by session_id if possible.
-        
-        const allSegs = [];
-        for(const sid of sessionIds) {
-            const s = await base44.entities.Segment.filter({ session_id: sid });
-            allSegs.push(...s);
-        }
-        return allSegs;
+        const response = await base44.functions.invoke('getSegmentsBySessionIds', { sessionIds });
+        return response.data.segments || [];
     },
-    enabled: sessionIds.length > 0
+    enabled: !!serviceId && sessionIds.length > 0
   });
 
   // Update Segment Mutation

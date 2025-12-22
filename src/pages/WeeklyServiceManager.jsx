@@ -310,8 +310,12 @@ export default function WeeklyServiceManager() {
               setLastSavedData(JSON.parse(JSON.stringify(data)));
             }
           }
-        } catch (e) {
-          // Silently fail - backup recovery is optional
+        } catch (error) {
+          console.error('[BACKUP RECOVERY ERROR] Failed to restore localStorage backup', {
+            backupKey,
+            error: error.message,
+            timestamp: new Date().toISOString()
+          });
         }
       }
     } else {

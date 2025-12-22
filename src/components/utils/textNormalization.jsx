@@ -162,7 +162,13 @@ export async function saveSuggestion(base44, type, value) {
       });
     }
   } catch (error) {
-    console.error('Error saving suggestion:', error);
+    console.error('[SUGGESTION SAVE ERROR] Failed to save autocomplete suggestion', {
+      type,
+      value,
+      normalized,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 }
 
@@ -188,7 +194,12 @@ export async function getSuggestions(base44, type, searchTerm = '') {
     
     return filtered;
   } catch (error) {
-    console.error('Error fetching suggestions:', error);
+    console.error('[SUGGESTION FETCH ERROR] Failed to retrieve autocomplete suggestions', {
+      type,
+      searchTerm,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
     return [];
   }
 }

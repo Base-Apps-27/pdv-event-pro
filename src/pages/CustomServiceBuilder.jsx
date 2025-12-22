@@ -158,13 +158,18 @@ export default function CustomServiceBuilder() {
           const backupDate = new Date(timestamp);
           const serverDate = existingService.updated_date ? new Date(existingService.updated_date) : new Date(0);
           if (backupDate > serverDate) {
-            console.warn('[BACKUP RECOVERY] LocalStorage backup is newer than server data. Consider restoring.', {
+            console.warn('[BACKUP RECOVERY] LocalStorage backup is newer than server data. User should be prompted to restore.', {
               backupTimestamp: timestamp,
-              serverTimestamp: existingService.updated_date
+              serverTimestamp: existingService.updated_date,
+              serviceId: existingService.id
             });
           }
-        } catch (e) {
-          console.error('[BACKUP] Error parsing backup:', e);
+        } catch (error) {
+          console.error('[BACKUP RECOVERY ERROR] Failed to parse localStorage backup', {
+            backupKey,
+            error: error.message,
+            timestamp: new Date().toISOString()
+          });
         }
       }
     }

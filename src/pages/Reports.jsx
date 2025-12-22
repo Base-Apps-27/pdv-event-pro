@@ -43,25 +43,46 @@ export default function Reports() {
   });
 
   const { data: sessions = [] } = useQuery({
-    queryKey: ['sessions'],
-    queryFn: () => base44.entities.Session.list(),
+    queryKey: ['sessions', selectedEventId],
+    queryFn: () => base44.entities.Session.filter({ event_id: selectedEventId }, 'order'),
+    enabled: !!selectedEventId,
   });
 
   const { data: allSegments = [] } = useQuery({
-    queryKey: ['segments'],
-    queryFn: () => base44.entities.Segment.list(),
+    queryKey: ['segments', selectedEventId, sessions.length],
+    queryFn: async () => {
+      if (!selectedEventId || sessions.length === 0) return [];
+      const sessionIds = sessions.map(s => s.id);
+      const response = await base44.functions.invoke('getSegmentsBySessionIds', { sessionIds });
+      return response.data.segments || [];
+    },
+    enabled: !!selectedEventId && sessions.length > 0,
   });
 
-
-
   const { data: allPreSessionDetails = [] } = useQuery({
-    queryKey: ['preSessionDetails'],
-    queryFn: () => base44.entities.PreSessionDetails.list(),
+    queryKey: ['preSessionDetails', selectedEventId],
+    queryFn: async () => {
+      if (sessions.length === 0) return [];
+      const sessionIds = sessions.map(s => s.id);
+      const results = await Promise.all(
+        sessionIds.map(sid => base44.entities.PreSessionDetails.filter({ session_id: sid }))
+      );
+      return results.flat();
+    },
+    enabled: !!selectedEventId && sessions.length > 0,
   });
 
   const { data: allHospitalityTasks = [] } = useQuery({
-    queryKey: ['hospitalityTasks'],
-    queryFn: () => base44.entities.HospitalityTask.list(),
+    queryKey: ['hospitalityTasks', selectedEventId],
+    queryFn: async () => {
+      if (sessions.length === 0) return [];
+      const sessionIds = sessions.map(s => s.id);
+      const results = await Promise.all(
+        sessionIds.map(sid => base44.entities.HospitalityTask.filter({ session_id: sid }, 'order'))
+      );
+      return results.flat();
+    },
+    enabled: !!selectedEventId && sessions.length > 0,
   });
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
