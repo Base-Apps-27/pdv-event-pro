@@ -187,8 +187,15 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
   const isCustomService = serviceData?.segments !== undefined;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl bg-white max-h-[95vh] overflow-hidden p-0">
+    <>
+      {/* PRINT-ONLY CONTENT - Hidden on screen, shown when printing */}
+      <div className="print-only-container" style={{ display: 'none' }}>
+        {renderPage1()}
+        {renderPage2()}
+      </div>
+
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-7xl bg-white max-h-[95vh] overflow-hidden p-0 print:hidden">
         {/* TOOLBAR */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -318,6 +325,43 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Print-specific styles */}
+    <style>{`
+      @media print {
+        @page {
+          size: letter;
+          margin: 0;
+        }
+        
+        body * {
+          visibility: hidden;
+        }
+        
+        .print-only-container,
+        .print-only-container * {
+          visibility: visible;
+        }
+        
+        .print-only-container {
+          display: block !important;
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+        }
+        
+        .print-only-container > div {
+          page-break-after: always;
+          page-break-inside: avoid;
+        }
+        
+        .print-only-container > div:last-child {
+          page-break-after: auto;
+        }
+      }
+    `}</style>
+  </>
   );
 
   function renderPage1() {
