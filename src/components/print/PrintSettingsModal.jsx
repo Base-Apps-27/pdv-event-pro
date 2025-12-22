@@ -382,25 +382,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       </div>
                     </div>
 
-                    {/* SCALABLE Body - Page 2 */}
-                    <div 
-                      ref={page2BodyRef}
-                      className="absolute overflow-hidden"
-                      style={{
-                        top: `${marginTopPx + HEADER_H}px`,
-                        left: `${marginLeftPx}px`,
-                        right: `${marginRightPx}px`,
-                        bottom: `${marginBottomPx + FOOTER_H}px`
-                      }}
-                    >
-                      <div style={{
-                        transform: `scale(${page2Settings.globalScale})`,
-                        transformOrigin: 'top left',
-                        width: `${100 / page2Settings.globalScale}%`
-                      }}>
 
-                      {isWeeklyService && serviceData?.['9:30am'] ? (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
                           {/* 9:30 AM Column */}
                           <div>
                             <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
@@ -652,8 +634,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                           </div>
                           )}
                         </div>
-                      ) : isCustomService && serviceData?.segments ? (
-                        <div style={{ fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3, padding: '8px' }}>
+                          ) : isCustomService && serviceData?.segments ? (
+                            <div style={{ fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3, padding: '8px' }}>
                           {serviceData.segments.map((seg, idx) => (
                             <div key={idx} style={{ marginBottom: '8px', paddingBottom: '6px', borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                               <div style={{ marginBottom: '2px' }}>
