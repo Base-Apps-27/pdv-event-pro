@@ -190,12 +190,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     <>
       {/* PRINT-ONLY CONTENT - Hidden on screen, shown when printing */}
       <div className="print-only-container" style={{ display: 'none' }}>
-        <div style={{ pageBreakAfter: 'always', pageBreakInside: 'avoid' }}>
-          {renderPage1()}
-        </div>
-        <div style={{ pageBreakAfter: 'auto', pageBreakInside: 'avoid' }}>
-          {renderPage2()}
-        </div>
+        {renderPage1()}
+        {renderPage2()}
       </div>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -362,20 +358,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           padding: 0;
         }
 
-        .print-only-container > div {
-          position: relative;
-          width: 8.5in;
-          height: 11in;
-          margin: 0;
-          padding: 0;
-          page-break-after: always;
-          page-break-inside: avoid;
-          box-shadow: none !important;
-        }
 
-        .print-only-container > div:last-child {
-          page-break-after: auto;
-        }
       }
     `}</style>
   </>
