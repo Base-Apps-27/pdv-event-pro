@@ -463,137 +463,107 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         >
           <div style={{ width: '100%' }}>
                         {isWeeklyService && serviceData?.['9:30am'] ? (
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4 }}>
-                          {/* 9:30 AM Column */}
-                          <div>
-                            <div style={{ fontSize: `${BASE_TITLE * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '16px', paddingBottom: '8px', borderBottom: '4px solid #1f2937', textTransform: 'uppercase' }}>
-                              9:30 A.M.
-                            </div>
-                            {serviceData?.pre_service_notes?.['9:30am'] && (
-                              <div style={{ marginBottom: '16px', fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
-                                {serviceData.pre_service_notes['9:30am']}
-                              </div>
-                            )}
-                            {Array.isArray(serviceData?.['9:30am']) && serviceData['9:30am'].filter(s => s?.type !== 'break').map((seg, idx) => (
-                              <div key={idx} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #f3f4f6' }}>
-                                <div style={{ marginBottom: '3px' }}>
-                                  <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
-                                    {seg.title || 'Sin título'}
-                                  </span>
-                                  {seg.duration && <span style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
+                          <>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4 }}>
+                              {/* 9:30 AM Column */}
+                              <div>
+                                <div style={{ fontSize: `${BASE_TITLE * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '16px', paddingBottom: '8px', borderBottom: '4px solid #1f2937', textTransform: 'uppercase' }}>
+                                  9:30 A.M.
                                 </div>
-                                {seg.data?.leader && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>
-                                    Dirige: {seg.data.leader}
+                                {serviceData?.pre_service_notes?.['9:30am'] && (
+                                  <div style={{ marginBottom: '16px', fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
+                                    {serviceData.pre_service_notes['9:30am']}
                                   </div>
                                 )}
-                                {seg.data?.preacher && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>
-                                    {seg.data.preacher}
-                                  </div>
-                                )}
-                                {seg.data?.presenter && !seg.data?.leader && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151', fontWeight: '500' }}>
-                                    {seg.data.presenter}
-                                  </div>
-                                )}
-                                {seg.data?.title && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
-                                    {seg.data.title}
-                                  </div>
-                                )}
-                                {seg.data?.verse && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af' }}>
-                                    📖 {seg.data.verse}
-                                  </div>
-                                )}
-                                {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
-                                  <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
-                                    {seg.songs.filter(s => s.title).map((song, sIdx) => (
-                                      <div key={sIdx} style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
-                                        - {song.title} {song.lead && `(${song.lead})`}
+                                {Array.isArray(serviceData?.['9:30am']) && serviceData['9:30am'].filter(s => s?.type !== 'break').map((seg, idx) => (
+                                  <div key={idx} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #f3f4f6' }}>
+                                    <div style={{ marginBottom: '3px' }}>
+                                      <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
+                                        {seg.title || 'Sin título'}
+                                      </span>
+                                      {seg.duration && <span style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
+                                    </div>
+                                    {seg.data?.leader && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>
+                                        Dirige: {seg.data.leader}
                                       </div>
-                                    ))}
+                                    )}
+                                    {seg.data?.preacher && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>
+                                        {seg.data.preacher}
+                                      </div>
+                                    )}
+                                    {seg.data?.presenter && !seg.data?.leader && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151', fontWeight: '500' }}>
+                                        {seg.data.presenter}
+                                      </div>
+                                    )}
+                                    {seg.data?.title && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
+                                        {seg.data.title}
+                                      </div>
+                                    )}
+                                    {seg.data?.verse && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af' }}>
+                                        📖 {seg.data.verse}
+                                      </div>
+                                    )}
+                                    {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
+                                      <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
+                                        {seg.songs.filter(s => s.title).map((song, sIdx) => (
+                                          <div key={sIdx} style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
+                                            - {song.title} {song.lead && `(${song.lead})`}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {seg.data?.ministry_leader && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px' }}>
+                                        • Ministración: {seg.data.ministry_leader} (5 min)
+                                      </div>
+                                    )}
+                                    {seg.data?.translator && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '2px' }}>
+                                        🌐 {seg.data.translator}
+                                      </div>
+                                    )}
+                                    {seg.data?.description && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
+                                        {seg.data.description}
+                                      </div>
+                                    )}
+                                    {seg.data?.description_details && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #9ca3af' }}>
+                                        📝 {seg.data.description_details}
+                                      </div>
+                                    )}
+                                    {seg.data?.general_notes && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #9ca3af' }}>
+                                        ℹ️ {seg.data.general_notes}
+                                      </div>
+                                    )}
+                                    {seg.data?.projection_notes && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #8b5cf6' }}>
+                                        📽️ {seg.data.projection_notes}
+                                      </div>
+                                    )}
+                                    {seg.data?.sound_notes && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#dc2626', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #dc2626' }}>
+                                        🔊 {seg.data.sound_notes}
+                                      </div>
+                                    )}
+                                    {seg.data?.ushers_notes && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#16a34a', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #16a34a' }}>
+                                        👥 {seg.data.ushers_notes}
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                                {seg.data?.ministry_leader && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px' }}>
-                                    • Ministración: {seg.data.ministry_leader} (5 min)
-                                  </div>
-                                )}
-                                {seg.data?.translator && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '2px' }}>
-                                    🌐 {seg.data.translator}
-                                  </div>
-                                )}
-                                {seg.data?.description && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
-                                    {seg.data.description}
-                                  </div>
-                                )}
-                                {seg.data?.projection_notes && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #8b5cf6' }}>
-                                    📽️ {seg.data.projection_notes}
-                                  </div>
-                                )}
-                                {seg.data?.sound_notes && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#dc2626', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #dc2626' }}>
-                                    🔊 {seg.data.sound_notes}
-                                  </div>
-                                )}
-                                {seg.data?.ushers_notes && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#16a34a', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #16a34a' }}>
-                                    👥 {seg.data.ushers_notes}
-                                  </div>
-                                )}
+                                ))}
                               </div>
-                            ))}
-                            
-                            {/* 9:30am Team Section */}
-                            {(serviceData?.coordinators?.['9:30am'] || serviceData?.ujieres?.['9:30am'] || serviceData?.sound?.['9:30am'] || serviceData?.luces?.['9:30am']) && (
-                              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '2px solid #dc2626' }}>
-                                <div style={{ fontSize: `${BASE_TITLE * 0.85 * page1Settings.titleFontScale}px`, fontWeight: '700', marginBottom: '8px', color: '#dc2626', textTransform: 'uppercase' }}>
-                                  Equipo
-                                </div>
-                                {serviceData?.coordinators?.['9:30am'] && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
-                                    <strong>Coord:</strong> {serviceData.coordinators['9:30am']}
-                                  </div>
-                                )}
-                                {serviceData?.ujieres?.['9:30am'] && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
-                                    <strong>Ujieres:</strong> {serviceData.ujieres['9:30am']}
-                                  </div>
-                                )}
-                                {serviceData?.sound?.['9:30am'] && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
-                                    <strong>Sonido:</strong> {serviceData.sound['9:30am']}
-                                  </div>
-                                )}
-                                {serviceData?.luces?.['9:30am'] && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
-                                    <strong>Luces:</strong> {serviceData.luces['9:30am']}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
 
-                          {/* RECESO */}
-                          {serviceData?.receso_notes?.['9:30am'] && (
-                            <div style={{ gridColumn: '1 / -1', margin: '16px 0', padding: '12px', background: '#f3f4f6', borderRadius: '8px', textAlign: 'center' }}>
-                              <div style={{ fontSize: `${BASE_TITLE * 0.85 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#6b7280', marginBottom: '4px', textTransform: 'uppercase' }}>
-                                RECESO (30 min)
-                              </div>
-                              <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280' }}>
-                                {serviceData.receso_notes['9:30am']}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* 11:30 AM Column */}
-                          {serviceData?.['11:30am'] && Array.isArray(serviceData['11:30am']) && (
-                          <div>
+                              {/* 11:30 AM Column */}
+                              {serviceData?.['11:30am'] && Array.isArray(serviceData['11:30am']) && (
+                              <div>
                             <div style={{ fontSize: `${BASE_TITLE * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '16px', paddingBottom: '8px', borderBottom: '4px solid #1f2937', textTransform: 'uppercase' }}>
                               11:30 A.M.
                             </div>
@@ -730,9 +700,19 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                   )}
 
                                   {/* SHARED FIELDS */}
-                                  {seg.data?.description_details && (
+                                  {seg.data?.description && (
                                     <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
-                                      {seg.data.description_details}
+                                      {seg.data.description}
+                                    </div>
+                                  )}
+                                  {seg.data?.description_details && (
+                                    <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #9ca3af' }}>
+                                      📝 {seg.data.description_details}
+                                    </div>
+                                  )}
+                                  {seg.data?.general_notes && (
+                                    <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #9ca3af' }}>
+                                      ℹ️ {seg.data.general_notes}
                                     </div>
                                   )}
                                   {seg.data?.projection_notes && (
@@ -754,37 +734,68 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                               );
                             })}
                             
-                            {/* 11:30am Team Section */}
-                            {(serviceData?.coordinators?.['11:30am'] || serviceData?.ujieres?.['11:30am'] || serviceData?.sound?.['11:30am'] || serviceData?.luces?.['11:30am']) && (
-                              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '2px solid #2563eb' }}>
-                                <div style={{ fontSize: `${BASE_TITLE * 0.85 * page1Settings.titleFontScale}px`, fontWeight: '700', marginBottom: '8px', color: '#2563eb', textTransform: 'uppercase' }}>
-                                  Equipo
+                            {/* 11:30am Team Section - only show if different from 9:30am */}
+                            {(() => {
+                              const coord930 = serviceData?.coordinators?.['9:30am'];
+                              const coord1130 = serviceData?.coordinators?.['11:30am'];
+                              const ujieres930 = serviceData?.ujieres?.['9:30am'];
+                              const ujieres1130 = serviceData?.ujieres?.['11:30am'];
+                              const sound930 = serviceData?.sound?.['9:30am'];
+                              const sound1130 = serviceData?.sound?.['11:30am'];
+                              const luces930 = serviceData?.luces?.['9:30am'];
+                              const luces1130 = serviceData?.luces?.['11:30am'];
+                              
+                              const hasDifferences = (coord1130 && coord1130 !== coord930) ||
+                                                     (ujieres1130 && ujieres1130 !== ujieres930) ||
+                                                     (sound1130 && sound1130 !== sound930) ||
+                                                     (luces1130 && luces1130 !== luces930);
+                              
+                              if (!hasDifferences) return null;
+                              
+                              return (
+                                <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '2px solid #2563eb' }}>
+                                  <div style={{ fontSize: `${BASE_TITLE * 0.85 * page1Settings.titleFontScale}px`, fontWeight: '700', marginBottom: '8px', color: '#2563eb', textTransform: 'uppercase' }}>
+                                    Equipo
+                                  </div>
+                                  {coord1130 && coord1130 !== coord930 && (
+                                    <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
+                                      <strong>Coord:</strong> {coord1130}
+                                    </div>
+                                  )}
+                                  {ujieres1130 && ujieres1130 !== ujieres930 && (
+                                    <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
+                                      <strong>Ujieres:</strong> {ujieres1130}
+                                    </div>
+                                  )}
+                                  {sound1130 && sound1130 !== sound930 && (
+                                    <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
+                                      <strong>Sonido:</strong> {sound1130}
+                                    </div>
+                                  )}
+                                  {luces1130 && luces1130 !== luces930 && (
+                                    <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
+                                      <strong>Luces:</strong> {luces1130}
+                                    </div>
+                                  )}
                                 </div>
-                                {serviceData?.coordinators?.['11:30am'] && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
-                                    <strong>Coord:</strong> {serviceData.coordinators['11:30am']}
-                                  </div>
-                                )}
-                                {serviceData?.ujieres?.['11:30am'] && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
-                                    <strong>Ujieres:</strong> {serviceData.ujieres['11:30am']}
-                                  </div>
-                                )}
-                                {serviceData?.sound?.['11:30am'] && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
-                                    <strong>Sonido:</strong> {serviceData.sound['11:30am']}
-                                  </div>
-                                )}
-                                {serviceData?.luces?.['11:30am'] && (
-                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
-                                    <strong>Luces:</strong> {serviceData.luces['11:30am']}
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                              );
+                            })()}
                           </div>
                           )}
-                          </div>
+                            </div>
+
+                            {/* RECESO - Outside grid at bottom */}
+                            {serviceData?.receso_notes?.['9:30am'] && (
+                              <div style={{ margin: '16px 0 0 0', padding: '12px', background: '#f3f4f6', borderRadius: '8px', textAlign: 'center' }}>
+                                <div style={{ fontSize: `${BASE_TITLE * 0.85 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#6b7280', marginBottom: '4px', textTransform: 'uppercase' }}>
+                                  RECESO (30 min)
+                                </div>
+                                <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280' }}>
+                                  {serviceData.receso_notes['9:30am']}
+                                </div>
+                              </div>
+                            )}
+                          </>
                           ) : isCustomService && serviceData?.segments ? (
                             <div style={{ fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4, padding: '8px' }}>
                           {serviceData.segments.map((seg, idx) => (
