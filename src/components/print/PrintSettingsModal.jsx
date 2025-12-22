@@ -346,9 +346,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, bottom: 0, width: `${marginLeftPx}px` }} />
         <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, right: 0, bottom: 0, width: `${marginRightPx}px` }} />
 
-
-                    {/* FIXED Header */}
-                    <div 
+        {/* FIXED Header */}
+        <div 
                       className="absolute bg-white"
                       style={{
                         top: `${marginTopPx}px`,
@@ -391,20 +390,20 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                           )}
                         </div>
                       )}
-                    </div>
+        </div>
 
-                    {/* SCALABLE Body */}
-                    <div 
-                      ref={page1BodyRef}
-                      className="absolute overflow-hidden"
-                      style={{
-                        top: `${marginTopPx + HEADER_H}px`,
-                        left: `${marginLeftPx}px`,
-                        right: `${marginRightPx}px`,
-                        bottom: `${marginBottomPx + FOOTER_H}px`
-                      }}
-                    >
-                      <div style={{ width: '100%' }}>
+        {/* SCALABLE Body */}
+        <div 
+          ref={page1BodyRef}
+          className="absolute overflow-hidden"
+          style={{
+            top: `${marginTopPx + HEADER_H}px`,
+            left: `${marginLeftPx}px`,
+            right: `${marginRightPx}px`,
+            bottom: `${marginBottomPx + FOOTER_H}px`
+          }}
+        >
+          <div style={{ width: '100%' }}>
                         {isWeeklyService && serviceData?.['9:30am'] ? (
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
                           {/* 9:30 AM Column */}
@@ -746,7 +745,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                             </div>
                             ) : (
                             <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>
-                            No hay datos de servicio
+                              No hay datos de servicio
                             </div>
                             )}
                             </div>
@@ -819,19 +818,19 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           </div>
         </div>
 
-                    {/* SCALABLE Body - 2 Column Announcements */}
-                    <div 
-                      ref={page2BodyRef}
-                      className="absolute overflow-hidden"
-                      style={{
-                        top: `${marginTopPx + HEADER_H}px`,
-                        left: `${marginLeftPx}px`,
-                        right: `${marginRightPx}px`,
-                        bottom: `${marginBottomPx + FOOTER_H}px`
-                      }}
-                    >
-                      <div style={{ width: '100%' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${9.5 * page2Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
+        {/* SCALABLE Body - 2 Column Announcements */}
+        <div 
+          ref={page2BodyRef}
+          className="absolute overflow-hidden"
+          style={{
+            top: `${marginTopPx + HEADER_H}px`,
+            left: `${marginLeftPx}px`,
+            right: `${marginRightPx}px`,
+            bottom: `${marginBottomPx + FOOTER_H}px`
+          }}
+        >
+          <div style={{ width: '100%' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${9.5 * page2Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
                         {/* Left Column: Fixed Announcements */}
                         <div>
                           {selectedFixed.map((ann) => (
@@ -903,15 +902,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                               </div>
                             );
                           })}
-                        </div>
-                        </div>
-                        ) : (
-                          <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>
-                            No hay datos de servicio
                           </div>
-                        )}
-                      </div>
-                    </div>
+                          </div>
+                          </div>
+                          </div>
 
         {/* FIXED Footer */}
         <div 
