@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, FileText, Bell, AlertTriangle, CheckCircle2, Save, Printer } from "lucide-react";
+import { Settings, FileText, Bell, AlertTriangle, CheckCircle2, Save, Printer, Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { formatDate as formatDateFn } from "date-fns";
@@ -140,6 +140,53 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     window.print();
   };
 
+  const handleAutoScale = () => {
+    const bodyRef = activePage === "page1" ? page1BodyRef : page2BodyRef;
+    if (!bodyRef.current) return;
+
+    // Generate all combinations in 0.05 steps from 0.5 to 1.0
+    const combinations = [];
+    for (let body = 1.0; body >= 0.5; body -= 0.05) {
+      for (let title = 1.0; title >= 0.5; title -= 0.05) {
+        combinations.push({ 
+          bodyFontScale: Math.round(body * 20) / 20, // Round to nearest 0.05
+          titleFontScale: Math.round(title * 20) / 20,
+          avg: (body + title) / 2 
+        });
+      }
+    }
+
+    // Sort by average scale descending (prefer larger text)
+    combinations.sort((a, b) => b.avg - a.avg);
+
+    // Try each combination
+    for (const combo of combinations) {
+      // Temporarily apply settings
+      setCurrentSettings(prev => ({
+        ...prev,
+        bodyFontScale: combo.bodyFontScale,
+        titleFontScale: combo.titleFontScale
+      }));
+
+      // Force sync check - measure immediately
+      setTimeout(() => {
+        const overflows = bodyRef.current.scrollHeight > bodyRef.current.clientHeight + 2;
+        if (!overflows) {
+          // Found a fit! Stop here
+          return;
+        }
+      }, 50);
+    }
+
+    // If nothing fits, use smallest combo
+    const smallest = combinations[combinations.length - 1];
+    setCurrentSettings(prev => ({
+      ...prev,
+      bodyFontScale: smallest.bodyFontScale,
+      titleFontScale: smallest.titleFontScale
+    }));
+  };
+
   const currentSettings = activePage === "page1" ? page1Settings : page2Settings;
   const setCurrentSettings = activePage === "page1" ? setPage1Settings : setPage2Settings;
   const currentOverflows = activePage === "page1" ? page1Overflows : page2Overflows;
@@ -204,6 +251,18 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           </div>
 
           <div className="flex items-center gap-4">
+            {/* AutoScale Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAutoScale}
+              className="gap-1 border-2 border-pdv-green text-pdv-green hover:bg-pdv-green hover:text-white font-semibold"
+              title={language === "es" ? "Escalar automáticamente para ajustar" : "Auto-scale to fit"}
+            >
+              <Sparkles className="w-3 h-3" />
+              Auto
+            </Button>
+
             {/* Body Font Scale */}
             <div className="flex items-center gap-2">
               <Label className="text-xs whitespace-nowrap">{t.bodyFontScale}</Label>
