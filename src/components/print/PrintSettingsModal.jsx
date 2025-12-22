@@ -331,7 +331,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
       @media print {
         @page {
           size: letter;
-          margin: 0;
+          margin: 0 !important;
         }
 
         * {
