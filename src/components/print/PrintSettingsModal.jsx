@@ -301,7 +301,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
               {/* Right: Page 1 Preview */}
               <div ref={previewWrapRef} className="bg-gray-900 rounded-lg flex items-center justify-center overflow-hidden">
-                <div style={{ display: 'inline-block', transform: `scale(${pageFitScale})`, transformOrigin: 'center center' }}>
+                <div style={{ display: 'inline-block', transform: `scale(${pageFitScale})`, transformOrigin: 'top center' }}>
                   <div 
                     className="bg-white shadow-2xl relative"
                     style={{
@@ -371,10 +371,34 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         top: `${marginTopPx + HEADER_H}px`,
                         left: `${marginLeftPx}px`,
                         right: `${marginRightPx}px`,
-                        bottom: `${marginBottomPx + FOOTER_H}px`,
-                        zoom: page1Settings.globalScale
+                        bottom: `${marginBottomPx + FOOTER_H}px`
                       }}
                     >
+                      <div style={{
+                        transform: `scale(${page1Settings.globalScale})`,
+                        transformOrigin: 'top left',
+                        width: `${100 / page1Settings.globalScale}%`
+                      }}>
+                      </div>
+                    </div>
+
+                    {/* SCALABLE Body - Page 2 */}
+                    <div 
+                      ref={page2BodyRef}
+                      className="absolute overflow-hidden"
+                      style={{
+                        top: `${marginTopPx + HEADER_H}px`,
+                        left: `${marginLeftPx}px`,
+                        right: `${marginRightPx}px`,
+                        bottom: `${marginBottomPx + FOOTER_H}px`
+                      }}
+                    >
+                      <div style={{
+                        transform: `scale(${page2Settings.globalScale})`,
+                        transformOrigin: 'top left',
+                        width: `${100 / page2Settings.globalScale}%`
+                      }}>
+
                       {isWeeklyService && serviceData?.['9:30am'] ? (
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
                           {/* 9:30 AM Column */}
