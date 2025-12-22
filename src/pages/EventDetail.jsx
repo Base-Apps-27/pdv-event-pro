@@ -41,17 +41,20 @@ export default function EventDetail() {
     refetchOnWindowFocus: false,
   });
 
+  const sessionIdsKey = sessions.map(s => s.id).join(',');
+
   const { data: segments = [] } = useQuery({
-    queryKey: ['segments', eventId],
+    queryKey: ['segments', eventId, sessionIdsKey],
     queryFn: async () => {
-      if (!sessions.length) return previousData || [];
       const allSegments = await base44.entities.Segment.list();
-      const sessionIds = sessions.map(s => s.id);
-      return allSegments.filter(seg => sessionIds.includes(seg.session_id));
+      const sessionIds = new Set(sessions.map(s => s.id));
+      return allSegments.filter(seg => sessionIds.has(seg.session_id));
     },
     enabled: !!eventId && sessions.length > 0,
     staleTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   const { data: allSessions = [] } = useQuery({
@@ -84,6 +87,8 @@ export default function EventDetail() {
     );
   }
 
+  const e = headerEvent ?? event;
+
   return (
     <div className="p-6 md:p-8 space-y-8">
       {/* Header Section with subtle gradient background */}
@@ -94,9 +99,9 @@ export default function EventDetail() {
           </Button>
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 uppercase font-['Bebas_Neue'] tracking-tight">{event.name}</h1>
-              <Badge variant="outline" className="text-xs uppercase tracking-wider border-gray-300 text-gray-500">{event.year}</Badge>
-              {event.origin === 'template' && (
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 uppercase font-['Bebas_Neue'] tracking-tight">{e.name}</h1>
+              <Badge variant="outline" className="text-xs uppercase tracking-wider border-gray-300 text-gray-500">{e.year}</Badge>
+              {e.origin === 'template' && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
@@ -111,7 +116,7 @@ export default function EventDetail() {
                   </Tooltip>
                 </TooltipProvider>
               )}
-              {event.origin === 'duplicate' && (
+              {e.origin === 'duplicate' && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
@@ -127,7 +132,7 @@ export default function EventDetail() {
                 </TooltipProvider>
               )}
             </div>
-            {event.theme && <p className="text-xl font-medium italic" style={{ color: '#1F8A70' }}>"{event.theme}"</p>}
+            {e.theme && <p className="text-xl font-medium italic" style={{ color: '#1F8A70' }}>"{e.theme}"</p>}
           </div>
           <div className="ml-auto flex gap-2">
             <Button 
