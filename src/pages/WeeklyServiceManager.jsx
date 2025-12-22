@@ -2158,15 +2158,9 @@ Return ONLY valid JSON:
                               )}
                             </CardContent>
                           </Card>
-                        )}
-                      </Draggable>
                     );
                   })}
-                  {provided.placeholder}
                 </div>
-              )}
-            </Droppable>
-          </DragDropContext>
 
           {/* Receso Block */}
           <Card className="bg-gray-100 border-2 border-gray-400">
@@ -2593,15 +2587,9 @@ Return ONLY valid JSON:
                               )}
                             </CardContent>
                           </Card>
-                        )}
-                      </Draggable>
                     );
                   })}
-                  {provided.placeholder}
                 </div>
-              )}
-            </Droppable>
-          </DragDropContext>
 
           {/* Team Section */}
           <Card className="bg-blue-50 border-2 border-blue-300 print:hidden">
