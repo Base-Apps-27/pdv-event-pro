@@ -152,7 +152,6 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
       : "Adjust how announcements print (always 2 columns)."
   };
 
-  // Sanitize HTML for preview
   const sanitize = (html) => {
     if (!html) return '';
     return html
@@ -164,7 +163,6 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     ? formatDateFn(new Date(serviceData.date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })
     : "—";
 
-  // Detect service type
   const isWeeklyService = serviceData?.['9:30am'] !== undefined;
   const isCustomService = serviceData?.segments !== undefined;
 
@@ -307,203 +305,311 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       height: `${PAGE_H}px`
                     }}
                   >
-                  {/* Margin Overlays */}
-                  <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
-                  <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
-                  <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, bottom: 0, width: `${marginLeftPx}px` }} />
-                  <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, right: 0, bottom: 0, width: `${marginRightPx}px` }} />
+                    {/* Margin Overlays */}
+                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
+                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
+                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, bottom: 0, width: `${marginLeftPx}px` }} />
+                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, right: 0, bottom: 0, width: `${marginRightPx}px` }} />
 
-                  {/* FIXED Header */}
-                  <div 
-                    className="absolute bg-white"
-                    style={{
-                      top: `${marginTopPx}px`,
-                      left: `${marginLeftPx}px`,
-                      right: `${marginRightPx}px`,
-                      height: `${HEADER_H}px`,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderBottom: '1px solid #e5e7eb'
-                    }}
-                  >
-                    <div style={{ fontSize: '16px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a' }}>
-                      Orden de Servicio
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>
-                      Domingo {selectedDateFormatted}
-                    </div>
-                    <div style={{ fontSize: '8px', color: '#6b7280', marginTop: '6px', display: 'flex', gap: '4px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                      {serviceData?.coordinators?.['9:30am'] && <span><strong>Coord:</strong> {serviceData.coordinators['9:30am']}</span>}
-                      {serviceData?.ujieres?.['9:30am'] && <><span style={{ color: '#9ca3af' }}>/</span><span><strong>Ujier:</strong> {serviceData.ujieres['9:30am']}</span></>}
-                      {serviceData?.sound?.['9:30am'] && <><span style={{ color: '#9ca3af' }}>/</span><span><strong>Sonido:</strong> {serviceData.sound['9:30am']}</span></>}
-                      {serviceData?.luces?.['9:30am'] && <><span style={{ color: '#9ca3af' }}>/</span><span><strong>Luces:</strong> {serviceData.luces['9:30am']}</span></>}
-                    </div>
-                  </div>
-
-                  {/* SCALABLE Body - 2 Columns (Weekly) or Single (Custom) */}
-                  <div 
-                    ref={page1BodyRef}
-                    className="absolute overflow-hidden"
-                    style={{
-                      top: `${marginTopPx + HEADER_H}px`,
-                      left: `${marginLeftPx}px`,
-                      right: `${marginRightPx}px`,
-                      bottom: `${marginBottomPx + FOOTER_H}px`,
-                      zoom: page1Settings.globalScale
-                    }}
-                  >
-                    {isWeeklyService ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', height: '100%', fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
-                        {/* 9:30 AM Column */}
-                        <div>
-                          <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
-                            9:30 A.M.
-                          </div>
-                          {serviceData?.pre_service_notes?.['9:30am'] && (
-                            <div style={{ marginBottom: '10px', fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
-                              {serviceData.pre_service_notes['9:30am']}
-                            </div>
-                          )}
-                          {serviceData?.['9:30am']?.filter(s => s.type !== 'break').map((seg, idx) => (
-                          <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
-                            <div style={{ marginBottom: '3px' }}>
-                              <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
-                                {seg.title || 'Sin título'}
-                              </span>
-                              {seg.duration && <span style={{ fontSize: '9px', color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
-                            </div>
-                            {seg.data?.leader && (
-                              <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
-                                Dirige: {seg.data.leader}
-                              </div>
-                            )}
-                            {seg.data?.preacher && (
-                              <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
-                                {seg.data.preacher}
-                              </div>
-                            )}
-                            {seg.data?.presenter && !seg.data?.leader && (
-                              <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
-                                {seg.data.presenter}
-                              </div>
-                            )}
-                            {seg.data?.title && (
-                              <div style={{ fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
-                                {seg.data.title}
-                              </div>
-                            )}
-                            {seg.data?.verse && (
-                              <div style={{ fontSize: '9px', color: '#9ca3af' }}>
-                                📖 {seg.data.verse}
-                              </div>
-                            )}
-                            {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
-                              <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
-                                {seg.songs.filter(s => s.title).map((song, sIdx) => (
-                                  <div key={sIdx} style={{ fontSize: '9px', color: '#16a34a' }}>
-                                    - {song.title} {song.lead && `(${song.lead})`}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            {seg.data?.ministry_leader && (
-                              <div style={{ fontSize: '9px', color: '#8b5cf6', marginTop: '3px' }}>
-                                • Ministración: {seg.data.ministry_leader} (5 min)
-                              </div>
-                            )}
-                          </div>
-                          ))}
-                        </div>
-
-                        {/* 11:30 AM Column */}
-                        <div>
-                          <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
-                            11:30 A.M.
-                          </div>
-                          {serviceData?.pre_service_notes?.['11:30am'] && (
-                            <div style={{ marginBottom: '10px', fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
-                              {serviceData.pre_service_notes['11:30am']}
-                            </div>
-                          )}
-                          {serviceData?.['11:30am']?.filter(s => s.type !== 'break').map((seg, idx) => (
-                          <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
-                            <div style={{ marginBottom: '3px' }}>
-                              <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
-                                {seg.title || 'Sin título'}
-                              </span>
-                              {seg.duration && <span style={{ fontSize: '9px', color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
-                            </div>
-                            {seg.data?.leader && (
-                              <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
-                                Dirige: {seg.data.leader}
-                              </div>
-                            )}
-                            {seg.data?.preacher && (
-                              <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
-                                {seg.data.preacher}
-                              </div>
-                            )}
-                            {seg.data?.presenter && !seg.data?.leader && (
-                              <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
-                                {seg.data.presenter}
-                              </div>
-                            )}
-                            {seg.data?.translator && (
-                              <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
-                                🌐 {seg.data.translator}
-                              </div>
-                            )}
-                            {seg.data?.title && (
-                              <div style={{ fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
-                                {seg.data.title}
-                              </div>
-                            )}
-                            {seg.data?.verse && (
-                              <div style={{ fontSize: '9px', color: '#9ca3af' }}>
-                                📖 {seg.data.verse}
-                              </div>
-                            )}
-                            {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
-                              <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
-                                {seg.songs.filter(s => s.title).map((song, sIdx) => (
-                                  <div key={sIdx} style={{ fontSize: '9px', color: '#16a34a' }}>
-                                    - {song.title} {song.lead && `(${song.lead})`}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            {seg.data?.ministry_leader && (
-                              <div style={{ fontSize: '9px', color: '#8b5cf6', marginTop: '3px' }}>
-                                • Ministración: {seg.data.ministry_leader} (5 min)
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                    {/* FIXED Header */}
+                    <div 
+                      className="absolute bg-white"
+                      style={{
+                        top: `${marginTopPx}px`,
+                        left: `${marginLeftPx}px`,
+                        right: `${marginRightPx}px`,
+                        height: `${HEADER_H}px`,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderBottom: '1px solid #e5e7eb'
+                      }}
+                    >
+                      <div style={{ fontSize: '16px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a' }}>
+                        Orden de Servicio
                       </div>
+                      <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>
+                        Domingo {selectedDateFormatted}
+                      </div>
+                      {isWeeklyService && (
+                        <div style={{ fontSize: '8px', color: '#6b7280', marginTop: '6px', display: 'flex', gap: '4px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                          {serviceData?.coordinators?.['9:30am'] && <span><strong>Coord:</strong> {serviceData.coordinators['9:30am']}</span>}
+                          {serviceData?.ujieres?.['9:30am'] && (
+                            <>
+                              <span style={{ color: '#9ca3af' }}>/</span>
+                              <span><strong>Ujier:</strong> {serviceData.ujieres['9:30am']}</span>
+                            </>
+                          )}
+                          {serviceData?.sound?.['9:30am'] && (
+                            <>
+                              <span style={{ color: '#9ca3af' }}>/</span>
+                              <span><strong>Sonido:</strong> {serviceData.sound['9:30am']}</span>
+                            </>
+                          )}
+                          {serviceData?.luces?.['9:30am'] && (
+                            <>
+                              <span style={{ color: '#9ca3af' }}>/</span>
+                              <span><strong>Luces:</strong> {serviceData.luces['9:30am']}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* SCALABLE Body */}
+                    <div 
+                      ref={page1BodyRef}
+                      className="absolute overflow-hidden"
+                      style={{
+                        top: `${marginTopPx + HEADER_H}px`,
+                        left: `${marginLeftPx}px`,
+                        right: `${marginRightPx}px`,
+                        bottom: `${marginBottomPx + FOOTER_H}px`,
+                        zoom: page1Settings.globalScale
+                      }}
+                    >
+                      {isWeeklyService ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
+                          {/* 9:30 AM Column */}
+                          <div>
+                            <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
+                              9:30 A.M.
+                            </div>
+                            {serviceData?.pre_service_notes?.['9:30am'] && (
+                              <div style={{ marginBottom: '10px', fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                                {serviceData.pre_service_notes['9:30am']}
+                              </div>
+                            )}
+                            {serviceData?.['9:30am']?.filter(s => s.type !== 'break').map((seg, idx) => (
+                              <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
+                                <div style={{ marginBottom: '3px' }}>
+                                  <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
+                                    {seg.title || 'Sin título'}
+                                  </span>
+                                  {seg.duration && <span style={{ fontSize: '9px', color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
+                                </div>
+                                {seg.data?.leader && (
+                                  <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                    Dirige: {seg.data.leader}
+                                  </div>
+                                )}
+                                {seg.data?.preacher && (
+                                  <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                    {seg.data.preacher}
+                                  </div>
+                                )}
+                                {seg.data?.presenter && !seg.data?.leader && (
+                                  <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
+                                    {seg.data.presenter}
+                                  </div>
+                                )}
+                                {seg.data?.title && (
+                                  <div style={{ fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                                    {seg.data.title}
+                                  </div>
+                                )}
+                                {seg.data?.verse && (
+                                  <div style={{ fontSize: '9px', color: '#9ca3af' }}>
+                                    📖 {seg.data.verse}
+                                  </div>
+                                )}
+                                {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
+                                  <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
+                                    {seg.songs.filter(s => s.title).map((song, sIdx) => (
+                                      <div key={sIdx} style={{ fontSize: '9px', color: '#16a34a' }}>
+                                        - {song.title} {song.lead && `(${song.lead})`}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {seg.data?.ministry_leader && (
+                                  <div style={{ fontSize: '9px', color: '#8b5cf6', marginTop: '3px' }}>
+                                    • Ministración: {seg.data.ministry_leader} (5 min)
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* 11:30 AM Column */}
+                          <div>
+                            <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
+                              11:30 A.M.
+                            </div>
+                            {serviceData?.pre_service_notes?.['11:30am'] && (
+                              <div style={{ marginBottom: '10px', fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                                {serviceData.pre_service_notes['11:30am']}
+                              </div>
+                            )}
+                            {serviceData?.['11:30am']?.filter(s => s.type !== 'break').map((seg, idx) => (
+                              <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
+                                <div style={{ marginBottom: '3px' }}>
+                                  <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
+                                    {seg.title || 'Sin título'}
+                                  </span>
+                                  {seg.duration && <span style={{ fontSize: '9px', color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
+                                </div>
+                                {seg.data?.leader && (
+                                  <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                    Dirige: {seg.data.leader}
+                                  </div>
+                                )}
+                                {seg.data?.preacher && (
+                                  <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                    {seg.data.preacher}
+                                  </div>
+                                )}
+                                {seg.data?.presenter && !seg.data?.leader && (
+                                  <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
+                                    {seg.data.presenter}
+                                  </div>
+                                )}
+                                {seg.data?.translator && (
+                                  <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                    🌐 {seg.data.translator}
+                                  </div>
+                                )}
+                                {seg.data?.title && (
+                                  <div style={{ fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                                    {seg.data.title}
+                                  </div>
+                                )}
+                                {seg.data?.verse && (
+                                  <div style={{ fontSize: '9px', color: '#9ca3af' }}>
+                                    📖 {seg.data.verse}
+                                  </div>
+                                )}
+                                {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
+                                  <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
+                                    {seg.songs.filter(s => s.title).map((song, sIdx) => (
+                                      <div key={sIdx} style={{ fontSize: '9px', color: '#16a34a' }}>
+                                        - {song.title} {song.lead && `(${song.lead})`}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {seg.data?.ministry_leader && (
+                                  <div style={{ fontSize: '9px', color: '#8b5cf6', marginTop: '3px' }}>
+                                    • Ministración: {seg.data.ministry_leader} (5 min)
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : isCustomService ? (
+                        <div style={{ fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3, padding: '8px' }}>
+                          {serviceData.segments?.map((seg, idx) => (
+                            <div key={idx} style={{ marginBottom: '8px', paddingBottom: '6px', borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                              <div style={{ marginBottom: '2px' }}>
+                                <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: 'bold', textTransform: 'uppercase' }}>
+                                  {seg.title || 'Sin título'}
+                                </span>
+                                {seg.duration && <span style={{ fontSize: '9px', color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} min)</span>}
+                              </div>
+                              {seg.leader && (
+                                <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                  Dirige: {seg.leader}
+                                </div>
+                              )}
+                              {seg.preacher && (
+                                <div style={{ fontSize: '10px', color: '#2563eb', fontWeight: '600' }}>
+                                  {seg.preacher}
+                                </div>
+                              )}
+                              {seg.presenter && !seg.leader && !seg.preacher && (
+                                <div style={{ fontSize: '10px', color: '#374151' }}>
+                                  {seg.presenter}
+                                </div>
+                              )}
+                              {seg.translator && (
+                                <div style={{ fontSize: '9px', color: '#6b7280' }}>
+                                  🌐 {seg.translator}
+                                </div>
+                              )}
+                              {seg.messageTitle && (
+                                <div style={{ fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                                  {seg.messageTitle}
+                                </div>
+                              )}
+                              {seg.verse && (
+                                <div style={{ fontSize: '9px', color: '#9ca3af' }}>
+                                  📖 {seg.verse}
+                                </div>
+                              )}
+                              {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
+                                <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
+                                  {seg.songs.filter(s => s.title).map((song, sIdx) => (
+                                    <div key={sIdx} style={{ fontSize: '9px', color: '#16a34a' }}>
+                                      - {song.title} {song.lead && `(${song.lead})`}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {seg.description && (
+                                <div style={{ fontSize: '9px', color: '#9ca3af', fontStyle: 'italic', marginTop: '3px' }}>
+                                  {seg.description}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {(serviceData.coordinators || serviceData.ujieres || serviceData.sound || serviceData.luces) && (
+                            <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '2px solid #1F8A70' }}>
+                              <div style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase' }}>
+                                Equipo
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                                {serviceData.coordinators && (
+                                  <div style={{ fontSize: '9px' }}>
+                                    <strong>Coordinador:</strong> {serviceData.coordinators}
+                                  </div>
+                                )}
+                                {serviceData.ujieres && (
+                                  <div style={{ fontSize: '9px' }}>
+                                    <strong>Ujieres:</strong> {serviceData.ujieres}
+                                  </div>
+                                )}
+                                {serviceData.sound && (
+                                  <div style={{ fontSize: '9px' }}>
+                                    <strong>Sonido:</strong> {serviceData.sound}
+                                  </div>
+                                )}
+                                {serviceData.luces && (
+                                  <div style={{ fontSize: '9px' }}>
+                                    <strong>Luces:</strong> {serviceData.luces}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>
+                          No hay datos de servicio
+                        </div>
+                      )}
+                    </div>
+
+                    {/* FIXED Footer */}
+                    <div 
+                      style={{
+                        position: 'absolute',
+                        bottom: `${marginBottomPx}px`,
+                        left: 0,
+                        right: 0,
+                        height: `${FOOTER_H}px`,
+                        background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <span style={{ fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
+                        ¡Atrévete a cambiar!
+                      </span>
                     </div>
                   </div>
-
-                  {/* FIXED Footer */}
-                  <div 
-                    style={{
-                      position: 'absolute',
-                      bottom: `${marginBottomPx}px`,
-                      left: 0,
-                      right: 0,
-                      height: `${FOOTER_H}px`,
-                      background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <span style={{ fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
-                      ¡Atrévete a cambiar!
-                    </span>
-                  </div>
-                </div>
                 </div>
               </div>
             </div>
@@ -613,153 +719,148 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       height: `${PAGE_H}px`
                     }}
                   >
-                  {/* Margin Overlays */}
-                  <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
-                  <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
-                  <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, bottom: 0, width: `${marginLeftPx}px` }} />
-                  <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, right: 0, bottom: 0, width: `${marginRightPx}px` }} />
+                    {/* Margin Overlays */}
+                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
+                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
+                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, bottom: 0, width: `${marginLeftPx}px` }} />
+                    <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, right: 0, bottom: 0, width: `${marginRightPx}px` }} />
 
-                  {/* FIXED Header */}
-                  <div 
-                    className="absolute bg-white"
-                    style={{
-                      top: `${marginTopPx}px`,
-                      left: `${marginLeftPx}px`,
-                      right: `${marginRightPx}px`,
-                      height: `${HEADER_H}px`,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderBottom: '1px solid #e5e7eb'
-                    }}
-                  >
-                    <div style={{ fontSize: '16px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a' }}>
-                      Anuncios
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>
-                      Domingo {selectedDateFormatted}
-                    </div>
-                  </div>
-
-                  {/* SCALABLE Body - 2 Column Announcements */}
-                  <div 
-                    ref={page2BodyRef}
-                    className="absolute overflow-hidden"
-                    style={{
-                      top: `${marginTopPx + HEADER_H}px`,
-                      left: `${marginLeftPx}px`,
-                      right: `${marginRightPx}px`,
-                      bottom: `${marginBottomPx + FOOTER_H}px`,
-                      zoom: page2Settings.globalScale
-                    }}
-                  >
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${9.5 * page2Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
-                      {/* Left Column: Fixed Announcements */}
-                      <div>
-                        {selectedFixed.map((ann) => (
-                          <div key={ann.id} style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #e5e7eb' }}>
-                            <div style={{ fontSize: `${10 * page2Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', marginBottom: '3px', color: '#1a1a1a' }}>
-                              {ann.title}
-                            </div>
-                            {ann.content && (
-                              <div 
-                                style={{ fontSize: '9.5px', color: '#374151', whiteSpace: 'pre-wrap' }}
-                                dangerouslySetInnerHTML={{ __html: sanitize(ann.content) }}
-                              />
-                            )}
-                            {ann.instructions && (
-                              <div 
-                                style={{ fontSize: '8.5px', color: '#6b7280', fontStyle: 'italic', marginTop: '4px', paddingLeft: '6px', borderLeft: '2px solid #fbbf24' }}
-                              >
-                                <strong style={{ fontStyle: 'normal', textTransform: 'uppercase', fontSize: '7.5px' }}>CUE: </strong>
-                                <span dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }} />
-                              </div>
-                            )}
-                            {ann.has_video && (
-                              <div style={{ fontSize: '8px', color: '#8b5cf6', marginTop: '3px' }}>📹 Video</div>
-                            )}
-                          </div>
-                        ))}
+                    {/* FIXED Header */}
+                    <div 
+                      className="absolute bg-white"
+                      style={{
+                        top: `${marginTopPx}px`,
+                        left: `${marginLeftPx}px`,
+                        right: `${marginRightPx}px`,
+                        height: `${HEADER_H}px`,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderBottom: '1px solid #e5e7eb'
+                      }}
+                    >
+                      <div style={{ fontSize: '16px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a' }}>
+                        Anuncios
                       </div>
+                      <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>
+                        Domingo {selectedDateFormatted}
+                      </div>
+                    </div>
 
-                      {/* Right Column: Dynamic Events */}
-                      <div style={{ borderLeft: '2px solid #e5e7eb', paddingLeft: '12px' }}>
-                        <div style={{ fontSize: '9px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #e5e7eb' }}>
-                          Próximos Eventos
-                        </div>
-                        {selectedDynamic.map((ann) => {
-                          const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
-                          const isEmphasized = ann.emphasize || ann.category === 'Urgent';
-                          return (
-                            <div 
-                              key={ann.id} 
-                              style={{ 
-                                marginBottom: '6px', 
-                                paddingBottom: '6px', 
-                                borderBottom: '1px solid #f3f4f6',
-                                ...(isEmphasized && { background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '4px', padding: '4px 6px', marginBottom: '6px' })
-                              }}
-                            >
-                              <div style={{ fontSize: `${10 * page2Settings.titleFontScale}px`, fontWeight: '600', color: '#16a34a', marginBottom: '2px' }}>
-                                {ann.isEvent ? ann.name : ann.title}
+                    {/* SCALABLE Body - 2 Column Announcements */}
+                    <div 
+                      ref={page2BodyRef}
+                      className="absolute overflow-hidden"
+                      style={{
+                        top: `${marginTopPx + HEADER_H}px`,
+                        left: `${marginLeftPx}px`,
+                        right: `${marginRightPx}px`,
+                        bottom: `${marginBottomPx + FOOTER_H}px`,
+                        zoom: page2Settings.globalScale
+                      }}
+                    >
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${9.5 * page2Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
+                        {/* Left Column: Fixed Announcements */}
+                        <div>
+                          {selectedFixed.map((ann) => (
+                            <div key={ann.id} style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #e5e7eb' }}>
+                              <div style={{ fontSize: `${10 * page2Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', marginBottom: '3px', color: '#1a1a1a' }}>
+                                {ann.title}
                               </div>
-                              {(ann.date_of_occurrence || ann.start_date) && (
-                                <div style={{ fontSize: '9px', color: '#4b5563', fontWeight: '500', marginBottom: '2px' }}>
-                                  {ann.date_of_occurrence || ann.start_date}
-                                  {ann.end_date && ` — ${ann.end_date}`}
-                                </div>
-                              )}
-                              {content && (
+                              {ann.content && (
                                 <div 
-                                  style={{ fontSize: '9px', color: '#374151', whiteSpace: 'pre-wrap' }}
-                                  dangerouslySetInnerHTML={{ __html: sanitize(content) }}
+                                  style={{ fontSize: '9.5px', color: '#374151', whiteSpace: 'pre-wrap' }}
+                                  dangerouslySetInnerHTML={{ __html: sanitize(ann.content) }}
                                 />
                               )}
                               {ann.instructions && (
-                                <div 
-                                  style={{ fontSize: '8px', color: '#6b7280', fontStyle: 'italic', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #fbbf24' }}
-                                >
-                                  <strong style={{ fontStyle: 'normal', textTransform: 'uppercase', fontSize: '7px' }}>CUE: </strong>
+                                <div style={{ fontSize: '8.5px', color: '#6b7280', fontStyle: 'italic', marginTop: '4px', paddingLeft: '6px', borderLeft: '2px solid #fbbf24' }}>
+                                  <strong style={{ fontStyle: 'normal', textTransform: 'uppercase', fontSize: '7.5px' }}>CUE: </strong>
                                   <span dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }} />
                                 </div>
                               )}
-                              {(ann.has_video || ann.announcement_has_video) && (
-                                <div style={{ fontSize: '8px', color: '#8b5cf6', marginTop: '2px' }}>📹 Video</div>
+                              {ann.has_video && (
+                                <div style={{ fontSize: '8px', color: '#8b5cf6', marginTop: '3px' }}>📹 Video</div>
                               )}
                             </div>
-                          );
-                        })}
+                          ))}
+                        </div>
+
+                        {/* Right Column: Dynamic Events */}
+                        <div style={{ borderLeft: '2px solid #e5e7eb', paddingLeft: '12px' }}>
+                          <div style={{ fontSize: '9px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #e5e7eb' }}>
+                            Próximos Eventos
+                          </div>
+                          {selectedDynamic.map((ann) => {
+                            const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
+                            const isEmphasized = ann.emphasize || ann.category === 'Urgent';
+                            return (
+                              <div 
+                                key={ann.id} 
+                                style={{ 
+                                  marginBottom: '6px', 
+                                  paddingBottom: '6px', 
+                                  borderBottom: '1px solid #f3f4f6',
+                                  ...(isEmphasized && { background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '4px', padding: '4px 6px', marginBottom: '6px' })
+                                }}
+                              >
+                                <div style={{ fontSize: `${10 * page2Settings.titleFontScale}px`, fontWeight: '600', color: '#16a34a', marginBottom: '2px' }}>
+                                  {ann.isEvent ? ann.name : ann.title}
+                                </div>
+                                {(ann.date_of_occurrence || ann.start_date) && (
+                                  <div style={{ fontSize: '9px', color: '#4b5563', fontWeight: '500', marginBottom: '2px' }}>
+                                    {ann.date_of_occurrence || ann.start_date}
+                                    {ann.end_date && ` — ${ann.end_date}`}
+                                  </div>
+                                )}
+                                {content && (
+                                  <div 
+                                    style={{ fontSize: '9px', color: '#374151', whiteSpace: 'pre-wrap' }}
+                                    dangerouslySetInnerHTML={{ __html: sanitize(content) }}
+                                  />
+                                )}
+                                {ann.instructions && (
+                                  <div style={{ fontSize: '8px', color: '#6b7280', fontStyle: 'italic', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #fbbf24' }}>
+                                    <strong style={{ fontStyle: 'normal', textTransform: 'uppercase', fontSize: '7px' }}>CUE: </strong>
+                                    <span dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }} />
+                                  </div>
+                                )}
+                                {(ann.has_video || ann.announcement_has_video) && (
+                                  <div style={{ fontSize: '8px', color: '#8b5cf6', marginTop: '2px' }}>📹 Video</div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* FIXED Footer */}
-                  <div 
-                    style={{
-                      position: 'absolute',
-                      bottom: `${marginBottomPx}px`,
-                      left: 0,
-                      right: 0,
-                      height: `${FOOTER_H}px`,
-                      background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <span style={{ fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
-                      ¡Atrévete a cambiar!
-                    </span>
+                    {/* FIXED Footer */}
+                    <div 
+                      style={{
+                        position: 'absolute',
+                        bottom: `${marginBottomPx}px`,
+                        left: 0,
+                        right: 0,
+                        height: `${FOOTER_H}px`,
+                        background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <span style={{ fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
+                        ¡Atrévete a cambiar!
+                      </span>
+                    </div>
                   </div>
                 </div>
-                </div>
-                </div>
-                </div>
-                </div>
-                </TabsContent>
-                </Tabs>
-                </DialogContent>
-                </Dialog>
-                );
-                }
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
