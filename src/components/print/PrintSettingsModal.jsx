@@ -526,9 +526,29 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                     • Ministración: {seg.data.ministry_leader} (5 min)
                                   </div>
                                 )}
-                                {seg.data?.translator && (
+                                {seg.data?.translator && seg.type === 'worship' && (
                                   <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
-                                    🌐 {seg.data.translator}
+                                    🌐 Traduce: {seg.data.translator}
+                                  </div>
+                                )}
+                                {seg.data?.preacher && (
+                                  <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                    {seg.data.preacher}
+                                  </div>
+                                )}
+                                {seg.data?.presenter && !seg.data?.ministry_leader && !seg.data?.leader && (
+                                  <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
+                                    {seg.data.presenter}
+                                  </div>
+                                )}
+                                {seg.data?.translator && (seg.type === 'welcome' || seg.type === 'offering' || seg.type === 'message') && (
+                                  <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                    🌐 Traduce: {seg.data.translator}
+                                  </div>
+                                )}
+                                {seg.data?.translator && seg.type === 'special' && (
+                                  <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                    🌐 Traduce: {seg.data.translator}
                                   </div>
                                 )}
                                 {seg.data?.description && (
