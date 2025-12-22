@@ -421,7 +421,7 @@ export default function PublicProgramView() {
                 const today = new Date();
                 const dayMap = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
                 const activeServices = services.filter(s => s.status === 'active');
-                
+
                 const upcomingServices = activeServices.map(service => {
                   const serviceDayNum = dayMap[service.day_of_week];
                   let daysUntil = serviceDayNum - today.getDay();
@@ -436,7 +436,12 @@ export default function PublicProgramView() {
                   nextDate.setDate(today.getDate() + daysUntil);
                   return { ...service, nextDate, daysUntil };
                 }).filter(s => s.daysUntil <= 7).sort((a, b) => a.daysUntil - b.daysUntil);
-                
+
+                // Deduplicate by service ID
+                const uniqueServices = Array.from(
+                  new Map(upcomingServices.map(s => [s.id, s])).values()
+                );
+
                 return (
                   <div className="w-full">
                     <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
@@ -444,7 +449,7 @@ export default function PublicProgramView() {
                         <SelectValue placeholder="Selecciona un servicio" />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
-                        {upcomingServices.map((service) => (
+                        {uniqueServices.map((service) => (
                           <SelectItem key={service.id} value={service.id}>
                             {service.name} - {service.day_of_week} ({service.daysUntil === 0 ? 'Hoy' : `en ${service.daysUntil} días`})
                           </SelectItem>
