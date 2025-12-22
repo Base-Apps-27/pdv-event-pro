@@ -358,23 +358,29 @@ export default function PublicProgramView() {
         {/* Navigation Selector */}
         <Card className="bg-white border-2 border-gray-300">
           <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="flex flex-col gap-4">
               {/* View Type Toggle */}
-              <div className="flex gap-2">
-                <Button
-                  variant={viewType === "event" ? "default" : "outline"}
+              <div className="flex gap-2 w-full">
+                <button
                   onClick={() => setViewType("event")}
-                  className={viewType === "event" ? "bg-pdv-teal text-white font-semibold" : "border-2 border-gray-400 text-gray-900 font-semibold"}
+                  className={`flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                    viewType === "event" 
+                      ? "bg-pdv-teal text-white shadow-md" 
+                      : "bg-white border-2 border-gray-400 text-gray-900 hover:bg-gray-50"
+                  }`}
                 >
                   Eventos
-                </Button>
-                <Button
-                  variant={viewType === "service" ? "default" : "outline"}
+                </button>
+                <button
                   onClick={() => setViewType("service")}
-                  className={viewType === "service" ? "bg-pdv-green text-white font-semibold" : "border-2 border-gray-400 text-gray-900 font-semibold"}
+                  className={`flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                    viewType === "service" 
+                      ? "bg-pdv-green text-white shadow-md" 
+                      : "bg-white border-2 border-gray-400 text-gray-900 hover:bg-gray-50"
+                  }`}
                 >
                   Servicios
-                </Button>
+                </button>
               </div>
 
               {/* Event Selector (1 past, 1 upcoming within 7 days) */}
@@ -399,14 +405,14 @@ export default function PublicProgramView() {
                 const availableEvents = [...pastEvents, ...upcomingEvents];
                 
                 return (
-                  <div className="flex-1">
+                  <div className="w-full">
                     <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-                      <SelectTrigger className="bg-white border-2 border-gray-400 text-gray-900 w-full">
+                      <SelectTrigger className="w-full bg-white border-2 border-gray-400 text-gray-900 h-12">
                         <SelectValue placeholder="Selecciona un evento" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white text-gray-900">
+                      <SelectContent className="bg-white">
                         {availableEvents.map((event) => (
-                          <SelectItem key={event.id} value={event.id} className="text-gray-900">
+                          <SelectItem key={event.id} value={event.id}>
                             {event.name} - {event.start_date}
                           </SelectItem>
                         ))}
@@ -438,14 +444,14 @@ export default function PublicProgramView() {
                 }).filter(s => s.daysUntil <= 7).sort((a, b) => a.daysUntil - b.daysUntil);
                 
                 return (
-                  <div className="flex-1">
+                  <div className="w-full">
                     <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
-                      <SelectTrigger className="bg-white border-2 border-gray-400 text-gray-900 w-full">
+                      <SelectTrigger className="w-full bg-white border-2 border-gray-400 text-gray-900 h-12">
                         <SelectValue placeholder="Selecciona un servicio" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white text-gray-900">
+                      <SelectContent className="bg-white">
                         {upcomingServices.map((service) => (
-                          <SelectItem key={service.id} value={service.id} className="text-gray-900">
+                          <SelectItem key={service.id} value={service.id}>
                             {service.name} - {service.day_of_week} ({service.daysUntil === 0 ? 'Hoy' : `en ${service.daysUntil} días`})
                           </SelectItem>
                         ))}
