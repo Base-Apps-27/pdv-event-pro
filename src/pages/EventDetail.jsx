@@ -44,15 +44,14 @@ export default function EventDetail() {
   const { data: segments = [] } = useQuery({
     queryKey: ['segments', eventId],
     queryFn: async () => {
+      if (!sessions.length) return previousData || [];
       const allSegments = await base44.entities.Segment.list();
       const sessionIds = sessions.map(s => s.id);
       return allSegments.filter(seg => sessionIds.includes(seg.session_id));
     },
-    enabled: !!eventId,
+    enabled: !!eventId && sessions.length > 0,
     staleTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
   });
 
   const { data: allSessions = [] } = useQuery({
@@ -60,8 +59,6 @@ export default function EventDetail() {
     queryFn: () => base44.entities.Session.list(),
     staleTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
   });
 
   const { data: allSegments = [] } = useQuery({
@@ -69,8 +66,6 @@ export default function EventDetail() {
     queryFn: () => base44.entities.Segment.list(),
     staleTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
   });
 
   if (isLoading) {
