@@ -197,28 +197,6 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Page Selector */}
-            <div className="flex items-center gap-1 bg-gray-100 rounded-md p-1">
-              <Button
-                variant={activePage === "page1" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActivePage("page1")}
-                className={activePage === "page1" ? "bg-white shadow-sm" : ""}
-              >
-                <FileText className="w-4 h-4 mr-1" />
-                {t.page1}
-              </Button>
-              <Button
-                variant={activePage === "page2" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActivePage("page2")}
-                className={activePage === "page2" ? "bg-white shadow-sm" : ""}
-              >
-                <Bell className="w-4 h-4 mr-1" />
-                {t.page2}
-              </Button>
-            </div>
-
             {/* Body Font Scale */}
             <div className="flex items-center gap-2">
               <Label className="text-xs whitespace-nowrap">{t.bodyFontScale}</Label>
@@ -326,7 +304,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
           {/* CENTER PREVIEW */}
           <div ref={previewViewportRef} className="flex-1 bg-gray-900 overflow-hidden flex items-center justify-center min-h-0">
-            <div style={{ transform: `scale(${pageFitScale})`, transformOrigin: "top center" }}>
+            <div style={{ transform: `scale(${pageFitScale})`, transformOrigin: "center center" }}>
               {activePage === "page1" ? renderPage1() : renderPage2()}
             </div>
           </div>
