@@ -15,6 +15,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import SuggestionsManager from "@/components/people/SuggestionsManager";
 
 export default function People() {
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  
   const [activeTab, setActiveTab] = useState("persons");
   const [searchTerm, setSearchTerm] = useState("");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -129,7 +131,8 @@ export default function People() {
         {activeTab === "persons" && (
           <Button 
             onClick={() => setIsUploadDialogOpen(true)} 
-            className="bg-pdv-teal hover:bg-pdv-green text-white shadow-md hover:shadow-lg transition-all font-bold uppercase px-6"
+            style={tealStyle}
+            className="shadow-md hover:shadow-lg transition-all font-bold uppercase px-6"
           >
             <Upload className="w-5 h-5 mr-2" />
             Importar CSV
@@ -266,7 +269,7 @@ export default function People() {
             </div>
           ) : (
             <div className="py-8 flex flex-col items-center justify-center text-center space-y-3">
-              <Loader2 className="w-10 h-10 animate-spin text-pdv-teal" />
+              <Loader2 className="w-10 h-10 animate-spin" style={{ color: '#1F8A70' }} />
               <p className="text-sm font-medium text-gray-600">{uploadStatus}</p>
             </div>
           )}
