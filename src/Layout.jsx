@@ -418,9 +418,10 @@ function LayoutContent({ children }) {
     }
 
     export default function Layout({ children }) {
-    return (
-    <LanguageProvider>
-    <LayoutContent>{children}</LayoutContent>
-    </LanguageProvider>
-    );
+      // Force rebuild - CSS fix deployment test
+      return (
+        <LanguageProvider>
+          <LayoutContent>{children}</LayoutContent>
+        </LanguageProvider>
+      );
     }
