@@ -1,37 +1,41 @@
-import Dashboard from './pages/Dashboard';
-import Events from './pages/Events';
-import EventDetail from './pages/EventDetail';
-import SessionDetail from './pages/SessionDetail';
-import Templates from './pages/Templates';
-import Rooms from './pages/Rooms';
-import Reports from './pages/Reports';
-import PublicProgramView from './pages/PublicProgramView';
 import AnnouncementsReport from './pages/AnnouncementsReport';
+import CustomServiceBuilder from './pages/CustomServiceBuilder';
+import Dashboard from './pages/Dashboard';
+import EventDetail from './pages/EventDetail';
+import Events from './pages/Events';
+import Home from './pages/Home';
 import People from './pages/People';
+import PublicProgramView from './pages/PublicProgramView';
+import Reports from './pages/Reports';
+import Rooms from './pages/Rooms';
 import ScheduleImporter from './pages/ScheduleImporter';
 import SchemaGuide from './pages/SchemaGuide';
+import SessionDetail from './pages/SessionDetail';
+import Templates from './pages/Templates';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
-import CustomServiceBuilder from './pages/CustomServiceBuilder';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
+import TestDashboard from './pages/TestDashboard';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
-    "Events": Events,
-    "EventDetail": EventDetail,
-    "SessionDetail": SessionDetail,
-    "Templates": Templates,
-    "Rooms": Rooms,
-    "Reports": Reports,
-    "PublicProgramView": PublicProgramView,
     "AnnouncementsReport": AnnouncementsReport,
+    "CustomServiceBuilder": CustomServiceBuilder,
+    "Dashboard": Dashboard,
+    "EventDetail": EventDetail,
+    "Events": Events,
+    "Home": Home,
     "People": People,
+    "PublicProgramView": PublicProgramView,
+    "Reports": Reports,
+    "Rooms": Rooms,
     "ScheduleImporter": ScheduleImporter,
     "SchemaGuide": SchemaGuide,
+    "SessionDetail": SessionDetail,
+    "Templates": Templates,
     "WeeklyServiceManager": WeeklyServiceManager,
-    "CustomServiceBuilder": CustomServiceBuilder,
     "WeeklyServiceReport": WeeklyServiceReport,
+    "TestDashboard": TestDashboard,
 }
 
 export const pagesConfig = {

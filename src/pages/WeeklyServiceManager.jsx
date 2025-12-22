@@ -11,11 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, GripVertical, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer, ExternalLink, Settings } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer, ExternalLink, Settings } from "lucide-react";
 import PrintSettingsModal from "@/components/print/PrintSettingsModal";
 import { Calendar } from "@/components/ui/calendar";
 import { createPageUrl } from "@/utils";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
@@ -631,13 +631,15 @@ export default function WeeklyServiceManager() {
     });
   };
 
-  const handleDragEnd = (result, timeSlot) => {
-    if (!result.destination) return;
-    
+  const handleMoveSegment = (timeSlot, index, direction) => {
     setSavingField('reorder');
     const items = [...serviceData[timeSlot]];
-    const [reordered] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reordered);
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+    
+    // Swap items
+    [items[index], items[targetIndex]] = [items[targetIndex], items[index]];
     
     const updatedData = {
       ...serviceData,
@@ -1899,10 +1901,7 @@ Return ONLY valid JSON:
             </CardContent>
           </Card>
 
-          <DragDropContext onDragEnd={(result) => handleDragEnd(result, "9:30am")}>
-            <Droppable droppableId="9:30am">
-              {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+          <div className="space-y-4">
                   {serviceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => {
                     const timeSlot = "9:30am";
                     const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
@@ -1953,24 +1952,36 @@ Return ONLY valid JSON:
                                 />
                               </CardContent>
                             </Card>
-                          )}
-                        </Draggable>
                       );
                     }
 
                     return (
-                      <Draggable key={`${timeSlot}-${idx}`} draggableId={`${timeSlot}-${idx}`} index={idx}>
-                        {(provided) => (
-                          <Card 
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className="border-2 border-gray-300 border-l-4 border-l-red-500 bg-white"
-                          >
-                            <CardHeader className="pb-2 bg-gray-50">
-                              <CardTitle className="text-lg flex items-center gap-2">
-                                <div {...provided.dragHandleProps} className="print:hidden touch-none p-1 -m-1 active:bg-gray-200 rounded">
-                                  <GripVertical className="w-6 h-6 md:w-4 md:h-4 text-gray-400 cursor-grab" />
-                                </div>
+                      <Card 
+                        key={`${timeSlot}-${idx}`}
+                        className="border-2 border-gray-300 border-l-4 border-l-red-500 bg-white"
+                      >
+                        <CardHeader className="pb-2 bg-gray-50">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <div className="print:hidden flex flex-col gap-0.5">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleMoveSegment(timeSlot, idx, 'up')}
+                                disabled={idx === 0}
+                                className="h-4 w-5 p-0 hover:bg-blue-100"
+                              >
+                                <ChevronUp className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleMoveSegment(timeSlot, idx, 'down')}
+                                disabled={idx === serviceData[timeSlot].filter(s => s.type !== 'break').length - 1}
+                                className="h-4 w-5 p-0 hover:bg-blue-100"
+                              >
+                                <ChevronDown className="w-3 h-3" />
+                              </Button>
+                            </div>
                                 <Clock className="w-4 h-4 text-red-600" />
                                 {segment.title}
                                 <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
@@ -2283,10 +2294,7 @@ Return ONLY valid JSON:
             </CardContent>
           </Card>
 
-          <DragDropContext onDragEnd={(result) => handleDragEnd(result, "11:30am")}>
-            <Droppable droppableId="11:30am">
-              {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+          <div className="space-y-4">
                   {serviceData["11:30am"].map((segment, idx) => {
                     const timeSlot = "11:30am";
                     const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
@@ -2344,24 +2352,36 @@ Return ONLY valid JSON:
                                 />
                               </CardContent>
                             </Card>
-                          )}
-                        </Draggable>
                       );
                     }
 
                     return (
-                      <Draggable key={`${timeSlot}-${idx}`} draggableId={`${timeSlot}-${idx}`} index={idx}>
-                        {(provided) => (
-                          <Card 
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className="border-2 border-gray-300 border-l-4 border-l-blue-500 bg-white"
-                          >
-                            <CardHeader className="pb-2 bg-gray-50">
-                              <CardTitle className="text-lg flex items-center gap-2">
-                                <div {...provided.dragHandleProps} className="print:hidden touch-none p-1 -m-1 active:bg-gray-200 rounded">
-                                  <GripVertical className="w-6 h-6 md:w-4 md:h-4 text-gray-400 cursor-grab" />
-                                </div>
+                      <Card 
+                        key={`${timeSlot}-${idx}`}
+                        className="border-2 border-gray-300 border-l-4 border-l-blue-500 bg-white"
+                      >
+                        <CardHeader className="pb-2 bg-gray-50">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <div className="print:hidden flex flex-col gap-0.5">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleMoveSegment(timeSlot, idx, 'up')}
+                                disabled={idx === 0}
+                                className="h-4 w-5 p-0 hover:bg-blue-100"
+                              >
+                                <ChevronUp className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleMoveSegment(timeSlot, idx, 'down')}
+                                disabled={idx === serviceData[timeSlot].length - 1}
+                                className="h-4 w-5 p-0 hover:bg-blue-100"
+                              >
+                                <ChevronDown className="w-3 h-3" />
+                              </Button>
+                            </div>
                                 <Clock className="w-4 h-4 text-blue-600" />
                                 {segment.title}
                                 <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
