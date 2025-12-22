@@ -204,62 +204,24 @@ export default function WeeklyServiceManager() {
   // Mutations
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
-      console.log('[WEEKLY SAVE START]', {
-        operation: existingData?.id ? 'UPDATE' : 'CREATE',
-        serviceId: existingData?.id,
-        date: data.date,
-        snapshot: {
-          hasCoordinators930: !!data.coordinators?.['9:30am'],
-          hasCoordinators1130: !!data.coordinators?.['11:30am'],
-          segments930Count: data['9:30am']?.length || 0,
-          segments1130Count: data['11:30am']?.length || 0,
-          selectedAnnouncementsCount: data.selected_announcements?.length || 0
-        },
-        fullPayload: data
-      });
-      
-      try {
-        let result;
-        if (existingData?.id) {
-          result = await base44.entities.Service.update(existingData.id, data);
-        } else {
-          result = await base44.entities.Service.create(data);
-        }
-        
-        console.log('[WEEKLY SAVE SUCCESS]', {
-          resultId: result?.id,
-          resultUpdatedDate: result?.updated_date,
-          fullResult: result
-        });
-        
-        return result;
-      } catch (error) {
-        console.error('[WEEKLY SAVE ERROR]', {
-          error: error.message,
-          stack: error.stack,
-          payload: data
-        });
-        throw error;
+      if (existingData?.id) {
+        return await base44.entities.Service.update(existingData.id, data);
+      } else {
+        return await base44.entities.Service.create(data);
       }
     },
     onSuccess: (result) => {
-      console.log('[WEEKLY MUTATION SUCCESS] Save completed');
       setLastSavedData(JSON.parse(JSON.stringify(serviceData)));
       setLastSaveTimestamp(new Date().toISOString());
       setHasUnsavedChanges(false);
       
-      // Save to localStorage backup
       const backupKey = `service_backup_${selectedDate}`;
       localStorage.setItem(backupKey, JSON.stringify({
         data: result,
         timestamp: new Date().toISOString()
       }));
-      console.log('[BACKUP] Saved to localStorage:', backupKey);
-      
-      // Don't invalidate queries to prevent refetch clearing state
     },
     onError: (error) => {
-      console.error('[WEEKLY MUTATION ERROR]', error);
       alert('Error al guardar: ' + error.message);
     }
   });
@@ -295,7 +257,6 @@ export default function WeeklyServiceManager() {
       queryClient.invalidateQueries(['dynamicAnnouncements']);
     },
     onError: (error) => {
-      console.error('Delete error:', error);
       alert('Error al eliminar: ' + (error.message || JSON.stringify(error)));
     }
   });
@@ -303,16 +264,6 @@ export default function WeeklyServiceManager() {
   // Initialize service data
   useEffect(() => {
     if (existingData) {
-      console.log('[WEEKLY DATA LOAD] Service loaded from backend:', {
-        id: existingData.id,
-        date: existingData.date,
-        updated_date: existingData.updated_date,
-        segments930Count: existingData['9:30am']?.length || 0,
-        segments1130Count: existingData['11:30am']?.length || 0,
-        fullData: existingData
-      });
-      
-      // Merge blueprint fields with existing segments to ensure backward compatibility
       const mergeSegmentsWithBlueprint = (existingSegments, timeSlot) => {
         return existingSegments.map((savedSeg, idx) => {
           const blueprintSeg = BLUEPRINT[timeSlot]?.find(b => b.type === savedSeg.type) || 
@@ -343,7 +294,6 @@ export default function WeeklyServiceManager() {
       setPrintSettingsPage2(existingData.print_settings_page2 || null);
       setHasUnsavedChanges(false);
       
-      // Check localStorage backup for recovery
       const backupKey = `service_backup_${selectedDate}`;
       const backup = localStorage.getItem(backupKey);
       if (backup) {
@@ -352,17 +302,13 @@ export default function WeeklyServiceManager() {
           const backupDate = new Date(timestamp);
           const serverDate = existingData.updated_date ? new Date(existingData.updated_date) : new Date(0);
           if (backupDate > serverDate) {
-            console.warn('[BACKUP RECOVERY] LocalStorage backup is newer than server data:', {
-              backupTimestamp: timestamp,
-              serverTimestamp: existingData.updated_date
-            });
             if (window.confirm('Se encontró una versión más reciente en el navegador. ¿Restaurar datos del backup local?')) {
               setServiceData(data);
               setLastSavedData(JSON.parse(JSON.stringify(data)));
             }
           }
         } catch (e) {
-          console.error('[BACKUP] Error parsing backup:', e);
+          // Silently fail - backup recovery is optional
         }
       }
     } else {
@@ -404,8 +350,6 @@ export default function WeeklyServiceManager() {
       setPrintSettingsPage1(null);
       setPrintSettingsPage2(null);
       setHasUnsavedChanges(false);
-      
-      console.log('[WEEKLY DATA LOAD] New service initialized for:', selectedDate);
     }
   }, [existingData, selectedDate]);
 
@@ -415,10 +359,6 @@ export default function WeeklyServiceManager() {
     
     const hasChanges = JSON.stringify(serviceData) !== JSON.stringify(lastSavedData);
     setHasUnsavedChanges(hasChanges);
-    
-    if (hasChanges) {
-      console.log('[UNSAVED CHANGES] Detected differences from last saved state');
-    }
   }, [serviceData, lastSavedData]);
 
   // Warn before leaving with unsaved changes
@@ -494,8 +434,6 @@ export default function WeeklyServiceManager() {
         name: `Domingo - ${selectedDate}`,
         status: 'active'
       };
-      
-      console.log('Saving data:', dataToSave);
       
       saveServiceMutation.mutate(dataToSave, {
         onSettled: () => {
@@ -1946,17 +1884,13 @@ Return ONLY valid JSON:
                 value={serviceData.pre_service_notes?.["9:30am"] || ""}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setServiceData(prev => {
-                    const updated = {
-                      ...prev,
-                      pre_service_notes: { 
-                        ...prev.pre_service_notes, 
-                        "9:30am": value 
-                      }
-                    };
-                    console.log('Updated pre-service 9:30am:', updated.pre_service_notes);
-                    return updated;
-                  });
+                  setServiceData(prev => ({
+                    ...prev,
+                    pre_service_notes: { 
+                      ...prev.pre_service_notes, 
+                      "9:30am": value 
+                    }
+                  }));
                   debouncedSave('pre-service-930');
                 }}
                 className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
@@ -2238,17 +2172,13 @@ Return ONLY valid JSON:
                 value={serviceData.receso_notes?.["9:30am"] || ""}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setServiceData(prev => {
-                    const updated = {
-                      ...prev,
-                      receso_notes: { 
-                        ...prev.receso_notes, 
-                        "9:30am": value 
-                      }
-                    };
-                    console.log('Updated receso 9:30am:', updated.receso_notes);
-                    return updated;
-                  });
+                  setServiceData(prev => ({
+                    ...prev,
+                    receso_notes: { 
+                      ...prev.receso_notes, 
+                      "9:30am": value 
+                    }
+                  }));
                   debouncedSave('receso-930');
                 }}
                 className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
@@ -2338,17 +2268,13 @@ Return ONLY valid JSON:
                 value={serviceData.pre_service_notes?.["11:30am"] || ""}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setServiceData(prev => {
-                    const updated = {
-                      ...prev,
-                      pre_service_notes: { 
-                        ...prev.pre_service_notes, 
-                        "11:30am": value 
-                      }
-                    };
-                    console.log('Updated pre-service 11:30am:', updated.pre_service_notes);
-                    return updated;
-                  });
+                  setServiceData(prev => ({
+                    ...prev,
+                    pre_service_notes: { 
+                      ...prev.pre_service_notes, 
+                      "11:30am": value 
+                    }
+                  }));
                   debouncedSave('pre-service-1130');
                 }}
                 className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
