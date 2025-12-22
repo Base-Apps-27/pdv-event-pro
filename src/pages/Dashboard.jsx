@@ -179,7 +179,7 @@ export default function Dashboard() {
                           )}
                         </div>
                         <Button 
-                          onClick={() => navigate(createPageUrl('EventDetail') + `?eventId=${event.id}`)}
+                          onClick={() => navigate(createPageUrl('EventDetail') + `?id=${event.id}`)}
                           className="w-full mt-4 gradient-pdv text-white font-semibold"
                         >
                           Ver Detalles / View Details
@@ -236,7 +236,7 @@ export default function Dashboard() {
                         <Button 
                           onClick={() => {
                             if (event?.id) {
-                              navigate(createPageUrl('EventDetail') + `?eventId=${event.id}`);
+                              navigate(createPageUrl('EventDetail') + `?id=${event.id}`);
                             }
                           }}
                           size="sm"
