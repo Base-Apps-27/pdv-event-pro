@@ -50,6 +50,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
   const PAGE_H = 11 * 96;  // 1056px
   const HEADER_H = 60;
   const FOOTER_H = 20;
+  const BASE_BODY = 10.5; // Base body font size in px
+  const BASE_TITLE = 12; // Base title font size in px
 
   useEffect(() => {
     setPage1Settings(settingsPage1 || DEFAULT_SETTINGS);
@@ -132,6 +134,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     } else {
       setPage2Settings(DEFAULT_SETTINGS);
     }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const currentSettings = activePage === "page1" ? page1Settings : page2Settings;
@@ -221,7 +227,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                   value={[currentSettings.bodyFontScale]}
                   onValueChange={([value]) => setCurrentSettings(prev => ({ ...prev, bodyFontScale: value }))}
                   min={0.7}
-                  max={1.6}
+                  max={2.5}
                   step={0.1}
                   className="w-full"
                 />
@@ -237,7 +243,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                   value={[currentSettings.titleFontScale]}
                   onValueChange={([value]) => setCurrentSettings(prev => ({ ...prev, titleFontScale: value }))}
                   min={0.7}
-                  max={1.6}
+                  max={2.5}
                   step={0.1}
                   className="w-full"
                 />
@@ -261,6 +267,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             {/* Reset */}
             <Button variant="outline" size="sm" onClick={handleReset}>
               Reset
+            </Button>
+
+            {/* Print */}
+            <Button variant="default" size="sm" onClick={handlePrint} className="bg-pdv-green text-white hover:bg-pdv-teal">
+              Print
             </Button>
           </div>
 
@@ -405,86 +416,86 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         >
           <div style={{ width: '100%' }}>
                         {isWeeklyService && serviceData?.['9:30am'] ? (
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4 }}>
                           {/* 9:30 AM Column */}
                           <div>
-                            <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
+                            <div style={{ fontSize: `${BASE_TITLE * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
                               9:30 A.M.
                             </div>
                             {serviceData?.pre_service_notes?.['9:30am'] && (
-                              <div style={{ marginBottom: '10px', fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                              <div style={{ marginBottom: '10px', fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
                                 {serviceData.pre_service_notes['9:30am']}
                               </div>
                             )}
                             {Array.isArray(serviceData?.['9:30am']) && serviceData['9:30am'].filter(s => s?.type !== 'break').map((seg, idx) => (
                               <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
                                 <div style={{ marginBottom: '3px' }}>
-                                  <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
+                                  <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
                                     {seg.title || 'Sin título'}
                                   </span>
-                                  {seg.duration && <span style={{ fontSize: '9px', color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
+                                  {seg.duration && <span style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
                                 </div>
                                 {seg.data?.leader && (
-                                  <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>
                                     Dirige: {seg.data.leader}
                                   </div>
                                 )}
                                 {seg.data?.preacher && (
-                                  <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>
                                     {seg.data.preacher}
                                   </div>
                                 )}
                                 {seg.data?.presenter && !seg.data?.leader && (
-                                  <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151', fontWeight: '500' }}>
                                     {seg.data.presenter}
                                   </div>
                                 )}
                                 {seg.data?.title && (
-                                  <div style={{ fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
                                     {seg.data.title}
                                   </div>
                                 )}
                                 {seg.data?.verse && (
-                                  <div style={{ fontSize: '9px', color: '#9ca3af' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af' }}>
                                     📖 {seg.data.verse}
                                   </div>
                                 )}
                                 {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
                                   <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
                                     {seg.songs.filter(s => s.title).map((song, sIdx) => (
-                                      <div key={sIdx} style={{ fontSize: '9px', color: '#16a34a' }}>
+                                      <div key={sIdx} style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
                                         - {song.title} {song.lead && `(${song.lead})`}
                                       </div>
                                     ))}
                                   </div>
                                 )}
                                 {seg.data?.ministry_leader && (
-                                  <div style={{ fontSize: '9px', color: '#8b5cf6', marginTop: '3px' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px' }}>
                                     • Ministración: {seg.data.ministry_leader} (5 min)
                                   </div>
                                 )}
                                 {seg.data?.translator && (
-                                  <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '2px' }}>
                                     🌐 {seg.data.translator}
                                   </div>
                                 )}
                                 {seg.data?.description && (
-                                  <div style={{ fontSize: '9px', color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
                                     {seg.data.description}
                                   </div>
                                 )}
                                 {seg.data?.projection_notes && (
-                                  <div style={{ fontSize: '8.5px', color: '#8b5cf6', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #8b5cf6' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #8b5cf6' }}>
                                     📽️ {seg.data.projection_notes}
                                   </div>
                                 )}
                                 {seg.data?.sound_notes && (
-                                  <div style={{ fontSize: '8.5px', color: '#dc2626', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #dc2626' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#dc2626', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #dc2626' }}>
                                     🔊 {seg.data.sound_notes}
                                   </div>
                                 )}
                                 {seg.data?.ushers_notes && (
-                                  <div style={{ fontSize: '8.5px', color: '#16a34a', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #16a34a' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#16a34a', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #16a34a' }}>
                                     👥 {seg.data.ushers_notes}
                                   </div>
                                 )}
@@ -495,11 +506,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                           {/* 11:30 AM Column */}
                           {serviceData?.['11:30am'] && Array.isArray(serviceData['11:30am']) && (
                           <div>
-                            <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
+                            <div style={{ fontSize: `${BASE_TITLE * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
                               11:30 A.M.
                             </div>
                             {serviceData?.pre_service_notes?.['11:30am'] && (
-                              <div style={{ marginBottom: '10px', fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                              <div style={{ marginBottom: '10px', fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
                                 {serviceData.pre_service_notes['11:30am']}
                               </div>
                             )}
@@ -510,36 +521,36 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                               return (
                                 <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
                                   <div style={{ marginBottom: '3px' }}>
-                                    <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
+                                    <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
                                       {seg.title || 'Sin título'}
                                     </span>
-                                    {seg.duration && <span style={{ fontSize: '9px', color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
+                                    {seg.duration && <span style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
                                   </div>
 
                                   {/* WORSHIP */}
                                   {seg.type === 'worship' && (
                                     <>
                                       {seg.data?.leader && (
-                                        <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>
                                           Dirige: {seg.data.leader}
                                         </div>
                                       )}
                                       {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
                                         <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
                                           {seg.songs.filter(s => s.title).map((song, sIdx) => (
-                                            <div key={sIdx} style={{ fontSize: '9px', color: '#16a34a' }}>
+                                            <div key={sIdx} style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
                                               - {song.title} {song.lead && `(${song.lead})`}
                                             </div>
                                           ))}
                                         </div>
                                       )}
                                       {seg.data?.ministry_leader && (
-                                        <div style={{ fontSize: '9px', color: '#8b5cf6', marginTop: '3px' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px' }}>
                                           • Ministración: {seg.data.ministry_leader} (5 min)
                                         </div>
                                       )}
                                       {seg.data?.translator && (
-                                        <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '2px' }}>
                                           🌐 Traduce: {seg.data.translator}
                                         </div>
                                       )}
@@ -550,12 +561,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                   {seg.type === 'welcome' && (
                                     <>
                                       {seg.data?.presenter && (
-                                        <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151', fontWeight: '500' }}>
                                           {seg.data.presenter}
                                         </div>
                                       )}
                                       {(seg.data?.translator || inheritedTranslator) && (
-                                        <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '2px' }}>
                                           🌐 Traduce: {seg.data.translator || inheritedTranslator}
                                         </div>
                                       )}
@@ -566,17 +577,17 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                   {seg.type === 'offering' && (
                                     <>
                                       {seg.data?.presenter && (
-                                        <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151', fontWeight: '500' }}>
                                           {seg.data.presenter}
                                         </div>
                                       )}
                                       {seg.data?.verse && (
-                                        <div style={{ fontSize: '9px', color: '#9ca3af' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af' }}>
                                           📖 {seg.data.verse}
                                         </div>
                                       )}
                                       {(seg.data?.translator || inheritedTranslator) && (
-                                        <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '2px' }}>
                                           🌐 Traduce: {seg.data.translator || inheritedTranslator}
                                         </div>
                                       )}
@@ -587,22 +598,22 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                   {seg.type === 'message' && (
                                     <>
                                       {seg.data?.preacher && (
-                                        <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>
                                           {seg.data.preacher}
                                         </div>
                                       )}
                                       {seg.data?.title && (
-                                        <div style={{ fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
                                           {seg.data.title}
                                         </div>
                                       )}
                                       {seg.data?.verse && (
-                                        <div style={{ fontSize: '9px', color: '#9ca3af' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af' }}>
                                           📖 {seg.data.verse}
                                         </div>
                                       )}
                                       {seg.data?.translator && (
-                                        <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '2px' }}>
                                           🌐 Traduce: {seg.data.translator}
                                         </div>
                                       )}
@@ -613,17 +624,17 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                   {seg.type === 'special' && (
                                     <>
                                       {seg.data?.presenter && (
-                                        <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151', fontWeight: '500' }}>
                                           {seg.data.presenter}
                                         </div>
                                       )}
                                       {seg.data?.description && (
-                                        <div style={{ fontSize: '9px', color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
                                           {seg.data.description}
                                         </div>
                                       )}
                                       {seg.data?.translator && (
-                                        <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '2px' }}>
                                           🌐 Traduce: {seg.data.translator}
                                         </div>
                                       )}
@@ -632,22 +643,22 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
                                   {/* SHARED FIELDS */}
                                   {seg.data?.description_details && (
-                                    <div style={{ fontSize: '9px', color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
+                                    <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
                                       {seg.data.description_details}
                                     </div>
                                   )}
                                   {seg.data?.projection_notes && (
-                                    <div style={{ fontSize: '8.5px', color: '#8b5cf6', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #8b5cf6' }}>
+                                    <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #8b5cf6' }}>
                                       📽️ {seg.data.projection_notes}
                                     </div>
                                   )}
                                   {seg.data?.sound_notes && (
-                                    <div style={{ fontSize: '8.5px', color: '#dc2626', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #dc2626' }}>
+                                    <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#dc2626', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #dc2626' }}>
                                       🔊 {seg.data.sound_notes}
                                     </div>
                                   )}
                                   {seg.data?.ushers_notes && (
-                                    <div style={{ fontSize: '8.5px', color: '#16a34a', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #16a34a' }}>
+                                    <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#16a34a', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #16a34a' }}>
                                       👥 {seg.data.ushers_notes}
                                     </div>
                                   )}
@@ -658,56 +669,56 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                           )}
                           </div>
                           ) : isCustomService && serviceData?.segments ? (
-                            <div style={{ fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3, padding: '8px' }}>
+                            <div style={{ fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4, padding: '8px' }}>
                           {serviceData.segments.map((seg, idx) => (
                             <div key={idx} style={{ marginBottom: '8px', paddingBottom: '6px', borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                               <div style={{ marginBottom: '2px' }}>
-                                <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: 'bold', textTransform: 'uppercase' }}>
+                                <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: 'bold', textTransform: 'uppercase' }}>
                                   {seg.title || 'Sin título'}
                                 </span>
-                                {seg.duration && <span style={{ fontSize: '9px', color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} min)</span>}
+                                {seg.duration && <span style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} min)</span>}
                               </div>
                               {seg.leader && (
-                                <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>
                                   Dirige: {seg.leader}
                                 </div>
                               )}
                               {seg.preacher && (
-                                <div style={{ fontSize: '10px', color: '#2563eb', fontWeight: '600' }}>
+                                <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '600' }}>
                                   {seg.preacher}
                                 </div>
                               )}
                               {seg.presenter && !seg.leader && !seg.preacher && (
-                                <div style={{ fontSize: '10px', color: '#374151' }}>
+                                <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151' }}>
                                   {seg.presenter}
                                 </div>
                               )}
                               {seg.translator && (
-                                <div style={{ fontSize: '9px', color: '#6b7280' }}>
+                                <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280' }}>
                                   🌐 {seg.translator}
                                 </div>
                               )}
                               {seg.messageTitle && (
-                                <div style={{ fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                                <div style={{ fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
                                   {seg.messageTitle}
                                 </div>
                               )}
                               {seg.verse && (
-                                <div style={{ fontSize: '9px', color: '#9ca3af' }}>
+                                <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af' }}>
                                   📖 {seg.verse}
                                 </div>
                               )}
                               {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
                                 <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
                                   {seg.songs.filter(s => s.title).map((song, sIdx) => (
-                                    <div key={sIdx} style={{ fontSize: '9px', color: '#16a34a' }}>
+                                    <div key={sIdx} style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
                                       - {song.title} {song.lead && `(${song.lead})`}
                                     </div>
                                   ))}
                                 </div>
                               )}
                               {seg.description && (
-                                <div style={{ fontSize: '9px', color: '#9ca3af', fontStyle: 'italic', marginTop: '3px' }}>
+                                <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', fontStyle: 'italic', marginTop: '3px' }}>
                                   {seg.description}
                                 </div>
                               )}
@@ -715,27 +726,27 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                           ))}
                           {(serviceData.coordinators || serviceData.ujieres || serviceData.sound || serviceData.luces) && (
                             <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '2px solid #1F8A70' }}>
-                              <div style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase' }}>
+                              <div style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase' }}>
                                 Equipo
                               </div>
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
                                 {serviceData.coordinators && (
-                                  <div style={{ fontSize: '9px' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
                                     <strong>Coordinador:</strong> {serviceData.coordinators}
                                   </div>
                                 )}
                                 {serviceData.ujieres && (
-                                  <div style={{ fontSize: '9px' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
                                     <strong>Ujieres:</strong> {serviceData.ujieres}
                                   </div>
                                 )}
                                 {serviceData.sound && (
-                                  <div style={{ fontSize: '9px' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
                                     <strong>Sonido:</strong> {serviceData.sound}
                                   </div>
                                 )}
                                 {serviceData.luces && (
-                                  <div style={{ fontSize: '9px' }}>
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
                                     <strong>Luces:</strong> {serviceData.luces}
                                   </div>
                                 )}
@@ -830,82 +841,82 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           }}
         >
           <div style={{ width: '100%' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${9.5 * page2Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
-                        {/* Left Column: Fixed Announcements */}
-                        <div>
-                          {selectedFixed.map((ann) => (
-                            <div key={ann.id} style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #e5e7eb' }}>
-                              <div style={{ fontSize: `${10 * page2Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', marginBottom: '3px', color: '#1a1a1a' }}>
-                                {ann.title}
-                              </div>
-                              {ann.content && (
-                                <div 
-                                  style={{ fontSize: `${9.5 * page2Settings.bodyFontScale}px`, color: '#374151', whiteSpace: 'pre-wrap' }}
-                                  dangerouslySetInnerHTML={{ __html: sanitize(ann.content) }}
-                                />
-                              )}
-                              {ann.instructions && (
-                                <div style={{ fontSize: `${8.5 * page2Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '4px', paddingLeft: '6px', borderLeft: '2px solid #fbbf24' }}>
-                                  <strong style={{ fontStyle: 'normal', textTransform: 'uppercase', fontSize: `${7.5 * page2Settings.bodyFontScale}px` }}>CUE: </strong>
-                                  <span dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }} />
-                                </div>
-                              )}
-                              {ann.has_video && (
-                                <div style={{ fontSize: `${8 * page2Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px' }}>📹 Video</div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${BASE_BODY * 0.9 * page2Settings.bodyFontScale}px`, lineHeight: 1.4 }}>
+            {/* Left Column: Fixed Announcements */}
+            <div>
+              {selectedFixed.map((ann) => (
+                <div key={ann.id} style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #e5e7eb' }}>
+                  <div style={{ fontSize: `${BASE_TITLE * 0.83 * page2Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', marginBottom: '3px', color: '#1a1a1a' }}>
+                    {ann.title}
+                  </div>
+                  {ann.content && (
+                    <div 
+                      style={{ fontSize: `${BASE_BODY * 0.9 * page2Settings.bodyFontScale}px`, color: '#374151', whiteSpace: 'pre-wrap' }}
+                      dangerouslySetInnerHTML={{ __html: sanitize(ann.content) }}
+                    />
+                  )}
+                  {ann.instructions && (
+                    <div style={{ fontSize: `${BASE_BODY * 0.81 * page2Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '4px', paddingLeft: '6px', borderLeft: '2px solid #fbbf24' }}>
+                      <strong style={{ fontStyle: 'normal', textTransform: 'uppercase', fontSize: `${BASE_BODY * 0.71 * page2Settings.bodyFontScale}px` }}>CUE: </strong>
+                      <span dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }} />
+                    </div>
+                  )}
+                  {ann.has_video && (
+                    <div style={{ fontSize: `${BASE_BODY * 0.76 * page2Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px' }}>📹 Video</div>
+                  )}
+                </div>
+              ))}
+            </div>
 
-                        {/* Right Column: Dynamic Events */}
-                        <div style={{ borderLeft: '2px solid #e5e7eb', paddingLeft: '12px' }}>
-                          <div style={{ fontSize: `${9 * page2Settings.bodyFontScale}px`, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #e5e7eb' }}>
-                            Próximos Eventos
-                          </div>
-                          {selectedDynamic.map((ann) => {
-                            const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
-                            const isEmphasized = ann.emphasize || ann.category === 'Urgent';
-                            return (
-                              <div 
-                                key={ann.id} 
-                                style={{ 
-                                  marginBottom: '6px', 
-                                  paddingBottom: '6px', 
-                                  borderBottom: '1px solid #f3f4f6',
-                                  ...(isEmphasized && { background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '4px', padding: '4px 6px', marginBottom: '6px' })
-                                }}
-                              >
-                                <div style={{ fontSize: `${10 * page2Settings.titleFontScale}px`, fontWeight: '600', color: '#16a34a', marginBottom: '2px' }}>
-                                  {ann.isEvent ? ann.name : ann.title}
-                                </div>
-                                {(ann.date_of_occurrence || ann.start_date) && (
-                                  <div style={{ fontSize: `${9 * page2Settings.bodyFontScale}px`, color: '#4b5563', fontWeight: '500', marginBottom: '2px' }}>
-                                    {ann.date_of_occurrence || ann.start_date}
-                                    {ann.end_date && ` — ${ann.end_date}`}
-                                  </div>
-                                )}
-                                {content && (
-                                  <div 
-                                    style={{ fontSize: `${9 * page2Settings.bodyFontScale}px`, color: '#374151', whiteSpace: 'pre-wrap' }}
-                                    dangerouslySetInnerHTML={{ __html: sanitize(content) }}
-                                  />
-                                )}
-                                {ann.instructions && (
-                                  <div style={{ fontSize: `${8 * page2Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #fbbf24' }}>
-                                    <strong style={{ fontStyle: 'normal', textTransform: 'uppercase', fontSize: `${7 * page2Settings.bodyFontScale}px` }}>CUE: </strong>
-                                    <span dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }} />
-                                  </div>
-                                )}
-                                {(ann.has_video || ann.announcement_has_video) && (
-                                  <div style={{ fontSize: `${8 * page2Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '2px' }}>📹 Video</div>
-                                )}
-                              </div>
-                            );
-                          })}
-                          </div>
-                          </div>
-                          </div>
-                          </div>
+            {/* Right Column: Dynamic Events */}
+            <div style={{ borderLeft: '2px solid #e5e7eb', paddingLeft: '12px' }}>
+              <div style={{ fontSize: `${BASE_BODY * 0.86 * page2Settings.bodyFontScale}px`, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #e5e7eb' }}>
+                Próximos Eventos
+              </div>
+              {selectedDynamic.map((ann) => {
+                const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
+                const isEmphasized = ann.emphasize || ann.category === 'Urgent';
+                return (
+                  <div 
+                    key={ann.id} 
+                    style={{ 
+                      marginBottom: '6px', 
+                      paddingBottom: '6px', 
+                      borderBottom: '1px solid #f3f4f6',
+                      ...(isEmphasized && { background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '4px', padding: '4px 6px', marginBottom: '6px' })
+                    }}
+                  >
+                    <div style={{ fontSize: `${BASE_TITLE * 0.83 * page2Settings.titleFontScale}px`, fontWeight: '600', color: '#16a34a', marginBottom: '2px' }}>
+                      {ann.isEvent ? ann.name : ann.title}
+                    </div>
+                    {(ann.date_of_occurrence || ann.start_date) && (
+                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page2Settings.bodyFontScale}px`, color: '#4b5563', fontWeight: '500', marginBottom: '2px' }}>
+                        {ann.date_of_occurrence || ann.start_date}
+                        {ann.end_date && ` — ${ann.end_date}`}
+                      </div>
+                    )}
+                    {content && (
+                      <div 
+                        style={{ fontSize: `${BASE_BODY * 0.86 * page2Settings.bodyFontScale}px`, color: '#374151', whiteSpace: 'pre-wrap' }}
+                        dangerouslySetInnerHTML={{ __html: sanitize(content) }}
+                      />
+                    )}
+                    {ann.instructions && (
+                      <div style={{ fontSize: `${BASE_BODY * 0.76 * page2Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #fbbf24' }}>
+                        <strong style={{ fontStyle: 'normal', textTransform: 'uppercase', fontSize: `${BASE_BODY * 0.67 * page2Settings.bodyFontScale}px` }}>CUE: </strong>
+                        <span dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }} />
+                      </div>
+                    )}
+                    {(ann.has_video || ann.announcement_has_video) && (
+                      <div style={{ fontSize: `${BASE_BODY * 0.76 * page2Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '2px' }}>📹 Video</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            </div>
+          </div>
+        </div>
 
         {/* FIXED Footer */}
         <div 
