@@ -10,6 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { formatTimeToEST } from "../components/utils/timeFormat";
 
 export default function PublicProgramView() {
+  const gradientStyle = {
+    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+  };
+  
   const urlParams = new URLSearchParams(window.location.search);
   const preloadedSlug = urlParams.get('slug');
   const preloadedEventId = urlParams.get('eventId') || "";
@@ -309,7 +313,7 @@ export default function PublicProgramView() {
   return (
     <div className="min-h-screen bg-[#F0F1F3]">
       {/* Hero Header */}
-      <div className="bg-gradient-to-r from-pdv-teal to-pdv-green text-white py-12 px-6">
+      <div style={gradientStyle} className="text-white py-12 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-4">
             <img 
@@ -1184,7 +1188,7 @@ export default function PublicProgramView() {
       </div>
 
       {/* Footer */}
-      <div className="mt-12 py-6 bg-gradient-to-r from-pdv-green to-pdv-teal">
+      <div style={gradientStyle} className="mt-12 py-6">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
