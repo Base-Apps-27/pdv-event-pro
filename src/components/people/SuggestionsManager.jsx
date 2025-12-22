@@ -21,6 +21,8 @@ const SUGGESTION_TYPES = {
 };
 
 export default function SuggestionsManager() {
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  
   const queryClient = useQueryClient();
   const [selectedType, setSelectedType] = useState("presenter");
   const [searchTerm, setSearchTerm] = useState("");
@@ -109,7 +111,8 @@ export default function SuggestionsManager() {
                 variant={selectedType === key ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedType(key)}
-                className={selectedType === key ? "bg-pdv-teal text-white hover:bg-pdv-teal/90" : "bg-white text-gray-700 hover:bg-gray-100 border-gray-300"}
+                style={selectedType === key ? tealStyle : undefined}
+                className={selectedType === key ? "" : "bg-white text-gray-700 hover:bg-gray-100 border-gray-300"}
               >
                 {label}
               </Button>
@@ -129,7 +132,7 @@ export default function SuggestionsManager() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 bg-white"
             />
-            <Button onClick={openCreate} className="bg-pdv-teal text-white hover:bg-pdv-teal/90 flex-shrink-0">
+            <Button onClick={openCreate} style={tealStyle} className="flex-shrink-0">
               <Plus className="w-4 h-4 mr-2" />
               Añadir
             </Button>
@@ -223,7 +226,7 @@ export default function SuggestionsManager() {
               <Button variant="outline" onClick={() => setShowDialog(false)} className="bg-white">
                 Cancelar
               </Button>
-              <Button onClick={handleSave} className="bg-pdv-teal text-white hover:bg-pdv-teal/90">
+              <Button onClick={handleSave} style={tealStyle}>
                 <Check className="w-4 h-4 mr-2" />
                 Guardar
               </Button>
