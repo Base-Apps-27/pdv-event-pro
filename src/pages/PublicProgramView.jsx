@@ -437,9 +437,9 @@ export default function PublicProgramView() {
                   return { ...service, nextDate, daysUntil };
                 }).filter(s => s.daysUntil <= 7).sort((a, b) => a.daysUntil - b.daysUntil);
 
-                // Deduplicate by service ID
+                // Deduplicate by day of week (only show one service per day)
                 const uniqueServices = Array.from(
-                  new Map(upcomingServices.map(s => [s.id, s])).values()
+                  new Map(upcomingServices.map(s => [s.day_of_week, s])).values()
                 );
 
                 return (
