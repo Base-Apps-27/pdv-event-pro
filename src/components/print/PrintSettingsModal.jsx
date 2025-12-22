@@ -213,26 +213,6 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="text-base font-semibold">{t.globalScale}</Label>
-                    <span className="text-sm font-mono text-gray-600">{(page1Settings.globalScale * 100).toFixed(0)}%</span>
-                  </div>
-                  <Slider
-                    value={[page1Settings.globalScale]}
-                    onValueChange={([value]) => setPage1Settings(prev => ({ ...prev, globalScale: value }))}
-                    min={0.7}
-                    max={1.2}
-                    step={0.05}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>70%</span>
-                    <span>100%</span>
-                    <span>120%</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
                     <Label className="text-base font-semibold">{t.bodyFontScale}</Label>
                     <span className="text-sm font-mono text-gray-600">{(page1Settings.bodyFontScale * 100).toFixed(0)}%</span>
                   </div>
@@ -354,11 +334,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         bottom: `${marginBottomPx + FOOTER_H}px`
                       }}
                     >
-                      <div style={{
-                        transform: `scale(${page1Settings.globalScale})`,
-                        transformOrigin: 'top left',
-                        width: `${100 / page1Settings.globalScale}%`
-                      }}>
+                      <div style={{ width: '100%' }}>
                         {isWeeklyService && serviceData?.['9:30am'] ? (
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
                           {/* 9:30 AM Column */}
@@ -741,23 +717,6 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="text-base font-semibold">{t.globalScale}</Label>
-                    <span className="text-sm font-mono text-gray-600">{(page2Settings.globalScale * 100).toFixed(0)}%</span>
-                  </div>
-                  <Slider
-                    value={[page2Settings.globalScale]}
-                    onValueChange={([value]) => setPage2Settings(prev => ({ ...prev, globalScale: value }))}
-                    min={0.7}
-                    max={1.2}
-                    step={0.05}
-                  />
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>70%</span><span>100%</span><span>120%</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
                     <Label className="text-base font-semibold">{t.bodyFontScale}</Label>
                     <span className="text-sm font-mono text-gray-600">{(page2Settings.bodyFontScale * 100).toFixed(0)}%</span>
                   </div>
@@ -856,11 +815,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         bottom: `${marginBottomPx + FOOTER_H}px`
                       }}
                     >
-                      <div style={{
-                        transform: `scale(${page2Settings.globalScale})`,
-                        transformOrigin: 'top left',
-                        width: `${100 / page2Settings.globalScale}%`
-                      }}>
+                      <div style={{ width: '100%' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${9.5 * page2Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
                         {/* Left Column: Fixed Announcements */}
                         <div>
