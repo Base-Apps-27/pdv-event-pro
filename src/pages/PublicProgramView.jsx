@@ -83,50 +83,74 @@ export default function PublicProgramView() {
     }
   }, [preloadedSlug, publicEvents, selectedEventId]);
 
-  // Auto-select next upcoming event or service
+  // Auto-select what's happening TODAY (prioritize same-day activities)
   useEffect(() => {
     if (!preloadedEventId && !preloadedServiceId && !preloadedDate && publicEvents.length > 0 && services.length > 0) {
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
       
-      // Find next event
-      const nextEvent = publicEvents.find(e => e.start_date && new Date(e.start_date) >= today);
+      // Check for events happening TODAY
+      const todayEvent = publicEvents.find(e => {
+        if (!e.start_date) return false;
+        const eventDate = new Date(e.start_date);
+        eventDate.setHours(0, 0, 0, 0);
+        const endDate = e.end_date ? new Date(e.end_date) : eventDate;
+        endDate.setHours(0, 0, 0, 0);
+        return today >= eventDate && today <= endDate;
+      });
       
-      // Find next service
+      // Check for services happening TODAY
       const dayMap = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
-      const activeServices = services.filter(s => s.status === 'active');
-      const upcomingServices = activeServices.map(service => {
-        const serviceDayNum = dayMap[service.day_of_week];
-        let daysUntil = serviceDayNum - today.getDay();
-        if (daysUntil < 0) daysUntil += 7;
-        if (daysUntil === 0 && service.time) {
-          const [hours, minutes] = service.time.split(':');
-          const serviceTime = new Date(today);
-          serviceTime.setHours(parseInt(hours), parseInt(minutes), 0);
-          if (serviceTime < today) daysUntil = 7;
-        }
-        const nextDate = new Date(today);
-        nextDate.setDate(today.getDate() + daysUntil);
-        return { ...service, nextDate, daysUntil };
-      }).sort((a, b) => a.daysUntil - b.daysUntil);
+      const todayService = services.find(s => {
+        if (s.status !== 'active') return false;
+        const serviceDayNum = dayMap[s.day_of_week];
+        return serviceDayNum === today.getDay();
+      });
       
-      const nextService = upcomingServices[0];
-      
-      // Compare and select closest
-      if (nextEvent && nextService) {
-        const eventDaysAway = Math.floor((new Date(nextEvent.start_date) - today) / (1000 * 60 * 60 * 24));
-        if (nextService.daysUntil <= eventDaysAway) {
-          setSelectedServiceId(nextService.id);
-          setViewType("service");
-        } else {
+      // Priority: Today's service > Today's event > Next upcoming (within 7 days)
+      if (todayService) {
+        setSelectedServiceId(todayService.id);
+        setViewType("service");
+      } else if (todayEvent) {
+        setSelectedEventId(todayEvent.id);
+        setViewType("event");
+      } else {
+        // Find next upcoming (within 7 days)
+        const sevenDaysOut = new Date(today);
+        sevenDaysOut.setDate(today.getDate() + 7);
+        
+        const nextEvent = publicEvents.find(e => {
+          if (!e.start_date) return false;
+          const eventDate = new Date(e.start_date);
+          return eventDate > today && eventDate <= sevenDaysOut;
+        });
+        
+        const activeServices = services.filter(s => s.status === 'active');
+        const upcomingServices = activeServices.map(service => {
+          const serviceDayNum = dayMap[service.day_of_week];
+          let daysUntil = serviceDayNum - today.getDay();
+          if (daysUntil <= 0) daysUntil += 7;
+          return { ...service, daysUntil };
+        }).filter(s => s.daysUntil <= 7).sort((a, b) => a.daysUntil - b.daysUntil);
+        
+        const nextService = upcomingServices[0];
+        
+        if (nextEvent && nextService) {
+          const eventDaysAway = Math.floor((new Date(nextEvent.start_date) - today) / (1000 * 60 * 60 * 24));
+          if (nextService.daysUntil <= eventDaysAway) {
+            setSelectedServiceId(nextService.id);
+            setViewType("service");
+          } else {
+            setSelectedEventId(nextEvent.id);
+            setViewType("event");
+          }
+        } else if (nextEvent) {
           setSelectedEventId(nextEvent.id);
           setViewType("event");
+        } else if (nextService) {
+          setSelectedServiceId(nextService.id);
+          setViewType("service");
         }
-      } else if (nextEvent) {
-        setSelectedEventId(nextEvent.id);
-        setViewType("event");
-      } else if (nextService) {
-        setSelectedServiceId(nextService.id);
-        setViewType("service");
       }
     }
   }, [publicEvents, services, preloadedEventId, preloadedServiceId]);
@@ -331,6 +355,109 @@ export default function PublicProgramView() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+        {/* Navigation Selector */}
+        <Card className="bg-white border-2 border-gray-300">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              {/* View Type Toggle */}
+              <div className="flex gap-2">
+                <Button
+                  variant={viewType === "event" ? "default" : "outline"}
+                  onClick={() => setViewType("event")}
+                  className={viewType === "event" ? "bg-pdv-teal text-white font-semibold" : "border-2 border-gray-400 text-gray-900 font-semibold"}
+                >
+                  Eventos
+                </Button>
+                <Button
+                  variant={viewType === "service" ? "default" : "outline"}
+                  onClick={() => setViewType("service")}
+                  className={viewType === "service" ? "bg-pdv-green text-white font-semibold" : "border-2 border-gray-400 text-gray-900 font-semibold"}
+                >
+                  Servicios
+                </Button>
+              </div>
+
+              {/* Event Selector (1 past, 1 upcoming within 7 days) */}
+              {viewType === "event" && (() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const sevenDaysOut = new Date(today);
+                sevenDaysOut.setDate(today.getDate() + 7);
+                
+                const pastEvents = publicEvents.filter(e => {
+                  if (!e.start_date) return false;
+                  const eventDate = new Date(e.start_date);
+                  return eventDate < today;
+                }).slice(0, 1);
+                
+                const upcomingEvents = publicEvents.filter(e => {
+                  if (!e.start_date) return false;
+                  const eventDate = new Date(e.start_date);
+                  return eventDate >= today && eventDate <= sevenDaysOut;
+                }).slice(0, 1);
+                
+                const availableEvents = [...pastEvents, ...upcomingEvents];
+                
+                return (
+                  <div className="flex-1">
+                    <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                      <SelectTrigger className="bg-white border-2 border-gray-400 text-gray-900 w-full">
+                        <SelectValue placeholder="Selecciona un evento" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white text-gray-900">
+                        {availableEvents.map((event) => (
+                          <SelectItem key={event.id} value={event.id} className="text-gray-900">
+                            {event.name} - {event.start_date}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                );
+              })()}
+
+              {/* Service Selector (upcoming within 7 days) */}
+              {viewType === "service" && (() => {
+                const today = new Date();
+                const dayMap = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
+                const activeServices = services.filter(s => s.status === 'active');
+                
+                const upcomingServices = activeServices.map(service => {
+                  const serviceDayNum = dayMap[service.day_of_week];
+                  let daysUntil = serviceDayNum - today.getDay();
+                  if (daysUntil < 0) daysUntil += 7;
+                  if (daysUntil === 0 && service.time) {
+                    const [hours, minutes] = service.time.split(':');
+                    const serviceTime = new Date(today);
+                    serviceTime.setHours(parseInt(hours), parseInt(minutes), 0);
+                    if (serviceTime < today) daysUntil = 7;
+                  }
+                  const nextDate = new Date(today);
+                  nextDate.setDate(today.getDate() + daysUntil);
+                  return { ...service, nextDate, daysUntil };
+                }).filter(s => s.daysUntil <= 7).sort((a, b) => a.daysUntil - b.daysUntil);
+                
+                return (
+                  <div className="flex-1">
+                    <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
+                      <SelectTrigger className="bg-white border-2 border-gray-400 text-gray-900 w-full">
+                        <SelectValue placeholder="Selecciona un servicio" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white text-gray-900">
+                        {upcomingServices.map((service) => (
+                          <SelectItem key={service.id} value={service.id} className="text-gray-900">
+                            {service.name} - {service.day_of_week} ({service.daysUntil === 0 ? 'Hoy' : `en ${service.daysUntil} días`})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                );
+              })()}
+            </div>
+          </CardContent>
+        </Card>
+
         {((selectedEventId && selectedEvent) || (selectedServiceId && selectedService)) && (
           <>
             {/* Event/Service Info Card */}
