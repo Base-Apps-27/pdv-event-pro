@@ -308,7 +308,7 @@ export default function Dashboard() {
                             </p>
                           </div>
                           <Button 
-                            onClick={() => navigate(createPageUrl('ServiceDetail') + `?id=${service.id}`)}
+                            onClick={() => navigate(createPageUrl('WeeklyServiceManager'))}
                             className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold"
                           >
                             Ver Detalles
@@ -322,7 +322,7 @@ export default function Dashboard() {
                 
                 {activeServices.length > 2 && (
                   <Button 
-                    onClick={() => navigate(createPageUrl('Services'))}
+                    onClick={() => navigate(createPageUrl('WeeklyServiceManager'))}
                     variant="outline"
                     className="w-full"
                   >
@@ -337,7 +337,7 @@ export default function Dashboard() {
                   <h3 className="text-lg font-bold text-gray-900 mb-2">No hay servicios programados</h3>
                   <p className="text-gray-600 text-sm mb-4">Crea tu primer servicio semanal</p>
                   <Button 
-                    onClick={() => navigate(createPageUrl('Services'))}
+                    onClick={() => navigate(createPageUrl('WeeklyServiceManager'))}
                     className="gradient-pdv text-white font-semibold"
                   >
                     <Plus className="w-4 h-4 mr-2" />
