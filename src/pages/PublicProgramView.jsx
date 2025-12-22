@@ -614,6 +614,7 @@ export default function PublicProgramView() {
 
             {/* Weekly Services Display (for Service view type) */}
             {viewType === "service" && actualServiceData && (
+              actualServiceData["9:30am"] || actualServiceData["11:30am"] ? (
               <div className="space-y-6">
                 {/* Countdown Timer - 2 hours for first segment, 1 hour for others */}
                 {(() => {
@@ -872,6 +873,12 @@ export default function PublicProgramView() {
                               </div>
                               )}
                               </div>
+                              ) : (
+                              <Card className="p-12 text-center bg-white border-2 border-gray-300">
+                                <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                                <p className="text-gray-600">Este servicio aún no tiene programa disponible</p>
+                              </Card>
+                              )
                               )}
 
             {/* Sessions Display (for Event view type) */}
