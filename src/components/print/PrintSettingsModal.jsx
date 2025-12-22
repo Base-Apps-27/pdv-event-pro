@@ -302,7 +302,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                     className="bg-white shadow-2xl relative"
                     style={{
                       width: `${PAGE_W}px`,
-                      height: `${PAGE_H}px`
+                      height: `${PAGE_H}px`,
+                      display: 'inline-block',
+                      flexShrink: 0
                     }}
                   >
                     {/* Margin Overlays */}
@@ -716,7 +718,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                     className="bg-white shadow-2xl relative"
                     style={{
                       width: `${PAGE_W}px`,
-                      height: `${PAGE_H}px`
+                      height: `${PAGE_H}px`,
+                      display: 'inline-block',
+                      flexShrink: 0
                     }}
                   >
                     {/* Margin Overlays */}
