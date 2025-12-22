@@ -21,16 +21,20 @@ export default function EventDetail() {
   const queryClient = useQueryClient();
   const [showAIHelper, setShowAIHelper] = useState(false);
 
-  const { data: event } = useQuery({
+  const { data: event, isLoading: eventLoading } = useQuery({
     queryKey: ['event', eventId],
     queryFn: () => base44.entities.Event.filter({ id: eventId }).then(res => res[0]),
     enabled: !!eventId,
+    staleTime: 5 * 60 * 1000,
+    keepPreviousData: true,
   });
 
   const { data: sessions = [] } = useQuery({
     queryKey: ['sessions', eventId],
     queryFn: () => base44.entities.Session.filter({ event_id: eventId }, 'order'),
     enabled: !!eventId,
+    staleTime: 5 * 60 * 1000,
+    keepPreviousData: true,
   });
 
   const { data: segments = [] } = useQuery({
@@ -41,22 +45,36 @@ export default function EventDetail() {
       return allSegments.filter(seg => sessionIds.includes(seg.session_id));
     },
     enabled: sessions.length > 0,
+    staleTime: 5 * 60 * 1000,
+    keepPreviousData: true,
   });
 
   const { data: allSessions = [] } = useQuery({
     queryKey: ['allSessions'],
     queryFn: () => base44.entities.Session.list(),
+    staleTime: 5 * 60 * 1000,
+    keepPreviousData: true,
   });
 
   const { data: allSegments = [] } = useQuery({
     queryKey: ['allSegments'],
     queryFn: () => base44.entities.Segment.list(),
+    staleTime: 5 * 60 * 1000,
+    keepPreviousData: true,
   });
 
-  if (!event) {
+  if (eventLoading && !event) {
     return (
       <div className="p-8 text-center">
         <p className="text-slate-600">Cargando evento...</p>
+      </div>
+    );
+  }
+  
+  if (!event) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-600">Evento no encontrado</p>
       </div>
     );
   }
