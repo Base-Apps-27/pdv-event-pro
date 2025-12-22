@@ -167,46 +167,79 @@
   box-shadow: none;
 }
 
-/* Fix Shadcn Tabs - force dark text on light backgrounds */
-[role="tablist"] button[role="tab"] {
-  color: #374151 !important;
-}
+/* CRITICAL: Force dark text on light backgrounds globally */
+/* This overrides Shadcn's default behavior that was causing white text */
 
-[role="tablist"] button[role="tab"][data-state="active"] {
-  color: #111827 !important;
-  background-color: white !important;
-}
-
-/* Fix Select components - dark text on light */
-[role="combobox"],
-button[role="combobox"] {
+body,
+body * {
   color: #111827 !important;
 }
 
-/* Fix Dialog/Modal text */
-[role="dialog"] h2,
-[role="dialog"] h3,
-[role="dialog"] p,
-[role="dialog"] label,
-[role="dialog"] span {
-  color: #111827 !important;
+/* Explicit exceptions for intentional white text on dark backgrounds */
+.text-white,
+.text-white *,
+[style*="color: white"],
+[style*="color: #fff"],
+[style*="color: #FFF"],
+[style*="color:#fff"],
+[style*="color:#FFF"],
+.gradient-pdv,
+.gradient-pdv *,
+.bg-black,
+.bg-black *,
+.bg-gray-900,
+.bg-gray-900 *,
+.bg-pdv-charcoal,
+.bg-pdv-charcoal *,
+.bg-pdv-teal,
+.bg-pdv-teal *,
+.bg-pdv-green,
+.bg-pdv-green *,
+.bg-green-600,
+.bg-green-600 *,
+.bg-green-700,
+.bg-green-700 *,
+.bg-purple-600,
+.bg-purple-600 *,
+.bg-purple-700,
+.bg-purple-700 *,
+.bg-blue-600,
+.bg-blue-600 *,
+.bg-blue-700,
+.bg-blue-700 *,
+.bg-red-600,
+.bg-red-600 *,
+.bg-red-700,
+.bg-red-700 *,
+button[class*="bg-green"],
+button[class*="bg-green"] *,
+button[class*="bg-blue"],
+button[class*="bg-blue"] *,
+button[class*="bg-purple"],
+button[class*="bg-purple"] *,
+button[class*="bg-red"],
+button[class*="bg-red"] *,
+.bg-yellow-500,
+.bg-yellow-500 *,
+.bg-amber-600,
+.bg-amber-600 * {
+  color: white !important;
 }
 
-/* Ensure all cards have dark text */
-.bg-white h1,
-.bg-white h2,
-.bg-white h3,
-.bg-white h4,
-.bg-white p,
-.bg-white span,
-.bg-white label {
-  color: #111827;
-}
-
-/* Ensure buttons have proper contrast */
-button:not(.gradient-pdv):not([style*="background"]) {
-  color: #111827;
-}
+/* Specific color overrides for colored text */
+.text-gray-900 { color: #111827 !important; }
+.text-gray-800 { color: #1F2937 !important; }
+.text-gray-700 { color: #374151 !important; }
+.text-gray-600 { color: #4B5563 !important; }
+.text-gray-500 { color: #6B7280 !important; }
+.text-red-600 { color: #DC2626 !important; }
+.text-blue-600 { color: #2563EB !important; }
+.text-green-600 { color: #16A34A !important; }
+.text-purple-600 { color: #9333EA !important; }
+.text-orange-600 { color: #EA580C !important; }
+.text-pdv-teal { color: #1F8A70 !important; }
+.text-pdv-green { color: #8DC63F !important; }
+.text-pdv-yellow { color: #D7DF23 !important; }
 
 /* Typography scale */
 .text-display {
