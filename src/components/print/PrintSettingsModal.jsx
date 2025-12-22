@@ -190,8 +190,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     <>
       {/* PRINT-ONLY CONTENT - Hidden on screen, shown when printing */}
       <div className="print-only-container" style={{ display: 'none' }}>
-        {renderPage1()}
-        {renderPage2()}
+        <div style={{ pageBreakAfter: 'always', pageBreakInside: 'avoid' }}>
+          {renderPage1()}
+        </div>
+        <div style={{ pageBreakAfter: 'auto', pageBreakInside: 'avoid' }}>
+          {renderPage2()}
+        </div>
       </div>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -331,18 +335,23 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
       @media print {
         @page {
           size: letter;
-          margin: 0;
+          margin: ${page1Settings.margins.top} ${page1Settings.margins.right} ${page1Settings.margins.bottom} ${page1Settings.margins.left};
         }
-        
+
+        html, body {
+          margin: 0;
+          padding: 0;
+        }
+
         body * {
           visibility: hidden;
         }
-        
+
         .print-only-container,
         .print-only-container * {
           visibility: visible;
         }
-        
+
         .print-only-container {
           display: block !important;
           position: absolute;
@@ -350,12 +359,15 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           top: 0;
           width: 100%;
         }
-        
+
         .print-only-container > div {
+          position: relative;
+          width: 100%;
+          min-height: 100vh;
           page-break-after: always;
           page-break-inside: avoid;
         }
-        
+
         .print-only-container > div:last-child {
           page-break-after: auto;
         }
@@ -372,7 +384,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
     return (
       <div 
-        className="bg-white shadow-2xl relative"
+        className="bg-white shadow-2xl relative print:shadow-none"
         style={{
           width: `${PAGE_W}px`,
           height: `${PAGE_H}px`,
@@ -380,6 +392,14 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           flexShrink: 0
         }}
       >
+        {/* Logo - only for print */}
+        <div className="hidden print:block absolute" style={{ top: `${marginTopPx}px`, left: `${marginLeftPx}px` }}>
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
+            alt="Logo" 
+            style={{ width: '60px', height: '60px' }}
+          />
+        </div>
         {/* Margin Overlays */}
         <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
         <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
@@ -821,7 +841,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
     return (
       <div 
-        className="bg-white shadow-2xl relative"
+        className="bg-white shadow-2xl relative print:shadow-none"
         style={{
           width: `${PAGE_W}px`,
           height: `${PAGE_H}px`,
@@ -829,6 +849,14 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           flexShrink: 0
         }}
       >
+        {/* Logo - only for print */}
+        <div className="hidden print:block absolute" style={{ top: `${marginTopPx}px`, left: `${marginLeftPx}px` }}>
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
+            alt="Logo" 
+            style={{ width: '60px', height: '60px' }}
+          />
+        </div>
         {/* Margin Overlays */}
         <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
         <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
