@@ -383,7 +383,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         }}
       >
         {/* Logo - only for print */}
-        <div className="hidden print:block absolute" style={{ top: `${marginTopPx + 10}px`, left: `${marginLeftPx + 10}px`, zIndex: 10 }}>
+        <div className="hidden print:block absolute" style={{ top: `${marginTopPx}px`, left: `${marginLeftPx}px`, zIndex: 10 }}>
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
             alt="Logo" 
@@ -844,7 +844,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         }}
       >
         {/* Logo - only for print */}
-        <div className="hidden print:block absolute" style={{ top: `${marginTopPx + 10}px`, left: `${marginLeftPx + 10}px`, zIndex: 10 }}>
+        <div className="hidden print:block absolute" style={{ top: `${marginTopPx}px`, left: `${marginLeftPx}px`, zIndex: 10 }}>
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
             alt="Logo" 
