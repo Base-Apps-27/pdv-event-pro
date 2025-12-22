@@ -268,8 +268,6 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
               <Save className="w-4 h-4" />
             </Button>
           </div>
-
-          <div className="flex items-center gap-2">
         </div>
 
         {/* VIEWER */}
