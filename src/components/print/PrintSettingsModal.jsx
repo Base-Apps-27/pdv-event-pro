@@ -97,7 +97,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
       const scaleX = containerWidth / PAGE_W;
       const scaleY = containerHeight / PAGE_H;
-      const scale = Math.min(scaleX, scaleY) * 0.90;
+      const scale = Math.min(scaleX, scaleY) * 0.95;
 
       setPageFitScale(scale);
     });
@@ -379,10 +379,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         transformOrigin: 'top left',
                         width: `${100 / page1Settings.globalScale}%`
                       }}>
-                      </div>
-                    </div>
-
-
+                        {isWeeklyService && serviceData?.['9:30am'] ? (
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
                           {/* 9:30 AM Column */}
                           <div>
                             <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
@@ -633,7 +631,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                             })}
                           </div>
                           )}
-                        </div>
+                          </div>
                           ) : isCustomService && serviceData?.segments ? (
                             <div style={{ fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3, padding: '8px' }}>
                           {serviceData.segments.map((seg, idx) => (
@@ -847,7 +845,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
               {/* Right: Page 2 Preview */}
               <div className="bg-gray-900 rounded-lg flex items-center justify-center overflow-hidden">
-                <div style={{ display: 'inline-block', transform: `scale(${pageFitScale})`, transformOrigin: 'center center' }}>
+                <div style={{ display: 'inline-block', transform: `scale(${pageFitScale})`, transformOrigin: 'top center' }}>
                   <div 
                     className="bg-white shadow-2xl relative"
                     style={{
@@ -894,11 +892,15 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         top: `${marginTopPx + HEADER_H}px`,
                         left: `${marginLeftPx}px`,
                         right: `${marginRightPx}px`,
-                        bottom: `${marginBottomPx + FOOTER_H}px`,
-                        zoom: page2Settings.globalScale
+                        bottom: `${marginBottomPx + FOOTER_H}px`
                       }}
                     >
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${9.5 * page2Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
+                      <div style={{
+                        transform: `scale(${page2Settings.globalScale})`,
+                        transformOrigin: 'top left',
+                        width: `${100 / page2Settings.globalScale}%`
+                      }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${9.5 * page2Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
                         {/* Left Column: Fixed Announcements */}
                         <div>
                           {selectedFixed.map((ann) => (
@@ -908,18 +910,18 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                               </div>
                               {ann.content && (
                                 <div 
-                                  style={{ fontSize: '9.5px', color: '#374151', whiteSpace: 'pre-wrap' }}
+                                  style={{ fontSize: `${9.5 * page2Settings.bodyFontScale}px`, color: '#374151', whiteSpace: 'pre-wrap' }}
                                   dangerouslySetInnerHTML={{ __html: sanitize(ann.content) }}
                                 />
                               )}
                               {ann.instructions && (
-                                <div style={{ fontSize: '8.5px', color: '#6b7280', fontStyle: 'italic', marginTop: '4px', paddingLeft: '6px', borderLeft: '2px solid #fbbf24' }}>
-                                  <strong style={{ fontStyle: 'normal', textTransform: 'uppercase', fontSize: '7.5px' }}>CUE: </strong>
+                                <div style={{ fontSize: `${8.5 * page2Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '4px', paddingLeft: '6px', borderLeft: '2px solid #fbbf24' }}>
+                                  <strong style={{ fontStyle: 'normal', textTransform: 'uppercase', fontSize: `${7.5 * page2Settings.bodyFontScale}px` }}>CUE: </strong>
                                   <span dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }} />
                                 </div>
                               )}
                               {ann.has_video && (
-                                <div style={{ fontSize: '8px', color: '#8b5cf6', marginTop: '3px' }}>📹 Video</div>
+                                <div style={{ fontSize: `${8 * page2Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px' }}>📹 Video</div>
                               )}
                             </div>
                           ))}
@@ -927,7 +929,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
                         {/* Right Column: Dynamic Events */}
                         <div style={{ borderLeft: '2px solid #e5e7eb', paddingLeft: '12px' }}>
-                          <div style={{ fontSize: '9px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #e5e7eb' }}>
+                          <div style={{ fontSize: `${9 * page2Settings.bodyFontScale}px`, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #e5e7eb' }}>
                             Próximos Eventos
                           </div>
                           {selectedDynamic.map((ann) => {
@@ -947,30 +949,36 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                   {ann.isEvent ? ann.name : ann.title}
                                 </div>
                                 {(ann.date_of_occurrence || ann.start_date) && (
-                                  <div style={{ fontSize: '9px', color: '#4b5563', fontWeight: '500', marginBottom: '2px' }}>
+                                  <div style={{ fontSize: `${9 * page2Settings.bodyFontScale}px`, color: '#4b5563', fontWeight: '500', marginBottom: '2px' }}>
                                     {ann.date_of_occurrence || ann.start_date}
                                     {ann.end_date && ` — ${ann.end_date}`}
                                   </div>
                                 )}
                                 {content && (
                                   <div 
-                                    style={{ fontSize: '9px', color: '#374151', whiteSpace: 'pre-wrap' }}
+                                    style={{ fontSize: `${9 * page2Settings.bodyFontScale}px`, color: '#374151', whiteSpace: 'pre-wrap' }}
                                     dangerouslySetInnerHTML={{ __html: sanitize(content) }}
                                   />
                                 )}
                                 {ann.instructions && (
-                                  <div style={{ fontSize: '8px', color: '#6b7280', fontStyle: 'italic', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #fbbf24' }}>
-                                    <strong style={{ fontStyle: 'normal', textTransform: 'uppercase', fontSize: '7px' }}>CUE: </strong>
+                                  <div style={{ fontSize: `${8 * page2Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #fbbf24' }}>
+                                    <strong style={{ fontStyle: 'normal', textTransform: 'uppercase', fontSize: `${7 * page2Settings.bodyFontScale}px` }}>CUE: </strong>
                                     <span dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }} />
                                   </div>
                                 )}
                                 {(ann.has_video || ann.announcement_has_video) && (
-                                  <div style={{ fontSize: '8px', color: '#8b5cf6', marginTop: '2px' }}>📹 Video</div>
+                                  <div style={{ fontSize: `${8 * page2Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '2px' }}>📹 Video</div>
                                 )}
                               </div>
                             );
                           })}
                         </div>
+                        </div>
+                        ) : (
+                          <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>
+                            No hay datos de servicio
+                          </div>
+                        )}
                       </div>
                     </div>
 
