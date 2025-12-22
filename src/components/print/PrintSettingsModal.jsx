@@ -541,16 +541,37 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                     {seg.data.presenter}
                                   </div>
                                 )}
-                                {seg.data?.translator && (seg.type === 'welcome' || seg.type === 'offering' || seg.type === 'message') && (
-                                  <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
-                                    🌐 Traduce: {seg.data.translator}
-                                  </div>
-                                )}
-                                {seg.data?.translator && seg.type === 'special' && (
-                                  <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
-                                    🌐 Traduce: {seg.data.translator}
-                                  </div>
-                                )}
+                                {(() => {
+                                  const worshipSegment = serviceData?.['11:30am']?.find(s => s.type === 'worship');
+                                  const inheritedTranslator = worshipSegment?.data?.translator;
+                                  const translatorToShow = seg.data?.translator || inheritedTranslator;
+                                  
+                                  if ((seg.type === 'welcome' || seg.type === 'offering') && translatorToShow) {
+                                    return (
+                                      <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                        🌐 Traduce: {translatorToShow}
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  if (seg.type === 'message' && seg.data?.translator) {
+                                    return (
+                                      <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                        🗣️ Traduce: {seg.data.translator}
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  if (seg.type === 'special' && seg.data?.translator) {
+                                    return (
+                                      <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                        🌐 Traduce: {seg.data.translator}
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  return null;
+                                })()}
                                 {seg.data?.description && (
                                   <div style={{ fontSize: '9px', color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
                                     {seg.data.description}

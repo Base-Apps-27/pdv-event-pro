@@ -1564,17 +1564,37 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.translator && (segment.type === 'welcome' || segment.type === 'offering' || segment.type === 'message') && (
-                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
-                      🌐 Traduce: {segment.data.translator}
-                    </div>
-                  )}
-
-                  {segment.data?.translator && segment.type === 'special' && (
-                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
-                      🌐 Traduce: {segment.data.translator}
-                    </div>
-                  )}
+                  {(() => {
+                    const worshipSegment = serviceData?.["11:30am"]?.find(s => s.type === 'worship');
+                    const inheritedTranslator = worshipSegment?.data?.translator;
+                    const translatorToShow = segment.data?.translator || inheritedTranslator;
+                    
+                    if ((segment.type === 'welcome' || segment.type === 'offering') && translatorToShow) {
+                      return (
+                        <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
+                          🌐 Traduce: {translatorToShow}
+                        </div>
+                      );
+                    }
+                    
+                    if (segment.type === 'message' && segment.data?.translator) {
+                      return (
+                        <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
+                          🗣️ Traduce: {segment.data.translator}
+                        </div>
+                      );
+                    }
+                    
+                    if (segment.type === 'special' && segment.data?.translator) {
+                      return (
+                        <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
+                          🌐 Traduce: {segment.data.translator}
+                        </div>
+                      );
+                    }
+                    
+                    return null;
+                  })()}
 
                   {segment.data?.title && (
                     <div className="print-segment-detail">
