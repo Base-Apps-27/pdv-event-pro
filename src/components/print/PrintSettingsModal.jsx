@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, FileText, Bell, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Settings, FileText, Bell, AlertTriangle, CheckCircle2, Save, Printer } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { formatDate as formatDateFn } from "date-fns";
@@ -247,20 +247,29 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
               Reset
             </Button>
 
-            {/* Print */}
-            <Button variant="default" size="sm" onClick={handlePrint} className="bg-pdv-green text-white hover:bg-pdv-teal">
-              Print
+            {/* Print Icon Button */}
+            <Button 
+              variant="default" 
+              size="icon" 
+              onClick={handlePrint} 
+              className="bg-pdv-green text-white hover:bg-pdv-teal"
+              title={language === "es" ? "Imprimir" : "Print"}
+            >
+              <Printer className="w-4 h-4" />
+            </Button>
+
+            {/* Save Icon Button */}
+            <Button 
+              onClick={handleSave} 
+              size="icon"
+              className="bg-pdv-teal text-white hover:bg-pdv-green"
+              title={t.save}
+            >
+              <Save className="w-4 h-4" />
             </Button>
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} size="sm">
-              {t.cancel}
-            </Button>
-            <Button onClick={handleSave} className="bg-pdv-teal text-white hover:bg-pdv-green" size="sm">
-              {t.save}
-            </Button>
-          </div>
         </div>
 
         {/* VIEWER */}
