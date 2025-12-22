@@ -3027,6 +3027,7 @@ Return ONLY valid JSON:
         settingsPage2={activePrintSettingsPage2}
         onSave={handleSavePrintSettings}
         language="es"
+        serviceData={serviceData}
       />
 
       {/* Announcement Dialog */}
