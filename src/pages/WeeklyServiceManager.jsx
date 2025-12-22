@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { useLanguage } from "@/components/utils/i18n";
 
 export default function WeeklyServiceManager() {
+  const navigate = useNavigate();
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
   const greenStyle = { backgroundColor: '#8DC63F', color: '#ffffff' };
   
@@ -1753,11 +1755,11 @@ Return ONLY valid JSON:
           
           {/* Live View Link - Always visible */}
           <Button 
-            onClick={() => window.open(createPageUrl('PublicProgramView') + `?date=${selectedDate}`, '_blank')}
+            onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${selectedDate}`)}
             variant="outline"
             className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
           >
-            <ExternalLink className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+            <Eye className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
             <span className="hidden md:inline">{t('btn.live_view')}</span>
           </Button>
           
