@@ -164,6 +164,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     ? formatDateFn(new Date(serviceData.date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })
     : "—";
 
+  // Detect service type
+  const isWeeklyService = serviceData?.['9:30am'] !== undefined;
+  const isCustomService = serviceData?.segments !== undefined;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-7xl bg-white max-h-[95vh] overflow-hidden p-6">
@@ -295,15 +299,14 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
               {/* Right: Page 1 Preview */}
               <div ref={previewWrapRef} className="bg-gray-900 rounded-lg flex items-center justify-center overflow-hidden">
-                <div 
-                  className="bg-white shadow-2xl relative"
-                  style={{
-                    width: `${PAGE_W}px`,
-                    height: `${PAGE_H}px`,
-                    transform: `scale(${pageFitScale})`,
-                    transformOrigin: 'center center'
-                  }}
-                >
+                <div style={{ display: 'inline-block', transform: `scale(${pageFitScale})`, transformOrigin: 'center center' }}>
+                  <div 
+                    className="bg-white shadow-2xl relative"
+                    style={{
+                      width: `${PAGE_W}px`,
+                      height: `${PAGE_H}px`
+                    }}
+                  >
                   {/* Margin Overlays */}
                   <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
                   <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
@@ -339,7 +342,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                     </div>
                   </div>
 
-                  {/* SCALABLE Body - 2 Columns */}
+                  {/* SCALABLE Body - 2 Columns (Weekly) or Single (Custom) */}
                   <div 
                     ref={page1BodyRef}
                     className="absolute overflow-hidden"
@@ -351,18 +354,19 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       zoom: page1Settings.globalScale
                     }}
                   >
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', height: '100%', fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
-                      {/* 9:30 AM Column */}
-                      <div>
-                        <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
-                          9:30 A.M.
-                        </div>
-                        {serviceData?.pre_service_notes?.['9:30am'] && (
-                          <div style={{ marginBottom: '10px', fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
-                            {serviceData.pre_service_notes['9:30am']}
+                    {isWeeklyService ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', height: '100%', fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
+                        {/* 9:30 AM Column */}
+                        <div>
+                          <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
+                            9:30 A.M.
                           </div>
-                        )}
-                        {serviceData?.['9:30am']?.filter(s => s.type !== 'break').map((seg, idx) => (
+                          {serviceData?.pre_service_notes?.['9:30am'] && (
+                            <div style={{ marginBottom: '10px', fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                              {serviceData.pre_service_notes['9:30am']}
+                            </div>
+                          )}
+                          {serviceData?.['9:30am']?.filter(s => s.type !== 'break').map((seg, idx) => (
                           <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
                             <div style={{ marginBottom: '3px' }}>
                               <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
@@ -410,20 +414,20 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                               </div>
                             )}
                           </div>
-                        ))}
-                      </div>
-
-                      {/* 11:30 AM Column */}
-                      <div>
-                        <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
-                          11:30 A.M.
+                          ))}
                         </div>
-                        {serviceData?.pre_service_notes?.['11:30am'] && (
-                          <div style={{ marginBottom: '10px', fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
-                            {serviceData.pre_service_notes['11:30am']}
+
+                        {/* 11:30 AM Column */}
+                        <div>
+                          <div style={{ fontSize: `${12 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
+                            11:30 A.M.
                           </div>
-                        )}
-                        {serviceData?.['11:30am']?.filter(s => s.type !== 'break').map((seg, idx) => (
+                          {serviceData?.pre_service_notes?.['11:30am'] && (
+                            <div style={{ marginBottom: '10px', fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                              {serviceData.pre_service_notes['11:30am']}
+                            </div>
+                          )}
+                          {serviceData?.['11:30am']?.filter(s => s.type !== 'break').map((seg, idx) => (
                           <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
                             <div style={{ marginBottom: '3px' }}>
                               <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
@@ -499,6 +503,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       ¡Atrévete a cambiar!
                     </span>
                   </div>
+                </div>
                 </div>
               </div>
             </div>
@@ -600,15 +605,14 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
               {/* Right: Page 2 Preview */}
               <div className="bg-gray-900 rounded-lg flex items-center justify-center overflow-hidden">
-                <div 
-                  className="bg-white shadow-2xl relative"
-                  style={{
-                    width: `${PAGE_W}px`,
-                    height: `${PAGE_H}px`,
-                    transform: `scale(${pageFitScale})`,
-                    transformOrigin: 'center center'
-                  }}
-                >
+                <div style={{ display: 'inline-block', transform: `scale(${pageFitScale})`, transformOrigin: 'center center' }}>
+                  <div 
+                    className="bg-white shadow-2xl relative"
+                    style={{
+                      width: `${PAGE_W}px`,
+                      height: `${PAGE_H}px`
+                    }}
+                  >
                   {/* Margin Overlays */}
                   <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ top: 0, left: 0, right: 0, height: `${marginTopPx}px` }} />
                   <div className="absolute bg-blue-400 opacity-20 pointer-events-none" style={{ bottom: 0, left: 0, right: 0, height: `${marginBottomPx}px` }} />
@@ -749,11 +753,13 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                     </span>
                   </div>
                 </div>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
-}
+                </div>
+                </div>
+                </div>
+                </div>
+                </TabsContent>
+                </Tabs>
+                </DialogContent>
+                </Dialog>
+                );
+                }
