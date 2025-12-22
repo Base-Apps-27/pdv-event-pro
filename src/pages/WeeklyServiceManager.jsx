@@ -1583,8 +1583,8 @@ Return ONLY valid JSON:
                   )}
                 </div>
               );
-            })}
-          </div>
+              })}
+              </div>
         </div>
         </div>
 
@@ -1902,9 +1902,9 @@ Return ONLY valid JSON:
           </Card>
 
           <div className="space-y-4">
-                  {serviceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => {
-                    const timeSlot = "9:30am";
-                    const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
+            {serviceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => {
+              const timeSlot = "9:30am";
+              const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
                     
                     if (segment.type === "special") {
                      return (
@@ -2303,9 +2303,9 @@ Return ONLY valid JSON:
           </Card>
 
           <div className="space-y-4">
-                  {serviceData["11:30am"].map((segment, idx) => {
-                    const timeSlot = "11:30am";
-                    const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
+            {serviceData["11:30am"].map((segment, idx) => {
+              const timeSlot = "11:30am";
+              const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
                     
                     if (segment.type === "special") {
                      return (
@@ -2616,10 +2616,10 @@ Return ONLY valid JSON:
                             </CardContent>
                           </Card>
                     );
-                  })}
-                </div>
+                    })}
+                    </div>
 
-          {/* Team Section */}
+                    {/* Team Section */}
           <Card className="bg-blue-50 border-2 border-blue-300 print:hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">EQUIPO 11:30am</CardTitle>
