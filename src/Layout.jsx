@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useLanguage, LanguageProvider } from "@/components/utils/i18n";
-import { DisableDarkMode } from "@/components/utils/DisableDarkMode";
 import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus } from "lucide-react";
 import {
   DropdownMenu,
@@ -100,7 +99,7 @@ function LayoutContent({ children }) {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#F0F1F3]" style={{color: '#111827'}}>
+    <div className="min-h-screen flex bg-[#F0F1F3]">
       {/* Dark Sidebar */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-black text-white fixed h-full font-sans print:hidden">
         <div className="p-6 mb-2">
@@ -421,7 +420,6 @@ function LayoutContent({ children }) {
     export default function Layout({ children }) {
       return (
         <LanguageProvider>
-          <DisableDarkMode />
           <LayoutContent>{children}</LayoutContent>
         </LanguageProvider>
       );
