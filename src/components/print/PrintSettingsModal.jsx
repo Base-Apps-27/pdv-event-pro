@@ -827,7 +827,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            WebkitPrintColorAdjust: 'exact',
+            printColorAdjust: 'exact'
           }}
         >
           <span style={{ fontSize: '20px', color: 'white', fontWeight: 'bold' }}>
@@ -991,7 +993,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            WebkitPrintColorAdjust: 'exact',
+            printColorAdjust: 'exact'
           }}
         >
           <span style={{ fontSize: '20px', color: 'white', fontWeight: 'bold' }}>
