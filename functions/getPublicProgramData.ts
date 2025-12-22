@@ -62,25 +62,56 @@ Deno.serve(async (req) => {
             });
         }
 
-        // Fetch segments using canonical backend function
+        // Fetch segments using canonical backend function (reuse getSegmentsBySessionIds logic)
         const sessionIds = sessions.map(s => s.id);
         
-        // Call internal backend function to get segments efficiently
-        const segmentsResponse = await fetch(new URL('/getSegmentsBySessionIds', req.url), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': req.headers.get('Authorization')
-            },
-            body: JSON.stringify({ sessionIds })
+        // Inline efficient fetch to avoid internal HTTP call overhead
+        // This duplicates the query logic from getSegmentsBySessionIds for performance
+        const validIds = sessionIds.filter(id => id && typeof id === 'string');
+        const seen = new Set();
+        const uniqueSessionIds = validIds.filter(id => {
+            if (seen.has(id)) return false;
+            seen.add(id);
+            return true;
         });
-        
-        if (!segmentsResponse.ok) {
-            throw new Error(`Failed to fetch segments: ${segmentsResponse.statusText}`);
+
+        if (uniqueSessionIds.length === 0) {
+            return Response.json({
+                event: selectedEvent,
+                sessions: sessions,
+                segments: [],
+                rooms: [],
+                eventDays: []
+            });
         }
-        
-        const { segments: allSegments } = await segmentsResponse.json();
-        const filteredSegments = allSegments.filter(seg => seg.show_in_general);
+
+        // Batch parallel queries (groups of 10)
+        const BATCH_SIZE = 10;
+        const batches = [];
+        for (let i = 0; i < uniqueSessionIds.length; i += BATCH_SIZE) {
+            batches.push(uniqueSessionIds.slice(i, i + BATCH_SIZE));
+        }
+
+        const allResults = [];
+        for (const batch of batches) {
+            const batchResults = await Promise.all(
+                batch.map(sessionId => 
+                    base44.asServiceRole.entities.Segment.filter({ session_id: sessionId }, 'order')
+                )
+            );
+            allResults.push(...batchResults.flat());
+        }
+
+        // Filter to show_in_general only and maintain session order
+        const orderMap = new Map(uniqueSessionIds.map((id, i) => [id, i]));
+        const filteredSegments = allResults
+            .filter(seg => seg.show_in_general)
+            .sort((a, b) => {
+                const aIndex = orderMap.has(a.session_id) ? orderMap.get(a.session_id) : Number.MAX_SAFE_INTEGER;
+                const bIndex = orderMap.has(b.session_id) ? orderMap.get(b.session_id) : Number.MAX_SAFE_INTEGER;
+                if (aIndex !== bIndex) return aIndex - bIndex;
+                return (a.order || 0) - (b.order || 0);
+            });
 
         // Fetch rooms
         const rooms = await base44.asServiceRole.entities.Room.list();

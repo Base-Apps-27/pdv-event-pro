@@ -8,19 +8,35 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     
     const body = await req.json();
-    const { sessionIds } = body;
+    const { sessionIds: rawSessionIds } = body;
 
-    if (!sessionIds || !Array.isArray(sessionIds) || sessionIds.length === 0) {
+    if (!rawSessionIds || !Array.isArray(rawSessionIds)) {
       return Response.json({ segments: [] });
     }
 
-    // Safety cap to prevent excessive queries
+    // Input normalization: filter to valid strings, deduplicate while preserving order
+    const validIds = rawSessionIds.filter(id => id && typeof id === 'string' && id.trim().length > 0);
+    const seen = new Set();
+    const sessionIds = validIds.filter(id => {
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+
+    if (sessionIds.length === 0) {
+      return Response.json({ segments: [] });
+    }
+
+    // Safety cap applied after deduplication
     if (sessionIds.length > MAX_SESSION_IDS) {
       return Response.json({ 
-        error: `Too many sessions requested. Maximum ${MAX_SESSION_IDS} allowed.`,
+        error: `Too many unique sessions requested. Maximum ${MAX_SESSION_IDS} allowed.`,
         sessionCount: sessionIds.length 
       }, { status: 400 });
     }
+
+    // Build constant-time lookup map for sorting
+    const orderMap = new Map(sessionIds.map((id, i) => [id, i]));
 
     // Batch parallel queries to avoid overload (groups of 10)
     const batches = [];
@@ -38,13 +54,19 @@ Deno.serve(async (req) => {
       allResults.push(...batchResults.flat());
     }
 
-    // Ensure deterministic ordering: by session_id, then by order
-    const sessionIdOrder = sessionIds;
+    // Deterministic ordering: by session_id position (unknown sessions last), then by order
     const sorted = allResults.sort((a, b) => {
-      const aIndex = sessionIdOrder.indexOf(a.session_id);
-      const bIndex = sessionIdOrder.indexOf(b.session_id);
+      const aIndex = orderMap.has(a.session_id) ? orderMap.get(a.session_id) : Number.MAX_SAFE_INTEGER;
+      const bIndex = orderMap.has(b.session_id) ? orderMap.get(b.session_id) : Number.MAX_SAFE_INTEGER;
       if (aIndex !== bIndex) return aIndex - bIndex;
       return (a.order || 0) - (b.order || 0);
+    });
+
+    console.log('[getSegmentsBySessionIds SUCCESS]', {
+      sessionCount: sessionIds.length,
+      batchCount: batches.length,
+      segmentsReturned: sorted.length,
+      timestamp: new Date().toISOString()
     });
 
     return Response.json({ segments: sorted });
