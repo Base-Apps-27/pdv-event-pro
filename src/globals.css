@@ -167,80 +167,6 @@
   box-shadow: none;
 }
 
-/* CRITICAL: Force dark text on light backgrounds globally */
-/* This overrides Shadcn's default behavior that was causing white text */
-
-body,
-body * {
-  color: #111827 !important;
-}
-
-/* Explicit exceptions for intentional white text on dark backgrounds */
-.text-white,
-.text-white *,
-[style*="color: white"],
-[style*="color: #fff"],
-[style*="color: #FFF"],
-[style*="color:#fff"],
-[style*="color:#FFF"],
-.gradient-pdv,
-.gradient-pdv *,
-.bg-black,
-.bg-black *,
-.bg-gray-900,
-.bg-gray-900 *,
-.bg-pdv-charcoal,
-.bg-pdv-charcoal *,
-.bg-pdv-teal,
-.bg-pdv-teal *,
-.bg-pdv-green,
-.bg-pdv-green *,
-.bg-green-600,
-.bg-green-600 *,
-.bg-green-700,
-.bg-green-700 *,
-.bg-purple-600,
-.bg-purple-600 *,
-.bg-purple-700,
-.bg-purple-700 *,
-.bg-blue-600,
-.bg-blue-600 *,
-.bg-blue-700,
-.bg-blue-700 *,
-.bg-red-600,
-.bg-red-600 *,
-.bg-red-700,
-.bg-red-700 *,
-button[class*="bg-green"],
-button[class*="bg-green"] *,
-button[class*="bg-blue"],
-button[class*="bg-blue"] *,
-button[class*="bg-purple"],
-button[class*="bg-purple"] *,
-button[class*="bg-red"],
-button[class*="bg-red"] *,
-.bg-yellow-500,
-.bg-yellow-500 *,
-.bg-amber-600,
-.bg-amber-600 * {
-  color: white !important;
-}
-
-/* Specific color overrides for colored text */
-.text-gray-900 { color: #111827 !important; }
-.text-gray-800 { color: #1F2937 !important; }
-.text-gray-700 { color: #374151 !important; }
-.text-gray-600 { color: #4B5563 !important; }
-.text-gray-500 { color: #6B7280 !important; }
-.text-red-600 { color: #DC2626 !important; }
-.text-blue-600 { color: #2563EB !important; }
-.text-green-600 { color: #16A34A !important; }
-.text-purple-600 { color: #9333EA !important; }
-.text-orange-600 { color: #EA580C !important; }
-.text-pdv-teal { color: #1F8A70 !important; }
-.text-pdv-green { color: #8DC63F !important; }
-.text-pdv-yellow { color: #D7DF23 !important; }
-
 /* Typography scale */
 .text-display {
   font-size: 3rem;
@@ -268,27 +194,27 @@ button[class*="bg-red"] *,
     font-size: 10pt;
   }
 
-  .print\\:hidden {
+  .print\:hidden {
     display: none !important;
   }
 
-  .print\\:block {
+  .print\:block {
     display: block !important;
   }
 
-  .print\\:break-before-page {
+  .print\:break-before-page {
     page-break-before: always;
   }
 
-  .print\\:text-xs {
+  .print\:text-xs {
     font-size: 8pt;
   }
 
-  .print\\:text-sm {
+  .print\:text-sm {
     font-size: 9pt;
   }
 
-  .print\\:p-2 {
+  .print\:p-2 {
     padding: 0.5rem;
   }
 
@@ -346,7 +272,7 @@ button[class*="bg-red"] *,
     display: grid !important;
   }
 
-  .md\\:grid-cols-2 {
+  .md\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
@@ -356,3 +282,91 @@ button[class*="bg-red"] *,
     widows: 3;
   }
 }
+
+/* ============================================= */
+/* CRITICAL FIX: FORCE DARK TEXT ON LIGHT BACKGROUNDS */
+/* This MUST be at the end of the file to override everything */
+/* ============================================= */
+
+body,
+body *,
+div,
+span,
+p,
+h1, h2, h3, h4, h5, h6,
+button,
+a,
+label,
+input,
+textarea,
+select {
+  color: #111827 !important;
+}
+
+/* Explicit exceptions for intentional white text on dark backgrounds */
+.text-white,
+.text-white *,
+[style*="color: white"],
+[style*="color: #fff"],
+[style*="color: #FFF"],
+[style*="color:#fff"],
+[style*="color:#FFF"],
+.gradient-pdv,
+.gradient-pdv *,
+.bg-black,
+.bg-black *,
+.bg-gray-900,
+.bg-gray-900 *,
+.bg-pdv-charcoal,
+.bg-pdv-charcoal *,
+.bg-pdv-teal,
+.bg-pdv-teal *,
+.bg-pdv-green,
+.bg-pdv-green *,
+.bg-green-600,
+.bg-green-600 *,
+.bg-green-700,
+.bg-green-700 *,
+.bg-purple-600,
+.bg-purple-600 *,
+.bg-purple-700,
+.bg-purple-700 *,
+.bg-blue-600,
+.bg-blue-600 *,
+.bg-blue-700,
+.bg-blue-700 *,
+.bg-red-600,
+.bg-red-600 *,
+.bg-red-700,
+.bg-red-700 *,
+button[class*="bg-green"],
+button[class*="bg-green"] *,
+button[class*="bg-blue"],
+button[class*="bg-blue"] *,
+button[class*="bg-purple"],
+button[class*="bg-purple"] *,
+button[class*="bg-red"],
+button[class*="bg-red"] *,
+.bg-yellow-500,
+.bg-yellow-500 *,
+.bg-amber-600,
+.bg-amber-600 *,
+aside *,
+nav * {
+  color: white !important;
+}
+
+/* Specific color overrides for intentionally colored text */
+.text-gray-900 { color: #111827 !important; }
+.text-gray-800 { color: #1F2937 !important; }
+.text-gray-700 { color: #374151 !important; }
+.text-gray-600 { color: #4B5563 !important; }
+.text-gray-500 { color: #6B7280 !important; }
+.text-red-600 { color: #DC2626 !important; }
+.text-blue-600 { color: #2563EB !important; }
+.text-green-600 { color: #16A34A !important; }
+.text-purple-600 { color: #9333EA !important; }
+.text-orange-600 { color: #EA580C !important; }
+.text-pdv-teal { color: #1F8A70 !important; }
+.text-pdv-green { color: #8DC63F !important; }
+.text-pdv-yellow { color: #D7DF23 !important; }
