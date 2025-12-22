@@ -62,16 +62,25 @@ Deno.serve(async (req) => {
             });
         }
 
-        // Fetch segments for these sessions using parallel queries
+        // Fetch segments using canonical backend function
         const sessionIds = sessions.map(s => s.id);
-        const segmentResults = await Promise.all(
-            sessionIds.map(sessionId => 
-                base44.asServiceRole.entities.Segment.filter({ session_id: sessionId }, 'order')
-            )
-        );
         
-        const filteredSegments = segmentResults.flat()
-            .filter(seg => seg.show_in_general);
+        // Call internal backend function to get segments efficiently
+        const segmentsResponse = await fetch(new URL('/getSegmentsBySessionIds', req.url), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': req.headers.get('Authorization')
+            },
+            body: JSON.stringify({ sessionIds })
+        });
+        
+        if (!segmentsResponse.ok) {
+            throw new Error(`Failed to fetch segments: ${segmentsResponse.statusText}`);
+        }
+        
+        const { segments: allSegments } = await segmentsResponse.json();
+        const filteredSegments = allSegments.filter(seg => seg.show_in_general);
 
         // Fetch rooms
         const rooms = await base44.asServiceRole.entities.Room.list();
