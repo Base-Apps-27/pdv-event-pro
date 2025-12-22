@@ -891,11 +891,11 @@ Return ONLY valid JSON:
           }
           
           .print-page-1-wrapper {
-            padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} ${activePrintSettingsPage1.margins.bottom} ${activePrintSettingsPage1.margins.left};
+            padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} calc(${activePrintSettingsPage1.margins.bottom} + 24pt) ${activePrintSettingsPage1.margins.left};
           }
 
           .print-page-2-wrapper {
-            padding: ${activePrintSettingsPage2.margins.top} ${activePrintSettingsPage2.margins.right} ${activePrintSettingsPage2.margins.bottom} ${activePrintSettingsPage2.margins.left};
+            padding: ${activePrintSettingsPage2.margins.top} ${activePrintSettingsPage2.margins.right} calc(${activePrintSettingsPage2.margins.bottom} + 24pt) ${activePrintSettingsPage2.margins.left};
           }
           
           .print-body-content {
@@ -1290,10 +1290,13 @@ Return ONLY valid JSON:
             width: 100%;
             height: 20pt;
             background: linear-gradient(90deg, #16a34a 0%, #059669 100%) !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: white !important;
             font-size: 9pt;
             font-weight: 600;
             letter-spacing: 0.5px;
