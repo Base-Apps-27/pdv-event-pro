@@ -233,20 +233,28 @@ export default function Dashboard() {
                 .map((event) => (
                   <Card 
                     key={event.id} 
-                    className="bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => navigate(createPageUrl('EventDetail') + `?eventId=${event.id}`)}
+                    className="bg-white shadow-sm hover:shadow-md transition-shadow"
                   >
                     <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
+                      <div className="flex justify-between items-start gap-3">
                         <div className="flex-1">
                           <h4 className="font-bold text-gray-900">{event.name}</h4>
                           <p className="text-sm text-gray-600">
-                            {format(new Date(event.start_date), 'MMM d, yyyy', { locale: es })}
+                            {event.start_date && format(new Date(event.start_date), 'MMM d, yyyy', { locale: es })}
                           </p>
                         </div>
-                        <Badge className={statusColors[event.status] || "bg-gray-500"}>
-                          {event.status}
-                        </Badge>
+                        <div className="flex flex-col gap-2 items-end">
+                          <Badge className={statusColors[event.status] || "bg-gray-500"}>
+                            {event.status}
+                          </Badge>
+                          <Button 
+                            onClick={() => navigate(createPageUrl('EventDetail') + `?eventId=${event.id}`)}
+                            size="sm"
+                            className="bg-pdv-teal text-white hover:bg-pdv-green"
+                          >
+                            Ver
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
