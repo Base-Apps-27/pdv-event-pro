@@ -21,7 +21,7 @@ export default function EventDetail() {
   const queryClient = useQueryClient();
   const [showAIHelper, setShowAIHelper] = useState(false);
 
-  const { data: event, isLoading: eventLoading } = useQuery({
+  const { data: event, isLoading } = useQuery({
     queryKey: ['event', eventId],
     queryFn: () => base44.entities.Event.filter({ id: eventId }).then(res => res[0]),
     enabled: !!eventId,
@@ -63,7 +63,7 @@ export default function EventDetail() {
     keepPreviousData: true,
   });
 
-  if (eventLoading && !event) {
+  if (isLoading) {
     return (
       <div className="p-8 text-center">
         <p className="text-slate-600">Cargando evento...</p>
