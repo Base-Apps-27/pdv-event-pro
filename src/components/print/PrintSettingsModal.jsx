@@ -50,8 +50,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
   const PAGE_H = 11 * 96;  // 1056px
   const HEADER_H = 60;
   const FOOTER_H = 20;
-  const BASE_BODY = 10.5; // Base body font size in px
-  const BASE_TITLE = 12; // Base title font size in px
+  const BASE_BODY = 31.5; // Base body font size in px (3x for preview readability)
+  const BASE_TITLE = 36; // Base title font size in px (3x for preview readability)
 
   useEffect(() => {
     setPage1Settings(settingsPage1 || DEFAULT_SETTINGS);
