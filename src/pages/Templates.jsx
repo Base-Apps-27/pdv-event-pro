@@ -30,6 +30,10 @@ const COLOR_CODES = [
 ];
 
 export default function Templates() {
+  const gradientStyle = {
+    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
+  };
+  
   const [showDialog, setShowDialog] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [templateToUse, setTemplateToUse] = useState(null);
@@ -463,7 +467,7 @@ export default function Templates() {
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="gradient-pdv text-white font-bold uppercase">
+              <Button type="submit" style={gradientStyle} className="text-white font-bold uppercase">
                 {editingTemplate ? 'Guardar' : 'Crear'}
               </Button>
             </div>

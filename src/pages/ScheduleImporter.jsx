@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function ScheduleImporter() {
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  
   const [step, setStep] = useState("upload"); // upload, processing, review, success, error
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -610,7 +612,7 @@ Example structure:
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase flex items-center justify-center gap-3">
-          <Sparkles className="w-8 h-8 text-pdv-teal" />
+          <Sparkles className="w-8 h-8" style={{ color: '#1F8A70' }} />
           Importador Inteligente de Cronogramas
         </h1>
         <p className="text-gray-500 mt-2 max-w-2xl mx-auto">
@@ -620,7 +622,7 @@ Example structure:
 
       {/* Step 1: Upload */}
       {step === "upload" && (
-        <Card className="w-full max-w-2xl border-2 border-dashed border-gray-300 hover:border-pdv-teal transition-colors bg-white">
+        <Card className="w-full max-w-2xl border-2 border-dashed border-gray-300 transition-colors bg-white" style={{ '--hover-border-color': '#1F8A70' }}>
           <div 
             className="p-12 flex flex-col items-center justify-center cursor-pointer"
             onClick={() => fileInputRef.current?.click()}
@@ -665,8 +667,8 @@ Example structure:
             <div className="flex justify-center mb-6">
                 <div className="relative">
                     <div className="h-20 w-20 rounded-full border-4 border-slate-100"></div>
-                    <div className="absolute top-0 left-0 h-20 w-20 rounded-full border-4 border-pdv-teal border-t-transparent animate-spin"></div>
-                    <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-pdv-teal animate-pulse" />
+                    <div className="absolute top-0 left-0 h-20 w-20 rounded-full border-4 border-t-transparent animate-spin" style={{ borderColor: '#1F8A70', borderTopColor: 'transparent' }}></div>
+                    <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 animate-pulse" style={{ color: '#1F8A70' }} />
                 </div>
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Procesando Cronograma</h3>

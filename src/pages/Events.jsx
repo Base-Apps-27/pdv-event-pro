@@ -174,7 +174,7 @@ export default function Events() {
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-xl mb-2 font-bold uppercase text-gray-900 group-hover:text-pdv-teal transition-colors">{event.name}</CardTitle>
+                  <CardTitle className="text-xl mb-2 font-bold uppercase text-gray-900 transition-colors" style={{'--hover-color': '#1F8A70'}}>{event.name}</CardTitle>
                   <Badge className={`${statusColors[event.status]} border-none font-bold uppercase tracking-wider text-[10px]`}>
                     {statusLabels[event.status]}
                   </Badge>
@@ -185,7 +185,7 @@ export default function Events() {
             <CardContent>
               <div className="space-y-3">
                 {event.theme && (
-                  <p className="text-sm text-pdv-green font-semibold italic">"{event.theme}"</p>
+                  <p className="text-sm font-semibold italic" style={{ color: '#8DC63F' }}>"{event.theme}"</p>
                 )}
                 
                 <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -202,7 +202,7 @@ export default function Events() {
 
                 <div className="pt-3 border-t border-gray-200 flex gap-2">
                   <Link to={createPageUrl(`EventDetail?id=${event.id}`)} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white">
+                    <Button variant="outline" size="sm" className="w-full" style={{ borderColor: '#1F8A70', color: '#1F8A70' }}>
                       Ver Detalles
                     </Button>
                   </Link>
@@ -398,11 +398,11 @@ export default function Events() {
                   checked={formData.promote_in_announcements}
                   onCheckedChange={(checked) => updateFormField('promote_in_announcements', checked)}
                 />
-                <Label htmlFor="promote_in_announcements" className="font-bold text-pdv-teal">Promocionar en Anuncios</Label>
+                <Label htmlFor="promote_in_announcements" className="font-bold" style={{ color: '#1F8A70' }}>Promocionar en Anuncios</Label>
               </div>
 
               {formData.promote_in_announcements && (
-                <div className="space-y-4 pl-6 border-l-2 border-pdv-teal/20">
+                <div className="space-y-4 pl-6 border-l-2" style={{ borderColor: 'rgba(31, 138, 112, 0.2)' }}>
                    <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Inicio Promoción</Label>

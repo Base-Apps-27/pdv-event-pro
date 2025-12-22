@@ -137,6 +137,8 @@ export default function StaticAnnouncementForm({
   onOptimize,
   optimizing = false
 }) {
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  
   const [form, setForm] = useState({
     title: '',
     content: '',
@@ -417,7 +419,7 @@ export default function StaticAnnouncementForm({
         </Button>
         <Button 
           onClick={handleSave} 
-          className="bg-pdv-teal text-white"
+          style={tealStyle}
           disabled={Object.keys(errors).some(k => errors[k])}
         >
           {isEditing ? 'Guardar / Save' : 'Crear / Create'}

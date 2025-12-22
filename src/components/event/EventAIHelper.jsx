@@ -10,6 +10,8 @@ import { Sparkles, Send, CheckCircle2, AlertCircle, Loader2, X, ChevronRight, Un
 import { toast } from "sonner";
 
 export default function EventAIHelper({ eventId, isOpen, onClose }) {
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  
   const queryClient = useQueryClient();
   const [userInput, setUserInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -316,7 +318,7 @@ CRITICAL: When user mentions song titles, map to these fields:
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-pdv-teal" />
+            <Sparkles className="w-5 h-5" style={{ color: '#1F8A70' }} />
             Asistente IA para Eventos
           </DialogTitle>
         </DialogHeader>
@@ -354,9 +356,10 @@ ACCIONES:
                 className="resize-none"
               />
               <Button 
-               onClick={analyzeRequest} 
-               disabled={!userInput.trim() || isProcessing}
-               className="w-full bg-pdv-teal hover:bg-pdv-teal/90 text-white"
+                onClick={analyzeRequest} 
+                disabled={!userInput.trim() || isProcessing}
+                style={tealStyle}
+                className="w-full"
               >
                {isProcessing ? (
                  <>
@@ -388,7 +391,7 @@ ACCIONES:
                   {queryResult.query_result.details?.length > 0 && (
                     <div className="space-y-2 mt-3">
                       {queryResult.query_result.details.map((detail, idx) => (
-                        <div key={idx} className="border-l-2 border-pdv-teal pl-3 py-1">
+                        <div key={idx} className="border-l-2 pl-3 py-1" style={{ borderColor: '#1F8A70' }}>
                           <div className="font-semibold text-gray-900">{detail.title}</div>
                           <div className="text-sm text-gray-700">{detail.info}</div>
                         </div>
@@ -438,7 +441,7 @@ ACCIONES:
                 {proposedActions.actions?.map((action, idx) => (
                   <Card key={idx} className="p-3 border-gray-200">
                     <div className="flex items-start gap-3">
-                      <ChevronRight className="w-5 h-5 text-pdv-teal mt-0.5" />
+                      <ChevronRight className="w-5 h-5 mt-0.5" style={{ color: '#1F8A70' }} />
                       <div className="flex-1">
                         <p className="font-medium text-gray-900">{action.description}</p>
                         <div className="flex flex-wrap gap-2 mt-2 text-xs">
