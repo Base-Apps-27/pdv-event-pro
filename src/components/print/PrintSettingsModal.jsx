@@ -211,7 +211,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                 <Slider
                   value={[currentSettings.bodyFontScale]}
                   onValueChange={([value]) => setCurrentSettings(prev => ({ ...prev, bodyFontScale: value }))}
-                  min={0.7}
+                  min={0.5}
                   max={2.5}
                   step={0.1}
                   className="w-full"
@@ -227,7 +227,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                 <Slider
                   value={[currentSettings.titleFontScale]}
                   onValueChange={([value]) => setCurrentSettings(prev => ({ ...prev, titleFontScale: value }))}
-                  min={0.7}
+                  min={0.5}
                   max={2.5}
                   step={0.1}
                   className="w-full"
