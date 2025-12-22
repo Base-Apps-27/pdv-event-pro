@@ -107,7 +107,7 @@ export default function Dashboard() {
           
           {/* Two Pillars */}
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all cursor-pointer" onClick={() => navigate(createPageUrl('Events'))}>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all">
               <div className="flex items-center gap-3 mb-2">
                 <div className="bg-white/20 p-2 rounded-lg">
                   <Calendar className="w-6 h-6 text-white" />
@@ -117,12 +117,12 @@ export default function Dashboard() {
                   <p className="text-white/80 text-sm">{t('dashboard.events.subtitle')}</p>
                 </div>
               </div>
-              <Button className="w-full bg-white text-pdv-teal hover:bg-gray-100 font-semibold">
+              <Button onClick={() => navigate(createPageUrl('Events'))} className="w-full bg-white text-pdv-teal hover:bg-gray-100 font-semibold">
                 {t('btn.view_events')}
               </Button>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all cursor-pointer" onClick={() => navigate(createPageUrl('Services'))}>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all">
               <div className="flex items-center gap-3 mb-2">
                 <div className="bg-white/20 p-2 rounded-lg">
                   <Clock className="w-6 h-6 text-white" />
@@ -132,7 +132,7 @@ export default function Dashboard() {
                   <p className="text-white/80 text-sm">{t('dashboard.services.subtitle')}</p>
                 </div>
               </div>
-              <Button className="w-full bg-white text-pdv-teal hover:bg-gray-100 font-semibold">
+              <Button onClick={() => navigate(createPageUrl('WeeklyServiceManager'))} className="w-full bg-white text-pdv-teal hover:bg-gray-100 font-semibold">
                 {t('btn.view_services')}
               </Button>
             </div>
