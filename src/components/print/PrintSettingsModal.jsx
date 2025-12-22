@@ -434,6 +434,31 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                     • Ministración: {seg.data.ministry_leader} (5 min)
                                   </div>
                                 )}
+                                {seg.data?.translator && (
+                                  <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                    🌐 {seg.data.translator}
+                                  </div>
+                                )}
+                                {seg.data?.description && (
+                                  <div style={{ fontSize: '9px', color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
+                                    {seg.data.description}
+                                  </div>
+                                )}
+                                {seg.data?.projection_notes && (
+                                  <div style={{ fontSize: '8.5px', color: '#8b5cf6', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #8b5cf6' }}>
+                                    📽️ {seg.data.projection_notes}
+                                  </div>
+                                )}
+                                {seg.data?.sound_notes && (
+                                  <div style={{ fontSize: '8.5px', color: '#dc2626', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #dc2626' }}>
+                                    🔊 {seg.data.sound_notes}
+                                  </div>
+                                )}
+                                {seg.data?.ushers_notes && (
+                                  <div style={{ fontSize: '8.5px', color: '#16a34a', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #16a34a' }}>
+                                    👥 {seg.data.ushers_notes}
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
