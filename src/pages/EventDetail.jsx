@@ -20,10 +20,15 @@ export default function EventDetail() {
   const eventId = urlParams.get('id');
   const queryClient = useQueryClient();
   const [showAIHelper, setShowAIHelper] = useState(false);
+  const [headerEvent, setHeaderEvent] = useState(null);
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['event', eventId],
-    queryFn: () => base44.entities.Event.filter({ id: eventId }).then(res => res[0]),
+    queryFn: async () => {
+      const res = await base44.entities.Event.filter({ id: eventId });
+      const e = res?.[0] ?? null;
+      return e ? JSON.parse(JSON.stringify(e)) : null;
+    },
     enabled: !!eventId,
     staleTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
@@ -31,14 +36,16 @@ export default function EventDetail() {
     refetchOnWindowFocus: false,
   });
 
+  React.useEffect(() => {
+    if (event?.name) setHeaderEvent(event);
+  }, [event?.name]);
+
   const { data: sessions = [] } = useQuery({
     queryKey: ['sessions', eventId],
     queryFn: () => base44.entities.Session.filter({ event_id: eventId }, 'order'),
     enabled: !!eventId,
     staleTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
   });
 
   const sessionIdsKey = sessions.map(s => s.id).join(',');
@@ -53,8 +60,6 @@ export default function EventDetail() {
     enabled: !!eventId && sessions.length > 0,
     staleTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
   });
 
   const { data: allSessions = [] } = useQuery({
