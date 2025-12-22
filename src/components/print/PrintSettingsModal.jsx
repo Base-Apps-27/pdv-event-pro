@@ -574,7 +574,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                       )}
                                       {seg.data?.translator && (
                                         <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
-                                          🗣️ Traduce: {seg.data.translator}
+                                          🌐 Traduce: {seg.data.translator}
                                         </div>
                                       )}
                                     </>

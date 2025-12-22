@@ -1580,7 +1580,7 @@ Return ONLY valid JSON:
                     if (segment.type === 'message' && segment.data?.translator) {
                       return (
                         <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
-                          🗣️ Traduce: {segment.data.translator}
+                          🌐 Traduce: {segment.data.translator}
                         </div>
                       );
                     }
