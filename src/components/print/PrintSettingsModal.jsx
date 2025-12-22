@@ -159,12 +159,15 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
       .replace(/&nbsp;/g, ' ');
   };
 
-  const selectedDateFormatted = serviceData?.date 
-    ? formatDateFn(new Date(serviceData.date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })
-    : "—";
+  // Memoize service data checks to prevent re-render issues
+  const selectedDateFormatted = React.useMemo(() => {
+    return serviceData?.date 
+      ? formatDateFn(new Date(serviceData.date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })
+      : "—";
+  }, [serviceData?.date]);
 
-  const isWeeklyService = serviceData?.['9:30am'] !== undefined;
-  const isCustomService = serviceData?.segments !== undefined;
+  const isWeeklyService = React.useMemo(() => serviceData?.['9:30am'] !== undefined, [serviceData]);
+  const isCustomService = React.useMemo(() => serviceData?.segments !== undefined, [serviceData]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -371,7 +374,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         zoom: page1Settings.globalScale
                       }}
                     >
-                      {isWeeklyService ? (
+                      {!serviceData ? (
+                        <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>
+                          No hay datos de servicio
+                        </div>
+                      ) : isWeeklyService ? (
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3 }}>
                           {/* 9:30 AM Column */}
                           <div>
@@ -499,9 +506,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                               </div>
                             ))}
                           </div>
-                        </div>
-                      ) : isCustomService ? (
-                        <div style={{ fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3, padding: '8px' }}>
+                          </div>
+                          ) : isCustomService ? (
+                          <div style={{ fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3, padding: '8px' }}>
+                          {serviceData.segments && serviceData.segments.length > 0 ? (
                           {serviceData.segments?.map((seg, idx) => (
                             <div key={idx} style={{ marginBottom: '8px', paddingBottom: '6px', borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                               <div style={{ marginBottom: '2px' }}>
@@ -583,15 +591,17 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                   </div>
                                 )}
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>
-                          No hay datos de servicio
-                        </div>
-                      )}
-                    </div>
+                              </div>
+                              )}
+                              </>
+                              ) : (
+                              <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>
+                              No hay segmentos
+                              </div>
+                              )}
+                              </div>
+                              ) : null}
+                              </div>
 
                     {/* FIXED Footer */}
                     <div 
