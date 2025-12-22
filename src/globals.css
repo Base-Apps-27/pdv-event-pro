@@ -84,6 +84,10 @@ css
 /* Brand gradient classes */
 .brand-gradient,
 .gradient-pdv {
+  background: linear-gradient(90deg, #0F5C4D 0%, #4A7C2F 50%, #7A8C1A 100%);
+}
+
+.gradient-pdv-bright {
   background: linear-gradient(90deg, var(--brand-teal) 0%, var(--brand-green) 50%, var(--brand-yellow) 100%);
 }
 
