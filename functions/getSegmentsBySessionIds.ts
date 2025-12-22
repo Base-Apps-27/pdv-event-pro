@@ -11,14 +11,15 @@ Deno.serve(async (req) => {
       return Response.json({ segments: [] });
     }
 
-    // Fetch all segments and filter by session IDs
-    // This consolidates what was previously done client-side across multiple components
-    const allSegments = await base44.asServiceRole.entities.Segment.list();
-    const sessionIdSet = new Set(sessionIds);
-    const filtered = allSegments.filter(seg => sessionIdSet.has(seg.session_id));
+    // Fetch segments efficiently using parallel filter queries
+    // This is more efficient than fetching all segments globally
+    const segmentResults = await Promise.all(
+      sessionIds.map(sessionId => 
+        base44.asServiceRole.entities.Segment.filter({ session_id: sessionId }, 'order')
+      )
+    );
     
-    // Sort by order for consistency
-    const sorted = filtered.sort((a, b) => (a.order || 0) - (b.order || 0));
+    const sorted = segmentResults.flat();
 
     return Response.json({ segments: sorted });
   } catch (error) {

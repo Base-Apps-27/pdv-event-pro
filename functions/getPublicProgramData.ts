@@ -62,15 +62,16 @@ Deno.serve(async (req) => {
             });
         }
 
-        // Fetch segments for these sessions
+        // Fetch segments for these sessions using parallel queries
         const sessionIds = sessions.map(s => s.id);
+        const segmentResults = await Promise.all(
+            sessionIds.map(sessionId => 
+                base44.asServiceRole.entities.Segment.filter({ session_id: sessionId }, 'order')
+            )
+        );
         
-        // Efficient fetch: get only segments for these sessions
-        const allSegments = await base44.asServiceRole.entities.Segment.list();
-        const sessionIdSet = new Set(sessionIds);
-        const filteredSegments = allSegments
-            .filter(seg => sessionIdSet.has(seg.session_id) && seg.show_in_general)
-            .sort((a, b) => (a.order || 0) - (b.order || 0));
+        const filteredSegments = segmentResults.flat()
+            .filter(seg => seg.show_in_general);
 
         // Fetch rooms
         const rooms = await base44.asServiceRole.entities.Room.list();

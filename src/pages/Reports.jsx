@@ -48,8 +48,13 @@ export default function Reports() {
     enabled: !!selectedEventId,
   });
 
+  const sessionIdsKey = React.useMemo(
+    () => sessions.map(s => s.id).sort().join(','),
+    [sessions]
+  );
+
   const { data: allSegments = [] } = useQuery({
-    queryKey: ['segments', selectedEventId, sessions.length],
+    queryKey: ['segments', selectedEventId, sessionIdsKey],
     queryFn: async () => {
       if (!selectedEventId || sessions.length === 0) return [];
       const sessionIds = sessions.map(s => s.id);

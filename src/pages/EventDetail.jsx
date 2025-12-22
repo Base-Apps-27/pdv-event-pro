@@ -62,8 +62,13 @@ export default function EventDetail() {
     placeholderData: (previousData) => previousData,
   });
 
+  const sessionIdsKey = React.useMemo(
+    () => sessions.map(s => s.id).sort().join(','),
+    [sessions]
+  );
+
   const { data: segments = [] } = useQuery({
-    queryKey: ['segments', eventId, sessions.length],
+    queryKey: ['segments', eventId, sessionIdsKey],
     queryFn: async () => {
       if (sessions.length === 0) return [];
       const sessionIds = sessions.map(s => s.id);

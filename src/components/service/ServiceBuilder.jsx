@@ -25,8 +25,13 @@ export default function ServiceBuilder({ serviceId }) {
 
   // Fetch All Segments for these sessions
   const sessionIds = sessions.map(s => s.id);
+  const sessionIdsKey = React.useMemo(
+    () => sessionIds.sort().join(','),
+    [sessionIds.join(',')]
+  );
+  
   const { data: segments = [], isLoading: loadingSegments } = useQuery({
-    queryKey: ['segments', serviceId, sessionIds.length],
+    queryKey: ['segments', serviceId, sessionIdsKey],
     queryFn: async () => {
         if (sessionIds.length === 0) return [];
         const response = await base44.functions.invoke('getSegmentsBySessionIds', { sessionIds });
