@@ -319,10 +319,10 @@ export default function PublicProgramView() {
             />
             <div>
               <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight text-white">Programa del Evento</h1>
-              <p className="text-sm md:text-base text-white mt-1">¡ATRÉVETE A CAMBIAR!</p>
+              <p className="text-sm md:text-base text-white/95 mt-1">¡ATRÉVETE A CAMBIAR!</p>
             </div>
           </div>
-          <p className="text-lg text-white">Explora el programa completo y mantente actualizado</p>
+          <p className="text-lg text-white/95">Explora el programa completo y mantente actualizado</p>
         </div>
       </div>
 
