@@ -508,9 +508,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                           </div>
                           </div>
                           ) : isCustomService ? (
-                          <div style={{ fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3, padding: '8px' }}>
-                          {serviceData.segments && serviceData.segments.length > 0 ? (
-                          {serviceData.segments?.map((seg, idx) => (
+                            <div style={{ fontSize: `${10.5 * page1Settings.bodyFontScale}px`, lineHeight: 1.3, padding: '8px' }}>
+                              {serviceData.segments && serviceData.segments.length > 0 ? (
+                              <>
+                              {serviceData.segments.map((seg, idx) => (
                             <div key={idx} style={{ marginBottom: '8px', paddingBottom: '6px', borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                               <div style={{ marginBottom: '2px' }}>
                                 <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: 'bold', textTransform: 'uppercase' }}>
