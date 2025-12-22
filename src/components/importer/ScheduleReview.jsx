@@ -17,6 +17,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export default function ScheduleReview({ data, onConfirm, onCancel }) {
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  
   const [importMode, setImportMode] = useState("new"); // "new" or "existing"
   const [selectedEventId, setSelectedEventId] = useState("");
   const [eventData, setEventData] = useState(data.event || { name: "", date: "" });
@@ -477,7 +479,8 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
           </Button>
           <Button 
             onClick={handleConfirm} 
-            className="bg-pdv-teal hover:bg-pdv-teal/90 text-white shadow-md gap-2"
+            style={tealStyle}
+            className="shadow-md gap-2"
             disabled={importMode === "existing" && !selectedEventId}
           >
             <Check className="w-4 h-4" />
@@ -1039,7 +1042,7 @@ export default function ScheduleReview({ data, onConfirm, onCancel }) {
             )}
             <DialogFooter className="flex-col sm:flex-row gap-2">
                 <Button variant="outline" onClick={() => setEditingSegmentIdx(null)} className="w-full sm:w-auto">Cancelar</Button>
-                <Button onClick={saveEditDialog} className="bg-pdv-teal hover:bg-pdv-teal/90 text-white w-full sm:w-auto">Guardar Cambios</Button>
+                <Button onClick={saveEditDialog} style={tealStyle} className="w-full sm:w-auto">Guardar Cambios</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
