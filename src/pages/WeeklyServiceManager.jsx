@@ -1689,10 +1689,10 @@ Return ONLY valid JSON:
           </div>
           </div>
         </div>
+        </div>
 
         <div className="print-footer">
           ¡Atrévete a cambiar!
-        </div>
         </div>
       </div>
 
