@@ -548,7 +548,48 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                 )}
                               </div>
                             ))}
+                            
+                            {/* 9:30am Team Section */}
+                            {(serviceData?.coordinators?.['9:30am'] || serviceData?.ujieres?.['9:30am'] || serviceData?.sound?.['9:30am'] || serviceData?.luces?.['9:30am']) && (
+                              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '2px solid #dc2626' }}>
+                                <div style={{ fontSize: `${BASE_TITLE * 0.85 * page1Settings.titleFontScale}px`, fontWeight: '700', marginBottom: '8px', color: '#dc2626', textTransform: 'uppercase' }}>
+                                  Equipo
+                                </div>
+                                {serviceData?.coordinators?.['9:30am'] && (
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
+                                    <strong>Coord:</strong> {serviceData.coordinators['9:30am']}
+                                  </div>
+                                )}
+                                {serviceData?.ujieres?.['9:30am'] && (
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
+                                    <strong>Ujieres:</strong> {serviceData.ujieres['9:30am']}
+                                  </div>
+                                )}
+                                {serviceData?.sound?.['9:30am'] && (
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
+                                    <strong>Sonido:</strong> {serviceData.sound['9:30am']}
+                                  </div>
+                                )}
+                                {serviceData?.luces?.['9:30am'] && (
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
+                                    <strong>Luces:</strong> {serviceData.luces['9:30am']}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
+
+                          {/* RECESO */}
+                          {serviceData?.receso_notes?.['9:30am'] && (
+                            <div style={{ gridColumn: '1 / -1', margin: '16px 0', padding: '12px', background: '#f3f4f6', borderRadius: '8px', textAlign: 'center' }}>
+                              <div style={{ fontSize: `${BASE_TITLE * 0.85 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#6b7280', marginBottom: '4px', textTransform: 'uppercase' }}>
+                                RECESO (30 min)
+                              </div>
+                              <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280' }}>
+                                {serviceData.receso_notes['9:30am']}
+                              </div>
+                            </div>
+                          )}
 
                           {/* 11:30 AM Column */}
                           {serviceData?.['11:30am'] && Array.isArray(serviceData['11:30am']) && (
@@ -712,6 +753,35 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                 </div>
                               );
                             })}
+                            
+                            {/* 11:30am Team Section */}
+                            {(serviceData?.coordinators?.['11:30am'] || serviceData?.ujieres?.['11:30am'] || serviceData?.sound?.['11:30am'] || serviceData?.luces?.['11:30am']) && (
+                              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '2px solid #2563eb' }}>
+                                <div style={{ fontSize: `${BASE_TITLE * 0.85 * page1Settings.titleFontScale}px`, fontWeight: '700', marginBottom: '8px', color: '#2563eb', textTransform: 'uppercase' }}>
+                                  Equipo
+                                </div>
+                                {serviceData?.coordinators?.['11:30am'] && (
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
+                                    <strong>Coord:</strong> {serviceData.coordinators['11:30am']}
+                                  </div>
+                                )}
+                                {serviceData?.ujieres?.['11:30am'] && (
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
+                                    <strong>Ujieres:</strong> {serviceData.ujieres['11:30am']}
+                                  </div>
+                                )}
+                                {serviceData?.sound?.['11:30am'] && (
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, marginBottom: '4px' }}>
+                                    <strong>Sonido:</strong> {serviceData.sound['11:30am']}
+                                  </div>
+                                )}
+                                {serviceData?.luces?.['11:30am'] && (
+                                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
+                                    <strong>Luces:</strong> {serviceData.luces['11:30am']}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                           )}
                           </div>
