@@ -85,7 +85,7 @@ export default function PublicProgramView() {
 
   // Auto-select what's happening TODAY (prioritize same-day activities)
   useEffect(() => {
-    if (!preloadedEventId && !preloadedServiceId && !preloadedDate && publicEvents.length > 0 && services.length > 0) {
+    if (publicEvents.length > 0 && services.length > 0 && !selectedEventId && !selectedServiceId) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
