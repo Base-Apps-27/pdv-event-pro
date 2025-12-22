@@ -50,8 +50,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
   const PAGE_H = 11 * 96;  // 1056px
   const HEADER_H = 60;
   const FOOTER_H = 20;
-  const BASE_BODY = 31.5; // Base body font size in px (3x for preview readability)
-  const BASE_TITLE = 36; // Base title font size in px (3x for preview readability)
+  const BASE_BODY = 21; // Base body font size in px (2x for preview readability)
+  const BASE_TITLE = 24; // Base title font size in px (2x for preview readability)
 
   useEffect(() => {
     setPage1Settings(settingsPage1 || DEFAULT_SETTINGS);
@@ -401,14 +401,14 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         borderBottom: '1px solid #e5e7eb'
                       }}
                     >
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a' }}>
+                      <div style={{ fontSize: '32px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a' }}>
                         Orden de Servicio
                       </div>
-                      <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>
+                      <div style={{ fontSize: '22px', color: '#4b5563', marginTop: '4px' }}>
                         Domingo {selectedDateFormatted}
                       </div>
                       {isWeeklyService && (
-                        <div style={{ fontSize: '8px', color: '#6b7280', marginTop: '6px', display: 'flex', gap: '4px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <div style={{ fontSize: '16px', color: '#6b7280', marginTop: '6px', display: 'flex', gap: '4px', flexWrap: 'wrap', justifyContent: 'center' }}>
                           {serviceData?.coordinators?.['9:30am'] && <span><strong>Coord:</strong> {serviceData.coordinators['9:30am']}</span>}
                           {serviceData?.ujieres?.['9:30am'] && (
                             <>
@@ -850,10 +850,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             borderBottom: '1px solid #e5e7eb'
           }}
         >
-          <div style={{ fontSize: '16px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a' }}>
+          <div style={{ fontSize: '32px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a' }}>
             Anuncios
           </div>
-          <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>
+          <div style={{ fontSize: '22px', color: '#4b5563', marginTop: '4px' }}>
             Domingo {selectedDateFormatted}
           </div>
         </div>
