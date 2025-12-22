@@ -1442,7 +1442,7 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.presenter && !segment.data?.ministry_leader && (
+                  {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && (
                     <div className="print-segment-detail">
                       <span className="print-name">{segment.data.presenter}</span>
                     </div>
