@@ -474,126 +474,157 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                 {serviceData.pre_service_notes['11:30am']}
                               </div>
                             )}
-                            {serviceData['11:30am'].filter(s => s?.type !== 'break').map((seg, idx) => (
-                              <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
-                                <div style={{ marginBottom: '3px' }}>
-                                  <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
-                                    {seg.title || 'Sin título'}
-                                  </span>
-                                  {seg.duration && <span style={{ fontSize: '9px', color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
+                            {serviceData['11:30am'].filter(s => s?.type !== 'break').map((seg, idx) => {
+                              const worshipSegment = serviceData?.['11:30am']?.find(s => s.type === 'worship');
+                              const inheritedTranslator = worshipSegment?.data?.translator;
+
+                              return (
+                                <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
+                                  <div style={{ marginBottom: '3px' }}>
+                                    <span style={{ fontSize: `${11 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
+                                      {seg.title || 'Sin título'}
+                                    </span>
+                                    {seg.duration && <span style={{ fontSize: '9px', color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
+                                  </div>
+
+                                  {/* WORSHIP */}
+                                  {seg.type === 'worship' && (
+                                    <>
+                                      {seg.data?.leader && (
+                                        <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                          Dirige: {seg.data.leader}
+                                        </div>
+                                      )}
+                                      {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
+                                        <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
+                                          {seg.songs.filter(s => s.title).map((song, sIdx) => (
+                                            <div key={sIdx} style={{ fontSize: '9px', color: '#16a34a' }}>
+                                              - {song.title} {song.lead && `(${song.lead})`}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                      {seg.data?.ministry_leader && (
+                                        <div style={{ fontSize: '9px', color: '#8b5cf6', marginTop: '3px' }}>
+                                          • Ministración: {seg.data.ministry_leader} (5 min)
+                                        </div>
+                                      )}
+                                      {seg.data?.translator && (
+                                        <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                          🌐 Traduce: {seg.data.translator}
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+
+                                  {/* WELCOME */}
+                                  {seg.type === 'welcome' && (
+                                    <>
+                                      {seg.data?.presenter && (
+                                        <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
+                                          {seg.data.presenter}
+                                        </div>
+                                      )}
+                                      {(seg.data?.translator || inheritedTranslator) && (
+                                        <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                          🌐 Traduce: {seg.data.translator || inheritedTranslator}
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+
+                                  {/* OFFERING */}
+                                  {seg.type === 'offering' && (
+                                    <>
+                                      {seg.data?.presenter && (
+                                        <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
+                                          {seg.data.presenter}
+                                        </div>
+                                      )}
+                                      {seg.data?.verse && (
+                                        <div style={{ fontSize: '9px', color: '#9ca3af' }}>
+                                          📖 {seg.data.verse}
+                                        </div>
+                                      )}
+                                      {(seg.data?.translator || inheritedTranslator) && (
+                                        <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                          🌐 Traduce: {seg.data.translator || inheritedTranslator}
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+
+                                  {/* MESSAGE */}
+                                  {seg.type === 'message' && (
+                                    <>
+                                      {seg.data?.preacher && (
+                                        <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
+                                          {seg.data.preacher}
+                                        </div>
+                                      )}
+                                      {seg.data?.title && (
+                                        <div style={{ fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
+                                          {seg.data.title}
+                                        </div>
+                                      )}
+                                      {seg.data?.verse && (
+                                        <div style={{ fontSize: '9px', color: '#9ca3af' }}>
+                                          📖 {seg.data.verse}
+                                        </div>
+                                      )}
+                                      {seg.data?.translator && (
+                                        <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                          🗣️ Traduce: {seg.data.translator}
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+
+                                  {/* SPECIAL */}
+                                  {seg.type === 'special' && (
+                                    <>
+                                      {seg.data?.presenter && (
+                                        <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
+                                          {seg.data.presenter}
+                                        </div>
+                                      )}
+                                      {seg.data?.description && (
+                                        <div style={{ fontSize: '9px', color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
+                                          {seg.data.description}
+                                        </div>
+                                      )}
+                                      {seg.data?.translator && (
+                                        <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                                          🌐 Traduce: {seg.data.translator}
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+
+                                  {/* SHARED FIELDS */}
+                                  {seg.data?.description_details && (
+                                    <div style={{ fontSize: '9px', color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
+                                      {seg.data.description_details}
+                                    </div>
+                                  )}
+                                  {seg.data?.projection_notes && (
+                                    <div style={{ fontSize: '8.5px', color: '#8b5cf6', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #8b5cf6' }}>
+                                      📽️ {seg.data.projection_notes}
+                                    </div>
+                                  )}
+                                  {seg.data?.sound_notes && (
+                                    <div style={{ fontSize: '8.5px', color: '#dc2626', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #dc2626' }}>
+                                      🔊 {seg.data.sound_notes}
+                                    </div>
+                                  )}
+                                  {seg.data?.ushers_notes && (
+                                    <div style={{ fontSize: '8.5px', color: '#16a34a', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #16a34a' }}>
+                                      👥 {seg.data.ushers_notes}
+                                    </div>
+                                  )}
                                 </div>
-                                {seg.data?.leader && (
-                                  <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
-                                    Dirige: {seg.data.leader}
-                                  </div>
-                                )}
-                                {seg.data?.preacher && (
-                                  <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
-                                    {seg.data.preacher}
-                                  </div>
-                                )}
-                                {seg.data?.presenter && !seg.data?.leader && (
-                                  <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
-                                    {seg.data.presenter}
-                                  </div>
-                                )}
-                                {seg.data?.translator && (
-                                  <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
-                                    🌐 {seg.data.translator}
-                                  </div>
-                                )}
-                                {seg.data?.title && (
-                                  <div style={{ fontSize: '9.5px', color: '#6b7280', fontStyle: 'italic' }}>
-                                    {seg.data.title}
-                                  </div>
-                                )}
-                                {seg.data?.verse && (
-                                  <div style={{ fontSize: '9px', color: '#9ca3af' }}>
-                                    📖 {seg.data.verse}
-                                  </div>
-                                )}
-                                {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
-                                  <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
-                                    {seg.songs.filter(s => s.title).map((song, sIdx) => (
-                                      <div key={sIdx} style={{ fontSize: '9px', color: '#16a34a' }}>
-                                        - {song.title} {song.lead && `(${song.lead})`}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                                {seg.data?.ministry_leader && (
-                                  <div style={{ fontSize: '9px', color: '#8b5cf6', marginTop: '3px' }}>
-                                    • Ministración: {seg.data.ministry_leader} (5 min)
-                                  </div>
-                                )}
-                                {seg.data?.translator && seg.type === 'worship' && (
-                                  <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
-                                    🌐 Traduce: {seg.data.translator}
-                                  </div>
-                                )}
-                                {seg.data?.preacher && (
-                                  <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600' }}>
-                                    {seg.data.preacher}
-                                  </div>
-                                )}
-                                {seg.data?.presenter && !seg.data?.ministry_leader && !seg.data?.preacher && !seg.data?.leader && (
-                                  <div style={{ fontSize: '10px', color: '#374151', fontWeight: '500' }}>
-                                    {seg.data.presenter}
-                                  </div>
-                                )}
-                                {(() => {
-                                  const worshipSegment = serviceData?.['11:30am']?.find(s => s.type === 'worship');
-                                  const inheritedTranslator = worshipSegment?.data?.translator;
-                                  const translatorToShow = seg.data?.translator || inheritedTranslator;
-                                  
-                                  if ((seg.type === 'welcome' || seg.type === 'offering') && translatorToShow) {
-                                    return (
-                                      <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
-                                        🌐 Traduce: {translatorToShow}
-                                      </div>
-                                    );
-                                  }
-                                  
-                                  if (seg.type === 'message' && seg.data?.translator) {
-                                    return (
-                                      <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
-                                        🗣️ Traduce: {seg.data.translator}
-                                      </div>
-                                    );
-                                  }
-                                  
-                                  if (seg.type === 'special' && seg.data?.translator) {
-                                    return (
-                                      <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
-                                        🌐 Traduce: {seg.data.translator}
-                                      </div>
-                                    );
-                                  }
-                                  
-                                  return null;
-                                })()}
-                                {seg.data?.description && (
-                                  <div style={{ fontSize: '9px', color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
-                                    {seg.data.description}
-                                  </div>
-                                )}
-                                {seg.data?.projection_notes && (
-                                  <div style={{ fontSize: '8.5px', color: '#8b5cf6', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #8b5cf6' }}>
-                                    📽️ {seg.data.projection_notes}
-                                  </div>
-                                )}
-                                {seg.data?.sound_notes && (
-                                  <div style={{ fontSize: '8.5px', color: '#dc2626', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #dc2626' }}>
-                                    🔊 {seg.data.sound_notes}
-                                  </div>
-                                )}
-                                {seg.data?.ushers_notes && (
-                                  <div style={{ fontSize: '8.5px', color: '#16a34a', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #16a34a' }}>
-                                    👥 {seg.data.ushers_notes}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                           )}
                         </div>
