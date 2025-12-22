@@ -557,6 +557,20 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                         👥 {seg.data.ushers_notes}
                                       </div>
                                     )}
+                                    {/* Coordinator Actions */}
+                                    {seg.actions && seg.actions.filter(a => a.department === 'Coordinador' || a.department === 'Admin').length > 0 && (
+                                      <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #fbbf24' }}>
+                                        <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, fontWeight: '700', color: '#f59e0b', marginBottom: '4px' }}>
+                                          📋 Acciones Coordinador
+                                        </div>
+                                        {seg.actions.filter(a => a.department === 'Coordinador' || a.department === 'Admin').map((action, aIdx) => (
+                                          <div key={aIdx} style={{ fontSize: `${BASE_BODY * 0.76 * page1Settings.bodyFontScale}px`, color: '#92400e', marginBottom: '2px', paddingLeft: '8px' }}>
+                                            • {action.label}
+                                            {action.notes && <span style={{ fontStyle: 'italic' }}> — {action.notes}</span>}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -728,6 +742,20 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                   {seg.data?.ushers_notes && (
                                     <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#16a34a', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #16a34a' }}>
                                       👥 {seg.data.ushers_notes}
+                                    </div>
+                                  )}
+                                  {/* Coordinator Actions */}
+                                  {seg.actions && seg.actions.filter(a => a.department === 'Coordinador' || a.department === 'Admin').length > 0 && (
+                                    <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #fbbf24' }}>
+                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, fontWeight: '700', color: '#f59e0b', marginBottom: '4px' }}>
+                                        📋 Acciones Coordinador
+                                      </div>
+                                      {seg.actions.filter(a => a.department === 'Coordinador' || a.department === 'Admin').map((action, aIdx) => (
+                                        <div key={aIdx} style={{ fontSize: `${BASE_BODY * 0.76 * page1Settings.bodyFontScale}px`, color: '#92400e', marginBottom: '2px', paddingLeft: '8px' }}>
+                                          • {action.label}
+                                          {action.notes && <span style={{ fontStyle: 'italic' }}> — {action.notes}</span>}
+                                        </div>
+                                      ))}
                                     </div>
                                   )}
                                 </div>
