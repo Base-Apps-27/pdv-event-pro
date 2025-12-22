@@ -335,12 +335,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
       @media print {
         @page {
           size: letter;
-          margin: ${page1Settings.margins.top} ${page1Settings.margins.right} ${page1Settings.margins.bottom} ${page1Settings.margins.left};
+          margin: 0;
         }
 
-        html, body {
-          margin: 0;
-          padding: 0;
+        * {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
 
         body * {
@@ -354,18 +354,23 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
         .print-only-container {
           display: block !important;
-          position: absolute;
+          position: fixed;
           left: 0;
           top: 0;
           width: 100%;
+          margin: 0;
+          padding: 0;
         }
 
         .print-only-container > div {
           position: relative;
-          width: 100%;
-          min-height: 100vh;
+          width: 8.5in;
+          height: 11in;
+          margin: 0;
+          padding: 0;
           page-break-after: always;
           page-break-inside: avoid;
+          box-shadow: none !important;
         }
 
         .print-only-container > div:last-child {
