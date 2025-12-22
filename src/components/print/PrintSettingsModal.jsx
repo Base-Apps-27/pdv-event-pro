@@ -334,6 +334,13 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           margin: 0 !important;
         }
 
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 8.5in;
+          height: 11in;
+        }
+
         * {
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
@@ -350,12 +357,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
         .print-only-container {
           display: block !important;
-          position: fixed;
+          position: absolute;
           left: 0;
           top: 0;
-          width: 100%;
-          margin: 0;
-          padding: 0;
+          width: 8.5in;
+          margin: 0 !important;
+          padding: 0 !important;
         }
 
 
@@ -376,10 +383,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         style={{
           width: `${PAGE_W}px`,
           height: `${PAGE_H}px`,
-          display: 'inline-block',
+          display: 'block',
+          margin: 0,
           flexShrink: 0,
-          pageBreakAfter: 'always',
-          pageBreakInside: 'avoid'
+          breakAfter: 'page',
+          breakInside: 'avoid'
         }}
       >
         {/* Logo - only for print */}
@@ -837,10 +845,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         style={{
           width: `${PAGE_W}px`,
           height: `${PAGE_H}px`,
-          display: 'inline-block',
+          display: 'block',
+          margin: 0,
           flexShrink: 0,
-          pageBreakAfter: 'auto',
-          pageBreakInside: 'avoid'
+          breakAfter: 'auto',
+          breakInside: 'avoid'
         }}
       >
         {/* Logo - only for print */}
