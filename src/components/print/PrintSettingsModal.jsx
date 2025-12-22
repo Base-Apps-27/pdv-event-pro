@@ -219,12 +219,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                   <Slider
                     value={[page1Settings.bodyFontScale]}
                     onValueChange={([value]) => setPage1Settings(prev => ({ ...prev, bodyFontScale: value }))}
-                    min={0.8}
-                    max={1.2}
-                    step={0.05}
+                    min={0.7}
+                    max={1.6}
+                    step={0.1}
                   />
                   <div className="flex justify-between text-xs text-gray-500">
-                    <span>80%</span><span>100%</span><span>120%</span>
+                    <span>70%</span><span>100%</span><span>160%</span>
                   </div>
                 </div>
 
@@ -236,12 +236,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                   <Slider
                     value={[page1Settings.titleFontScale]}
                     onValueChange={([value]) => setPage1Settings(prev => ({ ...prev, titleFontScale: value }))}
-                    min={0.8}
-                    max={1.2}
-                    step={0.05}
+                    min={0.7}
+                    max={1.6}
+                    step={0.1}
                   />
                   <div className="flex justify-between text-xs text-gray-500">
-                    <span>80%</span><span>100%</span><span>120%</span>
+                    <span>70%</span><span>100%</span><span>160%</span>
                   </div>
                 </div>
 
@@ -723,12 +723,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                   <Slider
                     value={[page2Settings.bodyFontScale]}
                     onValueChange={([value]) => setPage2Settings(prev => ({ ...prev, bodyFontScale: value }))}
-                    min={0.8}
-                    max={1.2}
-                    step={0.05}
+                    min={0.7}
+                    max={1.6}
+                    step={0.1}
                   />
                   <div className="flex justify-between text-xs text-gray-500">
-                    <span>80%</span><span>100%</span><span>120%</span>
+                    <span>70%</span><span>100%</span><span>160%</span>
                   </div>
                 </div>
 
@@ -740,12 +740,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                   <Slider
                     value={[page2Settings.titleFontScale]}
                     onValueChange={([value]) => setPage2Settings(prev => ({ ...prev, titleFontScale: value }))}
-                    min={0.8}
-                    max={1.2}
-                    step={0.05}
+                    min={0.7}
+                    max={1.6}
+                    step={0.1}
                   />
                   <div className="flex justify-between text-xs text-gray-500">
-                    <span>80%</span><span>100%</span><span>120%</span>
+                    <span>70%</span><span>100%</span><span>160%</span>
                   </div>
                 </div>
 
