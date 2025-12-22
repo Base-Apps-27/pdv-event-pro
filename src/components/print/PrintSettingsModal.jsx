@@ -140,51 +140,43 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     window.print();
   };
 
-  const handleAutoScale = () => {
+  const handleAutoScale = async () => {
     const bodyRef = activePage === "page1" ? page1BodyRef : page2BodyRef;
     if (!bodyRef.current) return;
 
-    // Generate all combinations in 0.05 steps from 0.5 to 1.0
+    // Generate combinations from 1.0 down to 0.5 in 0.05 steps
     const combinations = [];
     for (let body = 1.0; body >= 0.5; body -= 0.05) {
       for (let title = 1.0; title >= 0.5; title -= 0.05) {
         combinations.push({ 
-          bodyFontScale: Math.round(body * 20) / 20, // Round to nearest 0.05
+          bodyFontScale: Math.round(body * 20) / 20,
           titleFontScale: Math.round(title * 20) / 20,
           avg: (body + title) / 2 
         });
       }
     }
 
-    // Sort by average scale descending (prefer larger text)
+    // Sort by average descending (largest text first)
     combinations.sort((a, b) => b.avg - a.avg);
 
-    // Try each combination
+    // Test each combination
     for (const combo of combinations) {
-      // Temporarily apply settings
       setCurrentSettings(prev => ({
         ...prev,
         bodyFontScale: combo.bodyFontScale,
         titleFontScale: combo.titleFontScale
       }));
 
-      // Force sync check - measure immediately
-      setTimeout(() => {
-        const overflows = bodyRef.current.scrollHeight > bodyRef.current.clientHeight + 2;
-        if (!overflows) {
-          // Found a fit! Stop here
-          return;
-        }
-      }, 50);
-    }
+      // Wait for render
+      await new Promise(resolve => setTimeout(resolve, 100));
 
-    // If nothing fits, use smallest combo
-    const smallest = combinations[combinations.length - 1];
-    setCurrentSettings(prev => ({
-      ...prev,
-      bodyFontScale: smallest.bodyFontScale,
-      titleFontScale: smallest.titleFontScale
-    }));
+      // Check if it fits
+      const overflows = bodyRef.current.scrollHeight > bodyRef.current.clientHeight + 2;
+      if (!overflows) {
+        // Found the largest combo that fits!
+        return;
+      }
+    }
   };
 
   const currentSettings = activePage === "page1" ? page1Settings : page2Settings;
