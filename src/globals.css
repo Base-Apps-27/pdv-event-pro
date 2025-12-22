@@ -167,6 +167,47 @@
   box-shadow: none;
 }
 
+/* Fix Shadcn Tabs - force dark text on light backgrounds */
+[role="tablist"] button[role="tab"] {
+  color: #374151 !important;
+}
+
+[role="tablist"] button[role="tab"][data-state="active"] {
+  color: #111827 !important;
+  background-color: white !important;
+}
+
+/* Fix Select components - dark text on light */
+[role="combobox"],
+button[role="combobox"] {
+  color: #111827 !important;
+}
+
+/* Fix Dialog/Modal text */
+[role="dialog"] h2,
+[role="dialog"] h3,
+[role="dialog"] p,
+[role="dialog"] label,
+[role="dialog"] span {
+  color: #111827 !important;
+}
+
+/* Ensure all cards have dark text */
+.bg-white h1,
+.bg-white h2,
+.bg-white h3,
+.bg-white h4,
+.bg-white p,
+.bg-white span,
+.bg-white label {
+  color: #111827;
+}
+
+/* Ensure buttons have proper contrast */
+button:not(.gradient-pdv):not([style*="background"]) {
+  color: #111827;
+}
+
 /* Typography scale */
 .text-display {
   font-size: 3rem;

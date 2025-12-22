@@ -439,18 +439,18 @@ export default function PublicProgramView() {
                       variant={viewMode === "simple" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setViewMode("simple")}
-                      className={viewMode === "simple" ? "bg-pdv-teal text-white border-2 border-pdv-teal font-semibold" : "border-2 border-gray-400 bg-white text-gray-900 font-semibold"}
+                      className={viewMode === "simple" ? "bg-pdv-teal text-white border-2 border-pdv-teal font-semibold" : "border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:bg-gray-50"}
                     >
-                      <List className="w-4 h-4 mr-2" />
+                      <List className="w-4 h-4 mr-2 text-current" />
                       Simple
                     </Button>
                     <Button
                       variant={viewMode === "full" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setViewMode("full")}
-                      className={viewMode === "full" ? "bg-pdv-teal text-white border-2 border-pdv-teal font-semibold" : "border-2 border-gray-400 bg-white text-gray-900 font-semibold"}
+                      className={viewMode === "full" ? "bg-pdv-teal text-white border-2 border-pdv-teal font-semibold" : "border-2 border-gray-400 bg-white text-gray-900 font-semibold hover:bg-gray-50"}
                     >
-                      <ListChecks className="w-4 h-4 mr-2" />
+                      <ListChecks className="w-4 h-4 mr-2 text-current" />
                       Run of Show
                     </Button>
                   </div>
@@ -461,12 +461,12 @@ export default function PublicProgramView() {
                   <label className="text-sm font-semibold text-gray-900">Filtrar por Sesión</label>
                   <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
                     <SelectTrigger className="bg-white border-2 border-gray-400 text-gray-900">
-                      <SelectValue />
+                      <SelectValue className="text-gray-900" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="all">Todas las Sesiones</SelectItem>
+                    <SelectContent className="bg-white text-gray-900">
+                      <SelectItem value="all" className="text-gray-900">Todas las Sesiones</SelectItem>
                       {eventSessions.map((session) => (
-                        <SelectItem key={session.id} value={session.id}>
+                        <SelectItem key={session.id} value={session.id} className="text-gray-900">
                           {session.name}
                         </SelectItem>
                       ))}
@@ -510,7 +510,7 @@ export default function PublicProgramView() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm text-gray-600">Próximo Segmento</p>
-                            <p className="font-bold text-lg">{countdown.segment.title}</p>
+                            <p className="font-bold text-lg text-gray-900">{countdown.segment.title}</p>
                           </div>
                           <div className="text-right">
                             <p className={`text-3xl font-bold ${countdown.isNear ? 'text-blue-600' : 'text-gray-700'}`}>
@@ -530,7 +530,7 @@ export default function PublicProgramView() {
                 {actualServiceData["9:30am"] && (
                   <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500">
                     <div className="bg-gradient-to-r from-red-50 to-white p-4 border-b">
-                      <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 a.m.</h3>
+                      <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 A.M.</h3>
                       {actualServiceData.pre_service_notes?.["9:30am"] && (
                         <p className="text-sm text-gray-600 italic mt-2">{actualServiceData.pre_service_notes["9:30am"]}</p>
                       )}
@@ -541,8 +541,8 @@ export default function PublicProgramView() {
                          <div className="flex items-start justify-between gap-4">
                            <div className="flex-1">
                              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                               <h4 className="text-xl font-bold">{segment.title}</h4>
-                               <Badge variant="outline" className="text-xs">{segment.duration} min</Badge>
+                               <h4 className="text-xl font-bold text-gray-900">{segment.title}</h4>
+                               <Badge variant="outline" className="text-xs text-gray-700">{segment.duration} min</Badge>
                              </div>
 
                              {segment.data?.leader && (
@@ -636,7 +636,7 @@ export default function PublicProgramView() {
                 {actualServiceData["11:30am"] && (
                   <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-blue-500">
                     <div className="bg-gradient-to-r from-blue-50 to-white p-4 border-b">
-                      <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 a.m.</h3>
+                      <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 A.M.</h3>
                       {actualServiceData.pre_service_notes?.["11:30am"] && (
                         <p className="text-sm text-gray-600 italic mt-2">{actualServiceData.pre_service_notes["11:30am"]}</p>
                       )}
@@ -647,8 +647,8 @@ export default function PublicProgramView() {
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                <h4 className="text-xl font-bold">{segment.title}</h4>
-                                <Badge variant="outline" className="text-xs">{segment.duration} min</Badge>
+                                <h4 className="text-xl font-bold text-gray-900">{segment.title}</h4>
+                                <Badge variant="outline" className="text-xs text-gray-700">{segment.duration} min</Badge>
                               </div>
                               
                               {segment.data?.leader && (
@@ -788,7 +788,7 @@ export default function PublicProgramView() {
                     <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-4 border-b">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h3 className="text-2xl font-bold uppercase mb-1">{session.name}</h3>
+                          <h3 className="text-2xl font-bold uppercase mb-1 text-gray-900">{session.name}</h3>
                           <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                             {session.date && <span>{session.date}</span>}
                             {session.planned_start_time && (
@@ -867,12 +867,12 @@ export default function PublicProgramView() {
                                 {segment.breakout_rooms.map((room, roomIdx) => (
                                   <Card key={roomIdx} className="bg-white border-2 border-gray-300">
                                     <CardContent className="p-4">
-                                      {room.room_id && (
-                                        <Badge variant="outline" className="mb-2 bg-blue-50">
-                                          {getRoomName(room.room_id)}
-                                        </Badge>
-                                      )}
-                                      <h5 className="font-bold mb-2">{room.topic || `Sala ${roomIdx + 1}`}</h5>
+                                                  {room.room_id && (
+                                                    <Badge variant="outline" className="mb-2 bg-blue-50 text-blue-800">
+                                                      {getRoomName(room.room_id)}
+                                                    </Badge>
+                                                  )}
+                                                  <h5 className="font-bold mb-2 text-gray-900">{room.topic || `Sala ${roomIdx + 1}`}</h5>
                                       {room.hosts && (
                                         <p className="text-sm text-indigo-600 mb-1">
                                           <span className="font-semibold">Anfitrión:</span> {room.hosts}
@@ -920,11 +920,11 @@ export default function PublicProgramView() {
                             {/* SIMPLE MODE */}
                             {viewMode === "simple" && (
                               <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-3 mb-1">
-                                    <Clock className="w-5 h-5 text-pdv-teal flex-shrink-0" />
-                                    <div>
-                                      <span className="font-bold text-lg">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</span>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-1">
+                                      <Clock className="w-5 h-5 text-pdv-teal flex-shrink-0" />
+                                      <div>
+                                        <span className="font-bold text-lg text-gray-900">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</span>
                                       {segment.end_time && (
                                         <span className="text-gray-600 ml-2">- {formatTimeToEST(segment.end_time)}</span>
                                       )}
@@ -935,8 +935,8 @@ export default function PublicProgramView() {
                                   </div>
 
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <h4 className="text-xl font-bold">{segment.title}</h4>
-                                    <Badge variant="outline" className="text-xs">{segment.segment_type}</Badge>
+                                    <h4 className="text-xl font-bold text-gray-900">{segment.title}</h4>
+                                    <Badge variant="outline" className="text-xs text-gray-700">{segment.segment_type}</Badge>
                                   </div>
 
                                   {segment.presenter && (
@@ -972,8 +972,8 @@ export default function PublicProgramView() {
                                     </div>
 
                                     <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                      <h4 className="text-xl font-bold">{segment.title}</h4>
-                                      <Badge variant="outline" className="text-xs">{segment.segment_type}</Badge>
+                                      <h4 className="text-xl font-bold text-gray-900">{segment.title}</h4>
+                                      <Badge variant="outline" className="text-xs text-gray-700">{segment.segment_type}</Badge>
                                       {segment.requires_translation && (
                                         <div className="flex items-center gap-1">
                                           <Languages className="w-4 h-4 text-purple-600" />

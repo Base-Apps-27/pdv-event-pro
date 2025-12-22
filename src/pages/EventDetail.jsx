@@ -134,10 +134,10 @@ export default function EventDetail() {
       />
 
       <Tabs defaultValue="sessions" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
-          <TabsTrigger value="info">Información</TabsTrigger>
-          <TabsTrigger value="sessions">Sesiones</TabsTrigger>
-          <TabsTrigger value="calendar">Calendario</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-gray-100">
+          <TabsTrigger value="info" className="text-gray-700 data-[state=active]:text-gray-900 data-[state=active]:bg-white">Información</TabsTrigger>
+          <TabsTrigger value="sessions" className="text-gray-700 data-[state=active]:text-gray-900 data-[state=active]:bg-white">Sesiones</TabsTrigger>
+          <TabsTrigger value="calendar" className="text-gray-700 data-[state=active]:text-gray-900 data-[state=active]:bg-white">Calendario</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="mt-6">
