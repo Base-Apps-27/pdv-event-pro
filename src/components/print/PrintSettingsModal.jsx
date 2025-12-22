@@ -48,8 +48,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
   const PAGE_W = 8.5 * 96; // 816px
   const PAGE_H = 11 * 96;  // 1056px
-  const HEADER_H = 60;
-  const FOOTER_H = 20;
+  const HEADER_H = 120; // 2x for preview (was 60)
+  const FOOTER_H = 40; // 2x for preview (was 20)
   const BASE_BODY = 21; // Base body font size in px (2x for preview readability)
   const BASE_TITLE = 24; // Base title font size in px (2x for preview readability)
 
@@ -408,7 +408,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         Domingo {selectedDateFormatted}
                       </div>
                       {isWeeklyService && (
-                        <div style={{ fontSize: '16px', color: '#6b7280', marginTop: '6px', display: 'flex', gap: '4px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <div style={{ fontSize: '16px', color: '#6b7280', marginTop: '8px', display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
                           {serviceData?.coordinators?.['9:30am'] && <span><strong>Coord:</strong> {serviceData.coordinators['9:30am']}</span>}
                           {serviceData?.ujieres?.['9:30am'] && (
                             <>
@@ -445,19 +445,19 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         >
           <div style={{ width: '100%' }}>
                         {isWeeklyService && serviceData?.['9:30am'] ? (
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4 }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4 }}>
                           {/* 9:30 AM Column */}
                           <div>
-                            <div style={{ fontSize: `${BASE_TITLE * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
+                            <div style={{ fontSize: `${BASE_TITLE * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '16px', paddingBottom: '8px', borderBottom: '4px solid #1f2937', textTransform: 'uppercase' }}>
                               9:30 A.M.
                             </div>
                             {serviceData?.pre_service_notes?.['9:30am'] && (
-                              <div style={{ marginBottom: '10px', fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
+                              <div style={{ marginBottom: '16px', fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
                                 {serviceData.pre_service_notes['9:30am']}
                               </div>
                             )}
                             {Array.isArray(serviceData?.['9:30am']) && serviceData['9:30am'].filter(s => s?.type !== 'break').map((seg, idx) => (
-                              <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
+                              <div key={idx} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #f3f4f6' }}>
                                 <div style={{ marginBottom: '3px' }}>
                                   <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
                                     {seg.title || 'Sin título'}
@@ -535,11 +535,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                           {/* 11:30 AM Column */}
                           {serviceData?.['11:30am'] && Array.isArray(serviceData['11:30am']) && (
                           <div>
-                            <div style={{ fontSize: `${BASE_TITLE * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '10px', paddingBottom: '6px', borderBottom: '2px solid #1f2937', textTransform: 'uppercase' }}>
+                            <div style={{ fontSize: `${BASE_TITLE * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '16px', paddingBottom: '8px', borderBottom: '4px solid #1f2937', textTransform: 'uppercase' }}>
                               11:30 A.M.
                             </div>
                             {serviceData?.pre_service_notes?.['11:30am'] && (
-                              <div style={{ marginBottom: '10px', fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
+                              <div style={{ marginBottom: '16px', fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
                                 {serviceData.pre_service_notes['11:30am']}
                               </div>
                             )}
@@ -548,7 +548,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                               const inheritedTranslator = worshipSegment?.data?.translator;
 
                               return (
-                                <div key={idx} style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '0.5px solid #f3f4f6' }}>
+                                <div key={idx} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #f3f4f6' }}>
                                   <div style={{ marginBottom: '3px' }}>
                                     <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
                                       {seg.title || 'Sin título'}
@@ -870,7 +870,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           }}
         >
           <div style={{ width: '100%' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: `${BASE_BODY * 0.9 * page2Settings.bodyFontScale}px`, lineHeight: 1.4 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', fontSize: `${BASE_BODY * 0.9 * page2Settings.bodyFontScale}px`, lineHeight: 1.4 }}>
             {/* Left Column: Fixed Announcements */}
             <div>
               {selectedFixed.map((ann) => (
@@ -898,8 +898,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             </div>
 
             {/* Right Column: Dynamic Events */}
-            <div style={{ borderLeft: '2px solid #e5e7eb', paddingLeft: '12px' }}>
-              <div style={{ fontSize: `${BASE_BODY * 0.86 * page2Settings.bodyFontScale}px`, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #e5e7eb' }}>
+            <div style={{ borderLeft: '4px solid #e5e7eb', paddingLeft: '20px' }}>
+              <div style={{ fontSize: `${BASE_BODY * 0.86 * page2Settings.bodyFontScale}px`, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '12px', paddingBottom: '8px', borderBottom: '2px solid #e5e7eb' }}>
                 Próximos Eventos
               </div>
               {selectedDynamic.map((ann) => {
