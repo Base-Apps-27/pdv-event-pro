@@ -805,7 +805,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             justifyContent: 'center'
           }}
         >
-          <span style={{ fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
+          <span style={{ fontSize: '20px', color: 'white', fontWeight: 'bold' }}>
             ¡Atrévete a cambiar!
           </span>
         </div>
@@ -961,7 +961,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             justifyContent: 'center'
           }}
         >
-          <span style={{ fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
+          <span style={{ fontSize: '20px', color: 'white', fontWeight: 'bold' }}>
             ¡Atrévete a cambiar!
           </span>
         </div>
