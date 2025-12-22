@@ -234,9 +234,13 @@ export default function Dashboard() {
                           {event.status}
                         </Badge>
                         <Button 
-                          onClick={() => navigate(createPageUrl('EventDetail') + `?eventId=${event.id}`)}
+                          onClick={() => {
+                            if (event?.id) {
+                              navigate(createPageUrl('EventDetail') + `?eventId=${event.id}`);
+                            }
+                          }}
                           size="sm"
-                          variant="outline"
+                          className="bg-pdv-teal text-white hover:bg-pdv-green"
                         >
                           Ver / View
                         </Button>
