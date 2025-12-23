@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
+import MultiPersonSelect from "@/components/ui/MultiPersonSelect";
 import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, ChevronUp, ChevronDown, Sparkles, Settings, ArrowUp, ArrowDown } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 import TimePicker from "@/components/ui/TimePicker";
@@ -99,10 +100,10 @@ export default function CustomServiceBuilder() {
         actions: []
       }
     ],
-    coordinators: "",
-    ujieres: "",
-    sound: "",
-    luces: "",
+    coordinators: [],
+    ujieres: [],
+    sound: [],
+    luces: [],
     notes: ""
   });
 
@@ -950,35 +951,34 @@ export default function CustomServiceBuilder() {
         <CardContent className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Coordinador(a)</Label>
-            <AutocompleteInput
-              type="presenter"
+            <MultiPersonSelect
               value={serviceData.coordinators}
-              onChange={(e) => setServiceData(prev => ({ ...prev, coordinators: e.target.value }))}
-              placeholder="Nombre del coordinador"
+              onChange={(val) => setServiceData(prev => ({ ...prev, coordinators: val }))}
+              placeholder="Agregar coordinadores..."
             />
           </div>
           <div className="space-y-2">
             <Label>Ujieres</Label>
-            <Input
+            <MultiPersonSelect
               value={serviceData.ujieres}
-              onChange={(e) => setServiceData(prev => ({ ...prev, ujieres: e.target.value }))}
-              placeholder="Nombres de ujieres"
+              onChange={(val) => setServiceData(prev => ({ ...prev, ujieres: val }))}
+              placeholder="Agregar ujieres..."
             />
           </div>
           <div className="space-y-2">
             <Label>Sonido</Label>
-            <Input
+            <MultiPersonSelect
               value={serviceData.sound}
-              onChange={(e) => setServiceData(prev => ({ ...prev, sound: e.target.value }))}
-              placeholder="Equipo de sonido"
+              onChange={(val) => setServiceData(prev => ({ ...prev, sound: val }))}
+              placeholder="Agregar equipo de sonido..."
             />
           </div>
           <div className="space-y-2">
             <Label>Luces/Proyección</Label>
-            <Input
+            <MultiPersonSelect
               value={serviceData.luces}
-              onChange={(e) => setServiceData(prev => ({ ...prev, luces: e.target.value }))}
-              placeholder="Equipo de luces"
+              onChange={(val) => setServiceData(prev => ({ ...prev, luces: val }))}
+              placeholder="Agregar equipo de luces..."
             />
           </div>
         </CardContent>
