@@ -67,6 +67,7 @@ export default function PublicProgramView() {
         .filter(s => 
           s.status === 'active' && 
           s.date && // Must have a specific date
+          s.origin !== 'blueprint' && // Exclude old blueprint/template records
           new Date(s.date) >= today // Only future or today's services
         )
         .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date ascending
