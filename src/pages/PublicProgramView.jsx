@@ -451,7 +451,18 @@ export default function PublicProgramView() {
                     const diffTime = serviceDate - today;
                     const daysUntil = Math.floor(diffTime / (1000 * 60 * 60 * 24));
                     return { ...service, daysUntil };
-                  });
+                  })
+                  .reduce((acc, service) => {
+                    // Dedupe by date - keep only the most recently updated service per date
+                    const existing = acc.find(s => s.date === service.date);
+                    if (!existing) {
+                      acc.push(service);
+                    } else if (new Date(service.updated_date) > new Date(existing.updated_date)) {
+                      const idx = acc.indexOf(existing);
+                      acc[idx] = service;
+                    }
+                    return acc;
+                  }, []);
 
                 return (
                   <div className="w-full">
