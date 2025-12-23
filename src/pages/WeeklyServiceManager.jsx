@@ -216,6 +216,7 @@ export default function WeeklyServiceManager() {
       }
     },
     onSuccess: (result) => {
+      queryClient.invalidateQueries(['weeklyService', selectedDate]);
       setLastSavedData(JSON.parse(JSON.stringify(serviceData)));
       setLastSaveTimestamp(new Date().toISOString());
       setHasUnsavedChanges(false);
