@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
-import MultiPersonSelect from "@/components/ui/MultiPersonSelect";
 import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, ChevronUp, ChevronDown, Sparkles, Settings, ArrowUp, ArrowDown } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 import TimePicker from "@/components/ui/TimePicker";
@@ -122,7 +121,7 @@ export default function CustomServiceBuilder() {
     presenter: "",
     translator: "",
     preacher: "",
-    leader: [],
+    leader: "",
     messageTitle: "",
     verse: "",
     songs: [],
@@ -149,29 +148,8 @@ export default function CustomServiceBuilder() {
         segmentCount: existingService.segments?.length || 0,
         fullData: existingService
       });
-      
-      // Migrate legacy string data to arrays
-      const ensureArray = (val) => {
-        if (Array.isArray(val)) return val;
-        if (!val || val === '') return [];
-        if (typeof val === 'string') return val.split(',').map(s => s.trim()).filter(Boolean);
-        return [];
-      };
-
-      const migratedService = {
-        ...existingService,
-        coordinators: ensureArray(existingService.coordinators),
-        ujieres: ensureArray(existingService.ujieres),
-        sound: ensureArray(existingService.sound),
-        luces: ensureArray(existingService.luces),
-        segments: (existingService.segments || []).map(seg => ({
-          ...seg,
-          leader: ensureArray(seg.leader)
-        }))
-      };
-
-      setServiceData(migratedService);
-      setLastSavedData(JSON.parse(JSON.stringify(migratedService)));
+      setServiceData(existingService);
+      setLastSavedData(JSON.parse(JSON.stringify(existingService)));
       setPrintSettingsPage1(existingService.print_settings_page1 || null);
       setHasUnsavedChanges(false);
       
