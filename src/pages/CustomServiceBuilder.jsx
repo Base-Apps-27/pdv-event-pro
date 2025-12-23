@@ -149,8 +149,26 @@ export default function CustomServiceBuilder() {
         segmentCount: existingService.segments?.length || 0,
         fullData: existingService
       });
-      setServiceData(existingService);
-      setLastSavedData(JSON.parse(JSON.stringify(existingService)));
+      
+      // Transform old object/string format to arrays
+      const transformedService = {
+        ...existingService,
+        coordinators: Array.isArray(existingService.coordinators) 
+          ? existingService.coordinators 
+          : (existingService.coordinators ? [existingService.coordinators] : []),
+        ujieres: Array.isArray(existingService.ujieres) 
+          ? existingService.ujieres 
+          : (existingService.ujieres ? [existingService.ujieres] : []),
+        sound: Array.isArray(existingService.sound) 
+          ? existingService.sound 
+          : (existingService.sound ? [existingService.sound] : []),
+        luces: Array.isArray(existingService.luces) 
+          ? existingService.luces 
+          : (existingService.luces ? [existingService.luces] : [])
+      };
+      
+      setServiceData(transformedService);
+      setLastSavedData(JSON.parse(JSON.stringify(transformedService)));
       setPrintSettingsPage1(existingService.print_settings_page1 || null);
       setHasUnsavedChanges(false);
       
