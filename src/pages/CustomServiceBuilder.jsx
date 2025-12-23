@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, ChevronUp, ChevronDown, Sparkles, Settings, ArrowUp, ArrowDown } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
 import AnimatedSortableItem from "@/components/shared/AnimatedSortableItem";
 import { AnimatePresence } from "framer-motion";
 import { addMinutes, parse, format } from "date-fns";
@@ -551,10 +552,10 @@ export default function CustomServiceBuilder() {
             </div>
             <div className="space-y-2">
               <Label>Fecha *</Label>
-              <Input
-                type="date"
+              <DatePicker
                 value={serviceData.date}
-                onChange={(e) => setServiceData(prev => ({ ...prev, date: e.target.value }))}
+                onChange={(val) => setServiceData(prev => ({ ...prev, date: val }))}
+                placeholder="Seleccionar fecha"
                 required
                 className="w-full max-w-full"
               />
@@ -571,10 +572,10 @@ export default function CustomServiceBuilder() {
             </div>
             <div className="space-y-2">
               <Label>Hora *</Label>
-              <Input
-                type="time"
+              <TimePicker
                 value={serviceData.time}
-                onChange={(e) => setServiceData(prev => ({ ...prev, time: e.target.value }))}
+                onChange={(val) => setServiceData(prev => ({ ...prev, time: val }))}
+                placeholder="Seleccionar hora"
                 required
               />
             </div>

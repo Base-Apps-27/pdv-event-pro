@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Plus, Calendar, MapPin, Edit, Trash2, Copy, Save } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -308,12 +309,10 @@ export default function Events() {
               <div className="space-y-2">
                 <Label htmlFor="start_date">Fecha Inicio</Label>
                 <div className="relative">
-                  <Input 
-                    id="start_date" 
-                    name="start_date" 
-                    type="date"
+                  <DatePicker
                     value={formData.start_date}
-                    onChange={(e) => updateFormField('start_date', e.target.value)}
+                    onChange={(val) => updateFormField('start_date', val)}
+                    placeholder="Seleccionar fecha"
                   />
                   <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'start_date')} />
                 </div>
@@ -321,12 +320,10 @@ export default function Events() {
               <div className="space-y-2">
                 <Label htmlFor="end_date">Fecha Fin</Label>
                 <div className="relative">
-                  <Input 
-                    id="end_date" 
-                    name="end_date" 
-                    type="date"
+                  <DatePicker
                     value={formData.end_date}
-                    onChange={(e) => updateFormField('end_date', e.target.value)}
+                    onChange={(val) => updateFormField('end_date', val)}
+                    placeholder="Seleccionar fecha"
                   />
                   <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'end_date')} />
                 </div>
@@ -405,21 +402,21 @@ export default function Events() {
                 <div className="space-y-4 pl-6 border-l-2" style={{ borderColor: 'rgba(31, 138, 112, 0.2)' }}>
                    <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Inicio Promoción</Label>
-                        <Input 
-                          type="date"
-                          value={formData.promotion_start_date}
-                          onChange={(e) => updateFormField('promotion_start_date', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Fin Promoción</Label>
-                        <Input 
-                          type="date"
-                          value={formData.promotion_end_date}
-                          onChange={(e) => updateFormField('promotion_end_date', e.target.value)}
-                        />
-                      </div>
+                         <Label>Inicio Promoción</Label>
+                         <DatePicker
+                           value={formData.promotion_start_date}
+                           onChange={(val) => updateFormField('promotion_start_date', val)}
+                           placeholder="Seleccionar fecha"
+                         />
+                       </div>
+                       <div className="space-y-2">
+                         <Label>Fin Promoción</Label>
+                         <DatePicker
+                           value={formData.promotion_end_date}
+                           onChange={(val) => updateFormField('promotion_end_date', val)}
+                           placeholder="Seleccionar fecha"
+                         />
+                       </div>
                    </div>
                    <div className="space-y-2">
                       <Label>Blurb para Anuncio (Corto)</Label>

@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, Zap } from "lucide-react";
+import TimePicker from "@/components/ui/TimePicker";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -292,11 +293,10 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
       <div className="grid md:grid-cols-4 gap-4">
         <div className="space-y-2">
           <Label htmlFor="start_time">Hora Inicio</Label>
-          <Input 
-            id="start_time" 
-            type="time"
+          <TimePicker
             value={formData.start_time}
-            onChange={(e) => setFormData({...formData, start_time: e.target.value})}
+            onChange={(val) => setFormData({...formData, start_time: val})}
+            placeholder="Seleccionar hora"
           />
         </div>
 

@@ -71,19 +71,19 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-8 space-y-8">
         {/* Live Program Hero Card */}
         <Card className="hover:shadow-lg transition-all border-0 cursor-pointer overflow-hidden" onClick={() => navigate(createPageUrl('PublicProgramView'))}>
-          <CardContent className="p-4 md:p-5" style={gradientStyle}>
+          <CardContent className="p-3 md:p-4" style={gradientStyle}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <Bell className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <Bell className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-lg md:text-xl text-white uppercase tracking-wide">Programa en Vivo</h2>
-                  <p className="text-white/95 text-xs">Ver qué está pasando ahora</p>
+                  <h2 className="font-bold text-base md:text-lg text-white uppercase tracking-wide">Programa en Vivo</h2>
+                  <p className="text-white/95 text-[10px] md:text-xs">Ver qué está pasando ahora</p>
                 </div>
               </div>
-              <div className="hidden md:flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+              <div className="hidden sm:flex items-center gap-2">
+                <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-white animate-pulse"></div>
               </div>
             </div>
           </CardContent>

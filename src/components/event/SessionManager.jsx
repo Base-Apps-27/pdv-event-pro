@@ -4,6 +4,8 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Plus, Calendar, Clock, Edit, Trash2, List, ChevronRight, Users, ChevronDown, ChevronUp, RefreshCw, Utensils, Bookmark, Copy } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
+import TimePicker from "@/components/ui/TimePicker";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -576,12 +578,10 @@ export default function SessionManager({ eventId, serviceId, sessions, segments 
                   <div className="space-y-2">
                     <Label htmlFor="date">Fecha *</Label>
                     <div className="relative">
-                      <Input 
-                        id="date" 
-                        name="date" 
-                        type="date"
+                      <DatePicker
                         value={formData.date}
-                        onChange={(e) => updateFormField('date', e.target.value)}
+                        onChange={(val) => updateFormField('date', val)}
+                        placeholder="Seleccionar fecha"
                         required
                       />
                       <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'date')} />
@@ -606,21 +606,10 @@ export default function SessionManager({ eventId, serviceId, sessions, segments 
                   <div className="space-y-2">
                     <Label htmlFor="planned_start_time">Hora Inicio *</Label>
                     <div className="relative">
-                      <Input 
-                        id="planned_start_time" 
-                        name="planned_start_time" 
-                        type="time"
+                      <TimePicker
                         value={formData.planned_start_time}
-                        onChange={(e) => updateFormField('planned_start_time', e.target.value)}
-                        min={(() => {
-                          if (!formData.date || editingSession) return undefined;
-                          const sameDaySessions = sessions.filter(s => 
-                            s.date === formData.date && 
-                            s.planned_end_time
-                          ).sort((a, b) => (a.planned_end_time || '').localeCompare(b.planned_end_time || ''));
-                          const lastSession = sameDaySessions[sameDaySessions.length - 1];
-                          return lastSession?.planned_end_time;
-                        })()}
+                        onChange={(val) => updateFormField('planned_start_time', val)}
+                        placeholder="Seleccionar hora"
                         required
                       />
                       <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'planned_start_time')} />
@@ -643,13 +632,10 @@ export default function SessionManager({ eventId, serviceId, sessions, segments 
                   <div className="space-y-2">
                     <Label htmlFor="planned_end_time">Hora Fin *</Label>
                     <div className="relative">
-                      <Input 
-                        id="planned_end_time" 
-                        name="planned_end_time" 
-                        type="time"
+                      <TimePicker
                         value={formData.planned_end_time}
-                        onChange={(e) => updateFormField('planned_end_time', e.target.value)}
-                        min={formData.planned_start_time}
+                        onChange={(val) => updateFormField('planned_end_time', val)}
+                        placeholder="Seleccionar hora"
                         required
                       />
                       <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'planned_end_time')} />
