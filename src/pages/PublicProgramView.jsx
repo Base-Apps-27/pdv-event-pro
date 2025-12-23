@@ -636,7 +636,138 @@ export default function PublicProgramView() {
 
             {/* Weekly Services Display (for Service view type) */}
             {viewType === "service" && actualServiceData && (
-              (actualServiceData["9:30am"] && actualServiceData["9:30am"].length > 0) || 
+              // Check for CustomServiceBuilder format (segments array)
+              (actualServiceData.segments && actualServiceData.segments.length > 0) ? (
+              <div className="space-y-6">
+                {/* Countdown Timer for Custom Services */}
+                {(() => {
+                  const countdown = getCountdownToNext(actualServiceData.segments.filter(s => s.start_time));
+                  if (!countdown) return null;
+
+                  const sortedSegments = actualServiceData.segments.filter(s => s.start_time).sort((a, b) => {
+                    const [aH, aM] = a.start_time.split(':').map(Number);
+                    const [bH, bM] = b.start_time.split(':').map(Number);
+                    return (aH * 60 + aM) - (bH * 60 + bM);
+                  });
+                  const isFirstSegment = sortedSegments[0]?.title === countdown.segment.title;
+                  const maxMinutes = isFirstSegment ? 120 : 60;
+
+                  if (countdown.minutes > maxMinutes) return null;
+
+                  return (
+                    <Card className={`mb-6 ${countdown.isNear ? 'border-blue-500 border-2' : ''}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600">Próximo Segmento</p>
+                            <p className="font-bold text-lg text-gray-900">{countdown.segment.title}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-3xl font-bold ${countdown.isNear ? 'text-blue-600' : 'text-gray-700'}`}>
+                              {countdown.minutes}:{countdown.seconds.toString().padStart(2, '0')}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {countdown.minutes === 0 ? 'segundos' : countdown.minutes === 1 ? 'minuto' : 'minutos'}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
+
+                {/* Custom Service Segments */}
+                <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
+                  <div className="bg-gradient-to-r from-pdv-teal/10 to-white p-4 border-b">
+                    <h3 className="text-2xl font-bold uppercase text-pdv-teal">{actualServiceData.name}</h3>
+                    {actualServiceData.description && (
+                      <p className="text-sm text-gray-600 mt-2">{actualServiceData.description}</p>
+                    )}
+                  </div>
+                  <div className="divide-y divide-gray-200">
+                    {actualServiceData.segments.filter(seg => seg.type !== 'break').map((segment, idx) => {
+                      const isCurrent = isSegmentCurrent(segment);
+                      const isUpcoming = !isCurrent && isSegmentUpcoming(segment, actualServiceData.segments);
+
+                      return (
+                        <div key={idx} className={`p-4 ${isCurrent ? 'bg-yellow-100 border-l-4 border-l-yellow-500' : isUpcoming ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50'}`}>
+                          {isCurrent && (
+                            <div className="mb-2">
+                              <Badge className="bg-yellow-500 text-white animate-pulse">EN CURSO AHORA</Badge>
+                            </div>
+                          )}
+                          {isUpcoming && (
+                            <div className="mb-2">
+                              <Badge className="bg-blue-500 text-white">PRÓXIMO (15 min)</Badge>
+                            </div>
+                          )}
+
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                {segment.start_time && (
+                                  <span className="font-bold text-lg text-gray-900">{formatTimeToEST(segment.start_time)}</span>
+                                )}
+                                <h4 className="text-xl font-bold text-gray-900">{segment.title}</h4>
+                                <Badge variant="outline" className="text-xs text-gray-700">{segment.duration} min</Badge>
+                              </div>
+
+                              {segment.data?.leader && (
+                                <p className="text-lg font-bold text-pdv-green mb-2">Dirige: {segment.data.leader}</p>
+                              )}
+
+                              {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
+                                <div className="bg-green-50 p-2 rounded border border-green-200 text-sm mb-2">
+                                  <p className="font-semibold text-green-800 mb-1">Canciones:</p>
+                                  {segment.songs.filter(s => s.title).map((song, sIdx) => (
+                                    <div key={sIdx} className="text-xs">• {song.title} {song.lead && `(${song.lead})`}</div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {segment.data?.presenter && (
+                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
+                              )}
+
+                              {segment.data?.preacher && (
+                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
+                              )}
+
+                              {segment.data?.title && (
+                                <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
+                              )}
+
+                              {segment.data?.verse && (
+                                <p className="text-xs text-gray-600 mb-1">📖 {segment.data.verse}</p>
+                              )}
+
+                              {segment.data?.description && (
+                                <p className="text-xs text-gray-600 mt-2 italic">{segment.data.description}</p>
+                              )}
+
+                              {/* Coordinator Actions */}
+                              {segment.actions && segment.actions.length > 0 && (
+                                <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs mt-2">
+                                  <p className="font-bold text-amber-900 mb-1">📋 Acciones para Coordinador</p>
+                                  <div className="space-y-1">
+                                    {segment.actions.map((action, aIdx) => (
+                                      <div key={aIdx} className="text-amber-800">
+                                        • {action.label || action.description || action}
+                                        {action.notes && <span className="italic ml-1">— {action.notes}</span>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (actualServiceData["9:30am"] && actualServiceData["9:30am"].length > 0) || 
               (actualServiceData["11:30am"] && actualServiceData["11:30am"].length > 0) ? (
               <div className="space-y-6">
                 {/* Countdown Timer - 2 hours for first segment, 1 hour for others */}
