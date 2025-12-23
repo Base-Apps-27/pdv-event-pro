@@ -11,8 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
-import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, GripVertical, ChevronUp, ChevronDown, Sparkles, Settings } from "lucide-react";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, ChevronUp, ChevronDown, Sparkles, Settings, ArrowUp, ArrowDown } from "lucide-react";
 import { addMinutes, parse, format } from "date-fns";
 import PrintSettingsModal from "@/components/print/PrintSettingsModal";
 import { formatDate as formatDateES } from "date-fns";
@@ -352,13 +351,17 @@ export default function CustomServiceBuilder() {
     }));
   };
 
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
-    
+  const moveSegmentUp = (idx) => {
+    if (idx === 0) return;
     const items = Array.from(serviceData.segments);
-    const [reordered] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reordered);
-    
+    [items[idx - 1], items[idx]] = [items[idx], items[idx - 1]];
+    setServiceData(prev => ({ ...prev, segments: items }));
+  };
+
+  const moveSegmentDown = (idx) => {
+    if (idx === serviceData.segments.length - 1) return;
+    const items = Array.from(serviceData.segments);
+    [items[idx], items[idx + 1]] = [items[idx + 1], items[idx]];
     setServiceData(prev => ({ ...prev, segments: items }));
   };
 
@@ -613,27 +616,38 @@ export default function CustomServiceBuilder() {
           </Button>
         </div>
 
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="segments">
-            {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
-                {serviceData.segments.map((segment, idx) => {
-                  const isExpanded = expandedSegments[idx];
-                  const isSpecial = segment.type === "Especial";
-                  
-                  return (
-                    <Draggable key={`seg-${idx}`} draggableId={`seg-${idx}`} index={idx}>
-                      {(provided) => (
-                        <Card
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className={`border-l-4 ${isSpecial ? 'border-l-orange-500 bg-orange-50' : 'border-l-pdv-teal'}`}
-                        >
-                          <CardHeader className="pb-2 bg-gray-50">
-                            <div className="flex items-center gap-2 mb-2">
-                              <div {...provided.dragHandleProps} className="print:hidden">
-                                <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
-                              </div>
+        <div className="space-y-3">
+          {serviceData.segments.map((segment, idx) => {
+            const isExpanded = expandedSegments[idx];
+            const isSpecial = segment.type === "Especial";
+            
+            return (
+              <Card
+                key={`seg-${idx}`}
+                className={`border-l-4 ${isSpecial ? 'border-l-orange-500 bg-orange-50' : 'border-l-pdv-teal'}`}
+              >
+                <CardHeader className="pb-2 bg-gray-50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex flex-col gap-1 print:hidden">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 p-0"
+                        onClick={() => moveSegmentUp(idx)}
+                        disabled={idx === 0}
+                      >
+                        <ArrowUp className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 p-0"
+                        onClick={() => moveSegmentDown(idx)}
+                        disabled={idx === serviceData.segments.length - 1}
+                      >
+                        <ArrowDown className="w-3 h-3" />
+                      </Button>
+                    </div>
                               {isSpecial ? <Sparkles className="w-4 h-4 text-orange-600" /> : <Clock className="w-4 h-4 text-pdv-teal" />}
                               <Input
                                 value={segment.title}
@@ -895,17 +909,11 @@ export default function CustomServiceBuilder() {
                                 />
                               </div>
                             )}
-                          </CardContent>
-                        </Card>
-                      )}
-                    </Draggable>
-                  );
-                })}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+                  </CardContent>
+                </Card>
+              );
+            })}
+        </div>
 
         {serviceData.segments.length === 0 && (
           <Card className="border-dashed">
