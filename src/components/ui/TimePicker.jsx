@@ -80,7 +80,7 @@ export default function TimePicker({
               <select
                 value={hour}
                 onChange={(e) => setHour(e.target.value)}
-                className="w-full border rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pdv-green"
+                className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-pdv-green"
                 style={{ maxHeight: '200px' }}
               >
                 {hours.map((h) => (
@@ -94,7 +94,7 @@ export default function TimePicker({
               <select
                 value={minute}
                 onChange={(e) => setMinute(e.target.value)}
-                className="w-full border rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pdv-green"
+                className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-pdv-green"
               >
                 {minutes.map((m) => (
                   <option key={m} value={m}>{m}</option>
