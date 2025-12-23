@@ -1,5 +1,6 @@
 import AnnouncementsReport from './pages/AnnouncementsReport';
 import CustomServiceBuilder from './pages/CustomServiceBuilder';
+import CustomServicesManager from './pages/CustomServicesManager';
 import Dashboard from './pages/Dashboard';
 import EventDetail from './pages/EventDetail';
 import Events from './pages/Events';
@@ -15,13 +16,13 @@ import Templates from './pages/Templates';
 import TestDashboard from './pages/TestDashboard';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import CustomServicesManager from './pages/CustomServicesManager';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AnnouncementsReport": AnnouncementsReport,
     "CustomServiceBuilder": CustomServiceBuilder,
+    "CustomServicesManager": CustomServicesManager,
     "Dashboard": Dashboard,
     "EventDetail": EventDetail,
     "Events": Events,
@@ -37,7 +38,6 @@ export const PAGES = {
     "TestDashboard": TestDashboard,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "CustomServicesManager": CustomServicesManager,
 }
 
 export const pagesConfig = {

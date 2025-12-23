@@ -324,28 +324,48 @@ export default function WeeklyServiceManager() {
     } else {
       const initialData = {
         date: selectedDate,
-        "9:30am": BLUEPRINT["9:30am"].map(seg => ({
-          ...seg,
-          data: {},
-          actions: seg.actions || [],
-          songs: seg.type === "worship" ? [
-            { title: "", lead: "" },
-            { title: "", lead: "" },
-            { title: "", lead: "" },
-            { title: "", lead: "" }
-          ] : undefined
-        })),
-        "11:30am": BLUEPRINT["11:30am"].map(seg => ({
-          ...seg,
-          data: {},
-          actions: seg.actions || [],
-          songs: seg.type === "worship" ? [
-            { title: "", lead: "" },
-            { title: "", lead: "" },
-            { title: "", lead: "" },
-            { title: "", lead: "" }
-          ] : undefined
-        })),
+        "9:30am": BLUEPRINT["9:30am"].map(seg => {
+          const segmentCopy = {
+            type: seg.type,
+            title: seg.title,
+            duration: seg.duration,
+            fields: [...(seg.fields || [])],
+            data: {},
+            actions: seg.actions ? seg.actions.map(a => ({ ...a })) : []
+          };
+          
+          if (seg.type === "worship") {
+            segmentCopy.songs = [
+              { title: "", lead: "" },
+              { title: "", lead: "" },
+              { title: "", lead: "" },
+              { title: "", lead: "" }
+            ];
+          }
+          
+          return segmentCopy;
+        }),
+        "11:30am": BLUEPRINT["11:30am"].map(seg => {
+          const segmentCopy = {
+            type: seg.type,
+            title: seg.title,
+            duration: seg.duration,
+            fields: [...(seg.fields || [])],
+            data: {},
+            actions: seg.actions ? seg.actions.map(a => ({ ...a })) : []
+          };
+          
+          if (seg.type === "worship") {
+            segmentCopy.songs = [
+              { title: "", lead: "" },
+              { title: "", lead: "" },
+              { title: "", lead: "" },
+              { title: "", lead: "" }
+            ];
+          }
+          
+          return segmentCopy;
+        }),
         coordinators: { "9:30am": "", "11:30am": "" },
         ujieres: { "9:30am": "", "11:30am": "" },
         sound: { "9:30am": "", "11:30am": "" },
