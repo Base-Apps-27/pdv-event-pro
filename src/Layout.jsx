@@ -129,6 +129,25 @@ function LayoutContent({ children }) {
               {t('nav.dashboard')}
             </Link>
 
+            {/* LIVE VIEW - All Roles */}
+            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3 flex items-center gap-2">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+              <span>{t('section.live')}</span>
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+            </div>
+            <Link
+              to={createPageUrl("PublicProgramView")}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                isActive(createPageUrl("PublicProgramView"))
+                  ? "text-white shadow-md"
+                  : "text-gray-400 hover:bg-white/5 hover:text-white"
+              }`}
+              style={isActive(createPageUrl("PublicProgramView")) ? gradientStyle : {}}
+            >
+              <Bell className="w-5 h-5" />
+              {t('nav.liveProgram')}
+            </Link>
+
             {/* EVENTS PILLAR - AdmAsst and Admin */}
             {(userRole === 'AdmAsst' || userRole === 'Admin') && (
               <>
