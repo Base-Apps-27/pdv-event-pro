@@ -80,6 +80,7 @@ export default function WeeklyServiceManager() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSavedData, setLastSavedData] = useState(null);
   const [lastSaveTimestamp, setLastSaveTimestamp] = useState(null);
+  const [isQuickPrint, setIsQuickPrint] = useState(false);
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
@@ -815,6 +816,15 @@ Return ONLY valid JSON:
     debouncedSave('print-settings');
   };
 
+  const handleQuickPrint = () => {
+    setIsQuickPrint(true);
+    setTimeout(() => {
+      window.print();
+      // Reset after print dialog closes
+      setTimeout(() => setIsQuickPrint(false), 100);
+    }, 50);
+  };
+
   const toggleSegmentExpanded = (timeSlot, idx) => {
     const key = `${timeSlot}-${idx}`;
     setExpandedSegments(prev => ({
@@ -885,19 +895,15 @@ Return ONLY valid JSON:
   }
 
   // Apply print settings dynamically
-  const activePrintSettingsPage1 = printSettingsPage1 || {
+  const defaultPrintSettings = {
     globalScale: 1.0,
     margins: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" },
     bodyFontScale: 1.0,
     titleFontScale: 1.0
   };
 
-  const activePrintSettingsPage2 = printSettingsPage2 || {
-    globalScale: 1.0,
-    margins: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" },
-    bodyFontScale: 1.0,
-    titleFontScale: 1.0
-  };
+  const activePrintSettingsPage1 = isQuickPrint ? defaultPrintSettings : (printSettingsPage1 || defaultPrintSettings);
+  const activePrintSettingsPage2 = isQuickPrint ? defaultPrintSettings : (printSettingsPage2 || defaultPrintSettings);
 
   return (
     <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
@@ -1785,11 +1791,21 @@ Return ONLY valid JSON:
           </Button>
           
           <Button 
+            onClick={handleQuickPrint}
+            variant="outline"
+            className="border-2 border-gray-400 bg-white text-gray-900 hover:bg-gray-100 font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
+            title="Impresión Rápida / Quick Print"
+          >
+            <Printer className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+            <span className="hidden md:inline">Quick Print</span>
+          </Button>
+          
+          <Button 
             onClick={() => setShowPrintSettings(true)}
             style={greenStyle}
             className="font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
           >
-            <Printer className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+            <Settings className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
             <span className="hidden md:inline">{t('btn.print')}</span>
           </Button>
         </div>
