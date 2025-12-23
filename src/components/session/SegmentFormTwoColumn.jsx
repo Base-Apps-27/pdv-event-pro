@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell, ListChecks, Zap } from "lucide-react";
+import TimePicker from "@/components/ui/TimePicker";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import SegmentTimelinePreview from "./SegmentTimelinePreview";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
@@ -1024,17 +1025,11 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   <div className="space-y-3">
                     <div className="space-y-2">
                       <Label className="text-xs">Inicio *</Label>
-                      <Input 
-                        type="time"
+                      <TimePicker
                         value={formData.start_time}
-                        onChange={(e) => setFormData({...formData, start_time: e.target.value})}
+                        onChange={(val) => setFormData({...formData, start_time: val})}
+                        placeholder="Seleccionar hora"
                         className="h-9"
-                        min={(() => {
-                          if (segment || !allSegments || allSegments.length === 0) return undefined;
-                          const sortedSegments = [...allSegments].sort((a, b) => (a.order || 0) - (b.order || 0));
-                          const lastSegment = sortedSegments[sortedSegments.length - 1];
-                          return lastSegment?.end_time;
-                        })()}
                         required
                       />
                       {!segment && allSegments && allSegments.length > 0 && (() => {

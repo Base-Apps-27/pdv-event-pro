@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Copy, Loader2 } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
 import { createFieldOrigins } from "@/components/utils/fieldOrigins";
 
 export default function DuplicateEventDialog({ event, open, onOpenChange, mode = "duplicate" }) {
@@ -213,11 +214,10 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
             {!isTemplateMode && (
               <div className="grid gap-2">
                 <Label htmlFor="newStartDate">Fecha Inicio</Label>
-                <Input
-                  id="newStartDate"
-                  type="date"
+                <DatePicker
                   value={newStartDate}
-                  onChange={(e) => setNewStartDate(e.target.value)}
+                  onChange={(val) => setNewStartDate(val)}
+                  placeholder="Seleccionar fecha"
                   disabled={isDuplicating}
                 />
               </div>

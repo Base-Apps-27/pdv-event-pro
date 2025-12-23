@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { List, AlertTriangle, Loader2, Wand2 } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
 
 // Character limits - different for static vs dynamic
 const STATIC_LIMITS = { title: 60, body: 420, cue: 200, date: 50 };
@@ -319,11 +320,10 @@ export default function StaticAnnouncementForm({
           <Label htmlFor="date_of_occurrence" className="font-semibold">
             Fecha de Ocurrencia / Date of Occurrence
           </Label>
-          <Input
-            id="date_of_occurrence"
-            type="date"
+          <DatePicker
             value={form.date_of_occurrence || ''}
-            onChange={(e) => updateField('date_of_occurrence', e.target.value)}
+            onChange={(val) => updateField('date_of_occurrence', val)}
+            placeholder="Seleccionar fecha"
           />
           <p className="text-xs text-gray-500">
             El anuncio se mostrará hasta esta fecha / Announcement will show until this date
