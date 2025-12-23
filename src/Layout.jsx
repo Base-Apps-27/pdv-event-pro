@@ -353,6 +353,15 @@ function LayoutContent({ children }) {
                     Inicio
                   </Link>
 
+                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">En Vivo</div>
+                  <Link
+                    to={createPageUrl("PublicProgramView")}
+                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Programa en Vivo
+                  </Link>
+
                   <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">Eventos</div>
                   <Link
                     to={createPageUrl("Events")}
