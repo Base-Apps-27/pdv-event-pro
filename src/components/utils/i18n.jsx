@@ -4,6 +4,7 @@ const translations = {
   es: {
     // Navigation
     'nav.dashboard': 'Inicio',
+    'nav.liveProgram': 'Programa en Vivo',
     'nav.events': 'Eventos',
     'nav.services': 'Servicios',
     'nav.reports': 'Informes de Eventos',
@@ -16,6 +17,7 @@ const translations = {
     
     // Sections
     'section.main': 'Panel Principal',
+    'section.live': 'En Vivo',
     'section.events': 'Eventos Especiales',
     'section.services': 'Servicios Semanales',
     'section.resources': 'Recursos Compartidos',
@@ -74,6 +76,7 @@ const translations = {
   en: {
     // Navigation
     'nav.dashboard': 'Home',
+    'nav.liveProgram': 'Live Program',
     'nav.events': 'Events',
     'nav.services': 'Services',
     'nav.reports': 'Event Reports',
@@ -86,6 +89,7 @@ const translations = {
     
     // Sections
     'section.main': 'Main Panel',
+    'section.live': 'Live',
     'section.events': 'Special Events',
     'section.services': 'Weekly Services',
     'section.resources': 'Shared Resources',
