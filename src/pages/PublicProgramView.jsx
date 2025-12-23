@@ -54,17 +54,22 @@ export default function PublicProgramView() {
     refetchInterval: 5000, // Poll every 5 seconds
   });
 
-  // Fetch services (only WeeklyServiceManager services - recurring with day_of_week)
+  // Fetch services (only WeeklyServiceManager date-specific instances)
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
     queryFn: async () => {
       const allServices = await base44.entities.Service.list();
-      // Filter to only weekly recurring services (not custom/deprecated ones)
-      return allServices.filter(s => 
-        s.status === 'active' && 
-        s.day_of_week && 
-        !s.date // Weekly services don't have specific dates, only day_of_week
-      );
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Filter to only date-specific weekly services (created by WeeklyServiceManager)
+      return allServices
+        .filter(s => 
+          s.status === 'active' && 
+          s.date && // Must have a specific date
+          new Date(s.date) >= today // Only future or today's services
+        )
+        .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date ascending
     },
     refetchInterval: 5000,
   });
@@ -108,11 +113,10 @@ export default function PublicProgramView() {
       });
       
       // Check for services happening TODAY
-      const dayMap = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
       const todayService = services.find(s => {
-        if (s.status !== 'active') return false;
-        const serviceDayNum = dayMap[s.day_of_week];
-        return serviceDayNum === today.getDay();
+        const serviceDate = new Date(s.date);
+        serviceDate.setHours(0, 0, 0, 0);
+        return serviceDate.getTime() === today.getTime();
       });
       
       // Priority: Today's service > Today's event > Next upcoming (within 7 days)
@@ -133,19 +137,17 @@ export default function PublicProgramView() {
           return eventDate > today && eventDate <= sevenDaysOut;
         });
         
-        const activeServices = services.filter(s => s.status === 'active');
-        const upcomingServices = activeServices.map(service => {
-          const serviceDayNum = dayMap[service.day_of_week];
-          let daysUntil = serviceDayNum - today.getDay();
-          if (daysUntil <= 0) daysUntil += 7;
-          return { ...service, daysUntil };
-        }).filter(s => s.daysUntil <= 7).sort((a, b) => a.daysUntil - b.daysUntil);
-        
-        const nextService = upcomingServices[0];
+        // Services are already sorted by date, just find next one
+        const nextService = services.find(s => {
+          const serviceDate = new Date(s.date);
+          serviceDate.setHours(0, 0, 0, 0);
+          return serviceDate > today;
+        });
         
         if (nextEvent && nextService) {
           const eventDaysAway = Math.floor((new Date(nextEvent.start_date) - today) / (1000 * 60 * 60 * 24));
-          if (nextService.daysUntil <= eventDaysAway) {
+          const serviceDaysAway = Math.floor((new Date(nextService.date) - today) / (1000 * 60 * 60 * 24));
+          if (serviceDaysAway <= eventDaysAway) {
             setSelectedServiceId(nextService.id);
             setViewType("service");
           } else {
@@ -163,13 +165,13 @@ export default function PublicProgramView() {
     }
   }, [publicEvents, services, preloadedEventId, preloadedServiceId]);
 
-  // Fetch actual Service data for weekly services
+  // Fetch actual Service data for selected service
   const { data: weeklyServiceData } = useQuery({
     queryKey: ['weeklyServiceData', selectedServiceId],
     queryFn: async () => {
       const data = await base44.entities.Service.filter({ id: selectedServiceId });
-      // Ensure we only work with weekly services
-      return data.filter(s => s.status === 'active' && s.day_of_week && !s.date);
+      // Ensure we only work with active date-specific services
+      return data.filter(s => s.status === 'active' && s.date);
     },
     enabled: !!(viewType === "service" && selectedServiceId),
     refetchInterval: 5000,
@@ -431,28 +433,24 @@ export default function PublicProgramView() {
               {/* Service Selector (upcoming within 7 days) */}
               {viewType === "service" && (() => {
                 const today = new Date();
-                const dayMap = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
-                const activeServices = services.filter(s => s.status === 'active');
+                today.setHours(0, 0, 0, 0);
+                const sevenDaysOut = new Date(today);
+                sevenDaysOut.setDate(today.getDate() + 7);
 
-                const upcomingServices = activeServices.map(service => {
-                  const serviceDayNum = dayMap[service.day_of_week];
-                  let daysUntil = serviceDayNum - today.getDay();
-                  if (daysUntil < 0) daysUntil += 7;
-                  if (daysUntil === 0 && service.time) {
-                    const [hours, minutes] = service.time.split(':');
-                    const serviceTime = new Date(today);
-                    serviceTime.setHours(parseInt(hours), parseInt(minutes), 0);
-                    if (serviceTime < today) daysUntil = 7;
-                  }
-                  const nextDate = new Date(today);
-                  nextDate.setDate(today.getDate() + daysUntil);
-                  return { ...service, nextDate, daysUntil };
-                }).filter(s => s.daysUntil <= 7).sort((a, b) => a.daysUntil - b.daysUntil);
-
-                // Deduplicate by day of week (only show one service per day)
-                const uniqueServices = Array.from(
-                  new Map(upcomingServices.map(s => [s.day_of_week, s])).values()
-                );
+                // Services are already filtered and sorted by date
+                const upcomingServices = services
+                  .filter(s => {
+                    const serviceDate = new Date(s.date);
+                    serviceDate.setHours(0, 0, 0, 0);
+                    return serviceDate <= sevenDaysOut;
+                  })
+                  .map(service => {
+                    const serviceDate = new Date(service.date);
+                    serviceDate.setHours(0, 0, 0, 0);
+                    const diffTime = serviceDate - today;
+                    const daysUntil = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                    return { ...service, daysUntil };
+                  });
 
                 return (
                   <div className="w-full">
@@ -461,9 +459,9 @@ export default function PublicProgramView() {
                         <SelectValue placeholder="Selecciona un servicio" />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
-                        {uniqueServices.map((service) => (
+                        {upcomingServices.map((service) => (
                           <SelectItem key={service.id} value={service.id}>
-                            {service.name} - {service.day_of_week} ({service.daysUntil === 0 ? 'Hoy' : `en ${service.daysUntil} días`})
+                            {service.name} - {service.date} ({service.daysUntil === 0 ? 'Hoy' : `en ${service.daysUntil} días`})
                           </SelectItem>
                         ))}
                       </SelectContent>
