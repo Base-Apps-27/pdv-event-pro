@@ -218,8 +218,8 @@ export default function Reports() {
               <div className="flex justify-between items-center gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold text-gray-900 uppercase tracking-tight mb-1">
-                    <span className="hidden print:inline mr-2 text-gray-500">{selectedEvent.name} —</span>
+                  <h2 className="text-xl font-bold uppercase tracking-tight mb-1" style={{ color: '#1F8A70', fontWeight: '900' }}>
+                    <span className="hidden print:inline mr-2">{selectedEvent.name} —</span>
                     {session.name}
                   </h2>
                   {hasHospitalityTasks && (
@@ -979,10 +979,10 @@ export default function Reports() {
             border-radius: 0.5rem;
           }
 
-          /* Only force new page if session won't fit on current page */
+          /* Force new page before every session except the first one */
           .print-session:not(:first-of-type) {
-            break-before: auto;
-            page-break-before: auto;
+            break-before: page;
+            page-break-before: always;
           }
           
           /* Optimization for print density */
@@ -1133,18 +1133,7 @@ export default function Reports() {
               )}
             </div>
 
-            {/* Print header with logo */}
-            <div className="hidden print:flex print-header">
-              <div className="print-logo">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
-              </div>
-              <div className="print-title">
-                <h1>{selectedEvent.name}</h1>
-                {selectedEvent.theme && (
-                  <p>"{selectedEvent.theme}"</p>
-                )}
-              </div>
-            </div>
+
 
             <Tabs value={activeReport} onValueChange={setActiveReport} className="w-full">
               <TabsList className="grid w-full grid-cols-6 mb-6 no-print">
