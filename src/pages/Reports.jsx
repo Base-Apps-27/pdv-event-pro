@@ -918,9 +918,7 @@ export default function Reports() {
             visibility: visible;
           }
           #printable-report {
-            position: absolute;
-            left: 0;
-            top: 0;
+            position: relative;
             width: 100%;
             padding: 0;
             background: white;
@@ -929,15 +927,17 @@ export default function Reports() {
           .print-header {
             display: flex !important;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
             border-bottom: 2px solid #e5e7eb;
+            page-break-after: avoid;
+            break-after: avoid;
           }
           
           .print-logo {
-            width: 50px;
-            height: 50px;
+            width: 35px;
+            height: 35px;
             flex-shrink: 0;
           }
           
@@ -952,18 +952,19 @@ export default function Reports() {
           }
           
           .print-title h1 {
-            font-size: 18pt;
+            font-size: 14pt;
             font-weight: bold;
             color: #1a1a1a;
             margin: 0;
-            line-height: 1.2;
+            line-height: 1.1;
           }
           
           .print-title p {
-            font-size: 11pt;
+            font-size: 9pt;
             color: #1F8A70;
             font-style: italic;
-            margin: 2px 0 0 0;
+            margin: 0;
+            line-height: 1.1;
           }
           .no-print {
             display: none !important;
@@ -973,15 +974,15 @@ export default function Reports() {
             page-break-inside: avoid;
             display: block;
             width: 100%;
-            margin-bottom: 0 !important;
+            margin-bottom: 8px !important;
             border: 1px solid #e5e7eb;
             border-radius: 0.5rem;
           }
 
-          /* Force new page before every session except the first one */
+          /* Only force new page if session won't fit on current page */
           .print-session:not(:first-of-type) {
-            break-before: page;
-            page-break-before: always;
+            break-before: auto;
+            page-break-before: auto;
           }
           
           /* Optimization for print density */
