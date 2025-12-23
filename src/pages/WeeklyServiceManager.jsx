@@ -835,37 +835,87 @@ Return ONLY valid JSON:
 
 
 
-  // Line estimation helpers
-  const estimateLines = (text, charsPerLine = 32) => {
-    if (!text) return 0;
-    const lines = text.split('\n');
-    let totalLines = 0;
-    lines.forEach(line => {
-      if (line.trim().startsWith('•')) {
-        totalLines += Math.ceil((line.length - 2) / (charsPerLine * 0.8)) || 1;
-      } else {
-        totalLines += Math.ceil(line.length / charsPerLine) || 1;
-      }
-    });
-    return totalLines;
+  // Overflow detection helpers
+  const calculateServiceProgramOverflow = () => {
+    if (!serviceData) return { hasOverflow: false, level: 'low' };
+    
+    // Count content items for each service
+    const count930 = {
+      segments: serviceData["9:30am"]?.filter(s => s.type !== 'break').length || 0,
+      songs: serviceData["9:30am"]?.reduce((sum, seg) => sum + (seg.songs?.filter(s => s.title).length || 0), 0) || 0,
+      notes: (serviceData.pre_service_notes?.["9:30am"] ? 1 : 0)
+    };
+    
+    const count1130 = {
+      segments: serviceData["11:30am"]?.filter(s => s.type !== 'break').length || 0,
+      songs: serviceData["11:30am"]?.reduce((sum, seg) => sum + (seg.songs?.filter(s => s.title).length || 0), 0) || 0,
+      notes: (serviceData.pre_service_notes?.["11:30am"] ? 1 : 0)
+    };
+    
+    // Estimate page units (1 unit ≈ 1 line of content)
+    const units930 = count930.segments * 4 + count930.songs * 1.2 + count930.notes * 2;
+    const units1130 = count1130.segments * 4 + count1130.songs * 1.2 + count1130.notes * 2;
+    
+    // Each column can fit ~50 units comfortably
+    const maxUnitsPerColumn = 50;
+    
+    if (units930 > maxUnitsPerColumn || units1130 > maxUnitsPerColumn) {
+      return { hasOverflow: true, level: 'high', label: 'Sobrecarga Detectada', color: 'bg-red-100 text-red-800 border-red-300' };
+    }
+    if (units930 > maxUnitsPerColumn * 0.85 || units1130 > maxUnitsPerColumn * 0.85) {
+      return { hasOverflow: true, level: 'medium', label: 'Riesgo Moderado', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' };
+    }
+    
+    return { hasOverflow: false, level: 'low', label: 'Se Ajusta Bien', color: 'bg-green-100 text-green-800 border-green-300' };
   };
 
-  const calculatePDFRisk = () => {
+  const calculateAnnouncementOverflow = () => {
     const selected = [...fixedAnnouncements, ...dynamicAnnouncements]
       .filter(ann => selectedAnnouncements.includes(ann.id));
     
-    let totalLines = 0;
-    selected.forEach(ann => {
-      const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
-      const instructions = ann.instructions || "";
-      totalLines += estimateLines(content, 35);
-      totalLines += estimateLines(instructions, 35);
-      totalLines += 2; // Title + spacing
-    });
-
-    if (totalLines < 40) return { level: 'low', label: 'Se ajusta', color: 'bg-green-100 text-green-800 border-green-300' };
-    if (totalLines < 50) return { level: 'medium', label: 'Riesgo Moderado', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' };
-    return { level: 'high', label: 'Sobrecarga', color: 'bg-red-100 text-red-800 border-red-300' };
+    if (selected.length === 0) return { hasOverflow: false, level: 'low', label: 'Sin Anuncios', color: 'bg-gray-100 text-gray-800 border-gray-300' };
+    
+    // Estimate content units for 2-column layout
+    // Fixed announcements go in left column, dynamic in right
+    const fixedSelected = selected.filter(a => !a.isEvent && a.category === 'General');
+    const dynamicSelected = selected.filter(a => a.isEvent || a.category !== 'General');
+    
+    // Calculate units (title=2, content line=1, instructions=1.5, video badge=0.5)
+    const calculateUnits = (ann) => {
+      const content = ann.isEvent ? (ann.announcement_blurb || ann.description || '') : (ann.content || '');
+      const instructions = ann.instructions || '';
+      
+      // Strip HTML and count characters
+      const contentText = content.replace(/<[^>]*>/g, '');
+      const instructionsText = instructions.replace(/<[^>]*>/g, '');
+      
+      // 2-column layout: ~40 chars per line
+      const contentLines = Math.ceil(contentText.length / 40);
+      const instructionLines = Math.ceil(instructionsText.length / 35);
+      
+      let units = 2; // Title
+      units += contentLines;
+      units += instructionLines * 1.5;
+      units += (ann.has_video || ann.announcement_has_video) ? 0.5 : 0;
+      units += 1; // Spacing
+      
+      return units;
+    };
+    
+    const fixedUnits = fixedSelected.reduce((sum, ann) => sum + calculateUnits(ann), 0);
+    const dynamicUnits = dynamicSelected.reduce((sum, ann) => sum + calculateUnits(ann), 0);
+    
+    // Each column can fit ~55 units
+    const maxUnitsPerColumn = 55;
+    
+    if (fixedUnits > maxUnitsPerColumn || dynamicUnits > maxUnitsPerColumn) {
+      return { hasOverflow: true, level: 'high', label: 'Sobrecarga Detectada', color: 'bg-red-100 text-red-800 border-red-300' };
+    }
+    if (fixedUnits > maxUnitsPerColumn * 0.85 || dynamicUnits > maxUnitsPerColumn * 0.85) {
+      return { hasOverflow: true, level: 'medium', label: 'Riesgo Moderado', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' };
+    }
+    
+    return { hasOverflow: false, level: 'low', label: 'Se Ajusta Bien', color: 'bg-green-100 text-green-800 border-green-300' };
   };
 
   const calculateServiceTimes = (timeSlot) => {
@@ -1811,6 +1861,53 @@ Return ONLY valid JSON:
         </div>
       </div>
 
+      {/* Overflow Warnings - Quick Print Decision Helper */}
+      <div className="grid md:grid-cols-2 gap-4 print:hidden">
+        {/* Service Program Overflow */}
+        <Card className={`border-2 ${calculateServiceProgramOverflow().color}`}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                <span className="font-bold text-sm">Programa de Servicio</span>
+              </div>
+              <Badge className={`${calculateServiceProgramOverflow().color} text-xs px-2 py-1`}>
+                {calculateServiceProgramOverflow().label}
+              </Badge>
+            </div>
+            <p className="text-xs text-gray-700">
+              {calculateServiceProgramOverflow().hasOverflow ? (
+                <>⚠ Contenido extenso detectado. Usa <strong>Print Config</strong> para ajustar escala/márgenes.</>
+              ) : (
+                <>✓ El programa se ajusta bien. Usa <strong>Quick Print</strong> para imprimir rápido.</>
+              )}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Announcements Overflow */}
+        <Card className={`border-2 ${calculateAnnouncementOverflow().color}`}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5" />
+                <span className="font-bold text-sm">Anuncios</span>
+              </div>
+              <Badge className={`${calculateAnnouncementOverflow().color} text-xs px-2 py-1`}>
+                {calculateAnnouncementOverflow().label}
+              </Badge>
+            </div>
+            <p className="text-xs text-gray-700">
+              {calculateAnnouncementOverflow().hasOverflow ? (
+                <>⚠ Muchos anuncios seleccionados. Usa <strong>Print Config</strong> para compresión.</>
+              ) : (
+                <>✓ Los anuncios se ajustan bien. Usa <strong>Quick Print</strong> para imprimir rápido.</>
+              )}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Date Selection */}
       <Card className="print:hidden border-2 border-gray-300 bg-white">
         <CardContent className="p-4">
@@ -2696,28 +2793,6 @@ Return ONLY valid JSON:
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* PDF Risk Indicator */}
-          <Card className={`border-2 ${calculatePDFRisk().color}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-sm">Ajuste para PDF de Una Página</div>
-                  <div className="text-xs mt-1">
-                    {selectedAnnouncements.length} anuncios seleccionados
-                  </div>
-                </div>
-                <Badge className={calculatePDFRisk().color + ' text-sm px-3 py-1'}>
-                  {calculatePDFRisk().label}
-                </Badge>
-              </div>
-              {calculatePDFRisk().level === 'high' && (
-                <div className="mt-2 text-xs text-red-700">
-                  ⚠ El contenido puede exceder una página. Se aplicará compresión automática al generar el PDF.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Bulk Selection Controls */}
           <div className="flex gap-2 flex-wrap">
             <Button
