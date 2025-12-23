@@ -45,7 +45,7 @@ export default function CustomServiceBuilder() {
         presenter: "",
         translator: "",
         preacher: "",
-        leader: [],
+        leader: "",
         messageTitle: "",
         verse: "",
         songs: [
@@ -64,7 +64,7 @@ export default function CustomServiceBuilder() {
         presenter: "",
         translator: "",
         preacher: "",
-        leader: [],
+        leader: "",
         messageTitle: "",
         verse: "",
         songs: [],
@@ -78,7 +78,7 @@ export default function CustomServiceBuilder() {
         presenter: "",
         translator: "",
         preacher: "",
-        leader: [],
+        leader: "",
         messageTitle: "",
         verse: "",
         songs: [],
@@ -92,7 +92,7 @@ export default function CustomServiceBuilder() {
         presenter: "",
         translator: "",
         preacher: "",
-        leader: [],
+        leader: "",
         messageTitle: "",
         verse: "",
         songs: [],
@@ -100,10 +100,10 @@ export default function CustomServiceBuilder() {
         actions: []
       }
     ],
-    coordinators: [],
-    ujieres: [],
-    sound: [],
-    luces: [],
+    coordinators: "",
+    ujieres: "",
+    sound: "",
+    luces: "",
     notes: ""
   });
 
@@ -727,11 +727,11 @@ export default function CustomServiceBuilder() {
                                 <div className="grid md:grid-cols-2 gap-2">
                                   <div className="space-y-2">
                                     <Label className="text-xs">Líder / Director</Label>
-                                    <MultiPersonSelect
+                                    <AutocompleteInput
                                       type="leader"
-                                      value={segment.leader || []}
-                                      onChange={(val) => updateSegmentField(idx, 'leader', val)}
-                                      placeholder="Agregar líderes..."
+                                      value={segment.leader}
+                                      onChange={(e) => updateSegmentField(idx, 'leader', e.target.value)}
+                                      placeholder="Nombre del líder"
                                       className="text-sm"
                                     />
                                   </div>
@@ -972,38 +972,35 @@ export default function CustomServiceBuilder() {
         <CardContent className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Coordinador(a)</Label>
-            <MultiPersonSelect
+            <AutocompleteInput
               type="presenter"
               value={serviceData.coordinators}
-              onChange={(val) => setServiceData(prev => ({ ...prev, coordinators: val }))}
-              placeholder="Agregar coordinadores..."
+              onChange={(e) => setServiceData(prev => ({ ...prev, coordinators: e.target.value }))}
+              placeholder="Nombre del coordinador"
             />
           </div>
           <div className="space-y-2">
             <Label>Ujieres</Label>
-            <MultiPersonSelect
-              type="general"
+            <Input
               value={serviceData.ujieres}
-              onChange={(val) => setServiceData(prev => ({ ...prev, ujieres: val }))}
-              placeholder="Agregar ujieres..."
+              onChange={(e) => setServiceData(prev => ({ ...prev, ujieres: e.target.value }))}
+              placeholder="Nombres de ujieres"
             />
           </div>
           <div className="space-y-2">
             <Label>Sonido</Label>
-            <MultiPersonSelect
-              type="general"
+            <Input
               value={serviceData.sound}
-              onChange={(val) => setServiceData(prev => ({ ...prev, sound: val }))}
-              placeholder="Agregar equipo de sonido..."
+              onChange={(e) => setServiceData(prev => ({ ...prev, sound: e.target.value }))}
+              placeholder="Equipo de sonido"
             />
           </div>
           <div className="space-y-2">
             <Label>Luces/Proyección</Label>
-            <MultiPersonSelect
-              type="general"
+            <Input
               value={serviceData.luces}
-              onChange={(val) => setServiceData(prev => ({ ...prev, luces: val }))}
-              placeholder="Agregar equipo de luces..."
+              onChange={(e) => setServiceData(prev => ({ ...prev, luces: e.target.value }))}
+              placeholder="Equipo de luces"
             />
           </div>
         </CardContent>
