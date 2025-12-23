@@ -1861,40 +1861,32 @@ Return ONLY valid JSON:
         </div>
       </div>
 
-      {/* Overflow Warnings - Quick Print Decision Helper */}
-      <div className="grid md:grid-cols-2 gap-3 print:hidden">
-        {/* Service Program Overflow */}
-        <div className={`border-l-4 ${calculateServiceProgramOverflow().color} bg-white/50 rounded px-3 py-2`}>
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <Clock className="w-4 h-4 flex-shrink-0" />
-              <span className="font-semibold text-xs truncate">Programa</span>
-              <Badge variant="outline" className={`${calculateServiceProgramOverflow().color} text-[10px] px-1.5 py-0`}>
-                {calculateServiceProgramOverflow().label}
-              </Badge>
-            </div>
-            <span className="text-[10px] text-gray-600 whitespace-nowrap">
-              {calculateServiceProgramOverflow().hasOverflow ? '→ Print Config' : '→ Quick Print'}
-            </span>
-          </div>
-        </div>
+      {/* Print Size Warning */}
+      {(() => {
+        const programOverflow = calculateServiceProgramOverflow();
+        const announcementOverflow = calculateAnnouncementOverflow();
+        const hasAnyOverflow = programOverflow.hasOverflow || announcementOverflow.hasOverflow;
+        const worstLevel = programOverflow.level === 'high' || announcementOverflow.level === 'high' ? 'high' : 
+                          programOverflow.level === 'medium' || announcementOverflow.level === 'medium' ? 'medium' : 'low';
+        
+        const statusConfig = {
+          high: { color: 'bg-red-50 border-red-200 text-red-800', icon: '⚠', recommendation: 'Usa el botón ⚙️ (ajustes) para comprimir antes de imprimir' },
+          medium: { color: 'bg-yellow-50 border-yellow-200 text-yellow-800', icon: '⚡', recommendation: 'Recomendado: usa el botón ⚙️ (ajustes) para mejor ajuste' },
+          low: { color: 'bg-green-50 border-green-200 text-green-800', icon: '✓', recommendation: 'Todo se ajusta bien. Usa el botón 🖨️ (impresión rápida)' }
+        }[worstLevel];
 
-        {/* Announcements Overflow */}
-        <div className={`border-l-4 ${calculateAnnouncementOverflow().color} bg-white/50 rounded px-3 py-2`}>
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <Sparkles className="w-4 h-4 flex-shrink-0" />
-              <span className="font-semibold text-xs truncate">Anuncios</span>
-              <Badge variant="outline" className={`${calculateAnnouncementOverflow().color} text-[10px] px-1.5 py-0`}>
-                {calculateAnnouncementOverflow().label}
-              </Badge>
+        return (
+          <div className={`border-l-4 ${statusConfig.color} rounded px-4 py-2 print:hidden`}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">{statusConfig.icon}</span>
+                <span className="font-semibold text-xs">Recomendación de Impresión:</span>
+              </div>
+              <span className="text-xs">{statusConfig.recommendation}</span>
             </div>
-            <span className="text-[10px] text-gray-600 whitespace-nowrap">
-              {calculateAnnouncementOverflow().hasOverflow ? '→ Print Config' : '→ Quick Print'}
-            </span>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Date Selection */}
       <Card className="print:hidden border-2 border-gray-300 bg-white">
