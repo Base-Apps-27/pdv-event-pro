@@ -1862,50 +1862,38 @@ Return ONLY valid JSON:
       </div>
 
       {/* Overflow Warnings - Quick Print Decision Helper */}
-      <div className="grid md:grid-cols-2 gap-4 print:hidden">
+      <div className="grid md:grid-cols-2 gap-3 print:hidden">
         {/* Service Program Overflow */}
-        <Card className={`border-2 ${calculateServiceProgramOverflow().color}`}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                <span className="font-bold text-sm">Programa de Servicio</span>
-              </div>
-              <Badge className={`${calculateServiceProgramOverflow().color} text-xs px-2 py-1`}>
+        <div className={`border-l-4 ${calculateServiceProgramOverflow().color} bg-white/50 rounded px-3 py-2`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Clock className="w-4 h-4 flex-shrink-0" />
+              <span className="font-semibold text-xs truncate">Programa</span>
+              <Badge variant="outline" className={`${calculateServiceProgramOverflow().color} text-[10px] px-1.5 py-0`}>
                 {calculateServiceProgramOverflow().label}
               </Badge>
             </div>
-            <p className="text-xs text-gray-700">
-              {calculateServiceProgramOverflow().hasOverflow ? (
-                <>⚠ Contenido extenso detectado. Usa <strong>Print Config</strong> para ajustar escala/márgenes.</>
-              ) : (
-                <>✓ El programa se ajusta bien. Usa <strong>Quick Print</strong> para imprimir rápido.</>
-              )}
-            </p>
-          </CardContent>
-        </Card>
+            <span className="text-[10px] text-gray-600 whitespace-nowrap">
+              {calculateServiceProgramOverflow().hasOverflow ? '→ Print Config' : '→ Quick Print'}
+            </span>
+          </div>
+        </div>
 
         {/* Announcements Overflow */}
-        <Card className={`border-2 ${calculateAnnouncementOverflow().color}`}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5" />
-                <span className="font-bold text-sm">Anuncios</span>
-              </div>
-              <Badge className={`${calculateAnnouncementOverflow().color} text-xs px-2 py-1`}>
+        <div className={`border-l-4 ${calculateAnnouncementOverflow().color} bg-white/50 rounded px-3 py-2`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Sparkles className="w-4 h-4 flex-shrink-0" />
+              <span className="font-semibold text-xs truncate">Anuncios</span>
+              <Badge variant="outline" className={`${calculateAnnouncementOverflow().color} text-[10px] px-1.5 py-0`}>
                 {calculateAnnouncementOverflow().label}
               </Badge>
             </div>
-            <p className="text-xs text-gray-700">
-              {calculateAnnouncementOverflow().hasOverflow ? (
-                <>⚠ Muchos anuncios seleccionados. Usa <strong>Print Config</strong> para compresión.</>
-              ) : (
-                <>✓ Los anuncios se ajustan bien. Usa <strong>Quick Print</strong> para imprimir rápido.</>
-              )}
-            </p>
-          </CardContent>
-        </Card>
+            <span className="text-[10px] text-gray-600 whitespace-nowrap">
+              {calculateAnnouncementOverflow().hasOverflow ? '→ Print Config' : '→ Quick Print'}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Date Selection */}
