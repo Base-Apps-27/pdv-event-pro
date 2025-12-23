@@ -186,16 +186,17 @@ function LayoutContent({ children }) {
                   Servicios Dominicales
                 </Link>
                 <Link
-                  to={createPageUrl("CustomServiceBuilder")}
+                  to={createPageUrl("CustomServicesManager")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                    isActive(createPageUrl("CustomServicesManager")) || 
                     isActive(createPageUrl("CustomServiceBuilder"))
                       ? "text-white shadow-md"
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
-                  style={isActive(createPageUrl("CustomServiceBuilder")) ? gradientStyle : {}}
+                  style={isActive(createPageUrl("CustomServicesManager")) || isActive(createPageUrl("CustomServiceBuilder")) ? gradientStyle : {}}
                 >
                   <Plus className="w-5 h-5" />
-                  Servicio Personalizado
+                  Servicios Personalizados
                 </Link>
               </>
             )}
@@ -358,11 +359,11 @@ function LayoutContent({ children }) {
                     Servicios Dominicales
                   </Link>
                   <Link
-                    to={createPageUrl("CustomServiceBuilder")}
+                    to={createPageUrl("CustomServicesManager")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Servicio Personalizado
+                    Servicios Personalizados
                   </Link>
 
                   <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">Recursos</div>
