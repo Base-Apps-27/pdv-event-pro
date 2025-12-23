@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
-import MultiPersonSelect from "@/components/ui/MultiPersonSelect";
 import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, ChevronUp, ChevronDown, Sparkles, Settings, ArrowUp, ArrowDown } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 import TimePicker from "@/components/ui/TimePicker";
@@ -100,10 +99,10 @@ export default function CustomServiceBuilder() {
         actions: []
       }
     ],
-    coordinators: [],
-    ujieres: [],
-    sound: [],
-    luces: [],
+    coordinators: "",
+    ujieres: "",
+    sound: "",
+    luces: "",
     notes: ""
   });
 
@@ -149,26 +148,8 @@ export default function CustomServiceBuilder() {
         segmentCount: existingService.segments?.length || 0,
         fullData: existingService
       });
-      
-      // Transform old object/string format to arrays
-      const transformedService = {
-        ...existingService,
-        coordinators: Array.isArray(existingService.coordinators) 
-          ? existingService.coordinators 
-          : (existingService.coordinators ? [existingService.coordinators] : []),
-        ujieres: Array.isArray(existingService.ujieres) 
-          ? existingService.ujieres 
-          : (existingService.ujieres ? [existingService.ujieres] : []),
-        sound: Array.isArray(existingService.sound) 
-          ? existingService.sound 
-          : (existingService.sound ? [existingService.sound] : []),
-        luces: Array.isArray(existingService.luces) 
-          ? existingService.luces 
-          : (existingService.luces ? [existingService.luces] : [])
-      };
-      
-      setServiceData(transformedService);
-      setLastSavedData(JSON.parse(JSON.stringify(transformedService)));
+      setServiceData(existingService);
+      setLastSavedData(JSON.parse(JSON.stringify(existingService)));
       setPrintSettingsPage1(existingService.print_settings_page1 || null);
       setHasUnsavedChanges(false);
       
@@ -969,34 +950,35 @@ export default function CustomServiceBuilder() {
         <CardContent className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Coordinador(a)</Label>
-            <MultiPersonSelect
+            <AutocompleteInput
+              type="presenter"
               value={serviceData.coordinators}
-              onChange={(val) => setServiceData(prev => ({ ...prev, coordinators: val }))}
-              placeholder="Agregar coordinadores..."
+              onChange={(e) => setServiceData(prev => ({ ...prev, coordinators: e.target.value }))}
+              placeholder="Nombre del coordinador"
             />
           </div>
           <div className="space-y-2">
             <Label>Ujieres</Label>
-            <MultiPersonSelect
+            <Input
               value={serviceData.ujieres}
-              onChange={(val) => setServiceData(prev => ({ ...prev, ujieres: val }))}
-              placeholder="Agregar ujieres..."
+              onChange={(e) => setServiceData(prev => ({ ...prev, ujieres: e.target.value }))}
+              placeholder="Nombres de ujieres"
             />
           </div>
           <div className="space-y-2">
             <Label>Sonido</Label>
-            <MultiPersonSelect
+            <Input
               value={serviceData.sound}
-              onChange={(val) => setServiceData(prev => ({ ...prev, sound: val }))}
-              placeholder="Agregar equipo de sonido..."
+              onChange={(e) => setServiceData(prev => ({ ...prev, sound: e.target.value }))}
+              placeholder="Equipo de sonido"
             />
           </div>
           <div className="space-y-2">
             <Label>Luces/Proyección</Label>
-            <MultiPersonSelect
+            <Input
               value={serviceData.luces}
-              onChange={(val) => setServiceData(prev => ({ ...prev, luces: val }))}
-              placeholder="Agregar equipo de luces..."
+              onChange={(e) => setServiceData(prev => ({ ...prev, luces: e.target.value }))}
+              placeholder="Equipo de luces"
             />
           </div>
         </CardContent>
