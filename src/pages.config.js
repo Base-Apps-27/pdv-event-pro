@@ -16,6 +16,7 @@ import Templates from './pages/Templates';
 import TestDashboard from './pages/TestDashboard';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
+import UserManagement from './pages/UserManagement';
 import __Layout from './Layout.jsx';
 
 
@@ -38,6 +39,7 @@ export const PAGES = {
     "TestDashboard": TestDashboard,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
+    "UserManagement": UserManagement,
 }
 
 export const pagesConfig = {

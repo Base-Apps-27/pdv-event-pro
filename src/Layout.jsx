@@ -244,6 +244,18 @@ function LayoutContent({ children }) {
               <>
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-6 mb-3 pl-3">{t('section.settings')}</div>
                 <Link
+                  to={createPageUrl("UserManagement")}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                    isActive(createPageUrl("UserManagement"))
+                      ? "text-white shadow-md"
+                      : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  }`}
+                  style={isActive(createPageUrl("UserManagement")) ? gradientStyle : {}}
+                >
+                  <Users className="w-5 h-5" />
+                  User Management
+                </Link>
+                <Link
                   to={createPageUrl("Rooms")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
                     isActive(createPageUrl("Rooms"))
