@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, ChevronUp, ChevronDown, Sparkles, Settings, ArrowUp, ArrowDown } from "lucide-react";
+import AnimatedSortableItem from "@/components/shared/AnimatedSortableItem";
+import { AnimatePresence } from "framer-motion";
 import { addMinutes, parse, format } from "date-fns";
 import PrintSettingsModal from "@/components/print/PrintSettingsModal";
 import { formatDate as formatDateES } from "date-fns";
@@ -108,6 +110,7 @@ export default function CustomServiceBuilder() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSavedData, setLastSavedData] = useState(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState("idle"); // idle, saving, saved, error
+  const [highlightedSegmentId, setHighlightedSegmentId] = useState(null);
 
   const getDefaultSegmentForm = () => ({
     title: "",
@@ -354,15 +357,19 @@ export default function CustomServiceBuilder() {
   const moveSegmentUp = (idx) => {
     if (idx === 0) return;
     const items = Array.from(serviceData.segments);
+    const segmentId = `segment-${Date.now()}-${idx}`;
     [items[idx - 1], items[idx]] = [items[idx], items[idx - 1]];
     setServiceData(prev => ({ ...prev, segments: items }));
+    setHighlightedSegmentId(segmentId);
   };
 
   const moveSegmentDown = (idx) => {
     if (idx === serviceData.segments.length - 1) return;
     const items = Array.from(serviceData.segments);
+    const segmentId = `segment-${Date.now()}-${idx}`;
     [items[idx], items[idx + 1]] = [items[idx + 1], items[idx]];
     setServiceData(prev => ({ ...prev, segments: items }));
+    setHighlightedSegmentId(segmentId);
   };
 
   const calculateTotalTime = () => {
@@ -616,16 +623,22 @@ export default function CustomServiceBuilder() {
           </Button>
         </div>
 
-        <div className="space-y-3">
-          {serviceData.segments.map((segment, idx) => {
-            const isExpanded = expandedSegments[idx];
-            const isSpecial = segment.type === "Especial";
-            
-            return (
-              <Card
-                key={`seg-${idx}`}
-                className={`border-l-4 ${isSpecial ? 'border-l-orange-500 bg-orange-50' : 'border-l-pdv-teal'}`}
-              >
+        <AnimatePresence>
+          <div className="space-y-3">
+            {serviceData.segments.map((segment, idx) => {
+              const isExpanded = expandedSegments[idx];
+              const isSpecial = segment.type === "Especial";
+              const segmentId = `segment-${idx}-${segment.title}`;
+              
+              return (
+                <AnimatedSortableItem
+                  key={segmentId}
+                  id={segmentId}
+                  isHighlighted={highlightedSegmentId === segmentId}
+                >
+                  <Card
+                    className={`border-l-4 ${isSpecial ? 'border-l-orange-500 bg-orange-50' : 'border-l-pdv-teal'}`}
+                  >
                 <CardHeader className="pb-2 bg-gray-50">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="flex flex-col gap-1 print:hidden">
@@ -909,11 +922,13 @@ export default function CustomServiceBuilder() {
                                 />
                               </div>
                             )}
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </AnimatedSortableItem>
               );
             })}
-        </div>
+          </div>
+        </AnimatePresence>
 
         {serviceData.segments.length === 0 && (
           <Card className="border-dashed">
