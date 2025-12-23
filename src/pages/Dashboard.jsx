@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n";
-import { Calendar, Clock, FileText, Plus, ArrowRight } from "lucide-react";
+import { Calendar, Clock, FileText, Plus, ArrowRight, Bell } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +69,27 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-8 space-y-8">
+        {/* Live Program Hero Card */}
+        <Card className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:shadow-xl transition-all border-0 cursor-pointer" onClick={() => navigate(createPageUrl('PublicProgramView'))}>
+          <CardContent className="p-6 md:p-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center animate-pulse">
+                  <Bell className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-xl md:text-2xl text-white mb-1 uppercase tracking-wide">Programa en Vivo</h2>
+                  <p className="text-white/90 text-xs md:text-sm">Ver qué está pasando ahora • Próximos eventos y servicios</p>
+                </div>
+              </div>
+              <div className="hidden md:flex items-center gap-2 text-white/90">
+                <span className="text-xs font-semibold uppercase tracking-wide">Acceso Público</span>
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Quick Actions - 3 Shortcuts */}
         <div className="grid md:grid-cols-3 gap-6">
           <Card className="bg-gradient-to-br from-white to-green-50 border-2 border-green-200 hover:shadow-lg transition-all group">
