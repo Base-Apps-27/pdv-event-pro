@@ -230,7 +230,8 @@ export default function PublicProgramView() {
   };
 
   const isSegmentCurrent = (segment) => {
-    if (!segment.start_time || !segment.end_time) return false;
+    if (!segment?.start_time || !segment?.end_time) return false;
+    if (typeof segment.start_time !== 'string' || typeof segment.end_time !== 'string') return false;
     
     const now = currentTime;
     const [startHours, startMinutes] = segment.start_time.split(':').map(Number);
@@ -250,7 +251,7 @@ export default function PublicProgramView() {
     
     const now = currentTime;
     const futureSegments = segments.filter(seg => {
-      if (!seg.start_time) return false;
+      if (!seg?.start_time || typeof seg.start_time !== 'string') return false;
       const [hours, minutes] = seg.start_time.split(':').map(Number);
       const startTime = new Date(now);
       startTime.setHours(hours, minutes, 0);
@@ -270,6 +271,7 @@ export default function PublicProgramView() {
   const isSegmentUpcoming = (segment, allSegments) => {
     const nextSegment = getNextSegment(allSegments);
     if (!nextSegment || nextSegment.id !== segment.id) return false;
+    if (!segment?.start_time || typeof segment.start_time !== 'string') return false;
     
     const now = currentTime;
     const [startHours, startMinutes] = segment.start_time.split(':').map(Number);
@@ -282,7 +284,7 @@ export default function PublicProgramView() {
 
   const getCountdownToNext = (segments) => {
     const nextSegment = getNextSegment(segments);
-    if (!nextSegment) return null;
+    if (!nextSegment || !nextSegment?.start_time || typeof nextSegment.start_time !== 'string') return null;
     
     const now = currentTime;
     const [hours, minutes] = nextSegment.start_time.split(':').map(Number);
