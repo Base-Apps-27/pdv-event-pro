@@ -472,18 +472,24 @@ export default function CustomServiceBuilder() {
             </div>
           </div>
         </div>
-        <div className="flex gap-3">
-          <Button onClick={handleSave} style={tealStyle}>
-            <Save className="w-4 h-4 mr-2" />
-            Guardar
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowPrintSettings(true)}
+            title="Ajustes de Impresión"
+            className="border-2 border-gray-400"
+          >
+            <Settings className="w-5 h-5" />
           </Button>
-          <Button variant="outline" onClick={() => setShowPrintSettings(true)} className="border-2 border-gray-400 font-semibold">
-            <Settings className="w-4 h-4 mr-2" />
-            Config. Impresión
-          </Button>
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="w-4 h-4 mr-2" />
-            Imprimir
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handlePrint}
+            title="Imprimir"
+            className="border-2 border-gray-400"
+          >
+            <Printer className="w-5 h-5" />
           </Button>
         </div>
       </div>
