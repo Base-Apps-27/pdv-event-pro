@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, ChevronUp, ChevronDown, Sparkles, Settings, ArrowUp, ArrowDown } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
+import TimePicker from "@/components/ui/TimePicker";
 import AnimatedSortableItem from "@/components/shared/AnimatedSortableItem";
 import { AnimatePresence } from "framer-motion";
 import { addMinutes, parse, format } from "date-fns";
