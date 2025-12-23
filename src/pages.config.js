@@ -14,9 +14,9 @@ import SchemaGuide from './pages/SchemaGuide';
 import SessionDetail from './pages/SessionDetail';
 import Templates from './pages/Templates';
 import TestDashboard from './pages/TestDashboard';
+import UserManagement from './pages/UserManagement';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import UserManagement from './pages/UserManagement';
 import __Layout from './Layout.jsx';
 
 
@@ -37,9 +37,9 @@ export const PAGES = {
     "SessionDetail": SessionDetail,
     "Templates": Templates,
     "TestDashboard": TestDashboard,
+    "UserManagement": UserManagement,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "UserManagement": UserManagement,
 }
 
 export const pagesConfig = {
