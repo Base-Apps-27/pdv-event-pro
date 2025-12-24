@@ -253,6 +253,34 @@ export default function ServiceTemplatesTab() {
                                   className="text-xs w-24"
                                 />
                               </div>
+                              <Textarea
+                                placeholder="Notas para Coordinador"
+                                value={segment.data?.coordinator_notes || ""}
+                                onChange={(e) => updateSegmentField(service, idx, "coordinator_notes", e.target.value)}
+                                className="text-xs"
+                                rows={2}
+                              />
+                              <Textarea
+                                placeholder="Notas de Proyección"
+                                value={segment.data?.projection_notes || ""}
+                                onChange={(e) => updateSegmentField(service, idx, "projection_notes", e.target.value)}
+                                className="text-xs"
+                                rows={2}
+                              />
+                              <Textarea
+                                placeholder="Notas de Sonido"
+                                value={segment.data?.sound_notes || ""}
+                                onChange={(e) => updateSegmentField(service, idx, "sound_notes", e.target.value)}
+                                className="text-xs"
+                                rows={2}
+                              />
+                              <Textarea
+                                placeholder="Notas Generales"
+                                value={segment.data?.description_details || ""}
+                                onChange={(e) => updateSegmentField(service, idx, "description_details", e.target.value)}
+                                className="text-xs"
+                                rows={2}
+                              />
                             </div>
                           )}
                         </CardContent>
