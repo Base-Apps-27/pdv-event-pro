@@ -1301,6 +1301,29 @@ export default function PublicProgramView() {
                                   {segment.presenter && (
                                     <p className="text-blue-600 text-sm mt-1">{segment.presenter}</p>
                                   )}
+
+                                  {segment.scripture_references && (
+                                    <div className="flex items-start gap-2 mt-2">
+                                      <p className="text-xs text-gray-600 flex-1">📖 {segment.scripture_references}</p>
+                                      {segment.parsed_verse_data && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => {
+                                            setVersesModalData({
+                                              parsedData: segment.parsed_verse_data,
+                                              rawText: segment.scripture_references
+                                            });
+                                            setVersesModalOpen(true);
+                                          }}
+                                          className="h-6 px-2 text-xs border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+                                        >
+                                          <BookOpen className="w-3 h-3 mr-1" />
+                                          Ver Detalles
+                                        </Button>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                                 <Button
                                   variant="ghost"
@@ -1352,6 +1375,29 @@ export default function PublicProgramView() {
                                       <div className="flex items-center gap-2 text-gray-600 mb-2">
                                         <MapPin className="w-4 h-4" />
                                         <span>{getRoomName(segment.room_id)}</span>
+                                      </div>
+                                    )}
+
+                                    {segment.scripture_references && (
+                                      <div className="flex items-start gap-2">
+                                        <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.scripture_references}</p>
+                                        {segment.parsed_verse_data && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                              setVersesModalData({
+                                                parsedData: segment.parsed_verse_data,
+                                                rawText: segment.scripture_references
+                                              });
+                                              setVersesModalOpen(true);
+                                            }}
+                                            className="h-6 px-2 text-xs border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+                                          >
+                                            <BookOpen className="w-3 h-3 mr-1" />
+                                            Ver Detalles
+                                          </Button>
+                                        )}
                                       </div>
                                     )}
                                   </div>
