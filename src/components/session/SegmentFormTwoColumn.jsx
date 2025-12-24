@@ -486,6 +486,11 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                       />
                       <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'presenter')} />
                     </div>
+                    {isWorshipType && (
+                      <p className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded p-2">
+                        💡 Típicamente: Sarah Manzano o Anthony Estrella (quien esté sirviendo ese día). Si ninguno está sirviendo, entonces la persona designada como Director de Banda para ese día.
+                      </p>
+                    )}
                   </div>
                 )}
 
