@@ -743,7 +743,26 @@ export default function PublicProgramView() {
                               )}
 
                               {segment.data?.verse && (
-                                <p className="text-xs text-gray-600 mb-1">📖 {segment.data.verse}</p>
+                                <div className="flex items-start gap-2">
+                                  <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
+                                  {segment.data?.parsed_verse_data && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setVersesModalData({
+                                          parsedData: segment.data.parsed_verse_data,
+                                          rawText: segment.data.verse
+                                        });
+                                        setVersesModalOpen(true);
+                                      }}
+                                      className="h-6 px-2 text-xs border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+                                    >
+                                      <BookOpen className="w-3 h-3 mr-1" />
+                                      Ver Detalles
+                                    </Button>
+                                  )}
+                                </div>
                               )}
 
                               {segment.data?.description && (
@@ -873,7 +892,26 @@ export default function PublicProgramView() {
                              )}
 
                              {segment.data?.verse && (
-                               <p className="text-xs text-gray-600 mb-1">📖 {segment.data.verse}</p>
+                               <div className="flex items-start gap-2">
+                                 <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
+                                 {segment.data?.parsed_verse_data && (
+                                   <Button
+                                     variant="ghost"
+                                     size="sm"
+                                     onClick={() => {
+                                       setVersesModalData({
+                                         parsedData: segment.data.parsed_verse_data,
+                                         rawText: segment.data.verse
+                                       });
+                                       setVersesModalOpen(true);
+                                     }}
+                                     className="h-6 px-2 text-xs border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+                                   >
+                                     <BookOpen className="w-3 h-3 mr-1" />
+                                     Ver Detalles
+                                   </Button>
+                                 )}
+                               </div>
                              )}
 
                              {segment.data?.description && (
