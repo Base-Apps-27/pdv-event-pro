@@ -12,8 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer, ExternalLink, Settings } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer, ExternalLink, Settings, BookOpen } from "lucide-react";
 import PrintSettingsModal from "@/components/print/PrintSettingsModal";
+import VerseParserDialog from "@/components/service/VerseParserDialog";
 import { Calendar } from "@/components/ui/calendar";
 import { createPageUrl } from "@/utils";
 
@@ -81,6 +82,8 @@ export default function WeeklyServiceManager() {
   const [lastSavedData, setLastSavedData] = useState(null);
   const [lastSaveTimestamp, setLastSaveTimestamp] = useState(null);
   const [isQuickPrint, setIsQuickPrint] = useState(false);
+  const [verseParserOpen, setVerseParserOpen] = useState(false);
+  const [verseParserContext, setVerseParserContext] = useState({ timeSlot: null, segmentIdx: null });
   
   const saveTimeoutRef = useRef(null);
   const serviceDataRef = useRef(null);
@@ -505,6 +508,37 @@ export default function WeeklyServiceManager() {
       return updated;
     });
     debouncedSave(`${service}-${segmentIndex}-${field}`);
+  };
+
+  const handleOpenVerseParser = (timeSlot, segmentIdx) => {
+    const currentVerse = serviceData[timeSlot][segmentIdx]?.data?.verse || "";
+    const currentParsedData = serviceData[timeSlot][segmentIdx]?.data?.parsed_verse_data;
+    
+    setVerseParserContext({ 
+      timeSlot, 
+      segmentIdx,
+      initialText: currentVerse,
+      initialParsed: currentParsedData
+    });
+    setVerseParserOpen(true);
+  };
+
+  const handleSaveParsedVerses = (data) => {
+    const { timeSlot, segmentIdx } = verseParserContext;
+    
+    setServiceData(prev => {
+      const updated = { ...prev };
+      updated[timeSlot][segmentIdx].data = {
+        ...updated[timeSlot][segmentIdx].data,
+        verse: data.raw_text,
+        parsed_verse_data: data.parsed_data
+      };
+      return updated;
+    });
+    
+    debouncedSave(`${timeSlot}-${segmentIdx}-verse-parsed`);
+    setVerseParserOpen(false);
+    setVerseParserContext({ timeSlot: null, segmentIdx: null });
   };
 
   const copy930To1130 = () => {
@@ -2171,12 +2205,30 @@ Return ONLY valid JSON:
                                 />
                               )}
                               {segment.fields.includes("verse") && (
-                                <Input
-                                  placeholder="Verso / Cita Bíblica"
-                                  value={segment.data?.verse || ""}
-                                  onChange={(e) => updateSegmentField("9:30am", idx, "verse", e.target.value)}
-                                  className="text-sm"
-                                />
+                                <div className="space-y-1">
+                                  <div className="flex gap-2">
+                                    <Input
+                                      placeholder="Verso / Cita Bíblica"
+                                      value={segment.data?.verse || ""}
+                                      onChange={(e) => updateSegmentField("9:30am", idx, "verse", e.target.value)}
+                                      className="text-sm flex-1"
+                                    />
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleOpenVerseParser("9:30am", idx)}
+                                      className="border-2 border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
+                                      title="Analizar versos y bosquejo"
+                                    >
+                                      <BookOpen className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                  {segment.data?.parsed_verse_data && (
+                                    <Badge variant="outline" className="text-xs bg-green-50 border-green-300 text-green-700">
+                                      ✓ Analizado ({segment.data.parsed_verse_data.sections?.length || 0} elementos)
+                                    </Badge>
+                                  )}
+                                </div>
                               )}
                               {segment.songs && (
                                 <div className="space-y-1">
@@ -2575,12 +2627,30 @@ Return ONLY valid JSON:
                                 />
                               )}
                               {segment.fields.includes("verse") && (
-                                <Input
-                                  placeholder="Verso / Cita Bíblica"
-                                  value={segment.data?.verse || ""}
-                                  onChange={(e) => updateSegmentField("11:30am", idx, "verse", e.target.value)}
-                                  className="text-sm"
-                                />
+                                <div className="space-y-1">
+                                  <div className="flex gap-2">
+                                    <Input
+                                      placeholder="Verso / Cita Bíblica"
+                                      value={segment.data?.verse || ""}
+                                      onChange={(e) => updateSegmentField("11:30am", idx, "verse", e.target.value)}
+                                      className="text-sm flex-1"
+                                    />
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleOpenVerseParser("11:30am", idx)}
+                                      className="border-2 border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
+                                      title="Analizar versos y bosquejo"
+                                    >
+                                      <BookOpen className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                  {segment.data?.parsed_verse_data && (
+                                    <Badge variant="outline" className="text-xs bg-green-50 border-green-300 text-green-700">
+                                      ✓ Analizado ({segment.data.parsed_verse_data.sections?.length || 0} elementos)
+                                    </Badge>
+                                  )}
+                                </div>
                               )}
                               {segment.songs && (
                                 <div className="space-y-1">
@@ -3130,6 +3200,15 @@ Return ONLY valid JSON:
         onSave={handleSavePrintSettings}
         language="es"
         serviceData={serviceData}
+      />
+
+      {/* Verse Parser Dialog */}
+      <VerseParserDialog
+        open={verseParserOpen}
+        onOpenChange={setVerseParserOpen}
+        initialText={verseParserContext.initialText || ""}
+        onSave={handleSaveParsedVerses}
+        language="es"
       />
 
       {/* Announcement Dialog */}
