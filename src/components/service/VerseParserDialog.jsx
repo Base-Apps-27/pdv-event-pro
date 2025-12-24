@@ -48,7 +48,7 @@ function parseScriptureReferences(rawText) {
   
   return {
     type: verses.length > 0 ? 'verse_list' : 'empty',
-    verses: verses
+    sections: verses.map(v => ({ type: 'verse', content: v.reference }))
   };
 }
 
@@ -119,18 +119,18 @@ function VerseParserDialog({
       return <p className="text-gray-500 text-sm italic text-center py-8">{t.noData}</p>;
     }
 
-    if (parsedData.type === 'verse_list' && parsedData.verses.length > 0) {
+    if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
       return (
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-4 h-4 text-pdv-teal" />
             <h4 className="font-bold text-sm text-gray-900">{t.verseList}</h4>
-            <Badge variant="outline" className="text-xs">{parsedData.verses.length} {language === 'es' ? (parsedData.verses.length === 1 ? 'referencia' : 'referencias') : (parsedData.verses.length === 1 ? 'reference' : 'references')}</Badge>
+            <Badge variant="outline" className="text-xs">{parsedData.sections.length} {language === 'es' ? (parsedData.sections.length === 1 ? 'referencia' : 'referencias') : (parsedData.sections.length === 1 ? 'reference' : 'references')}</Badge>
           </div>
-          {parsedData.verses.map((item, idx) => (
+          {parsedData.sections.map((item, idx) => (
             <div key={idx} className="flex items-start gap-2 p-2 bg-white rounded border border-gray-200 hover:border-pdv-teal transition-colors">
               <span className="text-pdv-teal font-bold text-sm">{idx + 1}.</span>
-              <span className="text-gray-800 text-sm">{item.reference}</span>
+              <span className="text-gray-800 text-sm">{item.content}</span>
             </div>
           ))}
         </div>
