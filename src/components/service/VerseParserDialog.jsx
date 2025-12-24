@@ -113,7 +113,7 @@ function parseVersesAndOutline(rawText) {
   };
 }
 
-export default function VerseParserDialog({ 
+function VerseParserDialog({ 
   open, 
   onOpenChange, 
   initialText = "", 
