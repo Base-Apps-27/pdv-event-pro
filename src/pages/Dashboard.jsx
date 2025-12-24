@@ -20,6 +20,7 @@ export default function Dashboard() {
   };
   
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  const blueStyle = { backgroundColor: '#2563eb', color: '#ffffff' };
   
   const { data: events = [] } = useQuery({
     queryKey: ['events'],
@@ -276,7 +277,7 @@ export default function Dashboard() {
                             }
                           }}
                           size="sm"
-                          style={tealStyle}
+                          style={blueStyle}
                         >
                           Ver / View
                         </Button>
