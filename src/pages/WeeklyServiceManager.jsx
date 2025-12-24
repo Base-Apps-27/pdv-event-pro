@@ -2130,13 +2130,18 @@ Return ONLY valid JSON:
                             </CardHeader>
                             <CardContent className="space-y-2 pt-3">
                               {segment.fields.includes("leader") && (
-                                <AutocompleteInput
-                                  type="worshipLeader"
-                                  placeholder="Líder / Director"
-                                  value={segment.data?.leader || ""}
-                                  onChange={(e) => updateSegmentField("9:30am", idx, "leader", e.target.value)}
-                                  className="text-sm"
-                                />
+                                <div className="space-y-1">
+                                  <AutocompleteInput
+                                    type="worshipLeader"
+                                    placeholder="Líder / Director"
+                                    value={segment.data?.leader || ""}
+                                    onChange={(e) => updateSegmentField("9:30am", idx, "leader", e.target.value)}
+                                    className="text-sm"
+                                  />
+                                  <p className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded px-2 py-1">
+                                    💡 Sarah Manzano o Anthony Estrella (quien esté sirviendo). Si ninguno, el Director de Banda designado.
+                                  </p>
+                                </div>
                               )}
                               {segment.fields.includes("presenter") && (
                                 <AutocompleteInput
@@ -2529,13 +2534,18 @@ Return ONLY valid JSON:
                             </CardHeader>
                             <CardContent className="space-y-2 pt-3">
                               {segment.fields.includes("leader") && (
-                                <AutocompleteInput
-                                  type="worshipLeader"
-                                  placeholder="Líder / Director"
-                                  value={segment.data?.leader || ""}
-                                  onChange={(e) => updateSegmentField("11:30am", idx, "leader", e.target.value)}
-                                  className="text-sm"
-                                />
+                                <div className="space-y-1">
+                                  <AutocompleteInput
+                                    type="worshipLeader"
+                                    placeholder="Líder / Director"
+                                    value={segment.data?.leader || ""}
+                                    onChange={(e) => updateSegmentField("11:30am", idx, "leader", e.target.value)}
+                                    className="text-sm"
+                                  />
+                                  <p className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded px-2 py-1">
+                                    💡 Sarah Manzano o Anthony Estrella (quien esté sirviendo). Si ninguno, el Director de Banda designado.
+                                  </p>
+                                </div>
                               )}
                               {segment.fields.includes("presenter") && (
                                 <AutocompleteInput
