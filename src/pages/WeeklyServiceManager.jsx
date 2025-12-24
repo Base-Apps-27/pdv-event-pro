@@ -160,6 +160,15 @@ export default function WeeklyServiceManager() {
     ]
   };
 
+  // Fetch blueprint from database
+  const { data: blueprintData } = useQuery({
+    queryKey: ['serviceBlueprint'],
+    queryFn: async () => {
+      const blueprints = await base44.entities.Service.filter({ status: 'blueprint' });
+      return blueprints[0] || null;
+    }
+  });
+
   // Fetch service data
   const { data: existingData, isLoading } = useQuery({
     queryKey: ['weeklyService', selectedDate],
@@ -276,8 +285,10 @@ export default function WeeklyServiceManager() {
   useEffect(() => {
     if (existingData) {
       const mergeSegmentsWithBlueprint = (existingSegments, timeSlot) => {
+        const activeBlueprint = blueprintData || { "9:30am": BLUEPRINT["9:30am"], "11:30am": BLUEPRINT["11:30am"] };
         return existingSegments.map((savedSeg, idx) => {
-          const blueprintSeg = BLUEPRINT[timeSlot]?.find(b => b.type === savedSeg.type) || 
+          const blueprintSeg = activeBlueprint[timeSlot]?.find(b => b.type === savedSeg.type) || 
+                               activeBlueprint[timeSlot]?.[idx] ||
                                BLUEPRINT[timeSlot]?.[idx];
           
           if (blueprintSeg) {
@@ -327,9 +338,12 @@ export default function WeeklyServiceManager() {
         }
       }
     } else {
+      // Use database blueprint if available, fallback to hardcoded
+      const activeBlueprint = blueprintData || { "9:30am": BLUEPRINT["9:30am"], "11:30am": BLUEPRINT["11:30am"] };
+      
       const initialData = {
         date: selectedDate,
-        "9:30am": BLUEPRINT["9:30am"].map(seg => {
+        "9:30am": activeBlueprint["9:30am"].map(seg => {
           const segmentCopy = {
             type: seg.type,
             title: seg.title,
@@ -350,7 +364,7 @@ export default function WeeklyServiceManager() {
           
           return segmentCopy;
         }),
-        "11:30am": BLUEPRINT["11:30am"].map(seg => {
+        "11:30am": activeBlueprint["11:30am"].map(seg => {
           const segmentCopy = {
             type: seg.type,
             title: seg.title,
@@ -386,7 +400,7 @@ export default function WeeklyServiceManager() {
       setPrintSettingsPage2(null);
       setHasUnsavedChanges(false);
     }
-  }, [existingData, selectedDate]);
+  }, [existingData, selectedDate, blueprintData]);
 
   // Track unsaved changes
   useEffect(() => {
