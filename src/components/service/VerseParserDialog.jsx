@@ -4,112 +4,51 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2, BookOpen, List, FileText } from "lucide-react";
+import { Sparkles, Loader2, BookOpen } from "lucide-react";
 
-// Client-side parser for verses and outlines
-function parseVersesAndOutline(rawText) {
-  if (!rawText || rawText.trim() === '') return { type: 'empty', sections: [] };
+// Client-side parser for scripture references
+function parseScriptureReferences(rawText) {
+  if (!rawText || rawText.trim() === '') return { type: 'empty', verses: [] };
 
-  const lines = rawText.split('\n').map(l => l.trim()).filter(l => l);
+  // Comprehensive verse pattern matching common citation formats:
+  // John 3:16 | Juan 3:16 | 1 Corinthians 13:4-7 | Romans 8:28-30 | Genesis 1:1-2:3
+  const versePattern = /(\d\s)?([1-3]\s)?([A-ZÁ-Úa-zá-ú]+\.?\s?[A-ZÁ-Úa-zá-ú]*\.?)\s+(\d+):(\d+)(-(\d+))?(:(\d+))?/gi;
   
-  // Pattern matching for verses (e.g., Juan 3:16, Mateo 5:1-10, 1 Corintios 13:1)
-  const versePattern = /^(\d?\s?[A-ZÁ-Ú][a-zá-ú]+\.?\s)?(\d+):(\d+(-\d+)?)/;
-  const bookPattern = /^(\d?\s?[A-ZÁ-Ú][a-zá-ú]+\.?)/;
-  
-  // Detect if it's primarily verses or an outline
-  const verseLines = lines.filter(line => versePattern.test(line));
-  const isSimpleVerseList = verseLines.length / lines.length > 0.6;
-  
-  if (isSimpleVerseList) {
-    // Simple verse list - just return verses as flat items
-    return {
-      type: 'verse_list',
-      sections: verseLines.map(verse => ({
-        type: 'verse',
-        content: verse.trim()
-      }))
-    };
-  }
-  
-  // Complex outline detection - look for Roman numerals, numbers, letters
-  const outlineMarkers = /^(I{1,3}V?|IV|V|VI{1,3}|[IVXLCDM]+|[0-9]+\.|[A-Z]\.|[a-z]\.|[-•*])\s+/;
-  const sections = [];
-  let currentSection = null;
-  let currentSubsection = null;
+  const verses = [];
+  const lines = rawText.split('\n');
   
   for (let line of lines) {
-    // Check if it's an outline marker
-    const markerMatch = line.match(outlineMarkers);
+    const trimmed = line.trim();
+    if (!trimmed) continue;
     
-    if (markerMatch) {
-      const marker = markerMatch[0];
-      const content = line.replace(marker, '').trim();
+    // Try to match verse patterns in the line
+    const matches = [...trimmed.matchAll(versePattern)];
+    
+    if (matches.length > 0) {
+      // Extract all verse references from this line
+      matches.forEach(match => {
+        const fullMatch = match[0].trim();
+        verses.push({
+          reference: fullMatch,
+          original: trimmed
+        });
+      });
+    } else if (trimmed.length > 0 && trimmed.length < 150) {
+      // Check if line contains common book names even without full pattern
+      const bookNames = /\b(Genesis|Génesis|Exodus|Éxodo|Leviticus|Levítico|Numbers|Números|Deuteronomy|Deuteronomio|Joshua|Josué|Judges|Jueces|Ruth|Rut|Samuel|Kings|Reyes|Chronicles|Crónicas|Ezra|Esdras|Nehemiah|Nehemías|Esther|Ester|Job|Psalms?|Salmos?|Proverbs|Proverbios|Ecclesiastes|Eclesiastés|Song|Cantares|Isaiah|Isaías|Jeremiah|Jeremías|Lamentations|Lamentaciones|Ezekiel|Ezequiel|Daniel|Hosea|Oseas|Joel|Amos|Amós|Obadiah|Abdías|Jonah|Jonás|Micah|Miqueas|Nahum|Nahúm|Habakkuk|Habacuc|Zephaniah|Sofonías|Haggai|Hageo|Zechariah|Zacarías|Malachi|Malaquías|Matthew|Mateo|Mark|Marcos|Luke|Lucas|John|Juan|Acts|Hechos|Romans|Romanos|Corinthians|Corintios|Galatians|Gálatas|Ephesians|Efesios|Philippians|Filipenses|Colossians|Colosenses|Thessalonians|Tesalonicenses|Timothy|Timoteo|Titus|Tito|Philemon|Filemón|Hebrews|Hebreos|James|Santiago|Peter|Pedro|Jude|Judas|Revelation|Apocalipsis)\b/i;
       
-      // Determine hierarchy level
-      const isRoman = /^(I{1,3}V?|IV|V|VI{1,3})/.test(marker);
-      const isNumeric = /^\d+\./.test(marker);
-      const isLetter = /^[A-Z]\./.test(marker);
-      const isBullet = /^[-•*]/.test(marker);
-      
-      if (isRoman || (isNumeric && !currentSection)) {
-        // Main section
-        if (currentSection) sections.push(currentSection);
-        currentSection = {
-          type: 'section',
-          title: content,
-          verses: [],
-          subsections: []
-        };
-        currentSubsection = null;
-      } else if ((isNumeric || isLetter) && currentSection) {
-        // Subsection
-        if (currentSubsection) currentSection.subsections.push(currentSubsection);
-        currentSubsection = {
-          type: 'subsection',
-          title: content,
-          verses: []
-        };
-      } else if (isBullet && currentSubsection) {
-        // Verse under subsection
-        currentSubsection.verses.push(content);
-      } else if (isBullet && currentSection) {
-        // Verse under section
-        currentSection.verses.push(content);
-      }
-    } else if (versePattern.test(line)) {
-      // It's a verse without a bullet
-      if (currentSubsection) {
-        currentSubsection.verses.push(line);
-      } else if (currentSection) {
-        currentSection.verses.push(line);
-      } else {
-        // Standalone verse
-        sections.push({ type: 'verse', content: line });
-      }
-    } else {
-      // Regular text - treat as section title if nothing is open
-      if (!currentSection) {
-        currentSection = {
-          type: 'section',
-          title: line,
-          verses: [],
-          subsections: []
-        };
-      } else if (currentSubsection) {
-        currentSubsection.verses.push(line);
-      } else if (currentSection) {
-        currentSection.verses.push(line);
+      if (bookNames.test(trimmed)) {
+        verses.push({
+          reference: trimmed,
+          original: trimmed
+        });
       }
     }
   }
   
-  // Close remaining sections
-  if (currentSubsection) currentSection.subsections.push(currentSubsection);
-  if (currentSection) sections.push(currentSection);
-  
   return {
-    type: sections.length > 0 ? 'outline' : 'text',
-    sections: sections.length > 0 ? sections : [{ type: 'text', content: rawText }]
+    type: verses.length > 0 ? 'verse_list' : 'empty',
+    verses: verses
   };
 }
 
@@ -126,32 +65,28 @@ function VerseParserDialog({
 
   const texts = {
     es: {
-      title: "Analizar Versos y Bosquejo",
-      inputLabel: "Pega tu texto aquí",
-      inputPlaceholder: "Copia y pega versos bíblicos o el bosquejo completo del mensaje...\n\nEjemplo de versos:\nJuan 3:16\nRomanos 8:28\n1 Corintios 13:4-7\n\nO un bosquejo completo con secciones y versos.",
-      parseBtn: "Analizar",
-      parsing: "Analizando...",
+      title: "Extraer Referencias Bíblicas",
+      inputLabel: "Pega tus referencias aquí",
+      inputPlaceholder: "Copia y pega las referencias bíblicas del mensaje...\n\nEjemplos:\nJuan 3:16\nRomanos 8:28-30\n1 Corintios 13:4-7\nGénesis 1:1-2:3\nMateo 5:1-12",
+      parseBtn: "Extraer Referencias",
+      parsing: "Extrayendo...",
       saveBtn: "Guardar",
       cancelBtn: "Cancelar",
-      resultTitle: "Resultado del Análisis",
-      verseList: "Lista de Versos",
-      outline: "Bosquejo Estructurado",
-      text: "Texto",
-      noData: "Pega texto y presiona 'Analizar'",
+      resultTitle: "Referencias Encontradas",
+      verseList: "Referencias Bíblicas",
+      noData: "Pega las referencias y presiona 'Extraer'",
     },
     en: {
-      title: "Parse Verses and Outline",
-      inputLabel: "Paste your text here",
-      inputPlaceholder: "Copy and paste Bible verses or complete message outline...\n\nVerse example:\nJohn 3:16\nRomans 8:28\n1 Corinthians 13:4-7\n\nOr a complete outline with sections and verses.",
-      parseBtn: "Parse",
-      parsing: "Parsing...",
+      title: "Extract Scripture References",
+      inputLabel: "Paste your references here",
+      inputPlaceholder: "Copy and paste scripture references from the message...\n\nExamples:\nJohn 3:16\nRomans 8:28-30\n1 Corinthians 13:4-7\nGenesis 1:1-2:3\nMatthew 5:1-12",
+      parseBtn: "Extract References",
+      parsing: "Extracting...",
       saveBtn: "Save",
       cancelBtn: "Cancel",
-      resultTitle: "Analysis Result",
-      verseList: "Verse List",
-      outline: "Structured Outline",
-      text: "Text",
-      noData: "Paste text and press 'Parse'",
+      resultTitle: "References Found",
+      verseList: "Scripture References",
+      noData: "Paste references and press 'Extract'",
     }
   };
 
@@ -161,7 +96,7 @@ function VerseParserDialog({
     setIsParsing(true);
     // Simulate brief processing time for UX
     setTimeout(() => {
-      const result = parseVersesAndOutline(rawText);
+      const result = parseScriptureReferences(rawText);
       setParsedData(result);
       setIsParsing(false);
     }, 300);
@@ -184,80 +119,31 @@ function VerseParserDialog({
       return <p className="text-gray-500 text-sm italic text-center py-8">{t.noData}</p>;
     }
 
-    if (parsedData.type === 'verse_list') {
+    if (parsedData.type === 'verse_list' && parsedData.verses.length > 0) {
       return (
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-4 h-4 text-pdv-teal" />
             <h4 className="font-bold text-sm text-gray-900">{t.verseList}</h4>
-            <Badge variant="outline" className="text-xs">{parsedData.sections.length} {parsedData.sections.length === 1 ? 'verso' : 'versos'}</Badge>
+            <Badge variant="outline" className="text-xs">{parsedData.verses.length} {language === 'es' ? (parsedData.verses.length === 1 ? 'referencia' : 'referencias') : (parsedData.verses.length === 1 ? 'reference' : 'references')}</Badge>
           </div>
-          {parsedData.sections.map((item, idx) => (
-            <div key={idx} className="flex items-start gap-2 text-sm">
-              <span className="text-pdv-teal font-bold">{idx + 1}.</span>
-              <span className="text-gray-800">{item.content}</span>
+          {parsedData.verses.map((item, idx) => (
+            <div key={idx} className="flex items-start gap-2 p-2 bg-white rounded border border-gray-200 hover:border-pdv-teal transition-colors">
+              <span className="text-pdv-teal font-bold text-sm">{idx + 1}.</span>
+              <span className="text-gray-800 text-sm">{item.reference}</span>
             </div>
           ))}
         </div>
       );
     }
 
-    if (parsedData.type === 'outline') {
-      return (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 mb-3">
-            <List className="w-4 h-4 text-pdv-green" />
-            <h4 className="font-bold text-sm text-gray-900">{t.outline}</h4>
-            <Badge variant="outline" className="text-xs">{parsedData.sections.length} {parsedData.sections.length === 1 ? 'sección' : 'secciones'}</Badge>
-          </div>
-          {parsedData.sections.map((section, idx) => (
-            <div key={idx} className="border-l-4 border-pdv-teal pl-3 pb-2">
-              <h5 className="font-bold text-gray-900 mb-2">{section.title}</h5>
-              
-              {section.verses && section.verses.length > 0 && (
-                <div className="space-y-1 ml-2">
-                  {section.verses.map((verse, vIdx) => (
-                    <div key={vIdx} className="text-xs text-gray-700 flex gap-2">
-                      <span className="text-pdv-green">•</span>
-                      <span>{verse}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {section.subsections && section.subsections.length > 0 && (
-                <div className="ml-4 mt-2 space-y-2">
-                  {section.subsections.map((subsection, sIdx) => (
-                    <div key={sIdx} className="border-l-2 border-gray-300 pl-2">
-                      <h6 className="font-semibold text-gray-800 text-sm">{subsection.title}</h6>
-                      {subsection.verses && subsection.verses.length > 0 && (
-                        <div className="space-y-0.5 ml-2 mt-1">
-                          {subsection.verses.map((verse, vIdx) => (
-                            <div key={vIdx} className="text-xs text-gray-600 flex gap-2">
-                              <span className="text-gray-400">–</span>
-                              <span>{verse}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    // Fallback for plain text
+    // No verses found
     return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 mb-3">
-          <FileText className="w-4 h-4 text-gray-600" />
-          <h4 className="font-bold text-sm text-gray-900">{t.text}</h4>
-        </div>
-        <p className="text-sm text-gray-700 whitespace-pre-wrap">{rawText}</p>
+      <div className="text-center py-8">
+        <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+        <p className="text-gray-500 text-sm">
+          {language === 'es' ? 'No se encontraron referencias bíblicas' : 'No scripture references found'}
+        </p>
       </div>
     );
   };
