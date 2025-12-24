@@ -530,7 +530,6 @@ export default function WeeklyServiceManager() {
       const updated = { ...prev };
       updated[timeSlot][segmentIdx].data = {
         ...updated[timeSlot][segmentIdx].data,
-        verse: data.raw_text,
         parsed_verse_data: data.parsed_data
       };
       return updated;
@@ -2283,6 +2282,9 @@ Return ONLY valid JSON:
                                       <BookOpen className="w-4 h-4" />
                                     </Button>
                                   </div>
+                                  <p className="text-[10px] text-gray-500 italic">
+                                    💡 Usa el ícono 📖 para extraer y estructurar referencias bíblicas
+                                  </p>
                                   {segment.data?.parsed_verse_data && (
                                     <Badge variant="outline" className="text-xs bg-green-50 border-green-300 text-green-700">
                                       ✓ Analizado ({segment.data.parsed_verse_data.sections?.length || 0} elementos)
@@ -2758,6 +2760,9 @@ Return ONLY valid JSON:
                                       <BookOpen className="w-4 h-4" />
                                     </Button>
                                   </div>
+                                  <p className="text-[10px] text-gray-500 italic">
+                                    💡 Usa el ícono 📖 para extraer y estructurar referencias bíblicas
+                                  </p>
                                   {segment.data?.parsed_verse_data && (
                                     <Badge variant="outline" className="text-xs bg-green-50 border-green-300 text-green-700">
                                       ✓ Analizado ({segment.data.parsed_verse_data.sections?.length || 0} elementos)
