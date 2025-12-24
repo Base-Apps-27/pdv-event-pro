@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks, BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatTimeToEST } from "../components/utils/timeFormat";
+import StructuredVersesModal from "@/components/service/StructuredVersesModal";
 
 export default function PublicProgramView() {
   const gradientStyle = {
@@ -29,6 +30,8 @@ export default function PublicProgramView() {
   const [expandedSessions, setExpandedSessions] = useState({});
   const [showEventDetails, setShowEventDetails] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [versesModalOpen, setVersesModalOpen] = useState(false);
+  const [versesModalData, setVersesModalData] = useState({ parsedData: null, rawText: "" });
 
   // Update current time every minute
   useEffect(() => {
@@ -982,7 +985,26 @@ export default function PublicProgramView() {
                               )}
                               
                               {segment.data?.verse && (
-                                <p className="text-xs text-gray-600 mb-1">📖 {segment.data.verse}</p>
+                                <div className="flex items-start gap-2">
+                                  <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
+                                  {segment.data?.parsed_verse_data && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setVersesModalData({
+                                          parsedData: segment.data.parsed_verse_data,
+                                          rawText: segment.data.verse
+                                        });
+                                        setVersesModalOpen(true);
+                                      }}
+                                      className="h-6 px-2 text-xs border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+                                    >
+                                      <BookOpen className="w-3 h-3 mr-1" />
+                                      Ver Detalles
+                                    </Button>
+                                  )}
+                                </div>
                               )}
                               
                               {segment.data?.description && (
@@ -1481,6 +1503,15 @@ export default function PublicProgramView() {
           </Card>
         )}
       </div>
+
+      {/* Structured Verses Modal */}
+      <StructuredVersesModal
+        open={versesModalOpen}
+        onOpenChange={setVersesModalOpen}
+        parsedData={versesModalData.parsedData}
+        rawText={versesModalData.rawText}
+        language="es"
+      />
 
       {/* Footer */}
       <div style={gradientStyle} className="mt-12 py-6">
