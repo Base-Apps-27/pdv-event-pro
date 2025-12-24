@@ -19,6 +19,36 @@ export default function ServiceTemplatesTab() {
   const queryClient = useQueryClient();
   const [expandedSegments, setExpandedSegments] = useState({});
 
+  // Hardcoded defaults to merge if database blueprint is incomplete
+  const DEFAULT_ACTIONS = {
+    "9:30am": {
+      "worship": [
+        { label: "Video de introducción en FB", timing: "before_start", offset_min: 0, department: "Projection" }
+      ],
+      "welcome": [],
+      "offering": [
+        { label: "Enviar texto: 844-555-5555", timing: "after_start", offset_min: 0, department: "Admin" }
+      ],
+      "message": [
+        { label: "Pianista sube", timing: "before_end", offset_min: 15, department: "Alabanza" },
+        { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }
+      ]
+    },
+    "11:30am": {
+      "worship": [
+        { label: "Video de introducción en FB", timing: "before_start", offset_min: 0, department: "Projection" }
+      ],
+      "welcome": [],
+      "offering": [
+        { label: "Enviar texto: 844-555-5555", timing: "after_start", offset_min: 0, department: "Admin" }
+      ],
+      "message": [
+        { label: "Pianista sube", timing: "before_end", offset_min: 15, department: "Alabanza" },
+        { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }
+      ]
+    }
+  };
+
   // Fetch or create the Sunday blueprint
   const { data: existingBlueprint, isLoading } = useQuery({
     queryKey: ['sunday-blueprint'],
@@ -54,22 +84,41 @@ export default function ServiceTemplatesTab() {
       // Ensure existing blueprint has segment arrays, populate with defaults if empty
       const populated = { ...existingBlueprint };
       
+      // Helper to merge default actions into segments
+      const mergeDefaultActions = (segments, timeSlot) => {
+        return segments.map(seg => {
+          // If actions are missing or empty, use defaults based on segment type
+          if (!seg.actions || seg.actions.length === 0) {
+            const defaultActions = DEFAULT_ACTIONS[timeSlot]?.[seg.type] || [];
+            return {
+              ...seg,
+              actions: defaultActions.map(a => ({ ...a }))
+            };
+          }
+          return seg;
+        });
+      };
+      
       if (!populated["9:30am"] || populated["9:30am"].length === 0) {
         populated["9:30am"] = [
-          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
+          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: DEFAULT_ACTIONS["9:30am"]["worship"].map(a => ({ ...a })) },
           { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
-          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [] },
-          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
+          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: DEFAULT_ACTIONS["9:30am"]["offering"].map(a => ({ ...a })) },
+          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: DEFAULT_ACTIONS["9:30am"]["message"].map(a => ({ ...a })) }
         ];
+      } else {
+        populated["9:30am"] = mergeDefaultActions(populated["9:30am"], "9:30am");
       }
       
       if (!populated["11:30am"] || populated["11:30am"].length === 0) {
         populated["11:30am"] = [
-          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
+          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: DEFAULT_ACTIONS["11:30am"]["worship"].map(a => ({ ...a })) },
           { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
-          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [] },
-          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
+          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: DEFAULT_ACTIONS["11:30am"]["offering"].map(a => ({ ...a })) },
+          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: DEFAULT_ACTIONS["11:30am"]["message"].map(a => ({ ...a })) }
         ];
+      } else {
+        populated["11:30am"] = mergeDefaultActions(populated["11:30am"], "11:30am");
       }
       
       setBlueprintData(populated);
