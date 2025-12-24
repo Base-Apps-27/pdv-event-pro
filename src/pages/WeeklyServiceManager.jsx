@@ -218,7 +218,8 @@ export default function WeeklyServiceManager() {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries(['weeklyService', selectedDate]);
-      setLastSavedData(JSON.parse(JSON.stringify(serviceData)));
+      // Don't update lastSavedData here - it causes re-renders that interrupt typing
+      // We'll sync on initial load only
       setLastSaveTimestamp(new Date().toISOString());
       setHasUnsavedChanges(false);
       
