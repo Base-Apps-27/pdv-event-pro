@@ -83,15 +83,22 @@ export default function SegmentRow({ segment, onUpdate, onEditDetails }) {
 
       {/* Presenter Inline Edit */}
       <div className="col-span-2">
-        <div className="relative">
-            <User className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
-            <Input 
-                className="h-7 text-xs pl-6" 
-                value={localPresenter}
-                onChange={(e) => { setLocalPresenter(e.target.value); setIsDirty(true); }}
-                onBlur={handleBlur}
-                placeholder="Líder..."
-            />
+        <div className="space-y-1">
+            <div className="relative">
+                <User className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Input 
+                    className="h-7 text-xs pl-6" 
+                    value={localPresenter}
+                    onChange={(e) => { setLocalPresenter(e.target.value); setIsDirty(true); }}
+                    onBlur={handleBlur}
+                    placeholder="Líder..."
+                />
+            </div>
+            {segment.segment_type === 'Alabanza' && (
+                <p className="text-[9px] text-gray-500 leading-tight">
+                    💡 Sarah/Anthony o Director de Banda
+                </p>
+            )}
         </div>
       </div>
 
