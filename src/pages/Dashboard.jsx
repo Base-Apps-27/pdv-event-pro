@@ -54,6 +54,14 @@ export default function Dashboard() {
     archived: "bg-slate-100 text-slate-600 border-slate-200"
   };
 
+  const statusBorderColors = {
+    planning: "border-l-yellow-400",
+    confirmed: "border-l-green-500",
+    in_progress: "border-l-blue-500",
+    completed: "border-l-gray-400",
+    archived: "border-l-slate-400"
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -247,7 +255,7 @@ export default function Dashboard() {
               {recentPastEvents.map((event) => (
                 <Card 
                   key={event.id} 
-                  className="bg-white shadow-sm hover:shadow-md transition-shadow"
+                  className={`bg-white shadow-sm hover:shadow-md transition-shadow border-l-4 ${statusBorderColors[event.status] || 'border-l-gray-300'}`}
                 >
                   <CardContent className="p-4">
                     <div className="flex flex-col gap-3">
