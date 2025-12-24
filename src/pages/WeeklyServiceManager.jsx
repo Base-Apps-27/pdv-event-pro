@@ -2110,6 +2110,13 @@ Return ONLY valid JSON:
                              onChange={(e) => updateSegmentField(timeSlot, idx, "presenter", e.target.value)}
                              className="text-sm"
                            />
+                           <AutocompleteInput
+                             type="translator"
+                             placeholder="Traductor"
+                             value={segment.data?.translator || ""}
+                             onChange={(e) => updateSegmentField(timeSlot, idx, "translator", e.target.value)}
+                             className="text-sm"
+                           />
                            <Textarea
                              placeholder="Descripción / Notas"
                              value={segment.data?.description || ""}
@@ -2117,6 +2124,59 @@ Return ONLY valid JSON:
                              className="text-sm"
                              rows={2}
                            />
+                           
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => toggleSegmentExpanded(timeSlot, idx)}
+                             className="w-full text-xs mt-2 print:hidden"
+                           >
+                             {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                             {isExpanded ? "Menos detalles" : "Más detalles"}
+                           </Button>
+
+                           {isExpanded && (
+                             <div className="space-y-2 pt-2 border-t">
+                               <div className="space-y-1">
+                                 <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
+                                 <Input
+                                   type="number"
+                                   value={segment.duration || 0}
+                                   onChange={(e) => {
+                                     const newDuration = parseInt(e.target.value) || 0;
+                                     setServiceData(prev => {
+                                       const updated = { ...prev };
+                                       updated[timeSlot][idx].duration = newDuration;
+                                       return updated;
+                                     });
+                                     debouncedSave(`${timeSlot}-${idx}-duration`);
+                                   }}
+                                   className="text-xs w-24"
+                                 />
+                               </div>
+                               <Textarea
+                                 placeholder="Notas de Proyección"
+                                 value={segment.data?.projection_notes || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                               <Textarea
+                                 placeholder="Notas de Sonido"
+                                 value={segment.data?.sound_notes || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "sound_notes", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                               <Textarea
+                                 placeholder="Notas Generales"
+                                 value={segment.data?.description_details || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                             </div>
+                           )}
                          </CardContent>
                        </Card>
                       );
@@ -2548,6 +2608,59 @@ Return ONLY valid JSON:
                              className="text-sm"
                              rows={2}
                            />
+                           
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => toggleSegmentExpanded(timeSlot, idx)}
+                             className="w-full text-xs mt-2 print:hidden"
+                           >
+                             {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                             {isExpanded ? "Menos detalles" : "Más detalles"}
+                           </Button>
+
+                           {isExpanded && (
+                             <div className="space-y-2 pt-2 border-t">
+                               <div className="space-y-1">
+                                 <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
+                                 <Input
+                                   type="number"
+                                   value={segment.duration || 0}
+                                   onChange={(e) => {
+                                     const newDuration = parseInt(e.target.value) || 0;
+                                     setServiceData(prev => {
+                                       const updated = { ...prev };
+                                       updated[timeSlot][idx].duration = newDuration;
+                                       return updated;
+                                     });
+                                     debouncedSave(`${timeSlot}-${idx}-duration`);
+                                   }}
+                                   className="text-xs w-24"
+                                 />
+                               </div>
+                               <Textarea
+                                 placeholder="Notas de Proyección"
+                                 value={segment.data?.projection_notes || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                               <Textarea
+                                 placeholder="Notas de Sonido"
+                                 value={segment.data?.sound_notes || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "sound_notes", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                               <Textarea
+                                 placeholder="Notas Generales"
+                                 value={segment.data?.description_details || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                             </div>
+                           )}
                          </CardContent>
                        </Card>
                       );
