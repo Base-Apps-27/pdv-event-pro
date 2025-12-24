@@ -52,7 +52,7 @@ export default function StructuredVersesModal({
   }
 
   const renderContent = () => {
-    if (parsedData.type === 'verse_list') {
+    if (parsedData.type === 'verse_list' && parsedData.sections?.length > 0) {
       return (
         <div className="space-y-3">
           <div className="flex items-center gap-2 mb-4">
@@ -70,7 +70,7 @@ export default function StructuredVersesModal({
       );
     }
 
-    if (parsedData.type === 'outline') {
+    if (parsedData.type === 'outline' && parsedData.sections?.length > 0) {
       return (
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
