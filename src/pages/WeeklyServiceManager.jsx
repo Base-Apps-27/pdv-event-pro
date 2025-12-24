@@ -528,8 +528,10 @@ export default function WeeklyServiceManager() {
     
     setServiceData(prev => {
       const updated = { ...prev };
+      const currentVerse = updated[timeSlot][segmentIdx].data?.verse || "";
       updated[timeSlot][segmentIdx].data = {
         ...updated[timeSlot][segmentIdx].data,
+        verse: currentVerse, // Preserve existing verse text
         parsed_verse_data: data.parsed_data
       };
       return updated;
@@ -2386,6 +2388,13 @@ Return ONLY valid JSON:
                                   )}
 
                                   <Textarea
+                                    placeholder="Notas para Coordinador"
+                                    value={segment.data?.coordinator_notes || ""}
+                                    onChange={(e) => updateSegmentField(timeSlot, idx, "coordinator_notes", e.target.value)}
+                                    className="text-xs"
+                                    rows={2}
+                                  />
+                                  <Textarea
                                     placeholder="Notas de Proyección"
                                     value={segment.data?.projection_notes || ""}
                                     onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
@@ -2907,6 +2916,13 @@ Return ONLY valid JSON:
                                       />
                                     </div>
                                   )}
+                                  <Textarea
+                                    placeholder="Notas para Coordinador"
+                                    value={segment.data?.coordinator_notes || ""}
+                                    onChange={(e) => updateSegmentField(timeSlot, idx, "coordinator_notes", e.target.value)}
+                                    className="text-xs"
+                                    rows={2}
+                                  />
                                   <Textarea
                                     placeholder="Notas de Proyección"
                                     value={segment.data?.projection_notes || ""}
