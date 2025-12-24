@@ -10,9 +10,9 @@ import { Sparkles, Loader2, BookOpen } from "lucide-react";
 function parseScriptureReferences(rawText) {
   if (!rawText || rawText.trim() === '') return { type: 'empty', verses: [] };
 
-  // Comprehensive verse pattern matching common citation formats:
-  // John 3:16 | Juan 3:16 | 1 Corinthians 13:4-7 | Romans 8:28-30 | Genesis 1:1-2:3
-  const versePattern = /(\d\s)?([1-3]\s)?([A-ZÁ-Úa-zá-ú]+\.?\s?[A-ZÁ-Úa-zá-ú]*\.?)\s+(\d+):(\d+)(-(\d+))?(:(\d+))?/gi;
+  // Enhanced pattern for abbreviated and full book names
+  // Handles: Rom 8:28 | S. Mar 3:16 | 1 Cor 13:4-7 | Gen 1:1-2:3 | Juan 3:16
+  const versePattern = /([1-3]\s)?(S\.\s)?([A-ZÁ-Úa-zá-ú]+\.?)\s+(\d+):(\d+)(-(\d+))?(:(\d+))?/gi;
   
   const verses = [];
   const lines = rawText.split('\n');
@@ -34,10 +34,10 @@ function parseScriptureReferences(rawText) {
         });
       });
     } else if (trimmed.length > 0 && trimmed.length < 150) {
-      // Check if line contains common book names even without full pattern
-      const bookNames = /\b(Genesis|Génesis|Exodus|Éxodo|Leviticus|Levítico|Numbers|Números|Deuteronomy|Deuteronomio|Joshua|Josué|Judges|Jueces|Ruth|Rut|Samuel|Kings|Reyes|Chronicles|Crónicas|Ezra|Esdras|Nehemiah|Nehemías|Esther|Ester|Job|Psalms?|Salmos?|Proverbs|Proverbios|Ecclesiastes|Eclesiastés|Song|Cantares|Isaiah|Isaías|Jeremiah|Jeremías|Lamentations|Lamentaciones|Ezekiel|Ezequiel|Daniel|Hosea|Oseas|Joel|Amos|Amós|Obadiah|Abdías|Jonah|Jonás|Micah|Miqueas|Nahum|Nahúm|Habakkuk|Habacuc|Zephaniah|Sofonías|Haggai|Hageo|Zechariah|Zacarías|Malachi|Malaquías|Matthew|Mateo|Mark|Marcos|Luke|Lucas|John|Juan|Acts|Hechos|Romans|Romanos|Corinthians|Corintios|Galatians|Gálatas|Ephesians|Efesios|Philippians|Filipenses|Colossians|Colosenses|Thessalonians|Tesalonicenses|Timothy|Timoteo|Titus|Tito|Philemon|Filemón|Hebrews|Hebreos|James|Santiago|Peter|Pedro|Jude|Judas|Revelation|Apocalipsis)\b/i;
+      // Check if line contains common book names or abbreviations
+      const bookPattern = /\b(Gen|Gén|Ex|Éx|Lev|Num|Núm|Deut|Josh|Jos|Judg|Jue|Ruth|Rut|Sam|Kings|Rey|Chron|Cro|Ezr|Neh|Est|Ps|Sal|Prov|Prov|Eccl|Ecl|Song|Cant|Is|Isa|Jer|Lam|Ezek|Ez|Dan|Hos|Joel|Am|Amós|Obad|Abd|Jon|Mic|Miq|Nah|Hab|Zeph|Sof|Hag|Zech|Zac|Mal|Matt|Mat|Mk|Mar|Lk|Lc|Jn|Jua|Acts|Hch|Rom|Cor|Gal|Eph|Ef|Phil|Fil|Col|Thess?|Tes|Tim|Tit|Phlm|Flm|Heb|Jas|Stg|Pet|Jude|Rev|Apoc|Apo|S\.\s?Mar|S\.\s?Juan|S\.\s?Lucas|S\.\s?Mateo|Genesis|Génesis|Exodus|Éxodo|Leviticus|Levítico|Numbers|Números|Deuteronomy|Deuteronomio|Joshua|Josué|Judges|Jueces|Samuel|Kings|Reyes|Chronicles|Crónicas|Ezra|Esdras|Nehemiah|Nehemías|Esther|Ester|Job|Psalms?|Salmos?|Proverbs|Proverbios|Ecclesiastes|Eclesiastés|Isaiah|Isaías|Jeremiah|Jeremías|Lamentations|Lamentaciones|Ezekiel|Ezequiel|Daniel|Hosea|Oseas|Amos|Obadiah|Abdías|Jonah|Jonás|Micah|Miqueas|Nahum|Nahúm|Habakkuk|Habacuc|Zephaniah|Sofonías|Haggai|Hageo|Zechariah|Zacarías|Malachi|Malaquías|Matthew|Mateo|Mark|Marcos|Luke|Lucas|John|Juan|Acts|Hechos|Romans|Romanos|Corinthians|Corintios|Galatians|Gálatas|Ephesians|Efesios|Philippians|Filipenses|Colossians|Colosenses|Thessalonians|Tesalonicenses|Timothy|Timoteo|Titus|Tito|Philemon|Filemón|Hebrews|Hebreos|James|Santiago|Peter|Pedro|Jude|Judas|Revelation|Apocalipsis)\b/i;
       
-      if (bookNames.test(trimmed)) {
+      if (bookPattern.test(trimmed)) {
         verses.push({
           reference: trimmed,
           original: trimmed
