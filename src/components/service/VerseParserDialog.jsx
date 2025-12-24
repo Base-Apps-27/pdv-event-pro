@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,6 +57,12 @@ function VerseParserDialog({
   const [rawText, setRawText] = useState(initialText);
   const [parsedData, setParsedData] = useState(null);
   const [isParsing, setIsParsing] = useState(false);
+
+  // Reset state when initialText changes (e.g., different segment selected)
+  useEffect(() => {
+    setRawText(initialText);
+    setParsedData(null);
+  }, [initialText]);
 
   const texts = {
     es: {
