@@ -401,9 +401,8 @@ export default function ServiceTemplatesTab() {
           <h3 className="text-2xl font-bold">Blueprint: Servicios Dominicales</h3>
           <p className="text-sm text-gray-500 mt-1">Define la estructura fija que se aplicará cada semana</p>
         </div>
-        <Button onClick={handleSave} style={tealStyle}>
-          <Save className="w-4 h-4 mr-2" />
-          Guardar Blueprint
+        <Button onClick={handleSave} style={tealStyle} size="icon" title="Guardar Blueprint">
+          <Save className="w-4 h-4" />
         </Button>
       </div>
 
