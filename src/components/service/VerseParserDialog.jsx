@@ -6,49 +6,44 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, BookOpen } from "lucide-react";
 
-// Client-side parser for scripture references
+// Client-side parser for scripture references - ONLY extracts verse citations
 function parseScriptureReferences(rawText) {
-  if (!rawText || rawText.trim() === '') return { type: 'empty', verses: [] };
+  if (!rawText || rawText.trim() === '') return { type: 'empty', sections: [] };
 
-  // Enhanced pattern for abbreviated and full book names
-  // Handles: Rom 8:28 | S. Mar 3:16 | 1 Cor 13:4-7 | Gen 1:1-2:3 | Juan 3:16
-  const versePattern = /([1-3]\s)?(S\.\s)?([A-ZÁ-Úa-zá-ú]+\.?)\s+(\d+):(\d+)(-(\d+))?(:(\d+))?/gi;
+  // Strict pattern: ONLY match book + chapter:verse format
+  // Examples: Rom 8:28 | S. Mar 3:16 | 1 Cor 13:4-7 | Juan 3:16-18 | Gen 1:1-2:3
+  const versePattern = /\b([1-3]\s)?(S\.\s)?([A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?)\s+(\d{1,3}):(\d{1,3})(-(\d{1,3}))?(:(\d{1,3}))?\b/gi;
   
   const verses = [];
-  const lines = rawText.split('\n');
+  const seenRefs = new Set(); // Deduplicate
   
-  for (let line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
+  // Search entire text for verse patterns
+  const matches = [...rawText.matchAll(versePattern)];
+  
+  matches.forEach(match => {
+    const fullMatch = match[0].trim();
     
-    // Try to match verse patterns in the line
-    const matches = [...trimmed.matchAll(versePattern)];
+    // Filter out false positives (common words that look like book names)
+    const bookPart = (match[1] || '') + (match[2] || '') + match[3];
+    const lowerBook = bookPart.toLowerCase().trim();
     
-    if (matches.length > 0) {
-      // Extract all verse references from this line
-      matches.forEach(match => {
-        const fullMatch = match[0].trim();
-        verses.push({
-          reference: fullMatch,
-          original: trimmed
-        });
+    // Blacklist common Spanish/English words that match the pattern
+    const blacklist = ['y', 'es', 'en', 'el', 'la', 'de', 'a', 'por', 'con', 'sin'];
+    if (blacklist.includes(lowerBook)) return;
+    
+    // Only add if not already seen
+    if (!seenRefs.has(fullMatch)) {
+      seenRefs.add(fullMatch);
+      verses.push({
+        type: 'verse',
+        content: fullMatch
       });
-    } else if (trimmed.length > 0 && trimmed.length < 150) {
-      // Check if line contains common book names or abbreviations
-      const bookPattern = /\b(Gen|Gén|Ex|Éx|Lev|Num|Núm|Deut|Josh|Jos|Judg|Jue|Ruth|Rut|Sam|Kings|Rey|Chron|Cro|Ezr|Neh|Est|Ps|Sal|Prov|Prov|Eccl|Ecl|Song|Cant|Is|Isa|Jer|Lam|Ezek|Ez|Dan|Hos|Joel|Am|Amós|Obad|Abd|Jon|Mic|Miq|Nah|Hab|Zeph|Sof|Hag|Zech|Zac|Mal|Matt|Mat|Mk|Mar|Lk|Lc|Jn|Jua|Acts|Hch|Rom|Cor|Gal|Eph|Ef|Phil|Fil|Col|Thess?|Tes|Tim|Tit|Phlm|Flm|Heb|Jas|Stg|Pet|Jude|Rev|Apoc|Apo|S\.\s?Mar|S\.\s?Juan|S\.\s?Lucas|S\.\s?Mateo|Genesis|Génesis|Exodus|Éxodo|Leviticus|Levítico|Numbers|Números|Deuteronomy|Deuteronomio|Joshua|Josué|Judges|Jueces|Samuel|Kings|Reyes|Chronicles|Crónicas|Ezra|Esdras|Nehemiah|Nehemías|Esther|Ester|Job|Psalms?|Salmos?|Proverbs|Proverbios|Ecclesiastes|Eclesiastés|Isaiah|Isaías|Jeremiah|Jeremías|Lamentations|Lamentaciones|Ezekiel|Ezequiel|Daniel|Hosea|Oseas|Amos|Obadiah|Abdías|Jonah|Jonás|Micah|Miqueas|Nahum|Nahúm|Habakkuk|Habacuc|Zephaniah|Sofonías|Haggai|Hageo|Zechariah|Zacarías|Malachi|Malaquías|Matthew|Mateo|Mark|Marcos|Luke|Lucas|John|Juan|Acts|Hechos|Romans|Romanos|Corinthians|Corintios|Galatians|Gálatas|Ephesians|Efesios|Philippians|Filipenses|Colossians|Colosenses|Thessalonians|Tesalonicenses|Timothy|Timoteo|Titus|Tito|Philemon|Filemón|Hebrews|Hebreos|James|Santiago|Peter|Pedro|Jude|Judas|Revelation|Apocalipsis)\b/i;
-      
-      if (bookPattern.test(trimmed)) {
-        verses.push({
-          reference: trimmed,
-          original: trimmed
-        });
-      }
     }
-  }
+  });
   
   return {
     type: verses.length > 0 ? 'verse_list' : 'empty',
-    sections: verses.map(v => ({ type: 'verse', content: v.reference }))
+    sections: verses
   };
 }
 
@@ -104,8 +99,8 @@ function VerseParserDialog({
 
   const handleSave = () => {
     if (parsedData && onSave) {
+      // Only save parsed structure - do NOT overwrite original text field
       onSave({
-        raw_text: rawText,
         parsed_data: parsedData
       });
     }
