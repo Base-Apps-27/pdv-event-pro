@@ -101,6 +101,8 @@ export default function ServiceTemplatesTab() {
       
       if (field === 'songs') {
         updated[service][segmentIndex].songs = value;
+      } else if (field === 'actions') {
+        updated[service][segmentIndex].actions = value;
       } else if (field === 'duration' || field === 'title' || field === 'type') {
         updated[service][segmentIndex][field] = value;
       } else {
@@ -253,6 +255,52 @@ export default function ServiceTemplatesTab() {
                                   className="text-xs w-24"
                                 />
                               </div>
+
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-xs font-semibold">🏅 Acciones para Coordinador</Label>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      const actions = segment.actions || [];
+                                      updateSegmentField(service, idx, 'actions', [...actions, { label: '', timing: 'before_start', offset_min: 0 }]);
+                                    }}
+                                    className="h-6 text-xs"
+                                  >
+                                    <Plus className="w-3 h-3 mr-1" />
+                                    Añadir
+                                  </Button>
+                                </div>
+                                {(segment.actions || []).map((action, aIdx) => (
+                                  <div key={aIdx} className="bg-amber-50 border border-amber-200 rounded p-2 space-y-1">
+                                    <div className="flex gap-2">
+                                      <Input
+                                        placeholder="Ej: Enviar texto: 844-555-5555"
+                                        value={action.label || ''}
+                                        onChange={(e) => {
+                                          const actions = [...(segment.actions || [])];
+                                          actions[aIdx] = { ...actions[aIdx], label: e.target.value };
+                                          updateSegmentField(service, idx, 'actions', actions);
+                                        }}
+                                        className="text-xs flex-1"
+                                      />
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          const actions = (segment.actions || []).filter((_, i) => i !== aIdx);
+                                          updateSegmentField(service, idx, 'actions', actions);
+                                        }}
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        <Trash2 className="w-3 h-3 text-red-500" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
                               <Textarea
                                 placeholder="Notas para Coordinador"
                                 value={segment.data?.coordinator_notes || ""}
