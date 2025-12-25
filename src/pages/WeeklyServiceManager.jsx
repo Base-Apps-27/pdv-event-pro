@@ -295,6 +295,7 @@ export default function WeeklyServiceManager() {
             return {
               ...savedSeg,
               fields: blueprintSeg.fields || savedSeg.fields,
+              sub_assignments: blueprintSeg.sub_assignments || savedSeg.sub_assignments || [],
             };
           }
           return savedSeg;
@@ -350,7 +351,8 @@ export default function WeeklyServiceManager() {
             duration: seg.duration,
             fields: [...(seg.fields || [])],
             data: {},
-            actions: seg.actions ? seg.actions.map(a => ({ ...a })) : []
+            actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
+            sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : []
           };
           
           if (seg.type === "worship") {
@@ -371,7 +373,8 @@ export default function WeeklyServiceManager() {
             duration: seg.duration,
             fields: [...(seg.fields || [])],
             data: {},
-            actions: seg.actions ? seg.actions.map(a => ({ ...a })) : []
+            actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
+            sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : []
           };
           
           if (seg.type === "worship") {
@@ -1619,7 +1622,20 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.ministry_leader && (
+                  {/* Dynamic sub-assignments from blueprint */}
+                  {segment.sub_assignments && segment.sub_assignments.map((subAssign, saIdx) => {
+                    const personValue = segment.data?.[subAssign.person_field_name];
+                    if (!personValue) return null;
+                    return (
+                      <div key={saIdx} className="print-segment-detail">
+                        • {subAssign.label}: <span className="print-name">{personValue}</span>
+                        {subAssign.duration_min && <span className="print-duration"> ({subAssign.duration_min} min)</span>}
+                      </div>
+                    );
+                  })}
+                  
+                  {/* Legacy fallback for old ministry_leader field */}
+                  {(!segment.sub_assignments || segment.sub_assignments.length === 0) && segment.data?.ministry_leader && (
                     <div className="print-segment-detail">
                       • Ministración: <span className="print-name">{segment.data.ministry_leader}</span> <span className="print-duration">(5 min)</span>
                     </div>
@@ -2339,7 +2355,29 @@ Return ONLY valid JSON:
                                   ))}
                                 </div>
                               )}
-                              {segment.fields.includes("ministry_leader") && (
+                              {/* Dynamic Sub-Assignments from Blueprint */}
+                              {segment.sub_assignments && segment.sub_assignments.length > 0 && (
+                                <div className="space-y-2 border-t pt-2 mt-2">
+                                  <Label className="text-xs font-semibold text-purple-800">Sub-Asignaciones</Label>
+                                  {segment.sub_assignments.map((subAssign, saIdx) => (
+                                    <div key={saIdx} className="bg-purple-50 border border-purple-200 rounded p-2">
+                                      <Label className="text-xs font-semibold text-purple-800 mb-1">
+                                        {subAssign.label} {subAssign.duration_min ? `(${subAssign.duration_min} min)` : ''}
+                                      </Label>
+                                      <AutocompleteInput
+                                        type="person"
+                                        placeholder={`Nombre para ${subAssign.label}`}
+                                        value={segment.data?.[subAssign.person_field_name] || ""}
+                                        onChange={(e) => updateSegmentField("9:30am", idx, subAssign.person_field_name, e.target.value)}
+                                        className="text-sm"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {/* Legacy fallback for old ministry_leader field */}
+                              {!segment.sub_assignments?.length && segment.fields.includes("ministry_leader") && (
                                 <div className="bg-purple-50 border border-purple-200 rounded p-2">
                                   <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
                                   <AutocompleteInput
@@ -2837,7 +2875,29 @@ Return ONLY valid JSON:
                                 </div>
                               )}
 
-                              {segment.fields.includes("ministry_leader") && (
+                              {/* Dynamic Sub-Assignments from Blueprint */}
+                              {segment.sub_assignments && segment.sub_assignments.length > 0 && (
+                                <div className="space-y-2 border-t pt-2 mt-2">
+                                  <Label className="text-xs font-semibold text-purple-800">Sub-Asignaciones</Label>
+                                  {segment.sub_assignments.map((subAssign, saIdx) => (
+                                    <div key={saIdx} className="bg-purple-50 border border-purple-200 rounded p-2">
+                                      <Label className="text-xs font-semibold text-purple-800 mb-1">
+                                        {subAssign.label} {subAssign.duration_min ? `(${subAssign.duration_min} min)` : ''}
+                                      </Label>
+                                      <AutocompleteInput
+                                        type="person"
+                                        placeholder={`Nombre para ${subAssign.label}`}
+                                        value={segment.data?.[subAssign.person_field_name] || ""}
+                                        onChange={(e) => updateSegmentField("11:30am", idx, subAssign.person_field_name, e.target.value)}
+                                        className="text-sm"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {/* Legacy fallback for old ministry_leader field */}
+                              {!segment.sub_assignments?.length && segment.fields.includes("ministry_leader") && (
                                 <div className="bg-purple-50 border border-purple-200 rounded p-2">
                                   <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
                                   <AutocompleteInput
