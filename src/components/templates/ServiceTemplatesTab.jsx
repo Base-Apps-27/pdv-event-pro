@@ -361,7 +361,11 @@ export default function ServiceTemplatesTab() {
                                 <Input
                                   type="number"
                                   value={segment.duration || 0}
-                                  onChange={(e) => updateSegmentField(service, idx, 'duration', parseInt(e.target.value) || 0)}
+                                  onChange={(e) => {
+                                    const updated = [...(blueprintData[service] || [])];
+                                    updated[idx] = { ...updated[idx], duration: parseInt(e.target.value) || 0 };
+                                    setBlueprintData(prev => ({ ...prev, [service]: updated }));
+                                  }}
                                   className="text-xs w-24"
                                 />
                               </div>

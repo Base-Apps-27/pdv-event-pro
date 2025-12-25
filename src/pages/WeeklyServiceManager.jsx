@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -293,10 +292,21 @@ export default function WeeklyServiceManager() {
                                BLUEPRINT[timeSlot]?.[idx];
           
           if (blueprintSeg) {
+            let subAssignments = blueprintSeg.sub_assignments || savedSeg.sub_assignments || [];
+            
+            // Add defaults if missing
+            if (!subAssignments || subAssignments.length === 0) {
+              if (savedSeg.type === 'worship') {
+                subAssignments = [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }];
+              } else if (savedSeg.type === 'message') {
+                subAssignments = [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }];
+              }
+            }
+            
             return {
               ...savedSeg,
               fields: blueprintSeg.fields || savedSeg.fields,
-              sub_assignments: blueprintSeg.sub_assignments || savedSeg.sub_assignments || [],
+              sub_assignments: subAssignments,
               actions: blueprintSeg.actions || savedSeg.actions || [],
             };
           }
@@ -1583,12 +1593,15 @@ Return ONLY valid JSON:
 
                   {segment.actions && segment.actions.length > 0 && (
                     <div className="print-coordinator-actions">
-                      {segment.actions.map((action, aIdx) => (
-                        <div key={aIdx}>
-                          {action.label}
-                          {action.timing === "before_end" && ` (${action.offset_min} min antes)`}
-                        </div>
-                      ))}
+                      {segment.actions.map((action, aIdx) => {
+                        const hasTimingInLabel = /\d+\s*min/i.test(action.label);
+                        return (
+                          <div key={aIdx}>
+                            {action.label}
+                            {!hasTimingInLabel && action.timing === "before_end" && ` (${action.offset_min} min antes)`}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
