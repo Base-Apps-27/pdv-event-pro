@@ -43,68 +43,6 @@ export default function PublicProgramView() {
     return () => clearInterval(timer);
   }, []);
 
-  // Real-time notifications for segments
-  useEffect(() => {
-    // Collect all segments from current view
-    let segmentsToCheck = [];
-    
-    if (viewType === "service" && actualServiceData) {
-      if (actualServiceData.segments) {
-        segmentsToCheck = actualServiceData.segments.filter(s => s.start_time);
-      } else {
-        const morning = (actualServiceData["9:30am"] || []).map(s => ({ ...s, start_time: s.start_time || s.data?.start_time, title: s.title || s.data?.title }));
-        const afternoon = (actualServiceData["11:30am"] || []).map(s => ({ ...s, start_time: s.start_time || s.data?.start_time, title: s.title || s.data?.title }));
-        segmentsToCheck = [...morning, ...afternoon].filter(s => s.start_time && s.title);
-      }
-    } else if (viewType === "event") {
-      segmentsToCheck = allSegments.filter(s => s.start_time && s.title);
-    }
-
-    if (segmentsToCheck.length === 0) return;
-
-    const checkNotifications = () => {
-      const now = new Date();
-      
-      segmentsToCheck.forEach(segment => {
-        if (!segment.start_time || !segment.title) return;
-        
-        const segmentId = segment.id || `${segment.title}-${segment.start_time}`;
-        
-        // Parse start time
-        const [segHours, segMins] = segment.start_time.split(':').map(Number);
-        const segmentStart = new Date();
-        segmentStart.setHours(segHours, segMins, 0, 0);
-        
-        const diffMs = segmentStart - now;
-        const diffMins = Math.floor(diffMs / 60000);
-        
-        // Notify 2 minutes before
-        if (diffMins === 2 && !notifiedSegments.has(`${segmentId}-2min`)) {
-          toast.info(`⏰ ${segment.title} comienza en 2 minutos`, {
-            duration: 10000,
-            icon: <BellRing className="w-5 h-5" />,
-          });
-          setNotifiedSegments(prev => new Set(prev).add(`${segmentId}-2min`));
-        }
-        
-        // Notify when segment starts
-        if (diffMins === 0 && !notifiedSegments.has(`${segmentId}-start`)) {
-          toast.success(`▶️ ${segment.title} está comenzando ahora`, {
-            duration: 8000,
-            icon: <Clock className="w-5 h-5" />,
-          });
-          setNotifiedSegments(prev => new Set(prev).add(`${segmentId}-start`));
-        }
-      });
-    };
-
-    // Check immediately, then every 30 seconds
-    checkNotifications();
-    const interval = setInterval(checkNotifications, 30000);
-
-    return () => clearInterval(interval);
-  }, [actualServiceData, allSegments, viewType, notifiedSegments]);
-
   useEffect(() => {
     if (preloadedEventId) {
       setSelectedEventId(preloadedEventId);
@@ -291,6 +229,68 @@ export default function PublicProgramView() {
   const actualServiceData = weeklyServiceData?.[0] || null;
   const eventSessions = sessions;
   const filteredSessions = eventSessions;
+
+  // Real-time notifications for segments
+  useEffect(() => {
+    // Collect all segments from current view
+    let segmentsToCheck = [];
+    
+    if (viewType === "service" && actualServiceData) {
+      if (actualServiceData.segments) {
+        segmentsToCheck = actualServiceData.segments.filter(s => s.start_time);
+      } else {
+        const morning = (actualServiceData["9:30am"] || []).map(s => ({ ...s, start_time: s.start_time || s.data?.start_time, title: s.title || s.data?.title }));
+        const afternoon = (actualServiceData["11:30am"] || []).map(s => ({ ...s, start_time: s.start_time || s.data?.start_time, title: s.title || s.data?.title }));
+        segmentsToCheck = [...morning, ...afternoon].filter(s => s.start_time && s.title);
+      }
+    } else if (viewType === "event") {
+      segmentsToCheck = allSegments.filter(s => s.start_time && s.title);
+    }
+
+    if (segmentsToCheck.length === 0) return;
+
+    const checkNotifications = () => {
+      const now = new Date();
+      
+      segmentsToCheck.forEach(segment => {
+        if (!segment.start_time || !segment.title) return;
+        
+        const segmentId = segment.id || `${segment.title}-${segment.start_time}`;
+        
+        // Parse start time
+        const [segHours, segMins] = segment.start_time.split(':').map(Number);
+        const segmentStart = new Date();
+        segmentStart.setHours(segHours, segMins, 0, 0);
+        
+        const diffMs = segmentStart - now;
+        const diffMins = Math.floor(diffMs / 60000);
+        
+        // Notify 2 minutes before
+        if (diffMins === 2 && !notifiedSegments.has(`${segmentId}-2min`)) {
+          toast.info(`⏰ ${segment.title} comienza en 2 minutos`, {
+            duration: 10000,
+            icon: <BellRing className="w-5 h-5" />,
+          });
+          setNotifiedSegments(prev => new Set(prev).add(`${segmentId}-2min`));
+        }
+        
+        // Notify when segment starts
+        if (diffMins === 0 && !notifiedSegments.has(`${segmentId}-start`)) {
+          toast.success(`▶️ ${segment.title} está comenzando ahora`, {
+            duration: 8000,
+            icon: <Clock className="w-5 h-5" />,
+          });
+          setNotifiedSegments(prev => new Set(prev).add(`${segmentId}-start`));
+        }
+      });
+    };
+
+    // Check immediately, then every 30 seconds
+    checkNotifications();
+    const interval = setInterval(checkNotifications, 30000);
+
+    return () => clearInterval(interval);
+  }, [actualServiceData, allSegments, viewType, notifiedSegments]);
 
   const getSessionSegments = (sessionId) => {
     return allSegments.filter(seg => seg.session_id === sessionId);
