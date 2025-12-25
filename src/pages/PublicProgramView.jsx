@@ -683,12 +683,38 @@ export default function PublicProgramView() {
 
                 {/* Custom Service Segments */}
                 <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
-                  <div className="bg-gradient-to-r from-pdv-teal/10 to-white p-4 border-b">
-                    <h3 className="text-2xl font-bold uppercase text-pdv-teal">{actualServiceData.name}</h3>
-                    {actualServiceData.description && (
-                      <p className="text-sm text-gray-600 mt-2">{actualServiceData.description}</p>
-                    )}
-                  </div>
+                 <div className="bg-gradient-to-r from-pdv-teal/10 to-white p-4 border-b">
+                   <h3 className="text-2xl font-bold uppercase text-pdv-teal">{actualServiceData.name}</h3>
+                   {actualServiceData.description && (
+                     <p className="text-sm text-gray-600 mt-2">{actualServiceData.description}</p>
+                   )}
+                   {/* Team Info - Compact */}
+                   {(actualServiceData.coordinators || actualServiceData.ujieres || actualServiceData.sound || actualServiceData.luces) && (
+                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
+                       {actualServiceData.coordinators && Object.values(actualServiceData.coordinators).find(v => v) && (
+                         <span><strong>👤 Coord:</strong> {actualServiceData.coordinators["9:30am"] || actualServiceData.coordinators["11:30am"] || Object.values(actualServiceData.coordinators).find(v => v)}</span>
+                       )}
+                       {actualServiceData.ujieres && Object.values(actualServiceData.ujieres).find(v => v) && (
+                         <>
+                           <span className="text-gray-400">|</span>
+                           <span><strong>🚪 Ujieres:</strong> {actualServiceData.ujieres["9:30am"] || actualServiceData.ujieres["11:30am"] || Object.values(actualServiceData.ujieres).find(v => v)}</span>
+                         </>
+                       )}
+                       {actualServiceData.sound && Object.values(actualServiceData.sound).find(v => v) && (
+                         <>
+                           <span className="text-gray-400">|</span>
+                           <span><strong>🔊 Sonido:</strong> {actualServiceData.sound["9:30am"] || actualServiceData.sound["11:30am"] || Object.values(actualServiceData.sound).find(v => v)}</span>
+                         </>
+                       )}
+                       {actualServiceData.luces && Object.values(actualServiceData.luces).find(v => v) && (
+                         <>
+                           <span className="text-gray-400">|</span>
+                           <span><strong>💡 Luces:</strong> {actualServiceData.luces["9:30am"] || actualServiceData.luces["11:30am"] || Object.values(actualServiceData.luces).find(v => v)}</span>
+                         </>
+                       )}
+                     </div>
+                   )}
+                 </div>
                   <div className="divide-y divide-gray-200">
                     {actualServiceData.segments.filter(seg => seg.type !== 'break').map((segment, idx) => {
                       const isCurrent = isSegmentCurrent(segment);
@@ -849,6 +875,32 @@ export default function PublicProgramView() {
                       {actualServiceData.pre_service_notes?.["9:30am"] && (
                         <p className="text-sm text-gray-600 italic mt-2">{actualServiceData.pre_service_notes["9:30am"]}</p>
                       )}
+                      {/* Team Info - Compact */}
+                      {(actualServiceData.coordinators?.["9:30am"] || actualServiceData.ujieres?.["9:30am"] || actualServiceData.sound?.["9:30am"] || actualServiceData.luces?.["9:30am"]) && (
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
+                          {actualServiceData.coordinators?.["9:30am"] && (
+                            <span><strong>👤 Coord:</strong> {actualServiceData.coordinators["9:30am"]}</span>
+                          )}
+                          {actualServiceData.ujieres?.["9:30am"] && (
+                            <>
+                              <span className="text-gray-400">|</span>
+                              <span><strong>🚪 Ujieres:</strong> {actualServiceData.ujieres["9:30am"]}</span>
+                            </>
+                          )}
+                          {actualServiceData.sound?.["9:30am"] && (
+                            <>
+                              <span className="text-gray-400">|</span>
+                              <span><strong>🔊 Sonido:</strong> {actualServiceData.sound["9:30am"]}</span>
+                            </>
+                          )}
+                          {actualServiceData.luces?.["9:30am"] && (
+                            <>
+                              <span className="text-gray-400">|</span>
+                              <span><strong>💡 Luces:</strong> {actualServiceData.luces["9:30am"]}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="divide-y divide-gray-200">
                      {actualServiceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
@@ -985,6 +1037,32 @@ export default function PublicProgramView() {
                       <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 A.M.</h3>
                       {actualServiceData.pre_service_notes?.["11:30am"] && (
                         <p className="text-sm text-gray-600 italic mt-2">{actualServiceData.pre_service_notes["11:30am"]}</p>
+                      )}
+                      {/* Team Info - Compact */}
+                      {(actualServiceData.coordinators?.["11:30am"] || actualServiceData.ujieres?.["11:30am"] || actualServiceData.sound?.["11:30am"] || actualServiceData.luces?.["11:30am"]) && (
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
+                          {actualServiceData.coordinators?.["11:30am"] && (
+                            <span><strong>👤 Coord:</strong> {actualServiceData.coordinators["11:30am"]}</span>
+                          )}
+                          {actualServiceData.ujieres?.["11:30am"] && (
+                            <>
+                              <span className="text-gray-400">|</span>
+                              <span><strong>🚪 Ujieres:</strong> {actualServiceData.ujieres["11:30am"]}</span>
+                            </>
+                          )}
+                          {actualServiceData.sound?.["11:30am"] && (
+                            <>
+                              <span className="text-gray-400">|</span>
+                              <span><strong>🔊 Sonido:</strong> {actualServiceData.sound["11:30am"]}</span>
+                            </>
+                          )}
+                          {actualServiceData.luces?.["11:30am"] && (
+                            <>
+                              <span className="text-gray-400">|</span>
+                              <span><strong>💡 Luces:</strong> {actualServiceData.luces["11:30am"]}</span>
+                            </>
+                          )}
+                        </div>
                       )}
                     </div>
                     <div className="divide-y divide-gray-200">
@@ -1187,6 +1265,58 @@ export default function PublicProgramView() {
                               </>
                             )}
                           </div>
+                          {/* Team Info - Compact */}
+                          {(session.coordinators || session.ushers_team || session.sound_team || session.tech_team) && (
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
+                              {session.coordinators && (
+                                <span><strong>👤 Coord:</strong> {session.coordinators}</span>
+                              )}
+                              {session.ushers_team && (
+                                <>
+                                  <span className="text-gray-400">|</span>
+                                  <span><strong>🚪 Ujieres:</strong> {session.ushers_team}</span>
+                                </>
+                              )}
+                              {session.sound_team && (
+                                <>
+                                  <span className="text-gray-400">|</span>
+                                  <span><strong>🔊 Sonido:</strong> {session.sound_team}</span>
+                                </>
+                              )}
+                              {session.tech_team && (
+                                <>
+                                  <span className="text-gray-400">|</span>
+                                  <span><strong>💡 Tech:</strong> {session.tech_team}</span>
+                                </>
+                              )}
+                            </div>
+                          )}
+                          {/* Custom Service team display */}
+                          {viewType === "service" && actualServiceData?.coordinators && (
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
+                              {actualServiceData.coordinators && (
+                                <span><strong>👤 Coord:</strong> {actualServiceData.coordinators["9:30am"] || actualServiceData.coordinators["11:30am"] || Object.values(actualServiceData.coordinators).find(v => v)}</span>
+                              )}
+                              {actualServiceData.ujieres && (
+                                <>
+                                  <span className="text-gray-400">|</span>
+                                  <span><strong>🚪 Ujieres:</strong> {actualServiceData.ujieres["9:30am"] || actualServiceData.ujieres["11:30am"] || Object.values(actualServiceData.ujieres).find(v => v)}</span>
+                                </>
+                              )}
+                              {actualServiceData.sound && (
+                                <>
+                                  <span className="text-gray-400">|</span>
+                                  <span><strong>🔊 Sonido:</strong> {actualServiceData.sound["9:30am"] || actualServiceData.sound["11:30am"] || Object.values(actualServiceData.sound).find(v => v)}</span>
+                                </>
+                              )}
+                              {actualServiceData.luces && (
+                                <>
+                                  <span className="text-gray-400">|</span>
+                                  <span><strong>💡 Luces:</strong> {actualServiceData.luces["9:30am"] || actualServiceData.luces["11:30am"] || Object.values(actualServiceData.luces).find(v => v)}</span>
+                                </>
+                              )}
+                            </div>
+                          )}
 
                           {/* Expanded Session Details */}
                           {expandedSessions[session.id] && (
