@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { hasPermission } from "@/components/utils/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,17 @@ export default function WeeklyServiceManager() {
   const greenStyle = { backgroundColor: '#8DC63F', color: '#ffffff' };
   
   const { t } = useLanguage();
+  const [user, setUser] = useState(null);
+  
+  // Fetch user for permissions
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+    };
+    fetchUser();
+  }, []);
+  
   // State
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
@@ -2048,18 +2060,20 @@ Return ONLY valid JSON:
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-red-600">9:30 a.m.</h2>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "9:30am" }));
-                  setShowSpecialDialog(true);
-                }}
-                className="print:hidden border-2 border-gray-400 bg-white text-gray-900 font-semibold"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Especial
-              </Button>
+              {hasPermission(user, 'edit_services') && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "9:30am" }));
+                    setShowSpecialDialog(true);
+                  }}
+                  className="print:hidden border-2 border-gray-400 bg-white text-gray-900 font-semibold"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Especial
+                </Button>
+              )}
             </div>
             <div className="text-sm text-gray-600 flex items-center gap-3 flex-wrap">
               <Badge variant="outline" className={calculateServiceTimes("9:30am").isOverage ? "bg-amber-100 border-amber-400 text-amber-900 font-bold" : "bg-red-50"}>
@@ -2558,28 +2572,30 @@ Return ONLY valid JSON:
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-blue-600">11:30 a.m.</h2>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={copy930To1130}
-                  className="print:hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold border-2 border-blue-600"
-                >
-                  <ChevronsRight className="w-4 h-4 mr-2" />
-                  Copiar Todo de 9:30
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "11:30am" }));
-                    setShowSpecialDialog(true);
-                  }}
-                  className="print:hidden border-2 border-gray-400 bg-white text-gray-900 font-semibold"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Especial
-                </Button>
-              </div>
+              {hasPermission(user, 'edit_services') && (
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={copy930To1130}
+                    className="print:hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold border-2 border-blue-600"
+                  >
+                    <ChevronsRight className="w-4 h-4 mr-2" />
+                    Copiar Todo de 9:30
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: "11:30am" }));
+                      setShowSpecialDialog(true);
+                    }}
+                    className="print:hidden border-2 border-gray-400 bg-white text-gray-900 font-semibold"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Especial
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="text-sm text-gray-600 flex items-center gap-3 flex-wrap">
               <Badge variant="outline" className={calculateServiceTimes("11:30am").isOverage ? "bg-amber-100 border-amber-400 text-amber-900 font-bold" : "bg-blue-50"}>
@@ -3064,19 +3080,21 @@ Return ONLY valid JSON:
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl font-bold uppercase">Anuncios</CardTitle>
-            <Button
-              onClick={() => {
-                setEditingAnnouncement(null);
-                setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, has_video: false, date_of_occurrence: "", emphasize: false });
-                setShowAnnouncementDialog(true);
-              }}
-              size="sm"
-              style={tealStyle}
-              className="print:hidden"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nuevo Anuncio
-            </Button>
+            {hasPermission(user, 'create_announcements') && (
+              <Button
+                onClick={() => {
+                  setEditingAnnouncement(null);
+                  setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, has_video: false, date_of_occurrence: "", emphasize: false });
+                  setShowAnnouncementDialog(true);
+                }}
+                size="sm"
+                style={tealStyle}
+                className="print:hidden"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nuevo Anuncio
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -3143,43 +3161,47 @@ Return ONLY valid JSON:
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <h3 className="font-bold text-sm leading-tight">{ann.title}</h3>
-                      <div className="flex gap-1 flex-shrink-0 print:hidden">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => moveAnnouncementPriority(ann, 'up')}
-                        >
-                          <ChevronUp className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => moveAnnouncementPriority(ann, 'down')}
-                        >
-                          <ChevronDown className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => openAnnouncementEdit(ann)}
-                        >
-                          <Edit className="w-3 h-3" />
-                        </Button>
-                        <button
-                          type="button"
-                          className="h-7 w-7 flex items-center justify-center hover:bg-red-50 rounded"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setDeleteConfirmId(ann.id);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" />
-                        </button>
-                      </div>
+                      {hasPermission(user, 'edit_announcements') && (
+                        <div className="flex gap-1 flex-shrink-0 print:hidden">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => moveAnnouncementPriority(ann, 'up')}
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => moveAnnouncementPriority(ann, 'down')}
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => openAnnouncementEdit(ann)}
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          {hasPermission(user, 'delete_announcements') && (
+                            <button
+                              type="button"
+                              className="h-7 w-7 flex items-center justify-center hover:bg-red-50 rounded"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setDeleteConfirmId(ann.id);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div 
                       className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap mb-2"
@@ -3254,43 +3276,47 @@ Return ONLY valid JSON:
                         </div>
                       )}
                       {!ann.isEvent && (
-                        <div className="flex gap-1 flex-shrink-0 print:hidden">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => moveAnnouncementPriority(ann, 'up')}
-                          >
-                            <ChevronUp className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => moveAnnouncementPriority(ann, 'down')}
-                          >
-                            <ChevronDown className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => openAnnouncementEdit(ann)}
-                          >
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                          <button
-                            type="button"
-                            className="h-7 w-7 flex items-center justify-center hover:bg-red-50 rounded"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setDeleteConfirmId(ann.id);
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" />
-                          </button>
-                        </div>
+                        {hasPermission(user, 'edit_announcements') && (
+                          <div className="flex gap-1 flex-shrink-0 print:hidden">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => moveAnnouncementPriority(ann, 'up')}
+                            >
+                              <ChevronUp className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => moveAnnouncementPriority(ann, 'down')}
+                            >
+                              <ChevronDown className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => openAnnouncementEdit(ann)}
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            {hasPermission(user, 'delete_announcements') && (
+                              <button
+                                type="button"
+                                className="h-7 w-7 flex items-center justify-center hover:bg-red-50 rounded"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setDeleteConfirmId(ann.id);
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" />
+                              </button>
+                            )}
+                          </div>
+                        )}
                       )}
                     </div>
                     <div 

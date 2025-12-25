@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPageUrl } from "@/utils";
+import { hasPermission } from "@/components/utils/permissions";
 import { Users, Upload, Loader2, Search, Filter, FileDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,16 @@ export default function People() {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [user, setUser] = useState(null);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+    };
+    fetchUser();
+  }, []);
 
   const { data: people = [], isLoading } = useQuery({
     queryKey: ['people'],
@@ -128,7 +138,7 @@ export default function People() {
           </h1>
           <p className="text-gray-500 mt-1 font-medium">Directorio de miembros y listas de autocompletado</p>
         </div>
-        {activeTab === "persons" && (
+        {activeTab === "persons" && hasPermission(user, 'create_people') && (
           <Button 
             onClick={() => setIsUploadDialogOpen(true)} 
             style={tealStyle}

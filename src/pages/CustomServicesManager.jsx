@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n";
+import { hasPermission } from "@/components/utils/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,15 @@ export default function CustomServicesManager() {
   const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [showArchived, setShowArchived] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+    };
+    fetchUser();
+  }, []);
 
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
@@ -109,15 +119,17 @@ export default function CustomServicesManager() {
                 : `${upcoming.length} service${upcoming.length !== 1 ? 's' : ''} scheduled`}
             </p>
           </div>
-          <Button
-            onClick={handleCreateNew}
-            className="text-white font-semibold shadow-lg"
-            style={gradientStyle}
-            size="lg"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            {language === 'es' ? 'Crear Servicio' : 'Create Service'}
-          </Button>
+          {hasPermission(user, 'create_services') && (
+            <Button
+              onClick={handleCreateNew}
+              className="text-white font-semibold shadow-lg"
+              style={gradientStyle}
+              size="lg"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              {language === 'es' ? 'Crear Servicio' : 'Create Service'}
+            </Button>
+          )}
         </div>
 
         {/* Upcoming Services Grid */}

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { hasPermission } from "@/components/utils/permissions";
 import { Plus, Calendar, MapPin, Edit, Trash2, Copy, Save } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
@@ -32,7 +33,16 @@ export default function Events() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [formData, setFormData] = useState({});
   const [fieldOrigins, setFieldOrigins] = useState({});
+  const [user, setUser] = useState(null);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+    };
+    fetchUser();
+  }, []);
 
   const { data: allEvents = [], isLoading } = useQuery({
     queryKey: ['events'],
@@ -152,20 +162,22 @@ export default function Events() {
           <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">Eventos</h1>
           <p className="text-gray-500 mt-1 font-medium">Gestiona tus congresos y actividades especiales</p>
         </div>
-        <div className="flex gap-3">
-          <Button 
-            onClick={() => setShowTemplateSelector(true)} 
-            variant="outline"
-            className="shadow-sm hover:shadow-md transition-all font-bold uppercase px-4 border-gray-300 text-gray-600 hover:text-blue-600 hover:border-blue-300"
-          >
-            <Copy className="w-4 h-4 mr-2" />
-            Desde Plantilla
-          </Button>
-          <Button onClick={() => openEditDialog(null)} className="text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6" style={gradientStyle}>
-            <Plus className="w-5 h-5 mr-2" />
-            Nuevo Evento
-          </Button>
-        </div>
+        {hasPermission(user, 'create_events') && (
+          <div className="flex gap-3">
+            <Button 
+              onClick={() => setShowTemplateSelector(true)} 
+              variant="outline"
+              className="shadow-sm hover:shadow-md transition-all font-bold uppercase px-4 border-gray-300 text-gray-600 hover:text-blue-600 hover:border-blue-300"
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              Desde Plantilla
+            </Button>
+            <Button onClick={() => openEditDialog(null)} className="text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6" style={gradientStyle}>
+              <Plus className="w-5 h-5 mr-2" />
+              Nuevo Evento
+            </Button>
+          </div>
+        )}
         </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -207,32 +219,40 @@ export default function Events() {
                       Ver Detalles
                     </Button>
                   </Link>
-                  <Button variant="outline" size="sm" onClick={() => openEditDialog(event)}>
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setEventToDuplicate(event)}
-                    title="Duplicar evento"
-                  >
-                    <Copy className="w-4 h-4 text-blue-500" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setEventToTemplate(event)}
-                    title="Guardar como plantilla"
-                  >
-                    <Save className="w-4 h-4 text-amber-600" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleDeleteClick(event)}
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </Button>
+                  {hasPermission(user, 'edit_events') && (
+                    <Button variant="outline" size="sm" onClick={() => openEditDialog(event)}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {hasPermission(user, 'create_events') && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setEventToDuplicate(event)}
+                        title="Duplicar evento"
+                      >
+                        <Copy className="w-4 h-4 text-blue-500" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setEventToTemplate(event)}
+                        title="Guardar como plantilla"
+                      >
+                        <Save className="w-4 h-4 text-amber-600" />
+                      </Button>
+                    </>
+                  )}
+                  {hasPermission(user, 'delete_events') && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleDeleteClick(event)}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
