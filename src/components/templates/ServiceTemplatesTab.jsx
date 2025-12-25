@@ -283,6 +283,12 @@ export default function ServiceTemplatesTab() {
                             </div>
                           )}
 
+                          {segment.type === 'message' && segment.data?.cierre_leader && (
+                            <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm">
+                              <strong>Cierre:</strong> <span className="font-bold text-purple-900">{segment.data.cierre_leader}</span>
+                            </div>
+                          )}
+
                           <Button
                             variant="ghost"
                             size="sm"
@@ -304,6 +310,19 @@ export default function ServiceTemplatesTab() {
                                   className="text-xs w-24"
                                 />
                               </div>
+
+                              {segment.type === 'message' && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-semibold">Persona para Cierre (5 min)</Label>
+                                  <AutocompleteInput
+                                    type="person"
+                                    value={segment.data?.cierre_leader || ""}
+                                    onChange={(value) => updateSegmentField(service, idx, "cierre_leader", value)}
+                                    placeholder="Nombre de quien cierra"
+                                    className="text-xs"
+                                  />
+                                </div>
+                              )}
 
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between">
