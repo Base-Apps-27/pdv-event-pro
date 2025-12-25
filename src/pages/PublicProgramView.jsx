@@ -834,6 +834,17 @@ export default function PublicProgramView() {
                                 <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
                               )}
 
+                              {/* Cierre sub-assignment (shown after speaker) */}
+                              {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name === 'cierre_leader').map((subAssign, saIdx) => {
+                                const personValue = segment.data?.[subAssign.person_field_name];
+                                if (!personValue) return null;
+                                return (
+                                  <div key={saIdx} className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
+                                    <strong>{subAssign.label} {subAssign.duration_min && `(${subAssign.duration_min} min)`}:</strong> <span className="font-bold text-purple-900">{personValue}</span>
+                                  </div>
+                                );
+                              })}
+
                               {segment.data?.title && (
                                 <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
                               )}
@@ -995,8 +1006,8 @@ export default function PublicProgramView() {
                                </div>
                              )}
 
-                             {/* Sub-assignments from blueprint */}
-                             {segment.sub_assignments && segment.sub_assignments.map((subAssign, saIdx) => {
+                             {/* Sub-assignments from blueprint (excluding cierre, shown after speaker) */}
+                             {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name !== 'cierre_leader').map((subAssign, saIdx) => {
                                const personValue = segment.data?.[subAssign.person_field_name];
                                if (!personValue) return null;
                                return (
@@ -1020,6 +1031,17 @@ export default function PublicProgramView() {
                              {segment.data?.preacher && (
                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
                              )}
+
+                             {/* Cierre sub-assignment (shown after speaker) */}
+                             {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name === 'cierre_leader').map((subAssign, saIdx) => {
+                               const personValue = segment.data?.[subAssign.person_field_name];
+                               if (!personValue) return null;
+                               return (
+                                 <div key={saIdx} className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
+                                   <strong>{subAssign.label} {subAssign.duration_min && `(${subAssign.duration_min} min)`}:</strong> <span className="font-bold text-purple-900">{personValue}</span>
+                                 </div>
+                               );
+                             })}
 
                              {segment.data?.title && (
                                <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
@@ -1158,8 +1180,8 @@ export default function PublicProgramView() {
                                 </div>
                               )}
                               
-                              {/* Sub-assignments from blueprint */}
-                              {segment.sub_assignments && segment.sub_assignments.map((subAssign, saIdx) => {
+                              {/* Sub-assignments from blueprint (excluding cierre, shown after speaker) */}
+                              {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name !== 'cierre_leader').map((subAssign, saIdx) => {
                                 const personValue = segment.data?.[subAssign.person_field_name];
                                 if (!personValue) return null;
                                 return (
@@ -1183,6 +1205,17 @@ export default function PublicProgramView() {
                               {segment.data?.preacher && (
                                 <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
                               )}
+
+                              {/* Cierre sub-assignment (shown after speaker) */}
+                              {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name === 'cierre_leader').map((subAssign, saIdx) => {
+                                const personValue = segment.data?.[subAssign.person_field_name];
+                                if (!personValue) return null;
+                                return (
+                                  <div key={saIdx} className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
+                                    <strong>{subAssign.label} {subAssign.duration_min && `(${subAssign.duration_min} min)`}:</strong> <span className="font-bold text-purple-900">{personValue}</span>
+                                  </div>
+                                );
+                              })}
 
                               {segment.data?.translator && (
                                 <p className="text-xs text-blue-600 mt-1">
