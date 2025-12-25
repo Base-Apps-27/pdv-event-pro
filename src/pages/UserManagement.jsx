@@ -41,7 +41,8 @@ export default function UserManagement() {
 
   const handleEditUser = (user) => {
     setEditingUser(user);
-    setSelectedRole(user.app_role || 'EventDayViewer');
+    const role = user.app_role || 'EventDayViewer';
+    setSelectedRole(role);
     setCustomPermissions(user.custom_permissions || []);
     setRevokedPermissions(user.revoked_permissions || []);
   };
@@ -323,58 +324,67 @@ export default function UserManagement() {
               </Select>
             </div>
 
-            {/* Custom Permissions */}
+            {/* All Permissions (Unified View) */}
             <div className="space-y-2">
               <div className="text-sm font-semibold text-gray-700">
-                {language === 'es' ? 'Permisos Adicionales' : 'Additional Permissions'}
+                {language === 'es' ? 'Permisos' : 'Permissions'}
               </div>
-              <div className="border rounded-lg p-4 max-h-60 overflow-y-auto space-y-3">
+              <p className="text-xs text-gray-500 mb-2">
+                {language === 'es' 
+                  ? 'Los permisos del rol base están marcados en verde. Añade permisos adicionales o revoca permisos del rol.' 
+                  : 'Role base permissions are marked in green. Add extra permissions or revoke role permissions.'}
+              </p>
+              <div className="border rounded-lg p-4 max-h-96 overflow-y-auto space-y-3">
                 {Object.entries(permissionsByCategory).map(([category, perms]) => (
                   <div key={category}>
                     <h5 className="text-xs font-bold uppercase text-gray-600 mb-2">
                       {language === 'es' ? categoryLabels[category]?.es : categoryLabels[category]?.en}
                     </h5>
-                    <div className="grid grid-cols-2 gap-2">
-                      {perms.map(perm => (
-                        <div key={perm.key} className="flex items-center gap-2">
-                          <Checkbox
-                            checked={customPermissions.includes(perm.key)}
-                            onCheckedChange={() => toggleCustomPermission(perm.key)}
-                          />
-                          <label className="text-xs">
-                            {language === 'es' ? perm.label_es : perm.label_en}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Revoked Permissions */}
-            <div className="space-y-2">
-              <div className="text-sm font-semibold text-gray-700">
-                {language === 'es' ? 'Permisos Revocados' : 'Revoked Permissions'}
-              </div>
-              <div className="border rounded-lg p-4 max-h-60 overflow-y-auto space-y-3">
-                {Object.entries(permissionsByCategory).map(([category, perms]) => (
-                  <div key={category}>
-                    <h5 className="text-xs font-bold uppercase text-gray-600 mb-2">
-                      {language === 'es' ? categoryLabels[category]?.es : categoryLabels[category]?.en}
-                    </h5>
-                    <div className="grid grid-cols-2 gap-2">
-                      {perms.map(perm => (
-                        <div key={perm.key} className="flex items-center gap-2">
-                          <Checkbox
-                            checked={revokedPermissions.includes(perm.key)}
-                            onCheckedChange={() => toggleRevokedPermission(perm.key)}
-                          />
-                          <label className="text-xs">
-                            {language === 'es' ? perm.label_es : perm.label_en}
-                          </label>
-                        </div>
-                      ))}
+                    <div className="grid grid-cols-1 gap-2">
+                      {perms.map(perm => {
+                        const rolePerms = getRolePermissions(selectedRole);
+                        const isInRole = rolePerms.includes('*') || rolePerms.includes(perm.key);
+                        const isCustomAdded = customPermissions.includes(perm.key);
+                        const isRevoked = revokedPermissions.includes(perm.key);
+                        const isChecked = (isInRole || isCustomAdded) && !isRevoked;
+                        
+                        return (
+                          <div key={perm.key} className={`flex items-center gap-2 p-2 rounded ${
+                            isInRole && !isRevoked ? 'bg-green-50' : ''
+                          }`}>
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                if (isInRole) {
+                                  // If it's a role permission, toggle revoke
+                                  toggleRevokedPermission(perm.key);
+                                } else {
+                                  // If it's not a role permission, toggle custom add
+                                  toggleCustomPermission(perm.key);
+                                }
+                              }}
+                            />
+                            <label className="text-xs flex-1">
+                              {language === 'es' ? perm.label_es : perm.label_en}
+                            </label>
+                            {isInRole && !isRevoked && (
+                              <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300 text-[10px] px-1 py-0">
+                                {language === 'es' ? 'Rol' : 'Role'}
+                              </Badge>
+                            )}
+                            {isCustomAdded && !isInRole && (
+                              <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300 text-[10px] px-1 py-0">
+                                <Plus className="w-3 h-3" />
+                              </Badge>
+                            )}
+                            {isRevoked && (
+                              <Badge variant="outline" className="bg-red-100 text-red-700 border-red-300 text-[10px] px-1 py-0">
+                                <Minus className="w-3 h-3" />
+                              </Badge>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

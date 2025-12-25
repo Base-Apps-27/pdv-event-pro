@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import People from './pages/People';
 import PublicProgramView from './pages/PublicProgramView';
 import Reports from './pages/Reports';
+import RolePermissionManager from './pages/RolePermissionManager';
 import Rooms from './pages/Rooms';
 import ScheduleImporter from './pages/ScheduleImporter';
 import SchemaGuide from './pages/SchemaGuide';
@@ -17,7 +18,6 @@ import TestDashboard from './pages/TestDashboard';
 import UserManagement from './pages/UserManagement';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import RolePermissionManager from './pages/RolePermissionManager';
 import __Layout from './Layout.jsx';
 
 
@@ -32,6 +32,7 @@ export const PAGES = {
     "People": People,
     "PublicProgramView": PublicProgramView,
     "Reports": Reports,
+    "RolePermissionManager": RolePermissionManager,
     "Rooms": Rooms,
     "ScheduleImporter": ScheduleImporter,
     "SchemaGuide": SchemaGuide,
@@ -41,7 +42,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "RolePermissionManager": RolePermissionManager,
 }
 
 export const pagesConfig = {
