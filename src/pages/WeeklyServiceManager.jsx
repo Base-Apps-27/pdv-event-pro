@@ -2419,61 +2419,64 @@ Return ONLY valid JSON:
                               )}
 
                               <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleSegmentExpanded(timeSlot, idx)}
-                                className="w-full text-xs mt-2 print:hidden"
+                               variant="ghost"
+                               size="sm"
+                               onClick={() => toggleSegmentExpanded(timeSlot, idx)}
+                               className="w-full text-xs mt-2 print:hidden"
                               >
-                                {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
-                                {isExpanded ? "Menos detalles" : "Más detalles"}
+                               {isExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                               {isExpanded ? "Menos detalles" : "Más detalles"}
                               </Button>
 
                               {isExpanded && (
-                                <div className="space-y-2 pt-2 border-t">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
-                                    <Input
-                                      type="number"
-                                      value={segment.duration || 0}
-                                      onChange={(e) => {
-                                        const newDuration = parseInt(e.target.value) || 0;
-                                        setServiceData(prev => {
-                                          const updated = { ...prev };
-                                          updated[timeSlot][idx].duration = newDuration;
-                                          return updated;
-                                        });
-                                        debouncedSave(`${timeSlot}-${idx}-duration`);
-                                      }}
-                                      className="text-xs w-24"
-                                    />
-                                  </div>
+                               <div className="space-y-2 pt-2 border-t">
+                                 <div className="space-y-1">
+                                   <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
+                                   <Input
+                                     type="number"
+                                     value={segment.duration || 0}
+                                     onChange={(e) => {
+                                       const newDuration = parseInt(e.target.value) || 0;
+                                       setServiceData(prev => {
+                                         const updated = { ...prev };
+                                         updated[timeSlot][idx].duration = newDuration;
+                                         return updated;
+                                       });
+                                       debouncedSave(`${timeSlot}-${idx}-duration`);
+                                     }}
+                                     className="text-xs w-24"
+                                   />
+                                 </div>
 
-                                  {segment.actions && segment.actions.length > 0 && (
-                                    <div className="bg-amber-50 border border-amber-200 rounded p-2">
-                                      <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
-                                      <div className="space-y-1">
-                                        {segment.actions.map((action, aIdx) => (
-                                          <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
-                                            <span className="font-semibold">•</span>
-                                            <span>
-                                              {action.label} 
-                                              {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
-                                              {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
-                                              {action.timing === "before_start" && ` (antes de iniciar)`}
-                                            </span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
+                                 {segment.actions && segment.actions.length > 0 && (
+                                   <div className="bg-amber-50 border border-amber-200 rounded p-2">
+                                     <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
+                                     <div className="space-y-1">
+                                       {segment.actions.map((action, aIdx) => {
+                                         const hasTimingInLabel = /\d+\s*min/i.test(action.label);
+                                         return (
+                                           <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
+                                             <span className="font-semibold">•</span>
+                                             <span>
+                                               {action.label}
+                                               {!hasTimingInLabel && action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
+                                               {!hasTimingInLabel && action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
+                                               {!hasTimingInLabel && action.timing === "before_start" && ` (antes de iniciar)`}
+                                             </span>
+                                           </div>
+                                         );
+                                       })}
+                                     </div>
+                                   </div>
+                                 )}
 
-                                  <Textarea
-                                    placeholder="Notas para Coordinador"
-                                    value={segment.data?.coordinator_notes || ""}
-                                    onChange={(e) => updateSegmentField(timeSlot, idx, "coordinator_notes", e.target.value)}
-                                    className="text-xs"
-                                    rows={2}
-                                  />
+                                 <Textarea
+                                   placeholder="Notas para Coordinador"
+                                   value={segment.data?.coordinator_notes || ""}
+                                   onChange={(e) => updateSegmentField(timeSlot, idx, "coordinator_notes", e.target.value)}
+                                   className="text-xs"
+                                   rows={2}
+                                 />
                                   <Textarea
                                     placeholder="Notas de Proyección"
                                     value={segment.data?.projection_notes || ""}
@@ -2991,17 +2994,20 @@ Return ONLY valid JSON:
                                     <div className="bg-amber-50 border border-amber-200 rounded p-2">
                                       <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
                                       <div className="space-y-1">
-                                        {segment.actions.map((action, aIdx) => (
-                                          <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
-                                            <span className="font-semibold">•</span>
-                                            <span>
-                                              {action.label} 
-                                              {action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
-                                              {action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
-                                              {action.timing === "before_start" && ` (antes de iniciar)`}
-                                            </span>
-                                          </div>
-                                        ))}
+                                        {segment.actions.map((action, aIdx) => {
+                                          const hasTimingInLabel = /\d+\s*min/i.test(action.label);
+                                          return (
+                                            <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
+                                              <span className="font-semibold">•</span>
+                                              <span>
+                                                {action.label}
+                                                {!hasTimingInLabel && action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
+                                                {!hasTimingInLabel && action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
+                                                {!hasTimingInLabel && action.timing === "before_start" && ` (antes de iniciar)`}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
                                       </div>
                                     </div>
                                   )}
