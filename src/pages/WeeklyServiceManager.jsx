@@ -3277,45 +3277,45 @@ Return ONLY valid JSON:
                       )}
                       {!ann.isEvent && hasPermission(user, 'edit_announcements') && (
                         <div className="flex gap-1 flex-shrink-0 print:hidden">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => moveAnnouncementPriority(ann, 'up')}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => moveAnnouncementPriority(ann, 'up')}
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => moveAnnouncementPriority(ann, 'down')}
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => openAnnouncementEdit(ann)}
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          {hasPermission(user, 'delete_announcements') && (
+                            <button
+                              type="button"
+                              className="h-7 w-7 flex items-center justify-center hover:bg-red-50 rounded"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setDeleteConfirmId(ann.id);
+                              }}
                             >
-                              <ChevronUp className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => moveAnnouncementPriority(ann, 'down')}
-                            >
-                              <ChevronDown className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => openAnnouncementEdit(ann)}
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            {hasPermission(user, 'delete_announcements') && (
-                              <button
-                                type="button"
-                                className="h-7 w-7 flex items-center justify-center hover:bg-red-50 rounded"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setDeleteConfirmId(ann.id);
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" />
-                              </button>
-                            )}
-                          </div>
-                        )}
+                              <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" />
+                            </button>
+                          )}
+                        </div>
+                      )}
                       )}
                     </div>
                     <div 
