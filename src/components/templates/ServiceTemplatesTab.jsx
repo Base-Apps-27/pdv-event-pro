@@ -83,7 +83,7 @@ export default function ServiceTemplatesTab() {
     if (existingBlueprint) {
       // Ensure existing blueprint has segment arrays, populate with defaults if empty
       const populated = { ...existingBlueprint };
-      
+
       // Helper to merge default actions into segments
       const mergeDefaultActions = (segments, timeSlot) => {
         return segments.map(seg => {
@@ -98,27 +98,71 @@ export default function ServiceTemplatesTab() {
           return seg;
         });
       };
-      
+
+      // Helper to merge default sub_assignments and migrate old data
+      const mergeSubAssignments = (segments) => {
+        return segments.map(seg => {
+          let subAssignments = seg.sub_assignments || [];
+
+          // Migration: Move ministry_leader from data to sub_assignments
+          if (seg.data?.ministry_leader && !subAssignments.find(s => s.person_field_name === 'ministry_leader')) {
+            subAssignments.push({
+              label: 'Ministración de Sanidad y Milagros',
+              person_field_name: 'ministry_leader',
+              duration_min: 5
+            });
+          }
+
+          // Migration: Move cierre_leader from data to sub_assignments
+          if (seg.data?.cierre_leader && !subAssignments.find(s => s.person_field_name === 'cierre_leader')) {
+            subAssignments.push({
+              label: 'Cierre',
+              person_field_name: 'cierre_leader',
+              duration_min: 5
+            });
+          }
+
+          // Add default sub_assignments based on type if not present
+          if (seg.type === 'worship' && !subAssignments.find(s => s.person_field_name === 'ministry_leader')) {
+            subAssignments.push({
+              label: 'Ministración de Sanidad y Milagros',
+              person_field_name: 'ministry_leader',
+              duration_min: 5
+            });
+          }
+
+          if (seg.type === 'message' && !subAssignments.find(s => s.person_field_name === 'cierre_leader')) {
+            subAssignments.push({
+              label: 'Cierre',
+              person_field_name: 'cierre_leader',
+              duration_min: 5
+            });
+          }
+
+          return { ...seg, sub_assignments: subAssignments };
+        });
+      };
+
       if (!populated["9:30am"] || populated["9:30am"].length === 0) {
         populated["9:30am"] = [
-          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: DEFAULT_ACTIONS["9:30am"]["worship"].map(a => ({ ...a })) },
-          { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
-          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: DEFAULT_ACTIONS["9:30am"]["offering"].map(a => ({ ...a })) },
-          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: DEFAULT_ACTIONS["9:30am"]["message"].map(a => ({ ...a })) }
+          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: DEFAULT_ACTIONS["9:30am"]["worship"].map(a => ({ ...a })), sub_assignments: [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }] },
+          { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [], sub_assignments: [] },
+          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: DEFAULT_ACTIONS["9:30am"]["offering"].map(a => ({ ...a })), sub_assignments: [] },
+          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: DEFAULT_ACTIONS["9:30am"]["message"].map(a => ({ ...a })), sub_assignments: [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }] }
         ];
       } else {
-        populated["9:30am"] = mergeDefaultActions(populated["9:30am"], "9:30am");
+        populated["9:30am"] = mergeSubAssignments(mergeDefaultActions(populated["9:30am"], "9:30am"));
       }
-      
+
       if (!populated["11:30am"] || populated["11:30am"].length === 0) {
         populated["11:30am"] = [
-          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: DEFAULT_ACTIONS["11:30am"]["worship"].map(a => ({ ...a })) },
-          { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
-          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: DEFAULT_ACTIONS["11:30am"]["offering"].map(a => ({ ...a })) },
-          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: DEFAULT_ACTIONS["11:30am"]["message"].map(a => ({ ...a })) }
+          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: DEFAULT_ACTIONS["11:30am"]["worship"].map(a => ({ ...a })), sub_assignments: [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }] },
+          { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [], sub_assignments: [] },
+          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: DEFAULT_ACTIONS["11:30am"]["offering"].map(a => ({ ...a })), sub_assignments: [] },
+          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: DEFAULT_ACTIONS["11:30am"]["message"].map(a => ({ ...a })), sub_assignments: [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }] }
         ];
       } else {
-        populated["11:30am"] = mergeDefaultActions(populated["11:30am"], "11:30am");
+        populated["11:30am"] = mergeSubAssignments(mergeDefaultActions(populated["11:30am"], "11:30am"));
       }
       
       setBlueprintData(populated);
@@ -147,11 +191,13 @@ export default function ServiceTemplatesTab() {
     setBlueprintData(prev => {
       const updated = { ...prev };
       if (!updated[service] || !updated[service][segmentIndex]) return prev;
-      
+
       if (field === 'songs') {
         updated[service][segmentIndex].songs = value;
       } else if (field === 'actions') {
         updated[service][segmentIndex].actions = value;
+      } else if (field === 'sub_assignments') {
+        updated[service][segmentIndex].sub_assignments = value;
       } else if (field === 'duration' || field === 'title' || field === 'type') {
         updated[service][segmentIndex][field] = value;
       } else {
@@ -283,9 +329,18 @@ export default function ServiceTemplatesTab() {
                             </div>
                           )}
 
-                          {segment.type === 'message' && segment.data?.cierre_leader && (
-                            <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm">
-                              <strong>Cierre:</strong> <span className="font-bold text-purple-900">{segment.data.cierre_leader}</span>
+                          {segment.sub_assignments && segment.sub_assignments.length > 0 && (
+                            <div className="space-y-1 mt-2">
+                              {segment.sub_assignments.map((subAssign, saIdx) => {
+                                const personValue = segment.data?.[subAssign.person_field_name] || "";
+                                if (!personValue) return null;
+                                return (
+                                  <div key={saIdx} className="bg-purple-50 p-2 rounded border border-purple-200 text-sm">
+                                    <strong>{subAssign.label}:</strong> <span className="font-bold text-purple-900">{personValue}</span>
+                                    {subAssign.duration_min && <span className="text-xs text-gray-500 ml-2">({subAssign.duration_min} min)</span>}
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
 
@@ -311,18 +366,80 @@ export default function ServiceTemplatesTab() {
                                 />
                               </div>
 
-                              {segment.type === 'message' && (
-                                <div className="space-y-1">
-                                  <Label className="text-xs font-semibold">Persona para Cierre (5 min)</Label>
-                                  <AutocompleteInput
-                                    type="person"
-                                    value={segment.data?.cierre_leader || ""}
-                                    onChange={(value) => updateSegmentField(service, idx, "cierre_leader", value)}
-                                    placeholder="Nombre de quien cierra"
-                                    className="text-xs"
-                                  />
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-xs font-semibold">👥 Sub-Asignaciones</Label>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      const subAssignments = segment.sub_assignments || [];
+                                      updateSegmentField(service, idx, 'sub_assignments', [...subAssignments, { label: '', person_field_name: '', duration_min: 0 }]);
+                                    }}
+                                    className="h-6 text-xs"
+                                  >
+                                    <Plus className="w-3 h-3 mr-1" />
+                                    Añadir
+                                  </Button>
                                 </div>
-                              )}
+                                {(segment.sub_assignments || []).map((subAssign, saIdx) => (
+                                  <div key={saIdx} className="bg-purple-50 border border-purple-200 rounded p-2 space-y-2">
+                                    <div className="flex gap-2">
+                                      <Input
+                                        placeholder="Etiqueta (ej: Ministración)"
+                                        value={subAssign.label || ''}
+                                        onChange={(e) => {
+                                          const subs = [...(segment.sub_assignments || [])];
+                                          subs[saIdx] = { ...subs[saIdx], label: e.target.value };
+                                          updateSegmentField(service, idx, 'sub_assignments', subs);
+                                        }}
+                                        className="text-xs flex-1"
+                                      />
+                                      <Input
+                                        placeholder="Campo (ej: ministry_leader)"
+                                        value={subAssign.person_field_name || ''}
+                                        onChange={(e) => {
+                                          const subs = [...(segment.sub_assignments || [])];
+                                          subs[saIdx] = { ...subs[saIdx], person_field_name: e.target.value };
+                                          updateSegmentField(service, idx, 'sub_assignments', subs);
+                                        }}
+                                        className="text-xs flex-1"
+                                      />
+                                      <Input
+                                        type="number"
+                                        placeholder="Min"
+                                        value={subAssign.duration_min || 0}
+                                        onChange={(e) => {
+                                          const subs = [...(segment.sub_assignments || [])];
+                                          subs[saIdx] = { ...subs[saIdx], duration_min: parseInt(e.target.value) || 0 };
+                                          updateSegmentField(service, idx, 'sub_assignments', subs);
+                                        }}
+                                        className="text-xs w-16"
+                                      />
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          const subs = (segment.sub_assignments || []).filter((_, i) => i !== saIdx);
+                                          updateSegmentField(service, idx, 'sub_assignments', subs);
+                                        }}
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        <Trash2 className="w-3 h-3 text-red-500" />
+                                      </Button>
+                                    </div>
+                                    <AutocompleteInput
+                                      type="person"
+                                      value={segment.data?.[subAssign.person_field_name] || ""}
+                                      onChange={(e) => {
+                                        updateSegmentField(service, idx, subAssign.person_field_name, e.target.value);
+                                      }}
+                                      placeholder="Nombre de la persona"
+                                      className="text-xs"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
 
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between">
