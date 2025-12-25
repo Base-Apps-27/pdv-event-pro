@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/components/utils/i18n';
-import { getAllPermissionDefinitions, DEFAULT_ROLE_PERMISSIONS } from '@/components/utils/permissions';
+import { getAllPermissionDefinitions } from '@/components/utils/permissions';
 import { Shield, Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 
