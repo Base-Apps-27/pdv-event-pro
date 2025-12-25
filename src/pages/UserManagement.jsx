@@ -120,6 +120,22 @@ export default function UserManagement() {
     live: { en: 'Live View', es: 'Vista en Vivo' },
   };
 
+  const getRolePermissions = (role) => {
+    const defaultPerms = {
+      Admin: ['*'],
+      AdmAsst: [
+        'view_events', 'edit_events', 'create_events',
+        'view_services', 'edit_services', 'create_services',
+        'view_reports',
+        'view_announcements', 'edit_announcements', 'create_announcements',
+        'view_people', 'edit_people', 'create_people',
+        'view_live_program',
+      ],
+      EventDayViewer: ['view_live_program'],
+    };
+    return defaultPerms[role] || [];
+  };
+
   return (
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex justify-between items-center">

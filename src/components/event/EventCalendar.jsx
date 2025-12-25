@@ -249,11 +249,11 @@ export default function EventCalendar({ eventId, sessions, allSessions, segments
                                    ? 'bg-white border-l-4'
                                    : 'bg-gray-100 border-l-4 border-gray-400'
                                 }`}
-                                style={isCurrentEvent ? { borderLeftColor: '#1F8A70' } : {}}
                                 style={{
                                   top: `${top}px`,
                                   height: `${height}px`,
-                                  minHeight: '40px'
+                                  minHeight: '40px',
+                                  ...(isCurrentEvent ? { borderLeftColor: '#1F8A70' } : {})
                                 }}
                                 onClick={() => goToSession(session.id)}
                               >
