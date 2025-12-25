@@ -2452,20 +2452,12 @@ Return ONLY valid JSON:
                                    <div className="bg-amber-50 border border-amber-200 rounded p-2">
                                      <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
                                      <div className="space-y-1">
-                                       {segment.actions.map((action, aIdx) => {
-                                         const hasTimingInLabel = /\d+\s*min/i.test(action.label);
-                                         return (
-                                           <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
-                                             <span className="font-semibold">•</span>
-                                             <span>
-                                               {action.label}
-                                               {!hasTimingInLabel && action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
-                                               {!hasTimingInLabel && action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
-                                               {!hasTimingInLabel && action.timing === "before_start" && ` (antes de iniciar)`}
-                                             </span>
-                                           </div>
-                                         );
-                                       })}
+                                       {segment.actions.map((action, aIdx) => (
+                                         <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
+                                           <span className="font-semibold">•</span>
+                                           <span>{action.label}</span>
+                                         </div>
+                                       ))}
                                      </div>
                                    </div>
                                  )}
@@ -2994,20 +2986,12 @@ Return ONLY valid JSON:
                                     <div className="bg-amber-50 border border-amber-200 rounded p-2">
                                       <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
                                       <div className="space-y-1">
-                                        {segment.actions.map((action, aIdx) => {
-                                          const hasTimingInLabel = /\d+\s*min/i.test(action.label);
-                                          return (
-                                            <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
-                                              <span className="font-semibold">•</span>
-                                              <span>
-                                                {action.label}
-                                                {!hasTimingInLabel && action.timing === "before_end" && ` (${action.offset_min} min antes de terminar)`}
-                                                {!hasTimingInLabel && action.timing === "after_start" && action.offset_min > 0 && ` (${action.offset_min} min después de iniciar)`}
-                                                {!hasTimingInLabel && action.timing === "before_start" && ` (antes de iniciar)`}
-                                              </span>
-                                            </div>
-                                          );
-                                        })}
+                                        {segment.actions.map((action, aIdx) => (
+                                          <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
+                                            <span className="font-semibold">•</span>
+                                            <span>{action.label}</span>
+                                          </div>
+                                        ))}
                                       </div>
                                     </div>
                                   )}
