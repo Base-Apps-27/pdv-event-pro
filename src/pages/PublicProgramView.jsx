@@ -873,7 +873,19 @@ export default function PublicProgramView() {
                                </div>
                              )}
 
-                             {segment.data?.ministry_leader && (
+                             {/* Sub-assignments from blueprint */}
+                             {segment.sub_assignments && segment.sub_assignments.map((subAssign, saIdx) => {
+                               const personValue = segment.data?.[subAssign.person_field_name];
+                               if (!personValue) return null;
+                               return (
+                                 <div key={saIdx} className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
+                                   <strong>{subAssign.label} {subAssign.duration_min && `(${subAssign.duration_min} min)`}:</strong> <span className="font-bold text-purple-900">{personValue}</span>
+                                 </div>
+                               );
+                             })}
+
+                             {/* Legacy fallback */}
+                             {(!segment.sub_assignments || segment.sub_assignments.length === 0) && segment.data?.ministry_leader && (
                                <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
                                  <strong>Ministración (5 min):</strong> <span className="font-bold text-purple-900">{segment.data.ministry_leader}</span>
                                </div>
@@ -998,7 +1010,19 @@ export default function PublicProgramView() {
                                 </div>
                               )}
                               
-                              {segment.data?.ministry_leader && (
+                              {/* Sub-assignments from blueprint */}
+                              {segment.sub_assignments && segment.sub_assignments.map((subAssign, saIdx) => {
+                                const personValue = segment.data?.[subAssign.person_field_name];
+                                if (!personValue) return null;
+                                return (
+                                  <div key={saIdx} className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
+                                    <strong>{subAssign.label} {subAssign.duration_min && `(${subAssign.duration_min} min)`}:</strong> <span className="font-bold text-purple-900">{personValue}</span>
+                                  </div>
+                                );
+                              })}
+                              
+                              {/* Legacy fallback */}
+                              {(!segment.sub_assignments || segment.sub_assignments.length === 0) && segment.data?.ministry_leader && (
                                 <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
                                   <strong>Ministración (5 min):</strong> <span className="font-bold text-purple-900">{segment.data.ministry_leader}</span>
                                 </div>
