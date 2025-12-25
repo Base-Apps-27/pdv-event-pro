@@ -14,8 +14,20 @@ const PERMISSION_HIERARCHY = {
 };
 
 // Default role permissions (fallback for legacy app_role field)
+// Role = template, user-level custom_permissions/revoked_permissions = final authority
 const DEFAULT_ROLE_PERMISSIONS = {
-  Admin: ['*'], // Wildcard = all permissions
+  Admin: [
+    'view_events', 'edit_events', 'create_events', 'delete_events',
+    'view_services', 'edit_services', 'create_services', 'delete_services',
+    'view_templates', 'edit_templates', 'create_templates', 'delete_templates',
+    'view_people', 'edit_people', 'create_people', 'delete_people',
+    'view_rooms', 'edit_rooms', 'create_rooms', 'delete_rooms',
+    'view_announcements', 'edit_announcements', 'create_announcements', 'delete_announcements',
+    'view_reports',
+    'access_importer',
+    'view_live_program',
+    'manage_users',
+  ],
   AdmAsst: [
     'view_events', 'edit_events', 'create_events',
     'view_services', 'edit_services', 'create_services',
@@ -37,15 +49,10 @@ export function getUserPermissions(user) {
 
   const permissions = new Set();
 
-  // 1. Start with role-based permissions
+  // 1. Start with role-based permissions (role = template)
   const role = user.app_role || 'EventDayViewer';
   const rolePerms = DEFAULT_ROLE_PERMISSIONS[role] || [];
   
-  // Wildcard grants everything
-  if (rolePerms.includes('*')) {
-    return ['*'];
-  }
-
   rolePerms.forEach(p => permissions.add(p));
 
   // 2. Add custom permissions
@@ -68,9 +75,6 @@ export function hasPermission(user, permissionKey) {
   if (!user || !permissionKey) return false;
 
   const userPermissions = getUserPermissions(user);
-
-  // Wildcard grants everything
-  if (userPermissions.includes('*')) return true;
 
   // Direct match
   if (userPermissions.includes(permissionKey)) return true;
