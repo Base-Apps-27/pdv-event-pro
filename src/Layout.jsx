@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useLanguage, LanguageProvider } from "@/components/utils/i18n";
-import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus } from "lucide-react";
+import { hasPermission } from "@/components/utils/permissions";
+import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus, Shield } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -148,8 +149,8 @@ function LayoutContent({ children }) {
               {t('nav.liveProgram')}
             </Link>
 
-            {/* EVENTS PILLAR - AdmAsst and Admin */}
-            {(userRole === 'AdmAsst' || userRole === 'Admin') && (
+            {/* EVENTS PILLAR - Permission-based */}
+            {hasPermission(user, 'view_events') && (
               <>
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3 flex items-center gap-2">
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
@@ -184,8 +185,8 @@ function LayoutContent({ children }) {
               </>
             )}
 
-            {/* SERVICES PILLAR - AdmAsst and Admin */}
-            {(userRole === 'AdmAsst' || userRole === 'Admin') && (
+            {/* SERVICES PILLAR - Permission-based */}
+            {hasPermission(user, 'view_services') && (
               <>
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3 flex items-center gap-2">
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
@@ -220,8 +221,8 @@ function LayoutContent({ children }) {
               </>
             )}
 
-            {/* SHARED RESOURCES - AdmAsst and Admin */}
-            {(userRole === 'AdmAsst' || userRole === 'Admin') && (
+            {/* SHARED RESOURCES - Permission-based */}
+            {hasPermission(user, 'view_people') && (
               <>
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3">{t('section.resources')}</div>
                 <Link
@@ -239,22 +240,41 @@ function LayoutContent({ children }) {
               </>
             )}
 
-            {/* SETTINGS - Admin only */}
-            {userRole === 'Admin' && (
+            {/* SETTINGS - Permission-based */}
+            {(hasPermission(user, 'manage_users') || hasPermission(user, 'view_rooms') || hasPermission(user, 'view_templates') || hasPermission(user, 'access_importer')) && (
               <>
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-6 mb-3 pl-3">{t('section.settings')}</div>
-                <Link
-                  to={createPageUrl("UserManagement")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("UserManagement"))
-                      ? "text-white shadow-md"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={isActive(createPageUrl("UserManagement")) ? gradientStyle : {}}
-                >
-                  <Users className="w-5 h-5" />
-                  User Management
-                </Link>
+
+                {hasPermission(user, 'manage_users') && (
+                  <>
+                    <Link
+                      to={createPageUrl("UserManagement")}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                        isActive(createPageUrl("UserManagement"))
+                          ? "text-white shadow-md"
+                          : "text-gray-400 hover:bg-white/5 hover:text-white"
+                      }`}
+                      style={isActive(createPageUrl("UserManagement")) ? gradientStyle : {}}
+                    >
+                      <Users className="w-5 h-5" />
+                      User Management
+                    </Link>
+                    <Link
+                      to={createPageUrl("RolePermissionManager")}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                        isActive(createPageUrl("RolePermissionManager"))
+                          ? "text-white shadow-md"
+                          : "text-gray-400 hover:bg-white/5 hover:text-white"
+                      }`}
+                      style={isActive(createPageUrl("RolePermissionManager")) ? gradientStyle : {}}
+                    >
+                      <Shield className="w-5 h-5" />
+                      {t('nav.roles') || (language === 'es' ? 'Roles y Permisos' : 'Roles & Permissions')}
+                    </Link>
+                  </>
+                )}
+
+                {hasPermission(user, 'view_rooms') && (
                 <Link
                   to={createPageUrl("Rooms")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -267,7 +287,9 @@ function LayoutContent({ children }) {
                   <MapPin className="w-5 h-5" />
                   {t('nav.rooms')}
                 </Link>
+                )}
 
+                {hasPermission(user, 'view_templates') && (
                 <Link
                   to={createPageUrl("Templates")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -280,7 +302,9 @@ function LayoutContent({ children }) {
                   <Copy className="w-5 h-5" />
                   {t('nav.templates')}
                 </Link>
+                )}
 
+                {hasPermission(user, 'access_importer') && (
                 <Link
                   to={createPageUrl("ScheduleImporter")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -293,7 +317,9 @@ function LayoutContent({ children }) {
                   <Sparkles className="w-5 h-5" />
                   {t('nav.importer')}
                 </Link>
+                )}
 
+                {hasPermission(user, 'manage_users') && (
                 <Link
                   to={createPageUrl("SchemaGuide")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -306,8 +332,9 @@ function LayoutContent({ children }) {
                   <FileCode className="w-5 h-5" />
                   {t('nav.schema')}
                 </Link>
-              </>
-            )}
+                )}
+                </>
+                )}
 
             {/* Language Toggle */}
             <div className="pt-4 mt-4 border-t border-gray-700">
