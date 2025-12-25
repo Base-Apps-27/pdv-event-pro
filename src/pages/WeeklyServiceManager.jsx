@@ -1512,7 +1512,20 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.ministry_leader && (
+                  {/* Dynamic sub-assignments from blueprint */}
+                  {segment.sub_assignments && segment.sub_assignments.map((subAssign, saIdx) => {
+                    const personValue = segment.data?.[subAssign.person_field_name];
+                    if (!personValue) return null;
+                    return (
+                      <div key={saIdx} className="print-segment-detail">
+                        • {subAssign.label}: <span className="print-name">{personValue}</span>
+                        {subAssign.duration_min && <span className="print-duration"> ({subAssign.duration_min} min)</span>}
+                      </div>
+                    );
+                  })}
+                  
+                  {/* Legacy fallback for old ministry_leader field */}
+                  {(!segment.sub_assignments || segment.sub_assignments.length === 0) && segment.data?.ministry_leader && (
                     <div className="print-segment-detail">
                       • Ministración: <span className="print-name">{segment.data.ministry_leader}</span> <span className="print-duration">(5 min)</span>
                     </div>
