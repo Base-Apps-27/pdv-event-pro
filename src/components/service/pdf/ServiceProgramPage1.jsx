@@ -237,7 +237,19 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
               </View>
             )}
 
-            {segment.data?.ministry_leader && (
+            {/* Sub-assignments (excluding cierre, shown after speaker) */}
+            {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name !== 'cierre_leader').map((subAssign, saIdx) => {
+              const personValue = segment.data?.[subAssign.person_field_name];
+              if (!personValue) return null;
+              return (
+                <Text key={saIdx} style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                  • {subAssign.label}: <Text style={styles.segmentName}>{personValue}</Text> {subAssign.duration_min && `(${subAssign.duration_min} min)`}
+                </Text>
+              );
+            })}
+
+            {/* Legacy ministry_leader fallback */}
+            {(!segment.sub_assignments || segment.sub_assignments.length === 0) && segment.data?.ministry_leader && (
               <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
                 • Ministración: <Text style={styles.segmentName}>{segment.data.ministry_leader}</Text> (5 min)
               </Text>
@@ -260,6 +272,17 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
                 <Text style={styles.segmentName}>{segment.data.preacher}</Text>
               </Text>
             )}
+
+            {/* Cierre sub-assignment (shown after speaker) */}
+            {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name === 'cierre_leader').map((subAssign, saIdx) => {
+              const personValue = segment.data?.[subAssign.person_field_name];
+              if (!personValue) return null;
+              return (
+                <Text key={saIdx} style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                  • {subAssign.label}: <Text style={styles.segmentName}>{personValue}</Text> {subAssign.duration_min && `(${subAssign.duration_min} min)`}
+                </Text>
+              );
+            })}
 
             {segment.data?.title && (
               <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
