@@ -3275,9 +3275,8 @@ Return ONLY valid JSON:
                           <span className="text-xs font-semibold text-purple-700">📹</span>
                         </div>
                       )}
-                      {!ann.isEvent && (
-                        {hasPermission(user, 'edit_announcements') && (
-                          <div className="flex gap-1 flex-shrink-0 print:hidden">
+                      {!ann.isEvent && hasPermission(user, 'edit_announcements') && (
+                        <div className="flex gap-1 flex-shrink-0 print:hidden">
                             <Button
                               variant="ghost"
                               size="icon"
