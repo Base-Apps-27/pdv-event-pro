@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks, BookOpen } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks, BookOpen, BellRing } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ export default function PublicProgramView() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [versesModalOpen, setVersesModalOpen] = useState(false);
   const [versesModalData, setVersesModalData] = useState({ parsedData: null, rawText: "" });
+  const [notifiedSegments, setNotifiedSegments] = useState(new Set());
 
   // Update current time every minute
   useEffect(() => {
@@ -40,6 +42,68 @@ export default function PublicProgramView() {
     }, 60000); // Update every minute
     return () => clearInterval(timer);
   }, []);
+
+  // Real-time notifications for segments
+  useEffect(() => {
+    // Collect all segments from current view
+    let segmentsToCheck = [];
+    
+    if (viewType === "service" && actualServiceData) {
+      if (actualServiceData.segments) {
+        segmentsToCheck = actualServiceData.segments.filter(s => s.start_time);
+      } else {
+        const morning = (actualServiceData["9:30am"] || []).map(s => ({ ...s, start_time: s.start_time || s.data?.start_time, title: s.title || s.data?.title }));
+        const afternoon = (actualServiceData["11:30am"] || []).map(s => ({ ...s, start_time: s.start_time || s.data?.start_time, title: s.title || s.data?.title }));
+        segmentsToCheck = [...morning, ...afternoon].filter(s => s.start_time && s.title);
+      }
+    } else if (viewType === "event") {
+      segmentsToCheck = allSegments.filter(s => s.start_time && s.title);
+    }
+
+    if (segmentsToCheck.length === 0) return;
+
+    const checkNotifications = () => {
+      const now = new Date();
+      
+      segmentsToCheck.forEach(segment => {
+        if (!segment.start_time || !segment.title) return;
+        
+        const segmentId = segment.id || `${segment.title}-${segment.start_time}`;
+        
+        // Parse start time
+        const [segHours, segMins] = segment.start_time.split(':').map(Number);
+        const segmentStart = new Date();
+        segmentStart.setHours(segHours, segMins, 0, 0);
+        
+        const diffMs = segmentStart - now;
+        const diffMins = Math.floor(diffMs / 60000);
+        
+        // Notify 2 minutes before
+        if (diffMins === 2 && !notifiedSegments.has(`${segmentId}-2min`)) {
+          toast.info(`⏰ ${segment.title} comienza en 2 minutos`, {
+            duration: 10000,
+            icon: <BellRing className="w-5 h-5" />,
+          });
+          setNotifiedSegments(prev => new Set(prev).add(`${segmentId}-2min`));
+        }
+        
+        // Notify when segment starts
+        if (diffMins === 0 && !notifiedSegments.has(`${segmentId}-start`)) {
+          toast.success(`▶️ ${segment.title} está comenzando ahora`, {
+            duration: 8000,
+            icon: <Clock className="w-5 h-5" />,
+          });
+          setNotifiedSegments(prev => new Set(prev).add(`${segmentId}-start`));
+        }
+      });
+    };
+
+    // Check immediately, then every 30 seconds
+    checkNotifications();
+    const interval = setInterval(checkNotifications, 30000);
+
+    return () => clearInterval(interval);
+  }, [actualServiceData, allSegments, viewType, notifiedSegments]);
 
   useEffect(() => {
     if (preloadedEventId) {
@@ -359,15 +423,21 @@ export default function PublicProgramView() {
       {/* Hero Header */}
       <div style={gradientStyle} className="text-white py-12 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-4 mb-4">
-            <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
-              alt="Logo" 
-              className="w-16 h-16 md:w-20 md:h-20"
-            />
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight text-white">Programa del Evento</h1>
-              <p className="text-sm md:text-base text-white/95 mt-1">¡ATRÉVETE A CAMBIAR!</p>
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-4">
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
+                alt="Logo" 
+                className="w-16 h-16 md:w-20 md:h-20"
+              />
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight text-white">Programa del Evento</h1>
+                <p className="text-sm md:text-base text-white/95 mt-1">¡ATRÉVETE A CAMBIAR!</p>
+              </div>
+            </div>
+            <div className="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur px-3 py-2 rounded-lg">
+              <BellRing className="w-4 h-4 animate-pulse" />
+              <span className="text-xs font-medium">Notificaciones activas</span>
             </div>
           </div>
           <p className="text-lg text-white/95">Explora el programa completo y mantente actualizado</p>
