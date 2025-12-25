@@ -17,6 +17,7 @@ import TestDashboard from './pages/TestDashboard';
 import UserManagement from './pages/UserManagement';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
+import RolePermissionManager from './pages/RolePermissionManager';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +41,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
+    "RolePermissionManager": RolePermissionManager,
 }
 
 export const pagesConfig = {
