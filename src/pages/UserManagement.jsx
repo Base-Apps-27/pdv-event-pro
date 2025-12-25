@@ -5,39 +5,82 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Users, Search, Shield, Mail, Calendar, Edit2 } from "lucide-react";
+import { Users, Search, Shield, Mail, Calendar, Edit2, Plus, Minus } from "lucide-react";
+import { getAllPermissionDefinitions } from "@/components/utils/permissions";
+import { useLanguage } from "@/components/utils/i18n";
 
 export default function UserManagement() {
+  const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingUser, setEditingUser] = useState(null);
   const [selectedRole, setSelectedRole] = useState("");
+  const [customPermissions, setCustomPermissions] = useState([]);
+  const [revokedPermissions, setRevokedPermissions] = useState([]);
+
+  const allPermissions = getAllPermissionDefinitions();
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list('-created_date'),
   });
 
-  const updateRoleMutation = useMutation({
-    mutationFn: ({ userId, app_role }) => base44.entities.User.update(userId, { app_role }),
+  const updateUserMutation = useMutation({
+    mutationFn: ({ userId, data }) => base44.entities.User.update(userId, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['users']);
       setEditingUser(null);
       setSelectedRole("");
+      setCustomPermissions([]);
+      setRevokedPermissions([]);
     },
   });
 
-  const handleEditRole = (user) => {
+  const handleEditUser = (user) => {
     setEditingUser(user);
     setSelectedRole(user.app_role || 'EventDayViewer');
+    setCustomPermissions(user.custom_permissions || []);
+    setRevokedPermissions(user.revoked_permissions || []);
   };
 
-  const handleSaveRole = () => {
-    if (editingUser && selectedRole) {
-      updateRoleMutation.mutate({ userId: editingUser.id, app_role: selectedRole });
+  const handleSaveUser = () => {
+    if (editingUser) {
+      updateUserMutation.mutate({
+        userId: editingUser.id,
+        data: {
+          app_role: selectedRole,
+          custom_permissions: customPermissions,
+          revoked_permissions: revokedPermissions,
+        }
+      });
     }
+  };
+
+  const toggleCustomPermission = (permKey) => {
+    setCustomPermissions(prev => {
+      const perms = new Set(prev);
+      if (perms.has(permKey)) {
+        perms.delete(permKey);
+      } else {
+        perms.add(permKey);
+      }
+      return Array.from(perms);
+    });
+  };
+
+  const toggleRevokedPermission = (permKey) => {
+    setRevokedPermissions(prev => {
+      const perms = new Set(prev);
+      if (perms.has(permKey)) {
+        perms.delete(permKey);
+      } else {
+        perms.add(permKey);
+      }
+      return Array.from(perms);
+    });
   };
 
   const filteredUsers = users.filter(user => 
@@ -56,11 +99,25 @@ export default function UserManagement() {
 
   const getRoleLabel = (role) => {
     const labels = {
-      Admin: "Super Admin",
-      AdmAsst: "Assistant Admin",
-      EventDayViewer: "Viewer"
+      Admin: language === 'es' ? "Super Admin" : "Super Admin",
+      AdmAsst: language === 'es' ? "Asistente Admin" : "Assistant Admin",
+      EventDayViewer: language === 'es' ? "Visualizador" : "Viewer"
     };
-    return labels[role] || "Viewer";
+    return labels[role] || (language === 'es' ? "Visualizador" : "Viewer");
+  };
+
+  const permissionsByCategory = allPermissions.reduce((acc, perm) => {
+    if (!acc[perm.category]) acc[perm.category] = [];
+    acc[perm.category].push(perm);
+    return acc;
+  }, {});
+
+  const categoryLabels = {
+    events: { en: 'Events', es: 'Eventos' },
+    services: { en: 'Services', es: 'Servicios' },
+    resources: { en: 'Resources', es: 'Recursos' },
+    settings: { en: 'Settings', es: 'Configuración' },
+    live: { en: 'Live View', es: 'Vista en Vivo' },
   };
 
   return (
@@ -68,13 +125,17 @@ export default function UserManagement() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">
-            User Management
+            {language === 'es' ? 'Gestión de Usuarios' : 'User Management'}
           </h1>
-          <p className="text-gray-500 mt-1">Manage user roles and permissions</p>
+          <p className="text-gray-500 mt-1">
+            {language === 'es' ? 'Gestiona roles de usuarios y permisos' : 'Manage user roles and permissions'}
+          </p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)' }}>
           <Users className="w-5 h-5 text-white" />
-          <span className="text-white font-bold">{users.length} Total Users</span>
+          <span className="text-white font-bold">
+            {users.length} {language === 'es' ? 'Usuarios' : 'Users'}
+          </span>
         </div>
       </div>
 
@@ -82,12 +143,12 @@ export default function UserManagement() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="w-5 h-5" />
-            Search Users
+            {language === 'es' ? 'Buscar Usuarios' : 'Search Users'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Input
-            placeholder="Search by name or email..."
+            placeholder={language === 'es' ? 'Buscar por nombre o email...' : 'Search by name or email...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="max-w-md"
@@ -101,24 +162,32 @@ export default function UserManagement() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">User</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    {language === 'es' ? 'Usuario' : 'User'}
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Joined</th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    {language === 'es' ? 'Rol' : 'Role'}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    {language === 'es' ? 'Permisos' : 'Permissions'}
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    {language === 'es' ? 'Acciones' : 'Actions'}
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {isLoading ? (
                   <tr>
                     <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
-                      Loading users...
+                      {language === 'es' ? 'Cargando usuarios...' : 'Loading users...'}
                     </td>
                   </tr>
                 ) : filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
-                      No users found
+                      {language === 'es' ? 'No se encontraron usuarios' : 'No users found'}
                     </td>
                   </tr>
                 ) : (
@@ -130,7 +199,7 @@ export default function UserManagement() {
                             {user.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || '?'}
                           </div>
                           <div className="font-semibold text-gray-900">
-                            {user.full_name || 'No name'}
+                            {user.full_name || (language === 'es' ? 'Sin nombre' : 'No name')}
                           </div>
                         </div>
                       </td>
@@ -147,20 +216,30 @@ export default function UserManagement() {
                         </Badge>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Calendar className="w-4 h-4" />
-                          {user.created_date ? new Date(user.created_date).toLocaleDateString() : 'N/A'}
+                        <div className="flex gap-1">
+                          {user.custom_permissions?.length > 0 && (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                              <Plus className="w-3 h-3 mr-1" />
+                              {user.custom_permissions.length}
+                            </Badge>
+                          )}
+                          {user.revoked_permissions?.length > 0 && (
+                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">
+                              <Minus className="w-3 h-3 mr-1" />
+                              {user.revoked_permissions.length}
+                            </Badge>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEditRole(user)}
+                          onClick={() => handleEditUser(user)}
                           className="gap-2"
                         >
                           <Edit2 className="w-4 h-4" />
-                          Edit Role
+                          {language === 'es' ? 'Editar' : 'Edit'}
                         </Button>
                       </td>
                     </tr>
@@ -173,62 +252,129 @@ export default function UserManagement() {
       </Card>
 
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit User Role</DialogTitle>
+            <DialogTitle>
+              {language === 'es' ? 'Editar Usuario' : 'Edit User'}
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-6 py-4">
+            {/* User Info */}
             <div className="space-y-2">
-              <div className="text-sm font-semibold text-gray-700">User</div>
+              <div className="text-sm font-semibold text-gray-700">
+                {language === 'es' ? 'Usuario' : 'User'}
+              </div>
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'linear-gradient(135deg, #1F8A70 0%, #4DC15F 100%)' }}>
                   {editingUser?.full_name?.charAt(0).toUpperCase() || editingUser?.email?.charAt(0).toUpperCase() || '?'}
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">{editingUser?.full_name || 'No name'}</div>
+                  <div className="font-semibold text-gray-900">{editingUser?.full_name || (language === 'es' ? 'Sin nombre' : 'No name')}</div>
                   <div className="text-sm text-gray-500">{editingUser?.email}</div>
                 </div>
               </div>
             </div>
+
+            {/* Role Selection */}
             <div className="space-y-2">
-              <div className="text-sm font-semibold text-gray-700">Select Role</div>
+              <div className="text-sm font-semibold text-gray-700">
+                {language === 'es' ? 'Rol Base' : 'Base Role'}
+              </div>
               <Select value={selectedRole} onValueChange={setSelectedRole}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a role..." />
+                  <SelectValue placeholder={language === 'es' ? 'Selecciona un rol...' : 'Select a role...'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Admin">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-purple-600" />
-                      <span>Super Admin - Full Access</span>
+                      <span>{language === 'es' ? 'Super Admin - Acceso Completo' : 'Super Admin - Full Access'}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="AdmAsst">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-blue-600" />
-                      <span>Assistant Admin - Events & Services</span>
+                      <span>{language === 'es' ? 'Asistente Admin - Eventos y Servicios' : 'Assistant Admin - Events & Services'}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="EventDayViewer">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-gray-600" />
-                      <span>Viewer - Read-only Access</span>
+                      <span>{language === 'es' ? 'Visualizador - Solo Lectura' : 'Viewer - Read-only Access'}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Custom Permissions */}
+            <div className="space-y-2">
+              <div className="text-sm font-semibold text-gray-700">
+                {language === 'es' ? 'Permisos Adicionales' : 'Additional Permissions'}
+              </div>
+              <div className="border rounded-lg p-4 max-h-60 overflow-y-auto space-y-3">
+                {Object.entries(permissionsByCategory).map(([category, perms]) => (
+                  <div key={category}>
+                    <h5 className="text-xs font-bold uppercase text-gray-600 mb-2">
+                      {language === 'es' ? categoryLabels[category]?.es : categoryLabels[category]?.en}
+                    </h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      {perms.map(perm => (
+                        <div key={perm.key} className="flex items-center gap-2">
+                          <Checkbox
+                            checked={customPermissions.includes(perm.key)}
+                            onCheckedChange={() => toggleCustomPermission(perm.key)}
+                          />
+                          <label className="text-xs">
+                            {language === 'es' ? perm.label_es : perm.label_en}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Revoked Permissions */}
+            <div className="space-y-2">
+              <div className="text-sm font-semibold text-gray-700">
+                {language === 'es' ? 'Permisos Revocados' : 'Revoked Permissions'}
+              </div>
+              <div className="border rounded-lg p-4 max-h-60 overflow-y-auto space-y-3">
+                {Object.entries(permissionsByCategory).map(([category, perms]) => (
+                  <div key={category}>
+                    <h5 className="text-xs font-bold uppercase text-gray-600 mb-2">
+                      {language === 'es' ? categoryLabels[category]?.es : categoryLabels[category]?.en}
+                    </h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      {perms.map(perm => (
+                        <div key={perm.key} className="flex items-center gap-2">
+                          <Checkbox
+                            checked={revokedPermissions.includes(perm.key)}
+                            onCheckedChange={() => toggleRevokedPermission(perm.key)}
+                          />
+                          <label className="text-xs">
+                            {language === 'es' ? perm.label_es : perm.label_en}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingUser(null)}>
-              Cancel
+              {language === 'es' ? 'Cancelar' : 'Cancel'}
             </Button>
             <Button 
-              onClick={handleSaveRole}
-              disabled={updateRoleMutation.isPending}
+              onClick={handleSaveUser}
+              disabled={updateUserMutation.isPending}
               style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', color: '#ffffff' }}
             >
-              {updateRoleMutation.isPending ? 'Saving...' : 'Save Changes'}
+              {updateUserMutation.isPending ? (language === 'es' ? 'Guardando...' : 'Saving...') : (language === 'es' ? 'Guardar Cambios' : 'Save Changes')}
             </Button>
           </DialogFooter>
         </DialogContent>
