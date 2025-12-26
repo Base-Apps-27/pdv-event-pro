@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -25,11 +25,15 @@ import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { useLanguage } from "@/components/utils/i18n";
 import { useDebouncedCommit } from "@/components/utils/useDebouncedCommit";
 
+// Context for sharing serviceData and updaters
+const ServiceDataContext = React.createContext(null);
+const UpdatersContext = React.createContext(null);
+
 // Song Input Row with local state
 function SongInputRow({ service, segmentIndex, songIndex }) {
-  const segment = React.useContext(ServiceDataContext)?.[service]?.[segmentIndex];
+  const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
   const song = segment?.songs?.[songIndex] || { title: "", lead: "" };
-  const updateSegmentField = React.useContext(UpdatersContext)?.updateSegmentField;
+  const updateSegmentField = useContext(UpdatersContext)?.updateSegmentField;
   
   const [localTitle, setLocalTitle] = useState("");
   const [localLead, setLocalLead] = useState("");
@@ -85,14 +89,14 @@ function SongInputRow({ service, segmentIndex, songIndex }) {
 
 // Pre-Service Notes Input with local state
 function PreServiceNotesInput({ service }) {
-  const currentGlobalValue = React.useContext(ServiceDataContext)?.pre_service_notes?.[service] || "";
+  const currentGlobalValue = useContext(ServiceDataContext)?.pre_service_notes?.[service] || "";
+  const setServiceData = useContext(UpdatersContext)?.setServiceData;
   const [localValue, setLocalValue] = useState("");
   
   const commitNow = useDebouncedCommit(
     localValue,
     currentGlobalValue,
     (val) => {
-      const setServiceData = React.useContext(UpdatersContext)?.setServiceData;
       setServiceData(prev => ({
         ...prev,
         pre_service_notes: { 
@@ -122,14 +126,14 @@ function PreServiceNotesInput({ service }) {
 
 // Receso Notes Input with local state
 function RecesoNotesInput() {
-  const currentGlobalValue = React.useContext(ServiceDataContext)?.receso_notes?.["9:30am"] || "";
+  const currentGlobalValue = useContext(ServiceDataContext)?.receso_notes?.["9:30am"] || "";
+  const setServiceData = useContext(UpdatersContext)?.setServiceData;
   const [localValue, setLocalValue] = useState("");
   
   const commitNow = useDebouncedCommit(
     localValue,
     currentGlobalValue,
     (val) => {
-      const setServiceData = React.useContext(UpdatersContext)?.setServiceData;
       setServiceData(prev => ({
         ...prev,
         receso_notes: { 
@@ -159,8 +163,8 @@ function RecesoNotesInput() {
 
 // Team Input Component with local state
 function TeamInput({ field, service, placeholder }) {
-  const currentGlobalValue = React.useContext(ServiceDataContext)?.[field]?.[service] || "";
-  const updateTeamField = React.useContext(UpdatersContext)?.updateTeamField;
+  const currentGlobalValue = useContext(ServiceDataContext)?.[field]?.[service] || "";
+  const updateTeamField = useContext(UpdatersContext)?.updateTeamField;
   const [localValue, setLocalValue] = useState("");
   
   const commitNow = useDebouncedCommit(
@@ -187,9 +191,9 @@ function TeamInput({ field, service, placeholder }) {
 
 // Segment Field Component with local state (for simple text inputs)
 function SegmentTextInput({ service, segmentIndex, field, placeholder, className = "text-sm" }) {
-  const segment = React.useContext(ServiceDataContext)?.[service]?.[segmentIndex];
+  const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
   const currentGlobalValue = segment?.data?.[field] || "";
-  const updateSegmentField = React.useContext(UpdatersContext)?.updateSegmentField;
+  const updateSegmentField = useContext(UpdatersContext)?.updateSegmentField;
   const [localValue, setLocalValue] = useState("");
   
   const commitNow = useDebouncedCommit(
@@ -216,9 +220,9 @@ function SegmentTextInput({ service, segmentIndex, field, placeholder, className
 
 // Segment Textarea Component with local state
 function SegmentTextarea({ service, segmentIndex, field, placeholder, className = "text-sm", rows = 2 }) {
-  const segment = React.useContext(ServiceDataContext)?.[service]?.[segmentIndex];
+  const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
   const currentGlobalValue = segment?.data?.[field] || "";
-  const updateSegmentField = React.useContext(UpdatersContext)?.updateSegmentField;
+  const updateSegmentField = useContext(UpdatersContext)?.updateSegmentField;
   const [localValue, setLocalValue] = useState("");
   
   const commitNow = useDebouncedCommit(
@@ -246,9 +250,9 @@ function SegmentTextarea({ service, segmentIndex, field, placeholder, className 
 
 // Segment Autocomplete Component with local state
 function SegmentAutocomplete({ service, segmentIndex, field, placeholder, type, className = "text-sm" }) {
-  const segment = React.useContext(ServiceDataContext)?.[service]?.[segmentIndex];
+  const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
   const currentGlobalValue = segment?.data?.[field] || "";
-  const updateSegmentField = React.useContext(UpdatersContext)?.updateSegmentField;
+  const updateSegmentField = useContext(UpdatersContext)?.updateSegmentField;
   const [localValue, setLocalValue] = useState("");
   
   const commitNow = useDebouncedCommit(
@@ -273,10 +277,6 @@ function SegmentAutocomplete({ service, segmentIndex, field, placeholder, type, 
     />
   );
 }
-
-// Context for sharing serviceData and updaters
-const ServiceDataContext = React.createContext(null);
-const UpdatersContext = React.createContext(null);
 
 export default function WeeklyServiceManager() {
   const navigate = useNavigate();
