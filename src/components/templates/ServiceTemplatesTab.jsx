@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Clock, Save, Plus, Trash2, ChevronUp, ChevronDown, GripVertical, Sparkles } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,6 +89,14 @@ export default function ServiceTemplatesTab() {
       const mergeSubAssignments = (segments) => {
         return segments.map(seg => {
           let subAssignments = seg.sub_assignments || [];
+          
+          // Initialize translation settings if missing
+          if (seg.requires_translation === undefined) {
+            seg.requires_translation = false;
+          }
+          if (seg.default_translator_source === undefined) {
+            seg.default_translator_source = "manual";
+          }
 
           // Migration: Move ministry_leader from data to sub_assignments
           if (seg.data?.ministry_leader && !subAssignments.find(s => s.person_field_name === 'ministry_leader')) {
@@ -183,7 +192,7 @@ export default function ServiceTemplatesTab() {
         updated[service][segmentIndex].actions = value;
       } else if (field === 'sub_assignments') {
         updated[service][segmentIndex].sub_assignments = value;
-      } else if (field === 'duration' || field === 'title' || field === 'type') {
+      } else if (field === 'duration' || field === 'title' || field === 'type' || field === 'requires_translation' || field === 'default_translator_source') {
         updated[service][segmentIndex][field] = value;
       } else {
         updated[service][segmentIndex].data = {
@@ -503,6 +512,39 @@ export default function ServiceTemplatesTab() {
                                 className="text-xs"
                                 rows={2}
                               />
+
+                              {/* Translation Configuration */}
+                              <div className="space-y-2 pt-2 border-t border-gray-300">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-xs font-semibold">🌐 Requiere Traducción</Label>
+                                  <Switch
+                                    checked={segment.requires_translation || false}
+                                    onCheckedChange={(checked) => updateSegmentField(service, idx, 'requires_translation', checked)}
+                                  />
+                                </div>
+                                {segment.requires_translation && (
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold text-blue-800">Fuente del Traductor</Label>
+                                    <Select
+                                      value={segment.default_translator_source || 'manual'}
+                                      onValueChange={(value) => updateSegmentField(service, idx, 'default_translator_source', value)}
+                                    >
+                                      <SelectTrigger className="w-full text-xs">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="manual">Entrada Manual</SelectItem>
+                                        <SelectItem value="worship_segment_translator">Del segmento de Alabanza</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <p className="text-[10px] text-gray-500 italic mt-1">
+                                      {segment.default_translator_source === "worship_segment_translator" 
+                                        ? "Se copiará automáticamente del segmento de Alabanza, pero puede editarse manualmente"
+                                        : "El traductor se ingresa manualmente para este segmento"}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
                         </CardContent>

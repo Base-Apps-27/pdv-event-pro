@@ -401,9 +401,19 @@ export default function WeeklyServiceManager() {
         fields: ["leader", "songs", "ministry_leader", "translator"],
         actions: [
           { label: "Video de introducción en FB", timing: "before_start", offset_min: 0, department: "Projection" }
-        ]
+        ],
+        requires_translation: true,
+        default_translator_source: "manual"
       },
-      { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter", "translator"], actions: [] },
+      { 
+        type: "welcome", 
+        title: "Bienvenida y Anuncios", 
+        duration: 5, 
+        fields: ["presenter", "translator"], 
+        actions: [],
+        requires_translation: true,
+        default_translator_source: "worship_segment_translator"
+      },
       { 
         type: "offering", 
         title: "Ofrendas", 
@@ -411,7 +421,9 @@ export default function WeeklyServiceManager() {
         fields: ["presenter", "verse", "translator"],
         actions: [
           { label: "Enviar texto: 844-555-5555", timing: "after_start", offset_min: 0, department: "Admin" }
-        ]
+        ],
+        requires_translation: true,
+        default_translator_source: "worship_segment_translator"
       },
       { 
         type: "message", 
@@ -421,7 +433,9 @@ export default function WeeklyServiceManager() {
         actions: [
           { label: "Pianista sube", timing: "before_end", offset_min: 15, department: "Alabanza" },
           { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }
-        ]
+        ],
+        requires_translation: true,
+        default_translator_source: "manual"
       }
     ]
   };
@@ -574,6 +588,8 @@ export default function WeeklyServiceManager() {
               fields: blueprintSeg.fields || savedSeg.fields,
               sub_assignments: subAssignments,
               actions: blueprintSeg.actions || savedSeg.actions || [],
+              requires_translation: blueprintSeg.requires_translation !== undefined ? blueprintSeg.requires_translation : savedSeg.requires_translation,
+              default_translator_source: blueprintSeg.default_translator_source || savedSeg.default_translator_source || "manual",
             };
           }
           return savedSeg;
@@ -630,7 +646,9 @@ export default function WeeklyServiceManager() {
             fields: [...(seg.fields || [])],
             data: {},
             actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
-            sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : []
+            sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
+            requires_translation: seg.requires_translation || false,
+            default_translator_source: seg.default_translator_source || "manual"
           };
           
           if (seg.type === "worship") {
@@ -652,7 +670,9 @@ export default function WeeklyServiceManager() {
             fields: [...(seg.fields || [])],
             data: {},
             actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
-            sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : []
+            sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
+            requires_translation: seg.requires_translation || false,
+            default_translator_source: seg.default_translator_source || "manual"
           };
           
           if (seg.type === "worship") {
@@ -819,6 +839,24 @@ export default function WeeklyServiceManager() {
           [field]: value
         };
       }
+      
+      // Auto-propagate translator from worship to other segments in 11:30am
+      if (field === 'translator' && service === '11:30am' && updated[service][segmentIndex].type === 'worship') {
+        const worshipTranslator = value;
+        updated['11:30am'] = updated['11:30am'].map((seg, idx) => {
+          if (idx !== segmentIndex && seg.default_translator_source === 'worship_segment_translator' && !seg.data?.translator) {
+            return {
+              ...seg,
+              data: {
+                ...seg.data,
+                translator: worshipTranslator
+              }
+            };
+          }
+          return seg;
+        });
+      }
+      
       return updated;
     });
   };
@@ -2604,6 +2642,27 @@ Return ONLY valid JSON:
                                   ))}
                                 </div>
                               )}
+                              {segment.requires_translation && (
+                                <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                                  <Label className="text-xs font-semibold text-blue-800 mb-1">
+                                    🌐 Traductor(a)
+                                    {segment.default_translator_source === "worship_segment_translator" && (
+                                      <span className="ml-2 text-[10px] font-normal text-blue-600">(auto-rellena de Alabanza)</span>
+                                    )}
+                                  </Label>
+                                  <SegmentAutocomplete
+                                    service="9:30am"
+                                    segmentIndex={idx}
+                                    field="translator"
+                                    type="translator"
+                                    placeholder={
+                                      segment.default_translator_source === "worship_segment_translator"
+                                        ? (serviceData["9:30am"].find(s => s.type === "worship")?.data?.translator || "Del segmento de Alabanza")
+                                        : "Nombre del traductor"
+                                    }
+                                  />
+                                </div>
+                              )}
                               {/* Dynamic Sub-Assignments from Blueprint */}
                               {segment.sub_assignments && segment.sub_assignments.length > 0 && (
                                 <div className="space-y-2 border-t pt-2 mt-2">
@@ -3030,15 +3089,24 @@ Return ONLY valid JSON:
                                   ))}
                                 </div>
                               )}
-                              {segment.fields.includes("translator") && (
+                              {segment.requires_translation && (
                                 <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                                  <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
+                                  <Label className="text-xs font-semibold text-blue-800 mb-1">
+                                    🌐 Traductor(a)
+                                    {segment.default_translator_source === "worship_segment_translator" && (
+                                      <span className="ml-2 text-[10px] font-normal text-blue-600">(auto-rellena de Alabanza)</span>
+                                    )}
+                                  </Label>
                                   <SegmentAutocomplete
                                     service="11:30am"
                                     segmentIndex={idx}
                                     field="translator"
                                     type="translator"
-                                    placeholder="Nombre del traductor"
+                                    placeholder={
+                                      segment.default_translator_source === "worship_segment_translator"
+                                        ? (serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || "Del segmento de Alabanza")
+                                        : "Nombre del traductor"
+                                    }
                                   />
                                 </div>
                               )}
