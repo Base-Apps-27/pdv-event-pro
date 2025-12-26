@@ -63,16 +63,16 @@ export default function ServiceTemplatesTab() {
     name: "Servicios Dominicales",
     day_of_week: "Sunday",
     "9:30am": [
-      { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
-      { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
-      { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [] },
-      { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
+      { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [], requires_translation: false, default_translator_source: "manual" },
+      { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [], requires_translation: false, default_translator_source: "manual" },
+      { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [], requires_translation: false, default_translator_source: "manual" },
+      { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [], requires_translation: false, default_translator_source: "manual" }
     ],
     "11:30am": [
-      { title: "Equipo de A&A", type: "worship", duration: 35, fields: ["leader", "songs", "ministry_leader", "translator"], songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
-      { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, fields: ["presenter", "translator"], data: {}, actions: [] },
-      { title: "Ofrendas", type: "offering", duration: 5, fields: ["presenter", "verse", "translator"], data: {}, actions: [] },
-      { title: "Mensaje", type: "message", duration: 45, fields: ["preacher", "title", "verse", "translator"], data: {}, actions: [] }
+      { title: "Equipo de A&A", type: "worship", duration: 35, fields: ["leader", "songs", "ministry_leader", "translator"], songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [], requires_translation: true, default_translator_source: "manual" },
+      { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, fields: ["presenter", "translator"], data: {}, actions: [], requires_translation: true, default_translator_source: "worship_segment_translator" },
+      { title: "Ofrendas", type: "offering", duration: 5, fields: ["presenter", "verse", "translator"], data: {}, actions: [], requires_translation: true, default_translator_source: "worship_segment_translator" },
+      { title: "Mensaje", type: "message", duration: 45, fields: ["preacher", "title", "verse", "translator"], data: {}, actions: [], requires_translation: true, default_translator_source: "manual" }
     ],
     coordinators: { "9:30am": "", "11:30am": "" },
     ujieres: { "9:30am": "", "11:30am": "" },
