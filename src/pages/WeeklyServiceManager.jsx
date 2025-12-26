@@ -23,6 +23,268 @@ import { addMinutes, parse, format as formatDate } from "date-fns";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { useLanguage } from "@/components/utils/i18n";
+import { useDebouncedCommit } from "@/components/utils/useDebouncedCommit";
+
+// Song Input Row with local state
+function SongInputRow({ service, segmentIndex, songIndex }) {
+  const segment = React.useContext(ServiceDataContext)?.[service]?.[segmentIndex];
+  const song = segment?.songs?.[songIndex] || { title: "", lead: "" };
+  const updateSegmentField = React.useContext(UpdatersContext)?.updateSegmentField;
+  
+  const [localTitle, setLocalTitle] = useState("");
+  const [localLead, setLocalLead] = useState("");
+  
+  const commitTitle = useDebouncedCommit(
+    localTitle,
+    song.title,
+    (val) => {
+      const newSongs = [...(segment.songs || [])];
+      newSongs[songIndex] = { ...newSongs[songIndex], title: val };
+      updateSegmentField(service, segmentIndex, "songs", newSongs);
+    },
+    3000
+  );
+  
+  const commitLead = useDebouncedCommit(
+    localLead,
+    song.lead,
+    (val) => {
+      const newSongs = [...(segment.songs || [])];
+      newSongs[songIndex] = { ...newSongs[songIndex], lead: val };
+      updateSegmentField(service, segmentIndex, "songs", newSongs);
+    },
+    3000
+  );
+  
+  useEffect(() => {
+    setLocalTitle(song.title);
+    setLocalLead(song.lead);
+  }, [song.title, song.lead]);
+  
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <AutocompleteInput
+        type="songTitle"
+        placeholder={`Canción ${songIndex + 1}`}
+        value={localTitle}
+        onChange={(e) => setLocalTitle(e.target.value)}
+        onBlur={commitTitle}
+        className="text-xs"
+      />
+      <AutocompleteInput
+        type="worshipLeader"
+        placeholder="Líder"
+        value={localLead}
+        onChange={(e) => setLocalLead(e.target.value)}
+        onBlur={commitLead}
+        className="text-xs"
+      />
+    </div>
+  );
+}
+
+// Pre-Service Notes Input with local state
+function PreServiceNotesInput({ service }) {
+  const currentGlobalValue = React.useContext(ServiceDataContext)?.pre_service_notes?.[service] || "";
+  const [localValue, setLocalValue] = useState("");
+  
+  const commitNow = useDebouncedCommit(
+    localValue,
+    currentGlobalValue,
+    (val) => {
+      const setServiceData = React.useContext(UpdatersContext)?.setServiceData;
+      setServiceData(prev => ({
+        ...prev,
+        pre_service_notes: { 
+          ...prev.pre_service_notes, 
+          [service]: val 
+        }
+      }));
+    },
+    3000
+  );
+  
+  useEffect(() => {
+    setLocalValue(currentGlobalValue);
+  }, [currentGlobalValue]);
+  
+  return (
+    <Textarea
+      placeholder="Instrucciones pre-servicio (opcional)..."
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={commitNow}
+      className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
+      rows={2}
+    />
+  );
+}
+
+// Receso Notes Input with local state
+function RecesoNotesInput() {
+  const currentGlobalValue = React.useContext(ServiceDataContext)?.receso_notes?.["9:30am"] || "";
+  const [localValue, setLocalValue] = useState("");
+  
+  const commitNow = useDebouncedCommit(
+    localValue,
+    currentGlobalValue,
+    (val) => {
+      const setServiceData = React.useContext(UpdatersContext)?.setServiceData;
+      setServiceData(prev => ({
+        ...prev,
+        receso_notes: { 
+          ...prev.receso_notes, 
+          "9:30am": val 
+        }
+      }));
+    },
+    3000
+  );
+  
+  useEffect(() => {
+    setLocalValue(currentGlobalValue);
+  }, [currentGlobalValue]);
+  
+  return (
+    <Textarea
+      placeholder="Notas del receso (opcional)..."
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={commitNow}
+      className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
+      rows={2}
+    />
+  );
+}
+
+// Team Input Component with local state
+function TeamInput({ field, service, placeholder }) {
+  const currentGlobalValue = React.useContext(ServiceDataContext)?.[field]?.[service] || "";
+  const updateTeamField = React.useContext(UpdatersContext)?.updateTeamField;
+  const [localValue, setLocalValue] = useState("");
+  
+  const commitNow = useDebouncedCommit(
+    localValue,
+    currentGlobalValue,
+    (val) => updateTeamField(field, service, val),
+    3000
+  );
+  
+  useEffect(() => {
+    setLocalValue(currentGlobalValue);
+  }, [currentGlobalValue]);
+  
+  return (
+    <Input
+      placeholder={placeholder}
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={commitNow}
+      className="text-xs"
+    />
+  );
+}
+
+// Segment Field Component with local state (for simple text inputs)
+function SegmentTextInput({ service, segmentIndex, field, placeholder, className = "text-sm" }) {
+  const segment = React.useContext(ServiceDataContext)?.[service]?.[segmentIndex];
+  const currentGlobalValue = segment?.data?.[field] || "";
+  const updateSegmentField = React.useContext(UpdatersContext)?.updateSegmentField;
+  const [localValue, setLocalValue] = useState("");
+  
+  const commitNow = useDebouncedCommit(
+    localValue,
+    currentGlobalValue,
+    (val) => updateSegmentField(service, segmentIndex, field, val),
+    3000
+  );
+  
+  useEffect(() => {
+    setLocalValue(currentGlobalValue);
+  }, [currentGlobalValue]);
+  
+  return (
+    <Input
+      placeholder={placeholder}
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={commitNow}
+      className={className}
+    />
+  );
+}
+
+// Segment Textarea Component with local state
+function SegmentTextarea({ service, segmentIndex, field, placeholder, className = "text-sm", rows = 2 }) {
+  const segment = React.useContext(ServiceDataContext)?.[service]?.[segmentIndex];
+  const currentGlobalValue = segment?.data?.[field] || "";
+  const updateSegmentField = React.useContext(UpdatersContext)?.updateSegmentField;
+  const [localValue, setLocalValue] = useState("");
+  
+  const commitNow = useDebouncedCommit(
+    localValue,
+    currentGlobalValue,
+    (val) => updateSegmentField(service, segmentIndex, field, val),
+    3000
+  );
+  
+  useEffect(() => {
+    setLocalValue(currentGlobalValue);
+  }, [currentGlobalValue]);
+  
+  return (
+    <Textarea
+      placeholder={placeholder}
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={commitNow}
+      className={className}
+      rows={rows}
+    />
+  );
+}
+
+// Segment Autocomplete Component with local state
+function SegmentAutocomplete({ service, segmentIndex, field, placeholder, type, className = "text-sm" }) {
+  const segment = React.useContext(ServiceDataContext)?.[service]?.[segmentIndex];
+  const currentGlobalValue = segment?.data?.[field] || "";
+  const updateSegmentField = React.useContext(UpdatersContext)?.updateSegmentField;
+  const [localValue, setLocalValue] = useState("");
+  
+  const commitNow = useDebouncedCommit(
+    localValue,
+    currentGlobalValue,
+    (val) => updateSegmentField(service, segmentIndex, field, val),
+    3000
+  );
+  
+  useEffect(() => {
+    setLocalValue(currentGlobalValue);
+  }, [currentGlobalValue]);
+  
+  return (
+    <AutocompleteInput
+      type={type}
+      placeholder={placeholder}
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={commitNow}
+      className={className}
+    />
+  );
+}
+
+// Context for sharing serviceData and updaters
+const ServiceDataContext = React.createContext(null);
+const UpdatersContext = React.createContext(null);
+
+export default function WeeklyServiceManager() {
+  const navigate = useNavigate();
+  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  const greenStyle = { backgroundColor: '#8DC63F', color: '#ffffff' };
+  
+  const { t } = useLanguage();
+  const [user, setUser] = useState(null);
 
 export default function WeeklyServiceManager() {
   const navigate = useNavigate();
@@ -519,7 +781,7 @@ export default function WeeklyServiceManager() {
     }, 800);
   }, [selectedDate, selectedAnnouncements, saveServiceMutation]);
 
-  // Sync selected announcements with serviceData and save
+  // Sync selected announcements with serviceData
   useEffect(() => {
     setServiceData(prev => {
       if (!prev) return prev;
@@ -528,13 +790,32 @@ export default function WeeklyServiceManager() {
         selected_announcements: selectedAnnouncements
       };
     });
-    // Trigger save when announcements change
-    if (serviceData) {
-      debouncedSave('announcement-selection');
-    }
   }, [selectedAnnouncements]);
 
-  // Update handlers
+  // Central auto-save: triggers when serviceData changes
+  useEffect(() => {
+    if (!lastSavedData || !serviceData) return;
+    
+    const hasChanges = JSON.stringify(serviceData) !== JSON.stringify(lastSavedData);
+    if (!hasChanges) return;
+
+    const handler = setTimeout(() => {
+      const dataToSave = {
+        ...serviceData,
+        selected_announcements: selectedAnnouncements,
+        print_settings_page1: printSettingsPage1,
+        print_settings_page2: printSettingsPage2,
+        day_of_week: 'Sunday',
+        name: `Domingo - ${selectedDate}`,
+        status: 'active'
+      };
+      saveServiceMutation.mutate(dataToSave);
+    }, 1000); // Short delay after serviceData settles
+
+    return () => clearTimeout(handler);
+  }, [serviceData, lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate]);
+
+  // Update handlers (pure state mutation, no saves)
   const updateSegmentField = (service, segmentIndex, field, value) => {
     setServiceData(prev => {
       const updated = { ...prev };
@@ -548,7 +829,6 @@ export default function WeeklyServiceManager() {
       }
       return updated;
     });
-    debouncedSave(`${service}-${segmentIndex}-${field}`);
   };
 
   const handleOpenVerseParser = (timeSlot, segmentIdx) => {
@@ -664,7 +944,6 @@ export default function WeeklyServiceManager() {
       ...prev,
       [field]: { ...prev[field], [service]: value }
     }));
-    debouncedSave(`team-${field}-${service}`);
   };
 
 
@@ -1033,6 +1312,8 @@ Return ONLY valid JSON:
   const activePrintSettingsPage2 = isQuickPrint ? defaultPrintSettings : (printSettingsPage2 || defaultPrintSettings);
 
   return (
+    <ServiceDataContext.Provider value={serviceData}>
+      <UpdatersContext.Provider value={{ updateSegmentField, updateTeamField, setServiceData }}>
     <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -2107,23 +2388,7 @@ Return ONLY valid JSON:
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 pt-2">
-              <Textarea
-                placeholder="Instrucciones pre-servicio (opcional)..."
-                value={serviceData.pre_service_notes?.["9:30am"] || ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setServiceData(prev => ({
-                    ...prev,
-                    pre_service_notes: { 
-                      ...prev.pre_service_notes, 
-                      "9:30am": value 
-                    }
-                  }));
-                  debouncedSave('pre-service-930');
-                }}
-                className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
-                rows={2}
-              />
+              <PreServiceNotesInput service="9:30am" />
             </CardContent>
           </Card>
 
@@ -2299,12 +2564,12 @@ Return ONLY valid JSON:
                             <CardContent className="space-y-2 pt-3">
                               {segment.fields.includes("leader") && (
                                 <div className="space-y-1">
-                                  <AutocompleteInput
+                                  <SegmentAutocomplete
+                                    service="9:30am"
+                                    segmentIndex={idx}
+                                    field="leader"
                                     type="worshipLeader"
                                     placeholder="Líder / Director"
-                                    value={segment.data?.leader || ""}
-                                    onChange={(e) => updateSegmentField("9:30am", idx, "leader", e.target.value)}
-                                    className="text-sm"
                                   />
                                   <p className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded px-2 py-1">
                                     💡 Sarah Manzano o Anthony Estrella (quien esté sirviendo). Si ninguno, el Director de Banda designado.
@@ -2312,38 +2577,39 @@ Return ONLY valid JSON:
                                 </div>
                               )}
                               {segment.fields.includes("presenter") && (
-                                <AutocompleteInput
+                                <SegmentAutocomplete
+                                  service="9:30am"
+                                  segmentIndex={idx}
+                                  field="presenter"
                                   type="presenter"
                                   placeholder="Presentador"
-                                  value={segment.data?.presenter || ""}
-                                  onChange={(e) => updateSegmentField("9:30am", idx, "presenter", e.target.value)}
-                                  className="text-sm"
                                 />
                               )}
                               {segment.fields.includes("preacher") && (
-                                <AutocompleteInput
+                                <SegmentAutocomplete
+                                  service="9:30am"
+                                  segmentIndex={idx}
+                                  field="preacher"
                                   type="preacher"
                                   placeholder="Predicador"
-                                  value={segment.data?.preacher || ""}
-                                  onChange={(e) => updateSegmentField("9:30am", idx, "preacher", e.target.value)}
-                                  className="text-sm"
                                 />
                               )}
                               {segment.fields.includes("title") && (
-                                <Input
+                                <SegmentTextInput
+                                  service="9:30am"
+                                  segmentIndex={idx}
+                                  field="title"
                                   placeholder="Título del Mensaje"
-                                  value={segment.data?.title || ""}
-                                  onChange={(e) => updateSegmentField("9:30am", idx, "title", e.target.value)}
-                                  className="text-sm"
                                 />
                               )}
                               {segment.fields.includes("verse") && (
                                 <div className="space-y-1">
                                   <div className="flex gap-2">
-                                    <Input
+                                    <SegmentTextInput
+                                      service="9:30am"
+                                      segmentIndex={idx}
+                                      field="verse"
                                       placeholder="Verso / Cita Bíblica"
-                                      value={segment.data?.verse || ""}
-                                      onChange={(e) => updateSegmentField("9:30am", idx, "verse", e.target.value)}
                                       className="text-sm flex-1"
                                     />
                                     <Button
@@ -2370,30 +2636,7 @@ Return ONLY valid JSON:
                                 <div className="space-y-1">
                                   <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
                                   {segment.songs.map((song, sIdx) => (
-                                    <div key={sIdx} className="grid grid-cols-2 gap-2">
-                                      <AutocompleteInput
-                                        type="songTitle"
-                                        placeholder={`Canción ${sIdx + 1}`}
-                                        value={song.title}
-                                        onChange={(e) => {
-                                          const newSongs = [...segment.songs];
-                                          newSongs[sIdx].title = e.target.value;
-                                          updateSegmentField("9:30am", idx, "songs", newSongs);
-                                        }}
-                                        className="text-xs"
-                                      />
-                                      <AutocompleteInput
-                                        type="worshipLeader"
-                                        placeholder="Líder"
-                                        value={song.lead}
-                                        onChange={(e) => {
-                                          const newSongs = [...segment.songs];
-                                          newSongs[sIdx].lead = e.target.value;
-                                          updateSegmentField("9:30am", idx, "songs", newSongs);
-                                        }}
-                                        className="text-xs"
-                                      />
-                                    </div>
+                                    <SongInputRow key={sIdx} service="9:30am" segmentIndex={idx} songIndex={sIdx} />
                                   ))}
                                 </div>
                               )}
@@ -2406,12 +2649,12 @@ Return ONLY valid JSON:
                                       <Label className="text-xs font-semibold text-purple-800 mb-1">
                                         {subAssign.label} {subAssign.duration_min ? `(${subAssign.duration_min} min)` : ''}
                                       </Label>
-                                      <AutocompleteInput
+                                      <SegmentAutocomplete
+                                        service="9:30am"
+                                        segmentIndex={idx}
+                                        field={subAssign.person_field_name}
                                         type="person"
                                         placeholder={`Nombre para ${subAssign.label}`}
-                                        value={segment.data?.[subAssign.person_field_name] || ""}
-                                        onChange={(e) => updateSegmentField("9:30am", idx, subAssign.person_field_name, e.target.value)}
-                                        className="text-sm"
                                       />
                                     </div>
                                   ))}
@@ -2422,12 +2665,12 @@ Return ONLY valid JSON:
                               {!segment.sub_assignments?.length && segment.fields.includes("ministry_leader") && (
                                 <div className="bg-purple-50 border border-purple-200 rounded p-2">
                                   <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
-                                  <AutocompleteInput
+                                  <SegmentAutocomplete
+                                    service="9:30am"
+                                    segmentIndex={idx}
+                                    field="ministry_leader"
                                     type="ministryLeader"
                                     placeholder="Líder de Ministración"
-                                    value={segment.data?.ministry_leader || ""}
-                                    onChange={(e) => updateSegmentField("9:30am", idx, "ministry_leader", e.target.value)}
-                                    className="text-sm"
                                   />
                                 </div>
                               )}
@@ -2476,34 +2719,10 @@ Return ONLY valid JSON:
                                    </div>
                                  )}
 
-                                 <Textarea
-                                   placeholder="Notas para Coordinador"
-                                   value={segment.data?.coordinator_notes || ""}
-                                   onChange={(e) => updateSegmentField(timeSlot, idx, "coordinator_notes", e.target.value)}
-                                   className="text-xs"
-                                   rows={2}
-                                 />
-                                  <Textarea
-                                    placeholder="Notas de Proyección"
-                                    value={segment.data?.projection_notes || ""}
-                                    onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
-                                    className="text-xs"
-                                    rows={2}
-                                  />
-                                  <Textarea
-                                    placeholder="Notas de Sonido"
-                                    value={segment.data?.sound_notes || ""}
-                                    onChange={(e) => updateSegmentField(timeSlot, idx, "sound_notes", e.target.value)}
-                                    className="text-xs"
-                                    rows={2}
-                                  />
-                                  <Textarea
-                                    placeholder="Notas Generales"
-                                    value={segment.data?.description_details || ""}
-                                    onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
-                                    className="text-xs"
-                                    rows={2}
-                                  />
+                                 <SegmentTextarea service={timeSlot} segmentIndex={idx} field="coordinator_notes" placeholder="Notas para Coordinador" className="text-xs" />
+                                 <SegmentTextarea service={timeSlot} segmentIndex={idx} field="projection_notes" placeholder="Notas de Proyección" className="text-xs" />
+                                 <SegmentTextarea service={timeSlot} segmentIndex={idx} field="sound_notes" placeholder="Notas de Sonido" className="text-xs" />
+                                 <SegmentTextarea service={timeSlot} segmentIndex={idx} field="description_details" placeholder="Notas Generales" className="text-xs" />
                                 </div>
                               )}
                             </CardContent>
@@ -2522,23 +2741,7 @@ Return ONLY valid JSON:
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 pt-2">
-              <Textarea
-                placeholder="Notas del receso (opcional)..."
-                value={serviceData.receso_notes?.["9:30am"] || ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setServiceData(prev => ({
-                    ...prev,
-                    receso_notes: { 
-                      ...prev.receso_notes, 
-                      "9:30am": value 
-                    }
-                  }));
-                  debouncedSave('receso-930');
-                }}
-                className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
-                rows={2}
-              />
+              <RecesoNotesInput />
             </CardContent>
           </Card>
 
@@ -2559,10 +2762,10 @@ Return ONLY valid JSON:
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Input placeholder="Coordinador(a)" value={serviceData.coordinators?.["9:30am"] || ""} onChange={(e) => updateTeamField("coordinators", "9:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Ujieres" value={serviceData.ujieres?.["9:30am"] || ""} onChange={(e) => updateTeamField("ujieres", "9:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Sonido" value={serviceData.sound?.["9:30am"] || ""} onChange={(e) => updateTeamField("sound", "9:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Luces" value={serviceData.luces?.["9:30am"] || ""} onChange={(e) => updateTeamField("luces", "9:30am", e.target.value)} className="text-xs" />
+              <TeamInput field="coordinators" service="9:30am" placeholder="Coordinador(a)" />
+              <TeamInput field="ujieres" service="9:30am" placeholder="Ujieres" />
+              <TeamInput field="sound" service="9:30am" placeholder="Sonido" />
+              <TeamInput field="luces" service="9:30am" placeholder="Luces" />
             </CardContent>
           </Card>
         </div>
@@ -2620,23 +2823,7 @@ Return ONLY valid JSON:
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 pt-2">
-              <Textarea
-                placeholder="Instrucciones pre-servicio (opcional)..."
-                value={serviceData.pre_service_notes?.["11:30am"] || ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setServiceData(prev => ({
-                    ...prev,
-                    pre_service_notes: { 
-                      ...prev.pre_service_notes, 
-                      "11:30am": value 
-                    }
-                  }));
-                  debouncedSave('pre-service-1130');
-                }}
-                className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
-                rows={2}
-              />
+              <PreServiceNotesInput service="11:30am" />
             </CardContent>
           </Card>
 
@@ -2803,12 +2990,12 @@ Return ONLY valid JSON:
                             <CardContent className="space-y-2 pt-3">
                               {segment.fields.includes("leader") && (
                                 <div className="space-y-1">
-                                  <AutocompleteInput
+                                  <SegmentAutocomplete
+                                    service="11:30am"
+                                    segmentIndex={idx}
+                                    field="leader"
                                     type="worshipLeader"
                                     placeholder="Líder / Director"
-                                    value={segment.data?.leader || ""}
-                                    onChange={(e) => updateSegmentField("11:30am", idx, "leader", e.target.value)}
-                                    className="text-sm"
                                   />
                                   <p className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded px-2 py-1">
                                     💡 Sarah Manzano o Anthony Estrella (quien esté sirviendo). Si ninguno, el Director de Banda designado.
@@ -2816,38 +3003,39 @@ Return ONLY valid JSON:
                                 </div>
                               )}
                               {segment.fields.includes("presenter") && (
-                                <AutocompleteInput
+                                <SegmentAutocomplete
+                                  service="11:30am"
+                                  segmentIndex={idx}
+                                  field="presenter"
                                   type="presenter"
                                   placeholder="Presentador"
-                                  value={segment.data?.presenter || ""}
-                                  onChange={(e) => updateSegmentField("11:30am", idx, "presenter", e.target.value)}
-                                  className="text-sm"
                                 />
                               )}
                               {segment.fields.includes("preacher") && (
-                                <AutocompleteInput
+                                <SegmentAutocomplete
+                                  service="11:30am"
+                                  segmentIndex={idx}
+                                  field="preacher"
                                   type="preacher"
                                   placeholder="Predicador"
-                                  value={segment.data?.preacher || ""}
-                                  onChange={(e) => updateSegmentField("11:30am", idx, "preacher", e.target.value)}
-                                  className="text-sm"
                                 />
                               )}
                               {segment.fields.includes("title") && (
-                                <Input
+                                <SegmentTextInput
+                                  service="11:30am"
+                                  segmentIndex={idx}
+                                  field="title"
                                   placeholder="Título del Mensaje"
-                                  value={segment.data?.title || ""}
-                                  onChange={(e) => updateSegmentField("11:30am", idx, "title", e.target.value)}
-                                  className="text-sm"
                                 />
                               )}
                               {segment.fields.includes("verse") && (
                                 <div className="space-y-1">
                                   <div className="flex gap-2">
-                                    <Input
+                                    <SegmentTextInput
+                                      service="11:30am"
+                                      segmentIndex={idx}
+                                      field="verse"
                                       placeholder="Verso / Cita Bíblica"
-                                      value={segment.data?.verse || ""}
-                                      onChange={(e) => updateSegmentField("11:30am", idx, "verse", e.target.value)}
                                       className="text-sm flex-1"
                                     />
                                     <Button
@@ -2874,42 +3062,19 @@ Return ONLY valid JSON:
                                 <div className="space-y-1">
                                   <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
                                   {segment.songs.map((song, sIdx) => (
-                                    <div key={sIdx} className="grid grid-cols-2 gap-2">
-                                      <AutocompleteInput
-                                        type="songTitle"
-                                        placeholder={`Canción ${sIdx + 1}`}
-                                        value={song.title}
-                                        onChange={(e) => {
-                                          const newSongs = [...segment.songs];
-                                          newSongs[sIdx].title = e.target.value;
-                                          updateSegmentField("11:30am", idx, "songs", newSongs);
-                                        }}
-                                        className="text-xs"
-                                      />
-                                      <AutocompleteInput
-                                        type="worshipLeader"
-                                        placeholder="Líder"
-                                        value={song.lead}
-                                        onChange={(e) => {
-                                          const newSongs = [...segment.songs];
-                                          newSongs[sIdx].lead = e.target.value;
-                                          updateSegmentField("11:30am", idx, "songs", newSongs);
-                                        }}
-                                        className="text-xs"
-                                      />
-                                    </div>
+                                    <SongInputRow key={sIdx} service="11:30am" segmentIndex={idx} songIndex={sIdx} />
                                   ))}
                                 </div>
                               )}
                               {segment.fields.includes("translator") && segment.type === "worship" && (
                                 <div className="bg-blue-50 border border-blue-200 rounded p-2">
                                   <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) - Ministración, Anuncios, Ofrenda</Label>
-                                  <AutocompleteInput
+                                  <SegmentAutocomplete
+                                    service="11:30am"
+                                    segmentIndex={idx}
+                                    field="translator"
                                     type="translator"
                                     placeholder="Nombre del traductor"
-                                    value={segment.data?.translator || ""}
-                                    onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
-                                    className="text-sm"
                                   />
                                 </div>
                               )}
@@ -2923,12 +3088,12 @@ Return ONLY valid JSON:
                                       <Label className="text-xs font-semibold text-purple-800 mb-1">
                                         {subAssign.label} {subAssign.duration_min ? `(${subAssign.duration_min} min)` : ''}
                                       </Label>
-                                      <AutocompleteInput
+                                      <SegmentAutocomplete
+                                        service="11:30am"
+                                        segmentIndex={idx}
+                                        field={subAssign.person_field_name}
                                         type="person"
                                         placeholder={`Nombre para ${subAssign.label}`}
-                                        value={segment.data?.[subAssign.person_field_name] || ""}
-                                        onChange={(e) => updateSegmentField("11:30am", idx, subAssign.person_field_name, e.target.value)}
-                                        className="text-sm"
                                       />
                                     </div>
                                   ))}
@@ -2939,12 +3104,12 @@ Return ONLY valid JSON:
                               {!segment.sub_assignments?.length && segment.fields.includes("ministry_leader") && (
                                 <div className="bg-purple-50 border border-purple-200 rounded p-2">
                                   <Label className="text-xs font-semibold text-purple-800 mb-1">Ministración de Sanidad y Milagros (5 min)</Label>
-                                  <AutocompleteInput
+                                  <SegmentAutocomplete
+                                    service="11:30am"
+                                    segmentIndex={idx}
+                                    field="ministry_leader"
                                     type="ministryLeader"
                                     placeholder="Líder de Ministración"
-                                    value={segment.data?.ministry_leader || ""}
-                                    onChange={(e) => updateSegmentField("11:30am", idx, "ministry_leader", e.target.value)}
-                                    className="text-sm"
                                   />
                                 </div>
                               )}
@@ -2958,12 +3123,12 @@ Return ONLY valid JSON:
                               {segment.fields.includes("translator") && segment.type === "message" && (
                                 <div className="bg-blue-50 border border-blue-200 rounded p-2">
                                   <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) del Mensaje</Label>
-                                  <AutocompleteInput
+                                  <SegmentAutocomplete
+                                    service="11:30am"
+                                    segmentIndex={idx}
+                                    field="translator"
                                     type="translator"
                                     placeholder="Nombre del traductor (puede ser el mismo)"
-                                    value={segment.data?.translator || ""}
-                                    onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
-                                    className="text-sm"
                                   />
                                 </div>
                               )}
@@ -3015,43 +3180,19 @@ Return ONLY valid JSON:
                                   {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
                                     <div className="bg-blue-50 border border-blue-200 rounded p-2">
                                       <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
-                                      <AutocompleteInput
+                                      <SegmentAutocomplete
+                                        service="11:30am"
+                                        segmentIndex={idx}
+                                        field="translator"
                                         type="translator"
                                         placeholder="Auto-rellena del segmento de A&A, editable si es diferente"
-                                        value={segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || ""}
-                                        onChange={(e) => updateSegmentField("11:30am", idx, "translator", e.target.value)}
-                                        className="text-xs"
                                       />
                                     </div>
                                   )}
-                                  <Textarea
-                                    placeholder="Notas para Coordinador"
-                                    value={segment.data?.coordinator_notes || ""}
-                                    onChange={(e) => updateSegmentField(timeSlot, idx, "coordinator_notes", e.target.value)}
-                                    className="text-xs"
-                                    rows={2}
-                                  />
-                                  <Textarea
-                                    placeholder="Notas de Proyección"
-                                    value={segment.data?.projection_notes || ""}
-                                    onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
-                                    className="text-xs"
-                                    rows={2}
-                                  />
-                                  <Textarea
-                                    placeholder="Notas de Sonido"
-                                    value={segment.data?.sound_notes || ""}
-                                    onChange={(e) => updateSegmentField(timeSlot, idx, "sound_notes", e.target.value)}
-                                    className="text-xs"
-                                    rows={2}
-                                  />
-                                  <Textarea
-                                    placeholder="Notas Generales"
-                                    value={segment.data?.description_details || ""}
-                                    onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
-                                    className="text-xs"
-                                    rows={2}
-                                  />
+                                  <SegmentTextarea service={timeSlot} segmentIndex={idx} field="coordinator_notes" placeholder="Notas para Coordinador" className="text-xs" />
+                                  <SegmentTextarea service={timeSlot} segmentIndex={idx} field="projection_notes" placeholder="Notas de Proyección" className="text-xs" />
+                                  <SegmentTextarea service={timeSlot} segmentIndex={idx} field="sound_notes" placeholder="Notas de Sonido" className="text-xs" />
+                                  <SegmentTextarea service={timeSlot} segmentIndex={idx} field="description_details" placeholder="Notas Generales" className="text-xs" />
                                 </div>
                               )}
                             </CardContent>
@@ -3066,10 +3207,10 @@ Return ONLY valid JSON:
               <CardTitle className="text-sm">EQUIPO 11:30am</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Input placeholder="Coordinador(a)" value={serviceData.coordinators?.["11:30am"] || ""} onChange={(e) => updateTeamField("coordinators", "11:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Ujieres" value={serviceData.ujieres?.["11:30am"] || ""} onChange={(e) => updateTeamField("ujieres", "11:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Sonido" value={serviceData.sound?.["11:30am"] || ""} onChange={(e) => updateTeamField("sound", "11:30am", e.target.value)} className="text-xs" />
-              <Input placeholder="Luces" value={serviceData.luces?.["11:30am"] || ""} onChange={(e) => updateTeamField("luces", "11:30am", e.target.value)} className="text-xs" />
+              <TeamInput field="coordinators" service="11:30am" placeholder="Coordinador(a)" />
+              <TeamInput field="ujieres" service="11:30am" placeholder="Ujieres" />
+              <TeamInput field="sound" service="11:30am" placeholder="Sonido" />
+              <TeamInput field="luces" service="11:30am" placeholder="Luces" />
             </CardContent>
           </Card>
         </div>
@@ -3498,5 +3639,7 @@ Return ONLY valid JSON:
         </DialogContent>
       </Dialog>
     </div>
+      </UpdatersContext.Provider>
+    </ServiceDataContext.Provider>
   );
 }
