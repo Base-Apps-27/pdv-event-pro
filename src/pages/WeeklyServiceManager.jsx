@@ -1878,7 +1878,7 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.translator && (
+                  {segment.requires_translation && segment.data?.translator && (
                     <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
                       🌐 Traduce: {segment.data.translator}
                     </div>
