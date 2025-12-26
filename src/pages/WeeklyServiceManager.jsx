@@ -285,14 +285,6 @@ export default function WeeklyServiceManager() {
   
   const { t } = useLanguage();
   const [user, setUser] = useState(null);
-
-export default function WeeklyServiceManager() {
-  const navigate = useNavigate();
-  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
-  const greenStyle = { backgroundColor: '#8DC63F', color: '#ffffff' };
-  
-  const { t } = useLanguage();
-  const [user, setUser] = useState(null);
   
   // Fetch user for permissions
   useEffect(() => {
