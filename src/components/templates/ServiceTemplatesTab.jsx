@@ -84,21 +84,6 @@ export default function ServiceTemplatesTab() {
       // Ensure existing blueprint has segment arrays, populate with defaults if empty
       const populated = { ...existingBlueprint };
 
-      // Helper to merge default actions into segments
-      const mergeDefaultActions = (segments, timeSlot) => {
-        return segments.map(seg => {
-          // If actions are missing or empty, use defaults based on segment type
-          if (!seg.actions || seg.actions.length === 0) {
-            const defaultActions = DEFAULT_ACTIONS[timeSlot]?.[seg.type] || [];
-            return {
-              ...seg,
-              actions: defaultActions.map(a => ({ ...a }))
-            };
-          }
-          return seg;
-        });
-      };
-
       // Helper to merge default sub_assignments and migrate old data
       const mergeSubAssignments = (segments) => {
         return segments.map(seg => {
@@ -151,7 +136,7 @@ export default function ServiceTemplatesTab() {
           { title: "Mensaje", type: "message", duration: 45, data: {}, actions: DEFAULT_ACTIONS["9:30am"]["message"].map(a => ({ ...a })), sub_assignments: [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }] }
         ];
       } else {
-        populated["9:30am"] = mergeSubAssignments(mergeDefaultActions(populated["9:30am"], "9:30am"));
+        populated["9:30am"] = mergeSubAssignments(populated["9:30am"]);
       }
 
       if (!populated["11:30am"] || populated["11:30am"].length === 0) {
@@ -162,7 +147,7 @@ export default function ServiceTemplatesTab() {
           { title: "Mensaje", type: "message", duration: 45, data: {}, actions: DEFAULT_ACTIONS["11:30am"]["message"].map(a => ({ ...a })), sub_assignments: [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }] }
         ];
       } else {
-        populated["11:30am"] = mergeSubAssignments(mergeDefaultActions(populated["11:30am"], "11:30am"));
+        populated["11:30am"] = mergeSubAssignments(populated["11:30am"]);
       }
       
       setBlueprintData(populated);
