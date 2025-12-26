@@ -68,10 +68,10 @@ export default function ServiceTemplatesTab() {
       { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
     ],
     "11:30am": [
-      { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
-      { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [] },
-      { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: [] },
-      { title: "Mensaje", type: "message", duration: 45, data: {}, actions: [] }
+      { title: "Equipo de A&A", type: "worship", duration: 35, fields: ["leader", "songs", "ministry_leader", "translator"], songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [] },
+      { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, fields: ["presenter", "translator"], data: {}, actions: [] },
+      { title: "Ofrendas", type: "offering", duration: 5, fields: ["presenter", "verse", "translator"], data: {}, actions: [] },
+      { title: "Mensaje", type: "message", duration: 45, fields: ["preacher", "title", "verse", "translator"], data: {}, actions: [] }
     ],
     coordinators: { "9:30am": "", "11:30am": "" },
     ujieres: { "9:30am": "", "11:30am": "" },
@@ -141,10 +141,10 @@ export default function ServiceTemplatesTab() {
 
       if (!populated["11:30am"] || populated["11:30am"].length === 0) {
         populated["11:30am"] = [
-          { title: "Equipo de A&A", type: "worship", duration: 35, songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: DEFAULT_ACTIONS["11:30am"]["worship"].map(a => ({ ...a })), sub_assignments: [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }] },
-          { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, data: {}, actions: [], sub_assignments: [] },
-          { title: "Ofrendas", type: "offering", duration: 5, data: {}, actions: DEFAULT_ACTIONS["11:30am"]["offering"].map(a => ({ ...a })), sub_assignments: [] },
-          { title: "Mensaje", type: "message", duration: 45, data: {}, actions: DEFAULT_ACTIONS["11:30am"]["message"].map(a => ({ ...a })), sub_assignments: [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }] }
+          { title: "Equipo de A&A", type: "worship", duration: 35, fields: ["leader", "songs", "ministry_leader", "translator"], songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: DEFAULT_ACTIONS["11:30am"]["worship"].map(a => ({ ...a })), sub_assignments: [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }] },
+          { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, fields: ["presenter", "translator"], data: {}, actions: [], sub_assignments: [] },
+          { title: "Ofrendas", type: "offering", duration: 5, fields: ["presenter", "verse", "translator"], data: {}, actions: DEFAULT_ACTIONS["11:30am"]["offering"].map(a => ({ ...a })), sub_assignments: [] },
+          { title: "Mensaje", type: "message", duration: 45, fields: ["preacher", "title", "verse", "translator"], data: {}, actions: DEFAULT_ACTIONS["11:30am"]["message"].map(a => ({ ...a })), sub_assignments: [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }] }
         ];
       } else {
         populated["11:30am"] = mergeSubAssignments(populated["11:30am"]);

@@ -398,17 +398,17 @@ export default function WeeklyServiceManager() {
         type: "worship", 
         title: "Equipo de A&A", 
         duration: 35, 
-        fields: ["leader", "songs", "ministry_leader"],
+        fields: ["leader", "songs", "ministry_leader", "translator"],
         actions: [
           { label: "Video de introducción en FB", timing: "before_start", offset_min: 0, department: "Projection" }
         ]
       },
-      { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter"], actions: [] },
+      { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter", "translator"], actions: [] },
       { 
         type: "offering", 
         title: "Ofrendas", 
         duration: 5, 
-        fields: ["presenter", "verse"],
+        fields: ["presenter", "verse", "translator"],
         actions: [
           { label: "Enviar texto: 844-555-5555", timing: "after_start", offset_min: 0, department: "Admin" }
         ]
@@ -417,7 +417,7 @@ export default function WeeklyServiceManager() {
         type: "message", 
         title: "Mensaje", 
         duration: 45, 
-        fields: ["preacher", "title", "verse"],
+        fields: ["preacher", "title", "verse", "translator"],
         actions: [
           { label: "Pianista sube", timing: "before_end", offset_min: 15, department: "Alabanza" },
           { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }
@@ -1840,6 +1840,12 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
+                  {segment.data?.translator && (
+                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
+                      🌐 Traduce: {segment.data.translator}
+                    </div>
+                  )}
+
                   {segment.data?.title && (
                     <div className="print-segment-detail">
                       {segment.data.title}
@@ -3022,6 +3028,18 @@ Return ONLY valid JSON:
                                   {segment.songs.map((song, sIdx) => (
                                     <SongInputRow key={sIdx} service="11:30am" segmentIndex={idx} songIndex={sIdx} />
                                   ))}
+                                </div>
+                              )}
+                              {segment.fields.includes("translator") && (
+                                <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                                  <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
+                                  <SegmentAutocomplete
+                                    service="11:30am"
+                                    segmentIndex={idx}
+                                    field="translator"
+                                    type="translator"
+                                    placeholder="Nombre del traductor"
+                                  />
                                 </div>
                               )}
 
