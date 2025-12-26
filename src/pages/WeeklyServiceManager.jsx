@@ -2735,7 +2735,7 @@ Return ONLY valid JSON:
                                        {segment.actions.map((action, aIdx) => (
                                          <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
                                            <span className="font-semibold">•</span>
-                                           <span>{action.label}</span>
+                                           <span>{action?.label || ''}</span>
                                          </div>
                                        ))}
                                      </div>
