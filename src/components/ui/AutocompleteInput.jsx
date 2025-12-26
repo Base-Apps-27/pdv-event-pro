@@ -126,19 +126,17 @@ export default function AutocompleteInput({
         <div 
           className="absolute z-50 w-full mt-1 border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto" 
           style={{ 
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            color: '#111827'
           }}
         >
           {suggestions.map((suggestion, index) => (
             <div
               key={index}
+              className="px-3 py-2 cursor-pointer text-sm"
               style={{
-                padding: '0.5rem 0.75rem',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                color: index === selectedIndex ? '#ffffff' : '#111827',
-                backgroundColor: index === selectedIndex ? '#4DC15F' : '#ffffff',
-                transition: 'background-color 0.15s ease'
+                color: index === selectedIndex ? '#ffffff !important' : '#111827 !important',
+                backgroundColor: index === selectedIndex ? '#1F8A70' : '#ffffff'
               }}
               onMouseDown={(e) => {
                 e.preventDefault();
