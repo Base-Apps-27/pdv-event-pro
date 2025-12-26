@@ -398,17 +398,17 @@ export default function WeeklyServiceManager() {
         type: "worship", 
         title: "Equipo de A&A", 
         duration: 35, 
-        fields: ["leader", "songs", "ministry_leader", "translator"],
+        fields: ["leader", "songs", "ministry_leader"],
         actions: [
           { label: "Video de introducción en FB", timing: "before_start", offset_min: 0, department: "Projection" }
         ]
       },
-      { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter", "translator"], actions: [] },
+      { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter"], actions: [] },
       { 
         type: "offering", 
         title: "Ofrendas", 
         duration: 5, 
-        fields: ["presenter", "verse", "translator"],
+        fields: ["presenter", "verse"],
         actions: [
           { label: "Enviar texto: 844-555-5555", timing: "after_start", offset_min: 0, department: "Admin" }
         ]
@@ -417,7 +417,7 @@ export default function WeeklyServiceManager() {
         type: "message", 
         title: "Mensaje", 
         duration: 45, 
-        fields: ["preacher", "title", "verse", "translator"],
+        fields: ["preacher", "title", "verse"],
         actions: [
           { label: "Pianista sube", timing: "before_end", offset_min: 15, department: "Alabanza" },
           { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }
@@ -1954,11 +1954,7 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.translator && segment.type === 'worship' && (
-                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
-                      🌐 Traduce: {segment.data.translator}
-                    </div>
-                  )}
+
 
                   {segment.data?.preacher && (
                     <div className="print-segment-detail">
@@ -1972,37 +1968,7 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {(() => {
-                    const worshipSegment = serviceData?.["11:30am"]?.find(s => s.type === 'worship');
-                    const inheritedTranslator = worshipSegment?.data?.translator;
-                    const translatorToShow = segment.data?.translator || inheritedTranslator;
-                    
-                    if ((segment.type === 'welcome' || segment.type === 'offering') && translatorToShow) {
-                      return (
-                        <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
-                          🌐 Traduce: {translatorToShow}
-                        </div>
-                      );
-                    }
-                    
-                    if (segment.type === 'message' && segment.data?.translator) {
-                      return (
-                        <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
-                          🌐 Traduce: {segment.data.translator}
-                        </div>
-                      );
-                    }
-                    
-                    if (segment.type === 'special' && segment.data?.translator) {
-                      return (
-                        <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
-                          🌐 Traduce: {segment.data.translator}
-                        </div>
-                      );
-                    }
-                    
-                    return null;
-                  })()}
+
 
                   {segment.data?.title && (
                     <div className="print-segment-detail">
@@ -3058,18 +3024,7 @@ Return ONLY valid JSON:
                                   ))}
                                 </div>
                               )}
-                              {segment.fields.includes("translator") && segment.type === "worship" && (
-                                <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                                  <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) - Ministración, Anuncios, Ofrenda</Label>
-                                  <SegmentAutocomplete
-                                    service="11:30am"
-                                    segmentIndex={idx}
-                                    field="translator"
-                                    type="translator"
-                                    placeholder="Nombre del traductor"
-                                  />
-                                </div>
-                              )}
+
 
                               {/* Dynamic Sub-Assignments from Blueprint */}
                               {segment.sub_assignments && segment.sub_assignments.length > 0 && (
@@ -3106,24 +3061,7 @@ Return ONLY valid JSON:
                                 </div>
                               )}
 
-                              {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
-                                <div className="text-xs text-gray-600 italic flex items-center gap-1 mt-1">
-                                  🌐 {segment.data?.translator || serviceData["11:30am"].find(s => s.type === "worship")?.data?.translator || "Traductor por definir"}
-                                </div>
-                              )}
 
-                              {segment.fields.includes("translator") && segment.type === "message" && (
-                                <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                                  <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a) del Mensaje</Label>
-                                  <SegmentAutocomplete
-                                    service="11:30am"
-                                    segmentIndex={idx}
-                                    field="translator"
-                                    type="translator"
-                                    placeholder="Nombre del traductor (puede ser el mismo)"
-                                  />
-                                </div>
-                              )}
 
                               <Button
                                 variant="ghost"
@@ -3169,18 +3107,7 @@ Return ONLY valid JSON:
                                     </div>
                                   )}
 
-                                  {segment.fields.includes("translator") && (segment.type === "welcome" || segment.type === "offering") && (
-                                    <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                                      <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
-                                      <SegmentAutocomplete
-                                        service="11:30am"
-                                        segmentIndex={idx}
-                                        field="translator"
-                                        type="translator"
-                                        placeholder="Auto-rellena del segmento de A&A, editable si es diferente"
-                                      />
-                                    </div>
-                                  )}
+
                                   <SegmentTextarea service={timeSlot} segmentIndex={idx} field="coordinator_notes" placeholder="Notas para Coordinador" className="text-xs" />
                                   <SegmentTextarea service={timeSlot} segmentIndex={idx} field="projection_notes" placeholder="Notas de Proyección" className="text-xs" />
                                   <SegmentTextarea service={timeSlot} segmentIndex={idx} field="sound_notes" placeholder="Notas de Sonido" className="text-xs" />
