@@ -1923,11 +1923,11 @@ Return ONLY valid JSON:
                   {segment.actions && segment.actions.length > 0 && (
                     <div className="print-coordinator-actions">
                       {segment.actions.map((action, aIdx) => {
-                        const hasTimingInLabel = /\d+\s*min/i.test(action.label);
+                        const hasTimingInLabel = /\d+\s*min/i.test(action?.label || '');
                         return (
                           <div key={aIdx}>
-                            {action.label}
-                            {!hasTimingInLabel && action.timing === "before_end" && ` (${action.offset_min} min antes)`}
+                            {action?.label || ''}
+                            {!hasTimingInLabel && action?.timing === "before_end" && ` (${action?.offset_min || 0} min antes)`}
                           </div>
                         );
                       })}
@@ -2054,7 +2054,7 @@ Return ONLY valid JSON:
                     <div className="print-coordinator-actions">
                       {segment.actions.map((action, aIdx) => (
                         <div key={aIdx}>
-                          {action.label}
+                          {action?.label || ''}
                         </div>
                       ))}
                     </div>
@@ -3186,7 +3186,7 @@ Return ONLY valid JSON:
                                         {segment.actions.map((action, aIdx) => (
                                           <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
                                             <span className="font-semibold">•</span>
-                                            <span>{action.label}</span>
+                                            <span>{action?.label || ''}</span>
                                           </div>
                                         ))}
                                       </div>
