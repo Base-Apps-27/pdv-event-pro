@@ -130,7 +130,7 @@ export default function AutocompleteInput({
               className={`px-3 py-2 cursor-pointer text-sm ${
                 index === selectedIndex 
                   ? 'bg-pdv-teal text-white' 
-                  : 'hover:bg-gray-100'
+                  : 'text-gray-900 bg-white hover:bg-gray-100'
               }`}
               onMouseDown={(e) => {
                 e.preventDefault();
