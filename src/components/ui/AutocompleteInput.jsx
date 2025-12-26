@@ -136,7 +136,7 @@ export default function AutocompleteInput({
               className="px-3 py-2 cursor-pointer text-sm"
               style={{
                 color: index === selectedIndex ? '#ffffff !important' : '#111827 !important',
-                backgroundColor: index === selectedIndex ? '#1F8A70' : '#ffffff'
+                backgroundColor: index === selectedIndex ? '#8DC63F' : '#ffffff'
               }}
               onMouseDown={(e) => {
                 e.preventDefault();
