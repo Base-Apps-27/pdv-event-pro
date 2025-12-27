@@ -414,6 +414,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         }
 
         .print-footer {
+          width: 7.5in !important; /* Explicit width for print reliability */
+          left: 0.5in !important;  /* Center horizontally (8.5 - 7.5) / 2 */
+          bottom: 0.4in !important; /* Move up to safe zone */
           background-color: #1F8A70 !important;
           background-image: linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%) !important;
           -webkit-print-color-adjust: exact !important;
@@ -422,8 +425,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         }
 
         .print-footer-text {
+          background-color: transparent !important; /* Fix white box issue */
+          background: transparent !important;
           color: white !important;
           -webkit-text-fill-color: white !important;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important; /* Ensure visibility against light gradient parts */
         }
 
 
