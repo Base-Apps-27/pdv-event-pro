@@ -304,12 +304,15 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
 
             {segment.actions && segment.actions.length > 0 && (
               <View style={{ marginTop: 3 }}>
-                {segment.actions.map((action, aIdx) => (
+                {segment.actions.map((action, aIdx) => {
+                  const safeAction = typeof action === 'object' && action !== null ? action : {};
+                  return (
                   <Text key={aIdx} style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
-                    • {action.label}
-                    {action.timing === "before_end" && ` (${action.offset_min} min antes)`}
+                    • {safeAction.label || ''}
+                    {safeAction.timing === "before_end" && safeAction.offset_min ? ` (${safeAction.offset_min} min antes)` : ''}
                   </Text>
-                ))}
+                  );
+                })}
               </View>
             )}
           </View>
