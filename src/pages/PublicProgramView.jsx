@@ -888,8 +888,8 @@ export default function PublicProgramView() {
                                   <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
                                   {segment.data?.parsed_verse_data && (
                                     <Button
-                                      variant="ghost"
-                                      size="sm"
+                                      variant="outline"
+                                      size="icon"
                                       onClick={() => {
                                         setVersesModalData({
                                           parsedData: segment.data.parsed_verse_data,
@@ -897,10 +897,10 @@ export default function PublicProgramView() {
                                         });
                                         setVersesModalOpen(true);
                                       }}
-                                      className="h-6 px-2 text-xs border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+                                      className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
+                                      title="Ver Versículos"
                                     >
-                                      <BookOpen className="w-3 h-3 mr-1" />
-                                      Ver Detalles
+                                      <BookOpen className="w-3.5 h-3.5" />
                                     </Button>
                                   )}
                                 </div>
@@ -1108,8 +1108,8 @@ export default function PublicProgramView() {
                                  <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
                                  {segment.data?.parsed_verse_data && (
                                    <Button
-                                     variant="ghost"
-                                     size="sm"
+                                     variant="outline"
+                                     size="icon"
                                      onClick={() => {
                                        setVersesModalData({
                                          parsedData: segment.data.parsed_verse_data,
@@ -1117,10 +1117,10 @@ export default function PublicProgramView() {
                                        });
                                        setVersesModalOpen(true);
                                      }}
-                                     className="h-6 px-2 text-xs border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+                                     className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
+                                     title="Ver Versículos"
                                    >
-                                     <BookOpen className="w-3 h-3 mr-1" />
-                                     Ver Detalles
+                                     <BookOpen className="w-3.5 h-3.5" />
                                    </Button>
                                  )}
                                </div>
@@ -1306,8 +1306,8 @@ export default function PublicProgramView() {
                                   <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
                                   {segment.data?.parsed_verse_data && (
                                     <Button
-                                      variant="ghost"
-                                      size="sm"
+                                      variant="outline"
+                                      size="icon"
                                       onClick={() => {
                                         setVersesModalData({
                                           parsedData: segment.data.parsed_verse_data,
@@ -1315,10 +1315,10 @@ export default function PublicProgramView() {
                                         });
                                         setVersesModalOpen(true);
                                       }}
-                                      className="h-6 px-2 text-xs border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+                                      className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
+                                      title="Ver Versículos"
                                     >
-                                      <BookOpen className="w-3 h-3 mr-1" />
-                                      Ver Detalles
+                                      <BookOpen className="w-3.5 h-3.5" />
                                     </Button>
                                   )}
                                 </div>
@@ -1654,8 +1654,8 @@ export default function PublicProgramView() {
                                       <p className="text-xs text-gray-600 flex-1">📖 {segment.scripture_references}</p>
                                       {segment.parsed_verse_data && (
                                         <Button
-                                          variant="ghost"
-                                          size="sm"
+                                          variant="outline"
+                                          size="icon"
                                           onClick={() => {
                                             setVersesModalData({
                                               parsedData: segment.parsed_verse_data,
@@ -1663,10 +1663,10 @@ export default function PublicProgramView() {
                                             });
                                             setVersesModalOpen(true);
                                           }}
-                                          className="h-6 px-2 text-xs border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+                                          className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
+                                          title="Ver Versículos"
                                         >
-                                          <BookOpen className="w-3 h-3 mr-1" />
-                                          Ver Detalles
+                                          <BookOpen className="w-3.5 h-3.5" />
                                         </Button>
                                       )}
                                     </div>
@@ -1735,8 +1735,8 @@ export default function PublicProgramView() {
                                         <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.scripture_references}</p>
                                         {segment.parsed_verse_data && (
                                           <Button
-                                            variant="ghost"
-                                            size="sm"
+                                            variant="outline"
+                                            size="icon"
                                             onClick={() => {
                                               setVersesModalData({
                                                 parsedData: segment.parsed_verse_data,
@@ -1744,10 +1744,10 @@ export default function PublicProgramView() {
                                               });
                                               setVersesModalOpen(true);
                                             }}
-                                            className="h-6 px-2 text-xs border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+                                            className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
+                                            title="Ver Versículos"
                                           >
-                                            <BookOpen className="w-3 h-3 mr-1" />
-                                            Ver Detalles
+                                            <BookOpen className="w-3.5 h-3.5" />
                                           </Button>
                                         )}
                                       </div>
