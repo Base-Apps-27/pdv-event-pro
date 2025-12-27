@@ -883,9 +883,12 @@ export default function PublicProgramView() {
                                 <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
                               )}
 
-                              {segment.data?.verse && (
+                              {(segment.data?.verse || segment.data?.parsed_verse_data) && (
                                 <div className="flex items-start gap-2">
-                                  <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
+                                  {segment.data?.verse && (
+                                    <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
+                                  )}
+                                  {!segment.data?.verse && <div className="flex-1"></div>}
                                   {segment.data?.parsed_verse_data && (
                                     <Button
                                       variant="outline"
@@ -1103,9 +1106,12 @@ export default function PublicProgramView() {
                                <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
                              )}
 
-                             {segment.data?.verse && (
+                             {(segment.data?.verse || segment.data?.parsed_verse_data) && (
                                <div className="flex items-start gap-2">
-                                 <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
+                                 {segment.data?.verse && (
+                                   <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
+                                 )}
+                                 {!segment.data?.verse && <div className="flex-1"></div>}
                                  {segment.data?.parsed_verse_data && (
                                    <Button
                                      variant="outline"
@@ -1171,7 +1177,7 @@ export default function PublicProgramView() {
                                      );
                                    })}
                                  </div>
-                               </div>
+                                </div>
                              )}
                              </div>
                              </div>
@@ -1301,9 +1307,12 @@ export default function PublicProgramView() {
                                 <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
                               )}
                               
-                              {segment.data?.verse && (
+                              {(segment.data?.verse || segment.data?.parsed_verse_data) && (
                                 <div className="flex items-start gap-2">
-                                  <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
+                                  {segment.data?.verse && (
+                                    <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
+                                  )}
+                                  {!segment.data?.verse && <div className="flex-1"></div>}
                                   {segment.data?.parsed_verse_data && (
                                     <Button
                                       variant="outline"
@@ -1649,9 +1658,12 @@ export default function PublicProgramView() {
                                     <p className="text-blue-600 text-sm mt-1">{segment.presenter}</p>
                                   )}
 
-                                  {segment.scripture_references && (
+                                  {(segment.scripture_references || segment.parsed_verse_data) && (
                                     <div className="flex items-start gap-2 mt-2">
-                                      <p className="text-xs text-gray-600 flex-1">📖 {segment.scripture_references}</p>
+                                      {segment.scripture_references && (
+                                        <p className="text-xs text-gray-600 flex-1">📖 {segment.scripture_references}</p>
+                                      )}
+                                      {!segment.scripture_references && <div className="flex-1"></div>}
                                       {segment.parsed_verse_data && (
                                         <Button
                                           variant="outline"
@@ -1730,9 +1742,12 @@ export default function PublicProgramView() {
                                       </div>
                                     )}
 
-                                    {segment.scripture_references && (
+                                    {(segment.scripture_references || segment.parsed_verse_data) && (
                                       <div className="flex items-start gap-2">
-                                        <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.scripture_references}</p>
+                                        {segment.scripture_references && (
+                                          <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.scripture_references}</p>
+                                        )}
+                                        {!segment.scripture_references && <div className="flex-1"></div>}
                                         {segment.parsed_verse_data && (
                                           <Button
                                             variant="outline"
