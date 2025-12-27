@@ -814,12 +814,12 @@ export default function PublicProgramView() {
                               </div>
 
                               {segment.data?.leader && (
-                                <p className="text-lg font-bold text-pdv-green mb-2">Dirige: {segment.data.leader}</p>
+                                <p className="text-lg font-bold text-gray-800 mb-2">Dirige: {segment.data.leader}</p>
                               )}
 
                               {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
-                                <div className="bg-green-50 p-2 rounded border border-green-200 text-sm mb-2">
-                                  <p className="font-semibold text-green-800 mb-1">Canciones:</p>
+                                <div className="bg-slate-50 p-2 rounded border border-slate-200 text-sm mb-2">
+                                  <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
                                   {segment.songs.filter(s => s.title).map((song, sIdx) => (
                                     <div key={sIdx} className="text-xs">• {song.title} {song.lead && `(${song.lead})`}</div>
                                   ))}
@@ -1210,12 +1210,12 @@ export default function PublicProgramView() {
                               </div>
                               
                               {segment.data?.leader && (
-                                <p className="text-lg font-bold text-pdv-green mb-2">Dirige: {segment.data.leader}</p>
+                                <p className="text-lg font-bold text-gray-800 mb-2">Dirige: {segment.data.leader}</p>
                               )}
                               
                               {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
-                                <div className="bg-green-50 p-2 rounded border border-green-200 text-sm mb-2">
-                                  <p className="font-semibold text-green-800 mb-1">Canciones:</p>
+                                <div className="bg-slate-50 p-2 rounded border border-slate-200 text-sm mb-2">
+                                  <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
                                   {segment.songs.filter(s => s.title).map((song, sIdx) => (
                                     <div key={sIdx} className="text-xs">• {song.title} {song.lead && `(${song.lead})`}</div>
                                   ))}
@@ -1794,8 +1794,8 @@ export default function PublicProgramView() {
                                 {isExpanded && (
                                   <div className="border-t pt-3 space-y-2">
                                     {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
-                                      <div className="bg-green-50 p-2 rounded border border-green-200 text-xs">
-                                        <p className="font-semibold text-green-800 mb-1">Canciones:</p>
+                                      <div className="bg-slate-50 p-2 rounded border border-slate-200 text-xs">
+                                        <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
                                         <div className="space-y-1">
                                           {[...Array(segment.number_of_songs)].map((_, idx) => {
                                             const songNum = idx + 1;

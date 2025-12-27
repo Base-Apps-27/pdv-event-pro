@@ -1506,7 +1506,7 @@ Return ONLY valid JSON:
           }
 
           .print-name {
-            color: #16a34a;
+            color: #111827;
             font-weight: 700;
             font-size: 11pt;
           }
@@ -2740,7 +2740,7 @@ Return ONLY valid JSON:
                               )}
                               {segment.songs && (
                                 <div className="space-y-1">
-                                  <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
+                                  <Label className="text-xs font-semibold text-gray-700">Canciones</Label>
                                   {segment.songs.map((song, sIdx) => (
                                     <SongInputRow key={sIdx} service="9:30am" segmentIndex={idx} songIndex={sIdx} />
                                   ))}
@@ -3187,7 +3187,7 @@ Return ONLY valid JSON:
                               )}
                               {segment.songs && (
                                 <div className="space-y-1">
-                                  <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
+                                  <Label className="text-xs font-semibold text-gray-700">Canciones</Label>
                                   {segment.songs.map((song, sIdx) => (
                                     <SongInputRow key={sIdx} service="11:30am" segmentIndex={idx} songIndex={sIdx} />
                                   ))}
