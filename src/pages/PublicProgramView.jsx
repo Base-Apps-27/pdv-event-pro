@@ -1131,15 +1131,15 @@ export default function PublicProgramView() {
 
                              {/* Coordinator Actions */}
                              {segment.actions && segment.actions.length > 0 && (
-                               <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs mt-2">
-                                 <p className="font-bold text-amber-900 mb-1">📋 Acciones para Coordinador</p>
+                               <div className="bg-[#fffdf5] border border-yellow-100 rounded p-2 text-xs mt-2">
+                                 <p className="font-bold text-yellow-800 mb-1 opacity-75">📋 Acciones para Coordinador</p>
                                  <div className="space-y-1">
                                    {segment.actions.map((action, aIdx) => {
                                      const safeAction = typeof action === 'object' && action !== null ? action : {};
                                      return (
-                                     <div key={aIdx} className="text-amber-800">
+                                     <div key={aIdx} className="text-yellow-900 not-italic">
                                        • {safeAction.label || ''}
-                                       {safeAction.notes && <span className="italic ml-1">— {safeAction.notes}</span>}
+                                       {safeAction.notes && <span className="ml-1 opacity-75">— {safeAction.notes}</span>}
                                      </div>
                                      );
                                    })}

@@ -2833,11 +2833,11 @@ Return ONLY valid JSON:
                                  </div>
 
                                  {segment.actions && segment.actions.length > 0 && (
-                                   <div className="bg-amber-50 border border-amber-200 rounded p-2">
-                                     <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
+                                   <div className="bg-[#fffdf5] border border-yellow-100 rounded p-2">
+                                     <Label className="text-xs font-semibold text-yellow-800 mb-2 block opacity-75">⏰ Acciones para Coordinador</Label>
                                      <div className="space-y-1">
                                        {segment.actions.map((action, aIdx) => (
-                                         <div key={aIdx} className="text-xs text-amber-800 flex items-start gap-1">
+                                         <div key={aIdx} className="text-xs text-yellow-900 flex items-start gap-1">
                                            <span className="font-semibold">•</span>
                                            <span>{action?.label || ''}</span>
                                          </div>
