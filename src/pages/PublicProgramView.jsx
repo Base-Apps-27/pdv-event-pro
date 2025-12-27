@@ -1024,7 +1024,7 @@ export default function PublicProgramView() {
                                </div>
                              )}
 
-                             {segment.data?.presenter && !segment.data?.ministry_leader && (
+                             {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && (
                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
                              )}
 
@@ -1042,6 +1042,12 @@ export default function PublicProgramView() {
                                  </div>
                                );
                              })}
+
+                             {segment.requires_translation && segment.data?.translator && (
+                               <p className="text-xs text-blue-600 mt-1">
+                                 🌐 Traduce: {segment.data.translator}
+                               </p>
+                             )}
 
                              {segment.data?.title && (
                                <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
@@ -1097,19 +1103,22 @@ export default function PublicProgramView() {
                                <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs mt-2">
                                  <p className="font-bold text-amber-900 mb-1">📋 Acciones para Coordinador</p>
                                  <div className="space-y-1">
-                                   {segment.actions.map((action, aIdx) => (
+                                   {segment.actions.map((action, aIdx) => {
+                                     const safeAction = typeof action === 'object' && action !== null ? action : {};
+                                     return (
                                      <div key={aIdx} className="text-amber-800">
-                                       • {action.label || action.description || action}
-                                       {action.notes && <span className="italic ml-1">— {action.notes}</span>}
+                                       • {safeAction.label || ''}
+                                       {safeAction.notes && <span className="italic ml-1">— {safeAction.notes}</span>}
                                      </div>
-                                   ))}
+                                     );
+                                   })}
                                  </div>
                                </div>
                              )}
-                           </div>
-                         </div>
-                       </div>
-                     ))}
+                             </div>
+                             </div>
+                             </div>
+                             ))}
                     </div>
                   </div>
                 )}
@@ -1217,7 +1226,7 @@ export default function PublicProgramView() {
                                 );
                               })}
 
-                              {segment.data?.translator && (
+                              {segment.requires_translation && segment.data?.translator && (
                                 <p className="text-xs text-blue-600 mt-1">
                                   🌐 Traduce: {segment.data.translator}
                                 </p>
@@ -1277,12 +1286,15 @@ export default function PublicProgramView() {
                                 <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs mt-2">
                                   <p className="font-bold text-amber-900 mb-1">📋 Acciones para Coordinador</p>
                                   <div className="space-y-1">
-                                    {segment.actions.map((action, aIdx) => (
+                                    {segment.actions.map((action, aIdx) => {
+                                      const safeAction = typeof action === 'object' && action !== null ? action : {};
+                                      return (
                                       <div key={aIdx} className="text-amber-800">
-                                        • {action.label || action.description || action}
-                                        {action.notes && <span className="italic ml-1">— {action.notes}</span>}
+                                        • {safeAction.label || ''}
+                                        {safeAction.notes && <span className="italic ml-1">— {safeAction.notes}</span>}
                                       </div>
-                                    ))}
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               )}
