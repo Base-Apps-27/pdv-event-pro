@@ -619,18 +619,20 @@ export default function PublicProgramView() {
                 </div>
 
                 {/* Toggle Event Details */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowEventDetails(!showEventDetails)}
-                  className="mb-4 border-2 border-gray-400 bg-white text-gray-900 font-semibold"
-                >
-                  {showEventDetails ? <ChevronUp className="w-4 h-4 mr-2" /> : <ChevronDown className="w-4 h-4 mr-2" />}
-                  {showEventDetails ? 'Ocultar Detalles' : 'Ver Más Detalles'}
-                </Button>
+                {viewType === "event" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowEventDetails(!showEventDetails)}
+                    className="mb-4 border-2 border-gray-400 bg-white text-gray-900 font-semibold"
+                  >
+                    {showEventDetails ? <ChevronUp className="w-4 h-4 mr-2" /> : <ChevronDown className="w-4 h-4 mr-2" />}
+                    {showEventDetails ? 'Ocultar Detalles' : 'Ver Más Detalles'}
+                  </Button>
+                )}
 
                 {/* Expanded Details */}
-                {showEventDetails && (
+                {showEventDetails && viewType === "event" && (
                   <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
                     {viewType === "event" && selectedEvent?.description && (
                       <div>
