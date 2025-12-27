@@ -1877,7 +1877,7 @@ Return ONLY valid JSON:
 
                   {segment.data?.leader && (
                     <div className="print-segment-detail">
-                      Dirige: <span className="print-name">{segment.data.leader}</span>
+                      Dirige: <span className="print-name">{segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
@@ -1910,7 +1910,7 @@ Return ONLY valid JSON:
 
                   {segment.data?.preacher && (
                     <div className="print-segment-detail">
-                      <span className="print-name">{segment.data.preacher}</span>
+                      <span className="print-name">{segment.data.preacher.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
@@ -1935,7 +1935,7 @@ Return ONLY valid JSON:
 
                   {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && (
                     <div className="print-segment-detail">
-                      <span className="print-name">{segment.data.presenter}</span>
+                      <span className="print-name">{segment.data.presenter.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
@@ -2035,7 +2035,7 @@ Return ONLY valid JSON:
 
                   {segment.data?.leader && (
                     <div className="print-segment-detail">
-                      Dirige: <span className="print-name">{segment.data.leader}</span>
+                      Dirige: <span className="print-name">{segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
@@ -2074,7 +2074,7 @@ Return ONLY valid JSON:
 
                   {segment.data?.preacher && (
                     <div className="print-segment-detail">
-                      <span className="print-name">{segment.data.preacher}</span>
+                      <span className="print-name">{segment.data.preacher.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
@@ -2098,7 +2098,7 @@ Return ONLY valid JSON:
 
                   {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && (
                     <div className="print-segment-detail">
-                      <span className="print-name">{segment.data.presenter}</span>
+                      <span className="print-name">{segment.data.presenter.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
