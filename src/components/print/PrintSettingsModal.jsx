@@ -1038,21 +1038,24 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         <div 
           style={{
             position: 'absolute',
-            top: `${PAGE_H - marginBottomPx - FOOTER_H}px`,
+            bottom: 0,
             left: 0,
             right: 0,
             height: `${FOOTER_H}px`,
-            zIndex: 50,
+            zIndex: 9999,
             backgroundColor: '#1F8A70',
             background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             WebkitPrintColorAdjust: 'exact',
-            printColorAdjust: 'exact'
+            printColorAdjust: 'exact',
+            width: '100%',
+            overflow: 'visible',
+            borderTop: '1px solid #1F8A70'
           }}
         >
-          <span style={{ fontSize: '20px', color: 'white', fontWeight: 'bold' }}>
+          <span style={{ fontSize: '20px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative' }}>
             ¡Atrévete a cambiar!
           </span>
         </div>
@@ -1209,21 +1212,24 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         <div 
           style={{
             position: 'absolute',
-            top: `${PAGE_H - marginBottomPx - FOOTER_H}px`,
+            bottom: 0,
             left: 0,
             right: 0,
             height: `${FOOTER_H}px`,
-            zIndex: 50,
+            zIndex: 9999,
             backgroundColor: '#1F8A70',
             background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             WebkitPrintColorAdjust: 'exact',
-            printColorAdjust: 'exact'
+            printColorAdjust: 'exact',
+            width: '100%',
+            overflow: 'visible',
+            borderTop: '1px solid #1F8A70'
           }}
         >
-          <span style={{ fontSize: '20px', color: 'white', fontWeight: 'bold' }}>
+          <span style={{ fontSize: '20px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative' }}>
             ¡Atrévete a cambiar!
           </span>
         </div>
