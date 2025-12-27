@@ -531,21 +531,67 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                       </span>
                                       {seg.duration && <span style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} mins)</span>}
                                     </div>
+                                    
                                     {seg.data?.leader && (
-                                      <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>
-                                        Dirige: {seg.data.leader}
+                                      <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151', fontWeight: '700' }}>
+                                        Dirige: {seg.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}
                                       </div>
                                     )}
+                                    
+                                    {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
+                                      <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #d1d5db' }}>
+                                        {seg.songs.filter(s => s.title).map((song, sIdx) => (
+                                          <div key={sIdx} style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#374151' }}>
+                                            - {song.title} {song.lead && `(${song.lead})`}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {/* Sub-assignments */}
+                                    {seg.sub_assignments && seg.sub_assignments.map((subAssign, saIdx) => {
+                                      const personValue = seg.data?.[subAssign.person_field_name];
+                                      if (!personValue) return null;
+                                      return (
+                                        <div key={saIdx} style={{ marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #d8b4fe', fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b21a8' }}>
+                                          <strong>{subAssign.label}:</strong> <span style={{ fontWeight: '700', color: '#9333ea' }}>{personValue}</span>
+                                          {subAssign.duration_min && <span> ({subAssign.duration_min} min)</span>}
+                                        </div>
+                                      );
+                                    })}
+
+                                    {/* Legacy Ministración fallback */}
+                                    {(!seg.sub_assignments || seg.sub_assignments.length === 0) && seg.data?.ministry_leader && (
+                                      <div style={{ marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #d8b4fe', fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b21a8' }}>
+                                        <strong>Ministración:</strong> <span style={{ fontWeight: '700', color: '#9333ea' }}>{seg.data.ministry_leader}</span> (5 min)
+                                      </div>
+                                    )}
+
                                     {seg.data?.preacher && (
-                                      <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>
-                                        {seg.data.preacher}
+                                      <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '700' }}>
+                                        {seg.data.preacher.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}
                                       </div>
                                     )}
-                                    {seg.data?.presenter && !seg.data?.leader && (
-                                      <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151', fontWeight: '500' }}>
-                                        {seg.data.presenter}
+                                    
+                                    {seg.data?.preacher && seg.requires_translation && seg.data?.translator && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '2px', fontStyle: 'italic' }}>
+                                        🌐 Traduce: {seg.data.translator}
                                       </div>
                                     )}
+
+                                    {seg.data?.presenter && !seg.data?.ministry_leader && !seg.data?.preacher && !seg.data?.leader && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '700' }}>
+                                        {seg.data.presenter.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}
+                                      </div>
+                                    )}
+
+                                    {seg.data?.presenter && !seg.data?.ministry_leader && !seg.data?.preacher && !seg.data?.leader && 
+                                     seg.requires_translation && seg.data?.translator && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '2px', fontStyle: 'italic' }}>
+                                        🌐 Traduce: {seg.data.translator}
+                                      </div>
+                                    )}
+
                                     {seg.data?.title && (
                                       <div style={{ fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
                                         {seg.data.title}
@@ -556,65 +602,60 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                         📖 {seg.data.verse}
                                       </div>
                                     )}
-                                    {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
-                                      <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
-                                        {seg.songs.filter(s => s.title).map((song, sIdx) => (
-                                          <div key={sIdx} style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
-                                            - {song.title} {song.lead && `(${song.lead})`}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                    {seg.data?.ministry_leader && (
-                                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px' }}>
-                                        • Ministración: {seg.data.ministry_leader} (5 min)
-                                      </div>
-                                    )}
-                                    {seg.data?.translator && (
-                                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '2px' }}>
-                                        🌐 {seg.data.translator}
-                                      </div>
-                                    )}
+                                    
+                                    {/* Description / Details */}
                                     {seg.data?.description && (
-                                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '3px' }}>
+                                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#14532d', background: '#f0fdf4', borderLeft: '4px solid #16a34a', padding: '4px 8px', marginTop: '4px' }}>
                                         {seg.data.description}
                                       </div>
                                     )}
                                     {seg.data?.description_details && (
-                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #9ca3af' }}>
-                                        📝 {seg.data.description_details}
+                                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#14532d', background: '#f0fdf4', borderLeft: '4px solid #16a34a', padding: '4px 8px', marginTop: '4px' }}>
+                                        <strong>📝 Notas:</strong> {seg.data.description_details}
                                       </div>
                                     )}
-                                    {seg.data?.general_notes && (
-                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #9ca3af' }}>
-                                        ℹ️ {seg.data.general_notes}
+                                    
+                                    {/* Coordinator Notes */}
+                                    {seg.data?.coordinator_notes && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#92400e', background: '#fffbeb', borderLeft: '1px solid #fcd34d', padding: '2px 4px', marginTop: '2px', fontStyle: 'italic' }}>
+                                        <strong>📋 Coordinador:</strong> {seg.data.coordinator_notes}
+                                      </div>
+                                    )}
+
+                                    {/* Team Notes */}
+                                    {seg.data?.sound_notes && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#991b1b', marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #dc2626' }}>
+                                        <strong>🔊 Sonido:</strong> {seg.data.sound_notes}
                                       </div>
                                     )}
                                     {seg.data?.projection_notes && (
-                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#8b5cf6', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #8b5cf6' }}>
-                                        📽️ {seg.data.projection_notes}
-                                      </div>
-                                    )}
-                                    {seg.data?.sound_notes && (
-                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#dc2626', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #dc2626' }}>
-                                        🔊 {seg.data.sound_notes}
+                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#1e40af', marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #2563eb' }}>
+                                        <strong>📽️ Proyección:</strong> {seg.data.projection_notes}
                                       </div>
                                     )}
                                     {seg.data?.ushers_notes && (
-                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#16a34a', marginTop: '3px', paddingLeft: '4px', borderLeft: '2px solid #16a34a' }}>
-                                        👥 {seg.data.ushers_notes}
+                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#14532d', marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #16a34a' }}>
+                                        <strong>🚪 Ujieres:</strong> {seg.data.ushers_notes}
                                       </div>
                                     )}
+                                    {seg.data?.translation_notes && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#581c87', marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #9333ea' }}>
+                                        <strong>🌐 Traducción:</strong> {seg.data.translation_notes}
+                                      </div>
+                                    )}
+                                    {seg.data?.stage_decor_notes && (
+                                      <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#701a75', marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #c026d3' }}>
+                                        <strong>🎨 Stage:</strong> {seg.data.stage_decor_notes}
+                                      </div>
+                                    )}
+
                                     {/* Coordinator Actions */}
-                                    {seg.actions && seg.actions.filter(a => a.department === 'Coordinador' || a.department === 'Admin').length > 0 && (
-                                      <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #fbbf24' }}>
-                                        <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, fontWeight: '700', color: '#f59e0b', marginBottom: '4px' }}>
-                                          📋 Acciones Coordinador
-                                        </div>
-                                        {seg.actions.filter(a => a.department === 'Coordinador' || a.department === 'Admin').map((action, aIdx) => (
-                                          <div key={aIdx} style={{ fontSize: `${BASE_BODY * 0.76 * page1Settings.bodyFontScale}px`, color: '#92400e', marginBottom: '2px', paddingLeft: '8px' }}>
-                                            • {action.label}
-                                            {action.notes && <span style={{ fontStyle: 'italic' }}> — {action.notes}</span>}
+                                    {seg.actions && seg.actions.length > 0 && (
+                                      <div style={{ marginTop: '4px', padding: '3px 6px', background: '#fffdf5', border: '1px solid #fef3c7', borderRadius: '2px' }}>
+                                        {seg.actions.map((action, aIdx) => (
+                                          <div key={aIdx} style={{ fontSize: `${BASE_BODY * 0.76 * page1Settings.bodyFontScale}px`, color: '#78350f', lineHeight: 1.2 }}>
+                                            {action.label}
+                                            {action.timing === 'before_end' && !/\d+\s*min/i.test(action.label || '') && ` (${action.offset_min || 0} min antes)`}
                                           </div>
                                         ))}
                                       </div>
