@@ -883,12 +883,14 @@ export default function PublicProgramView() {
                                 <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
                               )}
 
-                              {(segment.data?.verse || segment.data?.parsed_verse_data) && (
-                                <div className="flex items-start gap-2">
-                                  {segment.data?.verse && (
-                                    <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
+                              {/* Verse Display - Prioritized for Messages */}
+                              {(segment.data?.verse || (segment.data?.parsed_verse_data && (segment.type === 'message' || segment.title === 'Mensaje' || segment.title === 'Message'))) && (
+                                <div className="flex items-start gap-2 mb-2">
+                                  {segment.data?.verse ? (
+                                    <p className="text-xs text-gray-600 flex-1">📖 {segment.data.verse}</p>
+                                  ) : (
+                                    <div className="flex-1"></div>
                                   )}
-                                  {!segment.data?.verse && <div className="flex-1"></div>}
                                   {segment.data?.parsed_verse_data && (
                                     <Button
                                       variant="outline"
@@ -900,7 +902,7 @@ export default function PublicProgramView() {
                                         });
                                         setVersesModalOpen(true);
                                       }}
-                                      className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
+                                      className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0 bg-white"
                                       title="Ver Versículos"
                                     >
                                       <BookOpen className="w-3.5 h-3.5" />
@@ -1307,12 +1309,14 @@ export default function PublicProgramView() {
                                 <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
                               )}
                               
-                              {(segment.data?.verse || segment.data?.parsed_verse_data) && (
-                                <div className="flex items-start gap-2">
-                                  {segment.data?.verse && (
-                                    <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
+                              {/* Verse Display - Prioritized for Messages */}
+                              {(segment.data?.verse || (segment.data?.parsed_verse_data && (segment.type === 'message' || segment.title === 'Mensaje' || segment.title === 'Message'))) && (
+                                <div className="flex items-start gap-2 mb-2">
+                                  {segment.data?.verse ? (
+                                    <p className="text-xs text-gray-600 flex-1">📖 {segment.data.verse}</p>
+                                  ) : (
+                                    <div className="flex-1"></div>
                                   )}
-                                  {!segment.data?.verse && <div className="flex-1"></div>}
                                   {segment.data?.parsed_verse_data && (
                                     <Button
                                       variant="outline"
@@ -1324,7 +1328,7 @@ export default function PublicProgramView() {
                                         });
                                         setVersesModalOpen(true);
                                       }}
-                                      className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
+                                      className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0 bg-white"
                                       title="Ver Versículos"
                                     >
                                       <BookOpen className="w-3.5 h-3.5" />
