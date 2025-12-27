@@ -2503,38 +2503,7 @@ Return ONLY valid JSON:
             <span className="hidden md:inline">{t('btn.live_view')}</span>
           </Button>
           
-          <Button 
-            onClick={async () => {
-              if (confirm('¿Ejecutar limpieza de datos corruptos en todos los servicios? Esto eliminará las acciones incorrectas en segmentos especiales.')) {
-                try {
-                  const res = await base44.functions.invoke('cleanCorruptedSegments');
-                  if (res.data.success) {
-                    const msg = res.data.cleaned_count > 0 
-                      ? `¡Éxito! ${res.data.cleaned_count} servicios corregidos.` 
-                      : `No se encontraron correcciones necesarias. (Revisado: ${res.data.inspection_sample?.length || 0} segmentos especiales)`;
-                    
-                    alert(msg);
-                    console.log("Cleanup Logs:", res.data);
-                    
-                    if (res.data.cleaned_count > 0) {
-                      queryClient.invalidateQueries(['weeklyService']);
-                      window.location.reload();
-                    }
-                  } else {
-                    alert('Error en la limpieza: ' + res.data.error);
-                  }
-                } catch (e) {
-                  alert('Error al invocar la limpieza: ' + e.message);
-                }
-              }
-            }}
-            variant="outline"
-            className="border-2 border-orange-400 bg-white text-orange-900 hover:bg-orange-50 font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
-            title="Reparar datos corruptos"
-          >
-            <Wand2 className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
-            <span className="hidden md:inline">Fix Data</span>
-          </Button>
+
 
           <Button 
             onClick={handleQuickPrint}
