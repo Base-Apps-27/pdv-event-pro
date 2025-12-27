@@ -2185,12 +2185,6 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.coordinator_notes && (
-                    <div className="print-note-segment-coordinator">
-                      <strong>📋 Coordinador:</strong> {segment.data.coordinator_notes}
-                    </div>
-                  )}
-
                   {segment.data?.projection_notes && (
                     <div className="print-note-projection-team">
                       <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
@@ -2675,6 +2669,13 @@ Return ONLY valid JSON:
                                  />
                                </div>
                                <Textarea
+                                 placeholder="Notas para Coordinador"
+                                 value={segment.data?.coordinator_notes || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "coordinator_notes", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                               <Textarea
                                  placeholder="Notas de Proyección"
                                  value={segment.data?.projection_notes || ""}
                                  onChange={(e) => updateSegmentField(timeSlot, idx, "projection_notes", e.target.value)}
@@ -3130,6 +3131,13 @@ Return ONLY valid JSON:
                                    className="text-xs w-24"
                                  />
                                </div>
+                               <Textarea
+                                 placeholder="Notas para Coordinador"
+                                 value={segment.data?.coordinator_notes || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "coordinator_notes", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
                                <Textarea
                                  placeholder="Notas de Proyección"
                                  value={segment.data?.projection_notes || ""}
