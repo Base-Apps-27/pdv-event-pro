@@ -1993,6 +1993,12 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
+                  {segment.data?.leader && segment.requires_translation && segment.data?.translator && !leaderHasTranslation && (
+                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
+                      🌐 Traduce: {segment.data.translator}
+                    </div>
+                  )}
+
                   {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
                     <div className="print-segment-songs">
                       {segment.songs.filter(s => s.title).map((song, sIdx) => (
@@ -2020,16 +2026,13 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-
-
                   {segment.data?.preacher && (
                     <div className="print-segment-detail">
                       <span className="print-name">{segment.data.preacher}</span>
                     </div>
                   )}
 
-                  {segment.data?.preacher && segment.requires_translation && segment.data?.translator && 
-                   !/(trad|traduc)/i.test(segment.data?.preacher || '') && (
+                  {segment.data?.preacher && segment.requires_translation && segment.data?.translator && !preacherHasTranslation && (
                     <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
                       🌐 Traduce: {segment.data.translator}
                     </div>
@@ -2054,8 +2057,7 @@ Return ONLY valid JSON:
                   )}
 
                   {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && 
-                   segment.requires_translation && segment.data?.translator && 
-                   !/(trad|traduc)/i.test(segment.data?.presenter || '') && (
+                   segment.requires_translation && segment.data?.translator && !presenterHasTranslation && (
                     <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
                       🌐 Traduce: {segment.data.translator}
                     </div>
