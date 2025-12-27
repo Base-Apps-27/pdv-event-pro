@@ -830,7 +830,7 @@ export default function PublicProgramView() {
                                 <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
                               )}
 
-                              {segment.data?.presenter && segment.requires_translation && segment.data?.translator && (
+                              {segment.data?.presenter && segment.requires_translation && segment.data?.translator && !/(trad|traduc)/i.test(segment.data?.presenter || '') && (
                                 <p className="text-sm text-blue-600 mb-2 ml-4">
                                   🌐 Traduce: {segment.data.translator}
                                 </p>
@@ -840,7 +840,7 @@ export default function PublicProgramView() {
                                 <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
                               )}
 
-                              {segment.data?.preacher && segment.requires_translation && segment.data?.translator && (
+                              {segment.data?.preacher && segment.requires_translation && segment.data?.translator && !/(trad|traduc)/i.test(segment.data?.preacher || '') && (
                                 <p className="text-sm text-blue-600 mb-2 ml-4">
                                   🌐 Traduce: {segment.data.translator}
                                 </p>
@@ -969,7 +969,9 @@ export default function PublicProgramView() {
                     <div className="bg-gradient-to-r from-red-50 to-white p-4 border-b">
                       <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 A.M.</h3>
                       {actualServiceData.pre_service_notes?.["9:30am"] && (
-                        <p className="text-sm text-gray-600 italic mt-2">{actualServiceData.pre_service_notes["9:30am"]}</p>
+                        <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
+                          <p className="text-sm text-green-900 font-medium italic">{actualServiceData.pre_service_notes["9:30am"]}</p>
+                        </div>
                       )}
                       {/* Team Info - Compact */}
                       {(actualServiceData.coordinators?.["9:30am"] || actualServiceData.ujieres?.["9:30am"] || actualServiceData.sound?.["9:30am"] || actualServiceData.luces?.["9:30am"]) && (
@@ -1043,7 +1045,7 @@ export default function PublicProgramView() {
                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
                              )}
 
-                             {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && segment.requires_translation && segment.data?.translator && (
+                             {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && segment.requires_translation && segment.data?.translator && !/(trad|traduc)/i.test(segment.data?.presenter || '') && (
                                <p className="text-sm text-blue-600 mb-2 ml-4">
                                  🌐 Traduce: {segment.data.translator}
                                </p>
@@ -1098,13 +1100,17 @@ export default function PublicProgramView() {
                              )}
 
                              {segment.data?.description && (
-                               <p className="text-xs text-gray-600 mt-2 italic">{segment.data.description}</p>
+                               <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
+                                 <p className="text-xs text-green-900 font-medium">{segment.data.description}</p>
+                               </div>
                              )}
 
                              {segment.data?.description_details && (
-                               <p className="text-xs text-gray-600 mt-2">
-                                 <strong>📝 Notas:</strong> {segment.data.description_details}
-                               </p>
+                               <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
+                                 <p className="text-xs text-green-900 font-medium">
+                                   <strong>📝 Notas:</strong> {segment.data.description_details}
+                                 </p>
+                               </div>
                              )}
 
                              {segment.data?.projection_notes && (
@@ -1158,7 +1164,9 @@ export default function PublicProgramView() {
                     <div className="bg-gradient-to-r from-blue-50 to-white p-4 border-b">
                       <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 A.M.</h3>
                       {actualServiceData.pre_service_notes?.["11:30am"] && (
-                        <p className="text-sm text-gray-600 italic mt-2">{actualServiceData.pre_service_notes["11:30am"]}</p>
+                        <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
+                          <p className="text-sm text-gray-600 font-medium italic">{actualServiceData.pre_service_notes["11:30am"]}</p>
+                        </div>
                       )}
                       {/* Team Info - Compact */}
                       {(actualServiceData.coordinators?.["11:30am"] || actualServiceData.ujieres?.["11:30am"] || actualServiceData.sound?.["11:30am"] || actualServiceData.luces?.["11:30am"]) && (
@@ -1695,15 +1703,15 @@ export default function PublicProgramView() {
 
                                 {/* Prep Actions (show for Coordinador too) */}
                                 {prepActions.length > 0 && (
-                                  <div className="bg-amber-50 border border-amber-200 rounded p-3">
-                                    <p className="font-bold text-amber-900 text-sm mb-2">⚠ PREPARACIÓN</p>
+                                  <div className="bg-gray-50 border border-gray-200 rounded p-3">
+                                    <p className="font-bold text-gray-700 text-sm mb-2">⚠ PREPARACIÓN</p>
                                     <div className="space-y-1">
                                       {prepActions.map((action, idx) => {
                                         const showForCoord = viewMode === "simple" || action.department === "Coordinador" || action.department === "Admin";
                                         if (viewMode === "simple" && !showForCoord) return null;
                                         
                                         return (
-                                          <div key={idx} className={`text-xs px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}>
+                                          <div key={idx} className="text-xs px-2 py-1 rounded border border-gray-200 bg-white text-gray-600">
                                             <span className="font-bold">[{action.department}]</span> {action.label}
                                             {action.offset_min !== undefined && (
                                               <span className="italic ml-1">({action.offset_min}m antes)</span>
@@ -1718,15 +1726,15 @@ export default function PublicProgramView() {
 
                                 {/* During Actions (show for Coordinador too) */}
                                 {duringActions.length > 0 && (
-                                  <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                                    <p className="font-bold text-blue-900 text-sm mb-2">▶ DURANTE SEGMENTO</p>
+                                  <div className="bg-gray-50 border border-gray-200 rounded p-3">
+                                    <p className="font-bold text-gray-700 text-sm mb-2">▶ DURANTE SEGMENTO</p>
                                     <div className="space-y-1">
                                       {duringActions.map((action, idx) => {
                                         const showForCoord = viewMode === "simple" || action.department === "Coordinador" || action.department === "Admin";
                                         if (viewMode === "simple" && !showForCoord) return null;
                                         
                                         return (
-                                          <div key={idx} className={`text-xs px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}>
+                                          <div key={idx} className="text-xs px-2 py-1 rounded border border-gray-200 bg-white text-gray-600">
                                             <span className="font-bold">[{action.department}]</span> {action.label}
                                             {action.notes && <span className="ml-1">— {action.notes}</span>}
                                           </div>
@@ -1739,33 +1747,33 @@ export default function PublicProgramView() {
                                 {/* Team Notes */}
                                 <div className="grid md:grid-cols-2 gap-2">
                                   {segment.projection_notes && (
-                                    <div className="bg-purple-50 p-2 rounded border border-purple-200 text-xs">
+                                    <div className="border-l-4 border-purple-500 pl-3 py-1 text-xs">
                                       <span className="font-bold text-purple-800">PROYECCIÓN:</span>
-                                      <p className="mt-1">{segment.projection_notes}</p>
+                                      <p className="mt-1 text-purple-900">{segment.projection_notes}</p>
                                     </div>
                                   )}
                                   {segment.sound_notes && (
-                                    <div className="bg-red-50 p-2 rounded border border-red-200 text-xs">
+                                    <div className="border-l-4 border-red-500 pl-3 py-1 text-xs">
                                       <span className="font-bold text-red-800">SONIDO:</span>
-                                      <p className="mt-1">{segment.sound_notes}</p>
+                                      <p className="mt-1 text-red-900">{segment.sound_notes}</p>
                                     </div>
                                   )}
                                   {segment.ushers_notes && (
-                                    <div className="bg-green-50 p-2 rounded border border-green-200 text-xs">
+                                    <div className="border-l-4 border-green-500 pl-3 py-1 text-xs">
                                       <span className="font-bold text-green-800">UJIERES:</span>
-                                      <p className="mt-1">{segment.ushers_notes}</p>
+                                      <p className="mt-1 text-green-900">{segment.ushers_notes}</p>
                                     </div>
                                   )}
                                   {segment.translation_notes && (
-                                    <div className="bg-blue-50 p-2 rounded border border-blue-200 text-xs">
+                                    <div className="border-l-4 border-blue-500 pl-3 py-1 text-xs">
                                       <span className="font-bold text-blue-800">TRADUCCIÓN:</span>
-                                      <p className="mt-1">{segment.translation_notes}</p>
+                                      <p className="mt-1 text-blue-900">{segment.translation_notes}</p>
                                     </div>
                                   )}
                                   {segment.stage_decor_notes && (
-                                    <div className="bg-purple-50 p-2 rounded border border-purple-200 text-xs">
+                                    <div className="border-l-4 border-purple-500 pl-3 py-1 text-xs">
                                       <span className="font-bold text-purple-800">STAGE & DECOR:</span>
-                                      <p className="mt-1">{segment.stage_decor_notes}</p>
+                                      <p className="mt-1 text-purple-900">{segment.stage_decor_notes}</p>
                                     </div>
                                   )}
                                 </div>
