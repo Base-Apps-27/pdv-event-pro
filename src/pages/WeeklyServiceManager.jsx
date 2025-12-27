@@ -2067,6 +2067,12 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
+                  {segment.data?.coordinator_notes && (
+                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#f59e0b', marginTop: '2pt' }}>
+                      <strong>📋 Coordinador:</strong> {segment.data.coordinator_notes}
+                    </div>
+                  )}
+
                   {segment.data?.projection_notes && (
                     <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#7c3aed', marginTop: '2pt' }}>
                       <strong>📽️ Proyección:</strong> {segment.data.projection_notes}

@@ -830,8 +830,20 @@ export default function PublicProgramView() {
                                 <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
                               )}
 
+                              {segment.data?.presenter && segment.requires_translation && segment.data?.translator && (
+                                <p className="text-sm text-blue-600 mb-2 ml-4">
+                                  🌐 Traduce: {segment.data.translator}
+                                </p>
+                              )}
+
                               {segment.data?.preacher && (
                                 <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
+                              )}
+
+                              {segment.data?.preacher && segment.requires_translation && segment.data?.translator && (
+                                <p className="text-sm text-blue-600 mb-2 ml-4">
+                                  🌐 Traduce: {segment.data.translator}
+                                </p>
                               )}
 
                               {/* Cierre sub-assignment (shown after speaker) */}
@@ -1031,8 +1043,20 @@ export default function PublicProgramView() {
                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
                              )}
 
+                             {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && segment.requires_translation && segment.data?.translator && (
+                               <p className="text-sm text-blue-600 mb-2 ml-4">
+                                 🌐 Traduce: {segment.data.translator}
+                               </p>
+                             )}
+
                              {segment.data?.preacher && (
                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
+                             )}
+
+                             {segment.data?.preacher && segment.requires_translation && segment.data?.translator && (
+                               <p className="text-sm text-blue-600 mb-2 ml-4">
+                                 🌐 Traduce: {segment.data.translator}
+                               </p>
                              )}
 
                              {/* Cierre sub-assignment (shown after speaker) */}
@@ -1045,12 +1069,6 @@ export default function PublicProgramView() {
                                  </div>
                                );
                              })}
-
-                             {segment.requires_translation && segment.data?.translator && (
-                               <p className="text-xs text-blue-600 mt-1">
-                                 🌐 Traduce: {segment.data.translator}
-                               </p>
-                             )}
 
                              {segment.data?.title && (
                                <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
