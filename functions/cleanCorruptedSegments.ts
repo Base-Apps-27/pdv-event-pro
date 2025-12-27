@@ -4,9 +4,10 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   
   try {
-    const services = await base44.entities.Service.list(100); // Fetch recent services
+    const services = await base44.entities.Service.list(100);
     const updates = [];
-    const log = [];
+    const logs = [];
+    const inspection = []; // Log what we see in special segments
 
     for (const service of services) {
       let isDirty = false;
@@ -17,17 +18,34 @@ Deno.serve(async (req) => {
 
         const originalSegments = service[timeSlot];
         const cleanedSegments = originalSegments.map(seg => {
-          // Check for Special segments
-          const isSpecial = ['special', 'Special', 'Especial'].includes(seg.type) || 
-                            ['special', 'Special', 'Especial'].includes(seg.segment_type);
+          // Robust check for Special type
+          const type = (seg.type || seg.segment_type || '').toLowerCase().trim();
+          const isSpecial = type === 'special' || type === 'especial';
 
-          if (isSpecial && seg.actions && Array.isArray(seg.actions)) {
+          if (isSpecial && seg.actions && Array.isArray(seg.actions) && seg.actions.length > 0) {
+            
+            // Log what we found for debugging
+            inspection.push({
+              service: service.name,
+              slot: timeSlot,
+              actions: seg.actions.map(a => a.label)
+            });
+
             const originalActionCount = seg.actions.length;
             
-            // Filter out the specific corrupted actions from Blueprint merging
+            // BROADER FILTER:
+            // The corruption comes from "Message" segment blueprint.
+            // Typical Message actions: "Pianista sube...", "Equipo de A&A sube..."
+            // We will filter based on broader keywords that shouldn't be auto-inherited.
             const cleanActions = seg.actions.filter(action => {
               const label = (action.label || '').toLowerCase();
-              return !label.includes('pianista sube') && !label.includes('equipo de a&a sube');
+              
+              // Dangerous keywords that mark the corrupted blueprint actions
+              const isPianist = label.includes('pianista');
+              const isAA = label.includes('a&a') || label.includes('equipo de a&a');
+              
+              // If it matches these specific blueprint signatures, remove it
+              return !(isPianist || isAA);
             });
 
             if (cleanActions.length !== originalActionCount) {
@@ -44,21 +62,17 @@ Deno.serve(async (req) => {
       }
 
       if (isDirty) {
-        // Perform update
         await base44.entities.Service.update(service.id, updatesForService);
-        updates.push({
-          id: service.id,
-          name: service.name,
-          date: service.date
-        });
-        log.push(`Cleaned service: ${service.name} (${service.date})`);
+        updates.push({ id: service.id, name: service.name });
+        logs.push(`Cleaned ${service.name} (${service.date})`);
       }
     }
 
     return new Response(JSON.stringify({
       success: true,
       cleaned_count: updates.length,
-      details: log
+      logs: logs,
+      inspection_sample: inspection.slice(0, 10) // Show us what actions special segments have
     }), {
       headers: { "Content-Type": "application/json" },
     });
