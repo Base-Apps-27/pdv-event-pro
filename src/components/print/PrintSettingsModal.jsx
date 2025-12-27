@@ -564,6 +564,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                         <div key={saIdx} style={{ marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #d8b4fe', fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b21a8' }}>
                                           <strong>{subAssign.label}:</strong> <span style={{ fontWeight: '700', color: '#9333ea' }}>{personValue}</span>
                                           {subAssign.duration_min && <span> ({subAssign.duration_min} min)</span>}
+                                          {seg.requires_translation && seg.data?.translator && (
+                                            <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280', marginTop: '1px', fontStyle: 'italic' }}>
+                                              🌐 Traduce: {seg.data.translator}
+                                            </div>
+                                          )}
                                         </div>
                                       );
                                     })}
