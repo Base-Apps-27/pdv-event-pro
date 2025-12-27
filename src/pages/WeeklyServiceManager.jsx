@@ -1529,6 +1529,12 @@ Return ONLY valid JSON:
             font-size: 11pt;
           }
 
+          .print-name-blue {
+            color: #2563eb;
+            font-weight: 700;
+            font-size: 11pt;
+          }
+
           .print-sub-assignment {
             margin-top: 2pt;
             padding-left: 6pt;
