@@ -425,11 +425,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         }
 
         .print-footer-text {
-          background-color: transparent !important; /* Fix white box issue */
+          background-color: transparent !important;
           background: transparent !important;
           color: white !important;
           -webkit-text-fill-color: white !important;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important; /* Ensure visibility against light gradient parts */
+          text-shadow: none !important;
         }
 
 
