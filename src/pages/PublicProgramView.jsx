@@ -843,7 +843,11 @@ export default function PublicProgramView() {
                                 <div className="bg-slate-50 p-2 rounded border border-slate-200 text-sm mb-2">
                                   <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
                                   {segment.songs.filter(s => s.title).map((song, sIdx) => (
-                                    <div key={sIdx} className="text-xs">• {song.title} {song.lead && `(${song.lead})`}</div>
+                                    <div key={sIdx} className="text-xs flex items-center gap-1">
+                                      <span>• {song.title}</span>
+                                      {song.lead && <span className="text-gray-600">({song.lead})</span>}
+                                      {song.key && <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">{song.key}</Badge>}
+                                    </div>
                                   ))}
                                 </div>
                               )}
@@ -1257,7 +1261,11 @@ export default function PublicProgramView() {
                                 <div className="bg-slate-50 p-2 rounded border border-slate-200 text-sm mb-2">
                                   <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
                                   {segment.songs.filter(s => s.title).map((song, sIdx) => (
-                                    <div key={sIdx} className="text-xs">• {song.title} {song.lead && `(${song.lead})`}</div>
+                                    <div key={sIdx} className="text-xs flex items-center gap-1">
+                                      <span>• {song.title}</span>
+                                      {song.lead && <span className="text-gray-600">({song.lead})</span>}
+                                      {song.key && <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">{song.key}</Badge>}
+                                    </div>
                                   ))}
                                 </div>
                               )}
