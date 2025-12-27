@@ -1506,9 +1506,29 @@ Return ONLY valid JSON:
           }
 
           .print-name {
-            color: #111827;
+            color: #374151; /* Gray-700 to match Live View leader style */
             font-weight: 700;
             font-size: 11pt;
+          }
+          
+          .print-name-blue {
+            color: #2563eb;
+            font-weight: 700;
+            font-size: 11pt;
+          }
+
+          .print-name-purple {
+            color: #9333ea;
+            font-weight: 700;
+            font-size: 11pt;
+          }
+
+          .print-sub-assignment {
+            margin-top: 2pt;
+            padding-left: 6pt;
+            border-left: 3pt solid #d8b4fe;
+            color: #6b21a8;
+            font-size: 10pt;
           }
 
           .print-duration {
@@ -1924,8 +1944,8 @@ Return ONLY valid JSON:
                     const personValue = segment.data?.[subAssign.person_field_name];
                     if (!personValue) return null;
                     return (
-                      <div key={saIdx} className="print-segment-detail">
-                        • {subAssign.label}: <span className="print-name">{personValue}</span>
+                      <div key={saIdx} className="print-sub-assignment">
+                        <strong>{subAssign.label}:</strong> <span className="print-name-purple">{personValue}</span>
                         {subAssign.duration_min && <span className="print-duration"> ({subAssign.duration_min} min)</span>}
                       </div>
                     );
@@ -1933,14 +1953,14 @@ Return ONLY valid JSON:
                   
                   {/* Legacy fallback for old ministry_leader field */}
                   {(!segment.sub_assignments || segment.sub_assignments.length === 0) && segment.data?.ministry_leader && (
-                    <div className="print-segment-detail">
-                      • Ministración: <span className="print-name">{segment.data.ministry_leader}</span> <span className="print-duration">(5 min)</span>
+                    <div className="print-sub-assignment">
+                      <strong>Ministración:</strong> <span className="print-name-purple">{segment.data.ministry_leader}</span> <span className="print-duration">(5 min)</span>
                     </div>
                   )}
 
                   {segment.data?.preacher && (
                     <div className="print-segment-detail">
-                      <span className="print-name">{segment.data.preacher.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
+                      <span className="print-name-blue">{segment.data.preacher.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
@@ -1955,8 +1975,8 @@ Return ONLY valid JSON:
                     const personValue = segment.data?.[subAssign.person_field_name];
                     if (!personValue) return null;
                     return (
-                      <div key={saIdx} className="print-segment-detail">
-                        • {subAssign.label}: <span className="print-name">{personValue}</span>
+                      <div key={saIdx} className="print-sub-assignment">
+                        <strong>{subAssign.label}:</strong> <span className="print-name-purple">{personValue}</span>
                         {subAssign.duration_min && <span className="print-duration"> ({subAssign.duration_min} min)</span>}
                       </div>
                     );
@@ -1964,7 +1984,7 @@ Return ONLY valid JSON:
 
                   {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && (
                     <div className="print-segment-detail">
-                      <span className="print-name">{segment.data.presenter.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
+                      <span className="print-name-blue">{segment.data.presenter.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
@@ -2128,8 +2148,8 @@ Return ONLY valid JSON:
                     const personValue = segment.data?.[subAssign.person_field_name];
                     if (!personValue) return null;
                     return (
-                      <div key={saIdx} className="print-segment-detail">
-                        • {subAssign.label}: <span className="print-name">{personValue}</span>
+                      <div key={saIdx} className="print-sub-assignment">
+                        <strong>{subAssign.label}:</strong> <span className="print-name-purple">{personValue}</span>
                         {subAssign.duration_min && <span className="print-duration"> ({subAssign.duration_min} min)</span>}
                       </div>
                     );
@@ -2137,14 +2157,14 @@ Return ONLY valid JSON:
                   
                   {/* Legacy fallback for old ministry_leader field */}
                   {(!segment.sub_assignments || segment.sub_assignments.length === 0) && segment.data?.ministry_leader && (
-                    <div className="print-segment-detail">
-                      • Ministración: <span className="print-name">{segment.data.ministry_leader}</span> <span className="print-duration">(5 min)</span>
+                    <div className="print-sub-assignment">
+                      <strong>Ministración:</strong> <span className="print-name-purple">{segment.data.ministry_leader}</span> <span className="print-duration">(5 min)</span>
                     </div>
                   )}
 
                   {segment.data?.preacher && (
                     <div className="print-segment-detail">
-                      <span className="print-name">{segment.data.preacher.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
+                      <span className="print-name-blue">{segment.data.preacher.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
@@ -2159,8 +2179,8 @@ Return ONLY valid JSON:
                     const personValue = segment.data?.[subAssign.person_field_name];
                     if (!personValue) return null;
                     return (
-                      <div key={saIdx} className="print-segment-detail">
-                        • {subAssign.label}: <span className="print-name">{personValue}</span>
+                      <div key={saIdx} className="print-sub-assignment">
+                        <strong>{subAssign.label}:</strong> <span className="print-name-purple">{personValue}</span>
                         {subAssign.duration_min && <span className="print-duration"> ({subAssign.duration_min} min)</span>}
                       </div>
                     );
@@ -2168,7 +2188,7 @@ Return ONLY valid JSON:
 
                   {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && (
                     <div className="print-segment-detail">
-                      <span className="print-name">{segment.data.presenter.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
+                      <span className="print-name-blue">{segment.data.presenter.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
