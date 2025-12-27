@@ -533,7 +533,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                     </div>
                                     
                                     {seg.data?.leader && (
-                                      <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '700' }}>
+                                      <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '700' }}>
                                         Dirige: {seg.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}
                                       </div>
                                     )}

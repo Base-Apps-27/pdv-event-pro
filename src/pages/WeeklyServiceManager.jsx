@@ -1524,7 +1524,7 @@ Return ONLY valid JSON:
           }
 
           .print-name-green {
-            color: #16a34a; /* Green-600 */
+            color: #2563eb; /* Blue-600 to match others */
             font-weight: 700;
             font-size: 11pt;
           }
@@ -1568,13 +1568,15 @@ Return ONLY valid JSON:
 
           /* General / Pre-Service Notes - Primary Importance */
           .print-note-general-info {
-            background-color: #f0fdf4; /* Light green background */
-            border-left: 4pt solid #16a34a; /* Strong green left border */
-            color: #14532d; /* Dark green text */
+            background-color: #f0fdf4 !important; /* Light green background */
+            border-left: 4pt solid #16a34a !important; /* Strong green left border */
+            color: #14532d !important; /* Dark green text */
             font-size: 10pt; /* Slightly larger text */
             margin-top: 4pt;
             padding: 4pt 8pt;
             font-style: italic;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
 
           /* Projection Notes - Role Indicator Only */
