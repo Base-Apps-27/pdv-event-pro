@@ -567,9 +567,23 @@ export default function WeeklyServiceManager() {
       const mergeSegmentsWithBlueprint = (existingSegments, timeSlot) => {
         const activeBlueprint = blueprintData || { "9:30am": BLUEPRINT["9:30am"], "11:30am": BLUEPRINT["11:30am"] };
         return existingSegments.map((savedSeg, idx) => {
-          const blueprintSeg = activeBlueprint[timeSlot]?.find(b => b.type === savedSeg.type) || 
-                               activeBlueprint[timeSlot]?.[idx] ||
-                               BLUEPRINT[timeSlot]?.[idx];
+          // Try to match by index first (if types match), otherwise find by type
+          let blueprintSeg = activeBlueprint[timeSlot]?.[idx];
+          
+          // If index-matched segment doesn't exist or type mismatch, try to find ANY segment of this type
+          if (!blueprintSeg || blueprintSeg.type !== savedSeg.type) {
+            blueprintSeg = activeBlueprint[timeSlot]?.find(b => b.type === savedSeg.type);
+          }
+          
+          // Fallback to hardcoded blueprint if not found in active (and type matches)
+          if (!blueprintSeg) {
+             const hardcoded = BLUEPRINT[timeSlot]?.[idx];
+             if (hardcoded && hardcoded.type === savedSeg.type) {
+               blueprintSeg = hardcoded;
+             } else {
+               blueprintSeg = BLUEPRINT[timeSlot]?.find(b => b.type === savedSeg.type);
+             }
+          }
           
           if (blueprintSeg) {
             let subAssignments = blueprintSeg.sub_assignments || savedSeg.sub_assignments || [];
