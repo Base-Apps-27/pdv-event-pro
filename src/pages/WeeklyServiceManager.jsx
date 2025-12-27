@@ -606,6 +606,21 @@ export default function WeeklyServiceManager() {
               default_translator_source: blueprintSeg.default_translator_source || savedSeg.default_translator_source || "manual",
             };
           }
+          
+          // HOTFIX: Clean up corrupted actions from previous "Special" segments that inherited "Mensaje" actions
+          if (savedSeg.type === 'special') {
+             const cleanedActions = (savedSeg.actions || []).filter(action => {
+                const label = (action.label || '').toLowerCase();
+                // Filter out specific message closure actions
+                if (label.includes('pianista sube') || label.includes('equipo de a&a sube')) return false;
+                return true;
+             });
+             
+             if (cleanedActions.length !== (savedSeg.actions || []).length) {
+                return { ...savedSeg, actions: cleanedActions };
+             }
+          }
+          
           return savedSeg;
         });
       };

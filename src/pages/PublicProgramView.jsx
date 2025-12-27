@@ -400,7 +400,21 @@ export default function PublicProgramView() {
 
   const getSegmentActions = (segment) => {
     // CustomServiceBuilder stores in 'actions', Session entities use 'segment_actions'
-    return segment?.actions || segment?.segment_actions || [];
+    const rawActions = segment?.actions || segment?.segment_actions || [];
+    
+    // HOTFIX: Filter out "Mensaje" actions that were incorrectly merged into "Special" segments
+    const isSpecial = ['Especial', 'Special', 'special'].includes(segment.segment_type || segment.type || segment.data?.type || segment.data?.segment_type);
+    
+    if (isSpecial) {
+      return rawActions.filter(action => {
+        const label = (action.label || '').toLowerCase();
+        // Filter out specific message closure actions
+        if (label.includes('pianista sube') || label.includes('equipo de a&a sube')) return false;
+        return true;
+      });
+    }
+    
+    return rawActions;
   };
 
   const departmentColors = {
