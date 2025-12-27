@@ -2504,6 +2504,31 @@ Return ONLY valid JSON:
           </Button>
           
           <Button 
+            onClick={async () => {
+              if (confirm('¿Ejecutar limpieza de datos corruptos en todos los servicios? Esto eliminará las acciones incorrectas en segmentos especiales.')) {
+                try {
+                  const res = await base44.functions.invoke('cleanCorruptedSegments');
+                  if (res.data.success) {
+                    alert(`Limpieza completada. ${res.data.cleaned_count} servicios corregidos.`);
+                    queryClient.invalidateQueries(['weeklyService']);
+                    window.location.reload();
+                  } else {
+                    alert('Error en la limpieza: ' + res.data.error);
+                  }
+                } catch (e) {
+                  alert('Error al invocar la limpieza: ' + e.message);
+                }
+              }
+            }}
+            variant="outline"
+            className="border-2 border-orange-400 bg-white text-orange-900 hover:bg-orange-50 font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
+            title="Reparar datos corruptos"
+          >
+            <Wand2 className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+            <span className="hidden md:inline">Fix Data</span>
+          </Button>
+
+          <Button 
             onClick={handleQuickPrint}
             variant="outline"
             className="border-2 border-gray-400 bg-white text-gray-900 hover:bg-gray-100 font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
