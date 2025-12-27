@@ -18,6 +18,8 @@ import AnimatedSortableItem from "@/components/shared/AnimatedSortableItem";
 import { AnimatePresence } from "framer-motion";
 import { addMinutes, parse, format } from "date-fns";
 import PrintSettingsModal from "@/components/print/PrintSettingsModal";
+import VerseParserDialog from "@/components/service/VerseParserDialog";
+import { BookOpen } from "lucide-react";
 import { formatDate as formatDateES } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -113,6 +115,8 @@ export default function CustomServiceBuilder() {
   const [lastSavedData, setLastSavedData] = useState(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState("idle"); // idle, saving, saved, error
   const [highlightedSegmentId, setHighlightedSegmentId] = useState(null);
+  const [verseParserOpen, setVerseParserOpen] = useState(false);
+  const [verseParserContext, setVerseParserContext] = useState({ segmentIdx: null });
 
   const getDefaultSegmentForm = () => ({
     title: "",
@@ -374,6 +378,47 @@ export default function CustomServiceBuilder() {
     setHighlightedSegmentId(segmentId);
   };
 
+  const handleOpenVerseParser = (idx) => {
+    const segment = serviceData.segments[idx];
+    const currentVerse = segment.verse || "";
+    // Check both root and data object for compatibility
+    const currentParsedData = segment.parsed_verse_data || segment.data?.parsed_verse_data;
+    
+    setVerseParserContext({ 
+      segmentIdx: idx,
+      initialText: currentVerse
+    });
+    setVerseParserOpen(true);
+  };
+
+  const handleSaveParsedVerses = (data) => {
+    const { segmentIdx } = verseParserContext;
+    
+    setServiceData(prev => {
+      const updated = { ...prev };
+      const segment = updated.segments[segmentIdx];
+      
+      // Save to BOTH root and data object for maximum compatibility with viewers
+      updated.segments[segmentIdx] = {
+        ...segment,
+        // Update root property if it exists there
+        parsed_verse_data: data.parsed_data,
+        // Ensure data object exists and update it there too (for PublicProgramView compatibility)
+        data: {
+          ...(segment.data || {}),
+          parsed_verse_data: data.parsed_data,
+          // Sync verse text too just in case
+          verse: segment.verse || segment.data?.verse
+        }
+      };
+      
+      return updated;
+    });
+    
+    setVerseParserOpen(false);
+    setVerseParserContext({ segmentIdx: null });
+  };
+
   const calculateTotalTime = () => {
     const total = serviceData.segments.reduce((sum, seg) => sum + (seg.duration || 0), 0);
     if (!serviceData.time) return { total, endTime: "N/A" };
@@ -523,6 +568,15 @@ export default function CustomServiceBuilder() {
         onSave={handleSavePrintSettings}
         language="es"
         serviceData={serviceData}
+      />
+
+      {/* Verse Parser Dialog */}
+      <VerseParserDialog
+        open={verseParserOpen}
+        onOpenChange={setVerseParserOpen}
+        initialText={verseParserContext.initialText || ""}
+        onSave={handleSaveParsedVerses}
+        language="es"
       />
 
       {/* Print Layout */}
@@ -804,12 +858,28 @@ export default function CustomServiceBuilder() {
                                 </div>
                                 <div className="space-y-2">
                                   <Label className="text-xs">Verso / Cita Bíblica</Label>
-                                  <Input
-                                    value={segment.verse}
-                                    onChange={(e) => updateSegmentField(idx, 'verse', e.target.value)}
-                                    placeholder="Ej. Juan 3:16"
-                                    className="text-sm"
-                                  />
+                                  <div className="flex gap-2">
+                                    <Input
+                                      value={segment.verse}
+                                      onChange={(e) => updateSegmentField(idx, 'verse', e.target.value)}
+                                      placeholder="Ej. Juan 3:16"
+                                      className="text-sm flex-1"
+                                    />
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleOpenVerseParser(idx)}
+                                      className="border-2 border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
+                                      title="Analizar versos"
+                                    >
+                                      <BookOpen className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                  {(segment.parsed_verse_data || segment.data?.parsed_verse_data) && (
+                                    <Badge variant="outline" className="text-xs bg-green-50 border-green-300 text-green-700 mt-1">
+                                      ✓ Analizado ({(segment.parsed_verse_data || segment.data?.parsed_verse_data).sections?.length || 0} elementos)
+                                    </Badge>
+                                  )}
                                 </div>
                               </>
                             )}

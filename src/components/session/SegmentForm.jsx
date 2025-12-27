@@ -10,8 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, Zap } from "lucide-react";
+import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, Zap, BookOpen } from "lucide-react";
 import TimePicker from "@/components/ui/TimePicker";
+import VerseParserDialog from "@/components/service/VerseParserDialog";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -54,6 +55,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
   const queryClient = useQueryClient();
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [showActions, setShowActions] = useState(false);
+  const [verseParserOpen, setVerseParserOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: segment?.title || "",
     segment_type: segment?.segment_type || "Plenaria",
@@ -92,6 +94,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     translator_name: segment?.translator_name || "",
     major_break: segment?.major_break || false,
     segment_actions: segment?.segment_actions || [],
+    parsed_verse_data: segment?.parsed_verse_data || null,
   });
 
   const calculateTimes = (startTime, durationMin, offsetMin) => {
@@ -356,12 +359,30 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
 
             <div className="space-y-2">
               <Label htmlFor="scripture_references">Referencias Bíblicas</Label>
-              <Input 
-                id="scripture_references" 
-                value={formData.scripture_references}
-                onChange={(e) => setFormData({...formData, scripture_references: e.target.value})}
-                placeholder="Juan 3:16, Romanos 8:28"
-              />
+              <div className="flex gap-2">
+                <Input 
+                  id="scripture_references" 
+                  value={formData.scripture_references}
+                  onChange={(e) => setFormData({...formData, scripture_references: e.target.value})}
+                  placeholder="Juan 3:16, Romanos 8:28"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setVerseParserOpen(true)}
+                  className="border-2 border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white"
+                  title="Analizar versos"
+                >
+                  <BookOpen className="w-4 h-4" />
+                </Button>
+              </div>
+              {formData.parsed_verse_data && (
+                <Badge variant="outline" className="text-xs bg-green-50 border-green-300 text-green-700 mt-1">
+                  ✓ Analizado ({formData.parsed_verse_data.sections?.length || 0} elementos)
+                </Badge>
+              )}
             </div>
 
             <div className="flex items-center space-x-2">
@@ -695,6 +716,14 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
           {segment ? 'Guardar' : 'Crear'}
         </Button>
       </div>
+
+      <VerseParserDialog
+        open={verseParserOpen}
+        onOpenChange={setVerseParserOpen}
+        initialText={formData.scripture_references || ""}
+        onSave={(result) => setFormData(prev => ({ ...prev, parsed_verse_data: result.parsed_data }))}
+        language="es"
+      />
     </form>
   );
 }
