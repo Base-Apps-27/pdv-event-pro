@@ -1863,9 +1863,12 @@ export default function PublicProgramView() {
                                             const title = segment[`song_${songNum}_title`];
                                             const lead = segment[`song_${songNum}_lead`];
                                             if (!title) return null;
+                                            const key = segment[`song_${songNum}_key`];
                                             return (
-                                              <div key={songNum}>
-                                                {songNum}. {title} {lead && `(${lead})`}
+                                              <div key={songNum} className="flex items-center gap-1">
+                                                <span>{songNum}. {title}</span>
+                                                {lead && <span className="text-gray-600">({lead})</span>}
+                                                {key && <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">{key}</Badge>}
                                               </div>
                                             );
                                           })}

@@ -80,16 +80,22 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     number_of_songs: segment?.number_of_songs || 3,
     song_1_title: segment?.song_1_title || "",
     song_1_lead: segment?.song_1_lead || "",
+    song_1_key: segment?.song_1_key || "",
     song_2_title: segment?.song_2_title || "",
     song_2_lead: segment?.song_2_lead || "",
+    song_2_key: segment?.song_2_key || "",
     song_3_title: segment?.song_3_title || "",
     song_3_lead: segment?.song_3_lead || "",
+    song_3_key: segment?.song_3_key || "",
     song_4_title: segment?.song_4_title || "",
     song_4_lead: segment?.song_4_lead || "",
+    song_4_key: segment?.song_4_key || "",
     song_5_title: segment?.song_5_title || "",
     song_5_lead: segment?.song_5_lead || "",
+    song_5_key: segment?.song_5_key || "",
     song_6_title: segment?.song_6_title || "",
     song_6_lead: segment?.song_6_lead || "",
+    song_6_key: segment?.song_6_key || "",
     requires_translation: segment?.requires_translation || false,
     translator_name: segment?.translator_name || "",
     major_break: segment?.major_break || false,
@@ -434,8 +440,8 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
               return (
                 <Card key={songNum} className="p-4 bg-gray-50">
                   <h4 className="font-medium text-sm text-gray-700 mb-3">Canción {songNum}</h4>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    <div className="space-y-2">
+                  <div className="grid md:grid-cols-12 gap-3">
+                    <div className="md:col-span-5 space-y-2">
                       <Label htmlFor={`song_${songNum}_title`}>Título</Label>
                       <Input 
                         id={`song_${songNum}_title`}
@@ -444,13 +450,22 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
                         placeholder="Nombre de la canción"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="md:col-span-5 space-y-2">
                       <Label htmlFor={`song_${songNum}_lead`}>Vocalista Principal</Label>
                       <Input 
                         id={`song_${songNum}_lead`}
                         value={formData[`song_${songNum}_lead`]}
                         onChange={(e) => setFormData({...formData, [`song_${songNum}_lead`]: e.target.value})}
                         placeholder="Nombre del vocalista"
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                      <Label htmlFor={`song_${songNum}_key`}>Tono</Label>
+                      <Input 
+                        id={`song_${songNum}_key`}
+                        value={formData[`song_${songNum}_key`]}
+                        onChange={(e) => setFormData({...formData, [`song_${songNum}_key`]: e.target.value})}
+                        placeholder="G"
                       />
                     </div>
                   </div>

@@ -32,11 +32,12 @@ const UpdatersContext = React.createContext(null);
 // Song Input Row with local state
 function SongInputRow({ service, segmentIndex, songIndex }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
-  const song = segment?.songs?.[songIndex] || { title: "", lead: "" };
+  const song = segment?.songs?.[songIndex] || { title: "", lead: "", key: "" };
   const updateSegmentField = useContext(UpdatersContext)?.updateSegmentField;
   
   const [localTitle, setLocalTitle] = useState("");
   const [localLead, setLocalLead] = useState("");
+  const [localKey, setLocalKey] = useState("");
   
   const commitTitle = useDebouncedCommit(
     localTitle,
@@ -59,30 +60,55 @@ function SongInputRow({ service, segmentIndex, songIndex }) {
     },
     3000
   );
+
+  const commitKey = useDebouncedCommit(
+    localKey,
+    song.key,
+    (val) => {
+      const newSongs = [...(segment.songs || [])];
+      newSongs[songIndex] = { ...newSongs[songIndex], key: val };
+      updateSegmentField(service, segmentIndex, "songs", newSongs);
+    },
+    3000
+  );
   
   useEffect(() => {
     setLocalTitle(song.title);
     setLocalLead(song.lead);
-  }, [song.title, song.lead]);
+    setLocalKey(song.key || "");
+  }, [song.title, song.lead, song.key]);
   
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <AutocompleteInput
-        type="songTitle"
-        placeholder={`Canción ${songIndex + 1}`}
-        value={localTitle}
-        onChange={(e) => setLocalTitle(e.target.value)}
-        onBlur={commitTitle}
-        className="text-xs"
-      />
-      <AutocompleteInput
-        type="worshipLeader"
-        placeholder="Líder"
-        value={localLead}
-        onChange={(e) => setLocalLead(e.target.value)}
-        onBlur={commitLead}
-        className="text-xs"
-      />
+    <div className="grid grid-cols-12 gap-2">
+      <div className="col-span-5">
+        <AutocompleteInput
+          type="songTitle"
+          placeholder={`Canción ${songIndex + 1}`}
+          value={localTitle}
+          onChange={(e) => setLocalTitle(e.target.value)}
+          onBlur={commitTitle}
+          className="text-xs"
+        />
+      </div>
+      <div className="col-span-5">
+        <AutocompleteInput
+          type="worshipLeader"
+          placeholder="Líder"
+          value={localLead}
+          onChange={(e) => setLocalLead(e.target.value)}
+          onBlur={commitLead}
+          className="text-xs"
+        />
+      </div>
+      <div className="col-span-2">
+        <Input
+          placeholder="Tono"
+          value={localKey}
+          onChange={(e) => setLocalKey(e.target.value)}
+          onBlur={commitKey}
+          className="text-xs px-1 text-center"
+        />
+      </div>
     </div>
   );
 }
@@ -682,10 +708,10 @@ export default function WeeklyServiceManager() {
           
           if (seg.type === "worship") {
             segmentCopy.songs = [
-              { title: "", lead: "" },
-              { title: "", lead: "" },
-              { title: "", lead: "" },
-              { title: "", lead: "" }
+              { title: "", lead: "", key: "" },
+              { title: "", lead: "", key: "" },
+              { title: "", lead: "", key: "" },
+              { title: "", lead: "", key: "" }
             ];
           }
           
@@ -706,10 +732,10 @@ export default function WeeklyServiceManager() {
           
           if (seg.type === "worship") {
             segmentCopy.songs = [
-              { title: "", lead: "" },
-              { title: "", lead: "" },
-              { title: "", lead: "" },
-              { title: "", lead: "" }
+              { title: "", lead: "", key: "" },
+              { title: "", lead: "", key: "" },
+              { title: "", lead: "", key: "" },
+              { title: "", lead: "", key: "" }
             ];
           }
           
