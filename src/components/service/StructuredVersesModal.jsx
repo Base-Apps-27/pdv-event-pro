@@ -36,7 +36,7 @@ export default function StructuredVersesModal({
   if (!parsedData) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl bg-white">
+        <DialogContent className="max-w-2xl bg-white flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-pdv-teal" />
@@ -130,28 +130,28 @@ export default function StructuredVersesModal({
     );
   };
 
+  const getTitle = () => {
+    if (parsedData?.type === 'verse_list') return t.verseList;
+    if (parsedData?.type === 'outline') return t.outline;
+    return t.title;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] bg-white">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
+      <DialogContent className="max-w-3xl max-h-[85vh] bg-white flex flex-col w-[95vw] md:w-full">
+        <DialogHeader className="flex-shrink-0">
+          <div className="flex items-center justify-between mr-6">
             <DialogTitle className="flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-pdv-teal" />
-              {t.title}
+              {getTitle()}
             </DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-              className="h-8 w-8"
-            >
-              <X className="w-4 h-4" />
-            </Button>
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
-          {renderContent()}
+        <ScrollArea className="flex-1 pr-4 -mr-4">
+          <div className="pr-4 pb-6">
+            {renderContent()}
+          </div>
         </ScrollArea>
       </DialogContent>
     </Dialog>
