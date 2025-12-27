@@ -413,6 +413,19 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           padding: 0 !important;
         }
 
+        .print-footer {
+          background-color: #1F8A70 !important;
+          background-image: linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%) !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+
+        .print-footer-text {
+          color: white !important;
+          -webkit-text-fill-color: white !important;
+        }
+
 
       }
     `}</style>
@@ -1037,6 +1050,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
         {/* FIXED Footer */}
         <div 
+          className="print-footer"
           style={{
             position: 'absolute',
             bottom: '20px',
@@ -1044,7 +1058,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             right: '40px',
             height: '24px',
             zIndex: 9999,
-            backgroundColor: '#1F8A70',
+            backgroundColor: '#1F8A70', /* Fallback solid color */
             background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
             display: 'flex',
             alignItems: 'center',
@@ -1053,10 +1067,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             printColorAdjust: 'exact',
             overflow: 'hidden',
             borderRadius: '4px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            border: '1px solid #1F8A70' /* Ensure border prints even if background doesn't */
           }}
         >
-          <span style={{ fontSize: '11px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          <span className="print-footer-text" style={{ fontSize: '11px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             ¡Atrévete a cambiar!
           </span>
         </div>
@@ -1212,6 +1227,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
         {/* FIXED Footer */}
         <div 
+          className="print-footer"
           style={{
             position: 'absolute',
             bottom: '20px',
@@ -1219,7 +1235,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             right: '40px',
             height: '24px',
             zIndex: 9999,
-            backgroundColor: '#1F8A70',
+            backgroundColor: '#1F8A70', /* Fallback solid color */
             background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
             display: 'flex',
             alignItems: 'center',
@@ -1228,10 +1244,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             printColorAdjust: 'exact',
             overflow: 'hidden',
             borderRadius: '4px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            border: '1px solid #1F8A70' /* Ensure border prints even if background doesn't */
           }}
         >
-          <span style={{ fontSize: '11px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          <span className="print-footer-text" style={{ fontSize: '11px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             ¡Atrévete a cambiar!
           </span>
         </div>
