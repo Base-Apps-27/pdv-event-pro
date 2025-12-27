@@ -1039,10 +1039,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         <div 
           style={{
             position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: `${FOOTER_H}px`,
+            bottom: '20px',
+            left: '40px',
+            right: '40px',
+            height: '24px',
             zIndex: 9999,
             backgroundColor: '#1F8A70',
             background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
@@ -1051,12 +1051,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             justifyContent: 'center',
             WebkitPrintColorAdjust: 'exact',
             printColorAdjust: 'exact',
-            width: '100%',
-            overflow: 'visible',
-            borderTop: '1px solid #1F8A70'
+            overflow: 'hidden',
+            borderRadius: '4px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
           }}
         >
-          <span style={{ fontSize: '20px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative' }}>
+          <span style={{ fontSize: '11px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             ¡Atrévete a cambiar!
           </span>
         </div>
@@ -1214,10 +1214,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         <div 
           style={{
             position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: `${FOOTER_H}px`,
+            bottom: '20px',
+            left: '40px',
+            right: '40px',
+            height: '24px',
             zIndex: 9999,
             backgroundColor: '#1F8A70',
             background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
@@ -1226,12 +1226,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             justifyContent: 'center',
             WebkitPrintColorAdjust: 'exact',
             printColorAdjust: 'exact',
-            width: '100%',
-            overflow: 'visible',
-            borderTop: '1px solid #1F8A70'
+            overflow: 'hidden',
+            borderRadius: '4px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
           }}
         >
-          <span style={{ fontSize: '20px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative' }}>
+          <span style={{ fontSize: '11px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             ¡Atrévete a cambiar!
           </span>
         </div>
