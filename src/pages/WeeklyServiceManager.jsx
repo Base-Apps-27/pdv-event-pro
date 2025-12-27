@@ -2006,13 +2006,29 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
+                  {/* Cierre sub-assignment (shown after speaker) */}
+                  {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name === 'cierre_leader').map((subAssign, saIdx) => {
+                    const personValue = segment.data?.[subAssign.person_field_name];
+                    if (!personValue) return null;
+                    return (
+                      <div key={saIdx} className="print-segment-detail">
+                        • {subAssign.label}: <span className="print-name">{personValue}</span>
+                        {subAssign.duration_min && <span className="print-duration"> ({subAssign.duration_min} min)</span>}
+                      </div>
+                    );
+                  })}
+
                   {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && (
                     <div className="print-segment-detail">
                       <span className="print-name">{segment.data.presenter}</span>
                     </div>
                   )}
 
-
+                  {segment.requires_translation && segment.data?.translator && (
+                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
+                      🌐 Traduce: {segment.data.translator}
+                    </div>
+                  )}
 
                   {segment.data?.title && (
                     <div className="print-segment-detail">
