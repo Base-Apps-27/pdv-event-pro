@@ -35,6 +35,13 @@ export default function PublicProgramView() {
   const [versesModalData, setVersesModalData] = useState({ parsedData: null, rawText: "" });
   const [notifiedSegments, setNotifiedSegments] = useState(new Set());
 
+  // Helper to parse date strings as local timezone dates at midnight
+  const getLocalDateAtMidnight = (dateString) => {
+    if (!dateString) return null;
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day, 0, 0, 0, 0);
+  };
+
   // Update current time every minute
   useEffect(() => {
     const timer = setInterval(() => {
@@ -111,18 +118,15 @@ export default function PublicProgramView() {
       // Check for events happening TODAY
       const todayEvent = publicEvents.find(e => {
         if (!e.start_date) return false;
-        const eventDate = new Date(e.start_date);
-        eventDate.setHours(0, 0, 0, 0);
-        const endDate = e.end_date ? new Date(e.end_date) : eventDate;
-        endDate.setHours(0, 0, 0, 0);
-        return today >= eventDate && today <= endDate;
+        const eventDate = getLocalDateAtMidnight(e.start_date);
+        const endDate = e.end_date ? getLocalDateAtMidnight(e.end_date) : eventDate;
+        return eventDate && endDate && today.getTime() >= eventDate.getTime() && today.getTime() <= endDate.getTime();
       });
       
       // Check for services happening TODAY
       const todayService = services.find(s => {
-        const serviceDate = new Date(s.date);
-        serviceDate.setHours(0, 0, 0, 0);
-        return serviceDate.getTime() === today.getTime();
+        const serviceDate = getLocalDateAtMidnight(s.date);
+        return serviceDate && serviceDate.getTime() === today.getTime();
       });
       
       // Priority: Today's service > Today's event > Next upcoming (within 7 days)
@@ -139,20 +143,19 @@ export default function PublicProgramView() {
         
         const nextEvent = publicEvents.find(e => {
           if (!e.start_date) return false;
-          const eventDate = new Date(e.start_date);
-          return eventDate > today && eventDate <= sevenDaysOut;
+          const eventDate = getLocalDateAtMidnight(e.start_date);
+          return eventDate && eventDate.getTime() > today.getTime() && eventDate.getTime() <= sevenDaysOut.getTime();
         });
         
         // Services are already sorted by date, just find next one
         const nextService = services.find(s => {
-          const serviceDate = new Date(s.date);
-          serviceDate.setHours(0, 0, 0, 0);
-          return serviceDate > today;
+          const serviceDate = getLocalDateAtMidnight(s.date);
+          return serviceDate && serviceDate.getTime() > today.getTime();
         });
         
         if (nextEvent && nextService) {
-          const eventDaysAway = Math.floor((new Date(nextEvent.start_date) - today) / (1000 * 60 * 60 * 24));
-          const serviceDaysAway = Math.floor((new Date(nextService.date) - today) / (1000 * 60 * 60 * 24));
+          const eventDaysAway = Math.floor((getLocalDateAtMidnight(nextEvent.start_date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          const serviceDaysAway = Math.floor((getLocalDateAtMidnight(nextService.date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
           if (serviceDaysAway <= eventDaysAway) {
             setSelectedServiceId(nextService.id);
             setViewType("service");
@@ -530,14 +533,12 @@ export default function PublicProgramView() {
                 // Services are already filtered and sorted by date
                 const upcomingServices = services
                   .filter(s => {
-                    const serviceDate = new Date(s.date);
-                    serviceDate.setHours(0, 0, 0, 0);
-                    return serviceDate <= sevenDaysOut;
+                    const serviceDate = getLocalDateAtMidnight(s.date);
+                    return serviceDate && serviceDate.getTime() <= sevenDaysOut.getTime();
                   })
                   .map(service => {
-                    const serviceDate = new Date(service.date);
-                    serviceDate.setHours(0, 0, 0, 0);
-                    const diffTime = serviceDate - today;
+                    const serviceDate = getLocalDateAtMidnight(service.date);
+                    const diffTime = serviceDate.getTime() - today.getTime();
                     const daysUntil = Math.floor(diffTime / (1000 * 60 * 60 * 24));
                     return { ...service, daysUntil };
                   })
@@ -562,7 +563,7 @@ export default function PublicProgramView() {
                       <SelectContent className="bg-white">
                         {upcomingServices.map((service) => (
                           <SelectItem key={service.id} value={service.id}>
-                            {service.name} - {service.date} ({service.daysUntil === 0 ? 'Hoy' : `en ${service.daysUntil} días`})
+                            {service.name} - {service.date} ({service.daysUntil === 0 ? 'Hoy' : service.daysUntil === 1 ? 'Mañana' : `en ${service.daysUntil} días`})
                           </SelectItem>
                         ))}
                       </SelectContent>
