@@ -2011,6 +2011,24 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
+                  {segment.data?.ushers_notes && (
+                    <div className="print-note-ushers-team">
+                      <strong>🚪 Ujieres:</strong> {segment.data.ushers_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.translation_notes && (
+                    <div className="print-note-translation-team">
+                      <strong>🌐 Traducción:</strong> {segment.data.translation_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.stage_decor_notes && (
+                    <div className="print-note-stage-team">
+                      <strong>🎨 Stage:</strong> {segment.data.stage_decor_notes}
+                    </div>
+                  )}
+
                   {segment.data?.coordinator_notes && (
                     <div className="print-note-segment-coordinator">
                       <strong>📋 Coordinador:</strong> {segment.data.coordinator_notes}
@@ -2194,6 +2212,24 @@ Return ONLY valid JSON:
                   {segment.data?.sound_notes && (
                     <div className="print-note-sound-team">
                       <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.ushers_notes && (
+                    <div className="print-note-ushers-team">
+                      <strong>🚪 Ujieres:</strong> {segment.data.ushers_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.translation_notes && (
+                    <div className="print-note-translation-team">
+                      <strong>🌐 Traducción:</strong> {segment.data.translation_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.stage_decor_notes && (
+                    <div className="print-note-stage-team">
+                      <strong>🎨 Stage:</strong> {segment.data.stage_decor_notes}
                     </div>
                   )}
 
@@ -2690,6 +2726,27 @@ Return ONLY valid JSON:
                                  rows={2}
                                />
                                <Textarea
+                                 placeholder="Notas de Ujieres"
+                                 value={segment.data?.ushers_notes || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "ushers_notes", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                               <Textarea
+                                 placeholder="Notas de Traducción"
+                                 value={segment.data?.translation_notes || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "translation_notes", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                               <Textarea
+                                 placeholder="Notas de Stage/Decor"
+                                 value={segment.data?.stage_decor_notes || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "stage_decor_notes", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                               <Textarea
                                  placeholder="Notas Generales"
                                  value={segment.data?.description_details || ""}
                                  onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
@@ -3153,6 +3210,27 @@ Return ONLY valid JSON:
                                  rows={2}
                                />
                                <Textarea
+                                 placeholder="Notas de Ujieres"
+                                 value={segment.data?.ushers_notes || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "ushers_notes", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                               <Textarea
+                                 placeholder="Notas de Traducción"
+                                 value={segment.data?.translation_notes || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "translation_notes", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                               <Textarea
+                                 placeholder="Notas de Stage/Decor"
+                                 value={segment.data?.stage_decor_notes || ""}
+                                 onChange={(e) => updateSegmentField(timeSlot, idx, "stage_decor_notes", e.target.value)}
+                                 className="text-xs"
+                                 rows={2}
+                               />
+                               <Textarea
                                  placeholder="Notas Generales"
                                  value={segment.data?.description_details || ""}
                                  onChange={(e) => updateSegmentField(timeSlot, idx, "description_details", e.target.value)}
@@ -3385,6 +3463,9 @@ Return ONLY valid JSON:
                                   <SegmentTextarea service={timeSlot} segmentIndex={idx} field="coordinator_notes" placeholder="Notas para Coordinador" className="text-xs" />
                                   <SegmentTextarea service={timeSlot} segmentIndex={idx} field="projection_notes" placeholder="Notas de Proyección" className="text-xs" />
                                   <SegmentTextarea service={timeSlot} segmentIndex={idx} field="sound_notes" placeholder="Notas de Sonido" className="text-xs" />
+                                  <SegmentTextarea service={timeSlot} segmentIndex={idx} field="ushers_notes" placeholder="Notas de Ujieres" className="text-xs" />
+                                  <SegmentTextarea service={timeSlot} segmentIndex={idx} field="translation_notes" placeholder="Notas de Traducción" className="text-xs" />
+                                  <SegmentTextarea service={timeSlot} segmentIndex={idx} field="stage_decor_notes" placeholder="Notas de Stage/Decor" className="text-xs" />
                                   <SegmentTextarea service={timeSlot} segmentIndex={idx} field="description_details" placeholder="Notas Generales" className="text-xs" />
                                 </div>
                               )}
