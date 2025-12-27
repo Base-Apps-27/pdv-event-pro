@@ -1872,6 +1872,18 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
+                  {/* Cierre sub-assignment (shown after speaker) */}
+                  {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name === 'cierre_leader').map((subAssign, saIdx) => {
+                    const personValue = segment.data?.[subAssign.person_field_name];
+                    if (!personValue) return null;
+                    return (
+                      <div key={saIdx} className="print-segment-detail">
+                        • {subAssign.label}: <span className="print-name">{personValue}</span>
+                        {subAssign.duration_min && <span className="print-duration"> ({subAssign.duration_min} min)</span>}
+                      </div>
+                    );
+                  })}
+
                   {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && (
                     <div className="print-segment-detail">
                       <span className="print-name">{segment.data.presenter}</span>
@@ -1923,11 +1935,12 @@ Return ONLY valid JSON:
                   {segment.actions && segment.actions.length > 0 && (
                     <div className="print-coordinator-actions">
                       {segment.actions.map((action, aIdx) => {
-                        const hasTimingInLabel = /\d+\s*min/i.test(action?.label || '');
+                        const safeAction = typeof action === 'object' && action !== null ? action : {};
+                        const hasTimingInLabel = /\d+\s*min/i.test(safeAction.label || '');
                         return (
                           <div key={aIdx}>
-                            {action?.label || ''}
-                            {!hasTimingInLabel && action?.timing === "before_end" && ` (${action?.offset_min || 0} min antes)`}
+                            {safeAction.label || ''}
+                            {!hasTimingInLabel && safeAction.timing === "before_end" && ` (${safeAction.offset_min || 0} min antes)`}
                           </div>
                         );
                       })}
@@ -2068,11 +2081,14 @@ Return ONLY valid JSON:
 
                   {segment.actions && segment.actions.length > 0 && (
                     <div className="print-coordinator-actions">
-                      {segment.actions.map((action, aIdx) => (
-                        <div key={aIdx}>
-                          {action?.label || ''}
-                        </div>
-                      ))}
+                      {segment.actions.map((action, aIdx) => {
+                        const safeAction = typeof action === 'object' && action !== null ? action : {};
+                        return (
+                          <div key={aIdx}>
+                            {safeAction.label || ''}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
