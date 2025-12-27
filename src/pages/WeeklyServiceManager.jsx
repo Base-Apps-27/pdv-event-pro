@@ -1570,6 +1570,36 @@ Return ONLY valid JSON:
             padding: 2pt 6pt;
           }
 
+          /* Ushers Notes */
+          .print-note-ushers-team {
+            border-left: 3pt solid #16a34a; /* Green left border */
+            background-color: transparent;
+            color: #14532d; /* Dark green text */
+            font-size: 9pt;
+            margin-top: 4pt;
+            padding: 2pt 6pt;
+          }
+
+          /* Translation Notes */
+          .print-note-translation-team {
+            border-left: 3pt solid #9333ea; /* Purple left border */
+            background-color: transparent;
+            color: #581c87; /* Dark purple text */
+            font-size: 9pt;
+            margin-top: 4pt;
+            padding: 2pt 6pt;
+          }
+          
+          /* Stage Notes */
+          .print-note-stage-team {
+            border-left: 3pt solid #c026d3; /* Purple left border */
+            background-color: transparent;
+            color: #701a75;
+            font-size: 9pt;
+            margin-top: 4pt;
+            padding: 2pt 6pt;
+          }
+
           /* Segment-Specific Coordinator Notes - Contextual */
           .print-note-segment-coordinator {
             background-color: #fffbeb; /* Very subtle yellow background */
@@ -1914,8 +1944,7 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.preacher && segment.requires_translation && segment.data?.translator && 
-                   !/(trad|traduc)/i.test(segment.data?.preacher || '') && (
+                  {segment.data?.preacher && segment.requires_translation && segment.data?.translator && (
                     <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
                       🌐 Traduce: {segment.data.translator}
                     </div>
@@ -1940,8 +1969,7 @@ Return ONLY valid JSON:
                   )}
 
                   {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && 
-                   segment.requires_translation && segment.data?.translator && 
-                   !/(trad|traduc)/i.test(segment.data?.presenter || '') && (
+                   segment.requires_translation && segment.data?.translator && (
                     <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
                       🌐 Traduce: {segment.data.translator}
                     </div>
@@ -1980,6 +2008,30 @@ Return ONLY valid JSON:
                   {segment.data?.sound_notes && (
                     <div className="print-note-sound-team">
                       <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.coordinator_notes && (
+                    <div className="print-note-segment-coordinator">
+                      <strong>📋 Coordinador:</strong> {segment.data.coordinator_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.ushers_notes && (
+                    <div className="print-note-ushers-team">
+                      <strong>🚪 Ujieres:</strong> {segment.data.ushers_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.translation_notes && (
+                    <div className="print-note-translation-team">
+                      <strong>🌐 Traducción:</strong> {segment.data.translation_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.stage_decor_notes && (
+                    <div className="print-note-stage-team">
+                      <strong>🎨 Stage:</strong> {segment.data.stage_decor_notes}
                     </div>
                   )}
 
@@ -2039,7 +2091,7 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.leader && segment.requires_translation && segment.data?.translator && !leaderHasTranslation && (
+                  {segment.data?.leader && segment.requires_translation && segment.data?.translator && (
                     <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
                       🌐 Traduce: {segment.data.translator}
                     </div>
@@ -2148,6 +2200,30 @@ Return ONLY valid JSON:
                   {segment.data?.sound_notes && (
                     <div className="print-note-sound-team">
                       <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.coordinator_notes && (
+                    <div className="print-note-segment-coordinator">
+                      <strong>📋 Coordinador:</strong> {segment.data.coordinator_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.ushers_notes && (
+                    <div className="print-note-ushers-team">
+                      <strong>🚪 Ujieres:</strong> {segment.data.ushers_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.translation_notes && (
+                    <div className="print-note-translation-team">
+                      <strong>🌐 Traducción:</strong> {segment.data.translation_notes}
+                    </div>
+                  )}
+
+                  {segment.data?.stage_decor_notes && (
+                    <div className="print-note-stage-team">
+                      <strong>🎨 Stage:</strong> {segment.data.stage_decor_notes}
                     </div>
                   )}
 
