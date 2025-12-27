@@ -1872,6 +1872,13 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
+                  {segment.data?.preacher && segment.requires_translation && segment.data?.translator && 
+                   !/(trad|traduc)/i.test(segment.data?.preacher || '') && (
+                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
+                      🌐 Traduce: {segment.data.translator}
+                    </div>
+                  )}
+
                   {/* Cierre sub-assignment (shown after speaker) */}
                   {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name === 'cierre_leader').map((subAssign, saIdx) => {
                     const personValue = segment.data?.[subAssign.person_field_name];
@@ -1890,7 +1897,9 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.requires_translation && segment.data?.translator && (
+                  {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && 
+                   segment.requires_translation && segment.data?.translator && 
+                   !/(trad|traduc)/i.test(segment.data?.presenter || '') && (
                     <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
                       🌐 Traduce: {segment.data.translator}
                     </div>
@@ -1952,20 +1961,20 @@ Return ONLY valid JSON:
 
           </div>
 
-          <div className="print-service-column right">
-            <div className="print-service-time">11:30 A.M.</div>
-            {serviceData?.pre_service_notes?.["11:30am"] && (
+          <div className="print-service-column left">
+            <div className="print-service-time">9:30 A.M.</div>
+            {serviceData?.pre_service_notes?.["9:30am"] && (
               <div className="print-segment">
                 <div className="print-segment-detail" style={{ fontStyle: 'italic', color: '#6b7280' }}>
-                  {serviceData.pre_service_notes["11:30am"]}
+                  {serviceData.pre_service_notes["9:30am"]}
                 </div>
               </div>
             )}
-            {serviceData?.["11:30am"]?.filter(s => s.type !== 'break').map((segment, idx) => {
-              let currentTime = parse("11:30am", "h:mma", new Date());
+            {serviceData?.["9:30am"]?.filter(s => s.type !== 'break').map((segment, idx) => {
+              let currentTime = parse("9:30am", "h:mma", new Date());
               for (let i = 0; i < idx; i++) {
-                if (serviceData["11:30am"][i].type !== 'break' && serviceData["11:30am"][i].type !== 'ministry') {
-                  currentTime = addMinutes(currentTime, serviceData["11:30am"][i].duration || 0);
+                if (serviceData["9:30am"][i].type !== 'break' && serviceData["9:30am"][i].type !== 'ministry') {
+                  currentTime = addMinutes(currentTime, serviceData["9:30am"][i].duration || 0);
                 }
               }
               const segmentTime = formatDate(currentTime, "h:mm a");
@@ -2019,6 +2028,13 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
+                  {segment.data?.preacher && segment.requires_translation && segment.data?.translator && 
+                   !/(trad|traduc)/i.test(segment.data?.preacher || '') && (
+                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
+                      🌐 Traduce: {segment.data.translator}
+                    </div>
+                  )}
+
                   {/* Cierre sub-assignment (shown after speaker) */}
                   {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name === 'cierre_leader').map((subAssign, saIdx) => {
                     const personValue = segment.data?.[subAssign.person_field_name];
@@ -2037,7 +2053,9 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.requires_translation && segment.data?.translator && (
+                  {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && 
+                   segment.requires_translation && segment.data?.translator && 
+                   !/(trad|traduc)/i.test(segment.data?.presenter || '') && (
                     <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#6b7280', marginTop: '2pt' }}>
                       🌐 Traduce: {segment.data.translator}
                     </div>
