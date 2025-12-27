@@ -1523,19 +1523,54 @@ Return ONLY valid JSON:
             font-style: italic;
           }
 
-          .print-coordinator-actions {
+          .print-note-coordinator-actions {
+            background-color: #fcf8e3; /* Very light yellow */
+            border: 1px solid #faebcc; /* Soft light yellow border */
+            color: #8a6d3b; /* Muted yellow-brown text */
+            font-size: 8.5pt;
             margin-top: 4pt;
-            padding-left: 4pt;
+            padding: 3pt 6pt;
+            border-radius: 3pt;
           }
 
-          .print-coordinator-actions strong {
-            display: none;
+          .print-note-coordinator-actions div {
+            font-size: 8.5pt;
+            line-height: 1.2;
+            font-style: normal;
           }
 
-          .print-coordinator-actions div {
+          .print-note-general-info {
+            background-color: #e8f5e9; /* Very light green */
+            border-left: 3pt solid #4CAF50; /* Distinct green left border */
+            color: #1b5e20; /* Darker green text */
             font-size: 9.5pt;
-            color: #6b7280;
-            line-height: 1.25;
+            margin-top: 4pt;
+            padding: 3pt 6pt;
+          }
+
+          .print-note-projection-team {
+            border-left: 3pt solid #2196F3; /* Distinct blue left border */
+            color: #0d47a1; /* Darker blue text */
+            font-size: 9.5pt;
+            margin-top: 4pt;
+            padding: 2pt 6pt;
+          }
+
+          .print-note-sound-team {
+            border-left: 3pt solid #f44336; /* Distinct red left border */
+            color: #b71c1c; /* Darker red text */
+            font-size: 9.5pt;
+            margin-top: 4pt;
+            padding: 2pt 6pt;
+          }
+
+          .print-note-segment-coordinator {
+            background-color: #fffde7; /* Very subtle light yellow */
+            border-left: 2px solid #ffeb3b; /* Thin yellow left border */
+            color: #f57f17; /* Yellow-brown text */
+            font-size: 9pt;
+            margin-top: 2pt;
+            padding: 2pt 4pt;
             font-style: italic;
           }
 
@@ -1811,7 +1846,7 @@ Return ONLY valid JSON:
             <div className="print-service-time">9:30 A.M.</div>
             {serviceData?.pre_service_notes?.["9:30am"] && (
               <div className="print-segment">
-                <div className="print-segment-detail" style={{ fontStyle: 'italic', color: '#6b7280' }}>
+                <div className="print-note-general-info">
                   {serviceData.pre_service_notes["9:30am"]}
                 </div>
               </div>
@@ -1965,7 +2000,7 @@ Return ONLY valid JSON:
             <div className="print-service-time">11:30 A.M.</div>
             {serviceData?.pre_service_notes?.["11:30am"] && (
               <div className="print-segment">
-                <div className="print-segment-detail" style={{ fontStyle: 'italic', color: '#6b7280' }}>
+                <div className="print-note-general-info">
                   {serviceData.pre_service_notes["11:30am"]}
                 </div>
               </div>
@@ -2086,31 +2121,31 @@ Return ONLY valid JSON:
                   )}
 
                   {segment.data?.description_details && (
-                    <div className="print-segment-detail print-note-text">
+                    <div className="print-note-general-info">
                       {segment.data.description_details}
                     </div>
                   )}
 
                   {segment.data?.coordinator_notes && (
-                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#f59e0b', marginTop: '2pt' }}>
+                    <div className="print-note-segment-coordinator">
                       <strong>📋 Coordinador:</strong> {segment.data.coordinator_notes}
                     </div>
                   )}
 
                   {segment.data?.projection_notes && (
-                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#7c3aed', marginTop: '2pt' }}>
+                    <div className="print-note-projection-team">
                       <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
                     </div>
                   )}
 
                   {segment.data?.sound_notes && (
-                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#dc2626', marginTop: '2pt' }}>
+                    <div className="print-note-sound-team">
                       <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
                     </div>
                   )}
 
                   {segment.actions && segment.actions.length > 0 && (
-                    <div className="print-coordinator-actions">
+                    <div className="print-note-coordinator-actions">
                       {segment.actions.map((action, aIdx) => {
                         const safeAction = typeof action === 'object' && action !== null ? action : {};
                         return (
