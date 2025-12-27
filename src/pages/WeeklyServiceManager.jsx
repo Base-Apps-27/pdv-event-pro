@@ -1927,7 +1927,7 @@ Return ONLY valid JSON:
 
                   {segment.data?.leader && (
                     <div className="print-segment-detail">
-                      Dirige: <span className="print-name">{segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
+                      Dirige: <span className="print-name-green">{segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
@@ -2125,7 +2125,7 @@ Return ONLY valid JSON:
 
                   {segment.data?.leader && (
                     <div className="print-segment-detail">
-                      Dirige: <span className="print-name">{segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
+                      Dirige: <span className="print-name-green">{segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
