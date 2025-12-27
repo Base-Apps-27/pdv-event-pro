@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks, BookOpen, BellRing } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks, BookOpen, BellRing, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -809,7 +809,12 @@ export default function PublicProgramView() {
                                 {segment.start_time && (
                                   <span className="font-bold text-lg text-gray-900">{formatTimeToEST(segment.start_time)}</span>
                                 )}
-                                <h4 className="text-xl font-bold text-gray-900">{segment.title}</h4>
+                                <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                  {(segment.segment_type === 'Especial' || segment.type === 'Especial') && (
+                                    <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
+                                  )}
+                                  {segment.title}
+                                </h4>
                                 <Badge variant="outline" className="text-xs text-gray-700">{segment.duration} min</Badge>
                               </div>
 
@@ -1006,7 +1011,12 @@ export default function PublicProgramView() {
                          <div className="flex items-start justify-between gap-4">
                            <div className="flex-1">
                              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                               <h4 className="text-xl font-bold text-gray-900">{segment.title}</h4>
+                               <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                 {(segment.segment_type === 'Especial' || segment.type === 'Especial') && (
+                                   <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
+                                 )}
+                                 {segment.title}
+                               </h4>
                                <Badge variant="outline" className="text-xs text-gray-700">{segment.duration} min</Badge>
                              </div>
 
@@ -1604,7 +1614,12 @@ export default function PublicProgramView() {
                                   </div>
 
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <h4 className="text-xl font-bold text-gray-900">{segment.title}</h4>
+                                    <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                      {(segment.segment_type === 'Especial' || segment.type === 'Especial') && (
+                                        <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
+                                      )}
+                                      {segment.title}
+                                    </h4>
                                     <Badge variant="outline" className="text-xs text-gray-700">{segment.segment_type}</Badge>
                                   </div>
 
@@ -1664,7 +1679,12 @@ export default function PublicProgramView() {
                                     </div>
 
                                     <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                      <h4 className="text-xl font-bold text-gray-900">{segment.title}</h4>
+                                      <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                        {(segment.segment_type === 'Especial' || segment.type === 'Especial') && (
+                                          <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
+                                        )}
+                                        {segment.title}
+                                      </h4>
                                       <Badge variant="outline" className="text-xs text-gray-700">{segment.segment_type}</Badge>
                                       {segment.requires_translation && (
                                         <div className="flex items-center gap-1">

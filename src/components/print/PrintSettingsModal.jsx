@@ -533,7 +533,15 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                 )}
                                 {Array.isArray(serviceData?.['9:30am']) && serviceData['9:30am'].filter(s => s?.type !== 'break').map((seg, idx) => (
                                   <div key={idx} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #f3f4f6' }}>
-                                    <div style={{ marginBottom: '3px' }}>
+                                    <div style={{ marginBottom: '3px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                                      {(seg.segment_type === 'Especial' || seg.type === 'Especial') && (
+                                        <Sparkles 
+                                          size={BASE_TITLE * 0.8 * page1Settings.titleFontScale} 
+                                          color="#f59e0b" 
+                                          fill="#fef3c7"
+                                          style={{ marginRight: '6px' }} 
+                                        />
+                                      )}
                                       <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', color: '#1a1a1a' }}>
                                         {seg.title || 'Sin título'}
                                       </span>
@@ -910,7 +918,15 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                             <div style={{ fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4, padding: '8px' }}>
                           {serviceData.segments.map((seg, idx) => (
                             <div key={idx} style={{ marginBottom: '8px', paddingBottom: '6px', borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
-                              <div style={{ marginBottom: '2px' }}>
+                              <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                                {(seg.segment_type === 'Especial' || seg.type === 'Especial') && (
+                                  <Sparkles 
+                                    size={BASE_TITLE * 0.8 * page1Settings.titleFontScale} 
+                                    color="#f59e0b" 
+                                    fill="#fef3c7"
+                                    style={{ marginRight: '6px' }} 
+                                  />
+                                )}
                                 <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: 'bold', textTransform: 'uppercase' }}>
                                   {seg.title || 'Sin título'}
                                 </span>
