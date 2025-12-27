@@ -1079,14 +1079,22 @@ export default function PublicProgramView() {
                                <p className="text-lg font-bold text-blue-600 mb-2">Dirige: {segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</p>
                              )}
 
-                             {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
-                               <div className="bg-slate-50 p-2 rounded border border-slate-200 text-sm mb-2">
-                                 <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
-                                 {segment.songs.filter(s => s.title).map((song, sIdx) => (
-                                   <div key={sIdx} className="text-xs">• {song.title} {song.lead && `(${song.lead})`}</div>
-                                 ))}
-                               </div>
-                             )}
+                             {(() => {
+                               const songs = normalizeSongs(segment).filter(s => s.title);
+                               if (songs.length === 0) return null;
+                               return (
+                                 <div className="bg-slate-50 p-2 rounded border border-slate-200 text-sm mb-2">
+                                   <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
+                                   {songs.map((song, sIdx) => (
+                                     <div key={sIdx} className="text-xs flex items-center gap-1">
+                                       <span>• {song.title}</span>
+                                       {song.lead && <span className="text-gray-600">({song.lead})</span>}
+                                       {song.key && <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">{song.key}</Badge>}
+                                     </div>
+                                   ))}
+                                 </div>
+                               );
+                             })()}
 
                              {/* Sub-assignments from blueprint (excluding cierre, shown after speaker) */}
                              {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name !== 'cierre_leader').map((subAssign, saIdx) => {
@@ -1952,17 +1960,17 @@ export default function PublicProgramView() {
                                   </div>
                                   )}
 
-                                  {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
+                                  {segment.segment_type === "Alabanza" && (
                                   <div className="bg-slate-50 p-2 rounded border border-slate-200 text-sm">
                                   <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
                                   <div className="space-y-1">
-                                    {[...Array(segment.number_of_songs)].map((_, idx) => {
-                                      const songNum = idx + 1;
-                                      const title = segment[`song_${songNum}_title`];
-                                      const lead = segment[`song_${songNum}_lead`];
-                                      if (!title) return null;
-                                      return <div key={songNum}>{songNum}. {title} {lead && `(${lead})`}</div>;
-                                    })}
+                                    {normalizeSongs(segment).map((song, idx) => (
+                                      <div key={idx} className="flex items-center gap-1">
+                                        <span>{idx + 1}. {song.title}</span>
+                                        {song.lead && <span className="text-gray-600">({song.lead})</span>}
+                                        {song.key && <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">{song.key}</Badge>}
+                                      </div>
+                                    ))}
                                   </div>
                                   </div>
                                   )}
