@@ -2509,9 +2509,17 @@ Return ONLY valid JSON:
                 try {
                   const res = await base44.functions.invoke('cleanCorruptedSegments');
                   if (res.data.success) {
-                    alert(`Limpieza completada. ${res.data.cleaned_count} servicios corregidos.`);
-                    queryClient.invalidateQueries(['weeklyService']);
-                    window.location.reload();
+                    const msg = res.data.cleaned_count > 0 
+                      ? `¡Éxito! ${res.data.cleaned_count} servicios corregidos.` 
+                      : `No se encontraron correcciones necesarias. (Revisado: ${res.data.inspection_sample?.length || 0} segmentos especiales)`;
+                    
+                    alert(msg);
+                    console.log("Cleanup Logs:", res.data);
+                    
+                    if (res.data.cleaned_count > 0) {
+                      queryClient.invalidateQueries(['weeklyService']);
+                      window.location.reload();
+                    }
                   } else {
                     alert('Error en la limpieza: ' + res.data.error);
                   }
