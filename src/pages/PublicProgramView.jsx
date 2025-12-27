@@ -1357,7 +1357,7 @@ export default function PublicProgramView() {
                               {/* Coordinator Actions */}
                               {segment.actions && segment.actions.length > 0 && (
                                 <div className="bg-[#fffdf5] border border-yellow-100 rounded p-2 text-xs mt-2">
-                                  <p className="font-bold text-yellow-800 mb-1 opacity-75">📋 Coordinador</p>
+                                  <p className="font-bold text-yellow-800 mb-1 opacity-75">📋 Acciones para Coordinador</p>
                                   <div className="space-y-1">
                                     {segment.actions.map((action, aIdx) => {
                                       const safeAction = typeof action === 'object' && action !== null ? action : {};
