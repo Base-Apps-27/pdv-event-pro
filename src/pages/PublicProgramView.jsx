@@ -881,12 +881,15 @@ export default function PublicProgramView() {
                                 <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs mt-2">
                                   <p className="font-bold text-amber-900 mb-1">📋 Acciones para Coordinador</p>
                                   <div className="space-y-1">
-                                    {segment.actions.map((action, aIdx) => (
+                                    {segment.actions.map((action, aIdx) => {
+                                      const safeAction = typeof action === 'object' && action !== null ? action : {};
+                                      return (
                                       <div key={aIdx} className="text-amber-800">
-                                        • {action.label || action.description || action}
-                                        {action.notes && <span className="italic ml-1">— {action.notes}</span>}
+                                        • {safeAction.label || ''}
+                                        {safeAction.notes && <span className="italic ml-1">— {safeAction.notes}</span>}
                                       </div>
-                                    ))}
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               )}
