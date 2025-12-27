@@ -449,7 +449,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         className="bg-white shadow-2xl relative print:shadow-none"
         style={{
           width: `${PAGE_W}px`,
-          height: `${PAGE_H - 5}px`, /* 5px safety buffer to prevent footer clipping */
+          height: `${PAGE_H - 40}px`, /* Safe buffer to prevent overflow/extra blank pages */
           display: 'block',
           margin: 0,
           flexShrink: 0,
@@ -1096,11 +1096,11 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         className="bg-white shadow-2xl relative print:shadow-none"
         style={{
           width: `${PAGE_W}px`,
-          height: `${PAGE_H - 5}px`, /* 5px safety buffer to prevent footer clipping */
+          height: `${PAGE_H - 40}px`, /* Safe buffer to prevent overflow/extra blank pages */
           display: 'block',
           margin: 0,
           flexShrink: 0,
-          breakAfter: 'auto',
+          breakAfter: 'avoid',
           breakInside: 'avoid',
           overflow: 'hidden'
         }}
