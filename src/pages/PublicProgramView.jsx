@@ -814,7 +814,7 @@ export default function PublicProgramView() {
                               </div>
 
                               {segment.data?.leader && (
-                                <p className="text-lg font-bold text-gray-800 mb-2">Dirige: {segment.data.leader}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">Dirige: {segment.data.leader}</p>
                               )}
 
                               {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
@@ -1210,7 +1210,7 @@ export default function PublicProgramView() {
                               </div>
                               
                               {segment.data?.leader && (
-                                <p className="text-lg font-bold text-gray-800 mb-2">Dirige: {segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">Dirige: {segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</p>
                               )}
                               
                               {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
