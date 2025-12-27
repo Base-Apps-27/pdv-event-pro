@@ -10,9 +10,9 @@ import { Sparkles, Loader2, BookOpen } from "lucide-react";
 function parseScriptureReferences(rawText) {
   if (!rawText || rawText.trim() === '') return { type: 'empty', sections: [] };
 
-  // Strict pattern: ONLY match book + chapter:verse format
-  // Examples: Rom 8:28 | S. Mar 3:16 | 1 Cor 13:4-7 | Juan 3:16-18 | Gen 1:1-2:3
-  const versePattern = /\b([1-3]\s)?(S\.\s)?([A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?)\s+(\d{1,3}):(\d{1,3})(-(\d{1,3}))?(:(\d{1,3}))?\b/gi;
+  // Enhanced pattern: Match book + chapter:verse + optional version
+  // Examples: Rom 8:28 | Juan 3:16 NVI | 1 Cor 13:4-7 (NTV) | Gen 1:1-2:3 RVR1960
+  const versePattern = /\b([1-3]\s)?(S\.\s)?([A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?)\s+(\d{1,3}):(\d{1,3})(-(\d{1,3}))?(:(\d{1,3}))?(?:\s+(?:[A-ZÑ]{3,6}\d{0,4}|\([A-ZÑ]{3,6}\d{0,4}\)))?/gi;
   
   const verses = [];
   const seenRefs = new Set(); // Deduplicate
