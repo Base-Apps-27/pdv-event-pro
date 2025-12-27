@@ -534,7 +534,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                 {Array.isArray(serviceData?.['9:30am']) && serviceData['9:30am'].filter(s => s?.type !== 'break').map((seg, idx) => (
                                   <div key={idx} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #f3f4f6' }}>
                                     <div style={{ marginBottom: '3px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-                                      {(seg.segment_type === 'Especial' || seg.type === 'Especial') && (
+                                      {(['Especial', 'Special', 'special'].includes(seg.segment_type || seg.type || seg.data?.type || seg.data?.segment_type)) && (
                                         <Sparkles 
                                           size={BASE_TITLE * 0.8 * page1Settings.titleFontScale} 
                                           color="#f59e0b" 
@@ -919,7 +919,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                           {serviceData.segments.map((seg, idx) => (
                             <div key={idx} style={{ marginBottom: '8px', paddingBottom: '6px', borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                               <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-                                {(seg.segment_type === 'Especial' || seg.type === 'Especial') && (
+                                {(['Especial', 'Special', 'special'].includes(seg.segment_type || seg.type || seg.data?.type || seg.data?.segment_type)) && (
                                   <Sparkles 
                                     size={BASE_TITLE * 0.8 * page1Settings.titleFontScale} 
                                     color="#f59e0b" 

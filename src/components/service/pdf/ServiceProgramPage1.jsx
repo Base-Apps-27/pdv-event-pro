@@ -218,6 +218,9 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
             )}
             
             <Text style={[styles.segmentTitle, scaledStyles.scaledSegmentTitle]}>
+              {(['Especial', 'Special', 'special'].includes(segment.segment_type || segment.type || segment.data?.type || segment.data?.segment_type)) && (
+                <Text style={{ color: '#f59e0b' }}>★ </Text>
+              )}
               {segment.title}
             </Text>
             

@@ -810,7 +810,7 @@ export default function PublicProgramView() {
                                   <span className="font-bold text-lg text-gray-900">{formatTimeToEST(segment.start_time)}</span>
                                 )}
                                 <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                  {(segment.segment_type === 'Especial' || segment.type === 'Especial') && (
+                                  {(['Especial', 'Special', 'special'].includes(segment.segment_type || segment.type || segment.data?.type || segment.data?.segment_type)) && (
                                     <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
                                   )}
                                   {segment.title}
