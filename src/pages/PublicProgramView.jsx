@@ -1012,7 +1012,7 @@ export default function PublicProgramView() {
                            <div className="flex-1">
                              <div className="flex items-center gap-2 mb-2 flex-wrap">
                                <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                 {(segment.segment_type === 'Especial' || segment.type === 'Especial') && (
+                                 {(['Especial', 'Special', 'special'].includes(segment.segment_type || segment.type || segment.data?.type || segment.data?.segment_type)) && (
                                    <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
                                  )}
                                  {segment.title}
@@ -1215,7 +1215,12 @@ export default function PublicProgramView() {
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                <h4 className="text-xl font-bold text-gray-900">{segment.title}</h4>
+                                <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                  {(['Especial', 'Special', 'special'].includes(segment.segment_type || segment.type || segment.data?.type || segment.data?.segment_type)) && (
+                                    <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
+                                  )}
+                                  {segment.title}
+                                </h4>
                                 <Badge variant="outline" className="text-xs text-gray-700">{segment.duration} min</Badge>
                               </div>
                               
