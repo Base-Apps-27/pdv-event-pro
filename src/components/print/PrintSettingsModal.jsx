@@ -386,7 +386,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           margin: 0 !important;
           padding: 0 !important;
           width: 8.5in;
-          height: 11in;
+          height: 100%;
+          overflow: hidden !important; /* Prevent scroll/spillover */
         }
 
         * {
@@ -449,7 +450,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         className="bg-white shadow-2xl relative print:shadow-none"
         style={{
           width: `${PAGE_W}px`,
-          height: `${PAGE_H - 40}px`, /* Safe buffer to prevent overflow/extra blank pages */
+          height: `${PAGE_H - 80}px`, /* Aggressive buffer to prevent ANY blank pages */
           display: 'block',
           margin: 0,
           flexShrink: 0,
@@ -1096,7 +1097,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         className="bg-white shadow-2xl relative print:shadow-none"
         style={{
           width: `${PAGE_W}px`,
-          height: `${PAGE_H - 40}px`, /* Safe buffer to prevent overflow/extra blank pages */
+          height: `${PAGE_H - 80}px`, /* Aggressive buffer to prevent ANY blank pages */
           display: 'block',
           margin: 0,
           flexShrink: 0,
