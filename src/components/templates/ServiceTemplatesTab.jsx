@@ -455,12 +455,15 @@ export default function ServiceTemplatesTab() {
                                     Añadir
                                   </Button>
                                 </div>
-                                {(segment.actions || []).map((action, aIdx) => (
+                                {(segment.actions || []).map((action, aIdx) => {
+                                  // Ensure action is an object
+                                  const safeAction = typeof action === 'object' && action !== null ? action : { label: '', timing: 'before_start', offset_min: 0 };
+                                  return (
                                   <div key={aIdx} className="bg-amber-50 border border-amber-200 rounded p-2 space-y-1">
                                     <div className="flex gap-2">
                                       <Input
                                         placeholder="Ej: Enviar texto: 844-555-5555"
-                                        value={action.label || ''}
+                                        value={safeAction.label || ''}
                                         onChange={(e) => {
                                           const actions = [...(segment.actions || [])];
                                           actions[aIdx] = { ...actions[aIdx], label: e.target.value };
@@ -481,7 +484,8 @@ export default function ServiceTemplatesTab() {
                                       </Button>
                                     </div>
                                   </div>
-                                ))}
+                                  );
+                                })}
                               </div>
 
                               <Textarea
