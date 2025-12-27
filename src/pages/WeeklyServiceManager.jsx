@@ -1523,55 +1523,62 @@ Return ONLY valid JSON:
             font-style: italic;
           }
 
+          /* Coordinator Actions - De-emphasized */
           .print-note-coordinator-actions {
-            background-color: #fcf8e3; /* Very light yellow */
-            border: 1px solid #faebcc; /* Soft light yellow border */
-            color: #8a6d3b; /* Muted yellow-brown text */
-            font-size: 8.5pt;
+            background-color: #fffdf5; /* Very light yellow (almost white) */
+            border: 1px solid #fef3c7; /* Thin soft yellow border */
+            color: #78350f; /* Muted yellow-brown text */
+            font-size: 8pt; /* Smaller text */
             margin-top: 4pt;
             padding: 3pt 6pt;
-            border-radius: 3pt;
+            border-radius: 2pt;
           }
 
           .print-note-coordinator-actions div {
-            font-size: 8.5pt;
+            font-size: 8pt;
             line-height: 1.2;
-            font-style: normal;
+            font-style: normal; /* No italics */
           }
 
+          /* General / Pre-Service Notes - Primary Importance */
           .print-note-general-info {
-            background-color: #e8f5e9; /* Very light green */
-            border-left: 3pt solid #4CAF50; /* Distinct green left border */
-            color: #1b5e20; /* Darker green text */
-            font-size: 9.5pt;
+            background-color: #f0fdf4; /* Light green background */
+            border-left: 4pt solid #16a34a; /* Strong green left border */
+            color: #14532d; /* Dark green text */
+            font-size: 10pt; /* Slightly larger text */
             margin-top: 4pt;
-            padding: 3pt 6pt;
+            padding: 4pt 8pt;
           }
 
+          /* Projection Notes - Role Indicator Only */
           .print-note-projection-team {
-            border-left: 3pt solid #2196F3; /* Distinct blue left border */
-            color: #0d47a1; /* Darker blue text */
-            font-size: 9.5pt;
+            border-left: 3pt solid #2563eb; /* Blue left border only */
+            background-color: transparent;
+            color: #1e40af; /* Blue text */
+            font-size: 9pt;
             margin-top: 4pt;
             padding: 2pt 6pt;
           }
 
+          /* Sound Notes - Role Indicator Only */
           .print-note-sound-team {
-            border-left: 3pt solid #f44336; /* Distinct red left border */
-            color: #b71c1c; /* Darker red text */
-            font-size: 9.5pt;
+            border-left: 3pt solid #dc2626; /* Red left border only */
+            background-color: transparent;
+            color: #991b1b; /* Red text */
+            font-size: 9pt;
             margin-top: 4pt;
             padding: 2pt 6pt;
           }
 
+          /* Segment-Specific Coordinator Notes - Contextual */
           .print-note-segment-coordinator {
-            background-color: #fffde7; /* Very subtle light yellow */
-            border-left: 2px solid #ffeb3b; /* Thin yellow left border */
-            color: #f57f17; /* Yellow-brown text */
+            background-color: #fffbeb; /* Very subtle yellow background */
+            border-left: 1px solid #fcd34d; /* Thin yellow left border */
+            color: #92400e; /* Yellow-brown text */
             font-size: 9pt;
             margin-top: 2pt;
             padding: 2pt 4pt;
-            font-style: italic;
+            font-style: italic; /* Italics retained */
           }
 
           .print-segment-songs {
