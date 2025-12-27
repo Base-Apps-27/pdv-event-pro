@@ -1059,12 +1059,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           className="print-footer"
           style={{
             position: 'absolute',
-            bottom: '20px',
-            left: '40px',
-            right: '40px',
+            bottom: '0.4in',
+            left: '0.5in',
+            width: '7.5in',
             height: '24px',
             zIndex: 9999,
-            backgroundColor: '#1F8A70', /* Fallback solid color */
+            backgroundColor: '#1F8A70',
             background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
             display: 'flex',
             alignItems: 'center',
@@ -1072,9 +1072,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             WebkitPrintColorAdjust: 'exact',
             printColorAdjust: 'exact',
             overflow: 'hidden',
-            borderRadius: '4px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            border: '1px solid #1F8A70' /* Ensure border prints even if background doesn't */
+            borderRadius: '12px',
+            boxShadow: 'none',
+            border: '1px solid #1F8A70'
           }}
         >
           <span className="print-footer-text" style={{ fontSize: '11px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
@@ -1236,12 +1236,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           className="print-footer"
           style={{
             position: 'absolute',
-            bottom: '20px',
-            left: '40px',
-            right: '40px',
+            bottom: '0.4in',
+            left: '0.5in',
+            width: '7.5in',
             height: '24px',
             zIndex: 9999,
-            backgroundColor: '#1F8A70', /* Fallback solid color */
+            backgroundColor: '#1F8A70',
             background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
             display: 'flex',
             alignItems: 'center',
@@ -1249,9 +1249,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             WebkitPrintColorAdjust: 'exact',
             printColorAdjust: 'exact',
             overflow: 'hidden',
-            borderRadius: '4px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            border: '1px solid #1F8A70' /* Ensure border prints even if background doesn't */
+            borderRadius: '12px',
+            boxShadow: 'none',
+            border: '1px solid #1F8A70'
           }}
         >
           <span className="print-footer-text" style={{ fontSize: '11px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
