@@ -6,13 +6,94 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, BookOpen } from "lucide-react";
 
-// Client-side parser for scripture references - ONLY extracts verse citations
+// Robust Bible Book Mapping
+const BIBLE_BOOKS = {
+  // Old Testament
+  "gn": { en: "Genesis", es: "Génesis" }, "gen": { en: "Genesis", es: "Génesis" }, "genesis": { en: "Genesis", es: "Génesis" }, "génesis": { en: "Genesis", es: "Génesis" },
+  "ex": { en: "Exodus", es: "Éxodo" }, "exo": { en: "Exodus", es: "Éxodo" }, "exod": { en: "Exodus", es: "Éxodo" }, "exodus": { en: "Exodus", es: "Éxodo" }, "éxodo": { en: "Exodus", es: "Éxodo" },
+  "lv": { en: "Leviticus", es: "Levítico" }, "lev": { en: "Leviticus", es: "Levítico" }, "leviticus": { en: "Leviticus", es: "Levítico" }, "levítico": { en: "Leviticus", es: "Levítico" },
+  "nm": { en: "Numbers", es: "Números" }, "num": { en: "Numbers", es: "Números" }, "numb": { en: "Numbers", es: "Números" }, "numbers": { en: "Numbers", es: "Números" }, "números": { en: "Numbers", es: "Números" },
+  "dt": { en: "Deuteronomy", es: "Deuteronomio" }, "deut": { en: "Deuteronomy", es: "Deuteronomio" }, "deuteronomy": { en: "Deuteronomy", es: "Deuteronomio" }, "deuteronomio": { en: "Deuteronomy", es: "Deuteronomio" },
+  "js": { en: "Joshua", es: "Josué" }, "jos": { en: "Joshua", es: "Josué" }, "josh": { en: "Joshua", es: "Josué" }, "joshua": { en: "Joshua", es: "Josué" }, "josué": { en: "Joshua", es: "Josué" },
+  "jue": { en: "Judges", es: "Jueces" }, "judg": { en: "Judges", es: "Jueces" }, "judges": { en: "Judges", es: "Jueces" }, "jueces": { en: "Judges", es: "Jueces" },
+  "rt": { en: "Ruth", es: "Rut" }, "rut": { en: "Ruth", es: "Rut" }, "ruth": { en: "Ruth", es: "Rut" },
+  "1 sm": { en: "1 Samuel", es: "1 Samuel" }, "1 sa": { en: "1 Samuel", es: "1 Samuel" }, "1 sam": { en: "1 Samuel", es: "1 Samuel" }, "1 samuel": { en: "1 Samuel", es: "1 Samuel" },
+  "2 sm": { en: "2 Samuel", es: "2 Samuel" }, "2 sa": { en: "2 Samuel", es: "2 Samuel" }, "2 sam": { en: "2 Samuel", es: "2 Samuel" }, "2 samuel": { en: "2 Samuel", es: "2 Samuel" },
+  "1 re": { en: "1 Kings", es: "1 Reyes" }, "1 kgs": { en: "1 Kings", es: "1 Reyes" }, "1 ki": { en: "1 Kings", es: "1 Reyes" }, "1 kings": { en: "1 Kings", es: "1 Reyes" }, "1 reyes": { en: "1 Kings", es: "1 Reyes" },
+  "2 re": { en: "2 Kings", es: "2 Reyes" }, "2 kgs": { en: "2 Kings", es: "2 Reyes" }, "2 ki": { en: "2 Kings", es: "2 Reyes" }, "2 kings": { en: "2 Kings", es: "2 Reyes" }, "2 reyes": { en: "2 Kings", es: "2 Reyes" },
+  "1 cr": { en: "1 Chronicles", es: "1 Crónicas" }, "1 chr": { en: "1 Chronicles", es: "1 Crónicas" }, "1 chron": { en: "1 Chronicles", es: "1 Crónicas" }, "1 chronicles": { en: "1 Chronicles", es: "1 Crónicas" }, "1 crónicas": { en: "1 Chronicles", es: "1 Crónicas" },
+  "2 cr": { en: "2 Chronicles", es: "2 Crónicas" }, "2 chr": { en: "2 Chronicles", es: "2 Crónicas" }, "2 chron": { en: "2 Chronicles", es: "2 Crónicas" }, "2 chronicles": { en: "2 Chronicles", es: "2 Crónicas" }, "2 crónicas": { en: "2 Chronicles", es: "2 Crónicas" },
+  "esd": { en: "Ezra", es: "Esdras" }, "ezr": { en: "Ezra", es: "Esdras" }, "ezra": { en: "Ezra", es: "Esdras" }, "esdras": { en: "Ezra", es: "Esdras" },
+  "neh": { en: "Nehemiah", es: "Nehemías" }, "nehemiah": { en: "Nehemiah", es: "Nehemías" }, "nehemías": { en: "Nehemiah", es: "Nehemías" },
+  "est": { en: "Esther", es: "Ester" }, "esth": { en: "Esther", es: "Ester" }, "esther": { en: "Esther", es: "Ester" }, "ester": { en: "Esther", es: "Ester" },
+  "job": { en: "Job", es: "Job" },
+  "sal": { en: "Psalms", es: "Salmos" }, "ps": { en: "Psalms", es: "Salmos" }, "psa": { en: "Psalms", es: "Salmos" }, "psalms": { en: "Psalms", es: "Salmos" }, "salmos": { en: "Psalms", es: "Salmos" },
+  "pr": { en: "Proverbs", es: "Proverbios" }, "prov": { en: "Proverbs", es: "Proverbios" }, "pro": { en: "Proverbs", es: "Proverbios" }, "proverbs": { en: "Proverbs", es: "Proverbios" }, "proverbios": { en: "Proverbs", es: "Proverbios" },
+  "ec": { en: "Ecclesiastes", es: "Eclesiastés" }, "eccl": { en: "Ecclesiastes", es: "Eclesiastés" }, "ecclesiastes": { en: "Ecclesiastes", es: "Eclesiastés" }, "eclesiastés": { en: "Ecclesiastes", es: "Eclesiastés" },
+  "cnt": { en: "Song of Solomon", es: "Cantares" }, "cant": { en: "Song of Solomon", es: "Cantares" }, "song": { en: "Song of Solomon", es: "Cantares" }, "cantares": { en: "Song of Solomon", es: "Cantares" },
+  "is": { en: "Isaiah", es: "Isaías" }, "isa": { en: "Isaiah", es: "Isaías" }, "isaiah": { en: "Isaiah", es: "Isaías" }, "isaías": { en: "Isaiah", es: "Isaías" },
+  "jer": { en: "Jeremiah", es: "Jeremías" }, "jeremiah": { en: "Jeremiah", es: "Jeremías" }, "jeremías": { en: "Jeremiah", es: "Jeremías" },
+  "lm": { en: "Lamentations", es: "Lamentaciones" }, "lam": { en: "Lamentations", es: "Lamentaciones" }, "lamentations": { en: "Lamentations", es: "Lamentaciones" }, "lamentaciones": { en: "Lamentations", es: "Lamentaciones" },
+  "ez": { en: "Ezekiel", es: "Ezequiel" }, "ezek": { en: "Ezekiel", es: "Ezequiel" }, "ezekiel": { en: "Ezekiel", es: "Ezequiel" }, "ezequiel": { en: "Ezekiel", es: "Ezequiel" },
+  "dn": { en: "Daniel", es: "Daniel" }, "dan": { en: "Daniel", es: "Daniel" }, "daniel": { en: "Daniel", es: "Daniel" },
+  "os": { en: "Hosea", es: "Oseas" }, "hos": { en: "Hosea", es: "Oseas" }, "hosea": { en: "Hosea", es: "Oseas" }, "oseas": { en: "Hosea", es: "Oseas" },
+  "jl": { en: "Joel", es: "Joel" }, "joel": { en: "Joel", es: "Joel" },
+  "am": { en: "Amos", es: "Amós" }, "amos": { en: "Amos", es: "Amós" }, "amós": { en: "Amos", es: "Amós" },
+  "abd": { en: "Obadiah", es: "Abdías" }, "obad": { en: "Obadiah", es: "Abdías" }, "obadiah": { en: "Obadiah", es: "Abdías" }, "abdías": { en: "Obadiah", es: "Abdías" },
+  "jon": { en: "Jonah", es: "Jonás" }, "jona": { en: "Jonah", es: "Jonás" }, "jonah": { en: "Jonah", es: "Jonás" }, "jonás": { en: "Jonah", es: "Jonás" },
+  "miq": { en: "Micah", es: "Miqueas" }, "mic": { en: "Micah", es: "Miqueas" }, "micah": { en: "Micah", es: "Miqueas" }, "miqueas": { en: "Micah", es: "Miqueas" },
+  "nah": { en: "Nahum", es: "Nahúm" }, "nahum": { en: "Nahum", es: "Nahúm" }, "nahúm": { en: "Nahum", es: "Nahúm" },
+  "hab": { en: "Habakkuk", es: "Habacuc" }, "habakkuk": { en: "Habakkuk", es: "Habacuc" }, "habacuc": { en: "Habakkuk", es: "Habacuc" },
+  "sof": { en: "Zephaniah", es: "Sofonías" }, "zeph": { en: "Zephaniah", es: "Sofonías" }, "zephaniah": { en: "Zephaniah", es: "Sofonías" }, "sofonías": { en: "Zephaniah", es: "Sofonías" },
+  "hag": { en: "Haggai", es: "Hageo" }, "hagg": { en: "Haggai", es: "Hageo" }, "haggai": { en: "Haggai", es: "Hageo" }, "hageo": { en: "Haggai", es: "Hageo" },
+  "zac": { en: "Zechariah", es: "Zacarías" }, "zech": { en: "Zechariah", es: "Zacarías" }, "zechariah": { en: "Zechariah", es: "Zacarías" }, "zacarías": { en: "Zechariah", es: "Zacarías" },
+  "mal": { en: "Malachi", es: "Malaquías" }, "malachi": { en: "Malachi", es: "Malaquías" }, "malaquías": { en: "Malachi", es: "Malaquías" },
+
+  // New Testament
+  "mt": { en: "Matthew", es: "Mateo" }, "matt": { en: "Matthew", es: "Mateo" }, "matthew": { en: "Matthew", es: "Mateo" }, "mateo": { en: "Matthew", es: "Mateo" },
+  "mr": { en: "Mark", es: "Marcos" }, "mk": { en: "Mark", es: "Marcos" }, "mark": { en: "Mark", es: "Marcos" }, "marcos": { en: "Mark", es: "Marcos" },
+  "lc": { en: "Luke", es: "Lucas" }, "lk": { en: "Luke", es: "Lucas" }, "luke": { en: "Luke", es: "Lucas" }, "lucas": { en: "Luke", es: "Lucas" },
+  "jn": { en: "John", es: "Juan" }, "jhn": { en: "John", es: "Juan" }, "john": { en: "John", es: "Juan" }, "juan": { en: "John", es: "Juan" },
+  "hch": { en: "Acts", es: "Hechos" }, "acts": { en: "Acts", es: "Hechos" }, "hechos": { en: "Acts", es: "Hechos" },
+  "rom": { en: "Romans", es: "Romanos" }, "ro": { en: "Romans", es: "Romanos" }, "romans": { en: "Romans", es: "Romanos" }, "romanos": { en: "Romans", es: "Romanos" },
+  "1 cor": { en: "1 Corinthians", es: "1 Corintios" }, "1 co": { en: "1 Corinthians", es: "1 Corintios" }, "1 corinthians": { en: "1 Corinthians", es: "1 Corintios" }, "1 corintios": { en: "1 Corinthians", es: "1 Corintios" },
+  "2 cor": { en: "2 Corinthians", es: "2 Corintios" }, "2 co": { en: "2 Corinthians", es: "2 Corintios" }, "2 corinthians": { en: "2 Corinthians", es: "2 Corintios" }, "2 corintios": { en: "2 Corinthians", es: "2 Corintios" },
+  "gal": { en: "Galatians", es: "Gálatas" }, "ga": { en: "Galatians", es: "Gálatas" }, "galatians": { en: "Galatians", es: "Gálatas" }, "gálatas": { en: "Galatians", es: "Gálatas" },
+  "ef": { en: "Ephesians", es: "Efesios" }, "eph": { en: "Ephesians", es: "Efesios" }, "ephesians": { en: "Ephesians", es: "Efesios" }, "efesios": { en: "Ephesians", es: "Efesios" },
+  "fil": { en: "Philippians", es: "Filipenses" }, "php": { en: "Philippians", es: "Filipenses" }, "philippians": { en: "Philippians", es: "Filipenses" }, "filipenses": { en: "Philippians", es: "Filipenses" },
+  "col": { en: "Colossians", es: "Colosenses" }, "colossians": { en: "Colossians", es: "Colosenses" }, "colosenses": { en: "Colossians", es: "Colosenses" },
+  "1 tes": { en: "1 Thessalonians", es: "1 Tesalonicenses" }, "1 th": { en: "1 Thessalonians", es: "1 Tesalonicenses" }, "1 thess": { en: "1 Thessalonians", es: "1 Tesalonicenses" }, "1 thessalonians": { en: "1 Thessalonians", es: "1 Tesalonicenses" }, "1 tesalonicenses": { en: "1 Thessalonians", es: "1 Tesalonicenses" },
+  "2 tes": { en: "2 Thessalonians", es: "2 Tesalonicenses" }, "2 th": { en: "2 Thessalonians", es: "2 Tesalonicenses" }, "2 thess": { en: "2 Thessalonians", es: "2 Tesalonicenses" }, "2 thessalonians": { en: "2 Thessalonians", es: "2 Tesalonicenses" }, "2 tesalonicenses": { en: "2 Thessalonians", es: "2 Tesalonicenses" },
+  "1 tim": { en: "1 Timothy", es: "1 Timoteo" }, "1 ti": { en: "1 Timothy", es: "1 Timoteo" }, "1 timothy": { en: "1 Timothy", es: "1 Timoteo" }, "1 timoteo": { en: "1 Timothy", es: "1 Timoteo" },
+  "2 tim": { en: "2 Timothy", es: "2 Timoteo" }, "2 ti": { en: "2 Timothy", es: "2 Timoteo" }, "2 timothy": { en: "2 Timothy", es: "2 Timoteo" }, "2 timoteo": { en: "2 Timothy", es: "2 Timoteo" },
+  "tit": { en: "Titus", es: "Tito" }, "titus": { en: "Titus", es: "Tito" }, "tito": { en: "Titus", es: "Tito" },
+  "flm": { en: "Philemon", es: "Filemón" }, "phm": { en: "Philemon", es: "Filemón" }, "philemon": { en: "Philemon", es: "Filemón" }, "filemón": { en: "Philemon", es: "Filemón" },
+  "heb": { en: "Hebrews", es: "Hebreos" }, "hebrews": { en: "Hebrews", es: "Hebreos" }, "hebreos": { en: "Hebrews", es: "Hebreos" },
+  "snt": { en: "James", es: "Santiago" }, "jas": { en: "James", es: "Santiago" }, "james": { en: "James", es: "Santiago" }, "santiago": { en: "James", es: "Santiago" },
+  "1 pe": { en: "1 Peter", es: "1 Pedro" }, "1 pt": { en: "1 Peter", es: "1 Pedro" }, "1 pet": { en: "1 Peter", es: "1 Pedro" }, "1 peter": { en: "1 Peter", es: "1 Pedro" }, "1 pedro": { en: "1 Peter", es: "1 Pedro" },
+  "2 pe": { en: "2 Peter", es: "2 Pedro" }, "2 pt": { en: "2 Peter", es: "2 Pedro" }, "2 pet": { en: "2 Peter", es: "2 Pedro" }, "2 peter": { en: "2 Peter", es: "2 Pedro" }, "2 pedro": { en: "2 Peter", es: "2 Pedro" },
+  "1 jn": { en: "1 John", es: "1 Juan" }, "1 jhn": { en: "1 John", es: "1 Juan" }, "1 john": { en: "1 John", es: "1 Juan" }, "1 juan": { en: "1 John", es: "1 Juan" },
+  "2 jn": { en: "2 John", es: "2 Juan" }, "2 jhn": { en: "2 John", es: "2 Juan" }, "2 john": { en: "2 John", es: "2 Juan" }, "2 juan": { en: "2 John", es: "2 Juan" },
+  "3 jn": { en: "3 John", es: "3 Juan" }, "3 jhn": { en: "3 John", es: "3 Juan" }, "3 john": { en: "3 John", es: "3 Juan" }, "3 juan": { en: "3 John", es: "3 Juan" },
+  "jud": { en: "Jude", es: "Judas" }, "jude": { en: "Jude", es: "Judas" }, "judas": { en: "Jude", es: "Judas" },
+  "ap": { en: "Revelation", es: "Apocalipsis" }, "rev": { en: "Revelation", es: "Apocalipsis" }, "revelation": { en: "Revelation", es: "Apocalipsis" }, "apocalipsis": { en: "Revelation", es: "Apocalipsis" }
+};
+
+// Client-side parser for scripture references - Extracts and Formats verses
 function parseScriptureReferences(rawText) {
   if (!rawText || rawText.trim() === '') return { type: 'empty', sections: [] };
 
-  // Enhanced pattern: Match book + chapter:verse + optional version
-  // Examples: Rom 8:28 | Juan 3:16 NVI | 1 Cor 13:4-7 (NTV) | Gen 1:1-2:3 RVR1960
-  const versePattern = /\b([1-3]\s)?(S\.\s)?([A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?)\s+(\d{1,3}):(\d{1,3})(-(\d{1,3}))?(:(\d{1,3}))?(?:\s+(?:[A-ZÑ]{3,6}\d{0,4}|\([A-ZÑ]{3,6}\d{0,4}\)))?/gi;
+  // Pattern to catch book (with numbers and spaces), reference, and optional version
+  // Capture Groups:
+  // 1: Optional leading number (e.g., "1 ")
+  // 2: Optional "S." or similar abbreviation part
+  // 3: Main book name part
+  // 4: Chapter
+  // 5: Verse start
+  // 6: Optional Verse Range part (-7)
+  // 7: Verse Range end
+  // 8: Optional Chapter Range (:8)
+  const versePattern = /\b(([1-3]\s)?(?:S\.\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3}):(\d{1,3})(-(\d{1,3}))?(:(\d{1,3}))?(?:\s+(?:[A-ZÑ]{3,6}\d{0,4}|\([A-ZÑ]{3,6}\d{0,4}\)))?/gi;
   
   const verses = [];
   const seenRefs = new Set(); // Deduplicate
@@ -22,21 +103,34 @@ function parseScriptureReferences(rawText) {
   
   matches.forEach(match => {
     const fullMatch = match[0].trim();
+    const bookRaw = match[1].trim().replace(/\.$/, ''); // Remove trailing dot
+    const restOfRef = fullMatch.substring(match[1].length).trim(); // "7:1" or "7:1-5"
+    
+    // Normalize book name to find in map
+    const bookLower = bookRaw.toLowerCase().replace(/\./g, '');
     
     // Filter out false positives (common words that look like book names)
-    const bookPart = (match[1] || '') + (match[2] || '') + match[3];
-    const lowerBook = bookPart.toLowerCase().trim();
+    const blacklist = ['y', 'es', 'en', 'el', 'la', 'de', 'a', 'por', 'con', 'sin', 'mi', 'tu', 'su', 'nos', 'os'];
+    if (blacklist.includes(bookLower)) return;
+
+    let formattedContent = fullMatch;
     
-    // Blacklist common Spanish/English words that match the pattern
-    const blacklist = ['y', 'es', 'en', 'el', 'la', 'de', 'a', 'por', 'con', 'sin'];
-    if (blacklist.includes(lowerBook)) return;
+    // Look up book name
+    if (BIBLE_BOOKS[bookLower]) {
+      const { en, es } = BIBLE_BOOKS[bookLower];
+      formattedContent = `${en} ${restOfRef} | ${es} ${restOfRef}`;
+    } else {
+        // Try fuzzy matching for "1cor", "1 cor", etc if exact match failed
+        // For now, exact match on cleaned string is safest to avoid "Sat" -> "Samuel" issues etc.
+    }
     
-    // Only add if not already seen
+    // Only add if not already seen (check the raw match to avoid dupes in logic, but save formatted)
     if (!seenRefs.has(fullMatch)) {
       seenRefs.add(fullMatch);
       verses.push({
         type: 'verse',
-        content: fullMatch
+        content: formattedContent,
+        original: fullMatch
       });
     }
   });
@@ -58,7 +152,7 @@ function VerseParserDialog({
   const [parsedData, setParsedData] = useState(null);
   const [isParsing, setIsParsing] = useState(false);
 
-  // Reset state when initialText changes (e.g., different segment selected)
+  // Reset state when initialText changes
   useEffect(() => {
     setRawText(initialText);
     setParsedData(null);
@@ -68,24 +162,24 @@ function VerseParserDialog({
     es: {
       title: "Extraer Referencias Bíblicas",
       inputLabel: "Pega tus referencias aquí",
-      inputPlaceholder: "Copia y pega las referencias bíblicas del mensaje...\n\nEjemplos:\nJuan 3:16\nRomanos 8:28-30\n1 Corintios 13:4-7\nGénesis 1:1-2:3\nMateo 5:1-12",
-      parseBtn: "Extraer Referencias",
-      parsing: "Extrayendo...",
+      inputPlaceholder: "Copia y pega las referencias bíblicas del mensaje...\n\nEjemplos:\nJuan 3:16\nRom 8:28-30 (se convertirá en Romans 8:28-30 | Romanos 8:28-30)\nHeb 7:1",
+      parseBtn: "Extraer y Formatear",
+      parsing: "Procesando...",
       saveBtn: "Guardar",
       cancelBtn: "Cancelar",
-      resultTitle: "Referencias Encontradas",
+      resultTitle: "Referencias Encontradas (EN | ES)",
       verseList: "Referencias Bíblicas",
       noData: "Pega las referencias y presiona 'Extraer'",
     },
     en: {
       title: "Extract Scripture References",
       inputLabel: "Paste your references here",
-      inputPlaceholder: "Copy and paste scripture references from the message...\n\nExamples:\nJohn 3:16\nRomans 8:28-30\n1 Corinthians 13:4-7\nGenesis 1:1-2:3\nMatthew 5:1-12",
-      parseBtn: "Extract References",
-      parsing: "Extracting...",
+      inputPlaceholder: "Copy and paste scripture references from the message...\n\nExamples:\nJohn 3:16\nRom 8:28-30 (will become Romans 8:28-30 | Romanos 8:28-30)\nHeb 7:1",
+      parseBtn: "Extract & Format",
+      parsing: "Processing...",
       saveBtn: "Save",
       cancelBtn: "Cancel",
-      resultTitle: "References Found",
+      resultTitle: "Found References (EN | ES)",
       verseList: "Scripture References",
       noData: "Paste references and press 'Extract'",
     }
@@ -105,9 +199,15 @@ function VerseParserDialog({
 
   const handleSave = () => {
     if (parsedData && onSave) {
-      // Only save parsed structure - do NOT overwrite original text field
+      // Create a formatted string for the main verse field too, 
+      // by joining all formatted sections with newlines
+      const formattedString = parsedData.sections.map(s => s.content).join('\n');
+      
       onSave({
-        parsed_data: parsedData
+        parsed_data: parsedData,
+        // Optionally update the raw verse text field with the formatted version if desired by the caller
+        // usually passed as `verse` or `scripture_references`
+        verse: formattedString 
       });
     }
     onOpenChange(false);
@@ -129,9 +229,14 @@ function VerseParserDialog({
             <Badge variant="outline" className="text-xs">{parsedData.sections.length} {language === 'es' ? (parsedData.sections.length === 1 ? 'referencia' : 'referencias') : (parsedData.sections.length === 1 ? 'reference' : 'references')}</Badge>
           </div>
           {parsedData.sections.map((item, idx) => (
-            <div key={idx} className="flex items-start gap-2 p-2 bg-white rounded border border-gray-200 hover:border-pdv-teal transition-colors">
-              <span className="text-pdv-teal font-bold text-sm">{idx + 1}.</span>
-              <span className="text-gray-800 text-sm">{item.content}</span>
+            <div key={idx} className="flex flex-col items-start gap-1 p-3 bg-white rounded border border-gray-200 hover:border-pdv-teal transition-colors shadow-sm">
+               <div className="flex items-center gap-2 w-full">
+                <span className="text-pdv-teal font-bold text-sm">{idx + 1}.</span>
+                <span className="text-gray-900 font-semibold text-sm flex-1">{item.content}</span>
+               </div>
+               {item.original && item.original !== item.content && (
+                 <span className="text-xs text-gray-400 ml-5">Original: {item.original}</span>
+               )}
             </div>
           ))}
         </div>
@@ -151,7 +256,7 @@ function VerseParserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] bg-white overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] bg-white overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-pdv-teal" />
@@ -159,7 +264,7 @@ function VerseParserDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid md:grid-cols-2 gap-4 flex-1 overflow-hidden">
+        <div className="grid md:grid-cols-2 gap-6 flex-1 overflow-hidden p-1">
           {/* Input Side */}
           <div className="flex flex-col gap-2 min-h-0">
             <label className="text-sm font-semibold text-gray-900">{t.inputLabel}</label>
@@ -167,13 +272,13 @@ function VerseParserDialog({
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
               placeholder={t.inputPlaceholder}
-              className="flex-1 min-h-[200px] text-sm font-mono"
+              className="flex-1 min-h-[200px] text-sm font-mono p-4"
             />
             <Button
               onClick={handleParse}
               disabled={!rawText.trim() || isParsing}
               style={{ backgroundColor: '#1F8A70', color: '#ffffff' }}
-              className="w-full font-semibold"
+              className="w-full font-semibold shadow-sm"
             >
               {isParsing ? (
                 <>
@@ -192,18 +297,18 @@ function VerseParserDialog({
           {/* Preview Side */}
           <div className="flex flex-col gap-2 min-h-0">
             <label className="text-sm font-semibold text-gray-900">{t.resultTitle}</label>
-            <ScrollArea className="flex-1 border-2 border-gray-300 rounded-lg p-4 bg-gray-50 min-h-[200px]">
+            <ScrollArea className="flex-1 border-2 border-gray-200 rounded-lg p-4 bg-gray-50 min-h-[200px]">
               {renderParsedContent()}
             </ScrollArea>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-3 pt-4 border-t">
+        <div className="flex justify-end gap-3 pt-4 border-t mt-2">
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)}
-            className="border-2 border-gray-400"
+            className="border-2 border-gray-300 hover:bg-gray-100 text-gray-700"
           >
             {t.cancelBtn}
           </Button>
@@ -211,7 +316,7 @@ function VerseParserDialog({
             onClick={handleSave}
             disabled={!parsedData || parsedData.type === 'empty'}
             style={{ backgroundColor: '#8DC63F', color: '#ffffff' }}
-            className="font-semibold"
+            className="font-semibold shadow-sm hover:brightness-110"
           >
             <BookOpen className="w-4 h-4 mr-2" />
             {t.saveBtn}
