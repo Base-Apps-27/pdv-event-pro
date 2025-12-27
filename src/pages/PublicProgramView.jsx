@@ -1759,9 +1759,9 @@ export default function PublicProgramView() {
                                 {/* Team Notes */}
                                 <div className="grid md:grid-cols-2 gap-2">
                                   {segment.projection_notes && (
-                                    <div className="border-l-4 border-purple-500 pl-3 py-1 text-xs">
-                                      <span className="font-bold text-purple-800">PROYECCIÓN:</span>
-                                      <p className="mt-1 text-purple-900">{segment.projection_notes}</p>
+                                    <div className="border-l-4 border-blue-500 pl-3 py-1 text-xs">
+                                      <span className="font-bold text-blue-800">PROYECCIÓN:</span>
+                                      <p className="mt-1 text-blue-900">{segment.projection_notes}</p>
                                     </div>
                                   )}
                                   {segment.sound_notes && (
@@ -1822,7 +1822,11 @@ export default function PublicProgramView() {
                                     )}
 
                                     {segment.description_details && (
-                                      <p className="text-gray-600 text-xs">{segment.description_details}</p>
+                                      <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
+                                        <p className="text-xs text-green-900 font-medium">
+                                          <strong>📝 Notas:</strong> {segment.description_details}
+                                        </p>
+                                      </div>
                                     )}
                                   </div>
                                   )}
@@ -1843,7 +1847,11 @@ export default function PublicProgramView() {
                                   {viewMode === "simple" && isExpanded && (
                                   <div className="mt-3 pt-3 border-t space-y-2">
                                   {segment.description_details && (
-                                  <p className="text-gray-600 text-sm">{segment.description_details}</p>
+                                  <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
+                                    <p className="text-sm text-green-900 font-medium">
+                                      <strong>📝 Notas:</strong> {segment.description_details}
+                                    </p>
+                                  </div>
                                   )}
 
                                   {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (

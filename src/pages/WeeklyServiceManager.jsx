@@ -1960,7 +1960,7 @@ Return ONLY valid JSON:
                   )}
 
                   {segment.data?.description && (
-                    <div className="print-segment-detail print-note-text">
+                    <div className="print-note-general-info">
                       {segment.data.description}
                     </div>
                   )}
@@ -2122,7 +2122,7 @@ Return ONLY valid JSON:
                   )}
 
                   {segment.data?.description && (
-                    <div className="print-segment-detail print-note-text">
+                    <div className="print-note-general-info">
                       {segment.data.description}
                     </div>
                   )}
