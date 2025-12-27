@@ -55,11 +55,6 @@ export default function StructuredVersesModal({
     if (parsedData.type === 'verse_list' && parsedData.sections?.length > 0) {
       return (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="w-5 h-5 text-pdv-teal" />
-            <h4 className="font-bold text-lg text-gray-900">{t.verseList}</h4>
-            <Badge variant="outline" className="ml-2">{parsedData.sections.length} {parsedData.sections.length === 1 ? 'verso' : 'versos'}</Badge>
-          </div>
           {parsedData.sections.map((item, idx) => (
             <div key={idx} className="flex items-start gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
               <span className="text-pdv-teal font-bold text-lg">{idx + 1}.</span>
@@ -73,11 +68,6 @@ export default function StructuredVersesModal({
     if (parsedData.type === 'outline' && parsedData.sections?.length > 0) {
       return (
         <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <List className="w-5 h-5 text-pdv-green" />
-            <h4 className="font-bold text-lg text-gray-900">{t.outline}</h4>
-            <Badge variant="outline" className="ml-2">{parsedData.sections.length} {parsedData.sections.length === 1 ? 'sección' : 'secciones'}</Badge>
-          </div>
           {parsedData.sections.map((section, idx) => (
             <div key={idx} className="border-l-4 border-pdv-teal pl-4 pb-3">
               <h5 className="font-bold text-gray-900 text-lg mb-3">{section.title}</h5>
@@ -121,10 +111,6 @@ export default function StructuredVersesModal({
     // Fallback plain text
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-2 mb-3">
-          <FileText className="w-4 h-4 text-gray-600" />
-          <h4 className="font-bold text-sm text-gray-900">{t.text}</h4>
-        </div>
         <p className="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded-lg border border-gray-200">{rawText}</p>
       </div>
     );
@@ -136,23 +122,32 @@ export default function StructuredVersesModal({
     return t.title;
   };
 
+  const getBadge = () => {
+    if (parsedData?.type === 'verse_list' && parsedData.sections?.length > 0) {
+      return <Badge variant="outline" className="ml-2">{parsedData.sections.length} {parsedData.sections.length === 1 ? 'verso' : 'versos'}</Badge>;
+    }
+    if (parsedData?.type === 'outline' && parsedData.sections?.length > 0) {
+      return <Badge variant="outline" className="ml-2">{parsedData.sections.length} {parsedData.sections.length === 1 ? 'sección' : 'secciones'}</Badge>;
+    }
+    return null;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] bg-white flex flex-col w-[95vw] md:w-full">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="max-w-3xl max-h-[85vh] bg-white flex flex-col w-[95vw] md:w-full p-0 overflow-hidden rounded-xl">
+        <DialogHeader className="flex-shrink-0 px-6 py-4 border-b border-gray-100">
           <div className="flex items-center justify-between mr-6">
             <DialogTitle className="flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-pdv-teal" />
               {getTitle()}
+              {getBadge()}
             </DialogTitle>
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4">
-          <div className="pr-4 pb-6">
-            {renderContent()}
-          </div>
-        </ScrollArea>
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          {renderContent()}
+        </div>
       </DialogContent>
     </Dialog>
   );
