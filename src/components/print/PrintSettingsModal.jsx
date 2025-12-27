@@ -519,7 +519,15 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                   9:30 A.M.
                                 </div>
                                 {serviceData?.pre_service_notes?.['9:30am'] && (
-                                  <div style={{ marginBottom: '16px', fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
+                                  <div style={{ 
+                                    marginBottom: '16px', 
+                                    fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, 
+                                    color: '#14532d', 
+                                    background: '#f0fdf4', 
+                                    borderLeft: '4px solid #16a34a', 
+                                    padding: '4px 8px',
+                                    fontStyle: 'italic'
+                                  }}>
                                     {serviceData.pre_service_notes['9:30am']}
                                   </div>
                                 )}
@@ -671,7 +679,15 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                               11:30 A.M.
                             </div>
                             {serviceData?.pre_service_notes?.['11:30am'] && (
-                              <div style={{ marginBottom: '16px', fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>
+                              <div style={{ 
+                                marginBottom: '16px', 
+                                fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, 
+                                color: '#14532d', 
+                                background: '#f0fdf4', 
+                                borderLeft: '4px solid #16a34a', 
+                                padding: '4px 8px',
+                                fontStyle: 'italic'
+                              }}>
                                 {serviceData.pre_service_notes['11:30am']}
                               </div>
                             )}
