@@ -890,13 +890,13 @@ export default function PublicProgramView() {
 
                               {/* Coordinator Actions */}
                               {segment.actions && segment.actions.length > 0 && (
-                                <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs mt-2">
-                                  <p className="font-bold text-amber-900 mb-1">📋 Acciones para Coordinador</p>
+                                <div className="bg-gray-50 border border-gray-200 rounded p-2 text-xs mt-2">
+                                  <p className="font-bold text-gray-700 mb-1">📋 Coordinador</p>
                                   <div className="space-y-1">
                                     {segment.actions.map((action, aIdx) => {
                                       const safeAction = typeof action === 'object' && action !== null ? action : {};
                                       return (
-                                      <div key={aIdx} className="text-amber-800">
+                                      <div key={aIdx} className="text-gray-600">
                                         • {safeAction.label || ''}
                                         {safeAction.notes && <span className="italic ml-1">— {safeAction.notes}</span>}
                                       </div>
@@ -1055,7 +1055,7 @@ export default function PublicProgramView() {
                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
                              )}
 
-                             {segment.data?.preacher && segment.requires_translation && segment.data?.translator && (
+                             {segment.data?.preacher && segment.requires_translation && segment.data?.translator && !/(trad|traduc)/i.test(segment.data?.preacher || '') && (
                                <p className="text-sm text-blue-600 mb-2 ml-4">
                                  🌐 Traduce: {segment.data.translator}
                                </p>
@@ -1114,15 +1114,19 @@ export default function PublicProgramView() {
                              )}
 
                              {segment.data?.projection_notes && (
-                               <p className="text-xs text-purple-700 mt-1">
-                                 <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
-                               </p>
+                               <div className="pl-2 border-l-4 border-purple-500 mt-1 bg-white">
+                                 <p className="text-xs text-purple-900">
+                                   <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
+                                 </p>
+                               </div>
                              )}
 
                              {segment.data?.sound_notes && (
-                               <p className="text-xs text-red-600 mt-1">
-                                 <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
-                               </p>
+                               <div className="pl-2 border-l-4 border-red-500 mt-1 bg-white">
+                                 <p className="text-xs text-red-900">
+                                   <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
+                                 </p>
+                               </div>
                              )}
 
                              {/* Coordinator Actions */}
@@ -1299,26 +1303,30 @@ export default function PublicProgramView() {
                               )}
                               
                               {segment.data?.projection_notes && (
-                                <p className="text-xs text-purple-700 mt-1">
-                                  <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
-                                </p>
+                                <div className="pl-2 border-l-4 border-purple-500 mt-1 bg-white">
+                                  <p className="text-xs text-purple-900">
+                                    <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
+                                  </p>
+                                </div>
                               )}
-                              
+
                               {segment.data?.sound_notes && (
-                                <p className="text-xs text-red-600 mt-1">
-                                  <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
-                                </p>
+                                <div className="pl-2 border-l-4 border-red-500 mt-1 bg-white">
+                                  <p className="text-xs text-red-900">
+                                    <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
+                                  </p>
+                                </div>
                               )}
 
                               {/* Coordinator Actions */}
                               {segment.actions && segment.actions.length > 0 && (
-                                <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs mt-2">
-                                  <p className="font-bold text-amber-900 mb-1">📋 Acciones para Coordinador</p>
+                                <div className="bg-gray-50 border border-gray-200 rounded p-2 text-xs mt-2">
+                                  <p className="font-bold text-gray-700 mb-1">📋 Coordinador</p>
                                   <div className="space-y-1">
                                     {segment.actions.map((action, aIdx) => {
                                       const safeAction = typeof action === 'object' && action !== null ? action : {};
                                       return (
-                                      <div key={aIdx} className="text-amber-800">
+                                      <div key={aIdx} className="text-gray-600">
                                         • {safeAction.label || ''}
                                         {safeAction.notes && <span className="italic ml-1">— {safeAction.notes}</span>}
                                       </div>
