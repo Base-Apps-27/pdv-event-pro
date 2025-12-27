@@ -975,7 +975,7 @@ export default function PublicProgramView() {
                       <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 A.M.</h3>
                       {actualServiceData.pre_service_notes?.["9:30am"] && (
                         <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                          <p className="text-sm text-green-900 font-medium italic">{actualServiceData.pre_service_notes["9:30am"]}</p>
+                          <p className="text-sm text-green-900 font-medium italic whitespace-pre-wrap line-clamp-3">{actualServiceData.pre_service_notes["9:30am"]}</p>
                         </div>
                       )}
                       {/* Team Info - Compact */}
@@ -1179,7 +1179,7 @@ export default function PublicProgramView() {
                       <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 A.M.</h3>
                       {actualServiceData.pre_service_notes?.["11:30am"] && (
                         <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                          <p className="text-sm text-gray-600 font-medium italic">{actualServiceData.pre_service_notes["11:30am"]}</p>
+                          <p className="text-sm text-gray-600 font-medium italic whitespace-pre-wrap line-clamp-3">{actualServiceData.pre_service_notes["11:30am"]}</p>
                         </div>
                       )}
                       {/* Team Info - Compact */}

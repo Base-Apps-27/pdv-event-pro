@@ -526,7 +526,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                     background: '#f0fdf4', 
                                     borderLeft: '4px solid #16a34a', 
                                     padding: '4px 8px',
-                                    fontStyle: 'italic'
+                                    fontStyle: 'italic',
+                                    whiteSpace: 'pre-wrap',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 3,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden'
                                   }}>
                                     {serviceData.pre_service_notes['9:30am']}
                                   </div>
@@ -699,7 +704,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                                 background: '#f0fdf4', 
                                 borderLeft: '4px solid #16a34a', 
                                 padding: '4px 8px',
-                                fontStyle: 'italic'
+                                fontStyle: 'italic',
+                                whiteSpace: 'pre-wrap',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden'
                               }}>
                                 {serviceData.pre_service_notes['11:30am']}
                               </div>
