@@ -1960,9 +1960,10 @@ Return ONLY valid JSON:
             })}
 
           </div>
+        </div>
+        </div>
 
-          <div className="print-service-column right">
-            <div className="print-service-time">11:30 A.M.</div>
+        <div className="print-receso">
             {serviceData?.pre_service_notes?.["9:30am"] && (
               <div className="print-segment">
                 <div className="print-segment-detail" style={{ fontStyle: 'italic', color: '#6b7280' }}>
