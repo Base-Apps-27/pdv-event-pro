@@ -1959,25 +1959,25 @@ Return ONLY valid JSON:
                   )}
 
                   {segment.data?.description_details && (
-                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#4b5563', marginTop: '2pt' }}>
+                    <div className="print-note-general-info">
                       <strong>📝 Notas:</strong> {segment.data.description_details}
                     </div>
                   )}
 
                   {segment.data?.projection_notes && (
-                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#7c3aed', marginTop: '2pt' }}>
+                    <div className="print-note-projection-team">
                       <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
                     </div>
                   )}
 
                   {segment.data?.sound_notes && (
-                    <div className="print-segment-detail print-note-text" style={{ fontSize: '9pt', color: '#dc2626', marginTop: '2pt' }}>
+                    <div className="print-note-sound-team">
                       <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
                     </div>
                   )}
 
                   {segment.actions && segment.actions.length > 0 && (
-                    <div className="print-coordinator-actions">
+                    <div className="print-note-coordinator-actions">
                       {segment.actions.map((action, aIdx) => {
                         const safeAction = typeof action === 'object' && action !== null ? action : {};
                         const hasTimingInLabel = /\d+\s*min/i.test(safeAction.label || '');
