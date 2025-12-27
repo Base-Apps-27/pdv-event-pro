@@ -1210,7 +1210,7 @@ export default function PublicProgramView() {
                               </div>
                               
                               {segment.data?.leader && (
-                                <p className="text-lg font-bold text-gray-800 mb-2">Dirige: {segment.data.leader}</p>
+                                <p className="text-lg font-bold text-gray-800 mb-2">Dirige: {segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</p>
                               )}
                               
                               {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
@@ -1241,11 +1241,11 @@ export default function PublicProgramView() {
                               )}
                               
                               {segment.data?.presenter && !segment.data?.ministry_leader && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</p>
                               )}
 
                               {segment.data?.preacher && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</p>
                               )}
 
                               {/* Cierre sub-assignment (shown after speaker) */}
