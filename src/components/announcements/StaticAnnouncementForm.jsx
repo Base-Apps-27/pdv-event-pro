@@ -71,6 +71,7 @@ function RichTextArea({ value, onChange, placeholder, maxLength, rows = 4, id })
           variant="outline"
           size="sm"
           className="h-7 w-7 p-0 font-bold"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => applyFormat('bold')}
           title="Negrita / Bold"
         >
@@ -81,6 +82,7 @@ function RichTextArea({ value, onChange, placeholder, maxLength, rows = 4, id })
           variant="outline"
           size="sm"
           className="h-7 w-7 p-0 italic"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => applyFormat('italic')}
           title="Itálica / Italic"
         >
@@ -91,6 +93,7 @@ function RichTextArea({ value, onChange, placeholder, maxLength, rows = 4, id })
           variant="outline"
           size="sm"
           className="h-7 px-2 text-xs"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={insertBullet}
           title="Viñeta / Bullet"
         >
