@@ -130,6 +130,13 @@ export default function CustomServiceBuilder() {
     verse: "",
     songs: [],
     description: "",
+    description_details: "",
+    coordinator_notes: "",
+    projection_notes: "",
+    sound_notes: "",
+    ushers_notes: "",
+    translation_notes: "",
+    stage_decor_notes: "",
     actions: []
   });
 
@@ -1001,6 +1008,80 @@ export default function CustomServiceBuilder() {
                                   className="text-xs"
                                   rows={3}
                                 />
+                                
+                                <div className="grid md:grid-cols-2 gap-3 pt-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold text-gray-700">Notas Coordinador</Label>
+                                    <Textarea
+                                      placeholder="Instrucciones para el coordinador..."
+                                      value={segment.coordinator_notes || ""}
+                                      onChange={(e) => updateSegmentField(idx, 'coordinator_notes', e.target.value)}
+                                      className="text-xs"
+                                      rows={2}
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold text-gray-700">Notas Proyección</Label>
+                                    <Textarea
+                                      placeholder="Instrucciones para pantallas..."
+                                      value={segment.projection_notes || ""}
+                                      onChange={(e) => updateSegmentField(idx, 'projection_notes', e.target.value)}
+                                      className="text-xs"
+                                      rows={2}
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold text-gray-700">Notas Sonido</Label>
+                                    <Textarea
+                                      placeholder="Instrucciones para audio..."
+                                      value={segment.sound_notes || ""}
+                                      onChange={(e) => updateSegmentField(idx, 'sound_notes', e.target.value)}
+                                      className="text-xs"
+                                      rows={2}
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold text-gray-700">Notas Ujieres</Label>
+                                    <Textarea
+                                      placeholder="Instrucciones para ujieres..."
+                                      value={segment.ushers_notes || ""}
+                                      onChange={(e) => updateSegmentField(idx, 'ushers_notes', e.target.value)}
+                                      className="text-xs"
+                                      rows={2}
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold text-gray-700">Notas Traducción</Label>
+                                    <Textarea
+                                      placeholder="Instrucciones para traducción..."
+                                      value={segment.translation_notes || ""}
+                                      onChange={(e) => updateSegmentField(idx, 'translation_notes', e.target.value)}
+                                      className="text-xs"
+                                      rows={2}
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs font-semibold text-gray-700">Notas Stage/Decor</Label>
+                                    <Textarea
+                                      placeholder="Instrucciones para escenario..."
+                                      value={segment.stage_decor_notes || ""}
+                                      onChange={(e) => updateSegmentField(idx, 'stage_decor_notes', e.target.value)}
+                                      className="text-xs"
+                                      rows={2}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1 pt-2">
+                                  <Label className="text-xs font-semibold text-gray-700">Notas Generales / Detalles</Label>
+                                  <Textarea
+                                    placeholder="Detalles adicionales para el programa..."
+                                    value={segment.description_details || ""}
+                                    onChange={(e) => updateSegmentField(idx, 'description_details', e.target.value)}
+                                    className="text-xs"
+                                    rows={2}
+                                  />
+                                </div>
                               </div>
                             )}
                     </CardContent>
