@@ -14,7 +14,6 @@ import StructuredVersesModal from "@/components/service/StructuredVersesModal";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import LiveAdminControls from "@/components/service/LiveAdminControls";
 import { hasPermission } from "@/components/utils/permissions";
-import { base44 } from "@/api/base44Client";
 
 export default function PublicProgramView() {
   const [currentUser, setCurrentUser] = useState(null);
