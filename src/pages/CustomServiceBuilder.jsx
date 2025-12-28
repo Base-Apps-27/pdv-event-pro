@@ -1038,7 +1038,8 @@ export default function CustomServiceBuilder() {
           </div>
           <div className="space-y-2">
             <Label>Ujieres</Label>
-            <Input
+            <AutocompleteInput
+              type="ujieres"
               value={serviceData.ujieres}
               onChange={(e) => setServiceData(prev => ({ ...prev, ujieres: e.target.value }))}
               placeholder="Nombres de ujieres"
@@ -1046,7 +1047,8 @@ export default function CustomServiceBuilder() {
           </div>
           <div className="space-y-2">
             <Label>Sonido</Label>
-            <Input
+            <AutocompleteInput
+              type="sound"
               value={serviceData.sound}
               onChange={(e) => setServiceData(prev => ({ ...prev, sound: e.target.value }))}
               placeholder="Equipo de sonido"
@@ -1054,7 +1056,8 @@ export default function CustomServiceBuilder() {
           </div>
           <div className="space-y-2">
             <Label>Luces/Proyección</Label>
-            <Input
+            <AutocompleteInput
+              type="tech"
               value={serviceData.luces}
               onChange={(e) => setServiceData(prev => ({ ...prev, luces: e.target.value }))}
               placeholder="Equipo de luces"

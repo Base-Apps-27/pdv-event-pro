@@ -33,16 +33,26 @@ const titleAbbreviations = {
 export function normalizeName(name) {
   if (!name || typeof name !== 'string') return name;
   
-  const trimmed = name.trim();
+  let trimmed = name.trim();
   if (!trimmed) return '';
 
-  // Split by spaces and capitalize each word
+  // Standardize separators: replace /, &, + with comma
+  trimmed = trimmed.replace(/\s*[\/&+|]\s*/g, ', ');
+  
+  // Normalize spacing after commas
+  trimmed = trimmed.replace(/\s*,\s*/g, ', ');
+
+  // Split by spaces to handle capitalization
   const words = trimmed.toLowerCase().split(/\s+/);
+  
   const normalized = words.map(word => {
-    // Check if it starts with a title
-    const lowerWord = word.toLowerCase().replace(/[.,]/g, '');
-    if (titleAbbreviations[lowerWord]) {
-      return titleAbbreviations[lowerWord];
+    // Skip capitalization for connector words if they appear in the middle (optional, but good for "de", "la")
+    // For now, we'll capitalize everything for consistency as requested, but handle specific titles
+    
+    // Check if it matches a title abbreviation
+    const lowerWordClean = word.toLowerCase().replace(/[.,]/g, '');
+    if (titleAbbreviations[lowerWordClean]) {
+      return titleAbbreviations[lowerWordClean];
     }
     
     // Handle names with apostrophes (O'Brien, D'Angelo)
@@ -59,11 +69,14 @@ export function normalizeName(name) {
       ).join('-');
     }
     
-    // Standard capitalization
-    return word.charAt(0).toUpperCase() + word.slice(1);
+    // Keep commas/periods attached to the word
+    const firstChar = word.charAt(0).toUpperCase();
+    const rest = word.slice(1);
+    return firstChar + rest;
   }).join(' ');
 
-  return normalized;
+  // Final cleanup: ensure space after comma if missing (though split/join handles most)
+  return normalized.replace(/,([^\s])/g, ', $1');
 }
 
 // Normalize song or message titles

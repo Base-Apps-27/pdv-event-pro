@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, Zap, BookOpen } from "lucide-react";
 import TimePicker from "@/components/ui/TimePicker";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
+import AutocompleteInput from "@/components/ui/AutocompleteInput";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -277,7 +278,8 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
           <Label htmlFor="presenter">
             {isWorshipType ? "Líder de Alabanza" : isPlenariaType ? "Predicador" : "Presentador"}
           </Label>
-          <Input 
+          <AutocompleteInput
+            type={isWorshipType ? "leader" : isPlenariaType ? "preacher" : "presenter"}
             id="presenter" 
             value={formData.presenter}
             onChange={(e) => setFormData({...formData, presenter: e.target.value})}
@@ -405,7 +407,8 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
             {formData.requires_translation && (
               <div className="space-y-2">
                 <Label htmlFor="translator_name">Traductor</Label>
-                <Input 
+                <AutocompleteInput
+                  type="translator"
                   id="translator_name" 
                   value={formData.translator_name}
                   onChange={(e) => setFormData({...formData, translator_name: e.target.value})}
@@ -443,7 +446,8 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
                   <div className="grid md:grid-cols-12 gap-3">
                     <div className="md:col-span-5 space-y-2">
                       <Label htmlFor={`song_${songNum}_title`}>Título</Label>
-                      <Input 
+                      <AutocompleteInput
+                        type="songTitle"
                         id={`song_${songNum}_title`}
                         value={formData[`song_${songNum}_title`]}
                         onChange={(e) => setFormData({...formData, [`song_${songNum}_title`]: e.target.value})}
@@ -452,7 +456,8 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
                     </div>
                     <div className="md:col-span-5 space-y-2">
                       <Label htmlFor={`song_${songNum}_lead`}>Vocalista Principal</Label>
-                      <Input 
+                      <AutocompleteInput
+                        type="leader"
                         id={`song_${songNum}_lead`}
                         value={formData[`song_${songNum}_lead`]}
                         onChange={(e) => setFormData({...formData, [`song_${songNum}_lead`]: e.target.value})}

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatTimeToEST } from "../components/utils/timeFormat";
+import { normalizeName } from "@/components/utils/textNormalization";
 import StructuredVersesModal from "@/components/service/StructuredVersesModal";
 
 export default function PublicProgramView() {
@@ -804,24 +805,24 @@ export default function PublicProgramView() {
                    {(actualServiceData.coordinators || actualServiceData.ujieres || actualServiceData.sound || actualServiceData.luces) && (
                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
                        {actualServiceData.coordinators && Object.values(actualServiceData.coordinators).find(v => v) && (
-                         <span><strong>👤 Coord:</strong> {actualServiceData.coordinators["9:30am"] || actualServiceData.coordinators["11:30am"] || Object.values(actualServiceData.coordinators).find(v => v)}</span>
+                         <span><strong>👤 Coord:</strong> {normalizeName(actualServiceData.coordinators["9:30am"] || actualServiceData.coordinators["11:30am"] || Object.values(actualServiceData.coordinators).find(v => v))}</span>
                        )}
                        {actualServiceData.ujieres && Object.values(actualServiceData.ujieres).find(v => v) && (
                          <>
                            <span className="text-gray-400">|</span>
-                           <span><strong>🚪 Ujieres:</strong> {actualServiceData.ujieres["9:30am"] || actualServiceData.ujieres["11:30am"] || Object.values(actualServiceData.ujieres).find(v => v)}</span>
+                           <span><strong>🚪 Ujieres:</strong> {normalizeName(actualServiceData.ujieres["9:30am"] || actualServiceData.ujieres["11:30am"] || Object.values(actualServiceData.ujieres).find(v => v))}</span>
                          </>
                        )}
                        {actualServiceData.sound && Object.values(actualServiceData.sound).find(v => v) && (
                          <>
                            <span className="text-gray-400">|</span>
-                           <span><strong>🔊 Sonido:</strong> {actualServiceData.sound["9:30am"] || actualServiceData.sound["11:30am"] || Object.values(actualServiceData.sound).find(v => v)}</span>
+                           <span><strong>🔊 Sonido:</strong> {normalizeName(actualServiceData.sound["9:30am"] || actualServiceData.sound["11:30am"] || Object.values(actualServiceData.sound).find(v => v))}</span>
                          </>
                        )}
                        {actualServiceData.luces && Object.values(actualServiceData.luces).find(v => v) && (
                          <>
                            <span className="text-gray-400">|</span>
-                           <span><strong>💡 Luces:</strong> {actualServiceData.luces["9:30am"] || actualServiceData.luces["11:30am"] || Object.values(actualServiceData.luces).find(v => v)}</span>
+                           <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["9:30am"] || actualServiceData.luces["11:30am"] || Object.values(actualServiceData.luces).find(v => v))}</span>
                          </>
                        )}
                      </div>
@@ -861,7 +862,7 @@ export default function PublicProgramView() {
                               </div>
 
                               {segment.data?.leader && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">Dirige: {segment.data.leader}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">Dirige: {normalizeName(segment.data.leader)}</p>
                               )}
 
                               {(() => {
@@ -882,22 +883,22 @@ export default function PublicProgramView() {
                               })()}
 
                               {segment.data?.presenter && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">{normalizeName(segment.data.presenter)}</p>
                               )}
 
                               {segment.data?.presenter && segment.requires_translation && segment.data?.translator && !/(trad|traduc)/i.test(segment.data?.presenter || '') && (
                                 <p className="text-sm text-blue-600 mb-2 ml-4">
-                                  🌐 Traduce: {segment.data.translator}
+                                  🌐 Traduce: {normalizeName(segment.data.translator)}
                                 </p>
                               )}
 
                               {segment.data?.preacher && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">{normalizeName(segment.data.preacher)}</p>
                               )}
 
                               {segment.data?.preacher && segment.requires_translation && segment.data?.translator && !/(trad|traduc)/i.test(segment.data?.preacher || '') && (
                                 <p className="text-sm text-blue-600 mb-2 ml-4">
-                                  🌐 Traduce: {segment.data.translator}
+                                  🌐 Traduce: {normalizeName(segment.data.translator)}
                                 </p>
                               )}
 
@@ -1037,24 +1038,24 @@ export default function PublicProgramView() {
                       {(actualServiceData.coordinators?.["9:30am"] || actualServiceData.ujieres?.["9:30am"] || actualServiceData.sound?.["9:30am"] || actualServiceData.luces?.["9:30am"]) && (
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
                           {actualServiceData.coordinators?.["9:30am"] && (
-                            <span><strong>👤 Coord:</strong> {actualServiceData.coordinators["9:30am"]}</span>
+                            <span><strong>👤 Coord:</strong> {normalizeName(actualServiceData.coordinators["9:30am"])}</span>
                           )}
                           {actualServiceData.ujieres?.["9:30am"] && (
                             <>
                               <span className="text-gray-400">|</span>
-                              <span><strong>🚪 Ujieres:</strong> {actualServiceData.ujieres["9:30am"]}</span>
+                              <span><strong>🚪 Ujieres:</strong> {normalizeName(actualServiceData.ujieres["9:30am"])}</span>
                             </>
                           )}
                           {actualServiceData.sound?.["9:30am"] && (
                             <>
                               <span className="text-gray-400">|</span>
-                              <span><strong>🔊 Sonido:</strong> {actualServiceData.sound["9:30am"]}</span>
+                              <span><strong>🔊 Sonido:</strong> {normalizeName(actualServiceData.sound["9:30am"])}</span>
                             </>
                           )}
                           {actualServiceData.luces?.["9:30am"] && (
                             <>
                               <span className="text-gray-400">|</span>
-                              <span><strong>💡 Luces:</strong> {actualServiceData.luces["9:30am"]}</span>
+                              <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["9:30am"])}</span>
                             </>
                           )}
                         </div>
@@ -1076,8 +1077,8 @@ export default function PublicProgramView() {
                              </div>
 
                              {segment.data?.leader && (
-                               <p className="text-lg font-bold text-blue-600 mb-2">Dirige: {segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</p>
-                             )}
+                                                                  <p className="text-lg font-bold text-blue-600 mb-2">Dirige: {normalizeName(segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, ''))}</p>
+                                                                )}
 
                              {(() => {
                                const songs = normalizeSongs(segment).filter(s => s.title);
@@ -1115,8 +1116,8 @@ export default function PublicProgramView() {
                              )}
 
                              {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && (
-                               <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter}</p>
-                             )}
+                                                                  <p className="text-lg font-bold text-blue-600 mb-2">{normalizeName(segment.data.presenter)}</p>
+                                                                )}
 
                              {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && segment.requires_translation && segment.data?.translator && !/(trad|traduc)/i.test(segment.data?.presenter || '') && (
                                <p className="text-sm text-blue-600 mb-2 ml-4">
@@ -1252,24 +1253,24 @@ export default function PublicProgramView() {
                       {(actualServiceData.coordinators?.["11:30am"] || actualServiceData.ujieres?.["11:30am"] || actualServiceData.sound?.["11:30am"] || actualServiceData.luces?.["11:30am"]) && (
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
                           {actualServiceData.coordinators?.["11:30am"] && (
-                            <span><strong>👤 Coord:</strong> {actualServiceData.coordinators["11:30am"]}</span>
+                            <span><strong>👤 Coord:</strong> {normalizeName(actualServiceData.coordinators["11:30am"])}</span>
                           )}
                           {actualServiceData.ujieres?.["11:30am"] && (
                             <>
                               <span className="text-gray-400">|</span>
-                              <span><strong>🚪 Ujieres:</strong> {actualServiceData.ujieres["11:30am"]}</span>
+                              <span><strong>🚪 Ujieres:</strong> {normalizeName(actualServiceData.ujieres["11:30am"])}</span>
                             </>
                           )}
                           {actualServiceData.sound?.["11:30am"] && (
                             <>
                               <span className="text-gray-400">|</span>
-                              <span><strong>🔊 Sonido:</strong> {actualServiceData.sound["11:30am"]}</span>
+                              <span><strong>🔊 Sonido:</strong> {normalizeName(actualServiceData.sound["11:30am"])}</span>
                             </>
                           )}
                           {actualServiceData.luces?.["11:30am"] && (
                             <>
                               <span className="text-gray-400">|</span>
-                              <span><strong>💡 Luces:</strong> {actualServiceData.luces["11:30am"]}</span>
+                              <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["11:30am"])}</span>
                             </>
                           )}
                         </div>
@@ -1330,11 +1331,11 @@ export default function PublicProgramView() {
                               )}
                               
                               {segment.data?.presenter && !segment.data?.ministry_leader && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.presenter.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">{normalizeName(segment.data.presenter.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, ''))}</p>
                               )}
 
                               {segment.data?.preacher && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">{normalizeName(segment.data.preacher.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, ''))}</p>
                               )}
 
                               {/* Cierre sub-assignment (shown after speaker) */}
@@ -1350,7 +1351,7 @@ export default function PublicProgramView() {
 
                               {segment.requires_translation && segment.data?.translator && (
                                 <p className="text-xs text-blue-600 mt-1">
-                                  🌐 Traduce: {segment.data.translator}
+                                  🌐 Traduce: {normalizeName(segment.data.translator)}
                                 </p>
                               )}
                               
@@ -1519,24 +1520,24 @@ export default function PublicProgramView() {
                           {(session.coordinators || session.ushers_team || session.sound_team || session.tech_team) && (
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
                               {session.coordinators && (
-                                <span><strong>👤 Coord:</strong> {session.coordinators}</span>
+                                <span><strong>👤 Coord:</strong> {normalizeName(session.coordinators)}</span>
                               )}
                               {session.ushers_team && (
                                 <>
                                   <span className="text-gray-400">|</span>
-                                  <span><strong>🚪 Ujieres:</strong> {session.ushers_team}</span>
+                                  <span><strong>🚪 Ujieres:</strong> {normalizeName(session.ushers_team)}</span>
                                 </>
                               )}
                               {session.sound_team && (
                                 <>
                                   <span className="text-gray-400">|</span>
-                                  <span><strong>🔊 Sonido:</strong> {session.sound_team}</span>
+                                  <span><strong>🔊 Sonido:</strong> {normalizeName(session.sound_team)}</span>
                                 </>
                               )}
                               {session.tech_team && (
                                 <>
                                   <span className="text-gray-400">|</span>
-                                  <span><strong>💡 Tech:</strong> {session.tech_team}</span>
+                                  <span><strong>💡 Tech:</strong> {normalizeName(session.tech_team)}</span>
                                 </>
                               )}
                             </div>
@@ -1545,24 +1546,24 @@ export default function PublicProgramView() {
                           {viewType === "service" && actualServiceData?.coordinators && (
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
                               {actualServiceData.coordinators && (
-                                <span><strong>👤 Coord:</strong> {actualServiceData.coordinators["9:30am"] || actualServiceData.coordinators["11:30am"] || Object.values(actualServiceData.coordinators).find(v => v)}</span>
+                                <span><strong>👤 Coord:</strong> {normalizeName(actualServiceData.coordinators["9:30am"] || actualServiceData.coordinators["11:30am"] || Object.values(actualServiceData.coordinators).find(v => v))}</span>
                               )}
                               {actualServiceData.ujieres && (
                                 <>
                                   <span className="text-gray-400">|</span>
-                                  <span><strong>🚪 Ujieres:</strong> {actualServiceData.ujieres["9:30am"] || actualServiceData.ujieres["11:30am"] || Object.values(actualServiceData.ujieres).find(v => v)}</span>
+                                  <span><strong>🚪 Ujieres:</strong> {normalizeName(actualServiceData.ujieres["9:30am"] || actualServiceData.ujieres["11:30am"] || Object.values(actualServiceData.ujieres).find(v => v))}</span>
                                 </>
                               )}
                               {actualServiceData.sound && (
                                 <>
                                   <span className="text-gray-400">|</span>
-                                  <span><strong>🔊 Sonido:</strong> {actualServiceData.sound["9:30am"] || actualServiceData.sound["11:30am"] || Object.values(actualServiceData.sound).find(v => v)}</span>
+                                  <span><strong>🔊 Sonido:</strong> {normalizeName(actualServiceData.sound["9:30am"] || actualServiceData.sound["11:30am"] || Object.values(actualServiceData.sound).find(v => v))}</span>
                                 </>
                               )}
                               {actualServiceData.luces && (
                                 <>
                                   <span className="text-gray-400">|</span>
-                                  <span><strong>💡 Luces:</strong> {actualServiceData.luces["9:30am"] || actualServiceData.luces["11:30am"] || Object.values(actualServiceData.luces).find(v => v)}</span>
+                                  <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["9:30am"] || actualServiceData.luces["11:30am"] || Object.values(actualServiceData.luces).find(v => v))}</span>
                                 </>
                               )}
                             </div>
@@ -1708,7 +1709,7 @@ export default function PublicProgramView() {
                                   </div>
 
                                   {segment.presenter && (
-                                    <p className="text-blue-600 text-sm mt-1">{segment.presenter}</p>
+                                    <p className="text-blue-600 text-sm mt-1">{normalizeName(segment.presenter)}</p>
                                   )}
 
                                   {(segment.scripture_references || segment.parsed_verse_data) && (
@@ -1784,7 +1785,7 @@ export default function PublicProgramView() {
                                     {segment.presenter && (
                                       <div className="flex items-center gap-2 text-blue-600 mb-2">
                                         <Users className="w-4 h-4" />
-                                        <span className="font-semibold">{segment.presenter}</span>
+                                        <span className="font-semibold">{normalizeName(segment.presenter)}</span>
                                       </div>
                                     )}
 
