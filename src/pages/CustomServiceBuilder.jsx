@@ -56,6 +56,13 @@ export default function CustomServiceBuilder() {
           { title: "", lead: "" }
         ],
         description: "",
+        description_details: "",
+        coordinator_notes: "",
+        projection_notes: "",
+        sound_notes: "",
+        ushers_notes: "",
+        translation_notes: "",
+        stage_decor_notes: "",
         actions: []
       },
       {
@@ -70,6 +77,13 @@ export default function CustomServiceBuilder() {
         verse: "",
         songs: [],
         description: "",
+        description_details: "",
+        coordinator_notes: "",
+        projection_notes: "",
+        sound_notes: "",
+        ushers_notes: "",
+        translation_notes: "",
+        stage_decor_notes: "",
         actions: []
       },
       {
@@ -84,6 +98,13 @@ export default function CustomServiceBuilder() {
         verse: "",
         songs: [],
         description: "",
+        description_details: "",
+        coordinator_notes: "",
+        projection_notes: "",
+        sound_notes: "",
+        ushers_notes: "",
+        translation_notes: "",
+        stage_decor_notes: "",
         actions: []
       },
       {
@@ -98,6 +119,13 @@ export default function CustomServiceBuilder() {
         verse: "",
         songs: [],
         description: "",
+        description_details: "",
+        coordinator_notes: "",
+        projection_notes: "",
+        sound_notes: "",
+        ushers_notes: "",
+        translation_notes: "",
+        stage_decor_notes: "",
         actions: []
       }
     ],
