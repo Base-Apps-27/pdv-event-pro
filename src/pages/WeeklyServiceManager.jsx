@@ -3823,7 +3823,6 @@ Return ONLY valid JSON:
                           )}
                         </div>
                       )}
-                      )}
                     </div>
                     <div 
                       className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap mb-2"

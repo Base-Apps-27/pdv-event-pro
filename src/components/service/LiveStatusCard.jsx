@@ -2,7 +2,7 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PlayCircle, ChevronRight } from "lucide-react";
-import { formatTimeToEST } from "../components/utils/timeFormat";
+import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 export default function LiveStatusCard({ segments, currentTime, onScrollTo }) {
   // Helper to parse "HH:MM" to Date object for today
