@@ -878,7 +878,10 @@ export default function PublicProgramView() {
                   if (countdown.minutes > maxMinutes) return null;
 
                   return (
-                    <Card className={`mb-6 ${countdown.isNear ? 'border-blue-500 border-2' : ''}`}>
+                    <Card 
+                      className={`mb-6 cursor-pointer hover:shadow-md transition-all hover:scale-[1.01] ${countdown.isNear ? 'border-blue-500 border-2' : 'hover:border-pdv-teal border-2 border-transparent'}`}
+                      onClick={() => scrollToSegment(countdown.segment)}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
@@ -1587,7 +1590,10 @@ export default function PublicProgramView() {
                 if (countdown.minutes > maxMinutes) return null;
                 
                 return (
-                  <Card className={`mb-6 ${countdown.isNear ? 'border-blue-500 border-2' : ''}`}>
+                  <Card 
+                    className={`mb-6 cursor-pointer hover:shadow-md transition-all hover:scale-[1.01] ${countdown.isNear ? 'border-blue-500 border-2' : 'hover:border-pdv-teal border-2 border-transparent'}`}
+                    onClick={() => scrollToSegment(countdown.segment)}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
