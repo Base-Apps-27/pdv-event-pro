@@ -269,8 +269,16 @@ export default function CustomServiceBuilder() {
         throw error;
       }
     },
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       console.log('[MUTATION SUCCESS] Invalidating queries and updating state');
+      
+      // SYNC TO SESSION/SEGMENTS for Live Control support
+      try {
+        await syncToSession(result);
+      } catch (err) {
+        console.error("Failed to sync session data:", err);
+      }
+
       queryClient.invalidateQueries(['customService']);
       queryClient.invalidateQueries(['services']);
       setLastSavedData(JSON.parse(JSON.stringify(serviceData)));
@@ -287,7 +295,10 @@ export default function CustomServiceBuilder() {
         console.log('[BACKUP] Saved to localStorage:', backupKey);
       }
       
-      alert('Servicio guardado exitosamente en ' + new Date().toLocaleTimeString());
+      // Only alert if manual save (status is saving)
+      if (autoSaveStatus !== "saving") {
+         alert('Servicio guardado exitosamente en ' + new Date().toLocaleTimeString());
+      }
     },
     onError: (error) => {
       console.error('[MUTATION ERROR]', error);
@@ -468,6 +479,113 @@ export default function CustomServiceBuilder() {
   };
 
   const timeCalc = calculateTotalTime();
+
+  // Helper to sync Service JSON to Session/Segment Entities
+  const syncToSession = async (serviceResult) => {
+    if (!serviceResult || !serviceResult.id) return;
+    
+    console.log('[SYNC] Starting sync to Session entities...');
+    const serviceId = serviceResult.id;
+    
+    // 1. Find or Create Session
+    let session = null;
+    const existingSessions = await base44.entities.Session.filter({ service_id: serviceId });
+    
+    if (existingSessions.length > 0) {
+      session = existingSessions[0];
+      // Update session details if needed
+      if (session.name !== serviceResult.name || session.date !== serviceResult.date || session.location !== serviceResult.location) {
+         await base44.entities.Session.update(session.id, {
+           name: serviceResult.name,
+           date: serviceResult.date,
+           location: serviceResult.location,
+           planned_start_time: serviceResult.time
+         });
+      }
+    } else {
+      session = await base44.entities.Session.create({
+        service_id: serviceId,
+        name: serviceResult.name,
+        date: serviceResult.date,
+        location: serviceResult.location,
+        planned_start_time: serviceResult.time,
+        live_adjustment_enabled: false
+      });
+    }
+    
+    // 2. Sync Segments
+    // We delete all existing segments for this session and recreate them to ensure order and content match perfectly.
+    // NOTE: This resets "Live" status if it was active. This is a tradeoff for the Builder.
+    const existingSegments = await base44.entities.Segment.filter({ session_id: session.id });
+    if (existingSegments.length > 0) {
+      // Parallel delete
+      await Promise.all(existingSegments.map(s => base44.entities.Segment.delete(s.id)));
+    }
+    
+    // 3. Create new Segments
+    const newSegments = [];
+    let currentTime = parse(serviceResult.time, "HH:mm", new Date());
+    
+    for (let i = 0; i < serviceData.segments.length; i++) {
+      const segData = serviceData.segments[i];
+      const duration = segData.duration || 0;
+      
+      const startTimeStr = format(currentTime, "HH:mm");
+      currentTime = addMinutes(currentTime, duration);
+      const endTimeStr = format(currentTime, "HH:mm");
+      
+      // Flatten songs
+      const flatSongs = {};
+      if (segData.songs && Array.isArray(segData.songs)) {
+        segData.songs.forEach((song, idx) => {
+          if (idx < 6) {
+            flatSongs[`song_${idx+1}_title`] = song.title;
+            flatSongs[`song_${idx+1}_lead`] = song.lead;
+            flatSongs[`song_${idx+1}_key`] = song.key;
+          }
+        });
+      }
+
+      newSegments.push({
+        session_id: session.id,
+        service_id: serviceId,
+        order: i + 1,
+        title: segData.title,
+        segment_type: segData.type || 'Especial',
+        start_time: startTimeStr,
+        end_time: endTimeStr,
+        duration_min: duration,
+        presenter: segData.presenter,
+        translator_name: segData.translator, // Mapping translator
+        description_details: segData.description_details || segData.description,
+        // Map notes
+        coordinator_notes: segData.coordinator_notes,
+        projection_notes: segData.projection_notes,
+        sound_notes: segData.sound_notes,
+        ushers_notes: segData.ushers_notes,
+        translation_notes: segData.translation_notes,
+        stage_decor_notes: segData.stage_decor_notes,
+        // Map specific fields
+        message_title: segData.messageTitle,
+        scripture_references: segData.verse,
+        parsed_verse_data: segData.parsed_verse_data,
+        // Songs
+        ...flatSongs,
+        // Actions
+        segment_actions: segData.actions,
+        // Flags
+        requires_translation: !!segData.translator,
+        show_in_general: true
+      });
+    }
+    
+    // Batch create if possible, or sequential
+    // Segment.create doesn't support bulk in standard SDK usually, check instructions?
+    // Instructions say: create_entity_records tool supports bulk. SDK?
+    // SDK: base44.entities.Todo.bulkCreate([...])
+    await base44.entities.Segment.bulkCreate(newSegments);
+    console.log('[SYNC] Completed sync to Session/Segments');
+  };
 
   const activePrintSettingsPage1 = printSettingsPage1 || {
     globalScale: 1.0,
