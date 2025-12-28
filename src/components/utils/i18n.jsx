@@ -144,6 +144,17 @@ const translations = {
     'common.location': 'Location',
     'common.sessions': 'sessions',
     'common.segments': 'segments',
+
+    // Live Admin
+    'live.admin_mode': 'Live Director Mode',
+    'live.enabled': 'Live adjustments enabled',
+    'live.disabled': 'Live adjustments disabled',
+    'live.mark_ended': 'End Now',
+    'live.delay': 'Delay',
+    'live.segment_ended': 'Segment marked as ended',
+    'live.time_adjusted': 'Time adjusted by {minutes} min',
+    'live.active_warning': 'Changes override planned times',
+    'live.current': 'Current',
   }
 };
 

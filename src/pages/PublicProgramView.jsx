@@ -12,8 +12,24 @@ import { formatTimeToEST } from "../components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import StructuredVersesModal from "@/components/service/StructuredVersesModal";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
+import LiveAdminControls from "@/components/service/LiveAdminControls";
+import { hasPermission } from "@/components/utils/permissions";
+import { base44 } from "@/api/base44Client";
 
 export default function PublicProgramView() {
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await base44.auth.me();
+        setCurrentUser(user);
+      } catch (e) {
+        // Not logged in
+      }
+    };
+    fetchUser();
+  }, []);
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
@@ -202,7 +218,7 @@ export default function PublicProgramView() {
   });
 
   // Fetch sessions for selected event OR service
-  const { data: sessions = [] } = useQuery({
+  const { data: sessions = [], refetch: refetchSessions } = useQuery({
     queryKey: ['sessions', selectedEventId, selectedServiceId, viewType],
     queryFn: () => {
       if (viewType === "event" && selectedEventId) {
@@ -217,7 +233,7 @@ export default function PublicProgramView() {
   });
 
   // Fetch segments for selected sessions
-  const { data: allSegments = [] } = useQuery({
+  const { data: allSegments = [], refetch: refetchSegments } = useQuery({
     queryKey: ['segments', selectedEventId, selectedServiceId, selectedSessionId, viewType],
     queryFn: async () => {
       const sessionIds = selectedSessionId === "all" 
@@ -234,6 +250,11 @@ export default function PublicProgramView() {
     enabled: !!(selectedEventId || selectedServiceId) && sessions.length > 0,
     refetchInterval: 5000,
   });
+
+  const refetchData = () => {
+    refetchSessions();
+    refetchSegments();
+  };
 
   // Fetch rooms
   const { data: rooms = [] } = useQuery({
@@ -811,6 +832,57 @@ export default function PublicProgramView() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Live Admin Controls */}
+            {hasPermission(currentUser, 'manage_live_timing') && filteredSessions.length > 0 && (
+              <LiveAdminControls 
+                session={filteredSessions[0]} // For now assume single session active or take first
+                currentSegment={(() => {
+                  // Re-use logic to find current segment for controls
+                  const sessionSegments = getSessionSegments(filteredSessions[0].id);
+                  const effectiveSegments = sessionSegments.map(s => {
+                    if (filteredSessions[0].live_adjustment_enabled && s.is_live_adjusted) {
+                      return { ...s, start_time: s.actual_start_time || s.start_time, end_time: s.actual_end_time || s.end_time };
+                    }
+                    return s;
+                  });
+                  // Helper to parse times
+                  const getTimeDate = (timeStr) => {
+                    if (!timeStr) return null;
+                    const [hours, mins] = timeStr.split(':').map(Number);
+                    const date = new Date(currentTime);
+                    date.setHours(hours, mins, 0, 0);
+                    return date;
+                  };
+                  return effectiveSegments.find(s => {
+                    const start = getTimeDate(s.start_time);
+                    const end = getTimeDate(s.end_time);
+                    return start && end && currentTime >= start && currentTime <= end;
+                  });
+                })()}
+                nextSegment={(() => {
+                   const sessionSegments = getSessionSegments(filteredSessions[0].id);
+                   const effectiveSegments = sessionSegments.map(s => {
+                    if (filteredSessions[0].live_adjustment_enabled && s.is_live_adjusted) {
+                      return { ...s, start_time: s.actual_start_time || s.start_time, end_time: s.actual_end_time || s.end_time };
+                    }
+                    return s;
+                  });
+                   const getTimeDate = (timeStr) => {
+                    if (!timeStr) return null;
+                    const [hours, mins] = timeStr.split(':').map(Number);
+                    const date = new Date(currentTime);
+                    date.setHours(hours, mins, 0, 0);
+                    return date;
+                  };
+                  return effectiveSegments.find(s => {
+                    const start = getTimeDate(s.start_time);
+                    return start && start > currentTime;
+                  });
+                })()}
+                refetchData={refetchData}
+              />
+            )}
 
             {/* View Mode and Filters Card - Only show for Events */}
             {viewType === "event" && (
@@ -1525,6 +1597,7 @@ export default function PublicProgramView() {
                 segments={allSegments} 
                 currentTime={currentTime}
                 onScrollTo={scrollToSegment}
+                liveAdjustmentEnabled={filteredSessions[0]?.live_adjustment_enabled}
               />
 
               {filteredSessions.map((session) => {

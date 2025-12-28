@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlayCircle } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
-export default function LiveStatusCard({ segments, currentTime, onScrollTo }) {
+export default function LiveStatusCard({ segments, currentTime, onScrollTo, liveAdjustmentEnabled }) {
   // Helper to parse "HH:MM" to Date object for today
   const getTimeDate = (timeStr) => {
     if (!timeStr) return null;
@@ -14,8 +14,20 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo }) {
     return date;
   };
 
+  // Determine effective times based on liveAdjustmentEnabled flag
+  const getEffectiveSegment = (s) => {
+    if (liveAdjustmentEnabled && s.is_live_adjusted) {
+      return {
+        ...s,
+        start_time: s.actual_start_time || s.start_time,
+        end_time: s.actual_end_time || s.end_time
+      };
+    }
+    return s;
+  };
+
   // Filter out breaks and ensure valid times
-  const validSegments = segments.filter(s => 
+  const validSegments = segments.map(getEffectiveSegment).filter(s => 
     s.start_time && 
     (s.type !== 'break' && s.segment_type !== 'break' && s.segment_type !== 'Break')
   ).sort((a, b) => {
@@ -98,6 +110,11 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo }) {
                 <h3 className="text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">
                   {nextSegment.title || nextSegment.data?.title}
                 </h3>
+                {nextSegment.is_live_adjusted && liveAdjustmentEnabled && (
+                  <Badge variant="outline" className="ml-2 border-amber-500 text-amber-600 text-[10px]">
+                    ADJUSTED
+                  </Badge>
+                )}
               </div>
             </div>
             {nextSegment.presenter && (

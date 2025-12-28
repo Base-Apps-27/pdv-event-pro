@@ -26,7 +26,12 @@ const DEFAULT_ROLE_PERMISSIONS = {
     'view_reports',
     'access_importer',
     'view_live_program',
+    'manage_live_timing',
     'manage_users',
+  ],
+  LiveManager: [
+    'view_live_program',
+    'manage_live_timing',
   ],
   AdmAsst: [
     'view_events', 'edit_events', 'create_events',
@@ -172,5 +177,8 @@ export function getAllPermissionDefinitions() {
 
     // User Management
     { key: 'manage_users', resource: 'users', action: 'manage', category: 'settings', hierarchy_level: 4, label_en: 'Manage Users', label_es: 'Gestionar Usuarios' },
+
+    // Live Timing
+    { key: 'manage_live_timing', resource: 'live_timing', action: 'manage', category: 'live', hierarchy_level: 2, label_en: 'Manage Live Timing', label_es: 'Gestionar Tiempos en Vivo' },
   ];
 }
