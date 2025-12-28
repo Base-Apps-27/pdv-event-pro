@@ -129,10 +129,10 @@ export default function CustomServiceBuilder() {
         actions: []
       }
     ],
-    coordinators: "",
-    ujieres: "",
-    sound: "",
-    luces: "",
+    coordinators: { main: "" },
+    ujieres: { main: "" },
+    sound: { main: "" },
+    luces: { main: "" },
     notes: ""
   });
 
@@ -1140,8 +1140,8 @@ export default function CustomServiceBuilder() {
             <Label>Coordinador(a)</Label>
             <AutocompleteInput
               type="presenter"
-              value={serviceData.coordinators}
-              onChange={(e) => setServiceData(prev => ({ ...prev, coordinators: e.target.value }))}
+              value={serviceData.coordinators?.main || ""}
+              onChange={(e) => setServiceData(prev => ({ ...prev, coordinators: { ...prev.coordinators, main: e.target.value } }))}
               placeholder="Nombre del coordinador"
             />
           </div>
@@ -1149,8 +1149,8 @@ export default function CustomServiceBuilder() {
             <Label>Ujieres</Label>
             <AutocompleteInput
               type="ujieres"
-              value={serviceData.ujieres}
-              onChange={(e) => setServiceData(prev => ({ ...prev, ujieres: e.target.value }))}
+              value={serviceData.ujieres?.main || ""}
+              onChange={(e) => setServiceData(prev => ({ ...prev, ujieres: { ...prev.ujieres, main: e.target.value } }))}
               placeholder="Nombres de ujieres"
             />
           </div>
@@ -1158,8 +1158,8 @@ export default function CustomServiceBuilder() {
             <Label>Sonido</Label>
             <AutocompleteInput
               type="sound"
-              value={serviceData.sound}
-              onChange={(e) => setServiceData(prev => ({ ...prev, sound: e.target.value }))}
+              value={serviceData.sound?.main || ""}
+              onChange={(e) => setServiceData(prev => ({ ...prev, sound: { ...prev.sound, main: e.target.value } }))}
               placeholder="Equipo de sonido"
             />
           </div>
@@ -1167,8 +1167,8 @@ export default function CustomServiceBuilder() {
             <Label>Luces/Proyección</Label>
             <AutocompleteInput
               type="tech"
-              value={serviceData.luces}
-              onChange={(e) => setServiceData(prev => ({ ...prev, luces: e.target.value }))}
+              value={serviceData.luces?.main || ""}
+              onChange={(e) => setServiceData(prev => ({ ...prev, luces: { ...prev.luces, main: e.target.value } }))}
               placeholder="Equipo de luces"
             />
           </div>
