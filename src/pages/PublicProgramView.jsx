@@ -243,7 +243,75 @@ export default function PublicProgramView() {
 
   const selectedEvent = publicEvents.find(e => e.id === selectedEventId);
   const selectedService = services.find(s => s.id === selectedServiceId);
-  const actualServiceData = weeklyServiceData?.[0] || null;
+  const rawServiceData = weeklyServiceData?.[0] || null;
+  
+  // Calculate start times for weekly service segments (which usually lack them)
+  const actualServiceData = React.useMemo(() => {
+    if (!rawServiceData) return null;
+    
+    // Only process if it's a weekly service structure (has 9:30am/11:30am arrays)
+    // Custom services usually have 'segments' with explicit times, but we can process those too if needed
+    
+    const calculateTimedSegments = (segments, startStr) => {
+      if (!segments || !Array.isArray(segments)) return [];
+      
+      let currentH = parseInt(startStr.split(':')[0]);
+      let currentM = parseInt(startStr.split(':')[1]);
+      
+      return segments.map(seg => {
+        // If already has time, update current pointer to its end and return
+        if (seg.start_time) {
+          const [h, m] = seg.start_time.split(':').map(Number);
+          currentH = h;
+          currentM = m;
+          
+          const duration = seg.duration || 0;
+          const date = new Date();
+          date.setHours(currentH, currentM + duration, 0, 0);
+          
+          // Update pointer for next segment (if contiguous)
+          currentH = date.getHours();
+          currentM = date.getMinutes();
+          
+          return seg;
+        }
+        
+        const startH = String(currentH).padStart(2, '0');
+        const startM = String(currentM).padStart(2, '0');
+        const startTime = `${startH}:${startM}`;
+        
+        // Add duration
+        const duration = seg.duration || 0;
+        const date = new Date();
+        date.setHours(currentH, currentM + duration, 0, 0);
+        
+        currentH = date.getHours();
+        currentM = date.getMinutes();
+        
+        const endH = String(currentH).padStart(2, '0');
+        const endM = String(currentM).padStart(2, '0');
+        const endTime = `${endH}:${endM}`;
+        
+        return {
+          ...seg,
+          start_time: startTime,
+          end_time: endTime
+        };
+      });
+    };
+
+    const newData = { ...rawServiceData };
+    
+    if (newData["9:30am"]) {
+      newData["9:30am"] = calculateTimedSegments(newData["9:30am"], "09:30");
+    }
+    if (newData["11:30am"]) {
+      newData["11:30am"] = calculateTimedSegments(newData["11:30am"], "11:30");
+    }
+    
+    return newData;
+  }, [rawServiceData]);
+
   const eventSessions = sessions;
   const filteredSessions = eventSessions;
 
