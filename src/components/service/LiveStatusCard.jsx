@@ -1,7 +1,8 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, ChevronRight, PlayCircle } from "lucide-react";
+import { PlayCircle, ChevronRight } from "lucide-react";
+import { formatTimeToEST } from "../components/utils/timeFormat";
 
 export default function LiveStatusCard({ segments, currentTime, onScrollTo }) {
   // Helper to parse "HH:MM" to Date object for today
@@ -46,7 +47,6 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo }) {
   };
 
   const currentRemaining = currentSegment ? getTimeRemaining(getTimeDate(currentSegment.end_time)) : null;
-  const nextCountdown = nextSegment ? getTimeRemaining(getTimeDate(nextSegment.start_time)) : null;
 
   if (!currentSegment && !nextSegment) return null;
 
@@ -57,20 +57,22 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo }) {
         {/* Current Segment Section */}
         {currentSegment ? (
           <div 
-            className="p-4 hover:bg-gray-50 cursor-pointer transition-colors group"
+            className="p-4 hover:bg-gray-50 cursor-pointer transition-colors group flex flex-col justify-between h-full"
             onClick={() => onScrollTo && onScrollTo(currentSegment)}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Badge variant="default" className="bg-red-500 hover:bg-red-600 animate-pulse flex items-center gap-1">
-                <PlayCircle className="w-3 h-3" /> EN CURSO
-              </Badge>
-              <span className="text-xs font-mono text-red-600 font-bold">{currentRemaining} restantes</span>
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="default" className="bg-red-500 hover:bg-red-600 animate-pulse flex items-center gap-1">
+                  <PlayCircle className="w-3 h-3" /> EN CURSO
+                </Badge>
+                <span className="text-xs font-mono text-red-600 font-bold">{currentRemaining} restantes</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">
+                {currentSegment.title || currentSegment.data?.title}
+              </h3>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-1">
-              {currentSegment.title || currentSegment.data?.title}
-            </h3>
             {currentSegment.presenter && (
-              <p className="text-sm text-gray-500 mt-1 line-clamp-1">{currentSegment.presenter}</p>
+              <p className="text-sm text-gray-500 mt-2 line-clamp-1">{currentSegment.presenter}</p>
             )}
           </div>
         ) : (
@@ -82,29 +84,26 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo }) {
         {/* Next Segment Section */}
         {nextSegment ? (
           <div 
-            className="p-4 hover:bg-gray-50 cursor-pointer transition-colors group relative"
+            className="p-4 hover:bg-gray-50 cursor-pointer transition-colors group flex flex-col justify-between h-full relative"
             onClick={() => onScrollTo && onScrollTo(nextSegment)}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">A Continuación</span>
-              <div className="flex items-center gap-1 text-pdv-teal font-mono font-bold bg-teal-50 px-2 py-0.5 rounded">
-                <Clock className="w-3 h-3" />
-                {nextCountdown}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">A Continuación</span>
+                <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300 font-mono font-bold">
+                  {nextSegment.start_time ? formatTimeToEST(nextSegment.start_time) : ''}
+                </Badge>
               </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-gray-800 group-hover:text-pdv-teal transition-colors line-clamp-1">
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">
                   {nextSegment.title || nextSegment.data?.title}
                 </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  {nextSegment.start_time ? 
-                    new Date(`2000-01-01T${nextSegment.start_time}`).toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'}) : 
-                    ''}
-                </p>
+                <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-pdv-teal group-hover:translate-x-1 transition-all flex-shrink-0 mt-1" />
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-pdv-teal group-hover:translate-x-1 transition-all" />
             </div>
+            {nextSegment.presenter && (
+              <p className="text-sm text-gray-500 mt-2 line-clamp-1">{nextSegment.presenter}</p>
+            )}
           </div>
         ) : (
           <div className="p-4 bg-gray-50 flex items-center justify-center text-gray-400">
