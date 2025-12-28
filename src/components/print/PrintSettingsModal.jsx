@@ -1025,22 +1025,22 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
                                 {serviceData.coordinators && (
                                   <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
-                                    <strong>Coordinador:</strong> {serviceData.coordinators}
+                                    <strong>Coordinador:</strong> {typeof serviceData.coordinators === 'object' ? serviceData.coordinators.main : serviceData.coordinators}
                                   </div>
                                 )}
                                 {serviceData.ujieres && (
                                   <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
-                                    <strong>Ujieres:</strong> {serviceData.ujieres}
+                                    <strong>Ujieres:</strong> {typeof serviceData.ujieres === 'object' ? serviceData.ujieres.main : serviceData.ujieres}
                                   </div>
                                 )}
                                 {serviceData.sound && (
                                   <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
-                                    <strong>Sonido:</strong> {serviceData.sound}
+                                    <strong>Sonido:</strong> {typeof serviceData.sound === 'object' ? serviceData.sound.main : serviceData.sound}
                                   </div>
                                 )}
                                 {serviceData.luces && (
                                   <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px` }}>
-                                    <strong>Luces:</strong> {serviceData.luces}
+                                    <strong>Luces:</strong> {typeof serviceData.luces === 'object' ? serviceData.luces.main : serviceData.luces}
                                   </div>
                                 )}
                               </div>
