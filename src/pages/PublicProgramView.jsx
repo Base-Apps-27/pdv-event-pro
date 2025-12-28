@@ -1081,40 +1081,7 @@ export default function PublicProgramView() {
                     />
                   );
                 })()}
-                  if (!countdown) return null;
-                  
-                  // Check if this is the first segment
-                  const sortedSegments = allServiceSegments.sort((a, b) => {
-                    const [aH, aM] = a.start_time.split(':').map(Number);
-                    const [bH, bM] = b.start_time.split(':').map(Number);
-                    return (aH * 60 + aM) - (bH * 60 + bM);
-                  });
-                  const isFirstSegment = sortedSegments[0]?.title === countdown.segment.title;
-                  const maxMinutes = isFirstSegment ? 120 : 60;
-                  
-                  if (countdown.minutes > maxMinutes) return null;
-                  
-                  return (
-                    <Card className={`mb-6 ${countdown.isNear ? 'border-blue-500 border-2' : ''}`}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-gray-600">Próximo Segmento</p>
-                            <p className="font-bold text-lg text-gray-900">{countdown.segment.title}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className={`text-3xl font-bold ${countdown.isNear ? 'text-blue-600' : 'text-gray-700'}`}>
-                              {countdown.minutes}:{countdown.seconds.toString().padStart(2, '0')}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {countdown.minutes === 0 ? 'segundos' : countdown.minutes === 1 ? 'minuto' : 'minutos'}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })()}
+
 
                 {/* 9:30am Service */}
                 {actualServiceData["9:30am"] && (
