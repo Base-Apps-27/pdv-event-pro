@@ -542,6 +542,30 @@ export default function PublicProgramView() {
     Other: "bg-gray-50 border-gray-200 text-gray-700"
   };
 
+  const getSegmentDomId = (segment) => {
+    // Generate a unique-ish ID for the DOM element
+    // Fallback to title+time for legacy segments without IDs
+    const baseId = segment.id || `${segment.title}-${segment.start_time}`;
+    // Sanitize for valid HTML ID
+    return `segment-${baseId}`.replace(/[^a-zA-Z0-9-_]/g, '-').replace(/-+/g, '-');
+  };
+
+  const scrollToSegment = (segment) => {
+    if (!segment) return;
+    const id = getSegmentDomId(segment);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Add a temporary visual highlight
+      element.classList.add('ring-4', 'ring-pdv-teal', 'ring-offset-2', 'transition-all', 'duration-500');
+      setTimeout(() => {
+        element.classList.remove('ring-4', 'ring-pdv-teal', 'ring-offset-2');
+      }, 2500);
+    } else {
+        console.warn('Scroll target not found:', id);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F0F1F3]">
       {/* Hero Header */}
@@ -915,7 +939,11 @@ export default function PublicProgramView() {
                       const isUpcoming = !isCurrent && isSegmentUpcoming(segment, actualServiceData.segments);
 
                       return (
-                        <div key={idx} className={`p-4 ${isCurrent ? 'bg-yellow-100 border-l-4 border-l-yellow-500' : isUpcoming ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50'}`}>
+                        <div 
+                          key={idx} 
+                          id={getSegmentDomId(segment)}
+                          className={`p-4 scroll-mt-24 transition-all duration-500 ${isCurrent ? 'bg-yellow-100 border-l-4 border-l-yellow-500' : isUpcoming ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50'}`}
+                        >
                           {isCurrent && (
                             <div className="mb-2">
                               <Badge className="bg-yellow-500 text-white animate-pulse">EN CURSO AHORA</Badge>
@@ -1144,7 +1172,11 @@ export default function PublicProgramView() {
                     </div>
                     <div className="divide-y divide-gray-200">
                      {actualServiceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
-                       <div key={idx} className="p-4 hover:bg-gray-50">
+                       <div 
+                         key={idx} 
+                         id={getSegmentDomId(segment)}
+                         className="p-4 hover:bg-gray-50 scroll-mt-24 transition-all duration-500"
+                       >
                          <div className="flex items-start justify-between gap-4">
                            <div className="flex-1">
                              <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -1359,7 +1391,11 @@ export default function PublicProgramView() {
                     </div>
                     <div className="divide-y divide-gray-200">
                       {actualServiceData["11:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
-                        <div key={idx} className="p-4 hover:bg-gray-50">
+                        <div 
+                          key={idx} 
+                          id={getSegmentDomId(segment)}
+                          className="p-4 hover:bg-gray-50 scroll-mt-24 transition-all duration-500"
+                        >
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -1747,7 +1783,11 @@ export default function PublicProgramView() {
                         const isUpcoming = !isCurrent && isSegmentUpcoming(segment, allSegments);
 
                         return (
-                          <div key={segment.id} className={`p-4 transition-colors border-b last:border-b-0 ${isCurrent ? 'bg-yellow-100 border-l-4 border-l-yellow-500' : isUpcoming ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50'}`}>
+                          <div 
+                            key={segment.id} 
+                            id={getSegmentDomId(segment)}
+                            className={`p-4 transition-colors border-b last:border-b-0 scroll-mt-24 duration-500 ${isCurrent ? 'bg-yellow-100 border-l-4 border-l-yellow-500' : isUpcoming ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50'}`}
+                          >
                             {/* Current Segment Indicator */}
                             {isCurrent && (
                               <div className="mb-2">
