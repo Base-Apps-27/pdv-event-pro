@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { formatTimeToEST } from "../components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import StructuredVersesModal from "@/components/service/StructuredVersesModal";
+import LiveStatusCard from "@/components/service/LiveStatusCard";
 
 export default function PublicProgramView() {
   const gradientStyle = {
@@ -866,45 +867,12 @@ export default function PublicProgramView() {
               // Check for CustomServiceBuilder format (segments array)
               (actualServiceData.segments && actualServiceData.segments.length > 0) ? (
               <div className="space-y-6">
-                {/* Countdown Timer for Custom Services */}
-                {(() => {
-                  const countdown = getCountdownToNext(actualServiceData.segments.filter(s => s.start_time));
-                  if (!countdown) return null;
-
-                  const sortedSegments = actualServiceData.segments.filter(s => s.start_time).sort((a, b) => {
-                    const [aH, aM] = a.start_time.split(':').map(Number);
-                    const [bH, bM] = b.start_time.split(':').map(Number);
-                    return (aH * 60 + aM) - (bH * 60 + bM);
-                  });
-                  const isFirstSegment = sortedSegments[0]?.title === countdown.segment.title;
-                  const maxMinutes = isFirstSegment ? 120 : 60;
-
-                  if (countdown.minutes > maxMinutes) return null;
-
-                  return (
-                    <Card 
-                      className={`mb-6 cursor-pointer hover:shadow-md transition-all hover:scale-[1.01] ${countdown.isNear ? 'border-blue-500 border-2' : 'hover:border-pdv-teal border-2 border-transparent'}`}
-                      onClick={() => scrollToSegment(countdown.segment)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-gray-600">Próximo Segmento</p>
-                            <p className="font-bold text-lg text-gray-900">{countdown.segment.title}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className={`text-3xl font-bold ${countdown.isNear ? 'text-blue-600' : 'text-gray-700'}`}>
-                              {countdown.minutes}:{countdown.seconds.toString().padStart(2, '0')}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {countdown.minutes === 0 ? 'segundos' : countdown.minutes === 1 ? 'minuto' : 'minutos'}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })()}
+                {/* Live Status Card for Custom Services */}
+                <LiveStatusCard 
+                  segments={actualServiceData.segments || []} 
+                  currentTime={currentTime}
+                  onScrollTo={scrollToSegment}
+                />
 
                 {/* Custom Service Segments */}
                 <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
@@ -1577,46 +1545,12 @@ export default function PublicProgramView() {
             {/* Sessions Display (for Event view type) */}
             {viewType === "event" && (
             <div className="space-y-6">
-              {/* Countdown Timer for Events - 2 hours for first segment, 1 hour for others */}
-              {(() => {
-                const countdown = getCountdownToNext(allSegments);
-                if (!countdown) return null;
-                
-                // Check if this is the first segment
-                const sortedSegments = allSegments.filter(s => s.start_time).sort((a, b) => {
-                  const [aH, aM] = a.start_time.split(':').map(Number);
-                  const [bH, bM] = b.start_time.split(':').map(Number);
-                  return (aH * 60 + aM) - (bH * 60 + bM);
-                });
-                const isFirstSegment = sortedSegments[0]?.id === countdown.segment.id;
-                const maxMinutes = isFirstSegment ? 120 : 60;
-                
-                if (countdown.minutes > maxMinutes) return null;
-                
-                return (
-                  <Card 
-                    className={`mb-6 cursor-pointer hover:shadow-md transition-all hover:scale-[1.01] ${countdown.isNear ? 'border-blue-500 border-2' : 'hover:border-pdv-teal border-2 border-transparent'}`}
-                    onClick={() => scrollToSegment(countdown.segment)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">Próximo Segmento</p>
-                          <p className="font-bold text-lg">{countdown.segment.title}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className={`text-3xl font-bold ${countdown.isNear ? 'text-blue-600' : 'text-gray-700'}`}>
-                            {countdown.minutes}:{countdown.seconds.toString().padStart(2, '0')}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {countdown.minutes === 0 ? 'segundos' : countdown.minutes === 1 ? 'minuto' : 'minutos'}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })()}
+              {/* Live Status Card for Events */}
+              <LiveStatusCard 
+                segments={allSegments} 
+                currentTime={currentTime}
+                onScrollTo={scrollToSegment}
+              />
 
               {filteredSessions.map((session) => {
                 const segments = getSessionSegments(session.id);
