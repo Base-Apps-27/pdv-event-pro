@@ -544,8 +544,12 @@ export default function PublicProgramView() {
 
   const getSegmentDomId = (segment) => {
     // Generate a unique-ish ID for the DOM element
+    // Handle both root-level and data-level properties to ensure consistency between raw and normalized objects
+    const title = segment.title || segment.data?.title || 'Untitled';
+    const startTime = segment.start_time || segment.data?.start_time || '00:00';
+    
     // Fallback to title+time for legacy segments without IDs
-    const baseId = segment.id || `${segment.title}-${segment.start_time}`;
+    const baseId = segment.id || `${title}-${startTime}`;
     // Sanitize for valid HTML ID
     return `segment-${baseId}`.replace(/[^a-zA-Z0-9-_]/g, '-').replace(/-+/g, '-');
   };
