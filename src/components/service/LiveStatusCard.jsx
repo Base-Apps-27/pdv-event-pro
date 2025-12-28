@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PlayCircle, ChevronRight } from "lucide-react";
+import { PlayCircle } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 export default function LiveStatusCard({ segments, currentTime, onScrollTo }) {
@@ -98,7 +98,6 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo }) {
                 <h3 className="text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">
                   {nextSegment.title || nextSegment.data?.title}
                 </h3>
-                <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-pdv-teal group-hover:translate-x-1 transition-all flex-shrink-0 mt-1" />
               </div>
             </div>
             {nextSegment.presenter && (
