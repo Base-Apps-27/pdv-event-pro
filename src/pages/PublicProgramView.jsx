@@ -43,11 +43,11 @@ export default function PublicProgramView() {
     return new Date(year, month - 1, day, 0, 0, 0, 0);
   };
 
-  // Update current time every minute
+  // Update current time every second for real-time countdowns
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000); // Update every minute
+    }, 1000); // Update every second
     return () => clearInterval(timer);
   }, []);
 
