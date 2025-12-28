@@ -74,6 +74,12 @@ export default function PublicProgramView() {
       const allServices = await base44.entities.Service.list();
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      
+      // Construct local YYYY-MM-DD string for comparison
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const todayString = `${yyyy}-${mm}-${dd}`;
 
       // Filter to only date-specific weekly services (created by WeeklyServiceManager)
       return allServices
@@ -81,7 +87,7 @@ export default function PublicProgramView() {
           s.status === 'active' && 
           s.date && // Must have a specific date
           s.origin !== 'blueprint' && // Exclude old blueprint/template records
-          new Date(s.date) >= today // Only future or today's services
+          s.date >= todayString // String comparison ensures timezone safety
         )
         .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date ascending
     },
@@ -126,8 +132,15 @@ export default function PublicProgramView() {
       
       // Check for services happening TODAY
       const todayService = services.find(s => {
-        const serviceDate = getLocalDateAtMidnight(s.date);
-        return serviceDate && serviceDate.getTime() === today.getTime();
+        // String comparison is safest for YYYY-MM-DD
+        const todayString = today.toLocaleDateString('sv-SE'); // Returns YYYY-MM-DD in most locales, safe for comparison
+        // Fallback to manual construction if locale is weird
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const manualTodayString = `${yyyy}-${mm}-${dd}`;
+        
+        return s.date === manualTodayString;
       });
       
       // Priority: Today's service > Today's event > Next upcoming (within 7 days)
