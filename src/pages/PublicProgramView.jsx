@@ -1061,7 +1061,7 @@ export default function PublicProgramView() {
             ) : (actualServiceData["9:30am"] && actualServiceData["9:30am"].length > 0) || 
               (actualServiceData["11:30am"] && actualServiceData["11:30am"].length > 0) ? (
               <div className="space-y-6">
-                {/* Countdown Timer - 2 hours for first segment, 1 hour for others */}
+                {/* Live Status Card for Weekly Services */}
                 {(() => {
                   const allServiceSegments = [
                     ...(actualServiceData?.['9:30am'] || []),
@@ -1069,10 +1069,18 @@ export default function PublicProgramView() {
                   ].map(s => ({
                     ...s,
                     start_time: s.start_time || s.data?.start_time,
+                    end_time: s.end_time || s.data?.end_time, // Ensure end_time is passed
                     title: s.title || s.data?.title || 'Untitled'
-                  })).filter(s => s.start_time);
-                  
-                  const countdown = getCountdownToNext(allServiceSegments);
+                  }));
+
+                  return (
+                    <LiveStatusCard 
+                      segments={allServiceSegments} 
+                      currentTime={currentTime}
+                      onScrollTo={scrollToSegment}
+                    />
+                  );
+                })()}
                   if (!countdown) return null;
                   
                   // Check if this is the first segment
