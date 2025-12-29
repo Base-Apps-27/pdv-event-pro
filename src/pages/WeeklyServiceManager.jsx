@@ -480,7 +480,27 @@ export default function WeeklyServiceManager() {
     queryKey: ['weeklyService', selectedDate],
     queryFn: async () => {
       const services = await base44.entities.Service.filter({ date: selectedDate });
-      return services[0] || null;
+      if (!services || services.length === 0) return null;
+
+      // Filter for services that look like Weekly Services (have 9:30am/11:30am arrays populated)
+      // and exclude Custom Services (which typically use the 'segments' array)
+      const weeklyCandidates = services.filter(s => 
+        (s["9:30am"]?.length > 0 || s["11:30am"]?.length > 0) &&
+        (!s.segments || s.segments.length === 0)
+      );
+
+      if (weeklyCandidates.length > 0) {
+        // Sort by updated_date desc to get latest valid one
+        return weeklyCandidates.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0))[0];
+      }
+
+      // If only empty candidates exist (e.g. created but empty), prefer one without 'segments' populated (not a custom service)
+      const emptyCandidates = services.filter(s => !s.segments || s.segments.length === 0);
+      if (emptyCandidates.length > 0) {
+         return emptyCandidates.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0))[0];
+      }
+
+      return services[0];
     },
     enabled: !!selectedDate
   });
