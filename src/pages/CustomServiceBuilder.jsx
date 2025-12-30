@@ -187,8 +187,17 @@ export default function CustomServiceBuilder() {
         segmentCount: existingService.segments?.length || 0,
         fullData: existingService
       });
-      setServiceData(existingService);
-      setLastSavedData(JSON.parse(JSON.stringify(existingService)));
+      // Sanitize loaded data to ensure team fields are objects
+      const sanitizedService = {
+        ...existingService,
+        coordinators: typeof existingService.coordinators === 'string' ? { main: existingService.coordinators } : (existingService.coordinators || { main: "" }),
+        ujieres: typeof existingService.ujieres === 'string' ? { main: existingService.ujieres } : (existingService.ujieres || { main: "" }),
+        sound: typeof existingService.sound === 'string' ? { main: existingService.sound } : (existingService.sound || { main: "" }),
+        luces: typeof existingService.luces === 'string' ? { main: existingService.luces } : (existingService.luces || { main: "" }),
+      };
+
+      setServiceData(sanitizedService);
+      setLastSavedData(JSON.parse(JSON.stringify(sanitizedService)));
       setPrintSettingsPage1(existingService.print_settings_page1 || null);
       setHasUnsavedChanges(false);
       
@@ -250,7 +259,20 @@ export default function CustomServiceBuilder() {
         if (serviceId) {
           result = await base44.entities.Service.update(serviceId, data);
         } else {
-          result = await base44.entities.Service.create(data);
+          // Ensure team fields are objects (dictionaries) to satisfy schema
+          const sanitizedData = {
+            ...data,
+            coordinators: typeof data.coordinators === 'string' ? { main: data.coordinators } : (data.coordinators || { main: "" }),
+            ujieres: typeof data.ujieres === 'string' ? { main: data.ujieres } : (data.ujieres || { main: "" }),
+            sound: typeof data.sound === 'string' ? { main: data.sound } : (data.sound || { main: "" }),
+            luces: typeof data.luces === 'string' ? { main: data.luces } : (data.luces || { main: "" }),
+          };
+
+          if (serviceId) {
+            result = await base44.entities.Service.update(serviceId, sanitizedData);
+          } else {
+            result = await base44.entities.Service.create(sanitizedData);
+          }
         }
         
         console.log('[SAVE SUCCESS]', {
