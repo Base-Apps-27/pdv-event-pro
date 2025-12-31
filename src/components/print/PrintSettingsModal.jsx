@@ -50,8 +50,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
   const PAGE_W = 8.5 * 96; // 816px
   const PAGE_H = 11 * 96;  // 1056px
-  const HEADER_H = 80; // Preview header height
-  const FOOTER_H = 40; // Preview footer height
+  const HEADER_H = 65; // Preview header height (Tightened from 80)
+  const FOOTER_H = 28; // Preview footer height (Tightened from 40 to fit 24px footer + 4px buffer)
   const BASE_BODY = 21; // Base body font size
   const BASE_TITLE = 24; // Base title font size
 
