@@ -224,7 +224,14 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
         <Text style={[styles.columnHeader, scaledStyles.scaledColumnHeader]}>
           <Text style={styles.timeAccent}>{timeLabel}</Text>
         </Text>
-        {validSegments.map((segment, idx) => (
+        {validSegments.map((segment, idx) => {
+          // Determine Segment Type and Context
+          const segmentType = segment.segment_type || segment.type || segment.data?.type || segment.data?.segment_type || 'Especial';
+          const isWorship = ['Alabanza', 'worship'].includes(segmentType);
+          const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
+          const isSpecial = ['Especial', 'Special', 'special'].includes(segmentType);
+          
+          return (
           <View key={idx} style={styles.segment}>
             {segment.duration && (
               <Text style={[styles.segmentTime, scaledStyles.scaledSegmentTime]}>
@@ -233,19 +240,21 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
             )}
             
             <Text style={[styles.segmentTitle, scaledStyles.scaledSegmentTitle]}>
-              {(['Especial', 'Special', 'special'].includes(segment.segment_type || segment.type || segment.data?.type || segment.data?.segment_type)) && (
+              {isSpecial && (
                 <Text style={{ color: '#f59e0b' }}>★ </Text>
               )}
               {segment.title}
             </Text>
             
-            {segment.data?.leader && (
+            {/* Show Leader ONLY for Worship */}
+            {isWorship && segment.data?.leader && (
               <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
                 Dirige: <Text style={styles.segmentName}>{segment.data.leader}</Text>
               </Text>
             )}
 
-            {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
+            {/* Show Songs ONLY for Worship */}
+            {isWorship && segment.songs && segment.songs.filter(s => s.title).length > 0 && (
               <View style={{ marginTop: 3 }}>
                 {segment.songs.filter(s => s.title).map((song, sIdx) => (
                   <Text key={sIdx} style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
@@ -279,13 +288,15 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
               </Text>
             )}
 
-            {segment.data?.presenter && !segment.data?.ministry_leader && (
+            {/* Show Presenter for types that AREN'T Worship or Message (unless ministry/special logic applies) */}
+            {!isWorship && !isMessage && segment.data?.presenter && !segment.data?.ministry_leader && (
               <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
                 <Text style={styles.segmentName}>{segment.data.presenter}</Text>
               </Text>
             )}
 
-            {segment.data?.preacher && (
+            {/* Show Preacher ONLY for Message */}
+            {isMessage && segment.data?.preacher && (
               <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
                 <Text style={styles.segmentName}>{segment.data.preacher}</Text>
               </Text>
