@@ -49,13 +49,16 @@ export default function CustomServicesManager() {
   
   const upcoming = allServices.filter(s => {
     if (!s.date) return true; // If no date, show in upcoming
-    const serviceDate = new Date(s.date);
+    const [year, month, day] = s.date.split('-').map(Number);
+    const serviceDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+    // Include today in upcoming (>= today)
     return serviceDate >= today;
   });
 
   const archived = allServices.filter(s => {
     if (!s.date) return false;
-    const serviceDate = new Date(s.date);
+    const [year, month, day] = s.date.split('-').map(Number);
+    const serviceDate = new Date(year, month - 1, day, 0, 0, 0, 0);
     return serviceDate < today;
   });
 
@@ -67,9 +70,18 @@ export default function CustomServicesManager() {
     navigate(createPageUrl('CustomServiceBuilder') + `?id=${serviceId}`);
   };
 
+  // Helper to parse "YYYY-MM-DD" as local date at midnight to prevent timezone shifts
+  const parseLocalDate = (dateStr) => {
+    if (!dateStr) return null;
+    // Append T00:00:00 to treat as local time in Date constructor (or manually parse)
+    // Safer to split and construct:
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day, 0, 0, 0, 0);
+  };
+
   const getStatusColor = (service) => {
     if (!service.date) return 'bg-gray-500';
-    const serviceDate = new Date(service.date);
+    const serviceDate = parseLocalDate(service.date);
     const daysUntil = Math.floor((serviceDate - today) / (1000 * 60 * 60 * 24));
     
     if (daysUntil < 0) return 'bg-gray-500';
@@ -80,7 +92,7 @@ export default function CustomServicesManager() {
 
   const getStatusLabel = (service) => {
     if (!service.date) return language === 'es' ? 'Sin Fecha' : 'No Date';
-    const serviceDate = new Date(service.date);
+    const serviceDate = parseLocalDate(service.date);
     const daysUntil = Math.floor((serviceDate - today) / (1000 * 60 * 60 * 24));
     
     if (daysUntil < 0) return language === 'es' ? 'Pasado' : 'Past';
@@ -175,7 +187,11 @@ export default function CustomServicesManager() {
                   {service.date && (
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Calendar className="w-4 h-4" />
-                      {format(new Date(service.date), 'MMM d, yyyy')}
+                      {(() => {
+                        const [y, m, d] = service.date.split('-').map(Number);
+                        const localDate = new Date(y, m - 1, d);
+                        return format(localDate, 'MMM d, yyyy');
+                      })()}
                     </div>
                   )}
                   {service.time && (
@@ -231,7 +247,11 @@ export default function CustomServicesManager() {
                       {service.date && (
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Calendar className="w-4 h-4" />
-                          {format(new Date(service.date), 'MMM d, yyyy')}
+                          {(() => {
+                            const [y, m, d] = service.date.split('-').map(Number);
+                            const localDate = new Date(y, m - 1, d);
+                            return format(localDate, 'MMM d, yyyy');
+                          })()}
                         </div>
                       )}
                     </CardContent>
