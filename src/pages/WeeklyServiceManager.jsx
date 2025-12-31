@@ -1976,7 +1976,7 @@ Return ONLY valid JSON:
           <div className="print-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
             <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
           </div>
-          <div className="print-title" style={{ textAlign: 'center', paddingLeft: '0', paddingRight: '0' }}>
+          <div className="print-title">
             <h1>Orden de Servicio</h1>
             <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
             <div className="print-team-info">
