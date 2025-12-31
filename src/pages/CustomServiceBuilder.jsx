@@ -41,6 +41,7 @@ export default function CustomServiceBuilder() {
     description: "",
     segments: [
       normalizeSegment({
+        _uiId: "init-1",
         title: "Equipo de A&A",
         type: "worship",
         duration: 35,
@@ -68,6 +69,7 @@ export default function CustomServiceBuilder() {
         actions: []
       }),
       normalizeSegment({
+        _uiId: "init-2",
         title: "Bienvenida y Anuncios",
         type: "welcome",
         duration: 5,
@@ -89,6 +91,7 @@ export default function CustomServiceBuilder() {
         actions: []
       }),
       normalizeSegment({
+        _uiId: "init-3",
         title: "Ofrendas",
         type: "offering",
         duration: 5,
@@ -110,6 +113,7 @@ export default function CustomServiceBuilder() {
         actions: []
       }),
       normalizeSegment({
+        _uiId: "init-4",
         title: "Mensaje",
         type: "message",
         duration: 45,
@@ -148,7 +152,11 @@ export default function CustomServiceBuilder() {
   const [verseParserOpen, setVerseParserOpen] = useState(false);
   const [verseParserContext, setVerseParserContext] = useState({ segmentIdx: null });
 
+  // Generate simple unique ID for UI tracking
+  const generateUiId = () => Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+
   const getDefaultSegmentForm = () => ({
+    _uiId: generateUiId(),
     title: "",
     type: "Especial",
     duration: 15,
@@ -219,6 +227,14 @@ export default function CustomServiceBuilder() {
       // This ensures teams are objects and segments have nested data structure
       const sanitizedService = normalizeServiceTeams(existingService);
       
+      // Ensure all segments have a stable UI ID for React keys
+      if (sanitizedService.segments) {
+        sanitizedService.segments = sanitizedService.segments.map(s => ({
+          ...s,
+          _uiId: s._uiId || Math.random().toString(36).substr(2, 9) + Date.now().toString(36)
+        }));
+      }
+
       setServiceData(sanitizedService);
       setLastSavedData(JSON.parse(JSON.stringify(sanitizedService)));
       setPrintSettingsPage1(existingService.print_settings_page1 || null);
@@ -461,19 +477,19 @@ export default function CustomServiceBuilder() {
   const moveSegmentUp = (idx) => {
     if (idx === 0) return;
     const items = Array.from(serviceData.segments);
-    const segmentId = `segment-${Date.now()}-${idx}`;
+    const movingSegment = items[idx];
     [items[idx - 1], items[idx]] = [items[idx], items[idx - 1]];
     setServiceData(prev => ({ ...prev, segments: items }));
-    setHighlightedSegmentId(segmentId);
+    setHighlightedSegmentId(movingSegment._uiId);
   };
 
   const moveSegmentDown = (idx) => {
     if (idx === serviceData.segments.length - 1) return;
     const items = Array.from(serviceData.segments);
-    const segmentId = `segment-${Date.now()}-${idx}`;
+    const movingSegment = items[idx];
     [items[idx], items[idx + 1]] = [items[idx + 1], items[idx]];
     setServiceData(prev => ({ ...prev, segments: items }));
-    setHighlightedSegmentId(segmentId);
+    setHighlightedSegmentId(movingSegment._uiId);
   };
 
   const handleOpenVerseParser = (idx) => {
@@ -903,7 +919,8 @@ export default function CustomServiceBuilder() {
             {serviceData.segments.map((segment, idx) => {
               const isExpanded = expandedSegments[idx];
               const isSpecial = segment.type === "Especial";
-              const segmentId = `segment-${idx}-${segment.title}`;
+              // Use stable ID for key to prevent re-mounting on title change (which causes focus loss)
+              const segmentId = segment._uiId || `seg-${idx}`; 
               
               return (
                 <AnimatedSortableItem
