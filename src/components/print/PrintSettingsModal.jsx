@@ -14,10 +14,10 @@ import { getSegmentData } from "@/components/utils/segmentDataUtils";
 const DEFAULT_SETTINGS = {
   globalScale: 1.0,
   margins: {
-    top: "0.5in",
-    right: "0.5in",
-    bottom: "0.5in",
-    left: "0.5in"
+    top: "0.25in",
+    right: "0.25in",
+    bottom: "0.25in",
+    left: "0.25in"
   },
   bodyFontScale: 1.0,
   titleFontScale: 1.0
@@ -241,7 +241,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
         {/* BODY - Custom Single Column */}
         <div ref={page1BodyRef} className="absolute overflow-hidden" style={{ top: `${marginTopPx + HEADER_H}px`, left: `${marginLeftPx}px`, right: `${marginRightPx}px`, bottom: `${marginBottomPx + FOOTER_H}px` }}>
-          <div style={{ width: '100%', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4, padding: '8px' }}>
+          <div style={{ width: '100%', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4, padding: '4px' }}>
              {(() => {
                 let currentTime = serviceData.time ? parse(serviceData.time, 'HH:mm', new Date()) : null;
 
@@ -629,7 +629,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           className="print-footer"
           style={{
             position: 'absolute',
-            bottom: '0.4in',
+            bottom: '0.25in',
             left: '0.5in',
             width: '7.5in',
             height: '24px',
@@ -841,7 +841,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           .print-footer {
             width: 7.5in !important; /* Explicit width for print reliability */
             left: 0.5in !important;  /* Center horizontally (8.5 - 7.5) / 2 */
-            bottom: 0.4in !important; /* Move up to safe zone */
+            bottom: 0.25in !important; /* Move up to safe zone */
             background-color: #1F8A70 !important;
             background-image: linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%) !important;
             -webkit-print-color-adjust: exact !important;
