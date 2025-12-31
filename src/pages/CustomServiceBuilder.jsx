@@ -44,7 +44,7 @@ export default function CustomServiceBuilder() {
       normalizeSegment({
         _uiId: "init-1",
         title: "Equipo de A&A",
-        type: "worship",
+        type: "Alabanza",
         duration: 35,
         // Legacy root fields for initial state
         presenter: "",
@@ -72,7 +72,7 @@ export default function CustomServiceBuilder() {
       normalizeSegment({
         _uiId: "init-2",
         title: "Bienvenida y Anuncios",
-        type: "welcome",
+        type: "Bienvenida",
         duration: 5,
         presenter: "",
         translator: "",
@@ -94,7 +94,7 @@ export default function CustomServiceBuilder() {
       normalizeSegment({
         _uiId: "init-3",
         title: "Ofrendas",
-        type: "offering",
+        type: "Ofrenda",
         duration: 5,
         presenter: "",
         translator: "",
@@ -116,7 +116,7 @@ export default function CustomServiceBuilder() {
       normalizeSegment({
         _uiId: "init-4",
         title: "Mensaje",
-        type: "message",
+        type: "Plenaria",
         duration: 45,
         presenter: "",
         translator: "",
@@ -980,10 +980,16 @@ export default function CustomServiceBuilder() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="worship">Alabanza</SelectItem>
-                                  <SelectItem value="message">Mensaje</SelectItem>
-                                  <SelectItem value="welcome">Bienvenida</SelectItem>
-                                  <SelectItem value="offering">Ofrenda</SelectItem>
+                                  <SelectItem value="Alabanza">Alabanza</SelectItem>
+                                  <SelectItem value="Plenaria">Plenaria (Mensaje)</SelectItem>
+                                  <SelectItem value="Bienvenida">Bienvenida</SelectItem>
+                                  <SelectItem value="Ofrenda">Ofrenda</SelectItem>
+                                  <SelectItem value="Anuncio">Anuncio</SelectItem>
+                                  <SelectItem value="Video">Video</SelectItem>
+                                  <SelectItem value="Dinámica">Dinámica</SelectItem>
+                                  <SelectItem value="Oración">Oración</SelectItem>
+                                  <SelectItem value="Ministración">Ministración</SelectItem>
+                                  <SelectItem value="Cierre">Cierre</SelectItem>
                                   <SelectItem value="Especial">Especial</SelectItem>
                                 </SelectContent>
                               </Select>
@@ -991,7 +997,7 @@ export default function CustomServiceBuilder() {
                           </CardHeader>
                           <CardContent className="space-y-2 pt-3">
                             {/* Worship fields */}
-                            {segment.type === 'worship' && (
+                            {(segment.type === 'Alabanza' || segment.type === 'worship') && (
                               <>
                                 <div className="grid md:grid-cols-2 gap-2">
                                   <div className="space-y-2">
@@ -1066,7 +1072,7 @@ export default function CustomServiceBuilder() {
                             )}
 
                             {/* Message fields */}
-                            {segment.type === 'message' && (
+                            {(segment.type === 'Plenaria' || segment.type === 'message') && (
                               <>
                                 <div className="grid md:grid-cols-2 gap-2">
                                   <div className="space-y-2">
@@ -1129,7 +1135,7 @@ export default function CustomServiceBuilder() {
                             )}
 
                             {/* Welcome fields */}
-                            {segment.type === 'welcome' && (
+                            {(segment.type === 'Bienvenida' || segment.type === 'welcome') && (
                               <div className="grid md:grid-cols-2 gap-2">
                                 <div className="space-y-2">
                                   <Label className="text-xs">Presentador</Label>
@@ -1155,7 +1161,7 @@ export default function CustomServiceBuilder() {
                             )}
 
                             {/* Offering fields */}
-                            {segment.type === 'offering' && (
+                            {(segment.type === 'Ofrenda' || segment.type === 'offering') && (
                               <>
                                 <div className="grid md:grid-cols-2 gap-2">
                                   <div className="space-y-2">
@@ -1191,11 +1197,13 @@ export default function CustomServiceBuilder() {
                               </>
                             )}
 
-                            {/* Special/Generic fields */}
-                            {segment.type === 'Especial' && (
+                            {/* Special/Generic fields (and others) */}
+                            {['Especial', 'Anuncio', 'Video', 'Dinámica', 'Oración', 'Ministración', 'Cierre'].includes(segment.type) && (
                               <div className="grid md:grid-cols-2 gap-2">
                                 <div className="space-y-2">
-                                  <Label className="text-xs">Presentador</Label>
+                                  <Label className="text-xs">
+                                    {segment.type === 'Ministración' ? 'Ministra' : 'Presentador'}
+                                  </Label>
                                   <AutocompleteInput
                                     type="presenter"
                                     value={segment.presenter}
