@@ -107,3 +107,39 @@ export const getSegmentData = (segment, field) => {
   // Fallback to root (Legacy)
   return segment[field];
 };
+
+/**
+ * Normalizes songs from various formats (array of objects or flat fields)
+ * Returns array of { title, lead, key }
+ */
+export const getNormalizedSongs = (segment) => {
+  if (!segment) return [];
+
+  // 1. Check data.songs (Canonical)
+  if (segment.data?.songs && Array.isArray(segment.data.songs) && segment.data.songs.length > 0) {
+    return segment.data.songs;
+  }
+
+  // 2. Check root songs (Legacy Array)
+  if (segment.songs && Array.isArray(segment.songs) && segment.songs.length > 0) {
+    return segment.songs;
+  }
+
+  // 3. Check flat fields (Legacy or Entity format)
+  // We check both data and root for flat fields
+  const songs = [];
+  const getField = (f) => segment.data?.[f] || segment[f];
+  
+  for (let i = 1; i <= 6; i++) {
+    const title = getField(`song_${i}_title`);
+    if (title) {
+      songs.push({
+        title,
+        lead: getField(`song_${i}_lead`),
+        key: getField(`song_${i}_key`)
+      });
+    }
+  }
+  
+  return songs;
+};
