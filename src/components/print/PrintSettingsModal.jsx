@@ -380,11 +380,21 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
               );
             })}
 
+            {/* Message/Content Fields */}
+            {seg.data?.messageTitle && <div style={{ fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic', marginTop: '2px' }}>{seg.data.messageTitle}</div>}
+            {(seg.data?.verse || seg.data?.scripture_references) && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af' }}>📖 {seg.data.verse || seg.data.scripture_references}</div>}
+
+            {/* Descriptions */}
             {seg.data?.description && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#14532d', background: '#f0fdf4', borderLeft: '4px solid #16a34a', padding: '4px 8px', marginTop: '4px' }}>{seg.data.description}</div>}
+            {seg.data?.description_details && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#374151', marginTop: '3px' }}>{seg.data.description_details}</div>}
             
             {/* Team Notes */}
+            {seg.data?.coordinator_notes && <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#92400e', marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #b45309' }}><strong>📋 Coord:</strong> {seg.data.coordinator_notes}</div>}
             {seg.data?.sound_notes && <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#991b1b', marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #dc2626' }}><strong>🔊 Sonido:</strong> {seg.data.sound_notes}</div>}
             {seg.data?.projection_notes && <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#1e40af', marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #2563eb' }}><strong>📽️ Proyección:</strong> {seg.data.projection_notes}</div>}
+            {seg.data?.ushers_notes && <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#14532d', marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #16a34a' }}><strong>🤝 Ujieres:</strong> {seg.data.ushers_notes}</div>}
+            {seg.data?.translation_notes && <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#4c1d95', marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #6d28d9' }}><strong>🌐 Trad:</strong> {seg.data.translation_notes}</div>}
+            {seg.data?.stage_decor_notes && <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#be185d', marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #db2777' }}><strong>🎨 Stage:</strong> {seg.data.stage_decor_notes}</div>}
           </div>
         ));
     };
