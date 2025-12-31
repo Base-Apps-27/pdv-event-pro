@@ -303,7 +303,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                    {messageTitle && <div style={{ fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>{messageTitle}</div>}
                    {verse && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af' }}>📖 {verse}</div>}
                    {description && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', fontStyle: 'italic', marginTop: '3px' }}>{description}</div>}
-                   {description_details && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#374151', marginTop: '3px' }}>{description_details}</div>}
+                   {description_details && (
+                      <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#1f2937', marginTop: '4px', padding: '6px 8px', background: '#f3f4f6', borderLeft: '4px solid #4b5563', borderRadius: '0 4px 4px 0' }}>
+                        <strong style={{ display: 'block', marginBottom: '2px', color: '#111827', textTransform: 'uppercase', fontSize: '0.9em' }}>📝 Notas Generales:</strong>
+                        {description_details}
+                      </div>
+                   )}
 
                    {/* Technical Notes */}
                    {(coordinator_notes || projection_notes || sound_notes || ushers_notes) && (
@@ -386,7 +391,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
             {/* Descriptions */}
             {seg.data?.description && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#14532d', background: '#f0fdf4', borderLeft: '4px solid #16a34a', padding: '4px 8px', marginTop: '4px' }}>{seg.data.description}</div>}
-            {seg.data?.description_details && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#374151', marginTop: '3px' }}>{seg.data.description_details}</div>}
+            {seg.data?.description_details && (
+              <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#1f2937', marginTop: '4px', padding: '6px 8px', background: '#f3f4f6', borderLeft: '4px solid #4b5563', borderRadius: '0 4px 4px 0' }}>
+                <strong style={{ display: 'block', marginBottom: '2px', color: '#111827', textTransform: 'uppercase', fontSize: '0.9em' }}>📝 Notas Generales:</strong>
+                {seg.data.description_details}
+              </div>
+            )}
             
             {/* Team Notes */}
             {seg.data?.coordinator_notes && <div style={{ fontSize: `${BASE_BODY * 0.81 * page1Settings.bodyFontScale}px`, color: '#92400e', marginTop: '3px', paddingLeft: '6px', borderLeft: '3px solid #b45309' }}><strong>📋 Coord:</strong> {seg.data.coordinator_notes}</div>}
