@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E6E6E6',
   },
   title: {
-    fontSize: 20,
+    fontSize: 15,
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -35,17 +35,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   date: {
-    fontSize: 13,
+    fontSize: 10.5,
     color: '#333333',
-    marginTop: 4,
+    marginTop: 2,
     fontWeight: 500,
     textAlign: 'center',
   },
   rolesLine: {
-    fontSize: 9.5,
+    fontSize: 8.5,
     color: '#666666',
     textAlign: 'center',
-    marginTop: 6,
+    marginTop: 3,
   },
   columnsContainer: {
     flexDirection: 'row',

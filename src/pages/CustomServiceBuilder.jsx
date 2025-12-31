@@ -815,11 +815,19 @@ export default function CustomServiceBuilder() {
       {/* Print Layout */}
       <div className="hidden print:block print-page-wrapper">
         {/* FIXED Print Header */}
-        <div className="text-center mb-6">
-          <div className="w-20 h-1 mx-auto mb-4" style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)' }} />
-          <h1 className="text-3xl font-bold uppercase mb-1">{serviceData.name || 'Orden de Servicio'}</h1>
-          <p className="text-lg text-gray-600">{serviceData.day_of_week} - {serviceData.date}</p>
-          {serviceData.time && <p className="text-sm text-gray-500">{serviceData.time}</p>}
+        <div className="text-center mb-4 border-b border-gray-200 pb-2">
+          <h1 className="text-xl font-bold uppercase mb-0.5">{serviceData.name || 'Orden de Servicio'}</h1>
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+            <span>{serviceData.day_of_week}</span>
+            <span>•</span>
+            <span>{serviceData.date}</span>
+            {serviceData.time && (
+              <>
+                <span>•</span>
+                <span>{serviceData.time}</span>
+              </>
+            )}
+          </div>
         </div>
 
         {/* SCALABLE Body Content */}

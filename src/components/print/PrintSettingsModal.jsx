@@ -50,7 +50,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
   const PAGE_W = 8.5 * 96; // 816px
   const PAGE_H = 11 * 96;  // 1056px
-  const HEADER_H = 120; // Preview header height
+  const HEADER_H = 80; // Preview header height
   const FOOTER_H = 40; // Preview footer height
   const BASE_BODY = 21; // Base body font size
   const BASE_TITLE = 24; // Base title font size
@@ -228,9 +228,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
         {/* HEADER - Custom */}
         <div className="absolute bg-white" style={{ top: `${marginTopPx}px`, left: `${marginLeftPx}px`, right: `${marginRightPx}px`, height: `${HEADER_H}px`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a' }}>{serviceData.name || "Orden de Servicio"}</div>
-          <div style={{ fontSize: '22px', color: '#4b5563', marginTop: '4px' }}>{serviceData.day_of_week} {selectedDateFormatted} {serviceData.time && `• ${serviceData.time}`}</div>
-          <div style={{ fontSize: '16px', color: '#6b7280', marginTop: '8px', display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a', lineHeight: 1.2 }}>{serviceData.name || "Orden de Servicio"}</div>
+          <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '2px' }}>{serviceData.day_of_week} {selectedDateFormatted} {serviceData.time && `• ${serviceData.time}`}</div>
+          <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
              {/* Custom team display logic */}
              {serviceData.coordinators && <span><strong>Coord:</strong> {typeof serviceData.coordinators === 'object' ? serviceData.coordinators.main : serviceData.coordinators}</span>}
              {serviceData.ujieres && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Ujier:</strong> {typeof serviceData.ujieres === 'object' ? serviceData.ujieres.main : serviceData.ujieres}</span></>)}
@@ -434,9 +434,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
         {/* HEADER - Standard */}
         <div className="absolute bg-white" style={{ top: `${marginTopPx}px`, left: `${marginLeftPx}px`, right: `${marginRightPx}px`, height: `${HEADER_H}px`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a' }}>Orden de Servicio</div>
-          <div style={{ fontSize: '22px', color: '#4b5563', marginTop: '4px' }}>Domingo {selectedDateFormatted}</div>
-          <div style={{ fontSize: '16px', color: '#6b7280', marginTop: '8px', display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a', lineHeight: 1.2 }}>Orden de Servicio</div>
+          <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '2px' }}>Domingo {selectedDateFormatted}</div>
+          <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
             {serviceData?.coordinators?.['9:30am'] && <span><strong>Coord:</strong> {serviceData.coordinators['9:30am']}</span>}
             {serviceData?.ujieres?.['9:30am'] && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Ujier:</strong> {serviceData.ujieres['9:30am']}</span></>)}
             {serviceData?.sound?.['9:30am'] && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Sonido:</strong> {serviceData.sound['9:30am']}</span></>)}
