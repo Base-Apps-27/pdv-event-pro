@@ -1309,6 +1309,7 @@ export default function PublicProgramView() {
                           );
                         }
 
+                        return (
                         <PublicProgramSegment
                           key={segment.id}
                           segment={segment}
