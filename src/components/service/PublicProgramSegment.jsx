@@ -85,9 +85,32 @@ export default function PublicProgramSegment({
               <Badge variant="outline" className="text-xs text-gray-700">{segmentType}</Badge>
             </div>
 
-            {getData('presenter') && (
-              <p className="text-blue-600 text-sm mt-1">{normalizeName(getData('presenter'))}</p>
-            )}
+            <div className="space-y-1 mt-1">
+              {getData('presenter') && (
+                <div className="flex items-center gap-2 text-blue-600 text-sm">
+                  <Users className="w-4 h-4" />
+                  <span className="font-semibold">{normalizeName(getData('presenter'))}</span>
+                </div>
+              )}
+              {getData('leader') && (
+                <div className="flex items-center gap-2 text-green-600 text-sm">
+                  <Users className="w-4 h-4" />
+                  <span className="font-semibold">Dirige: {normalizeName(getData('leader'))}</span>
+                </div>
+              )}
+              {getData('preacher') && (
+                <div className="flex items-center gap-2 text-indigo-600 text-sm">
+                  <Users className="w-4 h-4" />
+                  <span className="font-semibold">Predica: {normalizeName(getData('preacher'))}</span>
+                </div>
+              )}
+              {getData('translator') && (
+                <div className="flex items-center gap-2 text-purple-600 text-sm">
+                  <Languages className="w-4 h-4" />
+                  <span className="font-semibold">Traductor: {normalizeName(getData('translator'))}</span>
+                </div>
+              )}
+            </div>
 
             {(getData('scripture_references') || getData('verse') || getData('parsed_verse_data')) && (
               <div className="flex items-start gap-2 mt-2">
@@ -356,6 +379,46 @@ export default function PublicProgramSegment({
               )}
             </div>
           )}
+
+          {/* Team Notes - Always Visible in Operational View */}
+          <div className="grid md:grid-cols-2 gap-2 mt-2">
+            {getData('coordinator_notes') && (
+              <div className="bg-orange-50 border-l-4 border-orange-500 pl-3 py-2 text-xs rounded-r">
+                <span className="font-bold text-orange-800 block mb-1">COORDINACIÓN:</span>
+                <p className="text-orange-900 leading-snug">{getData('coordinator_notes')}</p>
+              </div>
+            )}
+            {getData('projection_notes') && (
+              <div className="bg-blue-50 border-l-4 border-blue-500 pl-3 py-2 text-xs rounded-r">
+                <span className="font-bold text-blue-800 block mb-1">PROYECCIÓN:</span>
+                <p className="text-blue-900 leading-snug">{getData('projection_notes')}</p>
+              </div>
+            )}
+            {getData('sound_notes') && (
+              <div className="bg-red-50 border-l-4 border-red-500 pl-3 py-2 text-xs rounded-r">
+                <span className="font-bold text-red-800 block mb-1">SONIDO:</span>
+                <p className="text-red-900 leading-snug">{getData('sound_notes')}</p>
+              </div>
+            )}
+            {getData('ushers_notes') && (
+              <div className="bg-green-50 border-l-4 border-green-500 pl-3 py-2 text-xs rounded-r">
+                <span className="font-bold text-green-800 block mb-1">UJIERES:</span>
+                <p className="text-green-900 leading-snug">{getData('ushers_notes')}</p>
+              </div>
+            )}
+            {getData('translation_notes') && (
+              <div className="bg-purple-50 border-l-4 border-purple-500 pl-3 py-2 text-xs rounded-r">
+                <span className="font-bold text-purple-800 block mb-1">TRADUCCIÓN:</span>
+                <p className="text-purple-900 leading-snug">{getData('translation_notes')}</p>
+              </div>
+            )}
+            {getData('stage_decor_notes') && (
+              <div className="bg-pink-50 border-l-4 border-pink-500 pl-3 py-2 text-xs rounded-r">
+                <span className="font-bold text-pink-800 block mb-1">STAGE & DECOR:</span>
+                <p className="text-pink-900 leading-snug">{getData('stage_decor_notes')}</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
