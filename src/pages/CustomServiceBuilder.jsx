@@ -67,7 +67,7 @@ export default function CustomServiceBuilder() {
         stage_decor_notes: "",
         actions: []
       }),
-      {
+      normalizeSegment({
         title: "Bienvenida y Anuncios",
         type: "welcome",
         duration: 5,
@@ -87,8 +87,8 @@ export default function CustomServiceBuilder() {
         translation_notes: "",
         stage_decor_notes: "",
         actions: []
-      },
-      {
+      }),
+      normalizeSegment({
         title: "Ofrendas",
         type: "offering",
         duration: 5,
@@ -108,8 +108,8 @@ export default function CustomServiceBuilder() {
         translation_notes: "",
         stage_decor_notes: "",
         actions: []
-      },
-      {
+      }),
+      normalizeSegment({
         title: "Mensaje",
         type: "message",
         duration: 45,
@@ -129,7 +129,7 @@ export default function CustomServiceBuilder() {
         translation_notes: "",
         stage_decor_notes: "",
         actions: []
-      }
+      })
     ],
     coordinators: { main: "" },
     ujieres: { main: "" },
@@ -575,6 +575,9 @@ export default function CustomServiceBuilder() {
     
     for (let i = 0; i < serviceData.segments.length; i++) {
       const segData = serviceData.segments[i];
+      // Use helper to get data (prioritizes data object, falls back to root)
+      const getData = (field) => getSegmentData(segData, field);
+      
       const duration = segData.duration || 0;
       
       const startTimeStr = format(currentTime, "HH:mm");
@@ -583,8 +586,9 @@ export default function CustomServiceBuilder() {
       
       // Flatten songs
       const flatSongs = {};
-      if (segData.songs && Array.isArray(segData.songs)) {
-        segData.songs.forEach((song, idx) => {
+      const songs = getData('songs');
+      if (songs && Array.isArray(songs)) {
+        songs.forEach((song, idx) => {
           if (idx < 6) {
             flatSongs[`song_${idx+1}_title`] = song.title;
             flatSongs[`song_${idx+1}_lead`] = song.lead;
@@ -602,26 +606,26 @@ export default function CustomServiceBuilder() {
         start_time: startTimeStr,
         end_time: endTimeStr,
         duration_min: duration,
-        presenter: segData.presenter,
-        translator_name: segData.translator, // Mapping translator
-        description_details: segData.description_details || segData.description,
+        presenter: getData('presenter'),
+        translator_name: getData('translator'), // Mapping translator
+        description_details: getData('description_details') || getData('description'),
         // Map notes
-        coordinator_notes: segData.coordinator_notes,
-        projection_notes: segData.projection_notes,
-        sound_notes: segData.sound_notes,
-        ushers_notes: segData.ushers_notes,
-        translation_notes: segData.translation_notes,
-        stage_decor_notes: segData.stage_decor_notes,
+        coordinator_notes: getData('coordinator_notes'),
+        projection_notes: getData('projection_notes'),
+        sound_notes: getData('sound_notes'),
+        ushers_notes: getData('ushers_notes'),
+        translation_notes: getData('translation_notes'),
+        stage_decor_notes: getData('stage_decor_notes'),
         // Map specific fields
-        message_title: segData.messageTitle,
-        scripture_references: segData.verse,
-        parsed_verse_data: segData.parsed_verse_data,
+        message_title: getData('messageTitle'),
+        scripture_references: getData('verse'),
+        parsed_verse_data: getData('parsed_verse_data'),
         // Songs
         ...flatSongs,
         // Actions
-        segment_actions: segData.actions,
+        segment_actions: getData('actions'),
         // Flags
-        requires_translation: !!segData.translator,
+        requires_translation: !!getData('translator'),
         show_in_general: true
       });
     }
