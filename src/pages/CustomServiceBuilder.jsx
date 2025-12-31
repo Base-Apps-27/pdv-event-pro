@@ -931,8 +931,14 @@ export default function CustomServiceBuilder() {
           }
 
           .print-announcements {
+            page-break-before: always;
             break-before: page;
             padding-bottom: 28pt;
+          }
+
+          .print-page-1-wrapper,
+          .print-page-2-wrapper {
+            page-break-after: avoid;
           }
 
           .print-announcements-logo {
@@ -1347,9 +1353,9 @@ export default function CustomServiceBuilder() {
         </div>
 
         {/* PAGE 2 - Announcements */}
-        {selectedAnnouncementsForPrint.length > 0 && (
+        {(selectedFixed.length > 0 || selectedDynamic.length > 0) && (
           <div className="print-page-2-wrapper">
-            <div className="print-announcements">
+            <div className="print-announcements" style={{ pageBreakBefore: 'always' }}>
               <div className="print-announcements-header" style={{ position: 'relative' }}>
                 <div className="print-announcements-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
                   <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
