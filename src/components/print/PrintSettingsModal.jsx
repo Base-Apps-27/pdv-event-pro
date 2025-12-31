@@ -214,7 +214,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         className="bg-white shadow-2xl relative print:shadow-none"
         style={{
           width: `${PAGE_W}px`,
-          height: `${PAGE_H - 80}px`, 
+          height: `${PAGE_H}px`, 
           display: 'block', margin: 0, flexShrink: 0, breakAfter: 'page', breakInside: 'avoid', overflow: 'hidden' 
         }}
       >
@@ -420,7 +420,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         className="bg-white shadow-2xl relative print:shadow-none"
         style={{
           width: `${PAGE_W}px`,
-          height: `${PAGE_H - 80}px`, 
+          height: `${PAGE_H}px`, 
           display: 'block', margin: 0, flexShrink: 0, breakAfter: 'page', breakInside: 'avoid', overflow: 'hidden' 
         }}
       >
@@ -489,7 +489,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         className="bg-white shadow-2xl relative print:shadow-none"
         style={{
           width: `${PAGE_W}px`,
-          height: `${PAGE_H - 80}px`, /* Aggressive buffer to prevent ANY blank pages */
+          height: `${PAGE_H}px`, /* Aggressive buffer to prevent ANY blank pages */
           display: 'block',
           margin: 0,
           flexShrink: 0,
@@ -834,8 +834,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             left: 0;
             top: 0;
             width: 8.5in;
+            height: 11in !important;
             margin: 0 !important;
             padding: 0 !important;
+            overflow: hidden !important;
           }
 
           .print-footer {
