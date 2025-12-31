@@ -766,6 +766,7 @@ export default function WeeklyServiceManager() {
         sound: { "9:30am": "", "11:30am": "" },
         luces: { "9:30am": "", "11:30am": "" },
         fotografia: { "9:30am": "", "11:30am": "" },
+        fotografia: { "9:30am": "", "11:30am": "" },
         receso_notes: { "9:30am": "" },
         pre_service_notes: { "9:30am": "", "11:30am": "" },
         selected_announcements: []
@@ -991,6 +992,7 @@ export default function WeeklyServiceManager() {
       updated.ujieres["11:30am"] = updated.ujieres["9:30am"];
       updated.sound["11:30am"] = updated.sound["9:30am"];
       updated.luces["11:30am"] = updated.luces["9:30am"];
+      updated.fotografia["11:30am"] = updated.fotografia["9:30am"];
 
       return updated;
     });
@@ -1040,6 +1042,7 @@ export default function WeeklyServiceManager() {
       updated.ujieres["11:30am"] = updated.ujieres["9:30am"];
       updated.sound["11:30am"] = updated.sound["9:30am"];
       updated.luces["11:30am"] = updated.luces["9:30am"];
+      updated.fotografia["11:30am"] = updated.fotografia["9:30am"];
       return updated;
     });
     debouncedSave('copy-team');
