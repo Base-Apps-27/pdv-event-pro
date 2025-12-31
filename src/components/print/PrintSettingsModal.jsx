@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Settings, FileText, Bell, AlertTriangle, CheckCircle2, Save, Printer, Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { formatDate as formatDateFn, addMinutes, parse, format } from "date-fns";
+import { formatDate as formatDateFn } from "date-fns";
 import { es } from "date-fns/locale";
 import { getSegmentData } from "@/components/utils/segmentDataUtils";
 
@@ -242,36 +242,14 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         {/* BODY - Custom Single Column */}
         <div ref={page1BodyRef} className="absolute overflow-hidden" style={{ top: `${marginTopPx + HEADER_H}px`, left: `${marginLeftPx}px`, right: `${marginRightPx}px`, bottom: `${marginBottomPx + FOOTER_H}px` }}>
           <div style={{ width: '100%', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4, padding: '8px' }}>
-             {(() => {
-                // Pre-calculate times
-                let runningTime = serviceData.time ? parse(serviceData.time, 'HH:mm', new Date()) : null;
-                
-                return serviceData.segments.map((seg, idx) => {
-                  const getData = (field) => getSegmentData(seg, field);
-                  const leader = getData('leader');
-                  
-                  // Format current start time
-                  const timeDisplay = runningTime ? format(runningTime, 'h:mm a') : '';
-                  
-                  // Increment for next segment
-                  if (runningTime && seg.duration) {
-                    runningTime = addMinutes(runningTime, seg.duration);
-                  }
+             {serviceData.segments.map((seg, idx) => {
+                const getData = (field) => getSegmentData(seg, field);
+                const leader = getData('leader');
                 const preacher = getData('preacher');
                 const presenter = getData('presenter');
                 const translator = getData('translator');
                 const songs = getData('songs');
                 const messageTitle = getData('messageTitle');
-
-                // Time calculation
-                let startTimeStr = "";
-                if (serviceData.time) {
-                  // Calculate start time for this segment based on accumulated duration
-                  // We need to calculate this outside the map or maintain running total. 
-                  // Since map doesn't easily allow running state without external var, we'll calculate it on the fly 
-                  // But react render is pure... actually we can just calculate all start times before mapping or use a running variable if we are careful.
-                  // Better: Calculate derived segments with times before mapping.
-                }
                 const verse = getData('verse');
                 const description = getData('description');
                 const description_details = getData('description_details');
@@ -292,14 +270,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                         />
                       )}
                       <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: 'bold', textTransform: 'uppercase' }}>{seg.title || 'Sin título'}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto', gap: '8px' }}>
-                        {timeDisplay && (
-                          <span style={{ fontSize: `${BASE_BODY * 0.92 * page1Settings.bodyFontScale}px`, fontWeight: 'bold', color: '#1F8A70', backgroundColor: '#f0fdf4', padding: '0 4px', borderRadius: '4px' }}>
-                            {timeDisplay}
-                          </span>
-                        )}
-                        {seg.duration && <span style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af' }}>({seg.duration} min)</span>}
-                      </div>
+                      {seg.duration && <span style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} min)</span>}
                    </div>
                    {leader && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>Dirige: {leader}</div>}
                    {preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '600' }}>{preacher}</div>}
@@ -333,8 +304,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       </div>
                    )}
                 </div>
-             )})()}
-             </div>
+             )})}
+          </div>
         </div>
         
         <div className="print-footer" style={{ position: 'absolute', bottom: '0.4in', left: '0.5in', width: '7.5in', height: '24px', zIndex: 9999, backgroundColor: '#1F8A70', background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', border: '1px solid #1F8A70' }}>
