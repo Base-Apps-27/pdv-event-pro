@@ -192,7 +192,12 @@ export default function CustomServiceBuilder() {
     leader: "",
     messageTitle: "",
     verse: "",
-    songs: [],
+    songs: [
+      { title: "", lead: "", key: "" },
+      { title: "", lead: "", key: "" },
+      { title: "", lead: "", key: "" },
+      { title: "", lead: "", key: "" }
+    ],
     description: "",
     description_details: "",
     coordinator_notes: "",
@@ -443,7 +448,8 @@ export default function CustomServiceBuilder() {
   const updateSegmentField = (idx, field, value) => {
     setServiceData(prev => {
       const updated = { ...prev };
-      const segment = { ...updated.segments[idx] };
+      const segments = [...prev.segments];
+      const segment = { ...segments[idx] };
       
       // Update root property (Legacy)
       if (field === 'songs') {
@@ -453,7 +459,6 @@ export default function CustomServiceBuilder() {
       }
       
       // Update nested data property (Canonical)
-      // Check if this field belongs in data (using simple heuristic or list from utils)
       // For safety, we ensure data object exists
       if (!segment.data) segment.data = {};
       
@@ -463,7 +468,8 @@ export default function CustomServiceBuilder() {
         segment.data[field] = value;
       }
       
-      updated.segments[idx] = segment;
+      segments[idx] = segment;
+      updated.segments = segments;
       return updated;
     });
   };
@@ -974,7 +980,19 @@ export default function CustomServiceBuilder() {
                             <div className="print:hidden">
                               <Select 
                                 value={segment.type} 
-                                onValueChange={(value) => updateSegmentField(idx, 'type', value)}
+                                onValueChange={(value) => {
+                                  updateSegmentField(idx, 'type', value);
+                                  // Initialize songs if switching to Alabanza and songs are missing
+                                  if ((value === 'Alabanza' || value === 'worship') && (!segment.songs || segment.songs.length === 0)) {
+                                    const defaultSongs = [
+                                      { title: "", lead: "", key: "" },
+                                      { title: "", lead: "", key: "" },
+                                      { title: "", lead: "", key: "" },
+                                      { title: "", lead: "", key: "" }
+                                    ];
+                                    updateSegmentField(idx, 'songs', defaultSongs);
+                                  }
+                                }}
                               >
                                 <SelectTrigger className="w-48">
                                   <SelectValue />
