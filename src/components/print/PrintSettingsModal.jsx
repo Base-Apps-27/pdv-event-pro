@@ -283,9 +283,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       </span>
                       {seg.duration && <span style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} min)</span>}
                       </div>
-                   {leader && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>Dirige: {leader}</div>}
-                   {preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '600' }}>{preacher}</div>}
-                   {presenter && !leader && !preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151' }}>{presenter}</div>}
+                   {leader && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '700' }}>Dirige: {leader}</div>}
+                   {preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '700' }}>{preacher}</div>}
+                   {presenter && !leader && !preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '700' }}>{presenter}</div>}
                    {translator && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280' }}>🌐 {translator}</div>}
 
                    {/* Songs */}
