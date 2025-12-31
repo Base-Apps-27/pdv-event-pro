@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Settings, FileText, Bell, AlertTriangle, CheckCircle2, Save, Printer, Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { formatDate as formatDateFn } from "date-fns";
+import { formatDate as formatDateFn, addMinutes, format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { getSegmentData } from "@/components/utils/segmentDataUtils";
 
@@ -242,9 +242,17 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         {/* BODY - Custom Single Column */}
         <div ref={page1BodyRef} className="absolute overflow-hidden" style={{ top: `${marginTopPx + HEADER_H}px`, left: `${marginLeftPx}px`, right: `${marginRightPx}px`, bottom: `${marginBottomPx + FOOTER_H}px` }}>
           <div style={{ width: '100%', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4, padding: '8px' }}>
-             {serviceData.segments.map((seg, idx) => {
-                const getData = (field) => getSegmentData(seg, field);
-                const leader = getData('leader');
+             {(() => {
+                let currentTime = serviceData.time ? parse(serviceData.time, 'HH:mm', new Date()) : null;
+
+                return serviceData.segments.map((seg, idx) => {
+                  const startTimeStr = currentTime ? format(currentTime, 'h:mm a') : '';
+                  if (currentTime && (seg.duration || seg.duration_min)) {
+                     currentTime = addMinutes(currentTime, seg.duration || seg.duration_min || 0);
+                  }
+
+                  const getData = (field) => getSegmentData(seg, field);
+                  const leader = getData('leader');
                 const preacher = getData('preacher');
                 const presenter = getData('presenter');
                 const translator = getData('translator');
@@ -269,9 +277,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                           style={{ marginRight: '6px' }} 
                         />
                       )}
-                      <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: 'bold', textTransform: 'uppercase' }}>{seg.title || 'Sin título'}</span>
+                      <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: 'bold', textTransform: 'uppercase' }}>
+                        {startTimeStr && <span style={{ color: '#4b5563', marginRight: '8px' }}>{startTimeStr}</span>}
+                        {seg.title || 'Sin título'}
+                      </span>
                       {seg.duration && <span style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} min)</span>}
-                   </div>
+                      </div>
                    {leader && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>Dirige: {leader}</div>}
                    {preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '600' }}>{preacher}</div>}
                    {presenter && !leader && !preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151' }}>{presenter}</div>}
@@ -304,9 +315,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       </div>
                    )}
                 </div>
-             )})}
-          </div>
-        </div>
+             )})
+             })()}
+             </div>
+             </div>
         
         <div className="print-footer" style={{ position: 'absolute', bottom: '0.4in', left: '0.5in', width: '7.5in', height: '24px', zIndex: 9999, backgroundColor: '#1F8A70', background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', border: '1px solid #1F8A70' }}>
           <span className="print-footer-text" style={{ fontSize: '11px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative', letterSpacing: '0.1em', textTransform: 'uppercase' }}>¡Atrévete a cambiar!</span>
