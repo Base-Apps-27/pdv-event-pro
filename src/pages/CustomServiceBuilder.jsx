@@ -40,10 +40,11 @@ export default function CustomServiceBuilder() {
     location: "",
     description: "",
     segments: [
-      {
+      normalizeSegment({
         title: "Equipo de A&A",
         type: "worship",
         duration: 35,
+        // Legacy root fields for initial state
         presenter: "",
         translator: "",
         preacher: "",
@@ -65,7 +66,7 @@ export default function CustomServiceBuilder() {
         translation_notes: "",
         stage_decor_notes: "",
         actions: []
-      },
+      }),
       {
         title: "Bienvenida y Anuncios",
         type: "welcome",
@@ -272,24 +273,15 @@ export default function CustomServiceBuilder() {
       });
       
       try {
+        // Normalize data before saving to ensure consistency
+        // This performs the "lazy migration" - saving in the new format
+        const sanitizedData = normalizeServiceTeams(data);
+
         let result;
         if (serviceId) {
-          result = await base44.entities.Service.update(serviceId, data);
+          result = await base44.entities.Service.update(serviceId, sanitizedData);
         } else {
-          // Ensure team fields are objects (dictionaries) to satisfy schema
-          const sanitizedData = {
-            ...data,
-            coordinators: typeof data.coordinators === 'string' ? { main: data.coordinators } : (data.coordinators || { main: "" }),
-            ujieres: typeof data.ujieres === 'string' ? { main: data.ujieres } : (data.ujieres || { main: "" }),
-            sound: typeof data.sound === 'string' ? { main: data.sound } : (data.sound || { main: "" }),
-            luces: typeof data.luces === 'string' ? { main: data.luces } : (data.luces || { main: "" }),
-          };
-
-          if (serviceId) {
-            result = await base44.entities.Service.update(serviceId, sanitizedData);
-          } else {
-            result = await base44.entities.Service.create(sanitizedData);
-          }
+          result = await base44.entities.Service.create(sanitizedData);
         }
         
         console.log('[SAVE SUCCESS]', {
@@ -429,11 +421,27 @@ export default function CustomServiceBuilder() {
   const updateSegmentField = (idx, field, value) => {
     setServiceData(prev => {
       const updated = { ...prev };
+      const segment = { ...updated.segments[idx] };
+      
+      // Update root property (Legacy)
       if (field === 'songs') {
-        updated.segments[idx].songs = value;
+        segment.songs = value;
       } else {
-        updated.segments[idx][field] = value;
+        segment[field] = value;
       }
+      
+      // Update nested data property (Canonical)
+      // Check if this field belongs in data (using simple heuristic or list from utils)
+      // For safety, we ensure data object exists
+      if (!segment.data) segment.data = {};
+      
+      if (field === 'songs') {
+        segment.data.songs = value;
+      } else {
+        segment.data[field] = value;
+      }
+      
+      updated.segments[idx] = segment;
       return updated;
     });
   };
