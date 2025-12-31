@@ -52,10 +52,10 @@ export default function CustomServiceBuilder() {
         messageTitle: "",
         verse: "",
         songs: [
-          { title: "", lead: "" },
-          { title: "", lead: "" },
-          { title: "", lead: "" },
-          { title: "", lead: "" }
+          { title: "", lead: "", key: "" },
+          { title: "", lead: "", key: "" },
+          { title: "", lead: "", key: "" },
+          { title: "", lead: "", key: "" }
         ],
         description: "",
         description_details: "",
@@ -160,7 +160,12 @@ export default function CustomServiceBuilder() {
       leader: "",
       messageTitle: "",
       verse: "",
-      songs: [],
+      songs: [
+        { title: "", lead: "", key: "" },
+        { title: "", lead: "", key: "" },
+        { title: "", lead: "", key: "" },
+        { title: "", lead: "", key: "" }
+      ],
       description: "",
       description_details: "",
       coordinator_notes: "",
@@ -995,29 +1000,45 @@ export default function CustomServiceBuilder() {
                                   <div className="space-y-1">
                                     <Label className="text-xs font-semibold text-pdv-green">Canciones</Label>
                                     {segment.songs.map((song, sIdx) => (
-                                      <div key={sIdx} className="grid grid-cols-2 gap-2">
-                                        <AutocompleteInput
-                                          type="songTitle"
-                                          placeholder={`Canción ${sIdx + 1}`}
-                                          value={song.title}
-                                          onChange={(e) => {
-                                            const newSongs = [...segment.songs];
-                                            newSongs[sIdx].title = e.target.value;
-                                            updateSegmentField(idx, 'songs', newSongs);
-                                          }}
-                                          className="text-xs"
-                                        />
-                                        <AutocompleteInput
-                                          type="leader"
-                                          placeholder="Líder"
-                                          value={song.lead}
-                                          onChange={(e) => {
-                                            const newSongs = [...segment.songs];
-                                            newSongs[sIdx].lead = e.target.value;
-                                            updateSegmentField(idx, 'songs', newSongs);
-                                          }}
-                                          className="text-xs"
-                                        />
+                                      <div key={sIdx} className="grid grid-cols-12 gap-2">
+                                        <div className="col-span-6">
+                                          <AutocompleteInput
+                                            type="songTitle"
+                                            placeholder={`Canción ${sIdx + 1}`}
+                                            value={song.title}
+                                            onChange={(e) => {
+                                              const newSongs = [...segment.songs];
+                                              newSongs[sIdx].title = e.target.value;
+                                              updateSegmentField(idx, 'songs', newSongs);
+                                            }}
+                                            className="text-xs"
+                                          />
+                                        </div>
+                                        <div className="col-span-4">
+                                          <AutocompleteInput
+                                            type="leader"
+                                            placeholder="Líder"
+                                            value={song.lead}
+                                            onChange={(e) => {
+                                              const newSongs = [...segment.songs];
+                                              newSongs[sIdx].lead = e.target.value;
+                                              updateSegmentField(idx, 'songs', newSongs);
+                                            }}
+                                            className="text-xs"
+                                          />
+                                        </div>
+                                        <div className="col-span-2">
+                                          <Input
+                                            placeholder="Tono"
+                                            value={song.key || ""}
+                                            onChange={(e) => {
+                                              const newSongs = [...segment.songs];
+                                              newSongs[sIdx].key = e.target.value;
+                                              updateSegmentField(idx, 'songs', newSongs);
+                                            }}
+                                            className="text-xs h-9"
+                                          />
+                                        </div>
                                       </div>
                                     ))}
                                   </div>
