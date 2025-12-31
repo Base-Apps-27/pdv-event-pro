@@ -22,6 +22,7 @@ import VerseParserDialog from "@/components/service/VerseParserDialog";
 import { BookOpen } from "lucide-react";
 import { formatDate as formatDateES } from "date-fns";
 import { es } from "date-fns/locale";
+import { normalizeSegment, normalizeServiceTeams, getSegmentData } from "@/components/utils/segmentDataUtils";
 
 export default function CustomServiceBuilder() {
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
@@ -150,6 +151,26 @@ export default function CustomServiceBuilder() {
     title: "",
     type: "Especial",
     duration: 15,
+    // Initialize with data object for canonical structure
+    data: {
+      presenter: "",
+      translator: "",
+      preacher: "",
+      leader: "",
+      messageTitle: "",
+      verse: "",
+      songs: [],
+      description: "",
+      description_details: "",
+      coordinator_notes: "",
+      projection_notes: "",
+      sound_notes: "",
+      ushers_notes: "",
+      translation_notes: "",
+      stage_decor_notes: "",
+      actions: []
+    },
+    // Keep root fields empty/synced for now to ensure legacy compatibility
     presenter: "",
     translator: "",
     preacher: "",
@@ -187,15 +208,11 @@ export default function CustomServiceBuilder() {
         segmentCount: existingService.segments?.length || 0,
         fullData: existingService
       });
-      // Sanitize loaded data to ensure team fields are objects
-      const sanitizedService = {
-        ...existingService,
-        coordinators: typeof existingService.coordinators === 'string' ? { main: existingService.coordinators } : (existingService.coordinators || { main: "" }),
-        ujieres: typeof existingService.ujieres === 'string' ? { main: existingService.ujieres } : (existingService.ujieres || { main: "" }),
-        sound: typeof existingService.sound === 'string' ? { main: existingService.sound } : (existingService.sound || { main: "" }),
-        luces: typeof existingService.luces === 'string' ? { main: existingService.luces } : (existingService.luces || { main: "" }),
-      };
-
+      
+      // Normalize loaded data using shared utilities
+      // This ensures teams are objects and segments have nested data structure
+      const sanitizedService = normalizeServiceTeams(existingService);
+      
       setServiceData(sanitizedService);
       setLastSavedData(JSON.parse(JSON.stringify(sanitizedService)));
       setPrintSettingsPage1(existingService.print_settings_page1 || null);
