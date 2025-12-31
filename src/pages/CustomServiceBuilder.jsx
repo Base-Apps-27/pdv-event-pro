@@ -149,6 +149,7 @@ export default function CustomServiceBuilder() {
   const [expandedSegments, setExpandedSegments] = useState({});
   const [showPrintSettings, setShowPrintSettings] = useState(false);
   const [printSettingsPage1, setPrintSettingsPage1] = useState(null);
+  const [printSettingsPage2, setPrintSettingsPage2] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSavedData, setLastSavedData] = useState(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState("idle"); // idle, saving, saved, error
@@ -251,6 +252,7 @@ export default function CustomServiceBuilder() {
       setServiceData(sanitizedService);
       setLastSavedData(JSON.parse(JSON.stringify(sanitizedService)));
       setPrintSettingsPage1(existingService.print_settings_page1 || null);
+      setPrintSettingsPage2(existingService.print_settings_page2 || null);
       setHasUnsavedChanges(false);
       
       // Load from localStorage backup if available and newer
@@ -403,6 +405,7 @@ export default function CustomServiceBuilder() {
       saveServiceMutation.mutate({
         ...serviceData,
         print_settings_page1: printSettingsPage1,
+        print_settings_page2: printSettingsPage2,
         status: 'active'
       });
     }, 3000);
@@ -426,9 +429,11 @@ export default function CustomServiceBuilder() {
 
   const handleSavePrintSettings = (newSettings) => {
     setPrintSettingsPage1(newSettings.page1);
+    setPrintSettingsPage2(newSettings.page2);
     setServiceData(prev => ({
       ...prev,
-      print_settings_page1: newSettings.page1
+      print_settings_page1: newSettings.page1,
+      print_settings_page2: newSettings.page2
     }));
   };
 
@@ -680,9 +685,30 @@ export default function CustomServiceBuilder() {
     titleFontScale: 1.0
   };
 
+  const activePrintSettingsPage2 = printSettingsPage2 || {
+    globalScale: 1.0,
+    margins: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" },
+    bodyFontScale: 1.0,
+    titleFontScale: 1.0
+  };
+
+  // Fetch announcements for print
+  const { data: allAnnouncements = [] } = useQuery({
+    queryKey: ['allAnnouncements'],
+    queryFn: () => base44.entities.AnnouncementItem.list('priority'),
+  });
+
+  const selectedAnnouncementsForPrint = allAnnouncements.filter(a => 
+    serviceData.selected_announcements?.includes(a.id)
+  );
+  const selectedFixed = selectedAnnouncementsForPrint.filter(a => a.category === 'General');
+  const selectedDynamic = selectedAnnouncementsForPrint.filter(a => a.category !== 'General' || a.isEvent);
+
   return (
-    <div className="p-6 md:p-8 space-y-8 print:p-2">
+    <div className="p-6 md:p-8 space-y-8 print:p-0">
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
         @media print {
           @page { 
             size: letter; 
@@ -694,30 +720,405 @@ export default function CustomServiceBuilder() {
             print-color-adjust: exact;
             font-family: 'Inter', Helvetica, Arial, sans-serif;
             background: white;
+            font-size: 10.5pt;
+            line-height: 1.3;
             color: #374151;
           }
 
-          .print-page-wrapper {
-            padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} ${activePrintSettingsPage1.margins.bottom} ${activePrintSettingsPage1.margins.left};
+          .print-page-1-wrapper {
+            padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} calc(${activePrintSettingsPage1.margins.bottom} + 24pt) ${activePrintSettingsPage1.margins.left};
+          }
+
+          .print-page-2-wrapper {
+            padding: ${activePrintSettingsPage2.margins.top} ${activePrintSettingsPage2.margins.right} calc(${activePrintSettingsPage2.margins.bottom} + 24pt) ${activePrintSettingsPage2.margins.left};
           }
           
           .print-body-content {
             transform: scale(${activePrintSettingsPage1.globalScale});
             transform-origin: top left;
-            font-size: calc(10.5pt * ${activePrintSettingsPage1.bodyFontScale});
-            line-height: 1.3;
           }
-          
-          .print-body-content h1, 
-          .print-body-content h2, 
-          .print-body-content h3 {
-            font-size: calc(1em * ${activePrintSettingsPage1.titleFontScale});
-            page-break-after: avoid;
+
+          .print-announcements-body {
+            transform: scale(${activePrintSettingsPage2.globalScale});
+            transform-origin: top left;
           }
           
           * {
-            box-shadow: none !important;
-            text-shadow: none !important;
+            background: white !important;
+          }
+
+          .print-header {
+            position: relative;
+            text-align: center;
+            margin-bottom: 14pt;
+            padding-bottom: 8pt;
+            border-bottom: 1pt solid #e5e7eb;
+          }
+
+          .print-logo {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 50px;
+            height: 50px;
+          }
+
+          .print-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+          }
+
+          .print-title {
+            text-align: center;
+            padding: 0 60px;
+          }
+
+          .print-title h1 {
+            font-size: calc(18pt * ${activePrintSettingsPage1.titleFontScale});
+            font-weight: 600;
+            margin: 0 0 4pt 0;
+            text-transform: uppercase;
+            color: #000000;
+            letter-spacing: 0.5px;
+          }
+
+          .print-title p {
+            font-size: 11pt;
+            color: #4b5563;
+            font-weight: 400;
+            margin: 0 0 8pt 0;
+          }
+
+          .print-team-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4pt;
+            flex-wrap: wrap;
+            font-size: 9pt;
+            color: #4b5563;
+          }
+
+          .print-team-label {
+            font-weight: 600;
+            color: #1f2937;
+          }
+
+          .print-segment {
+            margin-bottom: 10pt;
+            padding-bottom: 8pt;
+            border-bottom: 1pt solid #f3f4f6;
+            font-size: calc(10.5pt * ${activePrintSettingsPage1.bodyFontScale});
+            line-height: 1.3;
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
+          .print-segment:last-child {
+            border-bottom: none;
+          }
+
+          .print-segment-time {
+            font-weight: 600;
+            color: #4b5563;
+            font-size: 10.5pt;
+            display: inline;
+            margin-right: 6pt;
+          }
+
+          .print-segment-title {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: calc(11pt * ${activePrintSettingsPage1.titleFontScale});
+            color: #000000;
+            letter-spacing: 0.25px;
+            display: inline;
+          }
+
+          .print-segment-detail {
+            font-size: 10.5pt;
+            color: #374151;
+            line-height: 1.3;
+            margin-top: 2pt;
+            padding-left: 4pt;
+          }
+
+          .print-name-blue {
+            color: #2563eb;
+            font-weight: 700;
+            font-size: 11pt;
+          }
+
+          .print-duration {
+            font-size: 10pt;
+            font-weight: 400;
+            color: #6b7280;
+          }
+
+          .print-note-text {
+            font-size: 9.5pt;
+            color: #6b7280;
+            font-style: italic;
+          }
+
+          .print-note-general-info {
+            background-color: #f0fdf4 !important;
+            border-left: 4pt solid #16a34a !important;
+            color: #14532d !important;
+            font-size: 10pt;
+            margin-top: 4pt;
+            padding: 4pt 8pt;
+            font-style: italic;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          .print-note-projection-team {
+            border-left: 3pt solid #2563eb;
+            background-color: transparent;
+            color: #1e40af;
+            font-size: 9pt;
+            margin-top: 4pt;
+            padding: 2pt 6pt;
+          }
+
+          .print-note-sound-team {
+            border-left: 3pt solid #dc2626;
+            background-color: transparent;
+            color: #991b1b;
+            font-size: 9pt;
+            margin-top: 4pt;
+            padding: 2pt 6pt;
+          }
+
+          .print-note-ushers-team {
+            border-left: 3pt solid #16a34a;
+            background-color: transparent;
+            color: #14532d;
+            font-size: 9pt;
+            margin-top: 4pt;
+            padding: 2pt 6pt;
+          }
+
+          .print-note-translation-team {
+            border-left: 3pt solid #9333ea;
+            background-color: transparent;
+            color: #581c87;
+            font-size: 9pt;
+            margin-top: 4pt;
+            padding: 2pt 6pt;
+          }
+
+          .print-note-stage-team {
+            border-left: 3pt solid #c026d3;
+            background-color: transparent;
+            color: #701a75;
+            font-size: 9pt;
+            margin-top: 4pt;
+            padding: 2pt 6pt;
+          }
+
+          .print-segment-songs {
+            margin-top: 4pt;
+            padding-left: 4pt;
+            font-size: 10pt;
+            line-height: 1.35;
+          }
+
+          .print-segment-songs div {
+            color: #374151;
+          }
+
+          .print-announcements {
+            break-before: page;
+            padding-bottom: 28pt;
+          }
+
+          .print-announcements-logo {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 50px;
+            height: 50px;
+          }
+
+          .print-announcements-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+          }
+
+          .print-announcements-header {
+            position: relative;
+            text-align: center;
+            margin-bottom: 14pt;
+            padding-bottom: 8pt;
+            border-bottom: 1pt solid #e5e7eb;
+          }
+
+          .print-announcements-title {
+            font-size: calc(18pt * ${activePrintSettingsPage2.titleFontScale});
+            font-weight: 600;
+            text-transform: uppercase;
+            margin: 0 0 4pt 0;
+            color: #000000;
+            letter-spacing: 0.5px;
+          }
+
+          .print-announcements-header p {
+            font-size: 11pt;
+            font-weight: 400;
+            color: #4b5563;
+            margin: 0;
+          }
+
+          .print-announcement-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20pt;
+            margin: 0;
+            padding: 0;
+          }
+
+          .print-announcements-column-left {
+            display: flex;
+            flex-direction: column;
+            gap: 8pt;
+          }
+
+          .print-events-column-right {
+            display: flex;
+            flex-direction: column;
+            gap: 6pt;
+            border-left: 2pt solid #e5e7eb;
+            padding-left: 12pt;
+          }
+
+          .print-events-header {
+            font-size: 9pt;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4pt;
+            padding-bottom: 4pt;
+            border-bottom: 1pt solid #e5e7eb;
+          }
+
+          .print-announcement-item {
+            margin-bottom: 8pt;
+            padding-bottom: 8pt;
+            border-bottom: 1pt solid #e5e7eb;
+            break-inside: avoid;
+            page-break-inside: avoid;
+            font-size: calc(9.5pt * ${activePrintSettingsPage2.bodyFontScale});
+          }
+
+          .print-announcement-item:last-child {
+            border-bottom: none;
+          }
+
+          .print-announcement-title {
+            font-size: calc(10pt * ${activePrintSettingsPage2.titleFontScale});
+            font-weight: 600;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 0.25px;
+            display: block;
+            line-height: 1.25;
+          }
+
+          .print-announcement-content {
+            font-size: 9.5pt;
+            line-height: 1.3;
+            color: #374151;
+            white-space: pre-wrap;
+          }
+
+          .print-announcement-instructions {
+            margin-top: 4pt;
+            font-size: 8.5pt;
+            font-style: italic;
+            color: #6b7280;
+            padding-left: 6pt;
+            border-left: 2pt solid #fbbf24;
+            line-height: 1.2;
+          }
+
+          .print-announcement-instructions::before {
+            content: "CUE: ";
+            font-weight: 700;
+            font-style: normal;
+            color: #1f2937;
+            text-transform: uppercase;
+            font-size: 7.5pt;
+            letter-spacing: 0.5px;
+          }
+
+          .print-event-compact {
+            display: flex;
+            flex-direction: column;
+            padding: 4pt 0;
+            border-bottom: 1pt solid #f3f4f6;
+          }
+
+          .print-event-compact:last-child {
+            border-bottom: none;
+          }
+
+          .print-event-compact.print-event-emphasized {
+            background: #fef3c7 !important;
+            border: 2pt solid #f59e0b !important;
+            border-radius: 4pt;
+            padding: 4pt 6pt;
+            margin-bottom: 4pt;
+          }
+
+          .print-event-title {
+            font-size: 10pt;
+            font-weight: 600;
+            color: #16a34a;
+            line-height: 1.2;
+          }
+
+          .print-event-date {
+            font-size: 9pt;
+            color: #4b5563;
+            font-weight: 500;
+            margin-top: 2pt;
+          }
+
+          .print-event-content {
+            font-size: 9pt;
+            color: #374151;
+            line-height: 1.3;
+            margin-top: 2pt;
+            white-space: pre-wrap;
+          }
+
+          .print-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 20pt;
+            background: linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%) !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white !important;
+            font-size: 9pt;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+          }
+
+          .print-content {
+            padding-bottom: 24pt;
           }
         }
       `}</style>
@@ -804,7 +1205,7 @@ export default function CustomServiceBuilder() {
         open={showPrintSettings}
         onOpenChange={setShowPrintSettings}
         settingsPage1={activePrintSettingsPage1}
-        settingsPage2={activePrintSettingsPage1}
+        settingsPage2={activePrintSettingsPage2}
         onSave={handleSavePrintSettings}
         language="es"
         serviceData={serviceData}
@@ -820,27 +1221,219 @@ export default function CustomServiceBuilder() {
       />
 
       {/* Print Layout */}
-      <div className="hidden print:block print-page-wrapper">
-        {/* FIXED Print Header */}
-        <div className="text-center mb-4 border-b border-gray-200 pb-2">
-          <h1 className="text-xl font-bold uppercase mb-0.5">{serviceData.name || 'Orden de Servicio'}</h1>
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-            <span>{serviceData.day_of_week}</span>
-            <span>•</span>
-            <span>{serviceData.date}</span>
-            {serviceData.time && (
-              <>
-                <span>•</span>
-                <span>{serviceData.time}</span>
-              </>
-            )}
+      <div className="hidden print:block">
+        {/* PAGE 1 - Service Program */}
+        <div className="print-page-1-wrapper">
+          <div className="print-header" style={{ position: 'relative' }}>
+            <div className="print-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
+              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
+            </div>
+            <div className="print-title">
+              <h1>{serviceData.name || 'Orden de Servicio'}</h1>
+              <p>{serviceData.day_of_week} {serviceData.date && formatDateES(new Date(serviceData.date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })} {serviceData.time && `• ${serviceData.time}`}</p>
+              <div className="print-team-info">
+                {serviceData.coordinators?.main && (
+                  <span><span className="print-team-label">Coordinador:</span> {serviceData.coordinators.main}</span>
+                )}
+                {serviceData.ujieres?.main && (
+                  <>
+                    <span style={{ color: '#9ca3af' }}>/</span>
+                    <span><span className="print-team-label">Ujier:</span> {serviceData.ujieres.main}</span>
+                  </>
+                )}
+                {serviceData.sound?.main && (
+                  <>
+                    <span style={{ color: '#9ca3af' }}>/</span>
+                    <span><span className="print-team-label">Sonido:</span> {serviceData.sound.main}</span>
+                  </>
+                )}
+                {serviceData.luces?.main && (
+                  <>
+                    <span style={{ color: '#9ca3af' }}>/</span>
+                    <span><span className="print-team-label">Luces:</span> {serviceData.luces.main}</span>
+                  </>
+                )}
+                {serviceData.fotografia?.main && (
+                  <>
+                    <span style={{ color: '#9ca3af' }}>/</span>
+                    <span className="print-team-label">Foto:</span> {serviceData.fotografia.main}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="print-body-content">
+            {(() => {
+              let currentTime = serviceData.time ? parse(serviceData.time, 'HH:mm', new Date()) : null;
+
+              return serviceData.segments.map((seg, idx) => {
+                const startTimeStr = currentTime ? format(currentTime, 'h:mm a') : '';
+                if (currentTime && seg.duration) {
+                  currentTime = addMinutes(currentTime, seg.duration);
+                }
+
+                const getData = (field) => getSegmentData(seg, field);
+                const segmentType = seg.type || getData('type') || 'Especial';
+                const isWorship = ['Alabanza', 'worship'].includes(segmentType);
+                const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
+                const isOffering = ['Ofrenda', 'offering'].includes(segmentType);
+
+                const leader = isWorship ? getData('leader') : null;
+                const preacher = isMessage ? getData('preacher') : null;
+                const presenter = (!isWorship && !isMessage) ? getData('presenter') : null;
+
+                const translator = getData('translator');
+                const songs = isWorship ? (getData('songs') || seg.songs) : null;
+                const messageTitle = isMessage ? getData('messageTitle') : null;
+                const verse = (isMessage || isOffering) ? getData('verse') : null;
+                const description = getData('description');
+                const description_details = getData('description_details');
+                const coordinator_notes = getData('coordinator_notes');
+                const projection_notes = getData('projection_notes');
+                const sound_notes = getData('sound_notes');
+                const ushers_notes = getData('ushers_notes');
+
+                return (
+                  <div key={idx} className="print-segment">
+                    <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                      {segmentType === 'Especial' && (
+                        <Sparkles 
+                          size={11 * activePrintSettingsPage1.titleFontScale} 
+                          color="#f59e0b" 
+                          fill="#fef3c7"
+                          style={{ marginRight: '6px' }} 
+                        />
+                      )}
+                      <span className="print-segment-title">
+                        {startTimeStr && <span className="print-segment-time">{startTimeStr}</span>}
+                        {seg.title || 'Sin título'}
+                      </span>
+                      {seg.duration && <span className="print-duration" style={{ marginLeft: '4px' }}>({seg.duration} min)</span>}
+                    </div>
+
+                    {leader && <div className="print-segment-detail">Dirige: <span className="print-name-blue">{leader}</span></div>}
+                    {preacher && <div className="print-segment-detail"><span className="print-name-blue">{preacher}</span></div>}
+                    {presenter && !leader && !preacher && <div className="print-segment-detail"><span className="print-name-blue">{presenter}</span></div>}
+                    {translator && <div className="print-segment-detail print-note-text">🌐 {translator}</div>}
+
+                    {songs && Array.isArray(songs) && songs.filter(s => s.title).length > 0 && (
+                      <div className="print-segment-songs">
+                        {songs.filter(s => s.title).map((song, sIdx) => (
+                          <div key={sIdx}>- {song.title} {song.lead && `(${song.lead})`}</div>
+                        ))}
+                      </div>
+                    )}
+
+                    {messageTitle && <div className="print-segment-detail print-note-text">{messageTitle}</div>}
+                    {verse && <div className="print-segment-detail print-note-text">📖 {verse}</div>}
+                    {description && <div className="print-note-general-info">{description}</div>}
+                    {description_details && (
+                      <div className="print-note-general-info">
+                        <strong style={{ display: 'block', marginBottom: '2px', color: '#111827', textTransform: 'uppercase', fontSize: '0.9em' }}>📝 Notas Generales:</strong>
+                        {description_details}
+                      </div>
+                    )}
+
+                    {coordinator_notes && <div className="print-note-projection-team"><strong>📋 Coord:</strong> {coordinator_notes}</div>}
+                    {projection_notes && <div className="print-note-projection-team"><strong>📽️ Proyección:</strong> {projection_notes}</div>}
+                    {sound_notes && <div className="print-note-sound-team"><strong>🔊 Sonido:</strong> {sound_notes}</div>}
+                    {ushers_notes && <div className="print-note-ushers-team"><strong>🤝 Ujieres:</strong> {ushers_notes}</div>}
+                  </div>
+                );
+              });
+            })()}
           </div>
         </div>
 
-        {/* SCALABLE Body Content */}
-        <div className="print-body-content">
-          {/* Print content will be rendered here */}
-          <p>Print view placeholder</p>
+        {/* PAGE 2 - Announcements */}
+        {selectedAnnouncementsForPrint.length > 0 && (
+          <div className="print-page-2-wrapper">
+            <div className="print-announcements">
+              <div className="print-announcements-header" style={{ position: 'relative' }}>
+                <div className="print-announcements-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
+                  <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
+                </div>
+                <div style={{ textAlign: 'center', paddingLeft: '0', paddingRight: '0' }}>
+                  <div className="print-announcements-title">ANUNCIOS</div>
+                  <p>{serviceData.day_of_week} {serviceData.date && formatDateES(new Date(serviceData.date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
+                </div>
+              </div>
+
+              <div className="print-announcements-body">
+                <div className="print-announcement-list">
+                  {/* Left Column: Fixed Announcements */}
+                  <div className="print-announcements-column-left">
+                    {selectedFixed.map((ann) => {
+                      const sanitize = (html) => {
+                        if (!html) return '';
+                        return html.replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
+                      };
+                      return (
+                        <div key={ann.id} className="print-announcement-item">
+                          <div className="print-announcement-title">{ann.title}</div>
+                          {ann.content && (
+                            <div 
+                              className="print-announcement-content"
+                              dangerouslySetInnerHTML={{ __html: sanitize(ann.content) }}
+                            />
+                          )}
+                          {ann.instructions && (
+                            <div 
+                              className="print-announcement-instructions"
+                              dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Right Column: Dynamic Events */}
+                  <div className="print-events-column-right">
+                    {selectedDynamic.length > 0 && (
+                      <div className="print-events-header">Próximos Eventos / Upcoming Events</div>
+                    )}
+                    {selectedDynamic.map((ann) => {
+                      const sanitize = (html) => {
+                        if (!html) return '';
+                        return html.replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
+                      };
+                      const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
+                      const isEmphasized = ann.emphasize || ann.category === 'Urgent';
+                      return (
+                        <div key={ann.id} className={`print-event-compact ${isEmphasized ? 'print-event-emphasized' : ''}`}>
+                          <div className="print-event-title">{ann.isEvent ? ann.name : ann.title}</div>
+                          {(ann.date_of_occurrence || ann.start_date) && (
+                            <div className="print-event-date">
+                              {ann.date_of_occurrence || ann.start_date}
+                              {ann.end_date && ` — ${ann.end_date}`}
+                            </div>
+                          )}
+                          {content && (
+                            <div 
+                              className="print-event-content"
+                              dangerouslySetInnerHTML={{ __html: sanitize(content) }}
+                            />
+                          )}
+                          {ann.instructions && (
+                            <div 
+                              className="print-announcement-instructions"
+                              dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="print-footer">
+          ¡Atrévete a cambiar!
         </div>
       </div>
 
