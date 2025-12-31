@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -710,7 +711,7 @@ export default function CustomServiceBuilder() {
       {/* Header */}
       <div className="flex justify-between items-center print:hidden">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate(-1)}>
+          <Button variant="ghost" onClick={() => navigate(createPageUrl('CustomServicesManager'))}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
