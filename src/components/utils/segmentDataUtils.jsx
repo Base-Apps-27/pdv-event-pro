@@ -71,7 +71,7 @@ export const normalizeServiceTeams = (rawService) => {
   if (!rawService) return null;
   const srv = { ...rawService };
 
-  const teamFields = ['coordinators', 'ujieres', 'sound', 'luces'];
+  const teamFields = ['coordinators', 'ujieres', 'sound', 'luces', 'fotografia'];
   
   teamFields.forEach(field => {
     const val = srv[field];

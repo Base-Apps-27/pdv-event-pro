@@ -964,6 +964,12 @@ export default function PublicProgramView() {
                            <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["9:30am"] || actualServiceData.luces["11:30am"] || Object.values(actualServiceData.luces).find(v => v))}</span>
                          </>
                        )}
+                       {actualServiceData.fotografia && Object.values(actualServiceData.fotografia).find(v => v) && (
+                         <>
+                           <span className="text-gray-400">|</span>
+                           <span><strong>📸 Foto:</strong> {normalizeName(actualServiceData.fotografia["9:30am"] || actualServiceData.fotografia["11:30am"] || Object.values(actualServiceData.fotografia).find(v => v))}</span>
+                         </>
+                       )}
                      </div>
                    )}
                  </div>
@@ -1050,6 +1056,12 @@ export default function PublicProgramView() {
                               <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["9:30am"])}</span>
                             </>
                           )}
+                          {actualServiceData.fotografia?.["9:30am"] && (
+                            <>
+                              <span className="text-gray-400">|</span>
+                              <span><strong>📸 Foto:</strong> {normalizeName(actualServiceData.fotografia["9:30am"])}</span>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1118,6 +1130,12 @@ export default function PublicProgramView() {
                             <>
                               <span className="text-gray-400">|</span>
                               <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["11:30am"])}</span>
+                            </>
+                          )}
+                          {actualServiceData.fotografia?.["11:30am"] && (
+                            <>
+                              <span className="text-gray-400">|</span>
+                              <span><strong>📸 Foto:</strong> {normalizeName(actualServiceData.fotografia["11:30am"])}</span>
                             </>
                           )}
                         </div>
@@ -1240,6 +1258,12 @@ export default function PublicProgramView() {
                                 <>
                                   <span className="text-gray-400">|</span>
                                   <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["9:30am"] || actualServiceData.luces["11:30am"] || Object.values(actualServiceData.luces).find(v => v))}</span>
+                                </>
+                              )}
+                              {actualServiceData.fotografia && (
+                                <>
+                                  <span className="text-gray-400">|</span>
+                                  <span><strong>📸 Foto:</strong> {normalizeName(actualServiceData.fotografia["9:30am"] || actualServiceData.fotografia["11:30am"] || Object.values(actualServiceData.fotografia).find(v => v))}</span>
                                 </>
                               )}
                             </div>

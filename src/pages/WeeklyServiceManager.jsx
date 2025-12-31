@@ -765,6 +765,7 @@ export default function WeeklyServiceManager() {
         ujieres: { "9:30am": "", "11:30am": "" },
         sound: { "9:30am": "", "11:30am": "" },
         luces: { "9:30am": "", "11:30am": "" },
+        fotografia: { "9:30am": "", "11:30am": "" },
         receso_notes: { "9:30am": "" },
         pre_service_notes: { "9:30am": "", "11:30am": "" },
         selected_announcements: []
@@ -1983,6 +1984,8 @@ Return ONLY valid JSON:
               <span><span className="print-team-label">Sonido:</span> {serviceData?.sound?.["9:30am"] || "—"}</span>
               <span style={{ color: '#9ca3af' }}>/</span>
               <span><span className="print-team-label">Luces:</span> {serviceData?.luces?.["9:30am"] || serviceData?.luces?.["11:30am"] || "—"}</span>
+              <span style={{ color: '#9ca3af' }}>/</span>
+              <span><span className="print-team-label">Foto:</span> {serviceData?.fotografia?.["9:30am"] || serviceData?.fotografia?.["11:30am"] || "—"}</span>
             </div>
           </div>
         </div>
@@ -3139,6 +3142,7 @@ Return ONLY valid JSON:
               <TeamInput field="ujieres" service="9:30am" placeholder="Ujieres" />
               <TeamInput field="sound" service="9:30am" placeholder="Sonido" />
               <TeamInput field="luces" service="9:30am" placeholder="Luces" />
+              <TeamInput field="fotografia" service="9:30am" placeholder="Fotografía" />
             </CardContent>
           </Card>
         </div>
@@ -3597,6 +3601,7 @@ Return ONLY valid JSON:
               <TeamInput field="ujieres" service="11:30am" placeholder="Ujieres" />
               <TeamInput field="sound" service="11:30am" placeholder="Sonido" />
               <TeamInput field="luces" service="11:30am" placeholder="Luces" />
+              <TeamInput field="fotografia" service="11:30am" placeholder="Fotografía" />
             </CardContent>
           </Card>
         </div>

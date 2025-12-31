@@ -140,6 +140,7 @@ export default function CustomServiceBuilder() {
     ujieres: { main: "" },
     sound: { main: "" },
     luces: { main: "" },
+    fotografia: { main: "" },
     notes: ""
   });
 
@@ -1413,6 +1414,15 @@ export default function CustomServiceBuilder() {
               value={serviceData.luces?.main || ""}
               onChange={(e) => setServiceData(prev => ({ ...prev, luces: { ...prev.luces, main: e.target.value } }))}
               placeholder="Equipo de luces"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Fotografía</Label>
+            <AutocompleteInput
+              type="tech"
+              value={serviceData.fotografia?.main || ""}
+              onChange={(e) => setServiceData(prev => ({ ...prev, fotografia: { ...prev.fotografia, main: e.target.value } }))}
+              placeholder="Equipo de fotografía"
             />
           </div>
         </CardContent>

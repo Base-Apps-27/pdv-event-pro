@@ -236,6 +236,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
              {serviceData.ujieres && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Ujier:</strong> {typeof serviceData.ujieres === 'object' ? serviceData.ujieres.main : serviceData.ujieres}</span></>)}
              {serviceData.sound && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Sonido:</strong> {typeof serviceData.sound === 'object' ? serviceData.sound.main : serviceData.sound}</span></>)}
              {serviceData.luces && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Luces:</strong> {typeof serviceData.luces === 'object' ? serviceData.luces.main : serviceData.luces}</span></>)}
+             {serviceData.fotografia && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Foto:</strong> {typeof serviceData.fotografia === 'object' ? serviceData.fotografia.main : serviceData.fotografia}</span></>)}
           </div>
         </div>
 
@@ -441,6 +442,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             {serviceData?.ujieres?.['9:30am'] && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Ujier:</strong> {serviceData.ujieres['9:30am']}</span></>)}
             {serviceData?.sound?.['9:30am'] && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Sonido:</strong> {serviceData.sound['9:30am']}</span></>)}
             {serviceData?.luces?.['9:30am'] && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Luces:</strong> {serviceData.luces['9:30am']}</span></>)}
+            {serviceData?.fotografia?.['9:30am'] && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Foto:</strong> {serviceData.fotografia['9:30am']}</span></>)}
           </div>
         </div>
 
