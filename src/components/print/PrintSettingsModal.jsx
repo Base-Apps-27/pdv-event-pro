@@ -252,14 +252,20 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                   }
 
                   const getData = (field) => getSegmentData(seg, field);
-                  const leader = getData('leader');
-                const preacher = getData('preacher');
-                const presenter = getData('presenter');
-                const translator = getData('translator');
-                const songs = getData('songs');
-                const messageTitle = getData('messageTitle');
-                const verse = getData('verse');
-                const description = getData('description');
+                  const segmentType = seg.segment_type || seg.type || getData('type') || 'Especial';
+                  const isWorship = ['Alabanza', 'worship'].includes(segmentType);
+                  const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
+                  const isOffering = ['Ofrenda', 'offering'].includes(segmentType);
+
+                  const leader = isWorship ? getData('leader') : null;
+                  const preacher = isMessage ? getData('preacher') : null;
+                  const presenter = (!isWorship && !isMessage) ? getData('presenter') : null;
+
+                  const translator = getData('translator');
+                  const songs = isWorship ? getData('songs') : null;
+                  const messageTitle = isMessage ? getData('messageTitle') : null;
+                  const verse = (isMessage || isOffering) ? getData('verse') : null;
+                  const description = getData('description');
                 const description_details = getData('description_details');
                 const coordinator_notes = getData('coordinator_notes');
                 const projection_notes = getData('projection_notes');

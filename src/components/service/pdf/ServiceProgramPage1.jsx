@@ -356,13 +356,20 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
         {/* No column header for custom single layout */}
         {segments.map((segment, idx) => {
           const getData = (field) => getSegmentData(segment, field);
-          const leader = getData('leader');
-          const preacher = getData('preacher');
-          const presenter = getData('presenter');
+          const segmentType = segment.segment_type || segment.type || getData('type') || 'Especial';
+          const isWorship = ['Alabanza', 'worship'].includes(segmentType);
+          const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
+          const isOffering = ['Ofrenda', 'offering'].includes(segmentType);
+
+          const leader = isWorship ? getData('leader') : null;
+          const preacher = isMessage ? getData('preacher') : null;
+          const presenter = (!isWorship && !isMessage) ? getData('presenter') : null;
+          
           const translator = getData('translator');
-          const songs = getData('songs');
-          const messageTitle = getData('messageTitle');
-          const verse = getData('verse');
+          const songs = isWorship ? getData('songs') : null;
+          const messageTitle = isMessage ? getData('messageTitle') : null;
+          const verse = (isMessage || isOffering) ? getData('verse') : null;
+          
           const description = getData('description');
           const description_details = getData('description_details');
           const coordinator_notes = getData('coordinator_notes');
@@ -394,7 +401,7 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
             )}
             {preacher && (
               <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
-                <Text style={styles.segmentName}>{preacher}</Text>
+                Predica: <Text style={styles.segmentName}>{preacher}</Text>
               </Text>
             )}
             {presenter && !leader && !preacher && (

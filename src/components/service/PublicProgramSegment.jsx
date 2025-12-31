@@ -21,6 +21,12 @@ export default function PublicProgramSegment({
   const getData = (field) => getSegmentData(segment, field);
   const segmentType = segment.segment_type || segment.type || getData('type') || 'Especial';
   const isSpecial = ['Especial', 'Special', 'special'].includes(segmentType);
+
+  // Type-based visibility flags (Logic matching CustomServiceBuilder inputs)
+  const isWorship = ['Alabanza', 'worship'].includes(segmentType);
+  const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType); // 'Message' legacy?
+  const isOffering = ['Ofrenda', 'offering'].includes(segmentType);
+  const isWelcome = ['Bienvenida', 'welcome'].includes(segmentType);
   
   // IDs for scrolling
   const title = getData('title') || 'Untitled';
@@ -28,7 +34,8 @@ export default function PublicProgramSegment({
   const baseId = segment.id || `${title}-${startTime}`;
   const domId = `segment-${baseId}`.replace(/[^a-zA-Z0-9-_]/g, '-').replace(/-+/g, '-');
 
-  const songs = getNormalizedSongs(segment).filter(s => s.title);
+  // Show songs only for Worship segments
+  const songs = isWorship ? getNormalizedSongs(segment).filter(s => s.title) : [];
   
   // Actions
   const rawActions = segment.actions || segment.segment_actions || getData('actions') || [];
@@ -86,19 +93,25 @@ export default function PublicProgramSegment({
             </div>
 
             <div className="space-y-1 mt-1">
-              {getData('presenter') && (
+              {/* Presenter: Show for types that aren't Worship (Leader) or Message (Preacher) */}
+              {!isWorship && !isMessage && getData('presenter') && (
                 <div className="flex items-center gap-2 text-blue-600 text-sm">
                   <Users className="w-4 h-4" />
-                  <span className="font-semibold">{normalizeName(getData('presenter'))}</span>
+                  <span className="font-semibold">
+                    {segmentType === 'Ministración' ? 'Ministra: ' : ''}
+                    {normalizeName(getData('presenter'))}
+                  </span>
                 </div>
               )}
-              {getData('leader') && (
+              {/* Leader: Show only for Worship */}
+              {isWorship && getData('leader') && (
                 <div className="flex items-center gap-2 text-green-600 text-sm">
                   <Users className="w-4 h-4" />
                   <span className="font-semibold">Dirige: {normalizeName(getData('leader'))}</span>
                 </div>
               )}
-              {getData('preacher') && (
+              {/* Preacher: Show only for Message */}
+              {isMessage && getData('preacher') && (
                 <div className="flex items-center gap-2 text-indigo-600 text-sm">
                   <Users className="w-4 h-4" />
                   <span className="font-semibold">Predica: {normalizeName(getData('preacher'))}</span>
@@ -112,7 +125,8 @@ export default function PublicProgramSegment({
               )}
             </div>
 
-            {(getData('scripture_references') || getData('verse') || getData('parsed_verse_data')) && (
+            {/* Show Verses only for Message or Offering */}
+            {(isMessage || isOffering) && (getData('scripture_references') || getData('verse') || getData('parsed_verse_data')) && (
               <div className="flex items-start gap-2 mt-2">
                 {(getData('scripture_references') || getData('verse')) && (
                   <p className="text-xs text-gray-600 flex-1">📖 {getData('scripture_references') || getData('verse')}</p>
@@ -181,17 +195,27 @@ export default function PublicProgramSegment({
                 )}
               </div>
 
-              {getData('presenter') && (
+              {!isWorship && !isMessage && getData('presenter') && (
                 <div className="flex items-center gap-2 text-blue-600 mb-2">
                   <Users className="w-4 h-4" />
-                  <span className="font-semibold">{normalizeName(getData('presenter'))}</span>
+                  <span className="font-semibold">
+                    {segmentType === 'Ministración' ? 'Ministra: ' : ''}
+                    {normalizeName(getData('presenter'))}
+                  </span>
                 </div>
               )}
               
-              {getData('leader') && (
+              {isWorship && getData('leader') && (
                 <div className="flex items-center gap-2 text-blue-600 mb-2">
                   <Users className="w-4 h-4" />
                   <span className="font-semibold">Dirige: {normalizeName(getData('leader'))}</span>
+                </div>
+              )}
+
+              {isMessage && getData('preacher') && (
+                <div className="flex items-center gap-2 text-indigo-600 mb-2">
+                  <Users className="w-4 h-4" />
+                  <span className="font-semibold">Predica: {normalizeName(getData('preacher'))}</span>
                 </div>
               )}
 
@@ -202,7 +226,7 @@ export default function PublicProgramSegment({
                 </div>
               )}
 
-              {(getData('scripture_references') || getData('verse') || getData('parsed_verse_data')) && (
+              {(isMessage || isOffering) && (getData('scripture_references') || getData('verse') || getData('parsed_verse_data')) && (
                 <div className="flex items-start gap-2">
                   {(getData('scripture_references') || getData('verse')) && (
                     <p className="text-xs text-gray-600 mb-1 flex-1">📖 {getData('scripture_references') || getData('verse')}</p>
