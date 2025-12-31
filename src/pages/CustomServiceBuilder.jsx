@@ -938,7 +938,8 @@ export default function CustomServiceBuilder() {
 
           .print-page-1-wrapper,
           .print-page-2-wrapper {
-            page-break-after: avoid;
+            position: relative;
+            min-height: 11in;
           }
 
           .print-announcements-logo {
@@ -1104,7 +1105,7 @@ export default function CustomServiceBuilder() {
           }
 
           .print-footer {
-            position: fixed;
+            position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
@@ -1350,6 +1351,10 @@ export default function CustomServiceBuilder() {
               });
             })()}
           </div>
+          
+          <div className="print-footer">
+            ¡Atrévete a cambiar!
+          </div>
         </div>
 
         {/* PAGE 2 - Announcements */}
@@ -1435,12 +1440,12 @@ export default function CustomServiceBuilder() {
                 </div>
               </div>
             </div>
+            
+            <div className="print-footer">
+              ¡Atrévete a cambiar!
+            </div>
           </div>
         )}
-
-        <div className="print-footer">
-          ¡Atrévete a cambiar!
-        </div>
       </div>
 
       {/* Screen UI */}
