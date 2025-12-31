@@ -354,6 +354,9 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             </div>
             
             {seg.data?.leader && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '700' }}>Dirige: {seg.data.leader}</div>}
+            {seg.data?.preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '700' }}>{seg.data.preacher}</div>}
+            {seg.data?.presenter && !seg.data?.leader && !seg.data?.preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '700' }}>{seg.data.presenter}</div>}
+            {seg.data?.translator && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280' }}>🌐 {seg.data.translator}</div>}
             
             {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
               <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #d1d5db' }}>
