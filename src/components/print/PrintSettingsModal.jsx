@@ -83,8 +83,10 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
   ];
 
   const selectedAnnouncementIds = serviceData?.selected_announcements || [];
-  const selectedFixed = fixedAnnouncements.filter(a => selectedAnnouncementIds.includes(a.id));
-  const selectedDynamic = dynamicAnnouncements.filter(a => selectedAnnouncementIds.includes(a.id));
+  
+  const selectedAnnouncements = allAnnouncements.filter(a => selectedAnnouncementIds.includes(a.id));
+  const selectedFixed = selectedAnnouncements.filter(a => a.category === 'General');
+  const selectedDynamic = selectedAnnouncements.filter(a => a.category !== 'General' || a.isEvent);
 
   // Responsive preview scaling
   useEffect(() => {
@@ -552,7 +554,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', fontSize: `${BASE_BODY * 0.9 * page2Settings.bodyFontScale}px`, lineHeight: 1.4 }}>
             {/* Left Column: Fixed Announcements */}
             <div>
-              {selectedFixed.map((ann) => (
+              {selectedFixed.length > 0 && selectedFixed.map((ann) => (
                 <div key={ann.id} style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #e5e7eb' }}>
                   <div style={{ fontSize: `${BASE_TITLE * 0.83 * page2Settings.titleFontScale}px`, fontWeight: '600', textTransform: 'uppercase', marginBottom: '3px', color: '#1a1a1a' }}>
                     {ann.title}
@@ -578,10 +580,12 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
             {/* Right Column: Dynamic Events */}
             <div style={{ borderLeft: '4px solid #e5e7eb', paddingLeft: '20px' }}>
-              <div style={{ fontSize: `${BASE_BODY * 0.86 * page2Settings.bodyFontScale}px`, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '12px', paddingBottom: '8px', borderBottom: '2px solid #e5e7eb' }}>
-                Próximos Eventos
-              </div>
-              {selectedDynamic.map((ann) => {
+              {selectedDynamic.length > 0 && (
+                <div style={{ fontSize: `${BASE_BODY * 0.86 * page2Settings.bodyFontScale}px`, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '12px', paddingBottom: '8px', borderBottom: '2px solid #e5e7eb' }}>
+                  Próximos Eventos
+                </div>
+              )}
+              {selectedDynamic.length > 0 && selectedDynamic.map((ann) => {
                 const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
                 const isEmphasized = ann.emphasize || ann.category === 'Urgent';
                 return (

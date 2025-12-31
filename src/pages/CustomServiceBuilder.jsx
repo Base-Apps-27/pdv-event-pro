@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, ChevronUp, ChevronDown, Sparkles, Settings, ArrowUp, ArrowDown } from "lucide-react";
+import AnnouncementListSelector from "@/components/announcements/AnnouncementListSelector";
 import DatePicker from "@/components/ui/DatePicker";
 import TimePicker from "@/components/ui/TimePicker";
 import AnimatedSortableItem from "@/components/shared/AnimatedSortableItem";
@@ -141,7 +142,8 @@ export default function CustomServiceBuilder() {
     sound: { main: "" },
     luces: { main: "" },
     fotografia: { main: "" },
-    notes: ""
+    notes: "",
+    selected_announcements: []
   });
 
   const [expandedSegments, setExpandedSegments] = useState({});
@@ -240,6 +242,10 @@ export default function CustomServiceBuilder() {
           ...s,
           _uiId: s._uiId || Math.random().toString(36).substr(2, 9) + Date.now().toString(36)
         }));
+      }
+
+      if (!sanitizedService.selected_announcements) {
+        sanitizedService.selected_announcements = [];
       }
 
       setServiceData(sanitizedService);
@@ -1373,6 +1379,13 @@ export default function CustomServiceBuilder() {
           </Card>
         )}
       </div>
+
+      {/* Announcements Section */}
+      <AnnouncementListSelector
+        selectedAnnouncementIds={serviceData.selected_announcements}
+        onSelectionChange={(newSelection) => setServiceData(prev => ({ ...prev, selected_announcements: newSelection }))}
+        serviceDate={serviceData.date}
+      />
 
       {/* Team Section */}
       <Card className="print:hidden">
