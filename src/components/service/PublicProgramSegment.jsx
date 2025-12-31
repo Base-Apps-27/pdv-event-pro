@@ -346,8 +346,8 @@ export default function PublicProgramSegment({
               )}
 
               {(getData('description_details') || getData('description')) && (
-                <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                  <p className="text-xs text-green-900 font-medium">
+                <div className="bg-gray-100 border-l-4 border-gray-500 p-2 mt-2 rounded-r">
+                  <p className="text-xs text-gray-900 font-medium">
                     <strong>📝 Notas:</strong> {getData('description_details') || getData('description')}
                   </p>
                 </div>
@@ -373,8 +373,8 @@ export default function PublicProgramSegment({
       {viewMode === "simple" && isExpanded && (
         <div className="mt-3 pt-3 border-t space-y-2">
           {(getData('description_details') || getData('description')) && (
-            <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-              <p className="text-sm text-green-900 font-medium">
+            <div className="bg-gray-100 border-l-4 border-gray-500 p-2 mt-2 rounded-r">
+              <p className="text-sm text-gray-900 font-medium">
                 <strong>📝 Notas:</strong> {getData('description_details') || getData('description')}
               </p>
             </div>
