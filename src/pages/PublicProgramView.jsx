@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { formatTimeToEST } from "../components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import StructuredVersesModal from "@/components/service/StructuredVersesModal";
+import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import LiveAdminControls from "@/components/service/LiveAdminControls";
 import { hasPermission } from "@/components/utils/permissions";
@@ -941,152 +942,25 @@ export default function PublicProgramView() {
                    )}
                  </div>
                   <div className="divide-y divide-gray-200">
-                    {actualServiceData.segments.filter(seg => seg.type !== 'break').map((segment, idx) => {
-                      const isCurrent = isSegmentCurrent(segment);
-                      const isUpcoming = !isCurrent && isSegmentUpcoming(segment, actualServiceData.segments);
-
-                      return (
-                        <div 
-                          key={idx} 
-                          id={getSegmentDomId(segment)}
-                          className={`p-4 scroll-mt-24 transition-all duration-500 ${isCurrent ? 'bg-yellow-100 border-l-4 border-l-yellow-500' : isUpcoming ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50'}`}
-                        >
-                          {isCurrent && (
-                            <div className="mb-2">
-                              <Badge className="bg-yellow-500 text-white animate-pulse">EN CURSO AHORA</Badge>
-                            </div>
-                          )}
-                          {isUpcoming && (
-                            <div className="mb-2">
-                              <Badge className="bg-blue-500 text-white">PRÓXIMO (15 min)</Badge>
-                            </div>
-                          )}
-
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                {segment.start_time && (
-                                  <span className="font-bold text-lg text-gray-900">{formatTimeToEST(segment.start_time)}</span>
-                                )}
-                                <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                  {(['Especial', 'Special', 'special'].includes(segment.segment_type || segment.type || segment.data?.type || segment.data?.segment_type)) && (
-                                    <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
-                                  )}
-                                  {segment.title}
-                                </h4>
-                                <Badge variant="outline" className="text-xs text-gray-700">{segment.duration} min</Badge>
-                              </div>
-
-                              {segment.data?.leader && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">Dirige: {normalizeName(segment.data.leader)}</p>
-                              )}
-
-                              {(() => {
-                                const songs = normalizeSongs(segment).filter(s => s.title);
-                                if (songs.length === 0) return null;
-                                return (
-                                  <div className="bg-slate-50 p-2 rounded border border-slate-200 text-sm mb-2">
-                                    <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
-                                    {songs.map((song, sIdx) => (
-                                      <div key={sIdx} className="text-xs flex items-center gap-1">
-                                        <span>• {song.title}</span>
-                                        {song.lead && <span className="text-gray-600">({song.lead})</span>}
-                                        {song.key && <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">{song.key}</Badge>}
-                                      </div>
-                                    ))}
-                                  </div>
-                                );
-                              })()}
-
-                              {segment.data?.presenter && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{normalizeName(segment.data.presenter)}</p>
-                              )}
-
-                              {segment.data?.presenter && segment.requires_translation && segment.data?.translator && !/(trad|traduc)/i.test(segment.data?.presenter || '') && (
-                                <p className="text-sm text-blue-600 mb-2 ml-4">
-                                  🌐 Traduce: {normalizeName(segment.data.translator)}
-                                </p>
-                              )}
-
-                              {segment.data?.preacher && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{normalizeName(segment.data.preacher)}</p>
-                              )}
-
-                              {segment.data?.preacher && segment.requires_translation && segment.data?.translator && !/(trad|traduc)/i.test(segment.data?.preacher || '') && (
-                                <p className="text-sm text-blue-600 mb-2 ml-4">
-                                  🌐 Traduce: {normalizeName(segment.data.translator)}
-                                </p>
-                              )}
-
-                              {/* Cierre sub-assignment (shown after speaker) */}
-                              {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name === 'cierre_leader').map((subAssign, saIdx) => {
-                                const personValue = segment.data?.[subAssign.person_field_name];
-                                if (!personValue) return null;
-                                return (
-                                  <div key={saIdx} className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
-                                    <strong>{subAssign.label} {subAssign.duration_min && `(${subAssign.duration_min} min)`}:</strong> <span className="font-bold text-purple-900">{personValue}</span>
-                                  </div>
-                                );
-                              })}
-
-                              {segment.data?.title && (
-                                <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
-                              )}
-
-                              {/* Verse Display - Prioritized for Messages */}
-                              {(segment.data?.verse || (segment.data?.parsed_verse_data && (segment.type === 'message' || segment.title === 'Mensaje' || segment.title === 'Message'))) && (
-                                <div className="flex items-start gap-2 mb-2">
-                                  {segment.data?.verse ? (
-                                    <p className="text-xs text-gray-600 flex-1">📖 {segment.data.verse}</p>
-                                  ) : (
-                                    <div className="flex-1"></div>
-                                  )}
-                                  {segment.data?.parsed_verse_data && (
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      onClick={() => {
-                                        setVersesModalData({
-                                          parsedData: segment.data.parsed_verse_data,
-                                          rawText: segment.data.verse
-                                        });
-                                        setVersesModalOpen(true);
-                                      }}
-                                      className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0 bg-white"
-                                      title="Ver Versículos"
-                                    >
-                                      <BookOpen className="w-3.5 h-3.5" />
-                                    </Button>
-                                  )}
-                                </div>
-                              )}
-
-                              {segment.data?.description && (
-                                <p className="text-xs text-gray-600 mt-2 italic">{segment.data.description}</p>
-                              )}
-
-                              {/* Coordinator Actions */}
-                              {segment.actions && segment.actions.length > 0 && (
-                                <div className="bg-[#fffdf5] border border-yellow-100 rounded p-2 text-xs mt-2">
-                                  <p className="font-bold text-yellow-800 mb-1 opacity-75">📋 Coordinador</p>
-                                  <div className="space-y-1">
-                                    {segment.actions.map((action, aIdx) => {
-                                      const safeAction = typeof action === 'object' && action !== null ? action : {};
-                                      return (
-                                      <div key={aIdx} className="text-yellow-900 not-italic">
-                                        • {safeAction.label || ''}
-                                        {safeAction.notes && <span className="ml-1 opacity-75">— {safeAction.notes}</span>}
-                                      </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {actualServiceData.segments.filter(seg => seg.type !== 'break').map((segment, idx) => (
+                      <PublicProgramSegment
+                        key={segment.id || idx}
+                        segment={segment}
+                        isCurrent={isSegmentCurrent(segment)}
+                        isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, actualServiceData.segments)}
+                        viewMode="simple"
+                        isExpanded={expandedSegments[segment.id]}
+                        onToggleExpand={toggleSegmentExpanded}
+                        onOpenVerses={(data) => {
+                          setVersesModalData({
+                            parsedData: data.parsedData,
+                            rawText: data.rawText
+                          });
+                          setVersesModalOpen(true);
+                        }}
+                        allSegments={actualServiceData.segments}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1153,175 +1027,25 @@ export default function PublicProgramView() {
                       )}
                     </div>
                     <div className="divide-y divide-gray-200">
-                     {actualServiceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
-                       <div 
-                         key={idx} 
-                         id={getSegmentDomId(segment)}
-                         className="p-4 hover:bg-gray-50 scroll-mt-24 transition-all duration-500"
-                       >
-                         <div className="flex items-start justify-between gap-4">
-                           <div className="flex-1">
-                             <div className="flex items-center gap-2 mb-2 flex-wrap">
-                               <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                 {(['Especial', 'Special', 'special'].includes(segment.segment_type || segment.type || segment.data?.type || segment.data?.segment_type)) && (
-                                   <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
-                                 )}
-                                 {segment.title}
-                               </h4>
-                               <Badge variant="outline" className="text-xs text-gray-700">{segment.duration} min</Badge>
-                             </div>
-
-                             {segment.data?.leader && (
-                                                                  <p className="text-lg font-bold text-blue-600 mb-2">Dirige: {normalizeName(segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, ''))}</p>
-                                                                )}
-
-                             {(() => {
-                               const songs = normalizeSongs(segment).filter(s => s.title);
-                               if (songs.length === 0) return null;
-                               return (
-                                 <div className="bg-slate-50 p-2 rounded border border-slate-200 text-sm mb-2">
-                                   <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
-                                   {songs.map((song, sIdx) => (
-                                     <div key={sIdx} className="text-xs flex items-center gap-1">
-                                       <span>• {song.title}</span>
-                                       {song.lead && <span className="text-gray-600">({song.lead})</span>}
-                                       {song.key && <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">{song.key}</Badge>}
-                                     </div>
-                                   ))}
-                                 </div>
-                               );
-                             })()}
-
-                             {/* Sub-assignments from blueprint (excluding cierre, shown after speaker) */}
-                             {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name !== 'cierre_leader').map((subAssign, saIdx) => {
-                               const personValue = segment.data?.[subAssign.person_field_name];
-                               if (!personValue) return null;
-                               return (
-                                 <div key={saIdx} className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
-                                   <strong>{subAssign.label} {subAssign.duration_min && `(${subAssign.duration_min} min)`}:</strong> <span className="font-bold text-purple-900">{personValue}</span>
-                                 </div>
-                               );
-                             })}
-
-                             {/* Legacy fallback */}
-                             {(!segment.sub_assignments || segment.sub_assignments.length === 0) && segment.data?.ministry_leader && (
-                               <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
-                                 <strong>Ministración (5 min):</strong> <span className="font-bold text-purple-900">{segment.data.ministry_leader}</span>
-                               </div>
-                             )}
-
-                             {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && (
-                                                                  <p className="text-lg font-bold text-blue-600 mb-2">{normalizeName(segment.data.presenter)}</p>
-                                                                )}
-
-                             {segment.data?.presenter && !segment.data?.ministry_leader && !segment.data?.preacher && !segment.data?.leader && segment.requires_translation && segment.data?.translator && !/(trad|traduc)/i.test(segment.data?.presenter || '') && (
-                               <p className="text-sm text-blue-600 mb-2 ml-4">
-                                 🌐 Traduce: {segment.data.translator}
-                               </p>
-                             )}
-
-                             {segment.data?.preacher && (
-                               <p className="text-lg font-bold text-blue-600 mb-2">{segment.data.preacher}</p>
-                             )}
-
-                             {segment.data?.preacher && segment.requires_translation && segment.data?.translator && !/(trad|traduc)/i.test(segment.data?.preacher || '') && (
-                               <p className="text-sm text-blue-600 mb-2 ml-4">
-                                 🌐 Traduce: {segment.data.translator}
-                               </p>
-                             )}
-
-                             {/* Cierre sub-assignment (shown after speaker) */}
-                             {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name === 'cierre_leader').map((subAssign, saIdx) => {
-                               const personValue = segment.data?.[subAssign.person_field_name];
-                               if (!personValue) return null;
-                               return (
-                                 <div key={saIdx} className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
-                                   <strong>{subAssign.label} {subAssign.duration_min && `(${subAssign.duration_min} min)`}:</strong> <span className="font-bold text-purple-900">{personValue}</span>
-                                 </div>
-                               );
-                             })}
-
-                             {segment.data?.title && (
-                               <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
-                             )}
-
-                             {(segment.data?.verse || segment.data?.parsed_verse_data) && (
-                               <div className="flex items-start gap-2">
-                                 {segment.data?.verse && (
-                                   <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.data.verse}</p>
-                                 )}
-                                 {!segment.data?.verse && <div className="flex-1"></div>}
-                                 {segment.data?.parsed_verse_data && (
-                                   <Button
-                                     variant="outline"
-                                     size="icon"
-                                     onClick={() => {
-                                       setVersesModalData({
-                                         parsedData: segment.data.parsed_verse_data,
-                                         rawText: segment.data.verse
-                                       });
-                                       setVersesModalOpen(true);
-                                     }}
-                                     className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
-                                     title="Ver Versículos"
-                                   >
-                                     <BookOpen className="w-3.5 h-3.5" />
-                                   </Button>
-                                 )}
-                               </div>
-                             )}
-
-                             {segment.data?.description && (
-                               <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                                 <p className="text-sm text-green-900 font-medium">{segment.data.description}</p>
-                               </div>
-                             )}
-
-                             {segment.data?.description_details && (
-                               <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                                 <p className="text-sm text-green-900 font-medium">
-                                   <strong>📝 Notas:</strong> {segment.data.description_details}
-                                 </p>
-                               </div>
-                             )}
-
-                             {segment.data?.projection_notes && (
-                               <div className="pl-2 border-l-4 border-blue-500 mt-1 bg-transparent">
-                                 <p className="text-xs text-blue-800">
-                                   <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
-                                 </p>
-                               </div>
-                             )}
-
-                             {segment.data?.sound_notes && (
-                               <div className="pl-2 border-l-4 border-red-500 mt-1 bg-transparent">
-                                 <p className="text-xs text-red-800">
-                                   <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
-                                 </p>
-                               </div>
-                             )}
-
-                             {/* Coordinator Actions */}
-                             {segment.actions && segment.actions.length > 0 && (
-                               <div className="bg-[#fffdf5] border border-yellow-100 rounded p-2 text-xs mt-2">
-                                 <p className="font-bold text-yellow-800 mb-1 opacity-75">📋 Acciones para Coordinador</p>
-                                 <div className="space-y-1">
-                                   {segment.actions.map((action, aIdx) => {
-                                     const safeAction = typeof action === 'object' && action !== null ? action : {};
-                                     return (
-                                     <div key={aIdx} className="text-yellow-900 not-italic">
-                                       • {safeAction.label || ''}
-                                       {safeAction.notes && <span className="ml-1 opacity-75">— {safeAction.notes}</span>}
-                                     </div>
-                                     );
-                                   })}
-                                 </div>
-                                </div>
-                             )}
-                             </div>
-                             </div>
-                             </div>
-                             ))}
+                    {actualServiceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
+                      <PublicProgramSegment
+                        key={segment.id || idx}
+                        segment={segment}
+                        isCurrent={isSegmentCurrent(segment)}
+                        isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, actualServiceData["9:30am"])}
+                        viewMode="simple"
+                        isExpanded={expandedSegments[segment.id]}
+                        onToggleExpand={toggleSegmentExpanded}
+                        onOpenVerses={(data) => {
+                          setVersesModalData({
+                            parsedData: data.parsedData,
+                            rawText: data.rawText
+                          });
+                          setVersesModalOpen(true);
+                        }}
+                        allSegments={actualServiceData["9:30am"]}
+                      />
+                    ))}
                     </div>
                   </div>
                 )}
@@ -1373,170 +1097,24 @@ export default function PublicProgramView() {
                     </div>
                     <div className="divide-y divide-gray-200">
                       {actualServiceData["11:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
-                        <div 
-                          key={idx} 
-                          id={getSegmentDomId(segment)}
-                          className="p-4 hover:bg-gray-50 scroll-mt-24 transition-all duration-500"
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                  {(['Especial', 'Special', 'special'].includes(segment.segment_type || segment.type || segment.data?.type || segment.data?.segment_type)) && (
-                                    <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
-                                  )}
-                                  {segment.title}
-                                </h4>
-                                <Badge variant="outline" className="text-xs text-gray-700">{segment.duration} min</Badge>
-                              </div>
-                              
-                              {segment.data?.leader && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">Dirige: {segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</p>
-                              )}
-                              
-                              {(() => {
-                                const songs = normalizeSongs(segment).filter(s => s.title);
-                                if (songs.length === 0) return null;
-                                return (
-                                  <div className="bg-slate-50 p-2 rounded border border-slate-200 text-sm mb-2">
-                                    <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
-                                    {songs.map((song, sIdx) => (
-                                      <div key={sIdx} className="text-xs flex items-center gap-1">
-                                        <span>• {song.title}</span>
-                                        {song.lead && <span className="text-gray-600">({song.lead})</span>}
-                                        {song.key && <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">{song.key}</Badge>}
-                                      </div>
-                                    ))}
-                                  </div>
-                                );
-                              })()}
-                              
-                              {/* Sub-assignments from blueprint (excluding cierre, shown after speaker) */}
-                              {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name !== 'cierre_leader').map((subAssign, saIdx) => {
-                                const personValue = segment.data?.[subAssign.person_field_name];
-                                if (!personValue) return null;
-                                return (
-                                  <div key={saIdx} className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
-                                    <strong>{subAssign.label} {subAssign.duration_min && `(${subAssign.duration_min} min)`}:</strong> <span className="font-bold text-purple-900">{personValue}</span>
-                                  </div>
-                                );
-                              })}
-                              
-                              {/* Legacy fallback */}
-                              {(!segment.sub_assignments || segment.sub_assignments.length === 0) && segment.data?.ministry_leader && (
-                                <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
-                                  <strong>Ministración (5 min):</strong> <span className="font-bold text-purple-900">{segment.data.ministry_leader}</span>
-                                </div>
-                              )}
-                              
-                              {segment.data?.presenter && !segment.data?.ministry_leader && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{normalizeName(segment.data.presenter.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, ''))}</p>
-                              )}
-
-                              {segment.data?.preacher && (
-                                <p className="text-lg font-bold text-blue-600 mb-2">{normalizeName(segment.data.preacher.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, ''))}</p>
-                              )}
-
-                              {/* Cierre sub-assignment (shown after speaker) */}
-                              {segment.sub_assignments && segment.sub_assignments.filter(sa => sa.person_field_name === 'cierre_leader').map((subAssign, saIdx) => {
-                                const personValue = segment.data?.[subAssign.person_field_name];
-                                if (!personValue) return null;
-                                return (
-                                  <div key={saIdx} className="bg-purple-50 p-2 rounded border border-purple-200 text-sm mb-2">
-                                    <strong>{subAssign.label} {subAssign.duration_min && `(${subAssign.duration_min} min)`}:</strong> <span className="font-bold text-purple-900">{personValue}</span>
-                                  </div>
-                                );
-                              })}
-
-                              {segment.requires_translation && segment.data?.translator && (
-                                <p className="text-xs text-blue-600 mt-1">
-                                  🌐 Traduce: {normalizeName(segment.data.translator)}
-                                </p>
-                              )}
-                              
-                              {segment.data?.title && (
-                                <p className="text-sm text-gray-700 mb-1 italic">{segment.data.title}</p>
-                              )}
-                              
-                              {/* Verse Display - Prioritized for Messages */}
-                              {(segment.data?.verse || (segment.data?.parsed_verse_data && (segment.type === 'message' || segment.title === 'Mensaje' || segment.title === 'Message'))) && (
-                                <div className="flex items-start gap-2 mb-2">
-                                  {segment.data?.verse ? (
-                                    <p className="text-xs text-gray-600 flex-1">📖 {segment.data.verse}</p>
-                                  ) : (
-                                    <div className="flex-1"></div>
-                                  )}
-                                  {segment.data?.parsed_verse_data && (
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      onClick={() => {
-                                        setVersesModalData({
-                                          parsedData: segment.data.parsed_verse_data,
-                                          rawText: segment.data.verse
-                                        });
-                                        setVersesModalOpen(true);
-                                      }}
-                                      className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0 bg-white"
-                                      title="Ver Versículos"
-                                    >
-                                      <BookOpen className="w-3.5 h-3.5" />
-                                    </Button>
-                                  )}
-                                </div>
-                              )}
-                              
-                              {segment.data?.description && (
-                                <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                                  <p className="text-sm text-green-900 font-medium">{segment.data.description}</p>
-                                </div>
-                              )}
-
-                              {segment.data?.description_details && (
-                                <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                                  <p className="text-sm text-green-900 font-medium">
-                                    <strong>📝 Notas:</strong> {segment.data.description_details}
-                                  </p>
-                                </div>
-                              )}
-                              
-                              {segment.data?.projection_notes && (
-                                <div className="pl-2 border-l-4 border-blue-500 mt-1 bg-transparent">
-                                  <p className="text-xs text-blue-800">
-                                    <strong>📽️ Proyección:</strong> {segment.data.projection_notes}
-                                  </p>
-                                </div>
-                              )}
-
-                              {segment.data?.sound_notes && (
-                                <div className="pl-2 border-l-4 border-red-500 mt-1 bg-transparent">
-                                  <p className="text-xs text-red-800">
-                                    <strong>🔊 Sonido:</strong> {segment.data.sound_notes}
-                                  </p>
-                                </div>
-                              )}
-
-                              {/* Coordinator Actions */}
-                              {segment.actions && segment.actions.length > 0 && (
-                                <div className="bg-[#fffdf5] border border-yellow-100 rounded p-2 text-xs mt-2">
-                                  <p className="font-bold text-yellow-800 mb-1 opacity-75">📋 Acciones para Coordinador</p>
-                                  <div className="space-y-1">
-                                    {segment.actions.map((action, aIdx) => {
-                                      const safeAction = typeof action === 'object' && action !== null ? action : {};
-                                      return (
-                                      <div key={aIdx} className="text-yellow-900 not-italic">
-                                        • {safeAction.label || ''}
-                                        {safeAction.notes && <span className="ml-1 opacity-75">— {safeAction.notes}</span>}
-                                      </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              )}
-                              </div>
-                              </div>
-                              </div>
-                              ))}
+                        <PublicProgramSegment
+                          key={segment.id || idx}
+                          segment={segment}
+                          isCurrent={isSegmentCurrent(segment)}
+                          isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, actualServiceData["11:30am"])}
+                          viewMode="simple"
+                          isExpanded={expandedSegments[segment.id]}
+                          onToggleExpand={toggleSegmentExpanded}
+                          onOpenVerses={(data) => {
+                            setVersesModalData({
+                              parsedData: data.parsedData,
+                              rawText: data.rawText
+                            });
+                            setVersesModalOpen(true);
+                          }}
+                          allSegments={actualServiceData["11:30am"]}
+                        />
+                      ))}
                               </div>
                               </div>
                               )}
@@ -1731,335 +1309,23 @@ export default function PublicProgramView() {
                           );
                         }
 
-                        const isCurrent = isSegmentCurrent(segment);
-                        const isUpcoming = !isCurrent && isSegmentUpcoming(segment, allSegments);
-
-                        return (
-                          <div 
-                            key={segment.id} 
-                            id={getSegmentDomId(segment)}
-                            className={`p-4 transition-colors border-b last:border-b-0 scroll-mt-24 duration-500 ${isCurrent ? 'bg-yellow-100 border-l-4 border-l-yellow-500' : isUpcoming ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50'}`}
-                          >
-                            {/* Current Segment Indicator */}
-                            {isCurrent && (
-                              <div className="mb-2">
-                                <Badge className="bg-yellow-500 text-white animate-pulse">EN CURSO AHORA</Badge>
-                              </div>
-                            )}
-                            
-                            {/* Upcoming Segment Indicator */}
-                            {isUpcoming && (
-                              <div className="mb-2">
-                                <Badge className="bg-blue-500 text-white">PRÓXIMO (15 min)</Badge>
-                              </div>
-                            )}
-
-                            {/* SIMPLE MODE */}
-                            {viewMode === "simple" && (
-                              <div className="flex items-start justify-between gap-4">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-1">
-                                      <Clock className="w-5 h-5 text-pdv-teal flex-shrink-0" />
-                                      <div>
-                                        <span className="font-bold text-lg text-gray-900">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</span>
-                                      {segment.end_time && (
-                                        <span className="text-gray-600 ml-2">- {formatTimeToEST(segment.end_time)}</span>
-                                      )}
-                                      {segment.duration_min && (
-                                        <span className="text-sm text-gray-600 ml-2">({segment.duration_min} min)</span>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                      {(segment.segment_type === 'Especial' || segment.type === 'Especial') && (
-                                        <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
-                                      )}
-                                      {segment.title}
-                                    </h4>
-                                    <Badge variant="outline" className="text-xs text-gray-700">{segment.segment_type}</Badge>
-                                  </div>
-
-                                  {segment.presenter && (
-                                    <p className="text-blue-600 text-sm mt-1">{normalizeName(segment.presenter)}</p>
-                                  )}
-
-                                  {(segment.scripture_references || segment.parsed_verse_data) && (
-                                    <div className="flex items-start gap-2 mt-2">
-                                      {segment.scripture_references && (
-                                        <p className="text-xs text-gray-600 flex-1">📖 {segment.scripture_references}</p>
-                                      )}
-                                      {!segment.scripture_references && <div className="flex-1"></div>}
-                                      {segment.parsed_verse_data && (
-                                        <Button
-                                          variant="outline"
-                                          size="icon"
-                                          onClick={() => {
-                                            setVersesModalData({
-                                              parsedData: segment.parsed_verse_data,
-                                              rawText: segment.scripture_references
-                                            });
-                                            setVersesModalOpen(true);
-                                          }}
-                                          className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
-                                          title="Ver Versículos"
-                                        >
-                                          <BookOpen className="w-3.5 h-3.5" />
-                                        </Button>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleSegmentExpanded(segment.id)}
-                                >
-                                  {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                </Button>
-                              </div>
-                            )}
-
-                            {/* FULL RUN OF SHOW MODE */}
-                            {viewMode === "full" && (
-                              <div className="space-y-3">
-                                <div className="flex items-start justify-between gap-4">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                      <Clock className="w-5 h-5 text-pdv-teal flex-shrink-0" />
-                                      <div>
-                                        <span className="font-bold text-lg">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</span>
-                                        {segment.end_time && (
-                                          <span className="text-gray-600 ml-2">- {formatTimeToEST(segment.end_time)}</span>
-                                        )}
-                                        {segment.duration_min && (
-                                          <span className="text-sm text-gray-600 ml-2">({segment.duration_min} min)</span>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                      <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                        {(segment.segment_type === 'Especial' || segment.type === 'Especial') && (
-                                          <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
-                                        )}
-                                        {segment.title}
-                                      </h4>
-                                      <Badge variant="outline" className="text-xs text-gray-700">{segment.segment_type}</Badge>
-                                      {segment.requires_translation && (
-                                        <div className="flex items-center gap-1">
-                                          <Languages className="w-4 h-4 text-purple-600" />
-                                          {segment.translation_mode === "InPerson" && <Mic className="w-4 h-4 text-purple-600" />}
-                                        </div>
-                                      )}
-                                    </div>
-
-                                    {segment.presenter && (
-                                      <div className="flex items-center gap-2 text-blue-600 mb-2">
-                                        <Users className="w-4 h-4" />
-                                        <span className="font-semibold">{normalizeName(segment.presenter)}</span>
-                                      </div>
-                                    )}
-
-                                    {segment.room_id && (
-                                      <div className="flex items-center gap-2 text-gray-600 mb-2">
-                                        <MapPin className="w-4 h-4" />
-                                        <span>{getRoomName(segment.room_id)}</span>
-                                      </div>
-                                    )}
-
-                                    {(segment.scripture_references || segment.parsed_verse_data) && (
-                                      <div className="flex items-start gap-2">
-                                        {segment.scripture_references && (
-                                          <p className="text-xs text-gray-600 mb-1 flex-1">📖 {segment.scripture_references}</p>
-                                        )}
-                                        {!segment.scripture_references && <div className="flex-1"></div>}
-                                        {segment.parsed_verse_data && (
-                                          <Button
-                                            variant="outline"
-                                            size="icon"
-                                            onClick={() => {
-                                              setVersesModalData({
-                                                parsedData: segment.parsed_verse_data,
-                                                rawText: segment.scripture_references
-                                              });
-                                              setVersesModalOpen(true);
-                                            }}
-                                            className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
-                                            title="Ver Versículos"
-                                          >
-                                            <BookOpen className="w-3.5 h-3.5" />
-                                          </Button>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Prep Actions (show for Coordinador too) */}
-                                {prepActions.length > 0 && (
-                                  <div className="bg-gray-50 border border-gray-200 rounded p-3">
-                                    <p className="font-bold text-gray-700 text-sm mb-2">⚠ PREPARACIÓN</p>
-                                    <div className="space-y-1">
-                                      {prepActions.map((action, idx) => {
-                                        const showForCoord = viewMode === "simple" || action.department === "Coordinador" || action.department === "Admin";
-                                        if (viewMode === "simple" && !showForCoord) return null;
-                                        
-                                        return (
-                                          <div key={idx} className="text-xs px-2 py-1 rounded border border-gray-200 bg-white text-gray-600">
-                                            <span className="font-bold">[{action.department}]</span> {action.label}
-                                            {action.offset_min !== undefined && (
-                                              <span className="italic ml-1">({action.offset_min}m antes)</span>
-                                            )}
-                                            {action.notes && <span className="ml-1">— {action.notes}</span>}
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* During Actions (show for Coordinador too) */}
-                                {duringActions.length > 0 && (
-                                  <div className="bg-gray-50 border border-gray-200 rounded p-3">
-                                    <p className="font-bold text-gray-700 text-sm mb-2">▶ DURANTE SEGMENTO</p>
-                                    <div className="space-y-1">
-                                      {duringActions.map((action, idx) => {
-                                        const showForCoord = viewMode === "simple" || action.department === "Coordinador" || action.department === "Admin";
-                                        if (viewMode === "simple" && !showForCoord) return null;
-                                        
-                                        return (
-                                          <div key={idx} className="text-xs px-2 py-1 rounded border border-gray-200 bg-white text-gray-600">
-                                            <span className="font-bold">[{action.department}]</span> {action.label}
-                                            {action.notes && <span className="ml-1">— {action.notes}</span>}
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Team Notes */}
-                                <div className="grid md:grid-cols-2 gap-2">
-                                  {segment.projection_notes && (
-                                    <div className="border-l-4 border-blue-500 pl-3 py-1 text-xs">
-                                      <span className="font-bold text-blue-800">PROYECCIÓN:</span>
-                                      <p className="mt-1 text-blue-900">{segment.projection_notes}</p>
-                                    </div>
-                                  )}
-                                  {segment.sound_notes && (
-                                    <div className="border-l-4 border-red-500 pl-3 py-1 text-xs">
-                                      <span className="font-bold text-red-800">SONIDO:</span>
-                                      <p className="mt-1 text-red-900">{segment.sound_notes}</p>
-                                    </div>
-                                  )}
-                                  {segment.ushers_notes && (
-                                    <div className="border-l-4 border-green-500 pl-3 py-1 text-xs">
-                                      <span className="font-bold text-green-800">UJIERES:</span>
-                                      <p className="mt-1 text-green-900">{segment.ushers_notes}</p>
-                                    </div>
-                                  )}
-                                  {segment.translation_notes && (
-                                    <div className="border-l-4 border-blue-500 pl-3 py-1 text-xs">
-                                      <span className="font-bold text-blue-800">TRADUCCIÓN:</span>
-                                      <p className="mt-1 text-blue-900">{segment.translation_notes}</p>
-                                    </div>
-                                  )}
-                                  {segment.stage_decor_notes && (
-                                    <div className="border-l-4 border-purple-500 pl-3 py-1 text-xs">
-                                      <span className="font-bold text-purple-800">STAGE & DECOR:</span>
-                                      <p className="mt-1 text-purple-900">{segment.stage_decor_notes}</p>
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Additional Details (collapsed by default in full mode) */}
-                                {isExpanded && (
-                                  <div className="border-t pt-3 space-y-2">
-                                    {segment.segment_type === "Alabanza" && (
-                                      <div className="bg-slate-50 p-2 rounded border border-slate-200 text-xs">
-                                        <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
-                                        <div className="space-y-1">
-                                          {normalizeSongs(segment).map((song, idx) => (
-                                            <div key={idx} className="flex items-center gap-1">
-                                              <span>{idx + 1}. {song.title}</span>
-                                              {song.lead && <span className="text-gray-600">({song.lead})</span>}
-                                              {song.key && <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">{song.key}</Badge>}
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-
-                                    {segment.segment_type === "Plenaria" && segment.message_title && (
-                                      <div className="bg-blue-50 p-2 rounded border border-blue-200 text-xs">
-                                        <p className="font-semibold text-blue-800">Mensaje: {segment.message_title}</p>
-                                        {segment.scripture_references && (
-                                          <p className="mt-1">Escrituras: {segment.scripture_references}</p>
-                                        )}
-                                      </div>
-                                    )}
-
-                                    {segment.description_details && (
-                                      <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                                        <p className="text-xs text-green-900 font-medium">
-                                          <strong>📝 Notas:</strong> {segment.description_details}
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                  )}
-
-                                  <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleSegmentExpanded(segment.id)}
-                                  className="mt-2"
-                                  >
-                                  {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                  {isExpanded ? 'Menos' : 'Más Detalles'}
-                                  </Button>
-                                  </div>
-                                  )}
-
-                                  {/* Expanded details in SIMPLE mode */}
-                                  {viewMode === "simple" && isExpanded && (
-                                  <div className="mt-3 pt-3 border-t space-y-2">
-                                  {segment.description_details && (
-                                  <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                                    <p className="text-sm text-green-900 font-medium">
-                                      <strong>📝 Notas:</strong> {segment.description_details}
-                                    </p>
-                                  </div>
-                                  )}
-
-                                  {segment.segment_type === "Alabanza" && (
-                                  <div className="bg-slate-50 p-2 rounded border border-slate-200 text-sm">
-                                  <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
-                                  <div className="space-y-1">
-                                    {normalizeSongs(segment).map((song, idx) => (
-                                      <div key={idx} className="flex items-center gap-1">
-                                        <span>{idx + 1}. {song.title}</span>
-                                        {song.lead && <span className="text-gray-600">({song.lead})</span>}
-                                        {song.key && <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">{song.key}</Badge>}
-                                      </div>
-                                    ))}
-                                  </div>
-                                  </div>
-                                  )}
-
-                                  {segment.segment_type === "Plenaria" && segment.message_title && (
-                                  <div className="bg-blue-50 p-2 rounded border border-blue-200 text-sm">
-                                  <p className="font-semibold text-blue-800">Mensaje: {segment.message_title}</p>
-                                  {segment.scripture_references && (
-                                    <p className="mt-1">Escrituras: {segment.scripture_references}</p>
-                                  )}
-                                  </div>
-                                  )}
-                                  </div>
-                                  )}
-                                  </div>
+                        <PublicProgramSegment
+                          key={segment.id}
+                          segment={segment}
+                          isCurrent={isSegmentCurrent(segment)}
+                          isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, allSegments)}
+                          viewMode={viewMode}
+                          isExpanded={expandedSegments[segment.id]}
+                          onToggleExpand={toggleSegmentExpanded}
+                          onOpenVerses={(data) => {
+                            setVersesModalData({
+                              parsedData: data.parsedData,
+                              rawText: data.rawText
+                            });
+                            setVersesModalOpen(true);
+                          }}
+                          allSegments={allSegments}
+                        />
                         );
                       })}
                     </div>
