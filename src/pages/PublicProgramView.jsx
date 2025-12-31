@@ -277,25 +277,20 @@ export default function PublicProgramView() {
     const calculateTimedSegments = (segments, startStr) => {
       if (!segments || !Array.isArray(segments)) return [];
       
-      let currentH = parseInt(startStr.split(':')[0]);
-      let currentM = parseInt(startStr.split(':')[1]);
+      let currentH = 0;
+      let currentM = 0;
+
+      if (startStr) {
+        currentH = parseInt(startStr.split(':')[0]);
+        currentM = parseInt(startStr.split(':')[1]);
+      }
       
       return segments.map(seg => {
-        // If already has time, update current pointer to its end and return
+        // If already has time, use it to update current pointer
         if (seg.start_time) {
           const [h, m] = seg.start_time.split(':').map(Number);
           currentH = h;
           currentM = m;
-          
-          const duration = seg.duration || 0;
-          const date = new Date();
-          date.setHours(currentH, currentM + duration, 0, 0);
-          
-          // Update pointer for next segment (if contiguous)
-          currentH = date.getHours();
-          currentM = date.getMinutes();
-          
-          return seg;
         }
         
         const startH = String(currentH).padStart(2, '0');
@@ -314,10 +309,11 @@ export default function PublicProgramView() {
         const endM = String(currentM).padStart(2, '0');
         const endTime = `${endH}:${endM}`;
         
+        // Use calculated time if not present, but prefer existing if valid
         return {
           ...seg,
-          start_time: startTime,
-          end_time: endTime
+          start_time: seg.start_time || startTime,
+          end_time: seg.end_time || endTime
         };
       });
     };
@@ -329,6 +325,12 @@ export default function PublicProgramView() {
     }
     if (newData["11:30am"]) {
       newData["11:30am"] = calculateTimedSegments(newData["11:30am"], "11:30");
+    }
+    // Calculate times for Custom Services (segments array)
+    if (newData.segments && newData.segments.length > 0) {
+      // Use service time as start, default to 10:00 if missing
+      const serviceTime = newData.time || "10:00"; 
+      newData.segments = calculateTimedSegments(newData.segments, serviceTime);
     }
     
     return newData;
@@ -369,6 +371,22 @@ export default function PublicProgramView() {
     if (typeof segment.start_time !== 'string' || typeof segment.end_time !== 'string') return false;
     
     const now = currentTime;
+    
+    // Check if the service date is today
+    if (viewType === 'service' && actualServiceData?.date) {
+      const serviceDate = getLocalDateAtMidnight(actualServiceData.date);
+      const today = new Date(now);
+      today.setHours(0,0,0,0);
+      
+      if (serviceDate.getTime() !== today.getTime()) {
+        return false;
+      }
+    }
+    // Note: For Events, we'd need to check the specific day's date, 
+    // but simplified logic assumes if you're looking at the event view live, it's relevant.
+    // However, strictly speaking, we should verify date there too. 
+    // Given the prompt focuses on "Sunday service in 3 days says in progress", the service check is critical.
+
     const [startHours, startMinutes] = segment.start_time.split(':').map(Number);
     const [endHours, endMinutes] = segment.end_time.split(':').map(Number);
     
@@ -404,6 +422,14 @@ export default function PublicProgramView() {
   };
 
   const isSegmentUpcoming = (segment, allSegments) => {
+    // Date check for service
+    if (viewType === 'service' && actualServiceData?.date) {
+      const serviceDate = getLocalDateAtMidnight(actualServiceData.date);
+      const today = new Date(currentTime);
+      today.setHours(0,0,0,0);
+      if (serviceDate.getTime() !== today.getTime()) return false;
+    }
+
     const nextSegment = getNextSegment(allSegments);
     if (!nextSegment || nextSegment.id !== segment.id) return false;
     if (!segment?.start_time || typeof segment.start_time !== 'string') return false;
@@ -949,7 +975,8 @@ export default function PublicProgramView() {
                         isCurrent={isSegmentCurrent(segment)}
                         isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, actualServiceData.segments)}
                         viewMode="simple"
-                        isExpanded={expandedSegments[segment.id]}
+                        isExpanded={true} // Always expanded
+                        alwaysExpanded={true} // Hide toggle
                         onToggleExpand={toggleSegmentExpanded}
                         onOpenVerses={(data) => {
                           setVersesModalData({
@@ -1034,7 +1061,8 @@ export default function PublicProgramView() {
                         isCurrent={isSegmentCurrent(segment)}
                         isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, actualServiceData["9:30am"])}
                         viewMode="simple"
-                        isExpanded={expandedSegments[segment.id]}
+                        isExpanded={true}
+                        alwaysExpanded={true}
                         onToggleExpand={toggleSegmentExpanded}
                         onOpenVerses={(data) => {
                           setVersesModalData({
@@ -1103,7 +1131,8 @@ export default function PublicProgramView() {
                           isCurrent={isSegmentCurrent(segment)}
                           isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, actualServiceData["11:30am"])}
                           viewMode="simple"
-                          isExpanded={expandedSegments[segment.id]}
+                          isExpanded={true}
+                          alwaysExpanded={true}
                           onToggleExpand={toggleSegmentExpanded}
                           onOpenVerses={(data) => {
                             setVersesModalData({

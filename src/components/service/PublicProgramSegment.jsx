@@ -12,7 +12,8 @@ export default function PublicProgramSegment({
   isCurrent, 
   isUpcoming, 
   viewMode, 
-  isExpanded, 
+  isExpanded,
+  alwaysExpanded,
   onToggleExpand, 
   onOpenVerses,
   allSegments // Needed for calculating isUpcoming if logic moved here, but passed as boolean
@@ -111,13 +112,15 @@ export default function PublicProgramSegment({
               </div>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onToggleExpand(segment.id)}
-          >
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </Button>
+          {!alwaysExpanded && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onToggleExpand(segment.id)}
+            >
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
+          )}
         </div>
       )}
 
@@ -305,15 +308,17 @@ export default function PublicProgramSegment({
             </div>
           )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onToggleExpand(segment.id)}
-            className="mt-2"
-          >
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            {isExpanded ? 'Menos' : 'Más Detalles'}
-          </Button>
+          {!alwaysExpanded && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onToggleExpand(segment.id)}
+              className="mt-2"
+            >
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              {isExpanded ? 'Menos' : 'Más Detalles'}
+            </Button>
+          )}
         </div>
       )}
 
