@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Music, MessageSquare, Languages, ListOrdered, Circle, Users, AlertTriangle, Bookmark, Copy, Clock, ChevronUp, ChevronDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
+import { getSegmentData } from "@/components/utils/segmentDataUtils";
 
 export default function SegmentList({ segments, sessionId, onEdit, onEditPreSession }) {
   const queryClient = useQueryClient();
@@ -204,10 +205,11 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                   </TableCell>
                 </TableRow>
                 {segments.map((segment, index) => {
+            const getData = (field) => getSegmentData(segment, field);
             const actionCount = getSegmentActions(segment.id).length;
-            const hasProjectionNotes = !!segment.projection_notes;
-            const hasSoundNotes = !!segment.sound_notes;
-            const hasUshersNotes = !!segment.ushers_notes;
+            const hasProjectionNotes = !!getData('projection_notes');
+            const hasSoundNotes = !!getData('sound_notes');
+            const hasUshersNotes = !!getData('ushers_notes');
             const timingIssues = checkTimingIssues(segment, index);
 
             return (
@@ -285,32 +287,32 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                         </TooltipProvider>
                       )}
                     </div>
-                    {segment.presenter && (
+                    {getData('presenter') && (
                       <div className="text-xs text-slate-600 mt-0.5">
                         {segment.segment_type === "Alabanza" ? "Líder: " : segment.segment_type === "Plenaria" ? "Predicador: " : ""}
-                        {segment.presenter}
+                        {getData('presenter')}
                       </div>
                     )}
-                    {segment.segment_type === "Plenaria" && segment.message_title && (
-                      <div className="text-xs text-blue-600 mt-0.5 italic">{segment.message_title}</div>
+                    {segment.segment_type === "Plenaria" && getData('message_title') && (
+                      <div className="text-xs text-blue-600 mt-0.5 italic">{getData('message_title')}</div>
                     )}
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
-                    {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
+                    {segment.segment_type === "Alabanza" && getData('number_of_songs') > 0 && (
                       <Badge variant="outline" className="text-xs gap-1">
                         <Music className="w-3 h-3" />
-                        {segment.number_of_songs}
+                        {getData('number_of_songs')}
                       </Badge>
                     )}
-                    {segment.segment_type === "Plenaria" && segment.message_title && (
-                      <Badge variant="outline" className="text-xs gap-1" title={segment.message_title}>
+                    {segment.segment_type === "Plenaria" && getData('message_title') && (
+                      <Badge variant="outline" className="text-xs gap-1" title={getData('message_title')}>
                         <MessageSquare className="w-3 h-3" />
                         Mensaje
                       </Badge>
                     )}
-                    {segment.requires_translation && (
+                    {getData('requires_translation') && (
                       <Badge variant="outline" className="text-xs gap-1 bg-purple-50">
                         <Languages className="w-3 h-3" />
                       </Badge>
@@ -421,10 +423,11 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
         {/* Segment Cards */}
         <div className="space-y-3">
           {segments.map((segment, index) => {
+            const getData = (field) => getSegmentData(segment, field);
             const actionCount = getSegmentActions(segment.id).length;
-            const hasProjectionNotes = !!segment.projection_notes;
-            const hasSoundNotes = !!segment.sound_notes;
-            const hasUshersNotes = !!segment.ushers_notes;
+            const hasProjectionNotes = !!getData('projection_notes');
+            const hasSoundNotes = !!getData('sound_notes');
+            const hasUshersNotes = !!getData('ushers_notes');
             const timingIssues = checkTimingIssues(segment, index);
 
             return (
@@ -466,25 +469,25 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                               )}
                             </div>
                             <h4 className="font-semibold text-sm text-slate-900 line-clamp-1">{segment.title}</h4>
-                            {segment.presenter && (
+                            {getData('presenter') && (
                               <p className="text-xs text-slate-600 mt-0.5 line-clamp-1">
                                 {segment.segment_type === "Alabanza" ? "L: " : segment.segment_type === "Plenaria" ? "P: " : ""}
-                                {segment.presenter}
+                                {getData('presenter')}
                               </p>
                             )}
-                            {segment.segment_type === "Plenaria" && segment.message_title && (
-                              <p className="text-xs text-blue-600 mt-0.5 italic line-clamp-1">{segment.message_title}</p>
+                            {segment.segment_type === "Plenaria" && getData('message_title') && (
+                              <p className="text-xs text-blue-600 mt-0.5 italic line-clamp-1">{getData('message_title')}</p>
                             )}
                             
                             {/* Content Badges */}
                             <div className="flex flex-wrap gap-1 mt-2">
-                              {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
+                              {segment.segment_type === "Alabanza" && getData('number_of_songs') > 0 && (
                                 <Badge variant="outline" className="text-xs gap-1">
                                   <Music className="w-3 h-3" />
-                                  {segment.number_of_songs}
+                                  {getData('number_of_songs')}
                                 </Badge>
                               )}
-                              {segment.requires_translation && (
+                              {getData('requires_translation') && (
                                 <Badge variant="outline" className="text-xs gap-1 bg-purple-50">
                                   <Languages className="w-3 h-3" />
                                 </Badge>
