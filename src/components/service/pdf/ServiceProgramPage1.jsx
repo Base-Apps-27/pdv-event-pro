@@ -141,15 +141,26 @@ const styles = StyleSheet.create({
 });
 
 export default function ServiceProgramPage1({ serviceData, selectedDate, scale = 100 }) {
+  const isCustomService = serviceData?.segments && serviceData.segments.length > 0;
+
   const buildRolesLine = () => {
     if (!serviceData) return '';
     
     const roles = [];
     
-    const coord = serviceData.coordinators?.['9:30am'] || serviceData.coordinators?.['11:30am'];
-    const ujier = serviceData.ujieres?.['9:30am'] || serviceData.ujieres?.['11:30am'];
-    const sound = serviceData.sound?.['9:30am'] || serviceData.sound?.['11:30am'];
-    const luces = serviceData.luces?.['9:30am'] || serviceData.luces?.['11:30am'];
+    // Helper to get main value from object or string
+    const getVal = (field) => {
+      const val = serviceData[field];
+      if (!val) return null;
+      if (typeof val === 'string') return val;
+      if (isCustomService) return val.main;
+      return val['9:30am'] || val['11:30am'];
+    };
+
+    const coord = getVal('coordinators');
+    const ujier = getVal('ujieres');
+    const sound = getVal('sound');
+    const luces = getVal('luces');
     
     if (coord) roles.push(`Coordinador: ${coord}`);
     if (ujier) roles.push(`Ujier: ${ujier}`);
@@ -175,8 +186,19 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
     scaledRecesoNote: { fontSize: 9.5 * scaleFactor },
   });
 
-  const renderServiceColumn = (timeSlot, timeLabel, segments) => {
+  // Modified to accept a title overriding timeLabel if provided
+  const renderServiceColumn = (timeSlot, timeLabel, segments, isFullWidth = false) => {
     if (!segments || segments.length === 0) {
+      // If full width custom service and empty, show message
+      if (isFullWidth) {
+        return (
+          <View style={styles.column}>
+             <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail, { textAlign: 'center', marginTop: 20 }]}>
+              No hay segmentos definidos para este servicio.
+            </Text>
+          </View>
+        );
+      }
       return (
         <View style={styles.column}>
           <Text style={[styles.columnHeader, scaledStyles.scaledColumnHeader]}>
@@ -206,9 +228,11 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
 
     return (
       <View style={styles.column}>
-        <Text style={[styles.columnHeader, scaledStyles.scaledColumnHeader]}>
-          <Text style={styles.timeAccent}>{timeLabel}</Text>
-        </Text>
+        {!isFullWidth && (
+          <Text style={[styles.columnHeader, scaledStyles.scaledColumnHeader]}>
+            <Text style={styles.timeAccent}>{timeLabel}</Text>
+          </Text>
+        )}
         {validSegments.map((segment, idx) => (
           <View key={idx} style={styles.segment}>
             {segment.duration && (
@@ -299,6 +323,22 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
               </Text>
             )}
 
+            {/* Additional Custom Service Fields */}
+            {(segment.description || segment.description_details) && (
+              <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
+                {segment.description || segment.description_details}
+              </Text>
+            )}
+            
+            {/* Technical Notes Block for Custom Services */}
+            {(isFullWidth && (segment.coordinator_notes || segment.projection_notes || segment.sound_notes || segment.ushers_notes)) && (
+              <View style={{ marginTop: 4, paddingLeft: 4, borderLeftWidth: 1, borderLeftColor: '#DDD' }}>
+                {segment.coordinator_notes && <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote, {color: '#4F46E5'}]}>Coord: {segment.coordinator_notes}</Text>}
+                {segment.projection_notes && <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote, {color: '#7C3AED'}]}>Proj: {segment.projection_notes}</Text>}
+                {segment.sound_notes && <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote, {color: '#DC2626'}]}>Sound: {segment.sound_notes}</Text>}
+              </View>
+            )}
+
             {segment.data?.notes && (
               <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
                 {segment.data.notes}
@@ -331,9 +371,9 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
           <Image src={LOGO_URL} style={styles.logo} />
           
           <View style={styles.header}>
-            <Text style={[styles.title, scaledStyles.scaledTitle]}>ORDEN DE SERVICIO</Text>
+            <Text style={[styles.title, scaledStyles.scaledTitle]}>{serviceData?.name || "ORDEN DE SERVICIO"}</Text>
             <Text style={[styles.date, scaledStyles.scaledDate]}>
-              Domingo {selectedDate}
+              {serviceData?.day_of_week || "Domingo"} {selectedDate} {serviceData?.time && `• ${serviceData.time}`}
             </Text>
             {rolesLine && (
               <Text style={[styles.rolesLine, scaledStyles.scaledRolesLine]}>
@@ -343,8 +383,16 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
           </View>
 
           <View style={styles.columnsContainer}>
-            {renderServiceColumn('9:30am', '9:30 A.M.', serviceData?.['9:30am'])}
-            {renderServiceColumn('11:30am', '11:30 A.M.', serviceData?.['11:30am'])}
+            {isCustomService ? (
+              // Single column for custom services
+              renderServiceColumn('custom', 'Programa', serviceData.segments, true)
+            ) : (
+              // Dual column for weekly services
+              <>
+                {renderServiceColumn('9:30am', '9:30 A.M.', serviceData?.['9:30am'])}
+                {renderServiceColumn('11:30am', '11:30 A.M.', serviceData?.['11:30am'])}
+              </>
+            )}
           </View>
 
           {serviceData?.receso_notes?.['9:30am'] && (

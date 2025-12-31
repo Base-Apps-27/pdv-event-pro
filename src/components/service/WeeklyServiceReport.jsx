@@ -43,6 +43,194 @@ export default function WeeklyServiceReport({ date }) {
     .filter(e => selectedAnnouncements.includes(e.id))
     .sort((a, b) => new Date(a.start_date || 0) - new Date(b.start_date || 0));
 
+  const isCustomService = serviceData.segments && serviceData.segments.length > 0;
+
+  const renderCustomService = () => {
+    const segments = serviceData.segments || [];
+    // Custom services store teams in { main: "Name" } or just "Name" string
+    const getTeam = (field) => {
+      const val = serviceData[field];
+      if (!val) return "";
+      if (typeof val === 'object') return val.main || "";
+      return val;
+    };
+
+    const coordinators = getTeam('coordinators');
+    const ujieres = getTeam('ujieres');
+    const sound = getTeam('sound');
+    const luces = getTeam('luces');
+
+    return (
+      <div className="space-y-4 max-w-4xl mx-auto">
+        <div className="bg-gradient-to-r from-gray-50 to-white p-4 rounded-lg border-l-4 border-pdv-teal shadow-sm">
+          <div className="flex justify-between items-start">
+            <h3 className="text-2xl font-bold uppercase mb-2 text-pdv-teal">{serviceData.name || "Servicio Personalizado"}</h3>
+            <Badge variant="outline" className="text-lg px-3 py-1">{serviceData.time || "Hora por definir"}</Badge>
+          </div>
+          
+          {/* Team Info */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-2">
+            {coordinators && (
+              <div className="bg-white px-3 py-2 rounded border shadow-sm">
+                <span className="font-bold text-indigo-600 block text-xs uppercase tracking-wider">Coordinador</span>
+                <span className="font-medium text-gray-800">{coordinators}</span>
+              </div>
+            )}
+            {ujieres && (
+              <div className="bg-white px-3 py-2 rounded border shadow-sm">
+                <span className="font-bold text-blue-600 block text-xs uppercase tracking-wider">Ujieres</span>
+                <span className="font-medium text-gray-800">{ujieres}</span>
+              </div>
+            )}
+            {sound && (
+              <div className="bg-white px-3 py-2 rounded border shadow-sm">
+                <span className="font-bold text-red-600 block text-xs uppercase tracking-wider">Sonido</span>
+                <span className="font-medium text-gray-800">{sound}</span>
+              </div>
+            )}
+            {luces && (
+              <div className="bg-white px-3 py-2 rounded border shadow-sm">
+                <span className="font-bold text-purple-600 block text-xs uppercase tracking-wider">Luces/Proyección</span>
+                <span className="font-medium text-gray-800">{luces}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Segments */}
+        <div className="space-y-3">
+          {segments.map((segment, idx) => (
+            <Card key={idx} className={`border-l-4 ${segment.type === 'Especial' ? 'border-l-orange-500' : 'border-l-pdv-teal'}`}>
+              <CardHeader className="pb-2 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="text-gray-500 font-mono text-sm w-6">{idx + 1}.</span>
+                    {segment.title}
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    {segment.type && <Badge variant="secondary" className="text-xs">{segment.type}</Badge>}
+                    <Badge variant="outline">{segment.duration} min</Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-3 text-sm space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Left Column: Content & People */}
+                  <div className="space-y-2">
+                    {/* Primary Roles */}
+                    {(segment.leader || segment.presenter || segment.preacher) && (
+                      <div className="flex items-center gap-2 text-base">
+                        <span className="font-semibold text-pdv-teal">
+                          {segment.leader ? "Dirige:" : segment.preacher ? "Predica:" : "Presenta:"}
+                        </span>
+                        <span className="font-medium">{segment.leader || segment.preacher || segment.presenter}</span>
+                      </div>
+                    )}
+                    
+                    {segment.translator && (
+                      <div className="text-sm bg-blue-50 p-1.5 rounded border border-blue-100 inline-block">
+                        <span className="font-semibold text-blue-700">🌐 Traductor:</span> {segment.translator}
+                      </div>
+                    )}
+
+                    {/* Songs */}
+                    {segment.songs && segment.songs.length > 0 && segment.songs.some(s => s.title) && (
+                      <div className="bg-green-50 p-3 rounded border border-green-200 mt-2">
+                        <div className="font-semibold text-green-800 mb-1 text-xs uppercase tracking-wide">Repertorio</div>
+                        <ul className="space-y-1">
+                          {segment.songs.filter(s => s.title).map((song, sIdx) => (
+                            <li key={sIdx} className="text-sm text-gray-800 flex justify-between">
+                              <span>• {song.title}</span>
+                              {song.lead && <span className="text-gray-500 text-xs italic">{song.lead}</span>}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Message Details */}
+                    {(segment.messageTitle || segment.verse) && (
+                      <div className="bg-blue-50 p-3 rounded border border-blue-200 mt-2">
+                        {segment.messageTitle && (
+                          <div className="mb-1"><span className="font-semibold text-blue-800">Título:</span> {segment.messageTitle}</div>
+                        )}
+                        {segment.verse && (
+                          <div className="text-blue-900 italic">📖 {segment.verse}</div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* General Description */}
+                    {(segment.description || segment.description_details) && (
+                      <div className="text-gray-700 mt-2 p-2 bg-gray-50 rounded border border-gray-100">
+                        {segment.description && <div className="mb-1">{segment.description}</div>}
+                        {segment.description_details && <div className="text-xs text-gray-500">{segment.description_details}</div>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right Column: Technical & Operational Notes */}
+                  <div className="space-y-2 text-xs border-l pl-4 md:border-gray-200">
+                    <div className="font-semibold text-gray-400 uppercase tracking-widest mb-1">Notas Técnicas</div>
+                    
+                    {segment.coordinator_notes && (
+                      <div className="grid grid-cols-[80px_1fr] gap-2">
+                        <span className="font-bold text-indigo-600">COORD:</span>
+                        <span>{segment.coordinator_notes}</span>
+                      </div>
+                    )}
+                    {segment.projection_notes && (
+                      <div className="grid grid-cols-[80px_1fr] gap-2">
+                        <span className="font-bold text-purple-600">PROYECCIÓN:</span>
+                        <span>{segment.projection_notes}</span>
+                      </div>
+                    )}
+                    {segment.sound_notes && (
+                      <div className="grid grid-cols-[80px_1fr] gap-2">
+                        <span className="font-bold text-red-600">SONIDO:</span>
+                        <span>{segment.sound_notes}</span>
+                      </div>
+                    )}
+                    {segment.ushers_notes && (
+                      <div className="grid grid-cols-[80px_1fr] gap-2">
+                        <span className="font-bold text-green-600">UJIERES:</span>
+                        <span>{segment.ushers_notes}</span>
+                      </div>
+                    )}
+                    {segment.translation_notes && (
+                      <div className="grid grid-cols-[80px_1fr] gap-2">
+                        <span className="font-bold text-blue-600">TRADUCCIÓN:</span>
+                        <span>{segment.translation_notes}</span>
+                      </div>
+                    )}
+                    {segment.stage_decor_notes && (
+                      <div className="grid grid-cols-[80px_1fr] gap-2">
+                        <span className="font-bold text-pink-600">STAGE:</span>
+                        <span>{segment.stage_decor_notes}</span>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    {segment.actions && segment.actions.length > 0 && (
+                      <div className="mt-3 bg-amber-50 p-2 rounded border border-amber-200">
+                        <div className="font-semibold text-amber-900 mb-1">Cues / Acciones:</div>
+                        {segment.actions.map((action, aIdx) => (
+                          <div key={aIdx} className="text-amber-800 mb-0.5">
+                            • {action.label}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const renderService = (timeSlot, color) => {
     const segments = serviceData[timeSlot] || [];
     const coordinators = serviceData.coordinators?.[timeSlot] || "";
@@ -263,10 +451,14 @@ export default function WeeklyServiceReport({ date }) {
       </div>
 
       {/* Services Grid */}
-      <div className="grid md:grid-cols-2 gap-8">
-        {renderService("9:30am", "#DC2626")}
-        {renderService("11:30am", "#2563EB")}
-      </div>
+      {isCustomService ? (
+        renderCustomService()
+      ) : (
+        <div className="grid md:grid-cols-2 gap-8">
+          {renderService("9:30am", "#DC2626")}
+          {renderService("11:30am", "#2563EB")}
+        </div>
+      )}
 
       {/* Receso Block */}
       {serviceData.receso_notes?.["9:30am"] && (
