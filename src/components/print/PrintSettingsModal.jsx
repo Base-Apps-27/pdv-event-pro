@@ -9,6 +9,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { formatDate as formatDateFn } from "date-fns";
 import { es } from "date-fns/locale";
+import { getSegmentData } from "@/components/utils/segmentDataUtils";
 
 const DEFAULT_SETTINGS = {
   globalScale: 1.0,
@@ -241,7 +242,23 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         {/* BODY - Custom Single Column */}
         <div ref={page1BodyRef} className="absolute overflow-hidden" style={{ top: `${marginTopPx + HEADER_H}px`, left: `${marginLeftPx}px`, right: `${marginRightPx}px`, bottom: `${marginBottomPx + FOOTER_H}px` }}>
           <div style={{ width: '100%', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4, padding: '8px' }}>
-             {serviceData.segments.map((seg, idx) => (
+             {serviceData.segments.map((seg, idx) => {
+                const getData = (field) => getSegmentData(seg, field);
+                const leader = getData('leader');
+                const preacher = getData('preacher');
+                const presenter = getData('presenter');
+                const translator = getData('translator');
+                const songs = getData('songs');
+                const messageTitle = getData('messageTitle');
+                const verse = getData('verse');
+                const description = getData('description');
+                const description_details = getData('description_details');
+                const coordinator_notes = getData('coordinator_notes');
+                const projection_notes = getData('projection_notes');
+                const sound_notes = getData('sound_notes');
+                const ushers_notes = getData('ushers_notes');
+
+                return (
                 <div key={idx} style={{ marginBottom: '8px', paddingBottom: '6px', borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                    <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
                       {(['Especial', 'Special', 'special'].includes(seg.segment_type || seg.type || seg.data?.type || seg.data?.segment_type)) && (
@@ -255,15 +272,15 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                       <span style={{ fontSize: `${BASE_TITLE * 0.92 * page1Settings.titleFontScale}px`, fontWeight: 'bold', textTransform: 'uppercase' }}>{seg.title || 'Sin título'}</span>
                       {seg.duration && <span style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', marginLeft: '4px' }}>({seg.duration} min)</span>}
                    </div>
-                   {seg.leader && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>Dirige: {seg.leader}</div>}
-                   {seg.preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '600' }}>{seg.preacher}</div>}
-                   {seg.presenter && !seg.leader && !seg.preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151' }}>{seg.presenter}</div>}
-                   {seg.translator && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280' }}>🌐 {seg.translator}</div>}
-                   
+                   {leader && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#16a34a', fontWeight: '600' }}>Dirige: {leader}</div>}
+                   {preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#2563eb', fontWeight: '600' }}>{preacher}</div>}
+                   {presenter && !leader && !preacher && <div style={{ fontSize: `${BASE_BODY * 0.95 * page1Settings.bodyFontScale}px`, color: '#374151' }}>{presenter}</div>}
+                   {translator && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280' }}>🌐 {translator}</div>}
+
                    {/* Songs */}
-                   {seg.songs && seg.songs.filter(s => s.title).length > 0 && (
+                   {songs && songs.filter(s => s.title).length > 0 && (
                       <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid #16a34a' }}>
-                        {seg.songs.filter(s => s.title).map((song, sIdx) => (
+                        {songs.filter(s => s.title).map((song, sIdx) => (
                           <div key={sIdx} style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#16a34a' }}>
                             - {song.title} {song.lead && `(${song.lead})`}
                           </div>
@@ -272,22 +289,22 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                    )}
 
                    {/* Other Fields */}
-                   {seg.messageTitle && <div style={{ fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>{seg.messageTitle}</div>}
-                   {seg.verse && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af' }}>📖 {seg.verse}</div>}
-                   {seg.description && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', fontStyle: 'italic', marginTop: '3px' }}>{seg.description}</div>}
-                   {seg.description_details && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#374151', marginTop: '3px' }}>{seg.description_details}</div>}
-                   
+                   {messageTitle && <div style={{ fontSize: `${BASE_BODY * 0.9 * page1Settings.bodyFontScale}px`, color: '#6b7280', fontStyle: 'italic' }}>{messageTitle}</div>}
+                   {verse && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af' }}>📖 {verse}</div>}
+                   {description && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#9ca3af', fontStyle: 'italic', marginTop: '3px' }}>{description}</div>}
+                   {description_details && <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#374151', marginTop: '3px' }}>{description_details}</div>}
+
                    {/* Technical Notes */}
-                   {(seg.coordinator_notes || seg.projection_notes || seg.sound_notes || seg.ushers_notes) && (
+                   {(coordinator_notes || projection_notes || sound_notes || ushers_notes) && (
                       <div style={{ fontSize: `${BASE_BODY * 0.76 * page1Settings.bodyFontScale}px`, marginTop: '4px', padding: '4px', background: '#f9fafb', borderRadius: '4px' }}>
-                        {seg.coordinator_notes && <div><strong style={{color:'#92400e'}}>Coord:</strong> {seg.coordinator_notes}</div>}
-                        {seg.projection_notes && <div><strong style={{color:'#1e40af'}}>Proj:</strong> {seg.projection_notes}</div>}
-                        {seg.sound_notes && <div><strong style={{color:'#991b1b'}}>Sound:</strong> {seg.sound_notes}</div>}
-                        {seg.ushers_notes && <div><strong style={{color:'#14532d'}}>Ujieres:</strong> {seg.ushers_notes}</div>}
+                        {coordinator_notes && <div><strong style={{color:'#92400e'}}>Coord:</strong> {coordinator_notes}</div>}
+                        {projection_notes && <div><strong style={{color:'#1e40af'}}>Proj:</strong> {projection_notes}</div>}
+                        {sound_notes && <div><strong style={{color:'#991b1b'}}>Sound:</strong> {sound_notes}</div>}
+                        {ushers_notes && <div><strong style={{color:'#14532d'}}>Ujieres:</strong> {ushers_notes}</div>}
                       </div>
                    )}
                 </div>
-             ))}
+             )})}
           </div>
         </div>
         
