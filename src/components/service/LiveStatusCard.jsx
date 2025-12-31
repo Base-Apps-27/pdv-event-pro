@@ -60,6 +60,16 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
 
   const currentRemaining = currentSegment ? getTimeRemaining(getTimeDate(currentSegment.end_time)) : null;
 
+  // Helper to get the primary person for display
+  const getPersonName = (segment) => {
+    if (!segment) return null;
+    const data = segment.data || {};
+    // Check canonical data fields first, then root fields
+    return data.leader || segment.leader || 
+           data.preacher || segment.preacher || 
+           data.presenter || segment.presenter;
+  };
+
   if (!currentSegment && !nextSegment) return null;
 
   return (
@@ -83,8 +93,8 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                 {currentSegment.title || currentSegment.data?.title}
               </h3>
             </div>
-            {currentSegment.presenter && (
-              <p className="text-sm text-gray-500 mt-2 line-clamp-1">{currentSegment.presenter}</p>
+            {getPersonName(currentSegment) && (
+              <p className="text-sm text-gray-500 mt-2 line-clamp-1">{getPersonName(currentSegment)}</p>
             )}
           </div>
         ) : (
@@ -117,8 +127,8 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                 )}
               </div>
             </div>
-            {nextSegment.presenter && (
-              <p className="text-sm text-gray-500 mt-2 line-clamp-1">{nextSegment.presenter}</p>
+            {getPersonName(nextSegment) && (
+              <p className="text-sm text-gray-500 mt-2 line-clamp-1">{getPersonName(nextSegment)}</p>
             )}
           </div>
         ) : (
