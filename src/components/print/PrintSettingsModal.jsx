@@ -331,7 +331,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
              </div>
              </div>
         
-        <div className="print-footer" style={{ position: 'absolute', bottom: '0.4in', left: '0.5in', width: '7.5in', height: '24px', zIndex: 9999, backgroundColor: '#1F8A70', background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', border: '1px solid #1F8A70' }}>
+        <div className="print-footer" style={{ position: 'absolute', bottom: '0.25in', left: '0.5in', width: '7.5in', height: '24px', zIndex: 9999, backgroundColor: '#1F8A70', background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', border: '1px solid #1F8A70' }}>
           <span className="print-footer-text" style={{ fontSize: '11px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative', letterSpacing: '0.1em', textTransform: 'uppercase' }}>¡Atrévete a cambiar!</span>
         </div>
       </div>
@@ -471,7 +471,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
           </div>
         </div>
         {/* Footer */}
-        <div className="print-footer" style={{ position: 'absolute', bottom: '0.4in', left: '0.5in', width: '7.5in', height: '24px', zIndex: 9999, backgroundColor: '#1F8A70', background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', border: '1px solid #1F8A70' }}>
+        <div className="print-footer" style={{ position: 'absolute', bottom: '0.25in', left: '0.5in', width: '7.5in', height: '24px', zIndex: 9999, backgroundColor: '#1F8A70', background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', border: '1px solid #1F8A70' }}>
           <span className="print-footer-text" style={{ fontSize: '11px', color: 'white', fontWeight: 'bold', zIndex: 10000, position: 'relative', letterSpacing: '0.1em', textTransform: 'uppercase' }}>¡Atrévete a cambiar!</span>
         </div>
       </div>
