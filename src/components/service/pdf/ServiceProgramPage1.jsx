@@ -186,19 +186,10 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
     scaledRecesoNote: { fontSize: 9.5 * scaleFactor },
   });
 
-  // Modified to accept a title overriding timeLabel if provided
-  const renderServiceColumn = (timeSlot, timeLabel, segments, isFullWidth = false) => {
+  // Separate render function for Standard Weekly Service Column (e.g. 9:30am, 11:30am)
+  const renderStandardServiceColumn = (timeSlot, timeLabel, segments) => {
+    // If no segments or empty list
     if (!segments || segments.length === 0) {
-      // If full width custom service and empty, show message
-      if (isFullWidth) {
-        return (
-          <View style={styles.column}>
-             <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail, { textAlign: 'center', marginTop: 20 }]}>
-              No hay segmentos definidos para este servicio.
-            </Text>
-          </View>
-        );
-      }
       return (
         <View style={styles.column}>
           <Text style={[styles.columnHeader, scaledStyles.scaledColumnHeader]}>
@@ -228,11 +219,9 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
 
     return (
       <View style={styles.column}>
-        {!isFullWidth && (
-          <Text style={[styles.columnHeader, scaledStyles.scaledColumnHeader]}>
-            <Text style={styles.timeAccent}>{timeLabel}</Text>
-          </Text>
-        )}
+        <Text style={[styles.columnHeader, scaledStyles.scaledColumnHeader]}>
+          <Text style={styles.timeAccent}>{timeLabel}</Text>
+        </Text>
         {validSegments.map((segment, idx) => (
           <View key={idx} style={styles.segment}>
             {segment.duration && (
@@ -323,6 +312,112 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
               </Text>
             )}
 
+            {segment.data?.notes && (
+              <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
+                {segment.data.notes}
+              </Text>
+            )}
+
+            {segment.actions && segment.actions.length > 0 && (
+              <View style={{ marginTop: 3 }}>
+                {segment.actions.map((action, aIdx) => {
+                  const safeAction = typeof action === 'object' && action !== null ? action : {};
+                  return (
+                  <Text key={aIdx} style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
+                    • {safeAction.label || ''}
+                    {safeAction.timing === "before_end" && safeAction.offset_min ? ` (${safeAction.offset_min} min antes)` : ''}
+                  </Text>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  // Separate render function for Custom Service (Single Full Column)
+  const renderCustomServiceLayout = (segments) => {
+    if (!segments || segments.length === 0) {
+      return (
+        <View style={styles.column}>
+           <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail, { textAlign: 'center', marginTop: 20 }]}>
+            No hay segmentos definidos para este servicio.
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.column}>
+        {/* No column header for custom single layout */}
+        {segments.map((segment, idx) => (
+          <View key={idx} style={styles.segment}>
+            {segment.duration && (
+              <Text style={[styles.segmentTime, scaledStyles.scaledSegmentTime]}>
+                {segment.duration} min
+              </Text>
+            )}
+            
+            <Text style={[styles.segmentTitle, scaledStyles.scaledSegmentTitle]}>
+              {(['Especial', 'Special', 'special'].includes(segment.segment_type || segment.type || segment.data?.type || segment.data?.segment_type)) && (
+                <Text style={{ color: '#f59e0b' }}>★ </Text>
+              )}
+              {segment.title}
+            </Text>
+            
+            {/* Custom Service Specific Fields (Top Level) */}
+            {segment.leader && (
+              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                Dirige: <Text style={styles.segmentName}>{segment.leader}</Text>
+              </Text>
+            )}
+            {segment.preacher && (
+              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                <Text style={styles.segmentName}>{segment.preacher}</Text>
+              </Text>
+            )}
+            {segment.presenter && !segment.leader && !segment.preacher && (
+              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                <Text style={styles.segmentName}>{segment.presenter}</Text>
+              </Text>
+            )}
+            {segment.translator && (
+              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                Traduce: <Text style={styles.segmentName}>{segment.translator}</Text>
+              </Text>
+            )}
+
+            {/* Standard Data Fields (Fallback) */}
+            {segment.data?.leader && !segment.leader && (
+              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                Dirige: <Text style={styles.segmentName}>{segment.data.leader}</Text>
+              </Text>
+            )}
+
+            {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
+              <View style={{ marginTop: 3 }}>
+                {segment.songs.filter(s => s.title).map((song, sIdx) => (
+                  <Text key={sIdx} style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                    • {song.title} {song.lead && `(${song.lead})`}
+                  </Text>
+                ))}
+              </View>
+            )}
+
+            {segment.messageTitle && (
+              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
+                {segment.messageTitle}
+              </Text>
+            )}
+
+            {segment.verse && (
+              <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
+                {segment.verse}
+              </Text>
+            )}
+
             {/* Additional Custom Service Fields */}
             {(segment.description || segment.description_details) && (
               <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
@@ -331,18 +426,12 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
             )}
             
             {/* Technical Notes Block for Custom Services */}
-            {(isFullWidth && (segment.coordinator_notes || segment.projection_notes || segment.sound_notes || segment.ushers_notes)) && (
+            {(segment.coordinator_notes || segment.projection_notes || segment.sound_notes || segment.ushers_notes) && (
               <View style={{ marginTop: 4, paddingLeft: 4, borderLeftWidth: 1, borderLeftColor: '#DDD' }}>
                 {segment.coordinator_notes && <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote, {color: '#4F46E5'}]}>Coord: {segment.coordinator_notes}</Text>}
                 {segment.projection_notes && <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote, {color: '#7C3AED'}]}>Proj: {segment.projection_notes}</Text>}
                 {segment.sound_notes && <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote, {color: '#DC2626'}]}>Sound: {segment.sound_notes}</Text>}
               </View>
-            )}
-
-            {segment.data?.notes && (
-              <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
-                {segment.data.notes}
-              </Text>
             )}
 
             {segment.actions && segment.actions.length > 0 && (
@@ -385,17 +474,18 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
           <View style={styles.columnsContainer}>
             {isCustomService ? (
               // Single column for custom services
-              renderServiceColumn('custom', 'Programa', serviceData.segments, true)
+              renderCustomServiceLayout(serviceData.segments)
             ) : (
               // Dual column for weekly services
               <>
-                {renderServiceColumn('9:30am', '9:30 A.M.', serviceData?.['9:30am'])}
-                {renderServiceColumn('11:30am', '11:30 A.M.', serviceData?.['11:30am'])}
+                {renderStandardServiceColumn('9:30am', '9:30 A.M.', serviceData?.['9:30am'])}
+                {renderStandardServiceColumn('11:30am', '11:30 A.M.', serviceData?.['11:30am'])}
               </>
             )}
           </View>
 
-          {serviceData?.receso_notes?.['9:30am'] && (
+          {/* Only show Receso block for Standard Services */}
+          {!isCustomService && serviceData?.receso_notes?.['9:30am'] && (
             <View style={styles.recesoBlock}>
               <Text style={[styles.recesoTitle, scaledStyles.scaledRecesoTitle]}>Receso</Text>
               <Text style={[styles.recesoNote, scaledStyles.scaledRecesoNote]}>
