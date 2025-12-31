@@ -333,7 +333,7 @@ export default function CustomServiceBuilder() {
       
       // Only alert if manual save (status is saving)
       if (autoSaveStatus !== "saving") {
-         alert('Servicio guardado exitosamente en ' + new Date().toLocaleTimeString());
+         alert('Servicio guardado exitosamente en ' + new Date().toLocaleTimeString('es-ES', { timeZone: 'America/New_York' }));
       }
     },
     onError: (error) => {
@@ -711,7 +711,8 @@ export default function CustomServiceBuilder() {
                     month: 'short',
                     day: 'numeric',
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
+                    timeZone: 'America/New_York'
                   })}
                 </Badge>
               )}
