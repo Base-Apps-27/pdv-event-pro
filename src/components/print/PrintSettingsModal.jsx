@@ -50,8 +50,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
   const PAGE_W = 8.5 * 96; // 816px
   const PAGE_H = 11 * 96;  // 1056px
-  const HEADER_H = 65; // Preview header height (Tightened from 80)
-  const FOOTER_H = 28; // Preview footer height (Tightened from 40 to fit 24px footer + 4px buffer)
+  const HEADER_H = 65; // Preview header height
+  const FOOTER_H = 24; // Preview footer height (Exact fit)
   const BASE_BODY = 21; // Base body font size
   const BASE_TITLE = 24; // Base title font size
 
@@ -241,7 +241,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
         {/* BODY - Custom Single Column */}
         <div ref={page1BodyRef} className="absolute overflow-hidden" style={{ top: `${marginTopPx + HEADER_H}px`, left: `${marginLeftPx}px`, right: `${marginRightPx}px`, bottom: `${marginBottomPx + FOOTER_H}px` }}>
-          <div style={{ width: '100%', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4, padding: '4px' }}>
+          <div style={{ width: '100%', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4, padding: '0 4px' }}>
              {(() => {
                 let currentTime = serviceData.time ? parse(serviceData.time, 'HH:mm', new Date()) : null;
 
@@ -273,7 +273,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                 const ushers_notes = getData('ushers_notes');
 
                 return (
-                <div key={idx} style={{ marginBottom: '8px', paddingBottom: '6px', borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                <div key={idx} style={{ marginBottom: idx < serviceData.segments.length - 1 ? '8px' : '0', paddingBottom: '6px', borderBottom: idx < serviceData.segments.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                    <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
                       {(['Especial', 'Special', 'special'].includes(seg.segment_type || seg.type || seg.data?.type || seg.data?.segment_type)) && (
                         <Sparkles 
