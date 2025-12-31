@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
+import { getSegmentData } from "@/components/utils/segmentDataUtils";
 
 const LOGO_URL = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png';
 
@@ -153,8 +154,9 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
       const val = serviceData[field];
       if (!val) return null;
       if (typeof val === 'string') return val;
-      if (isCustomService) return val.main;
-      return val['9:30am'] || val['11:30am'];
+      if (isCustomService && val.main) return val.main; // Handle normalized object
+      // For standard services or unnormalized
+      return val['9:30am'] || val['11:30am'] || val.main;
     };
 
     const coord = getVal('coordinators');
@@ -352,7 +354,24 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
     return (
       <View style={styles.column}>
         {/* No column header for custom single layout */}
-        {segments.map((segment, idx) => (
+        {segments.map((segment, idx) => {
+          const getData = (field) => getSegmentData(segment, field);
+          const leader = getData('leader');
+          const preacher = getData('preacher');
+          const presenter = getData('presenter');
+          const translator = getData('translator');
+          const songs = getData('songs');
+          const messageTitle = getData('messageTitle');
+          const verse = getData('verse');
+          const description = getData('description');
+          const description_details = getData('description_details');
+          const coordinator_notes = getData('coordinator_notes');
+          const projection_notes = getData('projection_notes');
+          const sound_notes = getData('sound_notes');
+          const ushers_notes = getData('ushers_notes');
+          const actions = getData('actions');
+
+          return (
           <View key={idx} style={styles.segment}>
             {segment.duration && (
               <Text style={[styles.segmentTime, scaledStyles.scaledSegmentTime]}>
@@ -368,37 +387,30 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
             </Text>
             
             {/* Custom Service Specific Fields (Top Level) */}
-            {segment.leader && (
+            {leader && (
               <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
-                Dirige: <Text style={styles.segmentName}>{segment.leader}</Text>
+                Dirige: <Text style={styles.segmentName}>{leader}</Text>
               </Text>
             )}
-            {segment.preacher && (
+            {preacher && (
               <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
-                <Text style={styles.segmentName}>{segment.preacher}</Text>
+                <Text style={styles.segmentName}>{preacher}</Text>
               </Text>
             )}
-            {segment.presenter && !segment.leader && !segment.preacher && (
+            {presenter && !leader && !preacher && (
               <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
-                <Text style={styles.segmentName}>{segment.presenter}</Text>
+                <Text style={styles.segmentName}>{presenter}</Text>
               </Text>
             )}
-            {segment.translator && (
+            {translator && (
               <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
-                Traduce: <Text style={styles.segmentName}>{segment.translator}</Text>
-              </Text>
-            )}
-
-            {/* Standard Data Fields (Fallback) */}
-            {segment.data?.leader && !segment.leader && (
-              <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
-                Dirige: <Text style={styles.segmentName}>{segment.data.leader}</Text>
+                Traduce: <Text style={styles.segmentName}>{translator}</Text>
               </Text>
             )}
 
-            {segment.songs && segment.songs.filter(s => s.title).length > 0 && (
+            {songs && songs.filter(s => s.title).length > 0 && (
               <View style={{ marginTop: 3 }}>
-                {segment.songs.filter(s => s.title).map((song, sIdx) => (
+                {songs.filter(s => s.title).map((song, sIdx) => (
                   <Text key={sIdx} style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
                     • {song.title} {song.lead && `(${song.lead})`}
                   </Text>
@@ -406,37 +418,37 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
               </View>
             )}
 
-            {segment.messageTitle && (
+            {messageTitle && (
               <Text style={[styles.segmentDetail, scaledStyles.scaledSegmentDetail]}>
-                {segment.messageTitle}
+                {messageTitle}
               </Text>
             )}
 
-            {segment.verse && (
+            {verse && (
               <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
-                {segment.verse}
+                {verse}
               </Text>
             )}
 
             {/* Additional Custom Service Fields */}
-            {(segment.description || segment.description_details) && (
+            {(description || description_details) && (
               <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
-                {segment.description || segment.description_details}
+                {description || description_details}
               </Text>
             )}
             
             {/* Technical Notes Block for Custom Services */}
-            {(segment.coordinator_notes || segment.projection_notes || segment.sound_notes || segment.ushers_notes) && (
+            {(coordinator_notes || projection_notes || sound_notes || ushers_notes) && (
               <View style={{ marginTop: 4, paddingLeft: 4, borderLeftWidth: 1, borderLeftColor: '#DDD' }}>
-                {segment.coordinator_notes && <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote, {color: '#4F46E5'}]}>Coord: {segment.coordinator_notes}</Text>}
-                {segment.projection_notes && <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote, {color: '#7C3AED'}]}>Proj: {segment.projection_notes}</Text>}
-                {segment.sound_notes && <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote, {color: '#DC2626'}]}>Sound: {segment.sound_notes}</Text>}
+                {coordinator_notes && <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote, {color: '#4F46E5'}]}>Coord: {coordinator_notes}</Text>}
+                {projection_notes && <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote, {color: '#7C3AED'}]}>Proj: {projection_notes}</Text>}
+                {sound_notes && <Text style={[styles.segmentNote, scaledStyles.scaledSegmentNote, {color: '#DC2626'}]}>Sound: {sound_notes}</Text>}
               </View>
             )}
 
-            {segment.actions && segment.actions.length > 0 && (
+            {actions && actions.length > 0 && (
               <View style={{ marginTop: 3 }}>
-                {segment.actions.map((action, aIdx) => {
+                {actions.map((action, aIdx) => {
                   const safeAction = typeof action === 'object' && action !== null ? action : {};
                   return (
                   <Text key={aIdx} style={[styles.segmentNote, scaledStyles.scaledSegmentNote]}>
@@ -448,7 +460,7 @@ export default function ServiceProgramPage1({ serviceData, selectedDate, scale =
               </View>
             )}
           </View>
-        ))}
+        )})}
       </View>
     );
   };
