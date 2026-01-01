@@ -1243,8 +1243,9 @@ export default function CustomServiceBuilder() {
       />
 
       {/* Print Layout - Program */}
-      <div className={printMode === 'program' ? 'hidden print:block' : 'hidden'}>
-        <div className="print-page-1-wrapper">
+      {printMode === 'program' && (
+        <div className="hidden print:block">
+          <div className="print-page-1-wrapper">
           <div className="print-header" style={{ position: 'relative' }}>
             <div className="print-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
               <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
@@ -1366,10 +1367,11 @@ export default function CustomServiceBuilder() {
             })()}
           </div>
         </div>
-        <div className="print-footer">
-          ¡Atrévete a cambiar!
+          <div className="print-footer">
+            ¡Atrévete a cambiar!
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Print Layout - Announcements ONLY */}
       {printMode === 'announcements' && (
