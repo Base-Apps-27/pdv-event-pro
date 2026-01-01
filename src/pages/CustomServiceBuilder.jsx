@@ -151,6 +151,7 @@ export default function CustomServiceBuilder() {
   const [printSettingsPage1, setPrintSettingsPage1] = useState(null);
   const [printSettingsPage2, setPrintSettingsPage2] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [printMode, setPrintMode] = useState(null); // 'program' or 'announcements'
   const [lastSavedData, setLastSavedData] = useState(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState("idle"); // idle, saving, saved, error
   const [highlightedSegmentId, setHighlightedSegmentId] = useState(null);
@@ -437,8 +438,20 @@ export default function CustomServiceBuilder() {
     }));
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrintProgram = () => {
+    setPrintMode('program');
+    setTimeout(() => {
+      window.print();
+      setPrintMode(null);
+    }, 100);
+  };
+
+  const handlePrintAnnouncements = () => {
+    setPrintMode('announcements');
+    setTimeout(() => {
+      window.print();
+      setPrintMode(null);
+    }, 100);
   };
 
   const addSegment = () => {
@@ -1191,12 +1204,22 @@ export default function CustomServiceBuilder() {
           </Button>
           <Button
             variant="outline"
-            size="icon"
-            onClick={handlePrint}
-            title="Imprimir"
-            className="border-2 border-gray-400"
+            onClick={handlePrintProgram}
+            title="Imprimir Programa"
+            className="border-2 border-gray-400 gap-2"
           >
-            <Printer className="w-5 h-5" />
+            <Printer className="w-4 h-4" />
+            Programa
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handlePrintAnnouncements}
+            title="Imprimir Anuncios"
+            className="border-2 border-gray-400 gap-2"
+            disabled={!serviceData.selected_announcements || serviceData.selected_announcements.length === 0}
+          >
+            <Printer className="w-4 h-4" />
+            Anuncios
           </Button>
         </div>
       </div>
@@ -1223,6 +1246,7 @@ export default function CustomServiceBuilder() {
       {/* Print Layout */}
       <div className="hidden print:block">
         {/* PAGE 1 - Service Program */}
+        {printMode === 'program' && (
         <div className="print-page-1-wrapper">
           <div className="print-header" style={{ position: 'relative' }}>
             <div className="print-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
@@ -1345,9 +1369,10 @@ export default function CustomServiceBuilder() {
             })()}
           </div>
         </div>
+        )}
 
         {/* PAGE 2 - Announcements */}
-        {selectedAnnouncementsForPrint.length > 0 && (
+        {printMode === 'announcements' && selectedAnnouncementsForPrint.length > 0 && (
           <div className="print-page-2-wrapper">
             <div className="print-announcements">
               <div className="print-announcements-header" style={{ position: 'relative' }}>
