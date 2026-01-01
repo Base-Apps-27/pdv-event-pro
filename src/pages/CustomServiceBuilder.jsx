@@ -726,11 +726,11 @@ export default function CustomServiceBuilder() {
           }
 
           .print-page-1-wrapper {
-            page-break-after: always;
             padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} ${activePrintSettingsPage1.margins.bottom} ${activePrintSettingsPage1.margins.left};
           }
 
           .print-page-2-wrapper {
+            page-break-before: always;
             padding: ${activePrintSettingsPage2.margins.top} ${activePrintSettingsPage2.margins.right} ${activePrintSettingsPage2.margins.bottom} ${activePrintSettingsPage2.margins.left};
           }
           
