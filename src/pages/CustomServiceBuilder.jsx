@@ -1371,10 +1371,12 @@ export default function CustomServiceBuilder() {
         </div>
       </div>
 
-      {/* Print Layout - Announcements */}
-      <div className={printMode === 'announcements' ? 'hidden print:block' : 'hidden'}>
+      {/* Print Layout - Announcements ONLY */}
+      {printMode === 'announcements' && (
+        <div className="hidden print:block" style={{ pageBreakAfter: 'auto' }}>
           <div className="print-page-2-wrapper">
             <div className="print-announcements">
+              {/* Header */}
               <div className="print-announcements-header" style={{ position: 'relative' }}>
                 <div className="print-announcements-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
                   <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
@@ -1385,11 +1387,12 @@ export default function CustomServiceBuilder() {
                 </div>
               </div>
 
+              {/* Two Column Body */}
               <div className="print-announcements-body">
                 <div className="print-announcement-list">
-                  {/* Left Column: Fixed Announcements */}
+                  {/* Left Column: Fixed */}
                   <div className="print-announcements-column-left">
-                    {selectedFixed.map((ann) => {
+                    {selectedFixed.length > 0 && selectedFixed.map((ann) => {
                       const sanitize = (html) => {
                         if (!html) return '';
                         return html.replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
@@ -1409,56 +1412,67 @@ export default function CustomServiceBuilder() {
                               dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }}
                             />
                           )}
+                          {ann.has_video && (
+                            <div style={{ fontSize: '8pt', color: '#8b5cf6', marginTop: '2pt' }}>📹 Video</div>
+                          )}
                         </div>
                       );
                     })}
                   </div>
 
-                  {/* Right Column: Dynamic Events */}
+                  {/* Right Column: Dynamic */}
                   <div className="print-events-column-right">
                     {selectedDynamic.length > 0 && (
-                      <div className="print-events-header">Próximos Eventos / Upcoming Events</div>
-                    )}
-                    {selectedDynamic.map((ann) => {
-                      const sanitize = (html) => {
-                        if (!html) return '';
-                        return html.replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
-                      };
-                      const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
-                      const isEmphasized = ann.emphasize || ann.category === 'Urgent';
-                      return (
-                        <div key={ann.id} className={`print-event-compact ${isEmphasized ? 'print-event-emphasized' : ''}`}>
-                          <div className="print-event-title">{ann.isEvent ? ann.name : ann.title}</div>
-                          {(ann.date_of_occurrence || ann.start_date) && (
-                            <div className="print-event-date">
-                              {ann.date_of_occurrence || ann.start_date}
-                              {ann.end_date && ` — ${ann.end_date}`}
+                      <>
+                        <div className="print-events-header">Próximos Eventos</div>
+                        {selectedDynamic.map((ann) => {
+                          const sanitize = (html) => {
+                            if (!html) return '';
+                            return html.replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
+                          };
+                          const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
+                          const isEmphasized = ann.emphasize || ann.category === 'Urgent';
+                          return (
+                            <div key={ann.id} className={`print-event-compact ${isEmphasized ? 'print-event-emphasized' : ''}`}>
+                              <div className="print-event-title">{ann.isEvent ? ann.name : ann.title}</div>
+                              {(ann.date_of_occurrence || ann.start_date) && (
+                                <div className="print-event-date">
+                                  {ann.date_of_occurrence || ann.start_date}
+                                  {ann.end_date && ` — ${ann.end_date}`}
+                                </div>
+                              )}
+                              {content && (
+                                <div 
+                                  className="print-event-content"
+                                  dangerouslySetInnerHTML={{ __html: sanitize(content) }}
+                                />
+                              )}
+                              {ann.instructions && (
+                                <div 
+                                  className="print-announcement-instructions"
+                                  dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }}
+                                />
+                              )}
+                              {(ann.has_video || ann.announcement_has_video) && (
+                                <div style={{ fontSize: '8pt', color: '#8b5cf6', marginTop: '2pt' }}>📹 Video</div>
+                              )}
                             </div>
-                          )}
-                          {content && (
-                            <div 
-                              className="print-event-content"
-                              dangerouslySetInnerHTML={{ __html: sanitize(content) }}
-                            />
-                          )}
-                          {ann.instructions && (
-                            <div 
-                              className="print-announcement-instructions"
-                              dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        <div className="print-footer">
-          ¡Atrévete a cambiar!
+
+          {/* Footer */}
+          <div className="print-footer">
+            ¡Atrévete a cambiar!
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Screen UI */}
       {/* Service Details */}
