@@ -725,35 +725,13 @@ export default function CustomServiceBuilder() {
             color: #374151;
           }
 
-          .print-page-1-wrapper,
-          .print-page-2-wrapper {
-            height: 11in;
-            box-sizing: border-box;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-          }
-
           .print-page-1-wrapper {
+            page-break-after: always;
             padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} ${activePrintSettingsPage1.margins.bottom} ${activePrintSettingsPage1.margins.left};
           }
 
           .print-page-2-wrapper {
             padding: ${activePrintSettingsPage2.margins.top} ${activePrintSettingsPage2.margins.right} ${activePrintSettingsPage2.margins.bottom} ${activePrintSettingsPage2.margins.left};
-          }
-          
-          .print-content {
-            flex: 1;
-            min-height: 0;
-          }
-
-          .print-body-content {
-            transform: none !important;
-          }
-
-          .print-announcements-body {
-            transform: none !important;
           }
           
           * {
@@ -1234,7 +1212,6 @@ export default function CustomServiceBuilder() {
       <div className="hidden print:block">
         {/* PAGE 1 - Service Program */}
         <div className="print-page-1-wrapper">
-          <div className="print-content" style={{ zoom: activePrintSettingsPage1.globalScale }}>
           <div className="print-header" style={{ position: 'relative' }}>
             <div className="print-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
               <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
@@ -1355,7 +1332,6 @@ export default function CustomServiceBuilder() {
               });
             })()}
           </div>
-          </div>
           
           <div className="print-footer">
             ¡Atrévete a cambiar!
@@ -1365,7 +1341,6 @@ export default function CustomServiceBuilder() {
         {/* PAGE 2 - Announcements */}
         {(selectedFixed.length > 0 || selectedDynamic.length > 0) && (
           <div className="print-page-2-wrapper">
-            <div className="print-content" style={{ zoom: activePrintSettingsPage2.globalScale }}>
             <div className="print-announcements">
               <div className="print-announcements-header" style={{ position: 'relative' }}>
                 <div className="print-announcements-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
@@ -1445,7 +1420,6 @@ export default function CustomServiceBuilder() {
                   </div>
                 </div>
               </div>
-            </div>
             </div>
             
             <div className="print-footer">
