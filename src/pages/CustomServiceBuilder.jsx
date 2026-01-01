@@ -1243,10 +1243,9 @@ export default function CustomServiceBuilder() {
         language="es"
       />
 
-      {/* Print Layout */}
+      {/* Print Layout - Program */}
+      {printMode === 'program' && (
       <div className="hidden print:block">
-        {/* PAGE 1 - Service Program */}
-        {printMode === 'program' && (
         <div className="print-page-1-wrapper">
           <div className="print-header" style={{ position: 'relative' }}>
             <div className="print-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
@@ -1369,10 +1368,15 @@ export default function CustomServiceBuilder() {
             })()}
           </div>
         </div>
-        )}
+        <div className="print-footer">
+          ¡Atrévete a cambiar!
+        </div>
+      </div>
+      )}
 
-        {/* PAGE 2 - Announcements */}
-        {printMode === 'announcements' && selectedAnnouncementsForPrint.length > 0 && (
+      {/* Print Layout - Announcements */}
+      {printMode === 'announcements' && selectedAnnouncementsForPrint.length > 0 && (
+      <div className="hidden print:block">
           <div className="print-page-2-wrapper">
             <div className="print-announcements">
               <div className="print-announcements-header" style={{ position: 'relative' }}>
@@ -1455,12 +1459,11 @@ export default function CustomServiceBuilder() {
               </div>
             </div>
           </div>
-        )}
-
         <div className="print-footer">
           ¡Atrévete a cambiar!
         </div>
       </div>
+      )}
 
       {/* Screen UI */}
       {/* Service Details */}
