@@ -1242,222 +1242,129 @@ export default function CustomServiceBuilder() {
         language="es"
       />
 
-      {/* Print Layout - Program */}
+      {/* PRINT: Program Only */}
       {printMode === 'program' && (
-        <div className="hidden print:block">
+        <div className="screen:hidden print:block">
           <div className="print-page-1-wrapper">
-          <div className="print-header" style={{ position: 'relative' }}>
-            <div className="print-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
-              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
-            </div>
-            <div className="print-title">
-              <h1>{serviceData.name || 'Orden de Servicio'}</h1>
-              <p>{serviceData.day_of_week} {serviceData.date && formatDateES(new Date(serviceData.date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })} {serviceData.time && `• ${serviceData.time}`}</p>
-              <div className="print-team-info">
-                {serviceData.coordinators?.main && (
-                  <span><span className="print-team-label">Coordinador:</span> {serviceData.coordinators.main}</span>
-                )}
-                {serviceData.ujieres?.main && (
-                  <>
-                    <span style={{ color: '#9ca3af' }}>/</span>
-                    <span><span className="print-team-label">Ujier:</span> {serviceData.ujieres.main}</span>
-                  </>
-                )}
-                {serviceData.sound?.main && (
-                  <>
-                    <span style={{ color: '#9ca3af' }}>/</span>
-                    <span><span className="print-team-label">Sonido:</span> {serviceData.sound.main}</span>
-                  </>
-                )}
-                {serviceData.luces?.main && (
-                  <>
-                    <span style={{ color: '#9ca3af' }}>/</span>
-                    <span><span className="print-team-label">Luces:</span> {serviceData.luces.main}</span>
-                  </>
-                )}
-                {serviceData.fotografia?.main && (
-                  <>
-                    <span style={{ color: '#9ca3af' }}>/</span>
-                    <span className="print-team-label">Foto:</span> {serviceData.fotografia.main}
-                  </>
-                )}
+            <div className="print-header" style={{ position: 'relative' }}>
+              <div className="print-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
+              </div>
+              <div className="print-title">
+                <h1>{serviceData.name || 'Orden de Servicio'}</h1>
+                <p>{serviceData.day_of_week} {serviceData.date && formatDateES(new Date(serviceData.date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })} {serviceData.time && `• ${serviceData.time}`}</p>
+                <div className="print-team-info">
+                  {serviceData.coordinators?.main && <span><span className="print-team-label">Coordinador:</span> {serviceData.coordinators.main}</span>}
+                  {serviceData.ujieres?.main && (<><span style={{ color: '#9ca3af' }}>/</span><span><span className="print-team-label">Ujier:</span> {serviceData.ujieres.main}</span></>)}
+                  {serviceData.sound?.main && (<><span style={{ color: '#9ca3af' }}>/</span><span><span className="print-team-label">Sonido:</span> {serviceData.sound.main}</span></>)}
+                  {serviceData.luces?.main && (<><span style={{ color: '#9ca3af' }}>/</span><span><span className="print-team-label">Luces:</span> {serviceData.luces.main}</span></>)}
+                  {serviceData.fotografia?.main && (<><span style={{ color: '#9ca3af' }}>/</span><span className="print-team-label">Foto:</span> {serviceData.fotografia.main}</>)}
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className="print-body-content">
-            {(() => {
-              let currentTime = serviceData.time ? parse(serviceData.time, 'HH:mm', new Date()) : null;
-
-              return serviceData.segments.map((seg, idx) => {
-                const startTimeStr = currentTime ? format(currentTime, 'h:mm a') : '';
-                if (currentTime && seg.duration) {
-                  currentTime = addMinutes(currentTime, seg.duration);
-                }
-
-                const getData = (field) => getSegmentData(seg, field);
-                const segmentType = seg.type || getData('type') || 'Especial';
-                const isWorship = ['Alabanza', 'worship'].includes(segmentType);
-                const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
-                const isOffering = ['Ofrenda', 'offering'].includes(segmentType);
-
-                const leader = isWorship ? getData('leader') : null;
-                const preacher = isMessage ? getData('preacher') : null;
-                const presenter = (!isWorship && !isMessage) ? getData('presenter') : null;
-
-                const translator = getData('translator');
-                const songs = isWorship ? (getData('songs') || seg.songs) : null;
-                const messageTitle = isMessage ? getData('messageTitle') : null;
-                const verse = (isMessage || isOffering) ? getData('verse') : null;
-                const description = getData('description');
-                const description_details = getData('description_details');
-                const coordinator_notes = getData('coordinator_notes');
-                const projection_notes = getData('projection_notes');
-                const sound_notes = getData('sound_notes');
-                const ushers_notes = getData('ushers_notes');
-
-                return (
-                  <div key={idx} className="print-segment">
-                    <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-                      {segmentType === 'Especial' && (
-                        <Sparkles 
-                          size={11 * activePrintSettingsPage1.titleFontScale} 
-                          color="#f59e0b" 
-                          fill="#fef3c7"
-                          style={{ marginRight: '6px' }} 
-                        />
+            <div className="print-body-content">
+              {(() => {
+                let currentTime = serviceData.time ? parse(serviceData.time, 'HH:mm', new Date()) : null;
+                return serviceData.segments.map((seg, idx) => {
+                  const startTimeStr = currentTime ? format(currentTime, 'h:mm a') : '';
+                  if (currentTime && seg.duration) currentTime = addMinutes(currentTime, seg.duration);
+                  const getData = (field) => getSegmentData(seg, field);
+                  const segmentType = seg.type || getData('type') || 'Especial';
+                  const isWorship = ['Alabanza', 'worship'].includes(segmentType);
+                  const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
+                  const isOffering = ['Ofrenda', 'offering'].includes(segmentType);
+                  const leader = isWorship ? getData('leader') : null;
+                  const preacher = isMessage ? getData('preacher') : null;
+                  const presenter = (!isWorship && !isMessage) ? getData('presenter') : null;
+                  const translator = getData('translator');
+                  const songs = isWorship ? (getData('songs') || seg.songs) : null;
+                  const messageTitle = isMessage ? getData('messageTitle') : null;
+                  const verse = (isMessage || isOffering) ? getData('verse') : null;
+                  const description = getData('description');
+                  const description_details = getData('description_details');
+                  const coordinator_notes = getData('coordinator_notes');
+                  const projection_notes = getData('projection_notes');
+                  const sound_notes = getData('sound_notes');
+                  const ushers_notes = getData('ushers_notes');
+                  return (
+                    <div key={idx} className="print-segment">
+                      <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                        {segmentType === 'Especial' && <Sparkles size={11 * activePrintSettingsPage1.titleFontScale} color="#f59e0b" fill="#fef3c7" style={{ marginRight: '6px' }} />}
+                        <span className="print-segment-title">
+                          {startTimeStr && <span className="print-segment-time">{startTimeStr}</span>}
+                          {seg.title || 'Sin título'}
+                        </span>
+                        {seg.duration && <span className="print-duration" style={{ marginLeft: '4px' }}>({seg.duration} min)</span>}
+                      </div>
+                      {leader && <div className="print-segment-detail">Dirige: <span className="print-name-blue">{leader}</span></div>}
+                      {preacher && <div className="print-segment-detail"><span className="print-name-blue">{preacher}</span></div>}
+                      {presenter && !leader && !preacher && <div className="print-segment-detail"><span className="print-name-blue">{presenter}</span></div>}
+                      {translator && <div className="print-segment-detail print-note-text">🌐 {translator}</div>}
+                      {songs && Array.isArray(songs) && songs.filter(s => s.title).length > 0 && (
+                        <div className="print-segment-songs">{songs.filter(s => s.title).map((song, sIdx) => <div key={sIdx}>- {song.title} {song.lead && `(${song.lead})`}</div>)}</div>
                       )}
-                      <span className="print-segment-title">
-                        {startTimeStr && <span className="print-segment-time">{startTimeStr}</span>}
-                        {seg.title || 'Sin título'}
-                      </span>
-                      {seg.duration && <span className="print-duration" style={{ marginLeft: '4px' }}>({seg.duration} min)</span>}
+                      {messageTitle && <div className="print-segment-detail print-note-text">{messageTitle}</div>}
+                      {verse && <div className="print-segment-detail print-note-text">📖 {verse}</div>}
+                      {description && <div className="print-note-general-info">{description}</div>}
+                      {description_details && <div className="print-note-general-info"><strong style={{ display: 'block', marginBottom: '2px', color: '#111827', textTransform: 'uppercase', fontSize: '0.9em' }}>📝 Notas Generales:</strong>{description_details}</div>}
+                      {coordinator_notes && <div className="print-note-projection-team"><strong>📋 Coord:</strong> {coordinator_notes}</div>}
+                      {projection_notes && <div className="print-note-projection-team"><strong>📽️ Proyección:</strong> {projection_notes}</div>}
+                      {sound_notes && <div className="print-note-sound-team"><strong>🔊 Sonido:</strong> {sound_notes}</div>}
+                      {ushers_notes && <div className="print-note-ushers-team"><strong>🤝 Ujieres:</strong> {ushers_notes}</div>}
                     </div>
-
-                    {leader && <div className="print-segment-detail">Dirige: <span className="print-name-blue">{leader}</span></div>}
-                    {preacher && <div className="print-segment-detail"><span className="print-name-blue">{preacher}</span></div>}
-                    {presenter && !leader && !preacher && <div className="print-segment-detail"><span className="print-name-blue">{presenter}</span></div>}
-                    {translator && <div className="print-segment-detail print-note-text">🌐 {translator}</div>}
-
-                    {songs && Array.isArray(songs) && songs.filter(s => s.title).length > 0 && (
-                      <div className="print-segment-songs">
-                        {songs.filter(s => s.title).map((song, sIdx) => (
-                          <div key={sIdx}>- {song.title} {song.lead && `(${song.lead})`}</div>
-                        ))}
-                      </div>
-                    )}
-
-                    {messageTitle && <div className="print-segment-detail print-note-text">{messageTitle}</div>}
-                    {verse && <div className="print-segment-detail print-note-text">📖 {verse}</div>}
-                    {description && <div className="print-note-general-info">{description}</div>}
-                    {description_details && (
-                      <div className="print-note-general-info">
-                        <strong style={{ display: 'block', marginBottom: '2px', color: '#111827', textTransform: 'uppercase', fontSize: '0.9em' }}>📝 Notas Generales:</strong>
-                        {description_details}
-                      </div>
-                    )}
-
-                    {coordinator_notes && <div className="print-note-projection-team"><strong>📋 Coord:</strong> {coordinator_notes}</div>}
-                    {projection_notes && <div className="print-note-projection-team"><strong>📽️ Proyección:</strong> {projection_notes}</div>}
-                    {sound_notes && <div className="print-note-sound-team"><strong>🔊 Sonido:</strong> {sound_notes}</div>}
-                    {ushers_notes && <div className="print-note-ushers-team"><strong>🤝 Ujieres:</strong> {ushers_notes}</div>}
-                  </div>
-                );
-              });
-            })()}
+                  );
+                });
+              })()}
+            </div>
           </div>
-        </div>
-          <div className="print-footer">
-            ¡Atrévete a cambiar!
-          </div>
+          <div className="print-footer">¡Atrévete a cambiar!</div>
         </div>
       )}
 
-      {/* Print Layout - Announcements ONLY */}
+      {/* PRINT: Announcements Only */}
       {printMode === 'announcements' && (
-        <div className="hidden print:block" style={{ pageBreakAfter: 'auto' }}>
+        <div className="screen:hidden print:block">
           <div className="print-page-2-wrapper">
             <div className="print-announcements">
-              {/* Header */}
               <div className="print-announcements-header" style={{ position: 'relative' }}>
                 <div className="print-announcements-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
                   <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
                 </div>
-                <div style={{ textAlign: 'center', paddingLeft: '0', paddingRight: '0' }}>
+                <div style={{ textAlign: 'center' }}>
                   <div className="print-announcements-title">ANUNCIOS</div>
                   <p>{serviceData.day_of_week} {serviceData.date && formatDateES(new Date(serviceData.date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
                 </div>
               </div>
-
-              {/* Two Column Body */}
               <div className="print-announcements-body">
                 <div className="print-announcement-list">
-                  {/* Left Column: Fixed */}
                   <div className="print-announcements-column-left">
-                    {selectedFixed.length > 0 && selectedFixed.map((ann) => {
-                      const sanitize = (html) => {
-                        if (!html) return '';
-                        return html.replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
-                      };
+                    {selectedFixed.map((ann) => {
+                      const sanitize = (html) => html ? html.replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '').replace(/&nbsp;/g, ' ') : '';
                       return (
                         <div key={ann.id} className="print-announcement-item">
                           <div className="print-announcement-title">{ann.title}</div>
-                          {ann.content && (
-                            <div 
-                              className="print-announcement-content"
-                              dangerouslySetInnerHTML={{ __html: sanitize(ann.content) }}
-                            />
-                          )}
-                          {ann.instructions && (
-                            <div 
-                              className="print-announcement-instructions"
-                              dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }}
-                            />
-                          )}
-                          {ann.has_video && (
-                            <div style={{ fontSize: '8pt', color: '#8b5cf6', marginTop: '2pt' }}>📹 Video</div>
-                          )}
+                          {ann.content && <div className="print-announcement-content" dangerouslySetInnerHTML={{ __html: sanitize(ann.content) }} />}
+                          {ann.instructions && <div className="print-announcement-instructions" dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }} />}
+                          {ann.has_video && <div style={{ fontSize: '8pt', color: '#8b5cf6', marginTop: '2pt' }}>📹 Video</div>}
                         </div>
                       );
                     })}
                   </div>
-
-                  {/* Right Column: Dynamic */}
                   <div className="print-events-column-right">
                     {selectedDynamic.length > 0 && (
                       <>
                         <div className="print-events-header">Próximos Eventos</div>
                         {selectedDynamic.map((ann) => {
-                          const sanitize = (html) => {
-                            if (!html) return '';
-                            return html.replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
-                          };
+                          const sanitize = (html) => html ? html.replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '').replace(/&nbsp;/g, ' ') : '';
                           const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
                           const isEmphasized = ann.emphasize || ann.category === 'Urgent';
                           return (
                             <div key={ann.id} className={`print-event-compact ${isEmphasized ? 'print-event-emphasized' : ''}`}>
                               <div className="print-event-title">{ann.isEvent ? ann.name : ann.title}</div>
-                              {(ann.date_of_occurrence || ann.start_date) && (
-                                <div className="print-event-date">
-                                  {ann.date_of_occurrence || ann.start_date}
-                                  {ann.end_date && ` — ${ann.end_date}`}
-                                </div>
-                              )}
-                              {content && (
-                                <div 
-                                  className="print-event-content"
-                                  dangerouslySetInnerHTML={{ __html: sanitize(content) }}
-                                />
-                              )}
-                              {ann.instructions && (
-                                <div 
-                                  className="print-announcement-instructions"
-                                  dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }}
-                                />
-                              )}
-                              {(ann.has_video || ann.announcement_has_video) && (
-                                <div style={{ fontSize: '8pt', color: '#8b5cf6', marginTop: '2pt' }}>📹 Video</div>
-                              )}
+                              {(ann.date_of_occurrence || ann.start_date) && <div className="print-event-date">{ann.date_of_occurrence || ann.start_date}{ann.end_date && ` — ${ann.end_date}`}</div>}
+                              {content && <div className="print-event-content" dangerouslySetInnerHTML={{ __html: sanitize(content) }} />}
+                              {ann.instructions && <div className="print-announcement-instructions" dangerouslySetInnerHTML={{ __html: sanitize(ann.instructions) }} />}
+                              {(ann.has_video || ann.announcement_has_video) && <div style={{ fontSize: '8pt', color: '#8b5cf6', marginTop: '2pt' }}>📹 Video</div>}
                             </div>
                           );
                         })}
@@ -1468,11 +1375,7 @@ export default function CustomServiceBuilder() {
               </div>
             </div>
           </div>
-
-          {/* Footer */}
-          <div className="print-footer">
-            ¡Atrévete a cambiar!
-          </div>
+          <div className="print-footer">¡Atrévete a cambiar!</div>
         </div>
       )}
 
