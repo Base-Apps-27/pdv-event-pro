@@ -944,9 +944,7 @@ export default function CustomServiceBuilder() {
           }
 
           .print-announcements {
-            page-break-before: always;
-            break-before: page;
-            padding-bottom: 28pt;
+            padding-bottom: 0;
           }
 
 
