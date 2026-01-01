@@ -664,8 +664,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
   return (
     <>
       <div className="print-only-container" style={{ display: 'none' }}>
-        {isCustomService ? renderCustomPreview() : renderStandardPreview()}
-        {renderPage2()}
+        {activePage === "page1" ? (isCustomService ? renderCustomPreview() : renderStandardPreview()) : renderPage2()}
       </div>
 
       <Dialog open={open} onOpenChange={onOpenChange}>

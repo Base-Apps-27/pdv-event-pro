@@ -437,28 +437,8 @@ export default function CustomServiceBuilder() {
     }));
   };
 
-  const handlePrint = async () => {
-    const { pdf } = await import('@react-pdf/renderer');
-    const { buildServicePrintModel } = await import('@/components/utils/buildServicePrintModel');
-    const CustomServicePdfDocument = (await import('@/components/pdf/CustomServicePdfDocument')).default;
-    
-    const printModel = buildServicePrintModel(serviceData, allAnnouncements, {
-      page1Scale: activePrintSettingsPage1.bodyFontScale,
-      page2Scale: activePrintSettingsPage2.bodyFontScale
-    });
-    
-    if (!printModel) {
-      alert('Error: No se pudo generar el modelo de impresión');
-      return;
-    }
-    
-    const blob = await pdf(<CustomServicePdfDocument model={printModel} />).toBlob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${printModel.serviceName || 'Orden_de_Servicio'}_${printModel.dateISO}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handlePrint = () => {
+    window.print();
   };
 
   const addSegment = () => {
@@ -746,12 +726,21 @@ export default function CustomServiceBuilder() {
           }
 
           .print-page-1-wrapper {
-            padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} ${activePrintSettingsPage1.margins.bottom} ${activePrintSettingsPage1.margins.left};
+            padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} calc(${activePrintSettingsPage1.margins.bottom} + 24pt) ${activePrintSettingsPage1.margins.left};
           }
 
           .print-page-2-wrapper {
-            page-break-before: always;
-            padding: ${activePrintSettingsPage2.margins.top} ${activePrintSettingsPage2.margins.right} ${activePrintSettingsPage2.margins.bottom} ${activePrintSettingsPage2.margins.left};
+            padding: ${activePrintSettingsPage2.margins.top} ${activePrintSettingsPage2.margins.right} calc(${activePrintSettingsPage2.margins.bottom} + 24pt) ${activePrintSettingsPage2.margins.left};
+          }
+          
+          .print-body-content {
+            transform: scale(${activePrintSettingsPage1.globalScale});
+            transform-origin: top left;
+          }
+
+          .print-announcements-body {
+            transform: scale(${activePrintSettingsPage2.globalScale});
+            transform-origin: top left;
           }
           
           * {
@@ -942,10 +931,9 @@ export default function CustomServiceBuilder() {
           }
 
           .print-announcements {
-            padding-bottom: 0;
+            break-before: page;
+            padding-bottom: 28pt;
           }
-
-
 
           .print-announcements-logo {
             position: absolute;
@@ -1110,7 +1098,11 @@ export default function CustomServiceBuilder() {
           }
 
           .print-footer {
-            position: static;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
             height: 20pt;
             background: linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%) !important;
             -webkit-print-color-adjust: exact !important;
@@ -1352,14 +1344,10 @@ export default function CustomServiceBuilder() {
               });
             })()}
           </div>
-          
-          <div className="print-footer">
-            ¡Atrévete a cambiar!
-          </div>
         </div>
 
         {/* PAGE 2 - Announcements */}
-        {(selectedFixed.length > 0 || selectedDynamic.length > 0) && (
+        {selectedAnnouncementsForPrint.length > 0 && (
           <div className="print-page-2-wrapper">
             <div className="print-announcements">
               <div className="print-announcements-header" style={{ position: 'relative' }}>
@@ -1441,12 +1429,12 @@ export default function CustomServiceBuilder() {
                 </div>
               </div>
             </div>
-            
-            <div className="print-footer">
-              ¡Atrévete a cambiar!
-            </div>
           </div>
         )}
+
+        <div className="print-footer">
+          ¡Atrévete a cambiar!
+        </div>
       </div>
 
       {/* Screen UI */}
