@@ -437,8 +437,28 @@ export default function CustomServiceBuilder() {
     }));
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    const { pdf } = await import('@react-pdf/renderer');
+    const { buildServicePrintModel } = await import('@/components/utils/buildServicePrintModel');
+    const CustomServicePdfDocument = (await import('@/components/pdf/CustomServicePdfDocument')).default;
+    
+    const printModel = buildServicePrintModel(serviceData, allAnnouncements, {
+      page1Scale: activePrintSettingsPage1.bodyFontScale,
+      page2Scale: activePrintSettingsPage2.bodyFontScale
+    });
+    
+    if (!printModel) {
+      alert('Error: No se pudo generar el modelo de impresión');
+      return;
+    }
+    
+    const blob = await pdf(<CustomServicePdfDocument model={printModel} />).toBlob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${printModel.serviceName || 'Orden_de_Servicio'}_${printModel.dateISO}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const addSegment = () => {
