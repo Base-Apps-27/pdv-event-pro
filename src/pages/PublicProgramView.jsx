@@ -382,10 +382,20 @@ export default function PublicProgramView() {
         return false;
       }
     }
-    // Note: For Events, we'd need to check the specific day's date, 
-    // but simplified logic assumes if you're looking at the event view live, it's relevant.
-    // However, strictly speaking, we should verify date there too. 
-    // Given the prompt focuses on "Sunday service in 3 days says in progress", the service check is critical.
+    
+    // Check if the event session date is today
+    if (viewType === 'event' && sessions.length > 0) {
+      const firstSession = sessions[0];
+      if (firstSession?.date) {
+        const sessionDate = getLocalDateAtMidnight(firstSession.date);
+        const today = new Date(now);
+        today.setHours(0,0,0,0);
+        
+        if (sessionDate.getTime() !== today.getTime()) {
+          return false;
+        }
+      }
+    }
 
     const [startHours, startMinutes] = segment.start_time.split(':').map(Number);
     const [endHours, endMinutes] = segment.end_time.split(':').map(Number);
@@ -428,6 +438,17 @@ export default function PublicProgramView() {
       const today = new Date(currentTime);
       today.setHours(0,0,0,0);
       if (serviceDate.getTime() !== today.getTime()) return false;
+    }
+    
+    // Date check for event
+    if (viewType === 'event' && sessions.length > 0) {
+      const firstSession = sessions[0];
+      if (firstSession?.date) {
+        const sessionDate = getLocalDateAtMidnight(firstSession.date);
+        const today = new Date(currentTime);
+        today.setHours(0,0,0,0);
+        if (sessionDate.getTime() !== today.getTime()) return false;
+      }
     }
 
     const nextSegment = getNextSegment(allSegments);
