@@ -13,9 +13,10 @@ import { normalizeName } from "@/components/utils/textNormalization";
 import StructuredVersesModal from "@/components/service/StructuredVersesModal";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
-import LiveAdminControls from "@/components/service/LiveAdminControls";
 import { hasPermission } from "@/components/utils/permissions";
 import { useSegmentNotifications } from "@/components/service/useSegmentNotifications";
+import ServiceProgramView from "@/components/service/ServiceProgramView";
+import EventProgramView from "@/components/service/EventProgramView";
 
 export default function PublicProgramView() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -41,17 +42,17 @@ export default function PublicProgramView() {
   const preloadedServiceId = urlParams.get('serviceId') || "";
   const preloadedDate = urlParams.get('date') || "";
   
+  // Top-level state for view type selection and entity selection
   const [viewType, setViewType] = useState(preloadedServiceId || preloadedDate ? "service" : "event");
   const [selectedEventId, setSelectedEventId] = useState(preloadedEventId);
   const [selectedServiceId, setSelectedServiceId] = useState(preloadedServiceId);
-  const [selectedSessionId, setSelectedSessionId] = useState("all");
-  const [viewMode, setViewMode] = useState("simple"); // "simple" or "full"
-  const [expandedSegments, setExpandedSegments] = useState({});
-  const [expandedSessions, setExpandedSessions] = useState({});
   const [showEventDetails, setShowEventDetails] = useState(false);
+  
+  // Shared state for both views
   const [currentTime, setCurrentTime] = useState(new Date());
   const [versesModalOpen, setVersesModalOpen] = useState(false);
   const [versesModalData, setVersesModalData] = useState({ parsedData: null, rawText: "" });
+  const [expandedSegments, setExpandedSegments] = useState({}); // Still needed for verse modal callback compatibility
 
   // Helper to parse date strings as local timezone dates at midnight
   const getLocalDateAtMidnight = (dateString) => {
@@ -484,34 +485,10 @@ export default function PublicProgramView() {
     };
   };
 
+  // Helper functions shared across views
   const getRoomName = (roomId) => {
     const room = rooms.find(r => r.id === roomId);
     return room ? room.name : "";
-  };
-
-  const normalizeSongs = (segment) => {
-    // 1. Prefer existing songs array (Sunday services)
-    if (segment.songs && Array.isArray(segment.songs) && segment.songs.length > 0) {
-      return segment.songs;
-    }
-    
-    // 2. Fallback to flat fields (Custom services / Segment entities)
-    // Check both root level and .data property just in case
-    const songs = [];
-    const getField = (field) => segment[field] || segment.data?.[field];
-    
-    // Check up to 6 songs (standard max)
-    for (let i = 1; i <= 6; i++) {
-      const title = getField(`song_${i}_title`);
-      if (title) {
-        songs.push({
-          title,
-          lead: getField(`song_${i}_lead`),
-          key: getField(`song_${i}_key`)
-        });
-      }
-    }
-    return songs;
   };
 
   const toggleSegmentExpanded = (segmentId) => {
@@ -519,57 +496,6 @@ export default function PublicProgramView() {
       ...prev,
       [segmentId]: !prev[segmentId]
     }));
-  };
-
-  const toggleSessionExpanded = (sessionId) => {
-    setExpandedSessions(prev => ({
-      ...prev,
-      [sessionId]: !prev[sessionId]
-    }));
-  };
-
-  const sessionColorClasses = {
-    green: 'border-l-4 border-pdv-green',
-    blue: 'border-l-4 border-blue-500',
-    pink: 'border-l-4 border-pink-500',
-    orange: 'border-l-4 border-orange-500',
-    yellow: 'border-l-4 border-yellow-400',
-    purple: 'border-l-4 border-purple-500',
-    red: 'border-l-4 border-red-500',
-  };
-
-  const getSegmentActions = (segment) => {
-    // CustomServiceBuilder stores in 'actions', Session entities use 'segment_actions'
-    const rawActions = segment?.actions || segment?.segment_actions || [];
-    
-    // HOTFIX: Filter out "Mensaje" actions that were incorrectly merged into "Special" segments
-    const isSpecial = ['Especial', 'Special', 'special'].includes(segment.segment_type || segment.type || segment.data?.type || segment.data?.segment_type);
-    
-    if (isSpecial) {
-      return rawActions.filter(action => {
-        const label = (action.label || '').toLowerCase();
-        // Filter out specific message closure actions
-        if (label.includes('pianista sube') || label.includes('equipo de a&a sube')) return false;
-        return true;
-      });
-    }
-    
-    return rawActions;
-  };
-
-  const departmentColors = {
-    Admin: "bg-orange-50 border-orange-200 text-orange-700",
-    MC: "bg-blue-50 border-blue-200 text-blue-700",
-    Sound: "bg-red-50 border-red-200 text-red-700",
-    Projection: "bg-purple-50 border-purple-200 text-purple-700",
-    Hospitality: "bg-pink-50 border-pink-200 text-pink-700",
-    Ujieres: "bg-green-50 border-green-200 text-green-700",
-    Kids: "bg-yellow-50 border-yellow-200 text-yellow-700",
-    Coordinador: "bg-orange-50 border-orange-200 text-orange-700",
-    "Stage & Decor": "bg-purple-50 border-purple-200 text-purple-700",
-    Alabanza: "bg-green-50 border-green-200 text-green-700",
-    Translation: "bg-purple-50 border-purple-200 text-purple-700",
-    Other: "bg-gray-50 border-gray-200 text-gray-700"
   };
 
   const getSegmentDomId = (segment) => {
@@ -942,8 +868,50 @@ export default function PublicProgramView() {
               </Card>
             )}
 
-            {/* Weekly Services Display (for Service view type) */}
+            {/* Service Program View (Weekly and Custom Services) */}
             {viewType === "service" && actualServiceData && (
+              <ServiceProgramView
+                actualServiceData={actualServiceData}
+                currentTime={currentTime}
+                isSegmentCurrent={isSegmentCurrent}
+                isSegmentUpcoming={isSegmentUpcoming}
+                toggleSegmentExpanded={toggleSegmentExpanded}
+                onOpenVerses={(data) => {
+                  setVersesModalData({
+                    parsedData: data.parsedData,
+                    rawText: data.rawText
+                  });
+                  setVersesModalOpen(true);
+                }}
+                scrollToSegment={scrollToSegment}
+              />
+            )}
+
+            {/* Event Program View */}
+            {viewType === "event" && selectedEvent && (
+              <EventProgramView
+                selectedEvent={selectedEvent}
+                eventSessions={eventSessions}
+                allSegments={allSegments}
+                currentUser={currentUser}
+                currentTime={currentTime}
+                isSegmentCurrent={isSegmentCurrent}
+                isSegmentUpcoming={isSegmentUpcoming}
+                onOpenVerses={(data) => {
+                  setVersesModalData({
+                    parsedData: data.parsedData,
+                    rawText: data.rawText
+                  });
+                  setVersesModalOpen(true);
+                }}
+                scrollToSegment={scrollToSegment}
+                refetchData={refetchData}
+                getRoomName={getRoomName}
+              />
+            )}
+
+            {/* Legacy rendering - Remove after confirming above works */}
+            {false && viewType === "service" && actualServiceData && (
               // Check for CustomServiceBuilder format (segments array)
               (actualServiceData.segments && actualServiceData.segments.length > 0) ? (
               <div className="space-y-6">
@@ -1195,8 +1163,8 @@ export default function PublicProgramView() {
                               )
                               )}
 
-            {/* Sessions Display (for Event view type) */}
-            {viewType === "event" && (
+            {/* Legacy Event Display - Remove after confirming EventProgramView works */}
+            {false && viewType === "event" && (
             <div className="space-y-6">
               {/* Live Status Card for Events */}
               <LiveStatusCard 
