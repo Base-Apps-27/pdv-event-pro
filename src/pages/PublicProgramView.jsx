@@ -233,13 +233,11 @@ export default function PublicProgramView() {
     refetchInterval: 5000,
   });
 
-  // Fetch segments for selected sessions
+  // Fetch segments for selected sessions (fetch all, child components filter)
   const { data: allSegments = [], refetch: refetchSegments } = useQuery({
-    queryKey: ['segments', selectedEventId, selectedServiceId, selectedSessionId, viewType],
+    queryKey: ['segments', selectedEventId, selectedServiceId, viewType],
     queryFn: async () => {
-      const sessionIds = selectedSessionId === "all" 
-        ? sessions.map(s => s.id)
-        : [selectedSessionId];
+      const sessionIds = sessions.map(s => s.id);
       
       if (sessionIds.length === 0) return [];
       
