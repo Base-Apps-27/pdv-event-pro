@@ -1220,7 +1220,7 @@ export default function CustomServiceBuilder() {
             <Printer className="w-4 h-4" />
             Anuncios (Old)
           </Button>
-          {/* NEW PRINT BUTTONS - Dedicated Routes */}
+          {/* NEW PRINT BUTTONS - Dedicated Routes (Safari-compatible) */}
           <Button
             variant="default"
             onClick={() => {
@@ -1228,7 +1228,9 @@ export default function CustomServiceBuilder() {
                 alert('Debes guardar el servicio primero antes de imprimir');
                 return;
               }
-              window.open(`/print/custom-program/${serviceId}`, '_blank');
+              // CRITICAL: Use query param format (?id=xxx) to match print page's useSearchParams
+              // Safari-compatible: window.open with _blank is reliable for print workflows
+              window.open(`/print/custom-program?id=${serviceId}`, '_blank');
             }}
             style={tealStyle}
             className="gap-2 font-semibold"
@@ -1248,7 +1250,9 @@ export default function CustomServiceBuilder() {
                 alert('Debes seleccionar anuncios primero');
                 return;
               }
-              window.open(`/print/custom-announcements/${serviceId}`, '_blank');
+              // CRITICAL: Use query param format (?id=xxx) to match print page's useSearchParams
+              // Safari-compatible: window.open with _blank is reliable for print workflows
+              window.open(`/print/custom-announcements?id=${serviceId}`, '_blank');
             }}
             style={tealStyle}
             className="gap-2 font-semibold"
