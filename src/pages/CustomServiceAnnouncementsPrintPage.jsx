@@ -30,6 +30,7 @@ export default function CustomServiceAnnouncementsPrintPage() {
   const [searchParams] = useSearchParams();
   const serviceId = searchParams.get('id');
   
+  const [authReady, setAuthReady] = useState(false);
   const [service, setService] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
   const [fetchError, setFetchError] = useState(null);
@@ -47,8 +48,31 @@ export default function CustomServiceAnnouncementsPrintPage() {
     titleFontScale: 1.0
   };
 
-  // Fetch service and announcements
+  // CRITICAL: Check authentication before fetching data
+  // Print routes require auth to access user-specific service data
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const authenticated = await base44.auth.isAuthenticated();
+        if (!authenticated) {
+          // Redirect to login with clean from_url (prevents infinite nesting)
+          const currentUrl = window.location.pathname + window.location.search;
+          window.location.href = `/login?from_url=${encodeURIComponent(currentUrl)}`;
+          return;
+        }
+        setAuthReady(true);
+      } catch (err) {
+        console.error('[PRINT] Auth check failed:', err);
+        setFetchError('Authentication required');
+      }
+    };
+    checkAuth();
+  }, []);
+
+  // Fetch service and announcements ONLY after auth is confirmed ready
+  useEffect(() => {
+    if (!authReady) return;
+
     const fetchData = async () => {
       try {
         if (!serviceId) {
@@ -79,7 +103,7 @@ export default function CustomServiceAnnouncementsPrintPage() {
     };
 
     fetchData();
-  }, [serviceId]);
+  }, [authReady, serviceId]);
 
   const initialSettings = service?.print_settings_page2 || DEFAULT_SETTINGS;
 

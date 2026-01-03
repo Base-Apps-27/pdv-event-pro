@@ -32,6 +32,7 @@ export default function CustomServiceProgramPrintPage() {
   const [searchParams] = useSearchParams();
   const serviceId = searchParams.get('id');
   
+  const [authReady, setAuthReady] = useState(false);
   const [service, setService] = useState(null);
   const [fetchError, setFetchError] = useState(null);
   const contentRef = useRef(null);
@@ -49,8 +50,31 @@ export default function CustomServiceProgramPrintPage() {
     titleFontScale: 1.0
   };
 
-  // Fetch service data
+  // CRITICAL: Check authentication before fetching data
+  // Print routes require auth to access user-specific service data
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const authenticated = await base44.auth.isAuthenticated();
+        if (!authenticated) {
+          // Redirect to login with clean from_url (prevents infinite nesting)
+          const currentUrl = window.location.pathname + window.location.search;
+          window.location.href = `/login?from_url=${encodeURIComponent(currentUrl)}`;
+          return;
+        }
+        setAuthReady(true);
+      } catch (err) {
+        console.error('[PRINT] Auth check failed:', err);
+        setFetchError('Authentication required');
+      }
+    };
+    checkAuth();
+  }, []);
+
+  // Fetch service data ONLY after auth is confirmed ready
+  useEffect(() => {
+    if (!authReady) return;
+
     const fetchService = async () => {
       try {
         if (!serviceId) {
@@ -72,7 +96,7 @@ export default function CustomServiceProgramPrintPage() {
     };
 
     fetchService();
-  }, [serviceId]);
+  }, [authReady, serviceId]);
 
   // Get initial settings from service or use defaults
   const initialSettings = service?.print_settings_page1 || DEFAULT_SETTINGS;
