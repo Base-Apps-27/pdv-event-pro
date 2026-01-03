@@ -199,9 +199,34 @@ export function useAutoFitPrint(contentRef, initialSettings, onPrintComplete) {
     }
   };
 
-  // Run auto-fit on mount
+  // CRITICAL: Only run auto-fit when contentRef is ready and has content
+  // This prevents measuring null refs or empty DOM
   useEffect(() => {
-    autoFit();
+    // Wait for contentRef to be populated with actual content
+    const checkReadiness = async () => {
+      let attempts = 0;
+      const MAX_WAIT_ATTEMPTS = 20; // 2 seconds max wait
+      
+      while (attempts < MAX_WAIT_ATTEMPTS) {
+        // Check if ref exists and has measurable content
+        if (contentRef.current && contentRef.current.scrollHeight > 0) {
+          console.log('[AUTO-FIT] Content ready, starting auto-fit...');
+          await autoFit();
+          return;
+        }
+        
+        // Wait 100ms and try again
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      
+      // If we get here, content never became ready
+      console.error('[AUTO-FIT] Content not ready after waiting');
+      setError('Content failed to render');
+      setLoading(false);
+    };
+    
+    checkReadiness();
   }, []); // Only run once on mount
 
   return { loading, settings, error };
