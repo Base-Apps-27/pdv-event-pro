@@ -30,7 +30,6 @@ export default function CustomServiceAnnouncementsPrintPage() {
   const [searchParams] = useSearchParams();
   const serviceId = searchParams.get('id');
   
-  const [authReady, setAuthReady] = useState(false);
   const [service, setService] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
   const [fetchError, setFetchError] = useState(null);
@@ -48,31 +47,10 @@ export default function CustomServiceAnnouncementsPrintPage() {
     titleFontScale: 1.0
   };
 
-  // CRITICAL: Check authentication before fetching data
-  // Print routes require auth to access user-specific service data
+  // CRITICAL: Print routes are public entry points that rely on browser session cookies
+  // No explicit auth redirect - if user isn't logged in, fetch will fail with 401/403
+  // This prevents infinite redirect loops with AuthContext
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const authenticated = await base44.auth.isAuthenticated();
-        if (!authenticated) {
-          // Redirect to login with clean from_url (prevents infinite nesting)
-          const currentUrl = window.location.pathname + window.location.search;
-          window.location.href = `/login?from_url=${encodeURIComponent(currentUrl)}`;
-          return;
-        }
-        setAuthReady(true);
-      } catch (err) {
-        console.error('[PRINT] Auth check failed:', err);
-        setFetchError('Authentication required');
-      }
-    };
-    checkAuth();
-  }, []);
-
-  // Fetch service and announcements ONLY after auth is confirmed ready
-  useEffect(() => {
-    if (!authReady) return;
-
     const fetchData = async () => {
       try {
         if (!serviceId) {
@@ -80,7 +58,8 @@ export default function CustomServiceAnnouncementsPrintPage() {
           return;
         }
 
-        // Fetch service
+        // These calls use browser session cookies automatically (same-origin policy)
+        // If not authenticated, will throw 401/403 which we catch and display
         const services = await base44.entities.Service.filter({ id: serviceId });
         if (!services || services.length === 0) {
           setFetchError('Service not found');
@@ -89,7 +68,7 @@ export default function CustomServiceAnnouncementsPrintPage() {
         const svc = services[0];
         setService(svc);
 
-        // Fetch announcements (same logic as current implementation)
+        // Fetch announcements
         const allAnnouncements = await base44.entities.AnnouncementItem.list('priority');
         const selectedIds = svc.selected_announcements || [];
         const selected = allAnnouncements.filter(a => selectedIds.includes(a.id));
@@ -98,12 +77,18 @@ export default function CustomServiceAnnouncementsPrintPage() {
 
       } catch (err) {
         console.error('[PRINT PAGE] Failed to fetch data:', err);
-        setFetchError(err.message);
+        
+        // User-friendly error for auth failures
+        if (err.response?.status === 401 || err.response?.status === 403 || err.message?.includes('logged in')) {
+          setFetchError('Por favor inicia sesión en la aplicación principal primero, luego intenta imprimir nuevamente.');
+        } else {
+          setFetchError(err.message);
+        }
       }
     };
 
     fetchData();
-  }, [authReady, serviceId]);
+  }, [serviceId]);
 
   const initialSettings = service?.print_settings_page2 || DEFAULT_SETTINGS;
 

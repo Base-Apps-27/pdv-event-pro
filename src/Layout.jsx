@@ -25,8 +25,10 @@ function LayoutContent({ children }) {
 
   const isActive = (path) => location.pathname === path;
 
-  // Allow public access for PublicProgramView only (print routes require authentication)
-  const isPublicPage = location.pathname.includes('PublicProgramView');
+  // CRITICAL: PublicProgramView AND /print/ routes bypass Layout auth checks
+  // Print routes rely on browser session cookies (shared across tabs) for authentication
+  // If user isn't logged in, entity fetch will fail gracefully with 401/403
+  const isPublicPage = location.pathname.includes('PublicProgramView') || location.pathname.includes('/print/');
 
   if (isPublicPage) {
     return <div className="min-h-screen bg-gray-50">{children}</div>;
