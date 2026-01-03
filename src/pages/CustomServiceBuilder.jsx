@@ -1196,7 +1196,7 @@ export default function CustomServiceBuilder() {
             variant="outline"
             size="icon"
             onClick={() => setShowPrintSettings(true)}
-            title="Ajustes de Impresión"
+            title="Ajustes de Impresión (Legacy)"
             className="border-2 border-gray-400"
           >
             <Settings className="w-5 h-5" />
@@ -1204,21 +1204,59 @@ export default function CustomServiceBuilder() {
           <Button
             variant="outline"
             onClick={handlePrintProgram}
-            title="Imprimir Programa"
+            title="Imprimir Programa (Legacy)"
             className="border-2 border-gray-400 gap-2"
           >
             <Printer className="w-4 h-4" />
-            Programa
+            Programa (Old)
           </Button>
           <Button
             variant="outline"
             onClick={handlePrintAnnouncements}
-            title="Imprimir Anuncios"
+            title="Imprimir Anuncios (Legacy)"
             className="border-2 border-gray-400 gap-2"
             disabled={!serviceData.selected_announcements || serviceData.selected_announcements.length === 0}
           >
             <Printer className="w-4 h-4" />
-            Anuncios
+            Anuncios (Old)
+          </Button>
+          {/* NEW PRINT BUTTONS - Dedicated Routes */}
+          <Button
+            variant="default"
+            onClick={() => {
+              if (!serviceId) {
+                alert('Debes guardar el servicio primero antes de imprimir');
+                return;
+              }
+              window.open(`/print/custom-program/${serviceId}`, '_blank');
+            }}
+            style={tealStyle}
+            className="gap-2 font-semibold"
+            title="Imprimir Programa (Nuevo - Safari Compatible)"
+          >
+            <Printer className="w-4 h-4" />
+            Programa ✨
+          </Button>
+          <Button
+            variant="default"
+            onClick={() => {
+              if (!serviceId) {
+                alert('Debes guardar el servicio primero antes de imprimir');
+                return;
+              }
+              if (!serviceData.selected_announcements || serviceData.selected_announcements.length === 0) {
+                alert('Debes seleccionar anuncios primero');
+                return;
+              }
+              window.open(`/print/custom-announcements/${serviceId}`, '_blank');
+            }}
+            style={tealStyle}
+            className="gap-2 font-semibold"
+            title="Imprimir Anuncios (Nuevo - Safari Compatible)"
+            disabled={!serviceData.selected_announcements || serviceData.selected_announcements.length === 0}
+          >
+            <Printer className="w-4 h-4" />
+            Anuncios ✨
           </Button>
         </div>
       </div>
