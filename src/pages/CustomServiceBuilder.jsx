@@ -1411,9 +1411,9 @@ export default function CustomServiceBuilder() {
         language="es"
       />
 
-      {/* PRINT: Program Only */}
+      {/* PRINT: Program Only - CRITICAL: Must be visible for html2canvas capture */}
       {printMode === 'program' && (
-        <div className="screen:hidden print:block">
+        <div style={{ display: printMode === 'program' ? 'block' : 'none' }}>
           <div className="print-page-1-wrapper">
             <div className="print-header" style={{ position: 'relative' }}>
               <div className="print-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
@@ -1490,9 +1490,9 @@ export default function CustomServiceBuilder() {
         </div>
       )}
 
-      {/* PRINT: Announcements Only */}
+      {/* PRINT: Announcements Only - CRITICAL: Must be visible for html2canvas capture */}
       {printMode === 'announcements' && (
-        <div className="screen:hidden print:block">
+        <div style={{ display: printMode === 'announcements' ? 'block' : 'none' }}>
           <div className="print-page-2-wrapper">
             <div className="print-announcements">
               <div className="print-announcements-header" style={{ position: 'relative' }}>
