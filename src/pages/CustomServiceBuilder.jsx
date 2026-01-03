@@ -25,6 +25,9 @@ import { BookOpen } from "lucide-react";
 import { formatDate as formatDateES } from "date-fns";
 import { es } from "date-fns/locale";
 import { normalizeSegment, normalizeServiceTeams, getSegmentData } from "@/components/utils/segmentDataUtils";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import { Download } from "lucide-react";
 
 export default function CustomServiceBuilder() {
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
@@ -157,6 +160,7 @@ export default function CustomServiceBuilder() {
   const [highlightedSegmentId, setHighlightedSegmentId] = useState(null);
   const [verseParserOpen, setVerseParserOpen] = useState(false);
   const [verseParserContext, setVerseParserContext] = useState({ segmentIdx: null });
+  const [pdfGenerating, setPdfGenerating] = useState(false); // Track PDF generation state
 
   // Generate simple unique ID for UI tracking
   const generateUiId = () => Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
@@ -452,6 +456,148 @@ export default function CustomServiceBuilder() {
       window.print();
       setPrintMode(null);
     }, 100);
+  };
+
+  /**
+   * Generate PDF using html2canvas + jsPDF (Client-Side)
+   * 
+   * PURPOSE: Bypasses all routing/auth issues by generating PDF in the authenticated builder page
+   * FLOW:
+   * 1. Set printMode to render print layout
+   * 2. Wait for DOM to render
+   * 3. Screenshot content using html2canvas
+   * 4. Convert canvas to PNG dataURL
+   * 5. Embed PNG in jsPDF (8.5x11 letter)
+   * 6. Convert PDF to base64
+   * 7. Call backend function to download
+   * 8. Cleanup printMode
+   * 
+   * TRADEOFFS:
+   * + Works in Safari (no routing issues)
+   * + Pixel-perfect fidelity (exact match to existing print)
+   * + No auth issues (runs in authenticated context)
+   * - PDFs are images (not text-selectable)
+   * - Larger file sizes (~300-500KB vs 50KB)
+   * - 2-3 second generation time
+   */
+  const handleDownloadProgramPDF = async () => {
+    try {
+      setPdfGenerating(true);
+      
+      // Step 1: Render print layout
+      setPrintMode('program');
+      
+      // Step 2: Wait for DOM to fully render (critical for html2canvas)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Step 3: Find print content element
+      const printElement = document.querySelector('.print-page-1-wrapper');
+      if (!printElement) {
+        throw new Error('Print content not found');
+      }
+      
+      // Step 4: Screenshot to canvas (scale=2 for retina quality)
+      const canvas = await html2canvas(printElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: 8.5 * 96,  // Letter width at 96 DPI
+        height: 11 * 96   // Letter height
+      });
+      
+      // Step 5: Convert canvas to image
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Step 6: Create PDF with embedded image
+      const pdf = new jsPDF('p', 'in', 'letter');
+      pdf.addImage(imgData, 'PNG', 0, 0, 8.5, 11, '', 'FAST');
+      
+      // Step 7: Get base64 (strip data URI prefix)
+      const pdfBase64 = pdf.output('datauristring').split(',')[1];
+      
+      // Step 8: Call backend to download
+      const filename = `Programa-${serviceData.date || 'servicio'}.pdf`;
+      
+      const response = await base44.functions.invoke('downloadServicePDF', {
+        pdfBase64,
+        filename
+      });
+      
+      // Step 9: Trigger browser download
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      a.remove();
+      
+    } catch (error) {
+      console.error('[PDF GENERATION ERROR]', error);
+      alert('Error generando PDF: ' + error.message);
+    } finally {
+      setPrintMode(null);
+      setPdfGenerating(false);
+    }
+  };
+
+  /**
+   * Generate Announcements PDF using html2canvas + jsPDF
+   * Same approach as program PDF but for announcements page
+   */
+  const handleDownloadAnnouncementsPDF = async () => {
+    try {
+      setPdfGenerating(true);
+      
+      setPrintMode('announcements');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const printElement = document.querySelector('.print-page-2-wrapper');
+      if (!printElement) {
+        throw new Error('Announcements content not found');
+      }
+      
+      const canvas = await html2canvas(printElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: 8.5 * 96,
+        height: 11 * 96
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'in', 'letter');
+      pdf.addImage(imgData, 'PNG', 0, 0, 8.5, 11, '', 'FAST');
+      
+      const pdfBase64 = pdf.output('datauristring').split(',')[1];
+      const filename = `Anuncios-${serviceData.date || 'servicio'}.pdf`;
+      
+      const response = await base44.functions.invoke('downloadServicePDF', {
+        pdfBase64,
+        filename
+      });
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      a.remove();
+      
+    } catch (error) {
+      console.error('[PDF GENERATION ERROR]', error);
+      alert('Error generando PDF: ' + error.message);
+    } finally {
+      setPrintMode(null);
+      setPdfGenerating(false);
+    }
   };
 
   const addSegment = () => {
@@ -1220,47 +1366,28 @@ export default function CustomServiceBuilder() {
             <Printer className="w-4 h-4" />
             Anuncios (Old)
           </Button>
-          {/* NEW PRINT BUTTONS - Dedicated Routes (Safari-compatible) */}
+          {/* PDF DOWNLOAD BUTTONS - html2canvas approach (bypasses routing/auth issues) */}
           <Button
             variant="default"
-            onClick={() => {
-              if (!serviceId) {
-                alert('Debes guardar el servicio primero antes de imprimir');
-                return;
-              }
-              // CRITICAL: Use query param format (?id=xxx) to match print page's useSearchParams
-              // Safari-compatible: window.open with _blank is reliable for print workflows
-              window.open(`/print/custom-program?id=${serviceId}`, '_blank');
-            }}
+            onClick={handleDownloadProgramPDF}
+            disabled={pdfGenerating}
             style={tealStyle}
             className="gap-2 font-semibold"
-            title="Imprimir Programa (Nuevo - Safari Compatible)"
+            title="Descargar Programa como PDF"
           >
-            <Printer className="w-4 h-4" />
-            Programa ✨
+            <Download className="w-4 h-4" />
+            {pdfGenerating ? 'Generando...' : 'PDF Programa'}
           </Button>
           <Button
             variant="default"
-            onClick={() => {
-              if (!serviceId) {
-                alert('Debes guardar el servicio primero antes de imprimir');
-                return;
-              }
-              if (!serviceData.selected_announcements || serviceData.selected_announcements.length === 0) {
-                alert('Debes seleccionar anuncios primero');
-                return;
-              }
-              // CRITICAL: Use query param format (?id=xxx) to match print page's useSearchParams
-              // Safari-compatible: window.open with _blank is reliable for print workflows
-              window.open(`/print/custom-announcements?id=${serviceId}`, '_blank');
-            }}
+            onClick={handleDownloadAnnouncementsPDF}
+            disabled={pdfGenerating || !serviceData.selected_announcements || serviceData.selected_announcements.length === 0}
             style={tealStyle}
             className="gap-2 font-semibold"
-            title="Imprimir Anuncios (Nuevo - Safari Compatible)"
-            disabled={!serviceData.selected_announcements || serviceData.selected_announcements.length === 0}
+            title="Descargar Anuncios como PDF"
           >
-            <Printer className="w-4 h-4" />
-            Anuncios ✨
+            <Download className="w-4 h-4" />
+            {pdfGenerating ? 'Generando...' : 'PDF Anuncios'}
           </Button>
         </div>
       </div>
