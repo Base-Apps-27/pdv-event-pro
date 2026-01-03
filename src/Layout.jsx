@@ -25,9 +25,9 @@ function LayoutContent({ children }) {
 
   const isActive = (path) => location.pathname === path;
 
-  // If on PublicProgramView page, allow public access
-  const isPublicPage = location.pathname.includes('PublicProgramView');
-  
+  // Allow public access for PublicProgramView AND print routes (no auth required for printing)
+  const isPublicPage = location.pathname.includes('PublicProgramView') || location.pathname.includes('/print/');
+
   if (isPublicPage) {
     return <div className="min-h-screen bg-gray-50">{children}</div>;
   }
