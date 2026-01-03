@@ -6,7 +6,7 @@ import { getSegmentData } from '@/components/utils/segmentDataUtils';
 import { addMinutes, parse, format as formatFns } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Sparkles } from 'lucide-react';
-import '@/components/print/printStyles.css';
+
 
 /**
  * CustomServiceProgramPrintPage
@@ -159,6 +159,26 @@ export default function CustomServiceProgramPrintPage() {
 
   return (
     <>
+      <style>{`
+        @media print {
+          @page { size: letter; margin: 0 !important; }
+          html, body { margin: 0 !important; padding: 0 !important; width: 8.5in; height: auto !important; overflow: visible !important; background: white !important; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          body > *:not(.print-page-root) { display: none !important; }
+          .print-page-root { display: block !important; position: relative !important; width: 8.5in !important; height: 11in !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; page-break-after: avoid !important; page-break-inside: avoid !important; break-after: avoid !important; break-inside: avoid !important; }
+          .print-page-root * { max-height: none !important; }
+          .print-page-root::after { content: none !important; }
+          * { overflow: visible !important; }
+          .print-segment { break-inside: avoid !important; page-break-inside: avoid !important; }
+          .print-footer { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background-color: #1F8A70 !important; background-image: linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%) !important; color: white !important; }
+          .print-logo img { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .print-loading { display: none !important; }
+        }
+        @media screen {
+          .print-page-root { display: block; width: 8.5in; margin: 0 auto; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+          .print-loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; z-index: 9999; }
+        }
+      `}</style>
       <div className="print-page-root" style={{ width: `${PAGE_W}px`, height: `${PAGE_H}px`, position: 'relative', overflow: 'hidden', background: 'white' }}>
         
         {/* HEADER - Fixed, Not Scaled */}

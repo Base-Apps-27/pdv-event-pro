@@ -766,7 +766,6 @@ export default function WeeklyServiceManager() {
         sound: { "9:30am": "", "11:30am": "" },
         luces: { "9:30am": "", "11:30am": "" },
         fotografia: { "9:30am": "", "11:30am": "" },
-        fotografia: { "9:30am": "", "11:30am": "" },
         receso_notes: { "9:30am": "" },
         pre_service_notes: { "9:30am": "", "11:30am": "" },
         selected_announcements: []
