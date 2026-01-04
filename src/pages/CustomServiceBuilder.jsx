@@ -489,8 +489,25 @@ export default function CustomServiceBuilder() {
       styleElement = document.createElement('style');
       styleElement.textContent = `
         /* TEMPORARY: Force print styles during PDF generation */
+        /* CRITICAL: Base styles that @media print normally provides */
+        .pdf-capture-active body {
+          font-family: 'Inter', Helvetica, Arial, sans-serif !important;
+          background: white !important;
+          font-size: 10.5pt !important;
+          line-height: 1.3 !important;
+          color: #374151 !important;
+        }
         .pdf-capture-active .print-page-1-wrapper {
+          width: ${8.5 * 96}px !important;
+          min-height: ${11 * 96}px !important;
+          background: white !important;
+          font-family: 'Inter', Helvetica, Arial, sans-serif !important;
+          color: #374151 !important;
           padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} calc(${activePrintSettingsPage1.margins.bottom} + 24pt) ${activePrintSettingsPage1.margins.left};
+          box-sizing: border-box !important;
+        }
+        .pdf-capture-active .print-page-1-wrapper * {
+          box-sizing: border-box !important;
         }
         .pdf-capture-active .print-body-content {
           transform: scale(${activePrintSettingsPage1.globalScale});
@@ -730,8 +747,25 @@ export default function CustomServiceBuilder() {
       styleElement = document.createElement('style');
       styleElement.textContent = `
         /* TEMPORARY: Force print styles during PDF generation */
+        /* CRITICAL: Base styles that @media print normally provides */
+        .pdf-capture-active body {
+          font-family: 'Inter', Helvetica, Arial, sans-serif !important;
+          background: white !important;
+          font-size: 10.5pt !important;
+          line-height: 1.3 !important;
+          color: #374151 !important;
+        }
         .pdf-capture-active .print-page-2-wrapper {
+          width: ${8.5 * 96}px !important;
+          min-height: ${11 * 96}px !important;
+          background: white !important;
+          font-family: 'Inter', Helvetica, Arial, sans-serif !important;
+          color: #374151 !important;
           padding: ${activePrintSettingsPage2.margins.top} ${activePrintSettingsPage2.margins.right} calc(${activePrintSettingsPage2.margins.bottom} + 24pt) ${activePrintSettingsPage2.margins.left};
+          box-sizing: border-box !important;
+        }
+        .pdf-capture-active .print-page-2-wrapper * {
+          box-sizing: border-box !important;
         }
         .pdf-capture-active .print-announcements-body {
           transform: scale(${activePrintSettingsPage2.globalScale});
