@@ -481,42 +481,210 @@ export default function CustomServiceBuilder() {
    * - 2-3 second generation time
    */
   const handleDownloadProgramPDF = async () => {
+    let styleElement = null;
     try {
       setPdfGenerating(true);
       
-      // Step 1: Render print layout
+      // Step 1: Inject print styles for screen rendering (CRITICAL: @media print doesn't apply in screen context)
+      styleElement = document.createElement('style');
+      styleElement.textContent = `
+        /* TEMPORARY: Force print styles during PDF generation */
+        .pdf-capture-active .print-page-1-wrapper {
+          padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} calc(${activePrintSettingsPage1.margins.bottom} + 24pt) ${activePrintSettingsPage1.margins.left};
+        }
+        .pdf-capture-active .print-body-content {
+          transform: scale(${activePrintSettingsPage1.globalScale});
+          transform-origin: top left;
+        }
+        .pdf-capture-active .print-header {
+          position: relative;
+          text-align: center;
+          margin-bottom: 14pt;
+          padding-bottom: 8pt;
+          border-bottom: 1pt solid #e5e7eb;
+        }
+        .pdf-capture-active .print-logo {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 50px;
+          height: 50px;
+        }
+        .pdf-capture-active .print-logo img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+        .pdf-capture-active .print-title h1 {
+          font-size: calc(18pt * ${activePrintSettingsPage1.titleFontScale});
+          font-weight: 600;
+          margin: 0 0 4pt 0;
+          text-transform: uppercase;
+          color: #000000;
+          letter-spacing: 0.5px;
+        }
+        .pdf-capture-active .print-title p {
+          font-size: 11pt;
+          color: #4b5563;
+          font-weight: 400;
+          margin: 0 0 8pt 0;
+        }
+        .pdf-capture-active .print-team-info {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 4pt;
+          flex-wrap: wrap;
+          font-size: 9pt;
+          color: #4b5563;
+        }
+        .pdf-capture-active .print-team-label {
+          font-weight: 600;
+          color: #1f2937;
+        }
+        .pdf-capture-active .print-segment {
+          margin-bottom: 10pt;
+          padding-bottom: 8pt;
+          border-bottom: 1pt solid #f3f4f6;
+          font-size: calc(10.5pt * ${activePrintSettingsPage1.bodyFontScale});
+          line-height: 1.3;
+        }
+        .pdf-capture-active .print-segment:last-child {
+          border-bottom: none;
+        }
+        .pdf-capture-active .print-segment-time {
+          font-weight: 600;
+          color: #4b5563;
+          font-size: 10.5pt;
+          display: inline;
+          margin-right: 6pt;
+        }
+        .pdf-capture-active .print-segment-title {
+          font-weight: 600;
+          text-transform: uppercase;
+          font-size: calc(11pt * ${activePrintSettingsPage1.titleFontScale});
+          color: #000000;
+          letter-spacing: 0.25px;
+          display: inline;
+        }
+        .pdf-capture-active .print-segment-detail {
+          font-size: 10.5pt;
+          color: #374151;
+          line-height: 1.3;
+          margin-top: 2pt;
+          padding-left: 4pt;
+        }
+        .pdf-capture-active .print-name-blue {
+          color: #2563eb;
+          font-weight: 700;
+          font-size: 11pt;
+        }
+        .pdf-capture-active .print-duration {
+          font-size: 10pt;
+          font-weight: 400;
+          color: #6b7280;
+        }
+        .pdf-capture-active .print-note-text {
+          font-size: 9.5pt;
+          color: #6b7280;
+          font-style: italic;
+        }
+        .pdf-capture-active .print-note-general-info {
+          background-color: #f0fdf4 !important;
+          border-left: 4pt solid #16a34a !important;
+          color: #14532d !important;
+          font-size: 10pt;
+          margin-top: 4pt;
+          padding: 4pt 8pt;
+          font-style: italic;
+        }
+        .pdf-capture-active .print-note-projection-team {
+          border-left: 3pt solid #2563eb;
+          color: #1e40af;
+          font-size: 9pt;
+          margin-top: 4pt;
+          padding: 2pt 6pt;
+        }
+        .pdf-capture-active .print-note-sound-team {
+          border-left: 3pt solid #dc2626;
+          color: #991b1b;
+          font-size: 9pt;
+          margin-top: 4pt;
+          padding: 2pt 6pt;
+        }
+        .pdf-capture-active .print-note-ushers-team {
+          border-left: 3pt solid #16a34a;
+          color: #14532d;
+          font-size: 9pt;
+          margin-top: 4pt;
+          padding: 2pt 6pt;
+        }
+        .pdf-capture-active .print-segment-songs {
+          margin-top: 4pt;
+          padding-left: 4pt;
+          font-size: 10pt;
+          line-height: 1.35;
+        }
+        .pdf-capture-active .print-segment-songs div {
+          color: #374151;
+        }
+        .pdf-capture-active .print-footer {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          width: 100%;
+          height: 20pt;
+          background: linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%) !important;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white !important;
+          font-size: 9pt;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+        }
+      `;
+      document.head.appendChild(styleElement);
+      
+      // Step 2: Render print layout
       setPrintMode('program');
       
-      // Step 2: Wait for DOM to fully render (critical for html2canvas)
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Step 3: Add capture class to enable injected styles
+      document.body.classList.add('pdf-capture-active');
       
-      // Step 3: Find print content element
+      // Step 4: Wait for DOM to fully render (critical for html2canvas)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Step 5: Find print content element
       const printElement = document.querySelector('.print-page-1-wrapper');
       if (!printElement) {
         throw new Error('Print content not found');
       }
       
-      // Step 4: Screenshot to canvas (scale=2 for retina quality)
+      // Step 6: Screenshot to canvas (scale=2 for retina quality)
       const canvas = await html2canvas(printElement, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
-        logging: false,
-        width: 8.5 * 96,  // Letter width at 96 DPI
-        height: 11 * 96   // Letter height
+        logging: true, // Enable for debugging
+        width: printElement.scrollWidth,
+        height: printElement.scrollHeight,
+        windowWidth: 8.5 * 96,
+        windowHeight: 11 * 96
       });
       
-      // Step 5: Convert canvas to image
+      // Step 7: Convert canvas to image
       const imgData = canvas.toDataURL('image/png');
       
-      // Step 6: Create PDF with embedded image
+      // Step 8: Create PDF with embedded image
       const pdf = new jsPDF('p', 'in', 'letter');
       pdf.addImage(imgData, 'PNG', 0, 0, 8.5, 11, '', 'FAST');
       
-      // Step 7: Get base64 (strip data URI prefix)
+      // Step 9: Get base64 (strip data URI prefix)
       const pdfBase64 = pdf.output('datauristring').split(',')[1];
       
-      // Step 8: Call backend to download
+      // Step 10: Call backend to download
       const filename = `Programa-${serviceData.date || 'servicio'}.pdf`;
       
       const response = await base44.functions.invoke('downloadServicePDF', {
@@ -524,7 +692,7 @@ export default function CustomServiceBuilder() {
         filename
       });
       
-      // Step 9: Trigger browser download
+      // Step 11: Trigger browser download
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -539,6 +707,11 @@ export default function CustomServiceBuilder() {
       console.error('[PDF GENERATION ERROR]', error);
       alert('Error generando PDF: ' + error.message);
     } finally {
+      // CRITICAL: Cleanup injected styles and classes
+      document.body.classList.remove('pdf-capture-active');
+      if (styleElement && styleElement.parentNode) {
+        styleElement.parentNode.removeChild(styleElement);
+      }
       setPrintMode(null);
       setPdfGenerating(false);
     }
@@ -549,11 +722,180 @@ export default function CustomServiceBuilder() {
    * Same approach as program PDF but for announcements page
    */
   const handleDownloadAnnouncementsPDF = async () => {
+    let styleElement = null;
     try {
       setPdfGenerating(true);
       
+      // Step 1: Inject print styles for screen rendering (CRITICAL: @media print doesn't apply in screen context)
+      styleElement = document.createElement('style');
+      styleElement.textContent = `
+        /* TEMPORARY: Force print styles during PDF generation */
+        .pdf-capture-active .print-page-2-wrapper {
+          padding: ${activePrintSettingsPage2.margins.top} ${activePrintSettingsPage2.margins.right} calc(${activePrintSettingsPage2.margins.bottom} + 24pt) ${activePrintSettingsPage2.margins.left};
+        }
+        .pdf-capture-active .print-announcements-body {
+          transform: scale(${activePrintSettingsPage2.globalScale});
+          transform-origin: top left;
+        }
+        .pdf-capture-active .print-announcements-header {
+          position: relative;
+          text-align: center;
+          margin-bottom: 14pt;
+          padding-bottom: 8pt;
+          border-bottom: 1pt solid #e5e7eb;
+        }
+        .pdf-capture-active .print-announcements-logo {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 50px;
+          height: 50px;
+        }
+        .pdf-capture-active .print-announcements-logo img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+        .pdf-capture-active .print-announcements-title {
+          font-size: calc(18pt * ${activePrintSettingsPage2.titleFontScale});
+          font-weight: 600;
+          text-transform: uppercase;
+          margin: 0 0 4pt 0;
+          color: #000000;
+          letter-spacing: 0.5px;
+        }
+        .pdf-capture-active .print-announcements-header p {
+          font-size: 11pt;
+          font-weight: 400;
+          color: #4b5563;
+          margin: 0;
+        }
+        .pdf-capture-active .print-announcement-list {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 20pt;
+        }
+        .pdf-capture-active .print-announcements-column-left {
+          display: flex;
+          flex-direction: column;
+          gap: 8pt;
+        }
+        .pdf-capture-active .print-events-column-right {
+          display: flex;
+          flex-direction: column;
+          gap: 6pt;
+          border-left: 2pt solid #e5e7eb;
+          padding-left: 12pt;
+        }
+        .pdf-capture-active .print-events-header {
+          font-size: 9pt;
+          font-weight: 600;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 4pt;
+          padding-bottom: 4pt;
+          border-bottom: 1pt solid #e5e7eb;
+        }
+        .pdf-capture-active .print-announcement-item {
+          margin-bottom: 8pt;
+          padding-bottom: 8pt;
+          border-bottom: 1pt solid #e5e7eb;
+          font-size: calc(9.5pt * ${activePrintSettingsPage2.bodyFontScale});
+        }
+        .pdf-capture-active .print-announcement-item:last-child {
+          border-bottom: none;
+        }
+        .pdf-capture-active .print-announcement-title {
+          font-size: calc(10pt * ${activePrintSettingsPage2.titleFontScale});
+          font-weight: 600;
+          color: #000000;
+          text-transform: uppercase;
+          letter-spacing: 0.25px;
+          display: block;
+          line-height: 1.25;
+        }
+        .pdf-capture-active .print-announcement-content {
+          font-size: 9.5pt;
+          line-height: 1.3;
+          color: #374151;
+          white-space: pre-wrap;
+        }
+        .pdf-capture-active .print-announcement-instructions {
+          margin-top: 4pt;
+          font-size: 8.5pt;
+          font-style: italic;
+          color: #6b7280;
+          padding-left: 6pt;
+          border-left: 2pt solid #fbbf24;
+          line-height: 1.2;
+        }
+        .pdf-capture-active .print-announcement-instructions::before {
+          content: "CUE: ";
+          font-weight: 700;
+          font-style: normal;
+          color: #1f2937;
+          text-transform: uppercase;
+          font-size: 7.5pt;
+          letter-spacing: 0.5px;
+        }
+        .pdf-capture-active .print-event-compact {
+          display: flex;
+          flex-direction: column;
+          padding: 4pt 0;
+          border-bottom: 1pt solid #f3f4f6;
+        }
+        .pdf-capture-active .print-event-compact:last-child {
+          border-bottom: none;
+        }
+        .pdf-capture-active .print-event-compact.print-event-emphasized {
+          background: #fef3c7 !important;
+          border: 2pt solid #f59e0b !important;
+          border-radius: 4pt;
+          padding: 4pt 6pt;
+          margin-bottom: 4pt;
+        }
+        .pdf-capture-active .print-event-title {
+          font-size: 10pt;
+          font-weight: 600;
+          color: #16a34a;
+          line-height: 1.2;
+        }
+        .pdf-capture-active .print-event-date {
+          font-size: 9pt;
+          color: #4b5563;
+          font-weight: 500;
+          margin-top: 2pt;
+        }
+        .pdf-capture-active .print-event-content {
+          font-size: 9pt;
+          color: #374151;
+          line-height: 1.3;
+          margin-top: 2pt;
+          white-space: pre-wrap;
+        }
+        .pdf-capture-active .print-footer {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          width: 100%;
+          height: 20pt;
+          background: linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%) !important;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white !important;
+          font-size: 9pt;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+        }
+      `;
+      document.head.appendChild(styleElement);
+      
       setPrintMode('announcements');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      document.body.classList.add('pdf-capture-active');
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const printElement = document.querySelector('.print-page-2-wrapper');
       if (!printElement) {
@@ -564,9 +906,11 @@ export default function CustomServiceBuilder() {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
-        logging: false,
-        width: 8.5 * 96,
-        height: 11 * 96
+        logging: true,
+        width: printElement.scrollWidth,
+        height: printElement.scrollHeight,
+        windowWidth: 8.5 * 96,
+        windowHeight: 11 * 96
       });
       
       const imgData = canvas.toDataURL('image/png');
@@ -595,6 +939,11 @@ export default function CustomServiceBuilder() {
       console.error('[PDF GENERATION ERROR]', error);
       alert('Error generando PDF: ' + error.message);
     } finally {
+      // CRITICAL: Cleanup injected styles and classes
+      document.body.classList.remove('pdf-capture-active');
+      if (styleElement && styleElement.parentNode) {
+        styleElement.parentNode.removeChild(styleElement);
+      }
       setPrintMode(null);
       setPdfGenerating(false);
     }
