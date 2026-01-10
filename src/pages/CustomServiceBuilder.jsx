@@ -717,20 +717,20 @@ export default function CustomServiceBuilder() {
           }
 
           .print-page-1-wrapper {
-            padding: ${activePrintSettingsPage1.margins.top} ${activePrintSettingsPage1.margins.right} calc(${activePrintSettingsPage1.margins.bottom} + 24pt) ${activePrintSettingsPage1.margins.left};
+            padding: 0.5in 0.5in calc(0.5in + 24pt) 0.5in;
           }
 
           .print-page-2-wrapper {
-            padding: ${activePrintSettingsPage2.margins.top} ${activePrintSettingsPage2.margins.right} calc(${activePrintSettingsPage2.margins.bottom} + 24pt) ${activePrintSettingsPage2.margins.left};
+            padding: 0.5in 0.5in calc(0.5in + 24pt) 0.5in;
           }
-          
+
           .print-body-content {
-            transform: scale(${activePrintSettingsPage1.globalScale});
+            transform: scale(1.0);
             transform-origin: top left;
           }
 
           .print-announcements-body {
-            transform: scale(${activePrintSettingsPage2.globalScale});
+            transform: scale(1.0);
             transform-origin: top left;
           }
           
