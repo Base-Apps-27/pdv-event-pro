@@ -1002,7 +1002,7 @@ export default function CustomServiceBuilder() {
             border-bottom: 1pt solid #e5e7eb;
             break-inside: avoid;
             page-break-inside: avoid;
-            font-size: calc(9.5pt * ${activePrintSettingsPage2.bodyFontScale});
+            font-size: 9.5pt;
           }
 
           .print-announcement-item:last-child {
