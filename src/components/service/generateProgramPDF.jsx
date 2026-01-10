@@ -83,7 +83,6 @@ export function generateServiceProgramPDF(serviceData) {
     }),
     
     defaultStyle: { 
-      font: 'Helvetica', 
       fontSize: 10.5, 
       lineHeight: 1.3,
       color: '#374151'

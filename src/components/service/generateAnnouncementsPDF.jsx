@@ -103,7 +103,6 @@ export function generateAnnouncementsPDF(announcements, serviceDate) {
     }),
     
     defaultStyle: { 
-      font: 'Helvetica', 
       fontSize: 9.5, 
       lineHeight: 1.3,
       color: '#374151'
