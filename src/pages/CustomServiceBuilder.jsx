@@ -402,8 +402,6 @@ export default function CustomServiceBuilder() {
       console.log('[AUTO-SAVE] Triggering auto-save after 3 seconds of inactivity');
       saveServiceMutation.mutate({
         ...serviceData,
-        print_settings_page1: printSettingsPage1,
-        print_settings_page2: printSettingsPage2,
         status: 'active'
       });
     }, 3000);
