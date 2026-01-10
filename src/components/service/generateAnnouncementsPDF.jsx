@@ -208,20 +208,23 @@ function parseHtmlToPdfMake(html, globalScale = 1) {
 }
 
 function buildFixedAnnouncements(announcements, globalScale = 1) {
-  if (announcements.length === 0) return [];
-  
+  if (!announcements || announcements.length === 0) return [];
+
   return announcements.flatMap((ann, idx) => {
+    if (!ann) return [];
     const items = [];
-    
+
     // Title
-    items.push({
-      text: ann.title,
-      fontSize: 10 * globalScale,
-      bold: true,
-      color: '#000000',
-      margin: [0, idx > 0 ? 8 : 0, 0, 3]
-    });
-    
+    if (ann.title) {
+      items.push({
+        text: String(ann.title),
+        fontSize: 10 * globalScale,
+        bold: true,
+        color: '#000000',
+        margin: [0, idx > 0 ? 8 : 0, 0, 3]
+      });
+    }
+
     // Content (parse HTML formatting)
     if (ann.content) {
       items.push({
@@ -231,17 +234,18 @@ function buildFixedAnnouncements(announcements, globalScale = 1) {
         margin: [0, 0, 0, 2]
       });
     }
-    
+
     // Instructions (CUE with HTML formatting)
     if (ann.instructions) {
       const parsedInstructions = parseHtmlToPdfMake(ann.instructions, globalScale);
-      const instructionsArray = Array.isArray(parsedInstructions) ? parsedInstructions : [{ text: parsedInstructions, italics: true }];
-      
+      const instructionsArray = Array.isArray(parsedInstructions) ? parsedInstructions : [{ text: String(parsedInstructions), italics: true }];
+
       items.push({
         text: [
           { text: 'CUE: ', bold: true, fontSize: 8.5 * globalScale, color: '#1F2937' },
           ...instructionsArray.map(item => ({ 
             ...item, 
+            text: String(item.text || ''),
             fontSize: 8.5 * globalScale, 
             color: '#6B7280',
             italics: item.italics !== false 
@@ -250,7 +254,7 @@ function buildFixedAnnouncements(announcements, globalScale = 1) {
         margin: [6, 2, 0, 0]
       });
     }
-    
+
     // Video indicator
     if (ann.has_video) {
       items.push({
@@ -260,7 +264,7 @@ function buildFixedAnnouncements(announcements, globalScale = 1) {
         margin: [0, 2, 0, 0]
       });
     }
-    
+
     // Divider
     items.push({
       canvas: [{
@@ -271,7 +275,7 @@ function buildFixedAnnouncements(announcements, globalScale = 1) {
       }],
       margin: [0, 6, 0, 0]
     });
-    
+
     return items;
   });
 }
