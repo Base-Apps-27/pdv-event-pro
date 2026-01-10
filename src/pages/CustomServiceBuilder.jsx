@@ -766,7 +766,7 @@ export default function CustomServiceBuilder() {
           }
 
           .print-title h1 {
-            font-size: calc(18pt * ${activePrintSettingsPage1.titleFontScale});
+            font-size: 18pt;
             font-weight: 600;
             margin: 0 0 4pt 0;
             text-transform: uppercase;
