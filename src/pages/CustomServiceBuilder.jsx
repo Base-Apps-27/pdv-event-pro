@@ -19,7 +19,6 @@ import TimePicker from "@/components/ui/TimePicker";
 import AnimatedSortableItem from "@/components/shared/AnimatedSortableItem";
 import { AnimatePresence } from "framer-motion";
 import { addMinutes, parse, format } from "date-fns";
-import PrintSettingsModal from "@/components/print/PrintSettingsModal";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import { BookOpen } from "lucide-react";
 import { formatDate as formatDateES } from "date-fns";
