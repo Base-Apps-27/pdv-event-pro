@@ -8,27 +8,94 @@ import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 pdfMake.vfs = pdfFonts.vfs;
 
+/**
+ * Estimate optimal scale based on content density
+ * Content area target: 620pt (accounts for ~80pt header + ~20pt footer)
+ * Returns scale factor 0.75–1.0 to ensure content fits on one page
+ */
+function estimateOptimalScale(serviceData) {
+  const segments = serviceData.segments || [];
+  
+  // Count content density
+  const segmentCount = segments.length;
+  const totalNoteLength = segments.reduce((sum, seg) => {
+    const notes = [
+      seg.coordinator_notes, seg.projection_notes, seg.sound_notes, 
+      seg.ushers_notes, seg.translation_notes, seg.stage_decor_notes, 
+      seg.description_details, seg.description
+    ].join(' ').length;
+    return sum + notes;
+  }, 0);
+  const totalSongs = segments.reduce((sum, seg) => {
+    const songs = seg.songs || [];
+    return sum + songs.filter(s => s.title).length;
+  }, 0);
+  
+  // Heuristic: higher content = lower scale
+  // Light: 4-6 segments, minimal notes → 0.95
+  // Medium: 7-9 segments, moderate notes → 0.88
+  // Heavy: 10+ segments or 2000+ chars of notes → 0.78
+  
+  let scale = 1.0;
+  if (segmentCount >= 10) scale -= 0.15;
+  else if (segmentCount >= 7) scale -= 0.08;
+  else if (segmentCount >= 5) scale -= 0.03;
+  
+  if (totalNoteLength > 2000) scale -= 0.08;
+  else if (totalNoteLength > 1000) scale -= 0.04;
+  
+  if (totalSongs > 12) scale -= 0.05;
+  
+  return Math.max(0.75, Math.min(1.0, scale));
+}
+
 export function generateServiceProgramPDF(serviceData) {
+  const globalScale = estimateOptimalScale(serviceData);
+  
   const docDefinition = {
     pageSize: 'LETTER',
     pageMargins: [36, 36, 36, 56], // 0.5in margins + footer space
     
     content: [
-      // Header
-      { 
-        text: serviceData.name || 'ORDEN DE SERVICIO', 
-        fontSize: 18, 
-        bold: true, 
-        alignment: 'center', 
-        margin: [0, 0, 0, 8],
-        color: '#000000'
-      },
-      { 
-        text: `${serviceData.day_of_week} ${formatDate(serviceData.date)}${serviceData.time ? ` • ${serviceData.time}` : ''}`, 
-        fontSize: 11, 
-        alignment: 'center', 
-        margin: [0, 0, 0, 5],
-        color: '#4B5563'
+      // Logo + Title Header (PDV Branding)
+      {
+        columns: [
+          {
+            width: 50,
+            stack: [{
+              image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png',
+              width: 50,
+              height: 50
+            }]
+          },
+          { width: '*', text: '' },
+          {
+            width: 'auto',
+            stack: [
+              {
+                text: serviceData.name || 'ORDEN DE SERVICIO',
+                fontSize: 18 * globalScale,
+                bold: true,
+                alignment: 'center',
+                color: '#000000',
+                margin: [0, 0, 0, 2]
+              },
+              {
+                text: `${serviceData.day_of_week} ${formatDate(serviceData.date)}${serviceData.time ? ` • ${serviceData.time}` : ''}`,
+                fontSize: 11 * globalScale,
+                alignment: 'center',
+                color: '#4B5563',
+                margin: [0, 0, 0, 4]
+              }
+            ]
+          },
+          { width: '*', text: '' },
+          {
+            width: 50,
+            text: ''
+          }
+        ],
+        margin: [0, 0, 0, 8]
       },
       
       // Team info
@@ -37,7 +104,7 @@ export function generateServiceProgramPDF(serviceData) {
           { width: '*', text: '' },
           {
             width: 'auto',
-            stack: buildTeamInfo(serviceData)
+            stack: buildTeamInfo(serviceData, globalScale)
           },
           { width: '*', text: '' }
         ],
@@ -56,7 +123,7 @@ export function generateServiceProgramPDF(serviceData) {
       },
       
       // Segments (single column for custom services)
-      ...buildSegments(serviceData.segments || [])
+      ...buildSegments(serviceData.segments || [], globalScale)
     ],
     
     footer: (currentPage, pageCount) => ({
