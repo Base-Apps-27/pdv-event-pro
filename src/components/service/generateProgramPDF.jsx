@@ -222,15 +222,15 @@ function buildSegments(segments, globalScale = 1) {
     if (leader) {
       items.push({
         text: [
-          { text: 'Dirige: ', fontSize: 10, color: '#374151' },
-          { text: leader, fontSize: 11, bold: true, color: '#2563EB' }
+          { text: 'Dirige: ', fontSize: 10 * globalScale, color: '#374151' },
+          { text: leader, fontSize: 11 * globalScale, bold: true, color: '#2563EB' }
         ],
         margin: [5, 0, 0, 2]
       });
     } else if (preacher) {
       items.push({
         text: preacher,
-        fontSize: 11,
+        fontSize: 11 * globalScale,
         bold: true,
         color: '#2563EB',
         margin: [5, 0, 0, 2]
@@ -238,7 +238,7 @@ function buildSegments(segments, globalScale = 1) {
     } else if (presenter) {
       items.push({
         text: presenter,
-        fontSize: 11,
+        fontSize: 11 * globalScale,
         bold: true,
         color: '#2563EB',
         margin: [5, 0, 0, 2]
@@ -250,7 +250,7 @@ function buildSegments(segments, globalScale = 1) {
     if (translator) {
       items.push({
         text: `🌐 ${translator}`,
-        fontSize: 9.5,
+        fontSize: 9.5 * globalScale,
         color: '#6B7280',
         italics: true,
         margin: [5, 0, 0, 2]
@@ -261,8 +261,8 @@ function buildSegments(segments, globalScale = 1) {
     const songs = seg.data?.songs || seg.songs;
     if (songs && Array.isArray(songs) && songs.some(s => s.title)) {
       songs.filter(s => s.title).forEach(song => {
-        const songText = [{ text: `- ${song.title}`, fontSize: 10, color: '#374151' }];
-        if (song.lead) songText.push({ text: ` (${song.lead})`, fontSize: 9, color: '#6B7280' });
+        const songText = [{ text: `- ${song.title}`, fontSize: 10 * globalScale, color: '#374151' }];
+        if (song.lead) songText.push({ text: ` (${song.lead})`, fontSize: 9 * globalScale, color: '#6B7280' });
         items.push({ text: songText, margin: [5, 0, 0, 1] });
       });
     }
@@ -272,7 +272,7 @@ function buildSegments(segments, globalScale = 1) {
     if (messageTitle) {
       items.push({
         text: messageTitle,
-        fontSize: 9.5,
+        fontSize: 9.5 * globalScale,
         color: '#6B7280',
         italics: true,
         margin: [5, 2, 0, 2]
@@ -284,7 +284,7 @@ function buildSegments(segments, globalScale = 1) {
     if (verse) {
       items.push({
         text: `📖 ${verse}`,
-        fontSize: 9.5,
+        fontSize: 9.5 * globalScale,
         color: '#6B7280',
         italics: true,
         margin: [5, 2, 0, 2]
@@ -296,7 +296,7 @@ function buildSegments(segments, globalScale = 1) {
     if (description) {
       items.push({
         text: description,
-        fontSize: 10,
+        fontSize: 10 * globalScale,
         color: '#14532D',
         background: '#F0FDF4',
         margin: [0, 4, 0, 2],
@@ -309,8 +309,8 @@ function buildSegments(segments, globalScale = 1) {
       if (content) {
         items.push({
           text: [
-            { text: `${label}: `, bold: true, fontSize: 9 },
-            { text: content, fontSize: 9 }
+            { text: `${label}: `, bold: true, fontSize: 9 * globalScale },
+            { text: content, fontSize: 9 * globalScale }
           ],
           color: color,
           margin: [5, 2, 0, 0]
