@@ -167,7 +167,7 @@ function formatDate(dateStr) {
   return `${date.getDate()} de ${months[date.getMonth()]}, ${date.getFullYear()}`;
 }
 
-function buildTeamInfo(serviceData) {
+function buildTeamInfo(serviceData, globalScale = 1) {
   const items = [];
   const teams = [];
   
@@ -182,7 +182,7 @@ function buildTeamInfo(serviceData) {
   const teamText = teams.map(t => `${t.label}: ${t.value}`).join(' / ');
   items.push({
     text: teamText,
-    fontSize: 9,
+    fontSize: 9 * globalScale,
     color: '#4B5563',
     alignment: 'center'
   });
