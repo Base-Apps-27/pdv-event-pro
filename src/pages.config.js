@@ -1,4 +1,5 @@
 import AnnouncementsReport from './pages/AnnouncementsReport';
+import BuildMemory from './pages/BuildMemory';
 import CustomServiceAnnouncementsPrintPage from './pages/CustomServiceAnnouncementsPrintPage';
 import CustomServiceBuilder from './pages/CustomServiceBuilder';
 import CustomServiceProgramPrintPage from './pages/CustomServiceProgramPrintPage';
@@ -21,12 +22,12 @@ import TestFunctions from './pages/TestFunctions';
 import UserManagement from './pages/UserManagement';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import BuildMemory from './pages/BuildMemory';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AnnouncementsReport": AnnouncementsReport,
+    "BuildMemory": BuildMemory,
     "CustomServiceAnnouncementsPrintPage": CustomServiceAnnouncementsPrintPage,
     "CustomServiceBuilder": CustomServiceBuilder,
     "CustomServiceProgramPrintPage": CustomServiceProgramPrintPage,
@@ -49,7 +50,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "BuildMemory": BuildMemory,
 }
 
 export const pagesConfig = {
