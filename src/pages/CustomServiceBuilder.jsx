@@ -376,10 +376,9 @@ export default function CustomServiceBuilder() {
   const handleSave = () => {
     console.log('[USER ACTION] Manual save triggered');
     saveServiceMutation.mutate({
-      ...serviceData,
-      print_settings_page1: printSettingsPage1,
-      status: 'active'
-    });
+          ...serviceData,
+          status: 'active'
+        });
   };
 
   // Track unsaved changes
