@@ -38,21 +38,21 @@ export function generateAnnouncementsPDF(announcements, serviceDate) {
     pageMargins: [36, 36, 36, 56],
     
     content: [
-      // Logo + Title Header (PDV Branding)
+      // Title Header (PDV Branding)
       {
         columns: [
-          {
-            width: 50,
-            stack: [{
-              image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png',
-              width: 50,
-              height: 50
-            }]
-          },
           { width: '*', text: '' },
           {
             width: 'auto',
             stack: [
+              {
+                text: 'PALABRAS DE VIDA',
+                fontSize: 10 * globalScale,
+                bold: true,
+                alignment: 'center',
+                color: '#1F8A70',
+                margin: [0, 0, 0, 6]
+              },
               {
                 text: 'ANUNCIOS',
                 fontSize: 18 * globalScale,
@@ -70,11 +70,7 @@ export function generateAnnouncementsPDF(announcements, serviceDate) {
               }
             ]
           },
-          { width: '*', text: '' },
-          {
-            width: 50,
-            text: ''
-          }
+          { width: '*', text: '' }
         ],
         margin: [0, 0, 0, 8]
       },
