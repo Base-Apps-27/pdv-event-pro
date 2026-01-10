@@ -131,7 +131,8 @@ export function generateAnnouncementsPDF(announcements, serviceDate) {
             type: 'rect',
             x: 0, y: 0,
             w: 612, h: 20,
-            color: '#1F8A70'
+            color: '#1F8A70',
+            fillOpacity: 1
           }],
           margin: [0, 0, 0, 0]
         },
