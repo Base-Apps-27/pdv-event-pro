@@ -119,12 +119,45 @@ function formatDate(dateStr) {
   return `${date.getDate()} de ${months[date.getMonth()]}, ${date.getFullYear()}`;
 }
 
-function sanitizeHtml(html) {
+function parseHtmlToPdfMake(html) {
   if (!html) return '';
-  return html
+  
+  // Clean unwanted tags but keep b, i, strong, em, br
+  let cleaned = html
     .replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '')
     .replace(/&nbsp;/g, ' ')
-    .replace(/<br\s*\/?>/gi, '\n');
+    .trim();
+  
+  // If no HTML tags, return plain text
+  if (!/<[^>]+>/.test(cleaned)) return cleaned;
+  
+  const result = [];
+  const parts = cleaned.split(/(<\/?(?:b|i|strong|em|br\s*\/?)>)/gi);
+  
+  let currentBold = false;
+  let currentItalic = false;
+  
+  for (let part of parts) {
+    if (part === '<b>' || part === '<strong>') {
+      currentBold = true;
+    } else if (part === '</b>' || part === '</strong>') {
+      currentBold = false;
+    } else if (part === '<i>' || part === '<em>') {
+      currentItalic = true;
+    } else if (part === '</i>' || part === '</em>') {
+      currentItalic = false;
+    } else if (part === '<br>' || part === '<br/>') {
+      result.push({ text: '\n' });
+    } else if (part && part.trim()) {
+      result.push({
+        text: part,
+        ...(currentBold && { bold: true }),
+        ...(currentItalic && { italics: true })
+      });
+    }
+  }
+  
+  return result.length > 0 ? result : cleaned;
 }
 
 function buildFixedAnnouncements(announcements) {
@@ -142,22 +175,30 @@ function buildFixedAnnouncements(announcements) {
       margin: [0, idx > 0 ? 8 : 0, 0, 3]
     });
     
-    // Content
+    // Content (parse HTML formatting)
     if (ann.content) {
       items.push({
-        text: sanitizeHtml(ann.content),
+        text: parseHtmlToPdfMake(ann.content),
         fontSize: 9.5,
         color: '#374151',
         margin: [0, 0, 0, 2]
       });
     }
     
-    // Instructions (CUE)
+    // Instructions (CUE with HTML formatting)
     if (ann.instructions) {
+      const parsedInstructions = parseHtmlToPdfMake(ann.instructions);
+      const instructionsArray = Array.isArray(parsedInstructions) ? parsedInstructions : [{ text: parsedInstructions, italics: true }];
+      
       items.push({
         text: [
           { text: 'CUE: ', bold: true, fontSize: 8.5, color: '#1F2937' },
-          { text: sanitizeHtml(ann.instructions), fontSize: 8.5, color: '#6B7280', italics: true }
+          ...instructionsArray.map(item => ({ 
+            ...item, 
+            fontSize: 8.5, 
+            color: '#6B7280',
+            italics: item.italics !== false 
+          }))
         ],
         margin: [6, 2, 0, 0]
       });
@@ -219,23 +260,31 @@ function buildDynamicAnnouncements(announcements) {
       });
     }
     
-    // Content
+    // Content (parse HTML formatting)
     const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
     if (content) {
       eventItems.push({
-        text: sanitizeHtml(content),
+        text: parseHtmlToPdfMake(content),
         fontSize: 9,
         color: '#374151',
         margin: [0, 0, 0, 2]
       });
     }
     
-    // Instructions
+    // Instructions (CUE with HTML formatting)
     if (ann.instructions) {
+      const parsedInstructions = parseHtmlToPdfMake(ann.instructions);
+      const instructionsArray = Array.isArray(parsedInstructions) ? parsedInstructions : [{ text: parsedInstructions, italics: true }];
+      
       eventItems.push({
         text: [
           { text: 'CUE: ', bold: true, fontSize: 8.5, color: '#1F2937' },
-          { text: sanitizeHtml(ann.instructions), fontSize: 8.5, color: '#6B7280', italics: true }
+          ...instructionsArray.map(item => ({ 
+            ...item, 
+            fontSize: 8.5, 
+            color: '#6B7280',
+            italics: item.italics !== false 
+          }))
         ],
         margin: [6, 2, 0, 0]
       });
