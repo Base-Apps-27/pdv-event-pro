@@ -206,7 +206,7 @@ function parseHtmlToPdfMake(html) {
   return result.length > 0 ? result : cleaned;
 }
 
-function buildFixedAnnouncements(announcements) {
+function buildFixedAnnouncements(announcements, globalScale = 1) {
   if (announcements.length === 0) return [];
   
   return announcements.flatMap((ann, idx) => {
@@ -215,7 +215,7 @@ function buildFixedAnnouncements(announcements) {
     // Title
     items.push({
       text: ann.title,
-      fontSize: 10,
+      fontSize: 10 * globalScale,
       bold: true,
       color: '#000000',
       margin: [0, idx > 0 ? 8 : 0, 0, 3]
@@ -224,8 +224,8 @@ function buildFixedAnnouncements(announcements) {
     // Content (parse HTML formatting)
     if (ann.content) {
       items.push({
-        text: parseHtmlToPdfMake(ann.content),
-        fontSize: 9.5,
+        text: parseHtmlToPdfMake(ann.content, globalScale),
+        fontSize: 9.5 * globalScale,
         color: '#374151',
         margin: [0, 0, 0, 2]
       });
@@ -233,15 +233,15 @@ function buildFixedAnnouncements(announcements) {
     
     // Instructions (CUE with HTML formatting)
     if (ann.instructions) {
-      const parsedInstructions = parseHtmlToPdfMake(ann.instructions);
+      const parsedInstructions = parseHtmlToPdfMake(ann.instructions, globalScale);
       const instructionsArray = Array.isArray(parsedInstructions) ? parsedInstructions : [{ text: parsedInstructions, italics: true }];
       
       items.push({
         text: [
-          { text: 'CUE: ', bold: true, fontSize: 8.5, color: '#1F2937' },
+          { text: 'CUE: ', bold: true, fontSize: 8.5 * globalScale, color: '#1F2937' },
           ...instructionsArray.map(item => ({ 
             ...item, 
-            fontSize: 8.5, 
+            fontSize: 8.5 * globalScale, 
             color: '#6B7280',
             italics: item.italics !== false 
           }))
@@ -254,7 +254,7 @@ function buildFixedAnnouncements(announcements) {
     if (ann.has_video) {
       items.push({
         text: '📹 Video',
-        fontSize: 8,
+        fontSize: 8 * globalScale,
         color: '#8B5CF6',
         margin: [0, 2, 0, 0]
       });
