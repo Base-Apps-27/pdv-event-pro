@@ -1194,16 +1194,6 @@ export default function CustomServiceBuilder() {
         </div>
       </div>
 
-      <PrintSettingsModal
-        open={showPrintSettings}
-        onOpenChange={setShowPrintSettings}
-        settingsPage1={activePrintSettingsPage1}
-        settingsPage2={activePrintSettingsPage2}
-        onSave={handleSavePrintSettings}
-        language="es"
-        serviceData={serviceData}
-      />
-
       {/* Verse Parser Dialog */}
       <VerseParserDialog
         open={verseParserOpen}
