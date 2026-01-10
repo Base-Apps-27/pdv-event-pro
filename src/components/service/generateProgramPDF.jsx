@@ -133,7 +133,8 @@ export function generateServiceProgramPDF(serviceData) {
             type: 'rect',
             x: 0, y: 0,
             w: 612, h: 20,
-            color: '#1F8A70' // PDV teal
+            color: '#1F8A70', // PDV teal (start of gradient)
+            fillOpacity: 1
           }],
           margin: [0, 0, 0, 0]
         },
