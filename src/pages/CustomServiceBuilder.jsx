@@ -423,31 +423,7 @@ export default function CustomServiceBuilder() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  const handleSavePrintSettings = (newSettings) => {
-    setPrintSettingsPage1(newSettings.page1);
-    setPrintSettingsPage2(newSettings.page2);
-    setServiceData(prev => ({
-      ...prev,
-      print_settings_page1: newSettings.page1,
-      print_settings_page2: newSettings.page2
-    }));
-  };
 
-  const handlePrintProgram = () => {
-    setPrintMode('program');
-    setTimeout(() => {
-      window.print();
-      setPrintMode(null);
-    }, 100);
-  };
-
-  const handlePrintAnnouncements = () => {
-    setPrintMode('announcements');
-    setTimeout(() => {
-      window.print();
-      setPrintMode(null);
-    }, 100);
-  };
 
   const handleDownloadProgramPDF = () => {
     try {
