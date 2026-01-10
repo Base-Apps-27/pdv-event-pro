@@ -166,24 +166,25 @@ function formatDate(dateStr) {
 }
 
 function parseHtmlToPdfMake(html, globalScale = 1) {
-  if (!html) return '';
-  
+  if (!html || typeof html !== 'string') return '';
+
   // Clean unwanted tags but keep b, i, strong, em, br
   let cleaned = html
     .replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '')
     .replace(/&nbsp;/g, ' ')
     .trim();
-  
+
   // If no HTML tags, return plain text
   if (!/<[^>]+>/.test(cleaned)) return cleaned;
-  
+
   const result = [];
   const parts = cleaned.split(/(<\/?(?:b|i|strong|em|br\s*\/?)>)/gi);
-  
+
   let currentBold = false;
   let currentItalic = false;
-  
+
   for (let part of parts) {
+    if (!part) continue;
     if (part === '<b>' || part === '<strong>') {
       currentBold = true;
     } else if (part === '</b>' || part === '</strong>') {
@@ -202,7 +203,7 @@ function parseHtmlToPdfMake(html, globalScale = 1) {
       });
     }
   }
-  
+
   return result.length > 0 ? result : cleaned;
 }
 
