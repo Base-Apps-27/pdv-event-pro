@@ -800,7 +800,7 @@ export default function CustomServiceBuilder() {
             margin-bottom: 10pt;
             padding-bottom: 8pt;
             border-bottom: 1pt solid #f3f4f6;
-            font-size: calc(10.5pt * ${activePrintSettingsPage1.bodyFontScale});
+            font-size: 10.5pt;
             line-height: 1.3;
             break-inside: avoid;
             page-break-inside: avoid;
