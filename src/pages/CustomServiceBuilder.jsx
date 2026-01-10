@@ -1171,35 +1171,6 @@ export default function CustomServiceBuilder() {
             {saveServiceMutation.isPending ? 'Guardando...' : 'Guardar'}
           </Button>
           <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setShowPrintSettings(true)}
-            title="Ajustes de Impresión (Legacy)"
-            className="border-2 border-gray-400"
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handlePrintProgram}
-            title="Imprimir Programa (Legacy)"
-            className="border-2 border-gray-400 gap-2"
-          >
-            <Printer className="w-4 h-4" />
-            Programa (Old)
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handlePrintAnnouncements}
-            title="Imprimir Anuncios (Legacy)"
-            className="border-2 border-gray-400 gap-2"
-            disabled={!serviceData.selected_announcements || serviceData.selected_announcements.length === 0}
-          >
-            <Printer className="w-4 h-4" />
-            Anuncios (Old)
-          </Button>
-          {/* PDF DOWNLOAD BUTTONS - html2canvas approach (bypasses routing/auth issues) */}
-          <Button
             variant="default"
             onClick={handleDownloadProgramPDF}
             style={tealStyle}
