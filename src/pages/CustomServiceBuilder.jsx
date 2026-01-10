@@ -682,19 +682,7 @@ export default function CustomServiceBuilder() {
     console.log('[SYNC] Completed sync to Session/Segments');
   };
 
-  const activePrintSettingsPage1 = printSettingsPage1 || {
-    globalScale: 1.0,
-    margins: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" },
-    bodyFontScale: 1.0,
-    titleFontScale: 1.0
-  };
 
-  const activePrintSettingsPage2 = printSettingsPage2 || {
-    globalScale: 1.0,
-    margins: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" },
-    bodyFontScale: 1.0,
-    titleFontScale: 1.0
-  };
 
   // Fetch announcements for print
   const { data: allAnnouncements = [] } = useQuery({
