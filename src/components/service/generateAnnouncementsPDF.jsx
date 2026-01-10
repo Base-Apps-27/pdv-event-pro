@@ -281,24 +281,28 @@ function buildFixedAnnouncements(announcements, globalScale = 1) {
 }
 
 function buildDynamicAnnouncements(announcements, globalScale = 1) {
-  if (announcements.length === 0) return [];
-  
+  if (!announcements || announcements.length === 0) return [];
+
   return announcements.flatMap((ann, idx) => {
+    if (!ann) return [];
     const items = [];
     const isEmphasized = ann.emphasize || ann.category === 'Urgent';
-    
+
     // Event block
     const eventItems = [];
-    
+
     // Title
-    eventItems.push({
-      text: ann.isEvent ? ann.name : ann.title,
-      fontSize: 10 * globalScale,
-      bold: true,
-      color: '#16A34A',
-      margin: [0, 0, 0, 2]
-    });
-    
+    const titleText = ann.isEvent ? (ann.name || '') : (ann.title || '');
+    if (titleText) {
+      eventItems.push({
+        text: String(titleText),
+        fontSize: 10 * globalScale,
+        bold: true,
+        color: '#16A34A',
+        margin: [0, 0, 0, 2]
+      });
+    }
+
     // Date
     const eventDate = ann.date_of_occurrence || ann.start_date;
     if (eventDate) {
@@ -310,7 +314,7 @@ function buildDynamicAnnouncements(announcements, globalScale = 1) {
         margin: [0, 0, 0, 2]
       });
     }
-    
+
     // Content (parse HTML formatting)
     const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
     if (content) {
@@ -321,17 +325,18 @@ function buildDynamicAnnouncements(announcements, globalScale = 1) {
         margin: [0, 0, 0, 2]
       });
     }
-    
+
     // Instructions (CUE with HTML formatting)
     if (ann.instructions) {
       const parsedInstructions = parseHtmlToPdfMake(ann.instructions, globalScale);
-      const instructionsArray = Array.isArray(parsedInstructions) ? parsedInstructions : [{ text: parsedInstructions, italics: true }];
-      
+      const instructionsArray = Array.isArray(parsedInstructions) ? parsedInstructions : [{ text: String(parsedInstructions || ''), italics: true }];
+
       eventItems.push({
         text: [
           { text: 'CUE: ', bold: true, fontSize: 8.5 * globalScale, color: '#1F2937' },
           ...instructionsArray.map(item => ({ 
             ...item, 
+            text: String(item.text || ''),
             fontSize: 8.5 * globalScale, 
             color: '#6B7280',
             italics: item.italics !== false 
@@ -340,7 +345,7 @@ function buildDynamicAnnouncements(announcements, globalScale = 1) {
         margin: [6, 2, 0, 0]
       });
     }
-    
+
     // Video indicator
     if (ann.has_video || ann.announcement_has_video) {
       eventItems.push({
@@ -350,7 +355,7 @@ function buildDynamicAnnouncements(announcements, globalScale = 1) {
         margin: [0, 2, 0, 0]
       });
     }
-    
+
     // Wrapper (with emphasis if needed)
     if (isEmphasized) {
       items.push({
@@ -365,7 +370,7 @@ function buildDynamicAnnouncements(announcements, globalScale = 1) {
         margin: [0, idx > 0 ? 6 : 0, 0, 4]
       });
     }
-    
+
     // Divider
     items.push({
       canvas: [{
@@ -376,7 +381,7 @@ function buildDynamicAnnouncements(announcements, globalScale = 1) {
       }],
       margin: [0, 4, 0, 0]
     });
-    
+
     return items;
   });
 }
