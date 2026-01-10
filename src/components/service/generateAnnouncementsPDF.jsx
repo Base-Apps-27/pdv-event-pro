@@ -95,7 +95,7 @@ export function generateAnnouncementsPDF(announcements, serviceDate) {
         columns: [
           {
             width: '*',
-            stack: buildFixedAnnouncements(fixed)
+            stack: buildFixedAnnouncements(fixed, globalScale)
           },
           { width: 20, text: '' }, // Gap
           {
@@ -103,7 +103,7 @@ export function generateAnnouncementsPDF(announcements, serviceDate) {
             stack: [
               {
                 text: 'PRÓXIMOS EVENTOS',
-                fontSize: 9,
+                fontSize: 9 * globalScale,
                 bold: true,
                 color: '#6B7280',
                 margin: [0, 0, 0, 8]
@@ -117,7 +117,7 @@ export function generateAnnouncementsPDF(announcements, serviceDate) {
                 }],
                 margin: [0, 0, 0, 8]
               },
-              ...buildDynamicAnnouncements(dynamic)
+              ...buildDynamicAnnouncements(dynamic, globalScale)
             ]
           }
         ]
