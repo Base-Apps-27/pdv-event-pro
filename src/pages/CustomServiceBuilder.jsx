@@ -821,7 +821,7 @@ export default function CustomServiceBuilder() {
           .print-segment-title {
             font-weight: 600;
             text-transform: uppercase;
-            font-size: calc(11pt * ${activePrintSettingsPage1.titleFontScale});
+            font-size: 11pt;
             color: #000000;
             letter-spacing: 0.25px;
             display: inline;
