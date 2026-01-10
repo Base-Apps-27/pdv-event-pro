@@ -150,11 +150,7 @@ export default function CustomServiceBuilder() {
   });
 
   const [expandedSegments, setExpandedSegments] = useState({});
-  const [showPrintSettings, setShowPrintSettings] = useState(false);
-  const [printSettingsPage1, setPrintSettingsPage1] = useState(null);
-  const [printSettingsPage2, setPrintSettingsPage2] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [printMode, setPrintMode] = useState(null); // 'program' or 'announcements'
   const [lastSavedData, setLastSavedData] = useState(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState("idle"); // idle, saving, saved, error
   const [highlightedSegmentId, setHighlightedSegmentId] = useState(null);
