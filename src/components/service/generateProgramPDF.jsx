@@ -190,7 +190,7 @@ function buildTeamInfo(serviceData, globalScale = 1) {
   return items;
 }
 
-function buildSegments(segments) {
+function buildSegments(segments, globalScale = 1) {
   if (!segments || segments.length === 0) return [];
   
   return segments.flatMap((seg, idx) => {
@@ -200,13 +200,13 @@ function buildSegments(segments) {
     const titleParts = [];
     if (seg.start_time || seg.duration) {
       const timeStr = seg.start_time || `+${seg.duration}min`;
-      titleParts.push({ text: timeStr, color: '#4B5563', fontSize: 10.5, bold: true });
-      titleParts.push({ text: '  ', fontSize: 10.5 });
+      titleParts.push({ text: timeStr, color: '#4B5563', fontSize: 10.5 * globalScale, bold: true });
+      titleParts.push({ text: '  ', fontSize: 10.5 * globalScale });
     }
-    titleParts.push({ text: seg.title, fontSize: 11, bold: true, color: '#000000' });
+    titleParts.push({ text: seg.title, fontSize: 11 * globalScale, bold: true, color: '#000000' });
     
     if (seg.duration) {
-      titleParts.push({ text: ` (${seg.duration} min)`, fontSize: 10, color: '#6B7280' });
+      titleParts.push({ text: ` (${seg.duration} min)`, fontSize: 10 * globalScale, color: '#6B7280' });
     }
     
     items.push({
