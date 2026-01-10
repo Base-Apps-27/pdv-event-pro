@@ -165,7 +165,7 @@ function formatDate(dateStr) {
   return `${date.getDate()} de ${months[date.getMonth()]}, ${date.getFullYear()}`;
 }
 
-function parseHtmlToPdfMake(html) {
+function parseHtmlToPdfMake(html, globalScale = 1) {
   if (!html) return '';
   
   // Clean unwanted tags but keep b, i, strong, em, br
