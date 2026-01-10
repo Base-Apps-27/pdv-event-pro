@@ -252,8 +252,6 @@ export default function CustomServiceBuilder() {
 
       setServiceData(sanitizedService);
       setLastSavedData(JSON.parse(JSON.stringify(sanitizedService)));
-      setPrintSettingsPage1(existingService.print_settings_page1 || null);
-      setPrintSettingsPage2(existingService.print_settings_page2 || null);
       setHasUnsavedChanges(false);
       
       // Load from localStorage backup if available and newer
