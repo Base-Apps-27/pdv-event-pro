@@ -275,7 +275,7 @@ function buildFixedAnnouncements(announcements, globalScale = 1) {
   });
 }
 
-function buildDynamicAnnouncements(announcements) {
+function buildDynamicAnnouncements(announcements, globalScale = 1) {
   if (announcements.length === 0) return [];
   
   return announcements.flatMap((ann, idx) => {
@@ -288,7 +288,7 @@ function buildDynamicAnnouncements(announcements) {
     // Title
     eventItems.push({
       text: ann.isEvent ? ann.name : ann.title,
-      fontSize: 10,
+      fontSize: 10 * globalScale,
       bold: true,
       color: '#16A34A',
       margin: [0, 0, 0, 2]
@@ -299,7 +299,7 @@ function buildDynamicAnnouncements(announcements) {
     if (eventDate) {
       eventItems.push({
         text: formatDate(eventDate),
-        fontSize: 9,
+        fontSize: 9 * globalScale,
         color: '#4B5563',
         bold: true,
         margin: [0, 0, 0, 2]
@@ -310,8 +310,8 @@ function buildDynamicAnnouncements(announcements) {
     const content = ann.isEvent ? (ann.announcement_blurb || ann.description) : ann.content;
     if (content) {
       eventItems.push({
-        text: parseHtmlToPdfMake(content),
-        fontSize: 9,
+        text: parseHtmlToPdfMake(content, globalScale),
+        fontSize: 9 * globalScale,
         color: '#374151',
         margin: [0, 0, 0, 2]
       });
@@ -319,15 +319,15 @@ function buildDynamicAnnouncements(announcements) {
     
     // Instructions (CUE with HTML formatting)
     if (ann.instructions) {
-      const parsedInstructions = parseHtmlToPdfMake(ann.instructions);
+      const parsedInstructions = parseHtmlToPdfMake(ann.instructions, globalScale);
       const instructionsArray = Array.isArray(parsedInstructions) ? parsedInstructions : [{ text: parsedInstructions, italics: true }];
       
       eventItems.push({
         text: [
-          { text: 'CUE: ', bold: true, fontSize: 8.5, color: '#1F2937' },
+          { text: 'CUE: ', bold: true, fontSize: 8.5 * globalScale, color: '#1F2937' },
           ...instructionsArray.map(item => ({ 
             ...item, 
-            fontSize: 8.5, 
+            fontSize: 8.5 * globalScale, 
             color: '#6B7280',
             italics: item.italics !== false 
           }))
@@ -340,7 +340,7 @@ function buildDynamicAnnouncements(announcements) {
     if (ann.has_video || ann.announcement_has_video) {
       eventItems.push({
         text: '📹 Video',
-        fontSize: 8,
+        fontSize: 8 * globalScale,
         color: '#8B5CF6',
         margin: [0, 2, 0, 0]
       });
