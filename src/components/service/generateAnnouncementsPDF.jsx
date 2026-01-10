@@ -7,31 +7,76 @@ import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 pdfMake.vfs = pdfFonts.vfs;
 
+/**
+ * Estimate optimal scale based on announcements density
+ * Target: 620pt content area (accounts for header + footer)
+ * Returns scale factor 0.80–1.0
+ */
+function estimateOptimalScale(announcements) {
+  const totalItems = announcements.length;
+  const totalChars = announcements.reduce((sum, a) => sum + (a.content?.length || 0) + (a.instructions?.length || 0), 0);
+  
+  // Light: <5 items, <1000 chars → 1.0
+  // Medium: 5-10 items, 1000-3000 chars → 0.90
+  // Heavy: 10+ items or 3000+ chars → 0.80
+  
+  let scale = 1.0;
+  if (totalItems > 10 || totalChars > 3000) scale = 0.80;
+  else if (totalItems > 5 || totalChars > 1000) scale = 0.90;
+  
+  return scale;
+}
+
 export function generateAnnouncementsPDF(announcements, serviceDate) {
   // Split announcements
   const fixed = announcements.filter(a => a.category === 'General');
   const dynamic = announcements.filter(a => a.category !== 'General' || a.isEvent);
+  const globalScale = estimateOptimalScale(announcements);
   
   const docDefinition = {
     pageSize: 'LETTER',
     pageMargins: [36, 36, 36, 56],
     
     content: [
-      // Header
-      { 
-        text: 'ANUNCIOS', 
-        fontSize: 18, 
-        bold: true, 
-        alignment: 'center', 
-        margin: [0, 0, 0, 8],
-        color: '#000000'
-      },
-      { 
-        text: formatDate(serviceDate), 
-        fontSize: 11, 
-        alignment: 'center', 
-        margin: [0, 0, 0, 5],
-        color: '#4B5563'
+      // Logo + Title Header (PDV Branding)
+      {
+        columns: [
+          {
+            width: 50,
+            stack: [{
+              image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png',
+              width: 50,
+              height: 50
+            }]
+          },
+          { width: '*', text: '' },
+          {
+            width: 'auto',
+            stack: [
+              {
+                text: 'ANUNCIOS',
+                fontSize: 18 * globalScale,
+                bold: true,
+                alignment: 'center',
+                color: '#000000',
+                margin: [0, 0, 0, 2]
+              },
+              {
+                text: formatDate(serviceDate),
+                fontSize: 11 * globalScale,
+                alignment: 'center',
+                color: '#4B5563',
+                margin: [0, 0, 0, 4]
+              }
+            ]
+          },
+          { width: '*', text: '' },
+          {
+            width: 50,
+            text: ''
+          }
+        ],
+        margin: [0, 0, 0, 8]
       },
       
       // Divider
