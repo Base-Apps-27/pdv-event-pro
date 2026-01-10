@@ -1010,7 +1010,7 @@ export default function CustomServiceBuilder() {
           }
 
           .print-announcement-title {
-            font-size: calc(10pt * ${activePrintSettingsPage2.titleFontScale});
+            font-size: 10pt;
             font-weight: 600;
             color: #000000;
             text-transform: uppercase;
