@@ -424,23 +424,33 @@ export default function CustomServiceBuilder() {
 
 
 
-  const handleDownloadProgramPDF = () => {
+  const handleDownloadProgramPDF = async () => {
     try {
+      console.log('[PDF] Generating program PDF...');
       const pdf = generateServiceProgramPDF(serviceData);
+      console.log('[PDF] PDF object created, initiating download...');
       pdf.download(`Programa-${serviceData.date || 'servicio'}.pdf`);
+      console.log('[PDF] Program PDF download initiated');
     } catch (error) {
       console.error('[PDF ERROR]', error);
-      alert('Error generando PDF: ' + error.message);
+      alert('Error generando PDF del programa: ' + (error?.message || 'Error desconocido'));
     }
   };
 
-  const handleDownloadAnnouncementsPDF = () => {
+  const handleDownloadAnnouncementsPDF = async () => {
     try {
+      if (!selectedAnnouncementsForPrint || selectedAnnouncementsForPrint.length === 0) {
+        alert('Por favor, selecciona al menos un anuncio.');
+        return;
+      }
+      console.log('[PDF] Generating announcements PDF...');
       const pdf = generateAnnouncementsPDF(selectedAnnouncementsForPrint, serviceData.date);
+      console.log('[PDF] PDF object created, initiating download...');
       pdf.download(`Anuncios-${serviceData.date || 'servicio'}.pdf`);
+      console.log('[PDF] Announcements PDF download initiated');
     } catch (error) {
       console.error('[PDF ERROR]', error);
-      alert('Error generando PDF: ' + error.message);
+      alert('Error generando PDF de anuncios: ' + (error?.message || 'Error desconocido'));
     }
   };
 
