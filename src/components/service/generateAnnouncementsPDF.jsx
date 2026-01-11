@@ -5,6 +5,7 @@
 
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { getLogoDataUrl } from './pdfLogoData';
 pdfMake.vfs = pdfFonts.vfs;
 
 /**
@@ -27,35 +28,51 @@ function estimateOptimalScale(announcements) {
   return scale;
 }
 
-export function generateAnnouncementsPDF(announcements, serviceDate) {
+export async function generateAnnouncementsPDF(announcements, serviceDate) {
   // Split announcements
   const fixed = announcements.filter(a => a.category === 'General');
   const dynamic = announcements.filter(a => a.category !== 'General' || a.isEvent);
   const globalScale = estimateOptimalScale(announcements);
+  const logoDataUrl = await getLogoDataUrl();
   
   const docDefinition = {
     pageSize: 'LETTER',
     pageMargins: [36, 36, 36, 56],
     
     content: [
-      // Title Header (PDV Branding)
+      // Logo + Title Header (PDV Branding)
       {
-        stack: [
+        columns: [
+          logoDataUrl ? {
+            width: 50,
+            image: logoDataUrl,
+            width: 50,
+            height: 50,
+            alignment: 'left'
+          } : { width: 50, text: '' },
+          { width: '*', text: '' },
           {
-            text: 'ANUNCIOS',
-            fontSize: 18 * globalScale,
-            bold: true,
-            alignment: 'center',
-            color: '#000000',
-            margin: [0, 0, 0, 2]
+            width: 'auto',
+            stack: [
+              {
+                text: 'ANUNCIOS',
+                fontSize: 18 * globalScale,
+                bold: true,
+                alignment: 'center',
+                color: '#000000',
+                margin: [0, 0, 0, 2]
+              },
+              {
+                text: formatDate(serviceDate),
+                fontSize: 11 * globalScale,
+                alignment: 'center',
+                color: '#4B5563',
+                margin: [0, 0, 0, 4]
+              }
+            ]
           },
-          {
-            text: formatDate(serviceDate),
-            fontSize: 11 * globalScale,
-            alignment: 'center',
-            color: '#4B5563',
-            margin: [0, 0, 0, 4]
-          }
+          { width: '*', text: '' },
+          { width: 50, text: '' }
         ],
         margin: [0, 0, 0, 8]
       },

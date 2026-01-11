@@ -6,6 +6,7 @@
 
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { getLogoDataUrl } from './pdfLogoData';
 pdfMake.vfs = pdfFonts.vfs;
 
 /**
@@ -49,32 +50,48 @@ function estimateOptimalScale(serviceData) {
   return Math.max(0.75, Math.min(1.0, scale));
 }
 
-export function generateServiceProgramPDF(serviceData) {
+export async function generateServiceProgramPDF(serviceData) {
   const globalScale = estimateOptimalScale(serviceData);
+  const logoDataUrl = await getLogoDataUrl();
   
   const docDefinition = {
     pageSize: 'LETTER',
     pageMargins: [36, 36, 36, 56], // 0.5in margins + footer space
     
     content: [
-      // Title Header (PDV Branding)
+      // Logo + Title Header (PDV Branding)
       {
-        stack: [
+        columns: [
+          logoDataUrl ? {
+            width: 50,
+            image: logoDataUrl,
+            width: 50,
+            height: 50,
+            alignment: 'left'
+          } : { width: 50, text: '' },
+          { width: '*', text: '' },
           {
-            text: serviceData.name || 'ORDEN DE SERVICIO',
-            fontSize: 18 * globalScale,
-            bold: true,
-            alignment: 'center',
-            color: '#000000',
-            margin: [0, 0, 0, 2]
+            width: 'auto',
+            stack: [
+              {
+                text: serviceData.name || 'ORDEN DE SERVICIO',
+                fontSize: 18 * globalScale,
+                bold: true,
+                alignment: 'center',
+                color: '#000000',
+                margin: [0, 0, 0, 2]
+              },
+              {
+                text: `${serviceData.day_of_week} ${formatDate(serviceData.date)}${serviceData.time ? ` • ${serviceData.time}` : ''}`,
+                fontSize: 11 * globalScale,
+                alignment: 'center',
+                color: '#4B5563',
+                margin: [0, 0, 0, 4]
+              }
+            ]
           },
-          {
-            text: `${serviceData.day_of_week} ${formatDate(serviceData.date)}${serviceData.time ? ` • ${serviceData.time}` : ''}`,
-            fontSize: 11 * globalScale,
-            alignment: 'center',
-            color: '#4B5563',
-            margin: [0, 0, 0, 4]
-          }
+          { width: '*', text: '' },
+          { width: 50, text: '' }
         ],
         margin: [0, 0, 0, 8]
       },
