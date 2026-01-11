@@ -33,21 +33,21 @@ function estimateOptimalScale(serviceData) {
   }, 0);
   
   // Heuristic: higher content = lower scale
-  // Light: 4-6 segments, minimal notes → 0.95
-  // Medium: 7-9 segments, moderate notes → 0.88
-  // Heavy: 10+ segments or 2000+ chars of notes → 0.78
+  // Light: 3-4 segments, minimal notes → 0.92
+  // Medium: 5-7 segments, moderate notes → 0.82
+  // Heavy: 8+ segments or 1500+ chars of notes → 0.75
   
   let scale = 1.0;
-  if (segmentCount >= 10) scale -= 0.15;
-  else if (segmentCount >= 7) scale -= 0.08;
-  else if (segmentCount >= 5) scale -= 0.03;
+  if (segmentCount >= 8) scale -= 0.25;
+  else if (segmentCount >= 5) scale -= 0.18;
+  else if (segmentCount >= 3) scale -= 0.08;
   
-  if (totalNoteLength > 2000) scale -= 0.08;
-  else if (totalNoteLength > 1000) scale -= 0.04;
+  if (totalNoteLength > 1500) scale -= 0.10;
+  else if (totalNoteLength > 800) scale -= 0.05;
   
-  if (totalSongs > 12) scale -= 0.05;
+  if (totalSongs > 10) scale -= 0.05;
   
-  return Math.max(0.75, Math.min(1.0, scale));
+  return Math.max(0.72, Math.min(1.0, scale));
 }
 
 export async function generateServiceProgramPDF(serviceData) {
@@ -65,8 +65,7 @@ export async function generateServiceProgramPDF(serviceData) {
           logoDataUrl ? {
             width: 50,
             image: logoDataUrl,
-            width: 50,
-            height: 50,
+            fit: [50, 50],
             alignment: 'left'
           } : { width: 50, text: '' },
           { width: '*', text: '' },

@@ -17,13 +17,14 @@ function estimateOptimalScale(announcements) {
   const totalItems = announcements.length;
   const totalChars = announcements.reduce((sum, a) => sum + (a.content?.length || 0) + (a.instructions?.length || 0), 0);
   
-  // Light: <5 items, <1000 chars → 1.0
-  // Medium: 5-10 items, 1000-3000 chars → 0.90
-  // Heavy: 10+ items or 3000+ chars → 0.80
+  // Light: <4 items, <800 chars → 0.95
+  // Medium: 4-8 items, 800-2500 chars → 0.85
+  // Heavy: 8+ items or 2500+ chars → 0.75
   
   let scale = 1.0;
-  if (totalItems > 10 || totalChars > 3000) scale = 0.80;
-  else if (totalItems > 5 || totalChars > 1000) scale = 0.90;
+  if (totalItems > 8 || totalChars > 2500) scale = 0.75;
+  else if (totalItems > 4 || totalChars > 800) scale = 0.85;
+  else scale = 0.95;
   
   return scale;
 }
@@ -46,8 +47,7 @@ export async function generateAnnouncementsPDF(announcements, serviceDate) {
           logoDataUrl ? {
             width: 50,
             image: logoDataUrl,
-            width: 50,
-            height: 50,
+            fit: [50, 50],
             alignment: 'left'
           } : { width: 50, text: '' },
           { width: '*', text: '' },
