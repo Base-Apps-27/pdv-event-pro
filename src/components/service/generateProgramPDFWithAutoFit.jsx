@@ -203,17 +203,16 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, bodyFontScale, ti
       ...buildSegments(serviceData.segments || [], bodyFontScale, titleFontScale)
     ],
     
-    footer: (currentPage, pageCount) => {
-      return {
-        text: '¡Atrévete a cambiar!',
-        color: 'white',
-        fontSize: 10,
-        bold: true,
-        alignment: 'center',
-        background: '#1F8A70',
-        padding: [8, 10, 8, 10]
-      };
-    },
+    footer: () => ({
+      text: '¡Atrévete a cambiar!',
+      color: 'white',
+      fontSize: 10,
+      bold: true,
+      alignment: 'center',
+      background: '#1F8A70',
+      padding: [8, 10, 8, 10],
+      margin: [0, 0, 0, 0]
+    }),
     
     defaultStyle: { 
       fontSize: 10.5 * bodyFontScale, 
