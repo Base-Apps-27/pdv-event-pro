@@ -105,29 +105,29 @@ export function generateAnnouncementsPDF(announcements, serviceDate) {
       }
     ],
     
-    footer: {
-      stack: [
-        {
-          canvas: [{
-            type: 'rect',
-            x: 0,
-            y: 0,
-            w: 612,
-            h: 24,
-            color: '#1F8A70'
-          }],
-          absolutePosition: { x: 0, y: 768 }
-        },
-        {
-          text: '¡Atrévete a cambiar!',
-          color: 'white',
-          fontSize: 10,
-          bold: true,
-          alignment: 'center',
-          absolutePosition: { x: 0, y: 773 },
-          width: 612
-        }
-      ]
+    footer: (currentPage, pageCount) => {
+      return {
+        stack: [
+          {
+            canvas: [{
+              type: 'rect',
+              x: 0,
+              y: 0,
+              w: 612,
+              h: 24,
+              color: '#1F8A70'
+            }]
+          },
+          {
+            text: '¡Atrévete a cambiar!',
+            color: 'white',
+            fontSize: 10,
+            bold: true,
+            alignment: 'center',
+            margin: [-36, -18, -36, 0]
+          }
+        ]
+      };
     },
     
     defaultStyle: { 
