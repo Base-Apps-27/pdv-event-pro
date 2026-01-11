@@ -127,27 +127,16 @@ export function generateServiceProgramPDF(serviceData) {
     ],
     
     footer: (currentPage, pageCount) => ({
-      stack: [
-        {
-          canvas: [{
-            type: 'rect',
-            x: 0, y: 0,
-            w: 612, h: 20,
-            color: '#1F8A70', // PDV teal (start of gradient)
-            fillOpacity: 1
-          }],
-          margin: [0, 0, 0, 0]
-        },
-        {
-          text: '¡Atrévete a cambiar!',
-          alignment: 'center',
-          fontSize: 9,
-          bold: true,
-          color: 'white',
-          margin: [0, -14, 0, 0]
-        }
-      ],
-      margin: [0, 772, 0, 0]
+      canvas: [{
+        type: 'rect',
+        x: 0,
+        y: 0,
+        w: 612,
+        h: 24,
+        color: '#1F8A70'
+      }],
+      absolutePosition: { x: 0, y: 768 },
+      relativePosition: { x: 0, y: 0 }
     }),
     
     defaultStyle: { 
