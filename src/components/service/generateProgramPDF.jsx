@@ -141,7 +141,7 @@ export async function generateServiceProgramPDF(serviceData) {
     }
   };
   
-  return pdfMake.createPdf(docDefinition);
+  return pdfMake.createPdf(docDefinition, {});
 }
 
 export function formatDate(dateStr) {
