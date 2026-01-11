@@ -57,21 +57,21 @@ export function generateServiceProgramPDF(serviceData) {
     pageMargins: [36, 36, 36, 56], // 0.5in margins + footer space
     
     content: [
-      // Title Header (PDV Branding)
+      // Logo + Title Header (PDV Branding)
       {
         columns: [
+          {
+            width: 50,
+            stack: [{
+              image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png',
+              width: 50,
+              height: 50
+            }]
+          },
           { width: '*', text: '' },
           {
             width: 'auto',
             stack: [
-              {
-                text: 'PALABRAS DE VIDA',
-                fontSize: 10 * globalScale,
-                bold: true,
-                alignment: 'center',
-                color: '#1F8A70',
-                margin: [0, 0, 0, 6]
-              },
               {
                 text: serviceData.name || 'ORDEN DE SERVICIO',
                 fontSize: 18 * globalScale,
@@ -89,7 +89,11 @@ export function generateServiceProgramPDF(serviceData) {
               }
             ]
           },
-          { width: '*', text: '' }
+          { width: '*', text: '' },
+          {
+            width: 50,
+            text: ''
+          }
         ],
         margin: [0, 0, 0, 8]
       },
