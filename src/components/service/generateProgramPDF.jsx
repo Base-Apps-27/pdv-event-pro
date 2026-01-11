@@ -107,18 +107,30 @@ export function generateServiceProgramPDF(serviceData) {
       ...buildSegments(serviceData.segments || [], globalScale)
     ],
     
-    footer: (currentPage, pageCount) => ({
-      canvas: [{
-        type: 'rect',
-        x: 0,
-        y: 0,
-        w: 612,
-        h: 24,
-        color: '#1F8A70'
-      }],
-      absolutePosition: { x: 0, y: 768 },
-      relativePosition: { x: 0, y: 0 }
-    }),
+    footer: (currentPage, pageCount) => {
+      return {
+        stack: [
+          {
+            canvas: [{
+              type: 'rect',
+              x: 0,
+              y: 0,
+              w: 612,
+              h: 24,
+              color: '#1F8A70'
+            }]
+          },
+          {
+            text: '¡Atrévete a cambiar!',
+            color: 'white',
+            fontSize: 10,
+            bold: true,
+            alignment: 'center',
+            margin: [-36, -18, -36, 0]
+          }
+        ]
+      };
+    },
     
     defaultStyle: { 
       fontSize: 10.5, 
