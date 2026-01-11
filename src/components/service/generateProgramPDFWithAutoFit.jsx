@@ -222,7 +222,7 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, bodyFontScale, ti
     }
   };
   
-  return pdfMake.createPdf(docDefinition);
+  return pdfMake.createPdf(docDefinition, {});
 }
 
 /**
