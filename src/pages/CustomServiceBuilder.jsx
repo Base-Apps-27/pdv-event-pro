@@ -27,6 +27,8 @@ import { normalizeSegment, normalizeServiceTeams, getSegmentData } from "@/compo
 import { Download } from "lucide-react";
 import { generateServiceProgramPDF } from "@/components/service/generateProgramPDF";
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
+import { generateServiceProgramPDFWithAutoFit } from "@/components/service/generateProgramPDFWithAutoFit";
+import { useLanguage } from "@/components/utils/i18n";
 
 export default function CustomServiceBuilder() {
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
@@ -425,15 +427,41 @@ export default function CustomServiceBuilder() {
 
 
   const handleDownloadProgramPDF = async () => {
+    const { t } = useLanguage();
+    const toastId = toast.loading(t('pdf.generating') || 'Generando PDF...');
+    
     try {
-      console.log('[PDF] Generating program PDF...');
-      const pdf = await generateServiceProgramPDF(serviceData);
-      console.log('[PDF] PDF object created, initiating download...');
-      pdf.download(`Programa-${serviceData.date || 'servicio'}.pdf`);
-      console.log('[PDF] Program PDF download initiated');
+      console.log('[PDF] Generating program PDF with auto-fit...');
+      const result = await generateServiceProgramPDFWithAutoFit(serviceData, (msg) => {
+        toast.loading(msg, { id: toastId });
+      });
+      
+      console.log('[PDF] Download initiated', {
+        isCached: result.isCached,
+        scales: result.scales
+      });
+      
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(result.pdf);
+      link.download = `Programa-${serviceData.date || 'servicio'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+      
+      // Show success toast with cache indicator
+      const cacheLabel = result.isCached ? ' ✓ (Cached)' : '';
+      toast.success(
+        (t('pdf.generated') || 'PDF generado exitosamente') + cacheLabel,
+        { id: toastId }
+      );
     } catch (error) {
       console.error('[PDF ERROR]', error);
-      alert('Error generando PDF del programa: ' + (error?.message || 'Error desconocido'));
+      toast.error(
+        t('pdf.error') || 'Error generando PDF: ' + (error?.message || 'Error desconocido'),
+        { id: toastId }
+      );
     }
   };
 

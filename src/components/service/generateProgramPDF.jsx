@@ -158,14 +158,14 @@ export async function generateServiceProgramPDF(serviceData) {
   return pdfMake.createPdf(docDefinition);
 }
 
-function formatDate(dateStr) {
+export function formatDate(dateStr) {
   if (!dateStr) return '';
   const date = new Date(dateStr + 'T12:00:00');
   const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   return `${date.getDate()} de ${months[date.getMonth()]}, ${date.getFullYear()}`;
 }
 
-function buildTeamInfo(serviceData, globalScale = 1) {
+export function buildTeamInfo(serviceData, globalScale = 1) {
   const items = [];
   const teams = [];
   
@@ -188,7 +188,10 @@ function buildTeamInfo(serviceData, globalScale = 1) {
   return items;
 }
 
-function buildSegments(segments, globalScale = 1) {
+export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
+  // Support both legacy (globalScale) and new (separate body/title) parameters
+  const globalScale = bodyFontScale; // For backward compat in segment building
+  
   if (!segments || segments.length === 0) return [];
   
   return segments.flatMap((seg, idx) => {
