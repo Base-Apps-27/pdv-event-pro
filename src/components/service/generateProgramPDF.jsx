@@ -123,30 +123,16 @@ export async function generateServiceProgramPDF(serviceData) {
       ...buildSegments(serviceData.segments || [], globalScale, globalScale)
     ],
     
-    footer: (currentPage, pageCount) => {
-      return {
-        stack: [
-          {
-            canvas: [{
-              type: 'rect',
-              x: 0,
-              y: 0,
-              w: 612,
-              h: 24,
-              color: '#1F8A70'
-            }]
-          },
-          {
-            text: '¡Atrévete a cambiar!',
-            color: 'white',
-            fontSize: 10,
-            bold: true,
-            alignment: 'center',
-            margin: [-36, -18, -36, 0]
-          }
-        ]
-      };
-    },
+    footer: () => ({
+      text: '¡Atrévete a cambiar!',
+      color: 'white',
+      fontSize: 10,
+      bold: true,
+      alignment: 'center',
+      background: '#1F8A70',
+      padding: [8, 10, 8, 10],
+      margin: [0, 0, 0, 0]
+    }),
     
     defaultStyle: { 
       fontSize: 10.5, 
