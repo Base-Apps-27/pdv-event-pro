@@ -29,9 +29,11 @@ import { generateServiceProgramPDF } from "@/components/service/generateProgramP
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
 import { generateServiceProgramPDFWithAutoFit } from "@/components/service/generateProgramPDFWithAutoFit";
 import { useLanguage } from "@/components/utils/i18n";
+import { toast } from "sonner";
 
 export default function CustomServiceBuilder() {
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  const { t } = useLanguage();
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -427,7 +429,6 @@ export default function CustomServiceBuilder() {
 
 
   const handleDownloadProgramPDF = async () => {
-    const { t } = useLanguage();
     const toastId = toast.loading(t('pdf.generating') || 'Generando PDF...');
     
     try {
