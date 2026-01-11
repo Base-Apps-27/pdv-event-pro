@@ -200,7 +200,7 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, bodyFontScale, ti
       },
       
       // Segments
-      ...buildSegments(serviceData.segments || [], bodyFontScale, titleFontScale)
+      ...(Array.isArray(buildSegments(serviceData.segments || [], bodyFontScale, titleFontScale)) ? buildSegments(serviceData.segments || [], bodyFontScale, titleFontScale) : [])
     ],
     
     footer: (currentPage, pageCount) => {
