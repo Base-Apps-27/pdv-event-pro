@@ -176,7 +176,7 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, bodyFontScale, ti
       },
       
       // Team info
-      {
+      ...(buildTeamInfo(serviceData, bodyFontScale).length > 0 ? [{
         columns: [
           { width: '*', text: '' },
           {
@@ -186,7 +186,7 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, bodyFontScale, ti
           { width: '*', text: '' }
         ],
         margin: [0, 0, 0, 8]
-      },
+      }] : []),
       
       // Divider
       { 
