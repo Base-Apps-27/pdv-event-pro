@@ -57,42 +57,23 @@ export function generateServiceProgramPDF(serviceData) {
     pageMargins: [36, 36, 36, 56], // 0.5in margins + footer space
     
     content: [
-      // Logo + Title Header (PDV Branding)
+      // Title Header (PDV Branding)
       {
-        columns: [
+        stack: [
           {
-            width: 50,
-            stack: [{
-              image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png',
-              width: 50,
-              height: 50
-            }]
+            text: serviceData.name || 'ORDEN DE SERVICIO',
+            fontSize: 18 * globalScale,
+            bold: true,
+            alignment: 'center',
+            color: '#000000',
+            margin: [0, 0, 0, 2]
           },
-          { width: '*', text: '' },
           {
-            width: 'auto',
-            stack: [
-              {
-                text: serviceData.name || 'ORDEN DE SERVICIO',
-                fontSize: 18 * globalScale,
-                bold: true,
-                alignment: 'center',
-                color: '#000000',
-                margin: [0, 0, 0, 2]
-              },
-              {
-                text: `${serviceData.day_of_week} ${formatDate(serviceData.date)}${serviceData.time ? ` • ${serviceData.time}` : ''}`,
-                fontSize: 11 * globalScale,
-                alignment: 'center',
-                color: '#4B5563',
-                margin: [0, 0, 0, 4]
-              }
-            ]
-          },
-          { width: '*', text: '' },
-          {
-            width: 50,
-            text: ''
+            text: `${serviceData.day_of_week} ${formatDate(serviceData.date)}${serviceData.time ? ` • ${serviceData.time}` : ''}`,
+            fontSize: 11 * globalScale,
+            alignment: 'center',
+            color: '#4B5563',
+            margin: [0, 0, 0, 4]
           }
         ],
         margin: [0, 0, 0, 8]

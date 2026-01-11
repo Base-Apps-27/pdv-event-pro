@@ -38,42 +38,23 @@ export function generateAnnouncementsPDF(announcements, serviceDate) {
     pageMargins: [36, 36, 36, 56],
     
     content: [
-      // Logo + Title Header (PDV Branding)
+      // Title Header (PDV Branding)
       {
-        columns: [
+        stack: [
           {
-            width: 50,
-            stack: [{
-              image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png',
-              width: 50,
-              height: 50
-            }]
+            text: 'ANUNCIOS',
+            fontSize: 18 * globalScale,
+            bold: true,
+            alignment: 'center',
+            color: '#000000',
+            margin: [0, 0, 0, 2]
           },
-          { width: '*', text: '' },
           {
-            width: 'auto',
-            stack: [
-              {
-                text: 'ANUNCIOS',
-                fontSize: 18 * globalScale,
-                bold: true,
-                alignment: 'center',
-                color: '#000000',
-                margin: [0, 0, 0, 2]
-              },
-              {
-                text: formatDate(serviceDate),
-                fontSize: 11 * globalScale,
-                alignment: 'center',
-                color: '#4B5563',
-                margin: [0, 0, 0, 4]
-              }
-            ]
-          },
-          { width: '*', text: '' },
-          {
-            width: 50,
-            text: ''
+            text: formatDate(serviceDate),
+            fontSize: 11 * globalScale,
+            alignment: 'center',
+            color: '#4B5563',
+            margin: [0, 0, 0, 4]
           }
         ],
         margin: [0, 0, 0, 8]
