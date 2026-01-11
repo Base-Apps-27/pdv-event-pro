@@ -120,7 +120,7 @@ export async function generateServiceProgramPDF(serviceData) {
       },
       
       // Segments (single column for custom services)
-      ...buildSegments(serviceData.segments || [], globalScale)
+      ...buildSegments(serviceData.segments || [], globalScale, globalScale)
     ],
     
     footer: (currentPage, pageCount) => {
