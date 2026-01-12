@@ -12,7 +12,8 @@ pdfMake.vfs = pdfFonts.vfs;
 /**
  * Estimate optimal scale based on content density
  * Content area target: 620pt (accounts for ~80pt header + ~20pt footer)
- * Returns scale factor 0.75–1.0 to ensure content fits on one page
+ * Returns scale factor 0.65–1.0 to ensure content fits on one page
+ * Very long services compress aggressively to stay on single page
  */
 export function estimateOptimalScale(serviceData) {
   const segments = serviceData.segments || [];
@@ -33,21 +34,29 @@ export function estimateOptimalScale(serviceData) {
   }, 0);
   
   // Heuristic: higher content = lower scale
-  // Light: 3-4 segments, minimal notes → 0.92
-  // Medium: 5-7 segments, moderate notes → 0.82
-  // Heavy: 8+ segments or 1500+ chars of notes → 0.75
+  // Light: 3-4 segments, minimal notes → 0.95
+  // Medium: 5-7 segments, moderate notes → 0.85
+  // Heavy: 8-10 segments or 1500+ chars of notes → 0.75
+  // Very Heavy: 11+ segments or 2500+ chars or 15+ songs → 0.65-0.68
   
   let scale = 1.0;
-  if (segmentCount >= 8) scale -= 0.25;
-  else if (segmentCount >= 5) scale -= 0.18;
-  else if (segmentCount >= 3) scale -= 0.08;
   
-  if (totalNoteLength > 1500) scale -= 0.10;
-  else if (totalNoteLength > 800) scale -= 0.05;
+  // Segment-based reduction
+  if (segmentCount >= 11) scale -= 0.32;     // Very long: 0.68
+  else if (segmentCount >= 8) scale -= 0.25; // Heavy: 0.75
+  else if (segmentCount >= 5) scale -= 0.15; // Medium: 0.85
+  else if (segmentCount >= 3) scale -= 0.05; // Light: 0.95
   
-  if (totalSongs > 10) scale -= 0.05;
+  // Notes-based reduction
+  if (totalNoteLength > 2500) scale -= 0.05;
+  else if (totalNoteLength > 1500) scale -= 0.03;
+  else if (totalNoteLength > 800) scale -= 0.02;
   
-  return Math.max(0.72, Math.min(1.0, scale));
+  // Songs-based reduction
+  if (totalSongs > 15) scale -= 0.05;
+  else if (totalSongs > 10) scale -= 0.03;
+  
+  return Math.max(0.65, Math.min(1.0, scale));
 }
 
 export async function generateServiceProgramPDF(serviceData) {
