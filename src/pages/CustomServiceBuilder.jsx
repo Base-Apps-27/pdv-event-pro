@@ -879,11 +879,11 @@ export default function CustomServiceBuilder() {
           }
 
           .print-segment {
-            margin-bottom: 10pt;
+            margin-bottom: var(--print-segment-margin);
             padding-bottom: 8pt;
             border-bottom: 1pt solid #f3f4f6;
             font-size: 10.5pt;
-            line-height: 1.3;
+            line-height: var(--print-line-height);
             break-inside: avoid;
             page-break-inside: avoid;
           }
