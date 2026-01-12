@@ -753,7 +753,32 @@ export default function CustomServiceBuilder() {
   const selectedDynamic = selectedAnnouncementsForPrint.filter(a => a.category !== 'General' || a.isEvent);
 
   return (
-    <div className="p-6 md:p-8 space-y-8 print:p-0">
+    <div className="p-6 md:p-8 space-y-8 print:p-0" style={{
+      '--print-margin-top': (() => {
+        const level = getCompressionLevel(serviceData);
+        return level === 'aggressive' ? '0.25in' : level === 'moderate' ? '0.35in' : '0.5in';
+      })(),
+      '--print-margin-right': (() => {
+        const level = getCompressionLevel(serviceData);
+        return level === 'aggressive' ? '0.25in' : level === 'moderate' ? '0.35in' : '0.5in';
+      })(),
+      '--print-margin-bottom': (() => {
+        const level = getCompressionLevel(serviceData);
+        return level === 'aggressive' ? '0.25in' : level === 'moderate' ? '0.35in' : '0.5in';
+      })(),
+      '--print-margin-left': (() => {
+        const level = getCompressionLevel(serviceData);
+        return level === 'aggressive' ? '0.25in' : level === 'moderate' ? '0.35in' : '0.5in';
+      })(),
+      '--print-segment-margin': (() => {
+        const level = getCompressionLevel(serviceData);
+        return level === 'aggressive' ? '6pt' : level === 'moderate' ? '8pt' : '10pt';
+      })(),
+      '--print-line-height': (() => {
+        const level = getCompressionLevel(serviceData);
+        return level === 'aggressive' ? '1.2' : '1.3';
+      })(),
+    }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
