@@ -1,24 +1,19 @@
 /**
- * Granular Auto-Fit PDF Generator with Iterative Scaling
+ * PDF Generator with Heuristic Scaling + Cache
  * 
  * Strategy:
- * 1. Generate PDF at starting scales (bodyFontScale: 1.0, titleFontScale: 1.0)
- * 2. Measure page count (using pdfmake's internal metrics)
- * 3. If >1 page: reduce bodyFontScale by 0.05 (prioritize body text)
- * 4. Loop until page count = 1 or reach floor scales (body: 0.60, title: 0.70)
+ * 1. Check localStorage cache by service data hash → instant return if hit
+ * 2. If miss: estimate optimal scale using content heuristics
+ * 3. Generate PDF once at calculated scale
+ * 4. Cache result for 48h
  * 
- * Why granular?
- * - Body text has most content; shrinking it saves more space
- * - Titles are few; keeping them larger preserves readability
- * - Title floor (0.70) > body floor (0.60) ensures headers stay readable
- * 
- * Caching:
- * - Before iteration: check localStorage cache by service data hash
- * - If hit: return instantly (no generation)
- * - If miss: iterate, then store result for 48h
+ * Why heuristics over iteration?
+ * - pdfmake doesn't expose page count before rendering (async layout)
+ * - Heuristic is fast, predictable, and tunable based on real-world feedback
+ * - Single-pass generation (no expensive re-renders)
  * 
  * Performance:
- * - First PDF: 7–10 seconds (3–5 iterations)
+ * - First PDF: 2–3 seconds (single generation)
  * - Cached PDF: <100ms (localStorage retrieval)
  */
 
@@ -28,80 +23,42 @@ import { getLogoDataUrl } from './pdfLogoData';
 import { getCachedPDF, cachePDF } from './pdfCacheManager';
 pdfMake.vfs = pdfFonts.vfs;
 
-// Import the original unscaled generator (will refactor this soon)
-import { buildTeamInfo, buildSegments, formatDate } from './generateProgramPDF';
+import { buildTeamInfo, buildSegments, formatDate, estimateOptimalScale } from './generateProgramPDF';
 
 /**
- * Main entry point: generate service program PDF with auto-fit
- * Returns { pdf, isCached, scales: { bodyFontScale, titleFontScale } }
+ * Main entry point: generate service program PDF with heuristic scaling
+ * Returns { pdf, isCached, scale }
  */
 export async function generateServiceProgramPDFWithAutoFit(serviceData, onProgress) {
-  console.log('[AUTOFIT] Starting PDF generation with granular auto-fit...');
+  console.log('[PDF] Starting PDF generation with heuristic scaling...');
   
   // Check cache first
   const cached = await getCachedPDF(serviceData);
   if (cached) {
-    console.log('[AUTOFIT] Cache hit - returning cached PDF');
+    console.log('[PDF] Cache hit - returning cached PDF');
     return {
       pdf: cached.blob,
       isCached: true,
-      scales: cached.metadata?.scales || { bodyFontScale: 1.0, titleFontScale: 1.0 }
+      scale: cached.metadata?.scale || 1.0
     };
+  }
+  
+  if (onProgress) {
+    onProgress('Generando PDF...');
   }
   
   const logoDataUrl = await getLogoDataUrl();
   
-  // Starting scales
-  let bodyFontScale = 1.0;
-  let titleFontScale = 1.0;
-  let iteration = 0;
-  const maxIterations = 8;
+  // Use proven heuristic to estimate optimal scale
+  const globalScale = estimateOptimalScale(serviceData);
+  console.log(`[PDF] Heuristic scale: ${globalScale.toFixed(2)}`);
   
-  // Floor scales (minimum readable sizes)
-  const bodyFloor = 0.60;
-  const titleFloor = 0.70;
-  
-  let pageCount = 2; // Assume overflow initially
-  let pdfDoc = null;
-  
-  while (iteration < maxIterations && pageCount > 1) {
-    iteration++;
-    
-    console.log(`[AUTOFIT] Iteration ${iteration}: body=${bodyFontScale.toFixed(2)}, title=${titleFontScale.toFixed(2)}`);
-    
-    if (onProgress) {
-      onProgress(`Generando PDF (intento ${iteration}/${maxIterations})...`);
-    }
-    
-    // Generate PDF at current scales
-    pdfDoc = buildServiceProgramDocument(
-      serviceData,
-      logoDataUrl,
-      bodyFontScale,
-      titleFontScale
-    );
-    
-    // Estimate page count
-    pageCount = estimatePageCount(pdfDoc);
-    console.log(`[AUTOFIT] Estimated page count: ${pageCount}`);
-    
-    // If still overflowing and not at floor, reduce body scale
-    if (pageCount > 1 && iteration < maxIterations) {
-      // Reduce body first (has most content)
-      if (bodyFontScale > bodyFloor) {
-        bodyFontScale = Math.max(bodyFloor, bodyFontScale - 0.05);
-      } else if (titleFontScale > titleFloor) {
-        // If body at floor, reduce title
-        titleFontScale = Math.max(titleFloor, titleFontScale - 0.05);
-      } else {
-        // Both at floor, give up
-        console.warn('[AUTOFIT] Reached floor scales, stopping');
-        break;
-      }
-    }
-  }
-  
-  console.log(`[AUTOFIT] Converged after ${iteration} iterations: body=${bodyFontScale.toFixed(2)}, title=${titleFontScale.toFixed(2)}, pages=${pageCount}`);
+  // Generate PDF once at calculated scale
+  const pdfDoc = buildServiceProgramDocument(
+    serviceData,
+    logoDataUrl,
+    globalScale
+  );
   
   // Generate final PDF blob
   const pdfBlob = await new Promise((resolve, reject) => {
@@ -117,23 +74,22 @@ export async function generateServiceProgramPDFWithAutoFit(serviceData, onProgre
   
   // Cache result
   await cachePDF(serviceData, pdfBlob, {
-    scales: { bodyFontScale, titleFontScale },
-    iterations: iteration,
-    pageCount
+    scale: globalScale
   });
+  
+  console.log('[PDF] Generation complete');
   
   return {
     pdf: pdfBlob,
     isCached: false,
-    scales: { bodyFontScale, titleFontScale }
+    scale: globalScale
   };
 }
 
 /**
- * Build the PDF document with specified font scales
- * This mirrors generateServiceProgramPDF but accepts explicit scales
+ * Build the PDF document with specified scale
  */
-function buildServiceProgramDocument(serviceData, logoDataUrl, bodyFontScale, titleFontScale) {
+function buildServiceProgramDocument(serviceData, logoDataUrl, globalScale) {
   const docDefinition = {
     pageSize: 'LETTER',
     pageMargins: [36, 36, 36, 56],
@@ -154,7 +110,7 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, bodyFontScale, ti
             stack: [
               {
                 text: serviceData.name || 'ORDEN DE SERVICIO',
-                fontSize: 18 * titleFontScale,
+                fontSize: 18 * globalScale,
                 bold: true,
                 alignment: 'center',
                 color: '#000000',
@@ -162,7 +118,7 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, bodyFontScale, ti
               },
               {
                 text: `${serviceData.day_of_week} ${formatDate(serviceData.date)}${serviceData.time ? ` • ${serviceData.time}` : ''}`,
-                fontSize: 11 * bodyFontScale,
+                fontSize: 11 * globalScale,
                 alignment: 'center',
                 color: '#4B5563',
                 margin: [0, 0, 0, 4]
@@ -176,12 +132,12 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, bodyFontScale, ti
       },
       
       // Team info
-      ...(buildTeamInfo(serviceData, bodyFontScale).length > 0 ? [{
+      ...(buildTeamInfo(serviceData, globalScale).length > 0 ? [{
         columns: [
           { width: '*', text: '' },
           {
             width: 'auto',
-            stack: buildTeamInfo(serviceData, bodyFontScale)
+            stack: buildTeamInfo(serviceData, globalScale)
           },
           { width: '*', text: '' }
         ],
@@ -200,7 +156,7 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, bodyFontScale, ti
       },
       
       // Segments
-      ...buildSegments(serviceData.segments || [], bodyFontScale, titleFontScale)
+      ...buildSegments(serviceData.segments || [], globalScale, globalScale)
     ],
     
     footer: () => ({
@@ -215,7 +171,7 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, bodyFontScale, ti
     }),
     
     defaultStyle: { 
-      fontSize: 10.5 * bodyFontScale, 
+      fontSize: 10.5 * globalScale, 
       lineHeight: 1.3,
       color: '#374151'
     }
@@ -225,21 +181,6 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, bodyFontScale, ti
 }
 
 /**
- * Estimate page count from pdfmake document
- * Heuristic: measure internal buffer size relative to page capacity
- * More robust approach would use pdf.js parsing, but adds complexity
+ * Export heuristic for external use / testing
  */
-function estimatePageCount(pdfDoc) {
-  try {
-    // pdfmake internal: check if _pages array exists
-    if (pdfDoc._pages && Array.isArray(pdfDoc._pages)) {
-      return pdfDoc._pages.length;
-    }
-    
-    // Fallback: assume 1 page (don't error out)
-    return 1;
-  } catch (error) {
-    console.warn('[AUTOFIT] Could not estimate page count:', error);
-    return 1;
-  }
-}
+export { estimateOptimalScale };

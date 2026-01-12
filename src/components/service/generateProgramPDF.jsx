@@ -14,7 +14,7 @@ pdfMake.vfs = pdfFonts.vfs;
  * Content area target: 620pt (accounts for ~80pt header + ~20pt footer)
  * Returns scale factor 0.75–1.0 to ensure content fits on one page
  */
-function estimateOptimalScale(serviceData) {
+export function estimateOptimalScale(serviceData) {
   const segments = serviceData.segments || [];
   
   // Count content density

@@ -453,8 +453,9 @@ export default function CustomServiceBuilder() {
       
       // Show success toast with cache indicator
       const cacheLabel = result.isCached ? ' ✓ (Cached)' : '';
+      const scaleInfo = result.scale ? ` [${(result.scale * 100).toFixed(0)}%]` : '';
       toast.success(
-        (t('pdf.generated') || 'PDF generado exitosamente') + cacheLabel,
+        (t('pdf.generated') || 'PDF generado exitosamente') + cacheLabel + scaleInfo,
         { id: toastId }
       );
     } catch (error) {
