@@ -799,11 +799,11 @@ export default function CustomServiceBuilder() {
           }
 
           .print-page-1-wrapper {
-            padding: 0.5in 0.5in calc(0.5in + 24pt) 0.5in;
+            padding: var(--print-margin-top) var(--print-margin-right) calc(var(--print-margin-bottom) + 24pt) var(--print-margin-left);
           }
 
           .print-page-2-wrapper {
-            padding: 0.5in 0.5in calc(0.5in + 24pt) 0.5in;
+            padding: var(--print-margin-top) var(--print-margin-right) calc(var(--print-margin-bottom) + 24pt) var(--print-margin-left);
           }
 
           .print-body-content {
