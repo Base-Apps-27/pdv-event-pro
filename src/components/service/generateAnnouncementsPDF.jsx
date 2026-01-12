@@ -154,7 +154,7 @@ export async function generateAnnouncementsPDF(announcements, serviceDate) {
     }
   };
   
-  return pdfMake.createPdf(docDefinition);
+  return pdfMake.createPdf(docDefinition, {});
 }
 
 function formatDate(dateStr) {
