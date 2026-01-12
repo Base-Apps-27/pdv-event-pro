@@ -31,6 +31,23 @@ import { generateServiceProgramPDFWithAutoFit } from "@/components/service/gener
 import { useLanguage } from "@/components/utils/i18n";
 import { toast } from "sonner";
 
+// Helper: Detect service complexity and return compression level
+function getCompressionLevel(serviceData) {
+  if (!serviceData) return 'normal';
+  
+  const totalSegments = (serviceData.segments || []).length;
+  const avgNotesLength = (serviceData.segments || []).reduce((sum, seg) => {
+    const notes = [seg.coordinator_notes, seg.projection_notes, seg.sound_notes, seg.description_details].join(' ').length;
+    return sum + notes;
+  }, 0) / Math.max(totalSegments, 1);
+  
+  const contentDensity = totalSegments + (avgNotesLength > 100 ? 2 : 0);
+  
+  if (contentDensity > 12) return 'aggressive'; // 10+ segments or heavy notes
+  if (contentDensity > 8) return 'moderate';    // 6-9 segments
+  return 'normal';                               // <= 5 segments
+}
+
 export default function CustomServiceBuilder() {
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
   const { t } = useLanguage();
