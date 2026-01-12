@@ -62,14 +62,18 @@ export async function generateServiceProgramPDFWithAutoFit(serviceData, onProgre
   
   // Generate final PDF blob
   const pdfBlob = await new Promise((resolve, reject) => {
-    pdfDoc.getBase64((pdf) => {
-      const binaryStr = atob(pdf);
-      const bytes = new Uint8Array(binaryStr.length);
-      for (let i = 0; i < binaryStr.length; i++) {
-        bytes[i] = binaryStr.charCodeAt(i);
-      }
-      resolve(new Blob([bytes], { type: 'application/pdf' }));
-    }, (err) => reject(err));
+    try {
+      pdfDoc.getBase64((pdf) => {
+        const binaryStr = atob(pdf);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        resolve(new Blob([bytes], { type: 'application/pdf' }));
+      });
+    } catch (err) {
+      reject(err);
+    }
   });
   
   // Cache result
