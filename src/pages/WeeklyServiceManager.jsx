@@ -1306,7 +1306,7 @@ Return ONLY valid JSON:
         return;
       }
 
-      const pdf = await generateAnnouncementsPDF(selectedForPrint, serviceData.date);
+      const pdf = await generateAnnouncementsPDF(selectedForPrint, serviceData);
       pdf.download(`Anuncios-Domingo-${serviceData.date}.pdf`);
       toast.success('PDF descargado', { id: toastId });
     } catch (error) {
