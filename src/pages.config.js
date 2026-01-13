@@ -1,8 +1,6 @@
 import AnnouncementsReport from './pages/AnnouncementsReport';
 import BuildMemory from './pages/BuildMemory';
-import CustomServiceAnnouncementsPrintPage from './pages/CustomServiceAnnouncementsPrintPage';
 import CustomServiceBuilder from './pages/CustomServiceBuilder';
-import CustomServiceProgramPrintPage from './pages/CustomServiceProgramPrintPage';
 import CustomServicesManager from './pages/CustomServicesManager';
 import Dashboard from './pages/Dashboard';
 import EventDetail from './pages/EventDetail';
@@ -28,9 +26,7 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "AnnouncementsReport": AnnouncementsReport,
     "BuildMemory": BuildMemory,
-    "CustomServiceAnnouncementsPrintPage": CustomServiceAnnouncementsPrintPage,
     "CustomServiceBuilder": CustomServiceBuilder,
-    "CustomServiceProgramPrintPage": CustomServiceProgramPrintPage,
     "CustomServicesManager": CustomServicesManager,
     "Dashboard": Dashboard,
     "EventDetail": EventDetail,

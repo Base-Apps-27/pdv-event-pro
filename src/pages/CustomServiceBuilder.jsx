@@ -25,7 +25,7 @@ import { formatDate as formatDateES } from "date-fns";
 import { es } from "date-fns/locale";
 import { normalizeSegment, normalizeServiceTeams, getSegmentData } from "@/components/utils/segmentDataUtils";
 import { Download } from "lucide-react";
-import { generateServiceProgramPDF } from "@/components/service/generateProgramPDF";
+
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
 import { generateServiceProgramPDFWithAutoFit } from "@/components/service/generateProgramPDFWithAutoFit";
 import { useLanguage } from "@/components/utils/i18n";
