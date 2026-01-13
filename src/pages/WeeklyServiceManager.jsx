@@ -13,13 +13,16 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer, ExternalLink, Settings, BookOpen } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer, ExternalLink, Settings, BookOpen, Download } from "lucide-react";
 import PrintSettingsModal from "@/components/print/PrintSettingsModal";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import { Calendar } from "@/components/ui/calendar";
 import { createPageUrl } from "@/utils";
 
 import { addMinutes, parse, format as formatDate } from "date-fns";
+import { generateWeeklyProgramPDF } from "@/components/service/generateWeeklyProgramPDF";
+import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
+import { toast } from "sonner";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { useLanguage } from "@/components/utils/i18n";
@@ -1280,13 +1283,36 @@ Return ONLY valid JSON:
     debouncedSave('print-settings');
   };
 
-  const handleQuickPrint = () => {
-    setIsQuickPrint(true);
-    setTimeout(() => {
-      window.print();
-      // Reset after print dialog closes
-      setTimeout(() => setIsQuickPrint(false), 100);
-    }, 50);
+  const handleDownloadProgramPDF = async () => {
+    const toastId = toast.loading('Generando PDF del Programa...');
+    try {
+      const pdf = await generateWeeklyProgramPDF(serviceData);
+      pdf.download(`Programa-Domingo-${serviceData.date}.pdf`);
+      toast.success('PDF descargado', { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error('Error generando PDF: ' + error.message, { id: toastId });
+    }
+  };
+
+  const handleDownloadAnnouncementsPDF = async () => {
+    const toastId = toast.loading('Generando PDF de Anuncios...');
+    try {
+      const allAnns = [...fixedAnnouncements, ...dynamicAnnouncements];
+      const selectedForPrint = allAnns.filter(a => selectedAnnouncements.includes(a.id));
+      
+      if (selectedForPrint.length === 0) {
+        toast.error('No hay anuncios seleccionados', { id: toastId });
+        return;
+      }
+
+      const pdf = await generateAnnouncementsPDF(selectedForPrint, serviceData.date);
+      pdf.download(`Anuncios-Domingo-${serviceData.date}.pdf`);
+      toast.success('PDF descargado', { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error('Error generando PDF: ' + error.message, { id: toastId });
+    }
   };
 
   const toggleSegmentExpanded = (timeSlot, idx) => {
@@ -2557,22 +2583,23 @@ Return ONLY valid JSON:
 
 
           <Button 
-            onClick={handleQuickPrint}
-            variant="outline"
-            className="border-2 border-gray-400 bg-white text-gray-900 hover:bg-gray-100 font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
-            title="Impresión Rápida / Quick Print"
+            onClick={handleDownloadProgramPDF}
+            style={tealStyle}
+            className="font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
+            title="Descargar PDF Programa"
           >
-            <Printer className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
-            <span className="hidden md:inline">Quick Print</span>
+            <Download className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+            <span className="hidden md:inline">PDF Programa</span>
           </Button>
           
           <Button 
-            onClick={() => setShowPrintSettings(true)}
+            onClick={handleDownloadAnnouncementsPDF}
             style={greenStyle}
             className="font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
+            title="Descargar PDF Anuncios"
           >
-            <Settings className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
-            <span className="hidden md:inline">{t('btn.print')}</span>
+            <Download className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+            <span className="hidden md:inline">PDF Anuncios</span>
           </Button>
         </div>
       </div>
