@@ -615,22 +615,36 @@ export default function WeeklyServiceManager() {
     if (existingData) {
       const mergeSegmentsWithBlueprint = (existingSegments, timeSlot) => {
         const activeBlueprint = blueprintData || { "9:30am": BLUEPRINT["9:30am"], "11:30am": BLUEPRINT["11:30am"] };
+        
+        // Helper to normalize types for matching (handles Spanish/English and Case)
+        const normalizeType = (t) => {
+          if (!t) return "";
+          const lower = t.toLowerCase();
+          if (lower === 'alabanza' || lower === 'worship') return 'worship';
+          if (lower === 'bienvenida' || lower === 'welcome') return 'welcome';
+          if (lower === 'ofrenda' || lower === 'ofrendas' || lower === 'offering') return 'offering';
+          if (lower === 'plenaria' || lower === 'predica' || lower === 'mensaje' || lower === 'message') return 'message';
+          return lower;
+        };
+
         return existingSegments.map((savedSeg, idx) => {
+          const savedType = normalizeType(savedSeg.type);
+          
           // Try to match by index first (if types match), otherwise find by type
           let blueprintSeg = activeBlueprint[timeSlot]?.[idx];
           
           // If index-matched segment doesn't exist or type mismatch, try to find ANY segment of this type
-          if (!blueprintSeg || blueprintSeg.type !== savedSeg.type) {
-            blueprintSeg = activeBlueprint[timeSlot]?.find(b => b.type === savedSeg.type);
+          if (!blueprintSeg || normalizeType(blueprintSeg.type) !== savedType) {
+            blueprintSeg = activeBlueprint[timeSlot]?.find(b => normalizeType(b.type) === savedType);
           }
           
           // Fallback to hardcoded blueprint if not found in active (and type matches)
           if (!blueprintSeg) {
              const hardcoded = BLUEPRINT[timeSlot]?.[idx];
-             if (hardcoded && hardcoded.type === savedSeg.type) {
+             if (hardcoded && normalizeType(hardcoded.type) === savedType) {
                blueprintSeg = hardcoded;
              } else {
-               blueprintSeg = BLUEPRINT[timeSlot]?.find(b => b.type === savedSeg.type);
+               blueprintSeg = BLUEPRINT[timeSlot]?.find(b => normalizeType(b.type) === savedType);
              }
           }
           
@@ -639,9 +653,9 @@ export default function WeeklyServiceManager() {
             
             // Add defaults if missing
             if (!subAssignments || subAssignments.length === 0) {
-              if (savedSeg.type === 'worship') {
+              if (savedType === 'worship') {
                 subAssignments = [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }];
-              } else if (savedSeg.type === 'message') {
+              } else if (savedType === 'message') {
                 subAssignments = [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }];
               }
             }
@@ -654,6 +668,20 @@ export default function WeeklyServiceManager() {
               requires_translation: blueprintSeg.requires_translation !== undefined ? blueprintSeg.requires_translation : savedSeg.requires_translation,
               default_translator_source: blueprintSeg.default_translator_source || savedSeg.default_translator_source || "manual",
             };
+          }
+
+          // Emergency Fallback: If no blueprint match, ensure standard types have their fields
+          // This fixes legacy/corrupted data where fields array is empty
+          if (!savedSeg.fields || savedSeg.fields.length === 0) {
+             let defaultFields = [];
+             if (savedType === 'worship') defaultFields = ["leader", "songs", "ministry_leader"];
+             else if (savedType === 'welcome') defaultFields = ["presenter"];
+             else if (savedType === 'offering') defaultFields = ["presenter", "verse"];
+             else if (savedType === 'message') defaultFields = ["preacher", "title", "verse"];
+             
+             if (defaultFields.length > 0) {
+                return { ...savedSeg, fields: defaultFields };
+             }
           }
           
           // HOTFIX: Clean up corrupted actions from previous "Special" segments that inherited "Mensaje" actions
