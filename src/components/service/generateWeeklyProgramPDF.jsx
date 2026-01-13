@@ -25,34 +25,118 @@ const BRAND = {
 /**
  * Heuristic scaling for Weekly Services (2 columns)
  * Checks the denser column to determine scale
+ * UPDATED: Now accounts for text density in notes
  */
 export function estimateWeeklyOptimalScale(serviceData) {
-  const countContent = (segments) => {
-    if (!segments) return 0;
-    const segCount = segments.filter(s => s.type !== 'break').length;
-    const songCount = segments.reduce((sum, seg) => sum + (seg.songs?.filter(s => s.title).length || 0), 0);
-    // Rough estimate: segments are ~4 lines, songs ~1.5 lines
-    return (segCount * 4) + (songCount * 1.5);
+  const countContent = (segments, preServiceNote) => {
+    let units = 0;
+    
+    // Pre-service note
+    if (preServiceNote) {
+      units += 2 + Math.ceil(preServiceNote.length / 50);
+    }
+
+    if (!segments) return units;
+
+    segments.filter(s => s.type !== 'break').forEach(seg => {
+      // 1. Header (Time + Title + Duration)
+      units += 2.5;
+
+      // 2. Roles (Leader/Preacher/Presenter/Translator)
+      if (seg.data?.leader || seg.data?.preacher || seg.data?.presenter) units += 1.2;
+      if (seg.requires_translation && seg.data?.translator) units += 1.2;
+
+      // 3. Songs
+      const songCount = seg.songs?.filter(s => s.title).length || 0;
+      units += songCount * 1.2;
+
+      // 4. Sub-assignments
+      if (seg.sub_assignments) {
+        seg.sub_assignments.forEach(sub => {
+          if (seg.data?.[sub.person_field_name]) units += 1.2;
+        });
+      }
+      // Legacy ministry fallback
+      if (!seg.sub_assignments?.length && seg.data?.ministry_leader) units += 1.2;
+
+      // 5. Message Title & Verse
+      if (seg.data?.title && seg.type === 'message') units += 1.5;
+      if (seg.data?.verse) units += 1 + Math.ceil(seg.data.verse.length / 55);
+
+      // 6. Notes (The biggest variable)
+      const noteFields = [
+        seg.data?.coordinator_notes,
+        seg.data?.projection_notes,
+        seg.data?.sound_notes,
+        seg.data?.ushers_notes,
+        seg.data?.stage_decor_notes,
+        seg.data?.description_details, // "Notas Generales"
+        seg.data?.description
+      ];
+
+      noteFields.forEach(note => {
+        if (note) {
+          // Approx 50 chars per line in a column + 0.5 unit spacing
+          units += Math.ceil(note.length / 50) + 0.5;
+        }
+      });
+
+      // 7. Actions/Cues
+      if (seg.actions?.length > 0) {
+        // Actions usually wrapped in one block, but can wrap lines
+        const totalActionChars = seg.actions.reduce((sum, a) => sum + (a.label?.length || 0) + 5, 0);
+        units += Math.ceil(totalActionChars / 50) + 1; // +1 for "CUES:" label
+      }
+
+      // 8. Spacing
+      units += 1.5;
+    });
+
+    return units;
   };
 
-  const load930 = countContent(serviceData["9:30am"]);
-  const load1130 = countContent(serviceData["11:30am"]);
+  const load930 = countContent(serviceData["9:30am"], serviceData.pre_service_notes?.["9:30am"]);
+  const load1130 = countContent(serviceData["11:30am"], serviceData.pre_service_notes?.["11:30am"]);
   const maxLoad = Math.max(load930, load1130);
+
+  // console.log(`[PDF Heuristic] Load 9:30: ${load930}, Load 11:30: ${load1130}, Max: ${maxLoad}`);
 
   // Base scale starts at 1.0
   let scale = 1.0;
 
-  // Thresholds for 2-column layout (narrower width per column)
-  if (maxLoad > 55) scale = 0.65;
-  else if (maxLoad > 45) scale = 0.75;
-  else if (maxLoad > 35) scale = 0.85;
-  else if (maxLoad > 25) scale = 0.95;
+  // Thresholds for Letter page 2-column layout
+  // Approx 65-70 lines fit comfortably at 1.0 scale
+  if (maxLoad > 85) scale = 0.60;      // Extreme overflow
+  else if (maxLoad > 75) scale = 0.65; // Heavy overflow
+  else if (maxLoad > 65) scale = 0.72; // Moderate overflow
+  else if (maxLoad > 55) scale = 0.80; // Light overflow
+  else if (maxLoad > 45) scale = 0.90; // Dense
+  else scale = 1.0;                    // Standard
 
-  return Math.max(0.65, Math.min(1.0, scale));
+  return Math.max(0.60, Math.min(1.0, scale));
 }
 
 export async function generateWeeklyProgramPDF(serviceData) {
-  const globalScale = estimateWeeklyOptimalScale(serviceData);
+  // Use manual scale if provided in serviceData, otherwise heuristic
+  const userScale = serviceData.print_settings_page1?.globalScale;
+  const heuristicScale = estimateWeeklyOptimalScale(serviceData);
+  
+  // If user explicitly set a scale (and it's not the default 1.0 placeholder from initialization if we want strictness, but 
+  // usually if it's saved in DB it's intentional. However, print_settings might be default. 
+  // Let's prefer heuristic IF print_settings is just the default 1.0 AND heuristic says we need smaller.)
+  // Actually, simpler: if print_settings exists, trust it. If not, auto.
+  // Exception: If the user hasn't "Saved" settings yet, print_settings_page1 might be null or default.
+  // WeeklyServiceManager passes the full serviceData.
+  
+  let globalScale = heuristicScale;
+  
+  // If we have saved settings that deviate from 1.0 OR correspond to a previous manual save
+  if (serviceData.print_settings_page1?.globalScale) {
+     // We'll use the user's setting, but maybe warn if it differs? No, just use it.
+     // Users expect "Settings" to rule.
+     globalScale = serviceData.print_settings_page1.globalScale;
+  }
+
   const logoDataUrl = await getLogoDataUrl();
 
   const docDefinition = {
