@@ -324,8 +324,8 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
     // Translator
     if (seg.requires_translation && seg.data?.translator) {
       items.push({
-        text: `🌐 Traduce: ${seg.data.translator}`,
-        fontSize: 9 * scale,
+        text: `TRADUCE: ${seg.data.translator}`,
+        fontSize: 8.5 * scale,
         color: BRAND.GRAY,
         italics: true,
         margin: [8, 0, 0, 1]
@@ -383,16 +383,16 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       items.push({ text: seg.data.verse, italics: true, color: BRAND.GRAY, fontSize: 9 * scale, margin: [8, 0, 0, 0] });
     }
 
-    // Notes - Stacked with Icons (Matches Settings/Preview Style)
+    // Notes - Stacked (No Icons for PDF safety, Uppercase Labels)
     const noteConfig = [
-      { key: 'coordinator_notes', label: 'Coord', icon: '📋', color: BRAND.AMBER },
-      { key: 'projection_notes', label: 'Proj', icon: '📽️', color: BRAND.BLUE },
-      { key: 'sound_notes', label: 'Sonido', icon: '🔊', color: BRAND.RED },
-      { key: 'ushers_notes', label: 'Ujier', icon: '🤝', color: BRAND.GREEN },
-      { key: 'translation_notes', label: 'Trad', icon: '🌐', color: BRAND.PURPLE },
-      { key: 'stage_decor_notes', label: 'Stage', icon: '🎨', color: BRAND.PINK },
-      { key: 'description_details', label: 'Notas', icon: '📝', color: BRAND.GRAY },
-      { key: 'description', label: 'Notas', icon: '📝', color: BRAND.GRAY }
+      { key: 'coordinator_notes', label: 'COORD', color: BRAND.AMBER },
+      { key: 'projection_notes', label: 'PROJ', color: BRAND.BLUE },
+      { key: 'sound_notes', label: 'SONIDO', color: BRAND.RED },
+      { key: 'ushers_notes', label: 'UJIER', color: BRAND.GREEN },
+      { key: 'translation_notes', label: 'TRAD', color: BRAND.PURPLE },
+      { key: 'stage_decor_notes', label: 'STAGE', color: BRAND.PINK },
+      { key: 'description_details', label: 'NOTAS', color: BRAND.GRAY },
+      { key: 'description', label: 'NOTAS', color: BRAND.GRAY }
     ];
 
     noteConfig.forEach(conf => {
@@ -400,7 +400,7 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       if (val) {
         items.push({
           text: [
-            { text: `${conf.icon} ${conf.label}: `, bold: true, color: conf.color, fontSize: 9 * scale },
+            { text: `${conf.label}: `, bold: true, color: conf.color, fontSize: 8.5 * scale },
             { text: val, color: BRAND.GRAY, fontSize: 9 * scale }
           ],
           margin: [8, 1, 0, 1]
