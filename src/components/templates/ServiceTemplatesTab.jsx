@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Clock, Save, Plus, Trash2, ChevronUp, ChevronDown, GripVertical, Sparkles } from "lucide-react";
+import { Clock, Save, Plus, Trash2, ChevronUp, ChevronDown, GripVertical, Sparkles, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,105 @@ export default function ServiceTemplatesTab() {
     "message": ["preacher", "title", "verse"],
     "special": ["presenter", "description"],
     "Especial": ["presenter", "description"]
+  };
+
+  const FACTORY_DEFAULT = {
+    name: "Servicios Dominicales",
+    day_of_week: "Sunday",
+    "9:30am": [
+      { 
+        type: "worship", 
+        title: "Equipo de A&A", 
+        duration: 35, 
+        fields: ["leader", "songs", "ministry_leader"],
+        songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }],
+        data: {},
+        actions: [{ label: "Video de introducción en FB", timing: "before_start", offset_min: 0, department: "Projection" }],
+        sub_assignments: [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }],
+        requires_translation: false, 
+        default_translator_source: "manual"
+      },
+      { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter"], data: {}, actions: [], sub_assignments: [], requires_translation: false, default_translator_source: "manual" },
+      { 
+        type: "offering", 
+        title: "Ofrendas", 
+        duration: 5, 
+        fields: ["presenter", "verse"],
+        data: {},
+        actions: [{ label: "Enviar texto: 844-555-5555", timing: "after_start", offset_min: 0, department: "Admin" }],
+        sub_assignments: [],
+        requires_translation: false, 
+        default_translator_source: "manual"
+      },
+      { 
+        type: "message", 
+        title: "Mensaje", 
+        duration: 45, 
+        fields: ["preacher", "title", "verse"],
+        data: {},
+        actions: [
+          { label: "Pianista sube", timing: "before_end", offset_min: 15, department: "Alabanza" },
+          { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }
+        ],
+        sub_assignments: [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }],
+        requires_translation: false, 
+        default_translator_source: "manual"
+      }
+    ],
+    "11:30am": [
+      { 
+        type: "worship", 
+        title: "Equipo de A&A", 
+        duration: 35, 
+        fields: ["leader", "songs", "ministry_leader", "translator"],
+        songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }],
+        data: {},
+        actions: [{ label: "Video de introducción en FB", timing: "before_start", offset_min: 0, department: "Projection" }],
+        sub_assignments: [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }],
+        requires_translation: true, 
+        default_translator_source: "manual"
+      },
+      { 
+        type: "welcome", 
+        title: "Bienvenida y Anuncios", 
+        duration: 5, 
+        fields: ["presenter", "translator"], 
+        data: {},
+        actions: [],
+        sub_assignments: [],
+        requires_translation: true, 
+        default_translator_source: "worship_segment_translator"
+      },
+      { 
+        type: "offering", 
+        title: "Ofrendas", 
+        duration: 5, 
+        fields: ["presenter", "verse", "translator"],
+        data: {},
+        actions: [{ label: "Enviar texto: 844-555-5555", timing: "after_start", offset_min: 0, department: "Admin" }],
+        sub_assignments: [],
+        requires_translation: true, 
+        default_translator_source: "worship_segment_translator"
+      },
+      { 
+        type: "message", 
+        title: "Mensaje", 
+        duration: 45, 
+        fields: ["preacher", "title", "verse", "translator"],
+        data: {},
+        actions: [
+          { label: "Pianista sube", timing: "before_end", offset_min: 15, department: "Alabanza" },
+          { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }
+        ],
+        sub_assignments: [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }],
+        requires_translation: true, 
+        default_translator_source: "manual"
+      }
+    ],
+    coordinators: { "9:30am": "", "11:30am": "" },
+    ujieres: { "9:30am": "", "11:30am": "" },
+    sound: { "9:30am": "", "11:30am": "" },
+    luces: { "9:30am": "", "11:30am": "" }
   };
 
   // Fetch or create the Sunday blueprint
@@ -199,6 +298,12 @@ export default function ServiceTemplatesTab() {
 
   const handleSave = () => {
     saveMutation.mutate(blueprintData);
+  };
+
+  const handleResetToFactory = () => {
+    if (confirm("¿Estás seguro de restablecer el Blueprint a los valores de fábrica? Esto sobrescribirá la configuración actual.")) {
+      setBlueprintData(FACTORY_DEFAULT);
+    }
   };
 
   const updateSegmentField = (service, segmentIndex, field, value) => {
@@ -602,9 +707,15 @@ export default function ServiceTemplatesTab() {
           <h3 className="text-2xl font-bold">Blueprint: Servicios Dominicales</h3>
           <p className="text-sm text-gray-500 mt-1">Define la estructura fija que se aplicará cada semana</p>
         </div>
-        <Button onClick={handleSave} style={tealStyle} size="icon" title="Guardar Blueprint">
-          <Save className="w-4 h-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleResetToFactory} variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Restablecer Original
+          </Button>
+          <Button onClick={handleSave} style={tealStyle} size="icon" title="Guardar Blueprint">
+            <Save className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
