@@ -29,42 +29,51 @@ const BRAND = {
  * UPDATED: Now accounts for text density in notes
  */
 export function estimateWeeklyOptimalScale(serviceData) {
+  // Revised Heuristic: Accounts for "Box" overhead and uses continuous scaling
   const countContent = (segments, preServiceNote) => {
     let units = 0;
     
     // Pre-service note
     if (preServiceNote) {
-      units += 2 + Math.ceil(preServiceNote.length / 50);
+      units += 2 + Math.ceil(preServiceNote.length / 60);
     }
 
     if (!segments) return units;
 
     segments.filter(s => s.type !== 'break').forEach(seg => {
-      // 1. Header (Time + Title + Duration)
+      // 1. Header (Time + Title + Duration) - Approx 2 lines + margins
       units += 2.5;
 
       // 2. Roles (Leader/Preacher/Presenter/Translator)
-      if (seg.data?.leader || seg.data?.preacher || seg.data?.presenter) units += 1.2;
-      if (seg.requires_translation && seg.data?.translator) units += 1.2;
+      if (seg.data?.leader || seg.data?.preacher || seg.data?.presenter) units += 1.1;
+      if (seg.requires_translation && seg.data?.translator) units += 1.1;
 
-      // 3. Songs
+      // 3. Songs (Boxed)
+      // Box overhead (padding/margins) = ~1.5 lines
       const songCount = seg.songs?.filter(s => s.title).length || 0;
-      units += songCount * 1.2;
+      if (songCount > 0) {
+        units += 1.5 + (songCount * 1.1);
+      }
 
       // 4. Sub-assignments
       if (seg.sub_assignments) {
         seg.sub_assignments.forEach(sub => {
-          if (seg.data?.[sub.person_field_name]) units += 1.2;
+          if (seg.data?.[sub.person_field_name]) units += 1.1;
         });
       }
       // Legacy ministry fallback
-      if (!seg.sub_assignments?.length && seg.data?.ministry_leader) units += 1.2;
+      if (!seg.sub_assignments?.length && seg.data?.ministry_leader) units += 1.1;
 
-      // 5. Message Title & Verse
-      if (seg.data?.title && seg.type === 'message') units += 1.5;
-      if (seg.data?.verse) units += 1 + Math.ceil(seg.data.verse.length / 55);
+      // 5. Message Box (Title + Verse)
+      const hasMessageTitle = seg.data?.title && seg.type === 'message';
+      const hasVerse = !!seg.data?.verse;
+      if (hasMessageTitle || hasVerse) {
+        units += 1.5; // Box overhead
+        if (hasMessageTitle) units += 1.2;
+        if (hasVerse) units += 0.5 + Math.ceil(seg.data.verse.length / 60);
+      }
 
-      // 6. Notes (Capped by Operational Truncation)
+      // 6. Notes (Boxed)
       const noteFields = [
         seg.data?.coordinator_notes,
         seg.data?.projection_notes,
@@ -78,22 +87,25 @@ export function estimateWeeklyOptimalScale(serviceData) {
 
       noteFields.forEach(note => {
         if (note) {
-          // We truncate at 350 chars, so cap the cost calculation there
-          // With font size reduction (7.5pt), density is higher (approx 70 chars/line)
-          // 350 chars / 70 = ~5 lines max
+          // Box overhead per note + content
+          // Truncated at 350 chars (~5-6 lines at 7.5pt)
           const effectiveLength = Math.min(note.length, 350);
-          units += Math.ceil(effectiveLength / 70) + 0.2; // Lower spacing cost
+          units += 1.2 + Math.ceil(effectiveLength / 75); 
         }
       });
 
-      // 7. Actions/Cues
+      // 7. Actions/Cues (Boxed)
       if (seg.actions?.length > 0) {
-        const totalActionChars = seg.actions.reduce((sum, a) => sum + (a.label?.length || 0) + 5, 0);
-        units += Math.ceil(totalActionChars / 50) + 1;
+         // Separate boxes for prep vs during?
+         const prepCount = seg.actions.filter(a => a.timing === 'before_start').length;
+         const duringCount = seg.actions.filter(a => a.timing !== 'before_start').length;
+         
+         if (prepCount > 0) units += 1.5 + prepCount; // Box + items
+         if (duringCount > 0) units += 1.5 + duringCount; // Box + items
       }
 
-      // 8. Spacing
-      units += 1.5;
+      // 8. Inter-segment Spacing
+      units += 1.0;
     });
 
     return units;
@@ -103,16 +115,17 @@ export function estimateWeeklyOptimalScale(serviceData) {
   const load1130 = countContent(serviceData["11:30am"], serviceData.pre_service_notes?.["11:30am"]);
   const maxLoad = Math.max(load930, load1130);
 
+  // Continuous Scaling Formula
+  // Target: 55 units per column fits comfortably at 1.0 scale
+  // If load > 55, we scale down: scale = 55 / load
+  const TARGET_CAPACITY = 55;
+  
   let scale = 1.0;
+  if (maxLoad > TARGET_CAPACITY) {
+    scale = TARGET_CAPACITY / maxLoad;
+  }
 
-  // Thresholds for Letter page 2-column layout
-  if (maxLoad > 85) scale = 0.60;
-  else if (maxLoad > 75) scale = 0.65;
-  else if (maxLoad > 65) scale = 0.72;
-  else if (maxLoad > 55) scale = 0.80;
-  else if (maxLoad > 45) scale = 0.90;
-  else scale = 1.0;
-
+  // Hard clamp to prevent unreadable text (0.6 minimum)
   return Math.max(0.60, Math.min(1.0, scale));
 }
 
