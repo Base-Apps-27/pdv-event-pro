@@ -71,7 +71,10 @@ function estimateOptimalScale(announcements) {
   return Math.max(0.55, Math.min(1.25, scale));
 }
 
-export async function generateAnnouncementsPDF(announcements, serviceDate) {
+export async function generateAnnouncementsPDF(announcements, serviceDataOrDate) {
+  const serviceDate = typeof serviceDataOrDate === 'string' ? serviceDataOrDate : (serviceDataOrDate?.date || '');
+  const serviceData = typeof serviceDataOrDate === 'object' ? serviceDataOrDate : null;
+
   // Brand Palette from Guide
   const BRAND = {
     BLACK: '#1A1A1A',     // Charcoal/Black
@@ -140,7 +143,8 @@ export async function generateAnnouncementsPDF(announcements, serviceDate) {
                 color: BRAND.TEAL,
                 characterSpacing: 1,
                 margin: [0, 0, 0, 4]
-              }
+              },
+              ...getWelcomePresenterInfo(serviceData, globalScale, BRAND)
             ]
           },
           { width: '*', text: '' },
@@ -233,6 +237,75 @@ function formatDate(dateStr) {
   const date = new Date(dateStr + 'T12:00:00');
   const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   return `${date.getDate()} de ${months[date.getMonth()]}, ${date.getFullYear()}`;
+}
+
+function getWelcomePresenterInfo(serviceData, scale, BRAND) {
+  if (!serviceData) return [];
+  
+  const findWelcome = (segments) => segments?.find(s => 
+    (s.title?.toLowerCase().includes('bienvenida') && s.title?.toLowerCase().includes('anuncios')) ||
+    (s.type === 'welcome')
+  );
+  
+  const seg930 = findWelcome(serviceData["9:30am"]);
+  const seg1130 = findWelcome(serviceData["11:30am"]);
+  
+  const p9 = seg930?.data?.presenter;
+  const t9 = seg930?.data?.translator;
+  const p11 = seg1130?.data?.presenter;
+  const t11 = seg1130?.data?.translator;
+  
+  const items = [];
+  const clean = (name) => name ? name.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '') : '';
+  
+  const p9Clean = clean(p9);
+  const p11Clean = clean(p11);
+  
+  if (p9Clean || p11Clean) {
+    if (p9Clean === p11Clean && t9 === t11) {
+      // Same presenter/translator for both
+      if (p9Clean) {
+        let text = `BIENVENIDA: ${p9Clean}`;
+        if (t9) text += ` / TRAD: ${t9}`;
+        items.push({ 
+          text: text.toUpperCase(), 
+          fontSize: 9 * scale, 
+          color: BRAND.BLACK, 
+          bold: true, 
+          alignment: 'center', 
+          margin: [0, 2, 0, 0] 
+        });
+      }
+    } else {
+      // Different
+      if (p9Clean) {
+        let text = `9:30 AM: ${p9Clean}`;
+        if (t9) text += ` (Trad: ${t9})`;
+        items.push({ 
+          text: text.toUpperCase(), 
+          fontSize: 8.5 * scale, 
+          color: BRAND.BLACK, 
+          bold: true, 
+          alignment: 'center', 
+          margin: [0, 1, 0, 0] 
+        });
+      }
+      if (p11Clean) {
+        let text = `11:30 AM: ${p11Clean}`;
+        if (t11) text += ` (Trad: ${t11})`;
+        items.push({ 
+          text: text.toUpperCase(), 
+          fontSize: 8.5 * scale, 
+          color: BRAND.BLACK, 
+          bold: true, 
+          alignment: 'center', 
+          margin: [0, 1, 0, 0] 
+        });
+      }
+    }
+  }
+  
+  return items;
 }
 
 function parseHtmlToPdfMake(html, globalScale = 1) {
