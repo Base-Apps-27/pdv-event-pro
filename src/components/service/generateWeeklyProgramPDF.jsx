@@ -64,7 +64,7 @@ export function estimateWeeklyOptimalScale(serviceData) {
       if (seg.data?.title && seg.type === 'message') units += 1.5;
       if (seg.data?.verse) units += 1 + Math.ceil(seg.data.verse.length / 55);
 
-      // 6. Notes (The biggest variable)
+      // 6. Notes (Capped by Operational Truncation)
       const noteFields = [
         seg.data?.coordinator_notes,
         seg.data?.projection_notes,
@@ -78,8 +78,11 @@ export function estimateWeeklyOptimalScale(serviceData) {
 
       noteFields.forEach(note => {
         if (note) {
-          // Approx 50 chars per line in a column + 0.5 unit spacing
-          units += Math.ceil(note.length / 50) + 0.5;
+          // We truncate at 350 chars, so cap the cost calculation there
+          // With font size reduction (7.5pt), density is higher (approx 70 chars/line)
+          // 350 chars / 70 = ~5 lines max
+          const effectiveLength = Math.min(note.length, 350);
+          units += Math.ceil(effectiveLength / 70) + 0.2; // Lower spacing cost
         }
       });
 
@@ -464,30 +467,44 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       }
     }
 
-    // Notes - Styled Callout Boxes (Matches Live View)
-    // Helper to build a "border-l-4" style box
-    const buildCallout = (label, value, colors) => ({
-      table: {
-        widths: [3, '*'], // 3pt colored border, rest content
-        body: [[
-          { 
-            text: '', 
-            fillColor: colors.dark, 
-            border: [false, false, false, false] 
-          },
-          {
-            text: [
-              { text: `${label}: `, bold: true, color: colors.dark, fontSize: 8.5 * scale },
-              { text: value, color: colors.text, fontSize: 9 * scale }
-            ],
-            fillColor: colors.light,
-            border: [false, false, false, false],
-            margin: [4, 2, 2, 2] // Tight padding
-          }
-        ]]
-      },
-      margin: [8, 2, 0, 2] // Margin between boxes
-    });
+    // Notes - Styled Callout Boxes (Compact Operational Style)
+    // helper to clean and compact text
+    const cleanAndCompact = (text) => {
+      if (!text) return '';
+      // 1. Replace newlines with bullets to save vertical space
+      const compacted = text.replace(/\n+/g, ' • ');
+      // 2. Truncate to ~350 chars to prevent page overflow (Operational Constraint)
+      if (compacted.length > 350) {
+        return compacted.substring(0, 350) + '...';
+      }
+      return compacted;
+    };
+
+    const buildCallout = (label, value, colors) => {
+      const compactValue = cleanAndCompact(value);
+      return {
+        table: {
+          widths: [2, '*'], // Thinner accent border
+          body: [[
+            { 
+              text: '', 
+              fillColor: colors.dark, 
+              border: [false, false, false, false] 
+            },
+            {
+              text: [
+                { text: `${label}: `, bold: true, color: colors.dark, fontSize: 7.5 * scale }, // Smaller label
+                { text: compactValue, color: colors.text, fontSize: 7.5 * scale } // Significantly smaller content
+              ],
+              fillColor: colors.light,
+              border: [false, false, false, false],
+              margin: [3, 1, 2, 1] // Tighter padding
+            }
+          ]]
+        },
+        margin: [8, 1, 0, 1] // Tighter margins
+      };
+    };
 
     const NOTES_STYLE = {
       COORD: { light: '#FFF7ED', dark: '#F97316', text: '#7C2D12' }, // Orange-50/500/900
