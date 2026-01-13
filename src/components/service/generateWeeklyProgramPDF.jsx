@@ -115,18 +115,18 @@ export function estimateWeeklyOptimalScale(serviceData) {
   const load1130 = countContent(serviceData["11:30am"], serviceData.pre_service_notes?.["11:30am"]);
   const maxLoad = Math.max(load930, load1130);
 
-  // Continuous Scaling Formula
-  // Target: 55 units per column fits comfortably at 1.0 scale
-  // If load > 55, we scale down: scale = 55 / load
-  const TARGET_CAPACITY = 55;
+  // Continuous Scaling Formula (Aggressive)
+  // Target: 52 units per column fits comfortably at 1.0 scale (reduced from 55 for safety)
+  // If load > 52, we scale down with a 5% safety buffer: scale = (52 / load) * 0.95
+  const TARGET_CAPACITY = 52;
   
   let scale = 1.0;
   if (maxLoad > TARGET_CAPACITY) {
-    scale = TARGET_CAPACITY / maxLoad;
+    scale = (TARGET_CAPACITY / maxLoad) * 0.95;
   }
 
-  // Hard clamp to prevent unreadable text (0.6 minimum)
-  return Math.max(0.60, Math.min(1.0, scale));
+  // Lowered floor to 0.45 (approx 4.5pt font) to accommodate dense programs
+  return Math.max(0.45, Math.min(1.0, scale));
 }
 
 export async function generateWeeklyProgramPDF(serviceData) {
