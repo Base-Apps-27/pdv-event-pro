@@ -355,17 +355,6 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       });
     }
 
-    // Translator - Subordinate Style
-    if (seg.requires_translation && seg.data?.translator) {
-      items.push({
-        text: [
-          { text: 'Traductor: ', fontSize: 8.5 * scale, color: '#7C3AED', italics: true }, // Purple-600
-          { text: seg.data.translator, fontSize: 8.5 * scale, color: '#5B21B6', italics: true, bold: true } // Purple-800
-        ],
-        margin: [8, 0, 0, 1]
-      });
-    }
-
     // Songs - Styled Box (Slate-50)
     if (seg.songs && seg.songs.some(s => s.title)) {
       items.push({
@@ -422,6 +411,17 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
           { text: ' (5 min)', fontSize: 8.5 * scale, color: BRAND.GRAY }
         ],
         margin: [8, 1, 0, 1]
+      });
+    }
+
+    // Translator - Subordinate Style (Moved to bottom of personnel list per user request)
+    if (seg.requires_translation && seg.data?.translator) {
+      items.push({
+        text: [
+          { text: 'Traductor: ', fontSize: 8.5 * scale, color: '#7C3AED', italics: true }, // Purple-600
+          { text: seg.data.translator, fontSize: 8.5 * scale, color: '#5B21B6', italics: true, bold: true } // Purple-800
+        ],
+        margin: [8, 0, 0, 1]
       });
     }
 
