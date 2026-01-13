@@ -1095,14 +1095,25 @@ export default function WeeklyServiceManager() {
     // Use database blueprint if available, fallback to hardcoded
     const activeBlueprint = blueprintData || { "9:30am": BLUEPRINT["9:30am"], "11:30am": BLUEPRINT["11:30am"] };
     
+    // Helper to get default fields if blueprint is corrupted/missing them
+    const getDefaultFields = (type) => {
+      const t = type?.toLowerCase() || '';
+      if (t === 'worship') return ["leader", "songs", "ministry_leader"];
+      if (t === 'welcome') return ["presenter"];
+      if (t === 'offering') return ["presenter", "verse"];
+      if (t === 'message') return ["preacher", "title", "verse"];
+      return [];
+    };
+
     const initialData = {
       ...serviceData, // Keep ID, date, name, etc.
       "9:30am": activeBlueprint["9:30am"].map(seg => {
+        const fields = seg.fields && seg.fields.length > 0 ? seg.fields : getDefaultFields(seg.type);
         const segmentCopy = {
           type: seg.type,
           title: seg.title,
           duration: seg.duration,
-          fields: [...(seg.fields || [])],
+          fields: [...fields],
           data: {},
           actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
           sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
@@ -1122,11 +1133,12 @@ export default function WeeklyServiceManager() {
         return segmentCopy;
       }),
       "11:30am": activeBlueprint["11:30am"].map(seg => {
+        const fields = seg.fields && seg.fields.length > 0 ? seg.fields : getDefaultFields(seg.type);
         const segmentCopy = {
           type: seg.type,
           title: seg.title,
           duration: seg.duration,
-          fields: [...(seg.fields || [])],
+          fields: [...fields],
           data: {},
           actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
           sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
@@ -1145,9 +1157,7 @@ export default function WeeklyServiceManager() {
         
         return segmentCopy;
       }),
-      // Preserve team info and notes if possible, or reset them? 
-      // User asked to "force apply blueprint", usually implies structure reset. 
-      // We will preserve team info as that's often filled early.
+      // Preserve team info and notes
     };
 
     setServiceData(initialData);
