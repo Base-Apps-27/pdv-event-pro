@@ -1085,6 +1085,90 @@ export default function WeeklyServiceManager() {
     }));
   };
 
+  const resetToBlueprint = () => {
+    if (!window.confirm("¿Estás seguro? Esto restablecerá TODOS los segmentos y campos al diseño original. Se perderán los datos ingresados en los segmentos.")) {
+      return;
+    }
+
+    setSavingField('reset-blueprint');
+    
+    // Use database blueprint if available, fallback to hardcoded
+    const activeBlueprint = blueprintData || { "9:30am": BLUEPRINT["9:30am"], "11:30am": BLUEPRINT["11:30am"] };
+    
+    const initialData = {
+      ...serviceData, // Keep ID, date, name, etc.
+      "9:30am": activeBlueprint["9:30am"].map(seg => {
+        const segmentCopy = {
+          type: seg.type,
+          title: seg.title,
+          duration: seg.duration,
+          fields: [...(seg.fields || [])],
+          data: {},
+          actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
+          sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
+          requires_translation: seg.requires_translation || false,
+          default_translator_source: seg.default_translator_source || "manual"
+        };
+        
+        if (seg.type === "worship") {
+          segmentCopy.songs = [
+            { title: "", lead: "", key: "" },
+            { title: "", lead: "", key: "" },
+            { title: "", lead: "", key: "" },
+            { title: "", lead: "", key: "" }
+          ];
+        }
+        
+        return segmentCopy;
+      }),
+      "11:30am": activeBlueprint["11:30am"].map(seg => {
+        const segmentCopy = {
+          type: seg.type,
+          title: seg.title,
+          duration: seg.duration,
+          fields: [...(seg.fields || [])],
+          data: {},
+          actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
+          sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
+          requires_translation: seg.requires_translation || false,
+          default_translator_source: seg.default_translator_source || "manual"
+        };
+        
+        if (seg.type === "worship") {
+          segmentCopy.songs = [
+            { title: "", lead: "", key: "" },
+            { title: "", lead: "", key: "" },
+            { title: "", lead: "", key: "" },
+            { title: "", lead: "", key: "" }
+          ];
+        }
+        
+        return segmentCopy;
+      }),
+      // Preserve team info and notes if possible, or reset them? 
+      // User asked to "force apply blueprint", usually implies structure reset. 
+      // We will preserve team info as that's often filled early.
+    };
+
+    setServiceData(initialData);
+    
+    // Force immediate save
+    const dataToSave = {
+      ...initialData,
+      selected_announcements: selectedAnnouncements,
+      day_of_week: 'Sunday',
+      name: `Domingo - ${selectedDate}`,
+      status: 'active'
+    };
+    
+    saveServiceMutation.mutate(dataToSave, {
+      onSettled: () => setSavingField(null),
+      onSuccess: () => {
+        toast.success("Servicio restablecido al diseño original");
+      }
+    });
+  };
+
 
 
 
@@ -2638,6 +2722,17 @@ Return ONLY valid JSON:
           >
             <Settings className="w-4 h-4" />
           </Button>
+          
+          {hasPermission(user, 'edit_services') && (
+            <Button 
+              onClick={resetToBlueprint}
+              variant="destructive"
+              className="border-2 border-red-600 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-semibold px-2"
+              title="Restablecer diseño original (Borrar datos)"
+            >
+              <Wand2 className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
 
