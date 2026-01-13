@@ -383,28 +383,56 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       items.push({ text: seg.data.verse, italics: true, color: BRAND.GRAY, fontSize: 9 * scale, margin: [8, 0, 0, 0] });
     }
 
-    // Notes - Stacked (No Icons for PDF safety, Uppercase Labels)
+    // Notes - Styled Callout Boxes (Matches Live View)
+    // Helper to build a "border-l-4" style box
+    const buildCallout = (label, value, colors) => ({
+      table: {
+        widths: [3, '*'], // 3pt colored border, rest content
+        body: [[
+          { 
+            text: '', 
+            fillColor: colors.dark, 
+            border: [false, false, false, false] 
+          },
+          {
+            text: [
+              { text: `${label}: `, bold: true, color: colors.dark, fontSize: 8.5 * scale },
+              { text: value, color: colors.text, fontSize: 9 * scale }
+            ],
+            fillColor: colors.light,
+            border: [false, false, false, false],
+            margin: [4, 2, 2, 2] // Tight padding
+          }
+        ]]
+      },
+      margin: [8, 2, 0, 2] // Margin between boxes
+    });
+
+    const NOTES_STYLE = {
+      COORD: { light: '#FFF7ED', dark: '#F97316', text: '#7C2D12' }, // Orange-50/500/900
+      PROJ:  { light: '#EFF6FF', dark: '#3B82F6', text: '#1E3A8A' }, // Blue
+      SOUND: { light: '#FEF2F2', dark: '#EF4444', text: '#7F1D1D' }, // Red
+      UJIER: { light: '#F0FDF4', dark: '#22C55E', text: '#14532D' }, // Green
+      TRAD:  { light: '#FAF5FF', dark: '#A855F7', text: '#581C87' }, // Purple
+      STAGE: { light: '#FDF2F8', dark: '#EC4899', text: '#831843' }, // Pink
+      GEN:   { light: '#F3F4F6', dark: '#6B7280', text: '#111827' }  // Gray
+    };
+
     const noteConfig = [
-      { key: 'coordinator_notes', label: 'COORD', color: BRAND.AMBER },
-      { key: 'projection_notes', label: 'PROJ', color: BRAND.BLUE },
-      { key: 'sound_notes', label: 'SONIDO', color: BRAND.RED },
-      { key: 'ushers_notes', label: 'UJIER', color: BRAND.GREEN },
-      { key: 'translation_notes', label: 'TRAD', color: BRAND.PURPLE },
-      { key: 'stage_decor_notes', label: 'STAGE', color: BRAND.PINK },
-      { key: 'description_details', label: 'NOTAS', color: BRAND.GRAY },
-      { key: 'description', label: 'NOTAS', color: BRAND.GRAY }
+      { key: 'coordinator_notes', label: 'COORDINACIÓN', style: NOTES_STYLE.COORD },
+      { key: 'projection_notes', label: 'PROYECCIÓN', style: NOTES_STYLE.PROJ },
+      { key: 'sound_notes', label: 'SONIDO', style: NOTES_STYLE.SOUND },
+      { key: 'ushers_notes', label: 'UJIERES', style: NOTES_STYLE.UJIER },
+      { key: 'translation_notes', label: 'TRADUCCIÓN', style: NOTES_STYLE.TRAD },
+      { key: 'stage_decor_notes', label: 'STAGE & DECOR', style: NOTES_STYLE.STAGE },
+      { key: 'description_details', label: 'NOTAS', style: NOTES_STYLE.GEN },
+      { key: 'description', label: 'NOTAS', style: NOTES_STYLE.GEN }
     ];
 
     noteConfig.forEach(conf => {
       const val = seg.data?.[conf.key];
       if (val) {
-        items.push({
-          text: [
-            { text: `${conf.label}: `, bold: true, color: conf.color, fontSize: 8.5 * scale },
-            { text: val, color: BRAND.GRAY, fontSize: 9 * scale }
-          ],
-          margin: [8, 1, 0, 1]
-        });
+        items.push(buildCallout(conf.label, val, conf.style));
       }
     });
 
