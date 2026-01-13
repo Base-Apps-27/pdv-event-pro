@@ -115,22 +115,18 @@ export function estimateWeeklyOptimalScale(serviceData) {
   const load1130 = countContent(serviceData["11:30am"], serviceData.pre_service_notes?.["11:30am"]);
   const maxLoad = Math.max(load930, load1130);
 
-  // Continuous Scaling Formula (Max Aggression)
-  // Target: 48 units per column is the safe zone for a dense 2-column layout with boxes
-  const TARGET_CAPACITY = 48;
+  // Continuous Scaling Formula (Layout Efficiency Adjusted)
+  // With consolidated notes, we can fit more content (less vertical whitespace overhead).
+  // Target: 60 units per column (Up from 48/52 due to better layout efficiency)
+  const TARGET_CAPACITY = 60;
   
   let scale = 1.0;
   if (maxLoad > TARGET_CAPACITY) {
-    // If we are over capacity, scale down inversely
-    // e.g. Load 60 -> 48/60 = 0.8
     scale = TARGET_CAPACITY / maxLoad;
-    
-    // Apply an extra 10% safety margin for high loads to ensure fit
-    if (scale < 0.8) scale *= 0.90;
   }
 
-  // Clamp: 0.50 floor to keep readability (4.5pt is too small, 5pt is absolute limit)
-  return Math.max(0.50, Math.min(1.0, scale));
+  // Standard readability floor
+  return Math.max(0.55, Math.min(1.0, scale));
 }
 
 export async function generateWeeklyProgramPDF(serviceData) {
@@ -484,73 +480,76 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       }
     }
 
-    // Notes - Styled Callout Boxes (Compact Operational Style)
-    // helper to clean and compact text (Strict Truncation)
-    const cleanAndCompact = (text) => {
-      if (!text) return '';
-      // 1. Replace newlines with bullets to save vertical space
-      const compacted = text.replace(/\n+/g, ' • ');
-      // 2. Truncate to 150 chars (~2-3 lines max) to enforce single-page layout.
-      // This is a "Cue Sheet" view, not a full script.
-      if (compacted.length > 150) {
-        return compacted.substring(0, 150) + '...';
-      }
-      return compacted;
-    };
-
-    const buildCallout = (label, value, colors) => {
-      const compactValue = cleanAndCompact(value);
-      return {
-        table: {
-          widths: [2, '*'], // Thinner accent border
-          body: [[
-            { 
-              text: '', 
-              fillColor: colors.dark, 
-              border: [false, false, false, false] 
-            },
-            {
-              text: [
-                { text: `${label}: `, bold: true, color: colors.dark, fontSize: 7.5 * scale }, // Smaller label
-                { text: compactValue, color: colors.text, fontSize: 7.5 * scale } // Significantly smaller content
-              ],
-              fillColor: colors.light,
-              border: [false, false, false, false],
-              margin: [3, 1, 2, 1] // Tighter padding
-            }
-          ]]
-        },
-        margin: [8, 1, 0, 1] // Tighter margins
-      };
-    };
-
+    // Notes - Consolidated Block (Layout Efficiency)
+    // Instead of separate boxes (which add padding/margin overhead), we stack all notes
+    // into a single "Operations" block with colored labels. This mimics the dense "Settings" view.
+    
     const NOTES_STYLE = {
-      COORD: { light: '#FFF7ED', dark: '#F97316', text: '#7C2D12' }, // Orange-50/500/900
-      PROJ:  { light: '#EFF6FF', dark: '#3B82F6', text: '#1E3A8A' }, // Blue
-      SOUND: { light: '#FEF2F2', dark: '#EF4444', text: '#7F1D1D' }, // Red
-      UJIER: { light: '#F0FDF4', dark: '#22C55E', text: '#14532D' }, // Green
-      TRAD:  { light: '#FAF5FF', dark: '#A855F7', text: '#581C87' }, // Purple
-      STAGE: { light: '#FDF2F8', dark: '#EC4899', text: '#831843' }, // Pink
-      GEN:   { light: '#F3F4F6', dark: '#6B7280', text: '#111827' }  // Gray
+      COORD: { color: '#F97316', label: 'COORDINACIÓN' },
+      PROJ:  { color: '#2563EB', label: 'PROYECCIÓN' },
+      SOUND: { color: '#DC2626', label: 'SONIDO' },
+      UJIER: { color: '#16A34A', label: 'UJIERES' },
+      TRAD:  { color: '#9333EA', label: 'TRADUCCIÓN' },
+      STAGE: { color: '#DB2777', label: 'STAGE' },
+      GEN:   { color: '#4B5563', label: 'NOTAS' }
     };
 
     const noteConfig = [
-      { key: 'coordinator_notes', label: 'COORDINACIÓN', style: NOTES_STYLE.COORD },
-      { key: 'projection_notes', label: 'PROYECCIÓN', style: NOTES_STYLE.PROJ },
-      { key: 'sound_notes', label: 'SONIDO', style: NOTES_STYLE.SOUND },
-      { key: 'ushers_notes', label: 'UJIERES', style: NOTES_STYLE.UJIER },
-      { key: 'translation_notes', label: 'TRADUCCIÓN', style: NOTES_STYLE.TRAD },
-      { key: 'stage_decor_notes', label: 'STAGE & DECOR', style: NOTES_STYLE.STAGE },
-      { key: 'description_details', label: 'NOTAS', style: NOTES_STYLE.GEN },
-      { key: 'description', label: 'NOTAS', style: NOTES_STYLE.GEN }
+      { key: 'coordinator_notes', ...NOTES_STYLE.COORD },
+      { key: 'projection_notes', ...NOTES_STYLE.PROJ },
+      { key: 'sound_notes', ...NOTES_STYLE.SOUND },
+      { key: 'ushers_notes', ...NOTES_STYLE.UJIER },
+      { key: 'translation_notes', ...NOTES_STYLE.TRAD },
+      { key: 'stage_decor_notes', ...NOTES_STYLE.STAGE },
+      { key: 'description_details', ...NOTES_STYLE.GEN },
+      { key: 'description', ...NOTES_STYLE.GEN }
     ];
 
+    // Collect all active notes
+    const activeNotes = [];
     noteConfig.forEach(conf => {
-      const val = seg.data?.[conf.key];
-      if (val) {
-        items.push(buildCallout(conf.label, val, conf.style));
+      const rawVal = seg.data?.[conf.key];
+      if (rawVal) {
+        // Clean text: Replace newlines with bullets, remove excess whitespace
+        // NO TRUNCATION per user request - rely on layout efficiency
+        const cleanVal = rawVal.replace(/\n+/g, ' • ').trim();
+        activeNotes.push({
+          label: conf.label,
+          color: conf.color,
+          text: cleanVal
+        });
       }
     });
+
+    // Render as a single consolidated block if notes exist
+    if (activeNotes.length > 0) {
+      items.push({
+        table: {
+          widths: [2, '*'], // Single left accent border
+          body: [[
+            { 
+              text: '', 
+              fillColor: '#6B7280', // Neutral Gray accent 
+              border: [false, false, false, false] 
+            },
+            {
+              stack: activeNotes.map((note, idx) => ({
+                text: [
+                  { text: `${note.label}: `, bold: true, color: note.color, fontSize: 7.5 * scale },
+                  { text: note.text, color: '#374151', fontSize: 7.5 * scale }
+                ],
+                // Add tiny spacing between notes, but much tighter than separate boxes
+                margin: [0, idx > 0 ? 2 : 0, 0, 0]
+              })),
+              fillColor: '#F9FAFB', // Very light gray background for the whole block
+              border: [false, false, false, false],
+              margin: [4, 3, 2, 3] // Tight internal padding
+            }
+          ]]
+        },
+        margin: [8, 2, 0, 2] // Single margin for the whole block
+      });
+    }
 
     // Actions (Prep & During) - Demoted Visuals (No Icons, Small Text)
     if (seg.actions?.length > 0) {
