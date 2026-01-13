@@ -203,7 +203,7 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, globalScale) {
       ...buildSegments(serviceData.segments || [], globalScale, globalScale)
     ],
     
-    // Brand Footer: Charcoal Background + Gradient Top Border
+    // Brand Footer: White Background + Gradient Top Border
     footer: (currentPage, pageCount) => ({
       stack: [
         // Gradient Accent Line
@@ -214,24 +214,14 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, globalScale) {
             linearGradient: [BRAND.TEAL, BRAND.GREEN, BRAND.LIME] 
           }] 
         },
-        // Dark Footer Block
+        // Footer Text
         {
-          table: {
-            widths: ['*'],
-            body: [[
-              {
-                text: '¡ATRÉVETE A CAMBIAR!',
-                color: BRAND.WHITE,
-                fontSize: 10,
-                bold: true,
-                alignment: 'center',
-                fillColor: BRAND.BLACK,
-                border: [false, false, false, false],
-                margin: [0, 10, 0, 10]
-              }
-            ]]
-          },
-          layout: 'noBorders'
+          text: '¡ATRÉVETE A CAMBIAR!',
+          color: BRAND.BLACK,
+          fontSize: 10,
+          bold: true,
+          alignment: 'center',
+          margin: [0, 10, 0, 10]
         }
       ],
       margin: [0, 0, 0, 0]
