@@ -60,8 +60,8 @@ function estimateOptimalScale(announcements) {
   const rightLoad = countLines(dynamic) + 3; // +3 for "PRÓXIMOS EVENTOS" header
   const maxLoad = Math.max(leftLoad, rightLoad);
 
-  // Target Capacity: ~45 lines per column
-  const TARGET_LINES = 45;
+  // Target Capacity: ~40 lines per column (Conservative to ensure single-page fit)
+  const TARGET_LINES = 40;
   
   let scale = TARGET_LINES / maxLoad;
   
