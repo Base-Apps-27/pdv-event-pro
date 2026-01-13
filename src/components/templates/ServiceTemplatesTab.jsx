@@ -50,6 +50,15 @@ export default function ServiceTemplatesTab() {
     }
   };
 
+  const DEFAULT_FIELDS = {
+    "worship": ["leader", "songs", "ministry_leader"],
+    "welcome": ["presenter"],
+    "offering": ["presenter", "verse"],
+    "message": ["preacher", "title", "verse"],
+    "special": ["presenter", "description"],
+    "Especial": ["presenter", "description"]
+  };
+
   // Fetch or create the Sunday blueprint
   const { data: existingBlueprint, isLoading } = useQuery({
     queryKey: ['sunday-blueprint'],
@@ -133,7 +142,18 @@ export default function ServiceTemplatesTab() {
             });
           }
 
-          return { ...seg, sub_assignments: subAssignments };
+          // Ensure fields are populated
+          let fields = seg.fields || [];
+          if (fields.length === 0) {
+            const baseFields = DEFAULT_FIELDS[seg.type] || DEFAULT_FIELDS[seg.type.toLowerCase()] || [];
+            fields = [...baseFields];
+            // Add translator field if required
+            if (seg.requires_translation && !fields.includes('translator')) {
+              fields.push('translator');
+            }
+          }
+
+          return { ...seg, sub_assignments: subAssignments, fields: fields };
         });
       };
 
@@ -192,8 +212,17 @@ export default function ServiceTemplatesTab() {
         updated[service][segmentIndex].actions = value;
       } else if (field === 'sub_assignments') {
         updated[service][segmentIndex].sub_assignments = value;
-      } else if (field === 'duration' || field === 'title' || field === 'type' || field === 'requires_translation' || field === 'default_translator_source') {
+      } else if (field === 'duration' || field === 'title' || field === 'requires_translation' || field === 'default_translator_source') {
         updated[service][segmentIndex][field] = value;
+      } else if (field === 'type') {
+        // When type changes, update fields
+        updated[service][segmentIndex].type = value;
+        const baseFields = DEFAULT_FIELDS[value] || DEFAULT_FIELDS[value.toLowerCase()] || [];
+        const currentFields = [...baseFields];
+        if (updated[service][segmentIndex].requires_translation && !currentFields.includes('translator')) {
+          currentFields.push('translator');
+        }
+        updated[service][segmentIndex].fields = currentFields;
       } else {
         updated[service][segmentIndex].data = {
           ...updated[service][segmentIndex].data,
@@ -211,6 +240,7 @@ export default function ServiceTemplatesTab() {
         title: "",
         type: "Especial",
         duration: 15,
+        fields: ["presenter", "description"],
         data: {},
         actions: []
       }]
