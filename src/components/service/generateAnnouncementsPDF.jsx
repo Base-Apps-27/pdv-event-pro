@@ -30,6 +30,17 @@ function estimateOptimalScale(announcements) {
 }
 
 export async function generateAnnouncementsPDF(announcements, serviceDate) {
+  // Brand Palette from Guide
+  const BRAND = {
+    BLACK: '#1A1A1A',     // Charcoal/Black
+    TEAL: '#1F8A70',      // Primary Teal
+    GREEN: '#8DC63F',     // Bright Green
+    LIME: '#D7DF23',      // Lime Yellow
+    WHITE: '#FFFFFF',
+    GRAY: '#4B5563',
+    LIGHT_GRAY: '#E5E7EB'
+  };
+
   // Split announcements
   const fixed = announcements.filter(a => a.category === 'General');
   const dynamic = announcements.filter(a => a.category !== 'General' || a.isEvent);
@@ -38,54 +49,73 @@ export async function generateAnnouncementsPDF(announcements, serviceDate) {
   
   const docDefinition = {
     pageSize: 'LETTER',
-    pageMargins: [36, 36, 36, 56],
+    pageMargins: [36, 48, 36, 56], // Increased top margin slightly for brand bar
     
+    // Background Header Bar (Brand Gradient)
+    background: function(currentPage, pageSize) {
+      if (currentPage === 1) {
+        return {
+          canvas: [
+            {
+              type: 'rect',
+              x: 0, y: 0, w: pageSize.width, h: 12,
+              linearGradient: [BRAND.TEAL, BRAND.GREEN, BRAND.LIME]
+            }
+          ]
+        };
+      }
+      return null;
+    },
+
     content: [
       // Logo + Title Header (PDV Branding)
       {
         columns: [
           logoDataUrl ? {
-            width: 50,
+            width: 60,
             image: logoDataUrl,
-            fit: [50, 50],
+            fit: [60, 60],
             alignment: 'left'
-          } : { width: 50, text: '' },
+          } : { width: 60, text: '' },
           { width: '*', text: '' },
           {
             width: 'auto',
             stack: [
               {
                 text: 'ANUNCIOS',
-                fontSize: 18 * globalScale,
+                fontSize: 22 * globalScale,
                 bold: true,
                 alignment: 'center',
-                color: '#000000',
-                margin: [0, 0, 0, 2]
+                color: BRAND.BLACK,
+                characterSpacing: 0.5,
+                margin: [0, 4, 0, 2]
               },
               {
-                text: formatDate(serviceDate),
-                fontSize: 11 * globalScale,
+                text: formatDate(serviceDate).toUpperCase(),
+                fontSize: 10 * globalScale,
+                bold: true,
                 alignment: 'center',
-                color: '#4B5563',
+                color: BRAND.TEAL,
+                characterSpacing: 1,
                 margin: [0, 0, 0, 4]
               }
             ]
           },
           { width: '*', text: '' },
-          { width: 50, text: '' }
+          { width: 60, text: '' }
         ],
-        margin: [0, 0, 0, 8]
+        margin: [0, 0, 0, 12]
       },
       
-      // Divider
+      // Divider (Brand Colors)
       { 
         canvas: [{ 
           type: 'line', 
           x1: 0, y1: 0, x2: 540, y2: 0, 
-          lineWidth: 0.5, 
-          lineColor: '#E5E7EB' 
+          lineWidth: 2, 
+          lineColor: BRAND.GREEN // Green accent line
         }], 
-        margin: [0, 0, 0, 15] 
+        margin: [0, 0, 0, 16] 
       },
       
       // Two columns
@@ -101,19 +131,19 @@ export async function generateAnnouncementsPDF(announcements, serviceDate) {
             stack: [
               {
                 text: 'PRÓXIMOS EVENTOS',
-                fontSize: 9 * globalScale,
+                fontSize: 10 * globalScale,
                 bold: true,
-                color: '#6B7280',
+                color: BRAND.TEAL,
                 margin: [0, 0, 0, 8]
               },
               {
                 canvas: [{
                   type: 'line',
                   x1: 0, y1: 0, x2: 250, y2: 0,
-                  lineWidth: 0.5,
-                  lineColor: '#E5E7EB'
+                  lineWidth: 1,
+                  lineColor: BRAND.LIME
                 }],
-                margin: [0, 0, 0, 8]
+                margin: [0, 0, 0, 10]
               },
               ...buildDynamicAnnouncements(dynamic, globalScale)
             ]
@@ -122,35 +152,34 @@ export async function generateAnnouncementsPDF(announcements, serviceDate) {
       }
     ],
     
-    footer: (currentPage, pageCount) => {
-      return {
-        stack: [
-          {
-            canvas: [{
-              type: 'rect',
-              x: 0,
-              y: 0,
-              w: 612,
-              h: 24,
-              color: '#1F8A70'
-            }]
-          },
-          {
-            text: '¡Atrévete a cambiar!',
-            color: 'white',
-            fontSize: 10,
-            bold: true,
-            alignment: 'center',
-            margin: [-36, -18, -36, 0]
-          }
-        ]
-      };
-    },
+    // Brand Footer: White Background + Gradient Top Border
+    footer: (currentPage, pageCount) => ({
+      stack: [
+        // Gradient Accent Line
+        {
+          canvas: [{ 
+            type: 'rect', 
+            x: 0, y: 0, w: 612, h: 4, 
+            linearGradient: [BRAND.TEAL, BRAND.GREEN, BRAND.LIME] 
+          }] 
+        },
+        // Footer Text
+        {
+          text: '¡ATRÉVETE A CAMBIAR!',
+          color: BRAND.BLACK,
+          fontSize: 10,
+          bold: true,
+          alignment: 'center',
+          margin: [0, 10, 0, 10]
+        }
+      ],
+      margin: [0, 0, 0, 0]
+    }),
     
     defaultStyle: { 
-      fontSize: 9.5, 
+      fontSize: 9.5 * globalScale, 
       lineHeight: 1.3,
-      color: '#374151'
+      color: BRAND.BLACK
     }
   };
   
