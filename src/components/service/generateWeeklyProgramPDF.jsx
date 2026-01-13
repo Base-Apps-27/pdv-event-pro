@@ -1,7 +1,6 @@
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { getLogoDataUrl } from './pdfLogoData';
-import { formatDate } from './generateProgramPDF'; // Reuse utils
 import { es } from "date-fns/locale";
 import { addMinutes, parse, format } from "date-fns";
 
@@ -19,7 +18,9 @@ const BRAND = {
   RED: '#DC2626',
   BLUE: '#2563EB',
   PURPLE: '#7C3AED',
-  ORANGE: '#EA580C'
+  ORANGE: '#EA580C',
+  AMBER: '#B45309',
+  PINK: '#DB2777'
 };
 
 /**
@@ -69,8 +70,9 @@ export function estimateWeeklyOptimalScale(serviceData) {
         seg.data?.projection_notes,
         seg.data?.sound_notes,
         seg.data?.ushers_notes,
+        seg.data?.translation_notes,
         seg.data?.stage_decor_notes,
-        seg.data?.description_details, // "Notas Generales"
+        seg.data?.description_details,
         seg.data?.description
       ];
 
@@ -83,9 +85,8 @@ export function estimateWeeklyOptimalScale(serviceData) {
 
       // 7. Actions/Cues
       if (seg.actions?.length > 0) {
-        // Actions usually wrapped in one block, but can wrap lines
         const totalActionChars = seg.actions.reduce((sum, a) => sum + (a.label?.length || 0) + 5, 0);
-        units += Math.ceil(totalActionChars / 50) + 1; // +1 for "CUES:" label
+        units += Math.ceil(totalActionChars / 50) + 1;
       }
 
       // 8. Spacing
@@ -99,41 +100,26 @@ export function estimateWeeklyOptimalScale(serviceData) {
   const load1130 = countContent(serviceData["11:30am"], serviceData.pre_service_notes?.["11:30am"]);
   const maxLoad = Math.max(load930, load1130);
 
-  // console.log(`[PDF Heuristic] Load 9:30: ${load930}, Load 11:30: ${load1130}, Max: ${maxLoad}`);
-
-  // Base scale starts at 1.0
   let scale = 1.0;
 
   // Thresholds for Letter page 2-column layout
-  // Approx 65-70 lines fit comfortably at 1.0 scale
-  if (maxLoad > 85) scale = 0.60;      // Extreme overflow
-  else if (maxLoad > 75) scale = 0.65; // Heavy overflow
-  else if (maxLoad > 65) scale = 0.72; // Moderate overflow
-  else if (maxLoad > 55) scale = 0.80; // Light overflow
-  else if (maxLoad > 45) scale = 0.90; // Dense
-  else scale = 1.0;                    // Standard
+  if (maxLoad > 85) scale = 0.60;
+  else if (maxLoad > 75) scale = 0.65;
+  else if (maxLoad > 65) scale = 0.72;
+  else if (maxLoad > 55) scale = 0.80;
+  else if (maxLoad > 45) scale = 0.90;
+  else scale = 1.0;
 
   return Math.max(0.60, Math.min(1.0, scale));
 }
 
 export async function generateWeeklyProgramPDF(serviceData) {
   // Use manual scale if provided in serviceData, otherwise heuristic
-  const userScale = serviceData.print_settings_page1?.globalScale;
   const heuristicScale = estimateWeeklyOptimalScale(serviceData);
-  
-  // If user explicitly set a scale (and it's not the default 1.0 placeholder from initialization if we want strictness, but 
-  // usually if it's saved in DB it's intentional. However, print_settings might be default. 
-  // Let's prefer heuristic IF print_settings is just the default 1.0 AND heuristic says we need smaller.)
-  // Actually, simpler: if print_settings exists, trust it. If not, auto.
-  // Exception: If the user hasn't "Saved" settings yet, print_settings_page1 might be null or default.
-  // WeeklyServiceManager passes the full serviceData.
-  
   let globalScale = heuristicScale;
   
-  // If we have saved settings that deviate from 1.0 OR correspond to a previous manual save
+  // If user explicitly set a scale, use it
   if (serviceData.print_settings_page1?.globalScale) {
-     // We'll use the user's setting, but maybe warn if it differs? No, just use it.
-     // Users expect "Settings" to rule.
      globalScale = serviceData.print_settings_page1.globalScale;
   }
 
@@ -264,7 +250,6 @@ function buildHeader(serviceData, logoDataUrl, scale) {
 }
 
 function buildWeeklyTeamInfo(serviceData, scale) {
-  // Logic matches existing print view: prefer 9:30 but fallback/combine if needed
   const teams = [
     { label: 'Coordinador', value: serviceData.coordinators?.["9:30am"] || serviceData.coordinators?.["11:30am"] },
     { label: 'Ujier', value: serviceData.ujieres?.["9:30am"] },
@@ -398,25 +383,30 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       items.push({ text: seg.data.verse, italics: true, color: BRAND.GRAY, fontSize: 9 * scale, margin: [8, 0, 0, 0] });
     }
 
-    // Notes (Coordinator/Projection/etc) - Condensed
-    const notes = [
-      { l: 'Coord', v: seg.data?.coordinator_notes, c: BRAND.BLUE },
-      { l: 'Proj', v: seg.data?.projection_notes, c: BRAND.BLUE },
-      { l: 'Sonido', v: seg.data?.sound_notes, c: BRAND.RED },
-      { l: 'Ujier', v: seg.data?.ushers_notes, c: BRAND.GREEN },
-      { l: 'Stage', v: seg.data?.stage_decor_notes, c: BRAND.PURPLE }
-    ].filter(n => n.v);
+    // Notes - Stacked with Icons (Matches Settings/Preview Style)
+    const noteConfig = [
+      { key: 'coordinator_notes', label: 'Coord', icon: '📋', color: BRAND.AMBER },
+      { key: 'projection_notes', label: 'Proj', icon: '📽️', color: BRAND.BLUE },
+      { key: 'sound_notes', label: 'Sonido', icon: '🔊', color: BRAND.RED },
+      { key: 'ushers_notes', label: 'Ujier', icon: '🤝', color: BRAND.GREEN },
+      { key: 'translation_notes', label: 'Trad', icon: '🌐', color: BRAND.PURPLE },
+      { key: 'stage_decor_notes', label: 'Stage', icon: '🎨', color: BRAND.PINK },
+      { key: 'description_details', label: 'Notas', icon: '📝', color: BRAND.GRAY },
+      { key: 'description', label: 'Notas', icon: '📝', color: BRAND.GRAY }
+    ];
 
-    if (notes.length > 0) {
-      items.push({
-        text: notes.map(n => [
-          { text: `${n.l}: `, bold: true, color: n.c },
-          { text: `${n.v}  `, color: BRAND.GRAY }
-        ]).flat(),
-        fontSize: 8.5 * scale,
-        margin: [8, 2, 0, 0]
-      });
-    }
+    noteConfig.forEach(conf => {
+      const val = seg.data?.[conf.key];
+      if (val) {
+        items.push({
+          text: [
+            { text: `${conf.icon} ${conf.label}: `, bold: true, color: conf.color, fontSize: 9 * scale },
+            { text: val, color: BRAND.GRAY, fontSize: 9 * scale }
+          ],
+          margin: [8, 1, 0, 1]
+        });
+      }
+    });
 
     // Actions
     if (seg.actions?.length > 0) {
