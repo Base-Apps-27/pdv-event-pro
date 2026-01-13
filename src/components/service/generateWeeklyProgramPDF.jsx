@@ -310,19 +310,19 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       margin: [0, idx > 0 ? 6 : 0, 0, 2]
     });
 
-    // Content: Roles (Matches PublicProgramSegment logic)
+    // Content: Roles (Strict Hierarchy, No Emojis)
     const segmentType = seg.segment_type || seg.type || seg.data?.type || '';
     const isWorship = ['Alabanza', 'worship'].includes(segmentType);
     const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
     
     // Presenter (Non-Worship/Non-Message)
     if (!isWorship && !isMessage && seg.data?.presenter) {
+      // Logic from PublicProgramSegment: Show "MINISTRA: Name" or just "Name"
       const label = segmentType === 'Ministración' ? 'MINISTRA: ' : '';
       items.push({
         text: [
-          { text: '👤 ', fontSize: 10 * scale }, // Icon
-          label ? { text: label, bold: true, color: '#2563EB', fontSize: 9.5 * scale } : '', // Blue-600
-          { text: seg.data.presenter, bold: true, color: '#2563EB', fontSize: 10 * scale }
+          label ? { text: label, bold: true, color: '#2563EB', fontSize: 9 * scale } : '', // Blue-600
+          { text: seg.data.presenter, bold: true, color: '#2563EB', fontSize: 10 * scale } // Name is larger/bolder
         ],
         margin: [8, 0, 0, 1]
       });
@@ -332,8 +332,7 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
     if (isWorship && seg.data?.leader) {
       items.push({
         text: [
-          { text: '👤 ', fontSize: 10 * scale },
-          { text: 'DIRIGE: ', bold: true, color: '#16A34A', fontSize: 9.5 * scale }, // Green-600
+          { text: 'DIRIGE: ', bold: true, color: '#16A34A', fontSize: 9 * scale }, // Green-600
           { text: seg.data.leader, bold: true, color: '#16A34A', fontSize: 10 * scale }
         ],
         margin: [8, 0, 0, 1]
@@ -344,21 +343,20 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
     if (isMessage && seg.data?.preacher) {
       items.push({
         text: [
-          { text: '👤 ', fontSize: 10 * scale },
-          { text: 'PREDICA: ', bold: true, color: '#4F46E5', fontSize: 9.5 * scale }, // Indigo-600
+          { text: 'PREDICA: ', bold: true, color: '#4F46E5', fontSize: 9 * scale }, // Indigo-600
           { text: seg.data.preacher, bold: true, color: '#4F46E5', fontSize: 10 * scale }
         ],
         margin: [8, 0, 0, 1]
       });
     }
 
-    // Translator
+    // Translator - Subordinate Style
     if (seg.requires_translation && seg.data?.translator) {
       items.push({
-        text: `TRADUCE: ${seg.data.translator}`,
-        fontSize: 8.5 * scale,
-        color: BRAND.GRAY,
-        italics: true,
+        text: [
+          { text: 'Traductor: ', fontSize: 8.5 * scale, color: '#7C3AED', italics: true }, // Purple-600
+          { text: seg.data.translator, fontSize: 8.5 * scale, color: '#5B21B6', italics: true, bold: true } // Purple-800
+        ],
         margin: [8, 0, 0, 1]
       });
     }
@@ -519,7 +517,7 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       }
     });
 
-    // Actions (Prep & During) - Styled Callouts
+    // Actions (Prep & During) - Demoted Visuals (No Icons, Small Text)
     if (seg.actions?.length > 0) {
       const prepActions = seg.actions.filter(a => a.timing === 'before_start');
       const duringActions = seg.actions.filter(a => a.timing !== 'before_start');
@@ -532,25 +530,24 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
             body: [[
               {
                 stack: [
-                  { text: '⚠ PREPARACIÓN', bold: true, fontSize: 8 * scale, color: '#374151', margin: [0, 0, 0, 2] },
+                  { text: 'PREPARACIÓN', bold: true, fontSize: 7.5 * scale, color: '#6B7280', margin: [0, 0, 0, 2] },
                   ...prepActions.map(a => ({
                     text: [
-                      { text: `[${a.department || 'General'}] `, bold: true, color: '#4B5563' },
-                      { text: a.label, color: '#374151' },
-                      a.offset_min ? { text: ` (${a.offset_min}m antes)`, italics: true, color: '#6B7280' } : ''
+                      { text: `[${a.department || 'General'}] `, bold: true, color: '#6B7280', fontSize: 7.5 * scale },
+                      { text: a.label, color: '#4B5563', fontSize: 8 * scale },
+                      a.offset_min ? { text: ` (${a.offset_min}m antes)`, italics: true, color: '#9CA3AF', fontSize: 7.5 * scale } : ''
                     ],
-                    fontSize: 8 * scale,
                     margin: [0, 0, 0, 1]
                   }))
                 ],
                 fillColor: '#F9FAFB', // Gray-50
                 border: [true, true, true, true],
                 borderColor: ['#E5E7EB', '#E5E7EB', '#E5E7EB', '#E5E7EB'],
-                margin: [4, 4, 4, 4]
+                margin: [4, 2, 4, 2] // Tighter padding
               }
             ]]
           },
-          margin: [8, 4, 0, 2]
+          margin: [8, 2, 0, 2]
         });
       }
 
@@ -562,20 +559,19 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
             body: [[
               {
                 stack: [
-                  { text: '▶ DURANTE SEGMENTO', bold: true, fontSize: 8 * scale, color: '#374151', margin: [0, 0, 0, 2] },
+                  { text: 'DURANTE SEGMENTO', bold: true, fontSize: 7.5 * scale, color: '#6B7280', margin: [0, 0, 0, 2] },
                   ...duringActions.map(a => ({
                     text: [
-                      { text: `[${a.department || 'General'}] `, bold: true, color: '#4B5563' },
-                      { text: a.label, color: '#374151' }
+                      { text: `[${a.department || 'General'}] `, bold: true, color: '#6B7280', fontSize: 7.5 * scale },
+                      { text: a.label, color: '#4B5563', fontSize: 8 * scale }
                     ],
-                    fontSize: 8 * scale,
                     margin: [0, 0, 0, 1]
                   }))
                 ],
                 fillColor: '#F9FAFB', // Gray-50
                 border: [true, true, true, true],
                 borderColor: ['#E5E7EB', '#E5E7EB', '#E5E7EB', '#E5E7EB'],
-                margin: [4, 4, 4, 4]
+                margin: [4, 2, 4, 2]
               }
             ]]
           },
