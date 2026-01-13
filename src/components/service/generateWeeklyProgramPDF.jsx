@@ -115,18 +115,17 @@ export function estimateWeeklyOptimalScale(serviceData) {
   const load1130 = countContent(serviceData["11:30am"], serviceData.pre_service_notes?.["11:30am"]);
   const maxLoad = Math.max(load930, load1130);
 
-  // Continuous Scaling Formula (Layout Efficiency Adjusted)
-  // With consolidated notes, we can fit more content (less vertical whitespace overhead).
-  // Target: 60 units per column (Up from 48/52 due to better layout efficiency)
-  const TARGET_CAPACITY = 60;
+  // Continuous Scaling Formula (Aggressive Mode)
+  // Target: 50 units per column. Lowering to ensure fit.
+  const TARGET_CAPACITY = 50;
   
   let scale = 1.0;
   if (maxLoad > TARGET_CAPACITY) {
     scale = TARGET_CAPACITY / maxLoad;
   }
 
-  // Standard readability floor
-  return Math.max(0.55, Math.min(1.0, scale));
+  // Lower floor to 0.40 to accommodate huge blocks of text
+  return Math.max(0.40, Math.min(1.0, scale));
 }
 
 export async function generateWeeklyProgramPDF(serviceData) {
@@ -218,7 +217,8 @@ export async function generateWeeklyProgramPDF(serviceData) {
 
     defaultStyle: {
       fontSize: 10 * globalScale,
-      lineHeight: 1.2,
+      // Dynamic line height: condense spacing when scaling down
+      lineHeight: globalScale < 0.85 ? 0.9 : 1.2,
       color: BRAND.BLACK
     }
   };
@@ -539,7 +539,9 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
                   { text: note.text, color: '#374151', fontSize: 7.5 * scale }
                 ],
                 // Add tiny spacing between notes, but much tighter than separate boxes
-                margin: [0, idx > 0 ? 2 : 0, 0, 0]
+                margin: [0, idx > 0 ? 2 : 0, 0, 0],
+                // Ultra-tight line height for notes when scaled
+                lineHeight: scale < 0.85 ? 0.85 : 1.1
               })),
               fillColor: '#F9FAFB', // Very light gray background for the whole block
               border: [false, false, false, false],
