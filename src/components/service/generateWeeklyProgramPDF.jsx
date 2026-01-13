@@ -1,27 +1,15 @@
 import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { getLogoDataUrl } from './pdfLogoData';
 import { es } from "date-fns/locale";
 import { addMinutes, parse, format } from "date-fns";
+import { BRAND, formatDate } from './pdfUtils';
 
-pdfMake.vfs = pdfFonts.vfs;
-
-// Brand Palette
-const BRAND = {
-  BLACK: '#1A1A1A',
-  TEAL: '#1F8A70',
-  GREEN: '#8DC63F',
-  LIME: '#D7DF23',
-  WHITE: '#FFFFFF',
-  GRAY: '#4B5563',
-  LIGHT_GRAY: '#E5E7EB',
-  RED: '#DC2626',
-  BLUE: '#2563EB',
-  PURPLE: '#7C3AED',
-  ORANGE: '#EA580C',
-  AMBER: '#B45309',
-  PINK: '#DB2777'
-};
+// Font setup now handled in pdfUtils (imported indirectly or assumed set)
+// Redundant check doesn't hurt
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+if (pdfMake && !pdfMake.vfs && pdfFonts && pdfFonts.vfs) {
+  pdfMake.vfs = pdfFonts.vfs;
+}
 
 /**
  * Heuristic scaling for Weekly Services (2 columns)
@@ -227,6 +215,7 @@ export async function generateWeeklyProgramPDF(serviceData) {
 }
 
 function buildHeader(serviceData, logoDataUrl, scale) {
+  // Use centralized formatDate if available, otherwise manual format matches style
   const dateStr = serviceData.date 
     ? format(new Date(serviceData.date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })
     : '';

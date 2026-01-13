@@ -6,24 +6,19 @@
  * 2. If miss: estimate optimal scale using content heuristics
  * 3. Generate PDF once at calculated scale
  * 4. Cache result for 48h
- * 
- * Why heuristics over iteration?
- * - pdfmake doesn't expose page count before rendering (async layout)
- * - Heuristic is fast, predictable, and tunable based on real-world feedback
- * - Single-pass generation (no expensive re-renders)
- * 
- * Performance:
- * - First PDF: 2–3 seconds (single generation)
- * - Cached PDF: <100ms (localStorage retrieval)
  */
 
 import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { getLogoDataUrl } from './pdfLogoData';
 import { getCachedPDF, cachePDF } from './pdfCacheManager';
-pdfMake.vfs = pdfFonts.vfs;
+import { estimateOptimalScale, buildTeamInfo, buildSegments, formatDate } from './generateProgramPDF';
+import { BRAND } from './pdfUtils';
 
-import { buildTeamInfo, buildSegments, formatDate, estimateOptimalScale } from './generateProgramPDF';
+// Font setup now handled in pdfUtils (imported indirectly or assumed set)
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+if (pdfMake && !pdfMake.vfs && pdfFonts && pdfFonts.vfs) {
+  pdfMake.vfs = pdfFonts.vfs;
+}
 
 /**
  * Main entry point: generate service program PDF with heuristic scaling
@@ -39,7 +34,6 @@ export async function generateServiceProgramPDFWithAutoFit(serviceData, onProgre
   const cached = await getCachedPDF(serviceData);
   if (cached) {
     // Only use cache if the scale matches current heuristic
-    // This prevents serving stale PDFs if the heuristic logic changes
     const cachedScale = cached.metadata?.scale || 1.0;
     if (Math.abs(cachedScale - preCalculatedScale) < 0.01) {
       console.log('[PDF] Cache hit - returning cached PDF');
@@ -104,17 +98,6 @@ export async function generateServiceProgramPDFWithAutoFit(serviceData, onProgre
  * Build the PDF document with specified scale
  */
 function buildServiceProgramDocument(serviceData, logoDataUrl, globalScale) {
-  // Brand Palette from Guide
-  const BRAND = {
-    BLACK: '#1A1A1A',     // Charcoal/Black
-    TEAL: '#1F8A70',      // Primary Teal
-    GREEN: '#8DC63F',     // Bright Green
-    LIME: '#D7DF23',      // Lime Yellow
-    WHITE: '#FFFFFF',
-    GRAY: '#4B5563',
-    LIGHT_GRAY: '#E5E7EB'
-  };
-
   const docDefinition = {
     pageSize: 'LETTER',
     pageMargins: [36, 48, 36, 56], // Increased top margin slightly for brand bar
@@ -236,8 +219,3 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, globalScale) {
   
   return pdfMake.createPdf(docDefinition, {});
 }
-
-/**
- * Export heuristic for external use / testing
- */
-export { estimateOptimalScale };
