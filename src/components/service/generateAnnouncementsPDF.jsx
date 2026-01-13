@@ -9,24 +9,66 @@ import { getLogoDataUrl } from './pdfLogoData';
 pdfMake.vfs = pdfFonts.vfs;
 
 /**
- * Estimate optimal scale based on announcements density
- * Target: 620pt content area (accounts for header + footer)
- * Returns scale factor 0.80–1.0
+ * Estimate optimal scale using continuous "line unit" counting.
+ * Accounts for 2-column layout by measuring the tallest column.
+ * Target: ~45 lines of content per column fits comfortably at 1.0 scale.
+ * Range: 0.55 (dense) to 1.25 (sparse).
  */
 function estimateOptimalScale(announcements) {
-  const totalItems = announcements.length;
-  const totalChars = announcements.reduce((sum, a) => sum + (a.content?.length || 0) + (a.instructions?.length || 0), 0);
+  const fixed = announcements.filter(a => a.category === 'General');
+  const dynamic = announcements.filter(a => a.category !== 'General' || a.isEvent);
+
+  const countLines = (items) => {
+    let lines = 0;
+    if (!items) return 0;
+    
+    items.forEach(a => {
+      // Title (Bold)
+      if (a.title || a.name) lines += 2;
+      
+      // Date (for events)
+      if (a.date_of_occurrence || a.start_date) lines += 1.2;
+      
+      // Content (Body) - Approx 55 chars per line at 10pt
+      const content = a.isEvent ? (a.announcement_blurb || a.description) : a.content;
+      if (content) {
+        // Strip HTML for counting
+        const clean = content.replace(/<[^>]+>/g, '');
+        lines += Math.ceil(clean.length / 55);
+      }
+      
+      // Instructions/Cue
+      if (a.instructions) {
+        const clean = a.instructions.replace(/<[^>]+>/g, '');
+        lines += 1.0 + Math.ceil(clean.length / 60);
+      }
+      
+      // Video Tag
+      if (a.has_video || a.announcement_has_video) lines += 1;
+      
+      // Spacing/Divider overhead
+      lines += 2.0; 
+      
+      // Box overhead (emphasis)
+      if (a.emphasize || a.category === 'Urgent') lines += 1.5;
+    });
+    
+    return lines;
+  };
+
+  const leftLoad = countLines(fixed);
+  const rightLoad = countLines(dynamic) + 3; // +3 for "PRÓXIMOS EVENTOS" header
+  const maxLoad = Math.max(leftLoad, rightLoad);
+
+  // Target Capacity: ~45 lines per column
+  const TARGET_LINES = 45;
   
-  // Light: <4 items, <800 chars → 0.95
-  // Medium: 4-8 items, 800-2500 chars → 0.85
-  // Heavy: 8+ items or 2500+ chars → 0.75
+  let scale = TARGET_LINES / maxLoad;
   
-  let scale = 1.0;
-  if (totalItems > 8 || totalChars > 2500) scale = 0.75;
-  else if (totalItems > 4 || totalChars > 800) scale = 0.85;
-  else scale = 0.95;
-  
-  return scale;
+  // Clamp scale
+  // Max 1.25 (12.5pt font) - don't get comically large
+  // Min 0.55 (5.5pt font) - don't get unreadable
+  return Math.max(0.55, Math.min(1.25, scale));
 }
 
 export async function generateAnnouncementsPDF(announcements, serviceDate) {
