@@ -115,18 +115,22 @@ export function estimateWeeklyOptimalScale(serviceData) {
   const load1130 = countContent(serviceData["11:30am"], serviceData.pre_service_notes?.["11:30am"]);
   const maxLoad = Math.max(load930, load1130);
 
-  // Continuous Scaling Formula (Aggressive)
-  // Target: 52 units per column fits comfortably at 1.0 scale (reduced from 55 for safety)
-  // If load > 52, we scale down with a 5% safety buffer: scale = (52 / load) * 0.95
-  const TARGET_CAPACITY = 52;
+  // Continuous Scaling Formula (Max Aggression)
+  // Target: 48 units per column is the safe zone for a dense 2-column layout with boxes
+  const TARGET_CAPACITY = 48;
   
   let scale = 1.0;
   if (maxLoad > TARGET_CAPACITY) {
-    scale = (TARGET_CAPACITY / maxLoad) * 0.95;
+    // If we are over capacity, scale down inversely
+    // e.g. Load 60 -> 48/60 = 0.8
+    scale = TARGET_CAPACITY / maxLoad;
+    
+    // Apply an extra 10% safety margin for high loads to ensure fit
+    if (scale < 0.8) scale *= 0.90;
   }
 
-  // Lowered floor to 0.45 (approx 4.5pt font) to accommodate dense programs
-  return Math.max(0.45, Math.min(1.0, scale));
+  // Clamp: 0.50 floor to keep readability (4.5pt is too small, 5pt is absolute limit)
+  return Math.max(0.50, Math.min(1.0, scale));
 }
 
 export async function generateWeeklyProgramPDF(serviceData) {
@@ -481,14 +485,15 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
     }
 
     // Notes - Styled Callout Boxes (Compact Operational Style)
-    // helper to clean and compact text
+    // helper to clean and compact text (Strict Truncation)
     const cleanAndCompact = (text) => {
       if (!text) return '';
       // 1. Replace newlines with bullets to save vertical space
       const compacted = text.replace(/\n+/g, ' • ');
-      // 2. Truncate to ~350 chars to prevent page overflow (Operational Constraint)
-      if (compacted.length > 350) {
-        return compacted.substring(0, 350) + '...';
+      // 2. Truncate to 150 chars (~2-3 lines max) to enforce single-page layout.
+      // This is a "Cue Sheet" view, not a full script.
+      if (compacted.length > 150) {
+        return compacted.substring(0, 150) + '...';
       }
       return compacted;
     };
