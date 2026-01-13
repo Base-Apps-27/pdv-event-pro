@@ -303,6 +303,8 @@ export default function ServiceTemplatesTab() {
   const handleResetToFactory = () => {
     if (confirm("¿Estás seguro de restablecer el Blueprint a los valores de fábrica? Esto sobrescribirá la configuración actual.")) {
       setBlueprintData(FACTORY_DEFAULT);
+      // We don't save automatically to give the user a chance to review, but we'll notify them
+      alert("Blueprint restablecido. Revisa los cambios y haz clic en 'Guardar Blueprint' para aplicar.");
     }
   };
 
@@ -462,10 +464,9 @@ export default function ServiceTemplatesTab() {
                             <div className="space-y-1 mt-2">
                               {segment.sub_assignments.map((subAssign, saIdx) => {
                                 const personValue = segment.data?.[subAssign.person_field_name] || "";
-                                if (!personValue) return null;
                                 return (
                                   <div key={saIdx} className="bg-purple-50 p-2 rounded border border-purple-200 text-sm">
-                                    <strong>{subAssign.label}:</strong> <span className="font-bold text-purple-900">{personValue}</span>
+                                    <strong>{subAssign.label}:</strong> <span className="font-bold text-purple-900">{personValue || <span className="text-purple-400 font-normal italic">(Sin asignar)</span>}</span>
                                     {subAssign.duration_min && <span className="text-xs text-gray-500 ml-2">({subAssign.duration_min} min)</span>}
                                   </div>
                                 );
