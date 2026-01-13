@@ -304,19 +304,50 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       text: [
         { text: timeStr, bold: true, color: timeSlot === '9:30am' ? BRAND.RED : BRAND.BLUE, fontSize: 10 * scale },
         { text: '  ' + seg.title.toUpperCase(), bold: true, color: BRAND.BLACK, fontSize: 10.5 * scale },
+        seg.type ? { text: `  ${seg.type.toUpperCase()}  `, color: '#374151', background: '#F3F4F6', fontSize: 7 * scale, bold: true } : '',
         { text: ` (${seg.duration} min)`, color: BRAND.GRAY, fontSize: 9 * scale }
       ],
       margin: [0, idx > 0 ? 6 : 0, 0, 2]
     });
 
-    // Content: Leader/Preacher/Presenter
-    const leaderName = seg.data?.leader || seg.data?.preacher || seg.data?.presenter;
-    if (leaderName) {
+    // Content: Roles (Matches PublicProgramSegment logic)
+    const segmentType = seg.segment_type || seg.type || seg.data?.type || '';
+    const isWorship = ['Alabanza', 'worship'].includes(segmentType);
+    const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
+    
+    // Presenter (Non-Worship/Non-Message)
+    if (!isWorship && !isMessage && seg.data?.presenter) {
+      const label = segmentType === 'Ministración' ? 'MINISTRA: ' : '';
       items.push({
-        text: leaderName.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, ''),
-        bold: true,
-        color: BRAND.BLUE,
-        fontSize: 10.5 * scale,
+        text: [
+          { text: '👤 ', fontSize: 10 * scale }, // Icon
+          label ? { text: label, bold: true, color: '#2563EB', fontSize: 9.5 * scale } : '', // Blue-600
+          { text: seg.data.presenter, bold: true, color: '#2563EB', fontSize: 10 * scale }
+        ],
+        margin: [8, 0, 0, 1]
+      });
+    }
+
+    // Leader (Worship)
+    if (isWorship && seg.data?.leader) {
+      items.push({
+        text: [
+          { text: '👤 ', fontSize: 10 * scale },
+          { text: 'DIRIGE: ', bold: true, color: '#16A34A', fontSize: 9.5 * scale }, // Green-600
+          { text: seg.data.leader, bold: true, color: '#16A34A', fontSize: 10 * scale }
+        ],
+        margin: [8, 0, 0, 1]
+      });
+    }
+
+    // Preacher (Message)
+    if (isMessage && seg.data?.preacher) {
+      items.push({
+        text: [
+          { text: '👤 ', fontSize: 10 * scale },
+          { text: 'PREDICA: ', bold: true, color: '#4F46E5', fontSize: 9.5 * scale }, // Indigo-600
+          { text: seg.data.preacher, bold: true, color: '#4F46E5', fontSize: 10 * scale }
+        ],
         margin: [8, 0, 0, 1]
       });
     }
@@ -332,17 +363,33 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       });
     }
 
-    // Songs
+    // Songs - Styled Box (Slate-50)
     if (seg.songs && seg.songs.some(s => s.title)) {
-      seg.songs.filter(s => s.title).forEach(song => {
-        items.push({
-          text: [
-            { text: `• ${song.title}`, color: BRAND.BLACK },
-            song.lead ? { text: ` (${song.lead})`, color: BRAND.GRAY, italics: true } : ''
-          ],
-          fontSize: 9.5 * scale,
-          margin: [8, 0, 0, 1]
-        });
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[
+            {
+              stack: [
+                { text: 'CANCIONES:', bold: true, fontSize: 8.5 * scale, color: '#334155', margin: [0, 0, 0, 2] },
+                ...seg.songs.filter(s => s.title).map((song, i) => ({
+                  text: [
+                    { text: `${i + 1}. `, color: '#64748B', fontSize: 8.5 * scale },
+                    { text: song.title, color: '#0F172A', fontSize: 9 * scale, bold: true },
+                    song.lead ? { text: ` (${song.lead})`, color: '#64748B', fontSize: 8.5 * scale, italics: true } : '',
+                    song.key ? { text: ` [${song.key}]`, color: '#64748B', fontSize: 8 * scale, bold: true } : ''
+                  ],
+                  margin: [0, 0, 0, 1]
+                }))
+              ],
+              fillColor: '#F8FAFC', // Slate-50
+              border: [true, true, true, true],
+              borderColor: ['#E2E8F0', '#E2E8F0', '#E2E8F0', '#E2E8F0'], // Slate-200
+              margin: [4, 4, 4, 4]
+            }
+          ]]
+        },
+        margin: [8, 4, 0, 4]
       });
     }
 
@@ -375,12 +422,48 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       });
     }
 
-    // Message Title & Verse
-    if (seg.data?.title && seg.type === 'message') {
-      items.push({ text: seg.data.title, italics: true, color: BRAND.GRAY, fontSize: 9.5 * scale, margin: [8, 1, 0, 0] });
-    }
-    if (seg.data?.verse) {
-      items.push({ text: seg.data.verse, italics: true, color: BRAND.GRAY, fontSize: 9 * scale, margin: [8, 0, 0, 0] });
+    // Message/Special Details - Styled Box (Blue-50)
+    if ((seg.data?.title && seg.type === 'message') || seg.data?.scripture_references || seg.data?.verse) {
+      const msgContent = [];
+      if (seg.data?.title && seg.type === 'message') {
+        msgContent.push({ 
+          text: [
+            { text: 'MENSAJE: ', bold: true, color: '#1E40AF' }, // Blue-800
+            { text: seg.data.title, color: '#1E3A8A' } // Blue-900
+          ], 
+          fontSize: 9 * scale,
+          margin: [0, 0, 0, 2] 
+        });
+      }
+      
+      const verseText = seg.data?.scripture_references || seg.data?.verse;
+      if (verseText) {
+        msgContent.push({
+          text: [
+            { text: 'ESCRITURAS: ', bold: true, color: '#1E40AF' },
+            { text: verseText, color: '#1E3A8A' }
+          ],
+          fontSize: 9 * scale
+        });
+      }
+
+      if (msgContent.length > 0) {
+        items.push({
+          table: {
+            widths: ['*'],
+            body: [[
+              {
+                stack: msgContent,
+                fillColor: '#EFF6FF', // Blue-50
+                border: [true, true, true, true],
+                borderColor: ['#BFDBFE', '#BFDBFE', '#BFDBFE', '#BFDBFE'], // Blue-200
+                margin: [4, 4, 4, 4]
+              }
+            ]]
+          },
+          margin: [8, 2, 0, 2]
+        });
+      }
     }
 
     // Notes - Styled Callout Boxes (Matches Live View)
@@ -436,16 +519,69 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       }
     });
 
-    // Actions
+    // Actions (Prep & During) - Styled Callouts
     if (seg.actions?.length > 0) {
-      const actionText = seg.actions.map(a => a.label).join(' • ');
-      items.push({
-        text: `CUES: ${actionText}`,
-        fontSize: 8 * scale,
-        color: BRAND.ORANGE,
-        background: '#FFF7ED',
-        margin: [8, 2, 0, 0]
-      });
+      const prepActions = seg.actions.filter(a => a.timing === 'before_start');
+      const duringActions = seg.actions.filter(a => a.timing !== 'before_start');
+
+      // Prep Actions
+      if (prepActions.length > 0) {
+        items.push({
+          table: {
+            widths: ['*'],
+            body: [[
+              {
+                stack: [
+                  { text: '⚠ PREPARACIÓN', bold: true, fontSize: 8 * scale, color: '#374151', margin: [0, 0, 0, 2] },
+                  ...prepActions.map(a => ({
+                    text: [
+                      { text: `[${a.department || 'General'}] `, bold: true, color: '#4B5563' },
+                      { text: a.label, color: '#374151' },
+                      a.offset_min ? { text: ` (${a.offset_min}m antes)`, italics: true, color: '#6B7280' } : ''
+                    ],
+                    fontSize: 8 * scale,
+                    margin: [0, 0, 0, 1]
+                  }))
+                ],
+                fillColor: '#F9FAFB', // Gray-50
+                border: [true, true, true, true],
+                borderColor: ['#E5E7EB', '#E5E7EB', '#E5E7EB', '#E5E7EB'],
+                margin: [4, 4, 4, 4]
+              }
+            ]]
+          },
+          margin: [8, 4, 0, 2]
+        });
+      }
+
+      // During Actions
+      if (duringActions.length > 0) {
+        items.push({
+          table: {
+            widths: ['*'],
+            body: [[
+              {
+                stack: [
+                  { text: '▶ DURANTE SEGMENTO', bold: true, fontSize: 8 * scale, color: '#374151', margin: [0, 0, 0, 2] },
+                  ...duringActions.map(a => ({
+                    text: [
+                      { text: `[${a.department || 'General'}] `, bold: true, color: '#4B5563' },
+                      { text: a.label, color: '#374151' }
+                    ],
+                    fontSize: 8 * scale,
+                    margin: [0, 0, 0, 1]
+                  }))
+                ],
+                fillColor: '#F9FAFB', // Gray-50
+                border: [true, true, true, true],
+                borderColor: ['#E5E7EB', '#E5E7EB', '#E5E7EB', '#E5E7EB'],
+                margin: [4, 4, 4, 4]
+              }
+            ]]
+          },
+          margin: [8, 0, 0, 2]
+        });
+      }
     }
 
     // Separator line
