@@ -1004,6 +1004,7 @@ export default function PublicProgramView() {
                       segments={allServiceSegments} 
                       currentTime={currentTime}
                       onScrollTo={scrollToSegment}
+                      serviceDate={actualServiceData?.date}
                     />
                   );
                 })()}

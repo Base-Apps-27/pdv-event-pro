@@ -152,9 +152,13 @@ export default function EventProgramView({
         />
       )}
 
-      {/* Live Status Card */}
+      {/* Live Status Card - with date awareness */}
       <LiveStatusCard 
-        segments={allSegments} 
+        segments={allSegments.map(seg => {
+          // Augment segments with their session date for accurate live status
+          const session = eventSessions.find(s => s.id === seg.session_id);
+          return { ...seg, date: session?.date };
+        })} 
         currentTime={currentTime}
         onScrollTo={scrollToSegment}
         liveAdjustmentEnabled={filteredSessions[0]?.live_adjustment_enabled}

@@ -4,12 +4,28 @@ import { Badge } from "@/components/ui/badge";
 import { PlayCircle } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
-export default function LiveStatusCard({ segments, currentTime, onScrollTo, liveAdjustmentEnabled }) {
-  // Helper to parse "HH:MM" to Date object for today
-  const getTimeDate = (timeStr) => {
+export default function LiveStatusCard({ segments, currentTime, onScrollTo, liveAdjustmentEnabled, serviceDate }) {
+  // Helper to parse "HH:MM" to Date object
+  const getTimeDate = (timeStr, segmentDate) => {
     if (!timeStr) return null;
     const [hours, mins] = timeStr.split(':').map(Number);
+    
     const date = new Date(currentTime);
+    
+    // Priority: 1. segmentDate (specific to segment)
+    //           2. serviceDate (global override for component)
+    //           3. currentTime (today - fallback)
+    const targetDateStr = segmentDate || serviceDate;
+    
+    if (targetDateStr) {
+      // Parse YYYY-MM-DD
+      // Note: We use local parts to ensure we match the user's local timezone assumption
+      const [y, m, d] = targetDateStr.split('-').map(Number);
+      date.setFullYear(y);
+      date.setMonth(m - 1);
+      date.setDate(d);
+    }
+    
     date.setHours(hours, mins, 0, 0);
     return date;
   };
@@ -31,20 +47,20 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
     s.start_time && 
     (s.type !== 'break' && s.segment_type !== 'break' && s.segment_type !== 'Break')
   ).sort((a, b) => {
-    const timeA = getTimeDate(a.start_time);
-    const timeB = getTimeDate(b.start_time);
+    const timeA = getTimeDate(a.start_time, a.date);
+    const timeB = getTimeDate(b.start_time, b.date);
     return timeA - timeB;
   });
 
   const currentSegment = validSegments.find(s => {
-    const start = getTimeDate(s.start_time);
-    const end = getTimeDate(s.end_time);
+    const start = getTimeDate(s.start_time, s.date);
+    const end = getTimeDate(s.end_time, s.date);
     return start && end && currentTime >= start && currentTime <= end;
   });
 
   // Next is the first segment starting after now
   const nextSegment = validSegments.find(s => {
-    const start = getTimeDate(s.start_time);
+    const start = getTimeDate(s.start_time, s.date);
     return start && start > currentTime;
   });
 
@@ -55,10 +71,15 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
     if (diff < 0) return "00:00";
     const mins = Math.floor(diff / 60000);
     const secs = Math.floor((diff % 60000) / 1000);
+    
+    // If more than 24 hours, don't show countdown
+    if (mins > 1440) return null;
+    
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const currentRemaining = currentSegment ? getTimeRemaining(getTimeDate(currentSegment.end_time)) : null;
+  const currentEnd = currentSegment ? getTimeDate(currentSegment.end_time, currentSegment.date) : null;
+  const currentRemaining = currentEnd ? getTimeRemaining(currentEnd) : null;
 
   // Helper to get the primary person for display
   const getPersonName = (segment) => {
@@ -87,7 +108,9 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                 <Badge variant="default" className="bg-red-500 hover:bg-red-600 animate-pulse flex items-center gap-1">
                   <PlayCircle className="w-3 h-3" /> EN CURSO
                 </Badge>
-                <span className="text-xs font-mono text-red-600 font-bold">{currentRemaining} restantes</span>
+                {currentRemaining && (
+                  <span className="text-xs font-mono text-red-600 font-bold">{currentRemaining} restantes</span>
+                )}
               </div>
               <h3 className="text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">
                 {currentSegment.title || currentSegment.data?.title}
