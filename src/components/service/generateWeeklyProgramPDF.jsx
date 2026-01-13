@@ -130,7 +130,7 @@ export async function generateWeeklyProgramPDF(serviceData) {
 
   const docDefinition = {
     pageSize: 'LETTER',
-    pageMargins: [36, 48, 36, 56],
+    pageMargins: [24, 36, 24, 40],
 
     // Brand Header Bar
     background: function(currentPage, pageSize) {

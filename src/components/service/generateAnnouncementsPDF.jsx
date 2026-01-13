@@ -89,7 +89,7 @@ export async function generateAnnouncementsPDF(announcements, serviceDataOrDate)
   
   const docDefinition = {
     pageSize: 'LETTER',
-    pageMargins: [36, 48, 36, 56], // Increased top margin slightly for brand bar
+    pageMargins: [24, 36, 24, 40],
     
     // Background Header Bar (Brand Gradient)
     background: function(currentPage, pageSize) {
