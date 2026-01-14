@@ -59,6 +59,20 @@ export default function ServiceTemplatesTab() {
     "Especial": ["presenter", "description"]
   };
 
+  const FIELD_LABELS = {
+    leader: "Líder de Alabanza",
+    ministry_leader: "Líder de Ministración",
+    presenter: "Presentador",
+    preacher: "Predicador",
+    title: "Título del Mensaje",
+    verse: "Verso / Cita Bíblica",
+    description: "Descripción",
+    songs: "Canciones",
+    translator: "Traductor"
+  };
+
+  const PERSON_FIELDS = ["leader", "ministry_leader", "presenter", "preacher", "translator"];
+
   const FACTORY_DEFAULT = {
     name: "Servicios Dominicales",
     day_of_week: "Sunday",
@@ -457,6 +471,46 @@ export default function ServiceTemplatesTab() {
                                   Canción {sIdx + 1} (placeholder)
                                 </div>
                               ))}
+                            </div>
+                          )}
+
+                          {/* Primary Fields Display */}
+                          {(segment.fields || []).length > 0 && (
+                            <div className="space-y-2 mt-3">
+                              {(segment.fields || [])
+                                .filter(field => {
+                                  // Exclude fields handled elsewhere
+                                  if (field === 'songs') return false;
+                                  if (field === 'translator') return false;
+                                  // Exclude fields that are in sub_assignments
+                                  if (segment.sub_assignments?.some(sa => sa.person_field_name === field)) return false;
+                                  return true;
+                                })
+                                .map((field, fIdx) => (
+                                  <div key={fIdx} className="space-y-1">
+                                    <Label className="text-xs font-semibold text-gray-700">
+                                      {FIELD_LABELS[field] || field}
+                                      <span className="text-[10px] text-gray-400 font-normal ml-1">(Predeterminado)</span>
+                                    </Label>
+                                    {PERSON_FIELDS.includes(field) ? (
+                                      <AutocompleteInput
+                                        type="person"
+                                        value={segment.data?.[field] || ""}
+                                        onChange={(e) => updateSegmentField(service, idx, field, e.target.value)}
+                                        placeholder={`Seleccionar ${FIELD_LABELS[field] || field}...`}
+                                        className="text-xs h-8"
+                                      />
+                                    ) : (
+                                      <Input
+                                        value={segment.data?.[field] || ""}
+                                        onChange={(e) => updateSegmentField(service, idx, field, e.target.value)}
+                                        placeholder={FIELD_LABELS[field] || field}
+                                        className="text-xs h-8"
+                                      />
+                                    )}
+                                  </div>
+                                ))
+                              }
                             </div>
                           )}
 
