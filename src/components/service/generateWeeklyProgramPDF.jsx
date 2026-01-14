@@ -53,7 +53,8 @@ export function estimateWeeklyOptimalScale(serviceData) {
       if (!seg.sub_assignments?.length && seg.data?.ministry_leader) units += 1.1;
 
       // 5. Message Box (Title + Verse)
-      const hasMessageTitle = seg.data?.title && seg.type === 'message';
+      const messageTitle = seg.data?.title || seg.data?.messageTitle;
+      const hasMessageTitle = messageTitle && seg.type === 'message';
       const hasVerse = !!seg.data?.verse;
       if (hasMessageTitle || hasVerse) {
         units += 1.5; // Box overhead
@@ -426,13 +427,14 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
     }
 
     // Message/Special Details - Styled Box (Blue-50)
-    if ((seg.data?.title && seg.type === 'message') || seg.data?.scripture_references || seg.data?.verse) {
+    const messageTitle = seg.data?.title || seg.data?.messageTitle;
+    if ((messageTitle && seg.type === 'message') || seg.data?.scripture_references || seg.data?.verse) {
       const msgContent = [];
-      if (seg.data?.title && seg.type === 'message') {
+      if (messageTitle && seg.type === 'message') {
         msgContent.push({ 
           text: [
             { text: 'MENSAJE: ', bold: true, color: '#1E40AF' }, // Blue-800
-            { text: seg.data.title, color: '#1E3A8A' } // Blue-900
+            { text: messageTitle, color: '#1E3A8A' } // Blue-900
           ], 
           fontSize: 9 * scale,
           margin: [0, 0, 0, 2] 

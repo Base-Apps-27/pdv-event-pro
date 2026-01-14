@@ -54,7 +54,7 @@ export default function ServiceTemplatesTab() {
     "worship": ["leader", "songs", "ministry_leader"],
     "welcome": ["presenter"],
     "offering": ["presenter", "verse"],
-    "message": ["preacher", "title", "verse"],
+    "message": ["preacher", "messageTitle", "verse"],
     "special": ["presenter", "description"],
     "Especial": ["presenter", "description"]
   };
@@ -64,7 +64,7 @@ export default function ServiceTemplatesTab() {
     ministry_leader: "Líder de Ministración",
     presenter: "Presentador",
     preacher: "Predicador",
-    title: "Título del Mensaje",
+    messageTitle: "Título del Mensaje",
     verse: "Verso / Cita Bíblica",
     description: "Descripción",
     songs: "Canciones",
@@ -105,7 +105,7 @@ export default function ServiceTemplatesTab() {
         type: "message", 
         title: "Mensaje", 
         duration: 45, 
-        fields: ["preacher", "title", "verse"],
+        fields: ["preacher", "messageTitle", "verse"],
         data: {},
         actions: [
           { label: "Pianista sube", timing: "before_end", offset_min: 15, department: "Alabanza" },
@@ -155,7 +155,7 @@ export default function ServiceTemplatesTab() {
         type: "message", 
         title: "Mensaje", 
         duration: 45, 
-        fields: ["preacher", "title", "verse", "translator"],
+        fields: ["preacher", "messageTitle", "verse", "translator"],
         data: {},
         actions: [
           { label: "Pianista sube", timing: "before_end", offset_min: 15, department: "Alabanza" },
@@ -188,13 +188,13 @@ export default function ServiceTemplatesTab() {
       { title: "Equipo de A&A", type: "worship", duration: 35, fields: ["leader", "songs", "ministry_leader"], songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [], requires_translation: false, default_translator_source: "manual" },
       { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, fields: ["presenter"], data: {}, actions: [], requires_translation: false, default_translator_source: "manual" },
       { title: "Ofrendas", type: "offering", duration: 5, fields: ["presenter", "verse"], data: {}, actions: [], requires_translation: false, default_translator_source: "manual" },
-      { title: "Mensaje", type: "message", duration: 45, fields: ["preacher", "title", "verse"], data: {}, actions: [], requires_translation: false, default_translator_source: "manual" }
+      { title: "Mensaje", type: "message", duration: 45, fields: ["preacher", "messageTitle", "verse"], data: {}, actions: [], requires_translation: false, default_translator_source: "manual" }
     ],
     "11:30am": [
       { title: "Equipo de A&A", type: "worship", duration: 35, fields: ["leader", "songs", "ministry_leader", "translator"], songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: [], requires_translation: true, default_translator_source: "manual" },
       { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, fields: ["presenter", "translator"], data: {}, actions: [], requires_translation: true, default_translator_source: "worship_segment_translator" },
       { title: "Ofrendas", type: "offering", duration: 5, fields: ["presenter", "verse", "translator"], data: {}, actions: [], requires_translation: true, default_translator_source: "worship_segment_translator" },
-      { title: "Mensaje", type: "message", duration: 45, fields: ["preacher", "title", "verse", "translator"], data: {}, actions: [], requires_translation: true, default_translator_source: "manual" }
+      { title: "Mensaje", type: "message", duration: 45, fields: ["preacher", "messageTitle", "verse", "translator"], data: {}, actions: [], requires_translation: true, default_translator_source: "manual" }
     ],
     coordinators: { "9:30am": "", "11:30am": "" },
     ujieres: { "9:30am": "", "11:30am": "" },
@@ -275,7 +275,7 @@ export default function ServiceTemplatesTab() {
           { title: "Equipo de A&A", type: "worship", duration: 35, fields: ["leader", "songs", "ministry_leader"], songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: DEFAULT_ACTIONS["9:30am"]["worship"].map(a => ({ ...a })), sub_assignments: [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }], requires_translation: false, default_translator_source: "manual" },
           { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, fields: ["presenter"], data: {}, actions: [], sub_assignments: [], requires_translation: false, default_translator_source: "manual" },
           { title: "Ofrendas", type: "offering", duration: 5, fields: ["presenter", "verse"], data: {}, actions: DEFAULT_ACTIONS["9:30am"]["offering"].map(a => ({ ...a })), sub_assignments: [], requires_translation: false, default_translator_source: "manual" },
-          { title: "Mensaje", type: "message", duration: 45, fields: ["preacher", "title", "verse"], data: {}, actions: DEFAULT_ACTIONS["9:30am"]["message"].map(a => ({ ...a })), sub_assignments: [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }], requires_translation: false, default_translator_source: "manual" }
+          { title: "Mensaje", type: "message", duration: 45, fields: ["preacher", "messageTitle", "verse"], data: {}, actions: DEFAULT_ACTIONS["9:30am"]["message"].map(a => ({ ...a })), sub_assignments: [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }], requires_translation: false, default_translator_source: "manual" }
         ];
       } else {
         populated["9:30am"] = mergeSubAssignments(populated["9:30am"]);
@@ -286,7 +286,7 @@ export default function ServiceTemplatesTab() {
           { title: "Equipo de A&A", type: "worship", duration: 35, fields: ["leader", "songs", "ministry_leader", "translator"], songs: [{ title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }, { title: "", lead: "" }], data: {}, actions: DEFAULT_ACTIONS["11:30am"]["worship"].map(a => ({ ...a })), sub_assignments: [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }], requires_translation: true, default_translator_source: "manual" },
           { title: "Bienvenida y Anuncios", type: "welcome", duration: 5, fields: ["presenter", "translator"], data: {}, actions: [], sub_assignments: [], requires_translation: true, default_translator_source: "worship_segment_translator" },
           { title: "Ofrendas", type: "offering", duration: 5, fields: ["presenter", "verse", "translator"], data: {}, actions: DEFAULT_ACTIONS["11:30am"]["offering"].map(a => ({ ...a })), sub_assignments: [], requires_translation: true, default_translator_source: "worship_segment_translator" },
-          { title: "Mensaje", type: "message", duration: 45, fields: ["preacher", "title", "verse", "translator"], data: {}, actions: DEFAULT_ACTIONS["11:30am"]["message"].map(a => ({ ...a })), sub_assignments: [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }], requires_translation: true, default_translator_source: "manual" }
+          { title: "Mensaje", type: "message", duration: 45, fields: ["preacher", "messageTitle", "verse", "translator"], data: {}, actions: DEFAULT_ACTIONS["11:30am"]["message"].map(a => ({ ...a })), sub_assignments: [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }], requires_translation: true, default_translator_source: "manual" }
         ];
       } else {
         populated["11:30am"] = mergeSubAssignments(populated["11:30am"]);
