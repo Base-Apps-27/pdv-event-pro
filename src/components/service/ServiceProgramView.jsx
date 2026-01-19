@@ -198,7 +198,23 @@ export default function ServiceProgramView({
       {adjustedServiceData["9:30am"] && (
         <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500">
           <div className="bg-gradient-to-r from-red-50 to-white p-4 border-b">
-            <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 A.M.</h3>
+            {(() => {
+              const adjustment = liveAdjustments.find(a => a.time_slot === "9:30am");
+              if (adjustment && adjustment.offset_minutes !== 0) {
+                const adjustedTime = (() => {
+                  const [h, m] = "09:30".split(':').map(Number);
+                  const date = new Date();
+                  date.setHours(h, m + adjustment.offset_minutes, 0, 0);
+                  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                })();
+                return (
+                  <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">
+                    9:30 A.M. <span className="text-amber-600">(inicio: {adjustedTime})</span>
+                  </h3>
+                );
+              }
+              return <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 A.M.</h3>;
+            })()}
             {adjustedServiceData.pre_service_notes?.["9:30am"] && (
               <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
                 <p className="text-sm text-green-900 font-medium italic whitespace-pre-wrap line-clamp-3">{adjustedServiceData.pre_service_notes["9:30am"]}</p>
@@ -268,7 +284,23 @@ export default function ServiceProgramView({
       {adjustedServiceData["11:30am"] && (
         <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-blue-500">
           <div className="bg-gradient-to-r from-blue-50 to-white p-4 border-b">
-            <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 A.M.</h3>
+            {(() => {
+              const adjustment = liveAdjustments.find(a => a.time_slot === "11:30am");
+              if (adjustment && adjustment.offset_minutes !== 0) {
+                const adjustedTime = (() => {
+                  const [h, m] = "11:30".split(':').map(Number);
+                  const date = new Date();
+                  date.setHours(h, m + adjustment.offset_minutes, 0, 0);
+                  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                })();
+                return (
+                  <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">
+                    11:30 A.M. <span className="text-amber-600">(inicio: {adjustedTime})</span>
+                  </h3>
+                );
+              }
+              return <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 A.M.</h3>;
+            })()}
             {adjustedServiceData.pre_service_notes?.["11:30am"] && (
               <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
                 <p className="text-sm text-gray-600 font-medium italic whitespace-pre-wrap line-clamp-3">{adjustedServiceData.pre_service_notes["11:30am"]}</p>

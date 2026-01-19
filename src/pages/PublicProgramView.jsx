@@ -945,33 +945,50 @@ export default function PublicProgramView() {
               <Card className="bg-amber-50 border-2 border-amber-500">
                 <CardContent className="p-4">
                   <div className="space-y-2">
-                    {liveAdjustments.filter(adj => adj.offset_minutes !== 0).map((adj) => (
-                      <div key={adj.id} className="flex items-start justify-between gap-4 bg-white p-3 rounded border border-amber-300">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Clock className="w-4 h-4 text-amber-700" />
-                            <span className="font-bold text-amber-900">
-                              {adj.time_slot} ajustado {adj.offset_minutes > 0 ? '+' : ''}{adj.offset_minutes} minutos
-                            </span>
+                    {liveAdjustments.filter(adj => adj.offset_minutes !== 0).map((adj) => {
+                      // Calculate adjusted start time for display
+                      const baseTime = adj.time_slot.replace('am', '').replace('pm', '');
+                      const [h, m] = baseTime.split(':').map(Number);
+                      const adjustedDate = new Date();
+                      adjustedDate.setHours(h, m + adj.offset_minutes, 0, 0);
+                      const adjustedTimeStr = `${String(adjustedDate.getHours()).padStart(2, '0')}:${String(adjustedDate.getMinutes()).padStart(2, '0')}`;
+                      
+                      // Convert UTC timestamp to EST
+                      const createdDate = new Date(adj.created_date);
+                      const estTime = createdDate.toLocaleTimeString('es-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        timeZone: 'America/New_York'
+                      });
+                      
+                      return (
+                        <div key={adj.id} className="flex items-start justify-between gap-4 bg-white p-3 rounded border border-amber-300">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Clock className="w-4 h-4 text-amber-700" />
+                              <span className="font-bold text-amber-900">
+                                {adj.time_slot} ajustado {adj.offset_minutes > 0 ? '+' : ''}{adj.offset_minutes} minutos (inicio: {adjustedTimeStr})
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-700 space-y-0.5">
+                              <div><strong>Autorizado por:</strong> {adj.authorized_by}</div>
+                              <div><strong>Aplicado por:</strong> {adj.created_by}</div>
+                              <div><strong>Hora:</strong> {estTime}</div>
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-700 space-y-0.5">
-                            <div><strong>Autorizado por:</strong> {adj.authorized_by}</div>
-                            <div><strong>Aplicado por:</strong> {adj.created_by}</div>
-                            <div><strong>Hora:</strong> {new Date(adj.created_date).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</div>
-                          </div>
+                          {hasPermission(currentUser, 'manage_live_timing') && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => openAdjustmentModal(adj.time_slot)}
+                              className="shrink-0"
+                            >
+                              Editar
+                            </Button>
+                          )}
                         </div>
-                        {hasPermission(currentUser, 'manage_live_timing') && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => openAdjustmentModal(adj.time_slot)}
-                            className="shrink-0"
-                          >
-                            Editar
-                          </Button>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -984,7 +1001,7 @@ export default function PublicProgramView() {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <Clock className="w-5 h-5 text-blue-400" />
-                      <span className="font-bold uppercase text-sm">Ajuste de Tiempo en Vivo</span>
+                      <span className="font-bold uppercase text-sm">Ajustar Hora de Inicio</span>
                     </div>
                     <div className="flex gap-2">
                       {actualServiceData["9:30am"] && (
@@ -994,7 +1011,7 @@ export default function PublicProgramView() {
                           onClick={() => openAdjustmentModal("9:30am")}
                           className="bg-red-600 hover:bg-red-700 text-white border-none"
                         >
-                          Ajustar 9:30 AM
+                          9:30 AM
                         </Button>
                       )}
                       {actualServiceData["11:30am"] && (
@@ -1004,7 +1021,7 @@ export default function PublicProgramView() {
                           onClick={() => openAdjustmentModal("11:30am")}
                           className="bg-blue-600 hover:bg-blue-700 text-white border-none"
                         >
-                          Ajustar 11:30 AM
+                          11:30 AM
                         </Button>
                       )}
                     </div>
