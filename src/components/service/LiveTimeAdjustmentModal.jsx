@@ -18,9 +18,24 @@ export default function LiveTimeAdjustmentModal({
   const [authorizedBy, setAuthorizedBy] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Calculate new start time based on offset
+  const calculateNewTime = (originalTime, offset) => {
+    if (!originalTime) return '';
+    const baseTime = originalTime.replace('am', '').replace('pm', '');
+    const [h, m] = baseTime.split(':').map(Number);
+    const date = new Date();
+    date.setHours(h, m + offset, 0, 0);
+    const newH = String(date.getHours()).padStart(2, '0');
+    const newM = String(date.getMinutes()).padStart(2, '0');
+    return `${newH}:${newM}`;
+  };
+
+  const baseTime = timeSlot ? timeSlot.replace('am', '').replace('pm', '') : '';
+  const newTime = calculateNewTime(timeSlot, offsetMinutes);
+
   const handleSave = async () => {
     if (!authorizedBy.trim()) {
-      alert(t('live.authorization_required') || 'Please specify who authorized this change');
+      alert(t('live.authorization_required') || 'Por favor ingresa quién autorizó este cambio');
       return;
     }
 
@@ -30,7 +45,7 @@ export default function LiveTimeAdjustmentModal({
       onClose();
     } catch (err) {
       console.error(err);
-      alert(t('error.generic') || 'Error saving adjustment');
+      alert(t('error.generic') || 'Error al guardar el ajuste');
     } finally {
       setIsLoading(false);
     }
@@ -38,7 +53,7 @@ export default function LiveTimeAdjustmentModal({
 
   const handleClear = async () => {
     if (!authorizedBy.trim()) {
-      alert(t('live.authorization_required') || 'Please specify who authorized clearing this adjustment');
+      alert(t('live.authorization_required') || 'Por favor ingresa quién autorizó limpiar este ajuste');
       return;
     }
 
@@ -48,7 +63,7 @@ export default function LiveTimeAdjustmentModal({
       onClose();
     } catch (err) {
       console.error(err);
-      alert(t('error.generic') || 'Error clearing adjustment');
+      alert(t('error.generic') || 'Error al limpiar el ajuste');
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +75,7 @@ export default function LiveTimeAdjustmentModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clock className="w-5 h-5 text-blue-600" />
-            {t('live.adjust_service_time') || `Adjust ${timeSlot} Service Time`}
+            Ajustar Horario - Servicio {timeSlot}
           </DialogTitle>
         </DialogHeader>
 
@@ -69,14 +84,22 @@ export default function LiveTimeAdjustmentModal({
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-amber-900">
-                {t('live.adjustment_warning') || 'This will shift all segment times in the live view only. PDFs and saved data are not affected.'}
+                Este ajuste se aplicará solo en la Vista en Vivo para el día de hoy. No afectará los PDFs ni los datos originales.
               </p>
             </div>
           </div>
 
+          {/* New Time Display */}
+          <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600 mb-1">Hora Original</p>
+            <p className="text-2xl font-bold text-gray-400 line-through mb-3">{baseTime}</p>
+            <p className="text-sm text-blue-700 font-semibold mb-1">Nueva Hora de Inicio</p>
+            <p className="text-4xl font-bold text-blue-600">{newTime}</p>
+          </div>
+
           <div>
             <Label htmlFor="offset" className="font-bold">
-              {t('live.time_offset') || 'Time Offset (minutes)'}
+              Ajuste (minutos)
             </Label>
             <div className="flex items-center gap-2 mt-2">
               <Button 
@@ -105,23 +128,24 @@ export default function LiveTimeAdjustmentModal({
               </Button>
             </div>
             <p className="text-xs text-gray-600 mt-1">
-              {t('live.offset_help') || 'Positive = later, Negative = earlier (max ±60 min)'}
+              {offsetMinutes > 0 ? `${offsetMinutes} minutos más tarde` : offsetMinutes < 0 ? `${Math.abs(offsetMinutes)} minutos más temprano` : 'Sin cambio'}
             </p>
           </div>
 
           <div>
             <Label htmlFor="authorized" className="font-bold text-red-600">
-              {t('live.who_authorized') || 'Who authorized this change?'} *
+              ¿Quién autorizó este cambio? *
             </Label>
             <Input
               id="authorized"
               type="text"
               value={authorizedBy}
               onChange={(e) => setAuthorizedBy(e.target.value)}
-              placeholder={t('live.authorized_placeholder') || 'e.g., Pastor Juan, Coordinator Maria'}
+              placeholder="Ej: Pastor Juan Pérez"
               className="mt-2"
               disabled={isLoading}
             />
+            <p className="text-xs text-gray-500 mt-1">Este registro quedará en el sistema para referencia</p>
           </div>
         </div>
 
@@ -133,7 +157,7 @@ export default function LiveTimeAdjustmentModal({
               disabled={isLoading}
               className="w-full sm:w-auto"
             >
-              {t('live.clear_adjustment') || 'Clear Adjustment'}
+              Limpiar Ajuste
             </Button>
           )}
           <Button 
@@ -141,7 +165,7 @@ export default function LiveTimeAdjustmentModal({
             disabled={isLoading}
             className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
           >
-            {t('live.apply_adjustment') || 'Apply Adjustment'}
+            Aplicar Ajuste
           </Button>
         </DialogFooter>
       </DialogContent>
