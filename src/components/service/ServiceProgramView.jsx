@@ -33,30 +33,30 @@ export default function ServiceProgramView({
   onOpenVerses,
   scrollToSegment
 }) {
-  // Apply time offset to segments
-  const applyTimeOffset = (segments, timeSlot) => {
-    const adjustment = liveAdjustments.find(a => a.time_slot === timeSlot);
-    if (!adjustment || adjustment.offset_minutes === 0) return segments;
-
-    return segments.map(seg => {
-      const addMinutes = (timeStr, minutes) => {
-        if (!timeStr) return timeStr;
-        const [h, m] = timeStr.split(':').map(Number);
-        const date = new Date();
-        date.setHours(h, m + minutes, 0, 0);
-        return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-      };
-
-      return {
-        ...seg,
-        start_time: addMinutes(seg.start_time, adjustment.offset_minutes),
-        end_time: addMinutes(seg.end_time, adjustment.offset_minutes)
-      };
-    });
-  };
-
   const adjustedServiceData = React.useMemo(() => {
     if (!actualServiceData) return null;
+    
+    // Helper to apply time offset
+    const applyTimeOffset = (segments, timeSlot) => {
+      const adjustment = liveAdjustments.find(a => a.time_slot === timeSlot);
+      if (!adjustment || adjustment.offset_minutes === 0) return segments;
+
+      return segments.map(seg => {
+        const addMinutes = (timeStr, minutes) => {
+          if (!timeStr) return timeStr;
+          const [h, m] = timeStr.split(':').map(Number);
+          const date = new Date();
+          date.setHours(h, m + minutes, 0, 0);
+          return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        };
+
+        return {
+          ...seg,
+          start_time: addMinutes(seg.start_time, adjustment.offset_minutes),
+          end_time: addMinutes(seg.end_time, adjustment.offset_minutes)
+        };
+      });
+    };
     
     const adjusted = { ...actualServiceData };
     
