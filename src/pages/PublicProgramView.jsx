@@ -955,8 +955,8 @@ export default function PublicProgramView() {
                       
                       // Convert UTC timestamp to EST
                       const createdDate = new Date(adj.created_date);
-                      const estTime = createdDate.toLocaleTimeString('es-US', { 
-                        hour: '2-digit', 
+                      const estTime = createdDate.toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
                         minute: '2-digit',
                         timeZone: 'America/New_York'
                       });
