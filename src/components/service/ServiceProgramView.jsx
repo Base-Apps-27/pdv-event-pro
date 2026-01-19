@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
@@ -25,6 +25,7 @@ import { normalizeName } from "@/components/utils/textNormalization";
  */
 export default function ServiceProgramView({
   actualServiceData,
+  liveAdjustments = [],
   currentTime,
   isSegmentCurrent,
   isSegmentUpcoming,
@@ -32,8 +33,48 @@ export default function ServiceProgramView({
   onOpenVerses,
   scrollToSegment
 }) {
+  // Apply time offset to segments
+  const applyTimeOffset = (segments, timeSlot) => {
+    const adjustment = liveAdjustments.find(a => a.time_slot === timeSlot);
+    if (!adjustment || adjustment.offset_minutes === 0) return segments;
+
+    return segments.map(seg => {
+      const addMinutes = (timeStr, minutes) => {
+        if (!timeStr) return timeStr;
+        const [h, m] = timeStr.split(':').map(Number);
+        const date = new Date();
+        date.setHours(h, m + minutes, 0, 0);
+        return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+      };
+
+      return {
+        ...seg,
+        start_time: addMinutes(seg.start_time, adjustment.offset_minutes),
+        end_time: addMinutes(seg.end_time, adjustment.offset_minutes)
+      };
+    });
+  };
+
+  const adjustedServiceData = React.useMemo(() => {
+    if (!actualServiceData) return null;
+    
+    const adjusted = { ...actualServiceData };
+    
+    if (adjusted["9:30am"]) {
+      adjusted["9:30am"] = applyTimeOffset(adjusted["9:30am"], "9:30am");
+    }
+    if (adjusted["11:30am"]) {
+      adjusted["11:30am"] = applyTimeOffset(adjusted["11:30am"], "11:30am");
+    }
+    if (adjusted.segments) {
+      // For custom services, we might need a general offset - for now, leave unchanged
+    }
+    
+    return adjusted;
+  }, [actualServiceData, liveAdjustments]);
+
   // If no service data, show empty state
-  if (!actualServiceData) {
+  if (!adjustedServiceData) {
     return (
       <Card className="p-12 text-center bg-white border-2 border-gray-300">
         <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -43,9 +84,9 @@ export default function ServiceProgramView({
   }
 
   // Check if this is a Custom Service (has segments array) or Weekly Service (has 9:30am/11:30am)
-  const isCustomService = actualServiceData.segments && actualServiceData.segments.length > 0;
-  const isWeeklyService = (actualServiceData["9:30am"] && actualServiceData["9:30am"].length > 0) || 
-                          (actualServiceData["11:30am"] && actualServiceData["11:30am"].length > 0);
+  const isCustomService = adjustedServiceData.segments && adjustedServiceData.segments.length > 0;
+  const isWeeklyService = (adjustedServiceData["9:30am"] && adjustedServiceData["9:30am"].length > 0) || 
+                          (adjustedServiceData["11:30am"] && adjustedServiceData["11:30am"].length > 0);
 
   // If neither format, show empty state
   if (!isCustomService && !isWeeklyService) {
@@ -63,7 +104,7 @@ export default function ServiceProgramView({
       <div className="space-y-6">
         {/* Live Status Card for Custom Services */}
         <LiveStatusCard 
-          segments={actualServiceData.segments || []} 
+          segments={adjustedServiceData.segments || []} 
           currentTime={currentTime}
           onScrollTo={scrollToSegment}
         />
@@ -71,45 +112,45 @@ export default function ServiceProgramView({
         {/* Custom Service Segments */}
         <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
           <div className="bg-gradient-to-r from-pdv-teal/10 to-white p-4 border-b">
-            <h3 className="text-2xl font-bold uppercase text-pdv-teal">{actualServiceData.name}</h3>
-            {actualServiceData.description && (
-              <p className="text-sm text-gray-600 mt-2">{actualServiceData.description}</p>
+            <h3 className="text-2xl font-bold uppercase text-pdv-teal">{adjustedServiceData.name}</h3>
+            {adjustedServiceData.description && (
+              <p className="text-sm text-gray-600 mt-2">{adjustedServiceData.description}</p>
             )}
             {/* Team Info - Compact */}
-            {(actualServiceData.coordinators || actualServiceData.ujieres || actualServiceData.sound || actualServiceData.luces || actualServiceData.fotografia) && (
+            {(adjustedServiceData.coordinators || adjustedServiceData.ujieres || adjustedServiceData.sound || adjustedServiceData.luces || adjustedServiceData.fotografia) && (
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
-                {actualServiceData.coordinators && Object.values(actualServiceData.coordinators).find(v => v) && (
-                  <span><strong>👤 Coord:</strong> {normalizeName(actualServiceData.coordinators["9:30am"] || actualServiceData.coordinators["11:30am"] || Object.values(actualServiceData.coordinators).find(v => v))}</span>
+                {adjustedServiceData.coordinators && Object.values(adjustedServiceData.coordinators).find(v => v) && (
+                  <span><strong>👤 Coord:</strong> {normalizeName(adjustedServiceData.coordinators["9:30am"] || adjustedServiceData.coordinators["11:30am"] || Object.values(adjustedServiceData.coordinators).find(v => v))}</span>
                 )}
-                {actualServiceData.ujieres && Object.values(actualServiceData.ujieres).find(v => v) && (
+                {adjustedServiceData.ujieres && Object.values(adjustedServiceData.ujieres).find(v => v) && (
                   <>
                     <span className="text-gray-400">|</span>
-                    <span><strong>🚪 Ujieres:</strong> {normalizeName(actualServiceData.ujieres["9:30am"] || actualServiceData.ujieres["11:30am"] || Object.values(actualServiceData.ujieres).find(v => v))}</span>
+                    <span><strong>🚪 Ujieres:</strong> {normalizeName(adjustedServiceData.ujieres["9:30am"] || adjustedServiceData.ujieres["11:30am"] || Object.values(adjustedServiceData.ujieres).find(v => v))}</span>
                   </>
                 )}
-                {actualServiceData.sound && Object.values(actualServiceData.sound).find(v => v) && (
+                {adjustedServiceData.sound && Object.values(adjustedServiceData.sound).find(v => v) && (
                   <>
                     <span className="text-gray-400">|</span>
-                    <span><strong>🔊 Sonido:</strong> {normalizeName(actualServiceData.sound["9:30am"] || actualServiceData.sound["11:30am"] || Object.values(actualServiceData.sound).find(v => v))}</span>
+                    <span><strong>🔊 Sonido:</strong> {normalizeName(adjustedServiceData.sound["9:30am"] || adjustedServiceData.sound["11:30am"] || Object.values(adjustedServiceData.sound).find(v => v))}</span>
                   </>
                 )}
-                {actualServiceData.luces && Object.values(actualServiceData.luces).find(v => v) && (
+                {adjustedServiceData.luces && Object.values(adjustedServiceData.luces).find(v => v) && (
                   <>
                     <span className="text-gray-400">|</span>
-                    <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["9:30am"] || actualServiceData.luces["11:30am"] || Object.values(actualServiceData.luces).find(v => v))}</span>
+                    <span><strong>💡 Luces:</strong> {normalizeName(adjustedServiceData.luces["9:30am"] || adjustedServiceData.luces["11:30am"] || Object.values(adjustedServiceData.luces).find(v => v))}</span>
                   </>
                 )}
-                {actualServiceData.fotografia && Object.values(actualServiceData.fotografia).find(v => v) && (
+                {adjustedServiceData.fotografia && Object.values(adjustedServiceData.fotografia).find(v => v) && (
                   <>
                     <span className="text-gray-400">|</span>
-                    <span><strong>📸 Foto:</strong> {normalizeName(actualServiceData.fotografia["9:30am"] || actualServiceData.fotografia["11:30am"] || Object.values(actualServiceData.fotografia).find(v => v))}</span>
+                    <span><strong>📸 Foto:</strong> {normalizeName(adjustedServiceData.fotografia["9:30am"] || adjustedServiceData.fotografia["11:30am"] || Object.values(adjustedServiceData.fotografia).find(v => v))}</span>
                   </>
                 )}
               </div>
             )}
           </div>
           <div className="divide-y divide-gray-200">
-            {actualServiceData.segments.filter(seg => seg.type !== 'break').map((segment, idx) => (
+            {adjustedServiceData.segments.filter(seg => seg.type !== 'break').map((segment, idx) => (
               <PublicProgramSegment
                 key={segment.id || idx}
                 segment={segment}
@@ -120,7 +161,7 @@ export default function ServiceProgramView({
                 alwaysExpanded={true} // CRITICAL: Services always show all details
                 onToggleExpand={toggleSegmentExpanded}
                 onOpenVerses={onOpenVerses}
-                allSegments={actualServiceData.segments}
+                allSegments={adjustedServiceData.segments}
               />
             ))}
           </div>
@@ -135,8 +176,8 @@ export default function ServiceProgramView({
       {/* Live Status Card for Weekly Services */}
       {(() => {
         const allServiceSegments = [
-          ...(actualServiceData?.['9:30am'] || []),
-          ...(actualServiceData?.['11:30am'] || [])
+          ...(adjustedServiceData?.['9:30am'] || []),
+          ...(adjustedServiceData?.['11:30am'] || [])
         ].map(s => ({
           ...s,
           start_time: s.start_time || s.data?.start_time,
@@ -154,61 +195,61 @@ export default function ServiceProgramView({
       })()}
 
       {/* 9:30am Service */}
-      {actualServiceData["9:30am"] && (
+      {adjustedServiceData["9:30am"] && (
         <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500">
           <div className="bg-gradient-to-r from-red-50 to-white p-4 border-b">
             <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 A.M.</h3>
-            {actualServiceData.pre_service_notes?.["9:30am"] && (
+            {adjustedServiceData.pre_service_notes?.["9:30am"] && (
               <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                <p className="text-sm text-green-900 font-medium italic whitespace-pre-wrap line-clamp-3">{actualServiceData.pre_service_notes["9:30am"]}</p>
+                <p className="text-sm text-green-900 font-medium italic whitespace-pre-wrap line-clamp-3">{adjustedServiceData.pre_service_notes["9:30am"]}</p>
               </div>
             )}
             {/* Team Info - Compact */}
-            {(actualServiceData.coordinators?.["9:30am"] || actualServiceData.ujieres?.["9:30am"] || actualServiceData.sound?.["9:30am"] || actualServiceData.luces?.["9:30am"] || actualServiceData.fotografia?.["9:30am"]) && (
+            {(adjustedServiceData.coordinators?.["9:30am"] || adjustedServiceData.ujieres?.["9:30am"] || adjustedServiceData.sound?.["9:30am"] || adjustedServiceData.luces?.["9:30am"] || adjustedServiceData.fotografia?.["9:30am"]) && (
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
-                {actualServiceData.coordinators?.["9:30am"] && (
-                  <span><strong>👤 Coord:</strong> {normalizeName(actualServiceData.coordinators["9:30am"])}</span>
+                {adjustedServiceData.coordinators?.["9:30am"] && (
+                  <span><strong>👤 Coord:</strong> {normalizeName(adjustedServiceData.coordinators["9:30am"])}</span>
                 )}
-                {actualServiceData.ujieres?.["9:30am"] && (
+                {adjustedServiceData.ujieres?.["9:30am"] && (
                   <>
                     <span className="text-gray-400">|</span>
-                    <span><strong>🚪 Ujieres:</strong> {normalizeName(actualServiceData.ujieres["9:30am"])}</span>
+                    <span><strong>🚪 Ujieres:</strong> {normalizeName(adjustedServiceData.ujieres["9:30am"])}</span>
                   </>
                 )}
-                {actualServiceData.sound?.["9:30am"] && (
+                {adjustedServiceData.sound?.["9:30am"] && (
                   <>
                     <span className="text-gray-400">|</span>
-                    <span><strong>🔊 Sonido:</strong> {normalizeName(actualServiceData.sound["9:30am"])}</span>
+                    <span><strong>🔊 Sonido:</strong> {normalizeName(adjustedServiceData.sound["9:30am"])}</span>
                   </>
                 )}
-                {actualServiceData.luces?.["9:30am"] && (
+                {adjustedServiceData.luces?.["9:30am"] && (
                   <>
                     <span className="text-gray-400">|</span>
-                    <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["9:30am"])}</span>
+                    <span><strong>💡 Luces:</strong> {normalizeName(adjustedServiceData.luces["9:30am"])}</span>
                   </>
                 )}
-                {actualServiceData.fotografia?.["9:30am"] && (
+                {adjustedServiceData.fotografia?.["9:30am"] && (
                   <>
                     <span className="text-gray-400">|</span>
-                    <span><strong>📸 Foto:</strong> {normalizeName(actualServiceData.fotografia["9:30am"])}</span>
+                    <span><strong>📸 Foto:</strong> {normalizeName(adjustedServiceData.fotografia["9:30am"])}</span>
                   </>
                 )}
               </div>
             )}
           </div>
           <div className="divide-y divide-gray-200">
-            {actualServiceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
+            {adjustedServiceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
               <PublicProgramSegment
                 key={segment.id || idx}
                 segment={segment}
                 isCurrent={isSegmentCurrent(segment)}
-                isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, actualServiceData["9:30am"])}
+                isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, adjustedServiceData["9:30am"])}
                 viewMode="simple"
                 isExpanded={true}
                 alwaysExpanded={true} // CRITICAL: Services always show all details
                 onToggleExpand={toggleSegmentExpanded}
                 onOpenVerses={onOpenVerses}
-                allSegments={actualServiceData["9:30am"]}
+                allSegments={adjustedServiceData["9:30am"]}
               />
             ))}
           </div>
@@ -218,67 +259,67 @@ export default function ServiceProgramView({
       {/* Receso */}
       <div className="bg-gray-100 rounded-lg p-4 text-center border border-gray-300">
         <p className="font-bold text-gray-600">RECESO (30 min)</p>
-        {actualServiceData.receso_notes?.["9:30am"] && (
-          <p className="text-sm text-gray-600 mt-2">{actualServiceData.receso_notes["9:30am"]}</p>
+        {adjustedServiceData.receso_notes?.["9:30am"] && (
+          <p className="text-sm text-gray-600 mt-2">{adjustedServiceData.receso_notes["9:30am"]}</p>
         )}
       </div>
 
       {/* 11:30am Service */}
-      {actualServiceData["11:30am"] && (
+      {adjustedServiceData["11:30am"] && (
         <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-blue-500">
           <div className="bg-gradient-to-r from-blue-50 to-white p-4 border-b">
             <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 A.M.</h3>
-            {actualServiceData.pre_service_notes?.["11:30am"] && (
+            {adjustedServiceData.pre_service_notes?.["11:30am"] && (
               <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                <p className="text-sm text-gray-600 font-medium italic whitespace-pre-wrap line-clamp-3">{actualServiceData.pre_service_notes["11:30am"]}</p>
+                <p className="text-sm text-gray-600 font-medium italic whitespace-pre-wrap line-clamp-3">{adjustedServiceData.pre_service_notes["11:30am"]}</p>
               </div>
             )}
             {/* Team Info - Compact */}
-            {(actualServiceData.coordinators?.["11:30am"] || actualServiceData.ujieres?.["11:30am"] || actualServiceData.sound?.["11:30am"] || actualServiceData.luces?.["11:30am"] || actualServiceData.fotografia?.["11:30am"]) && (
+            {(adjustedServiceData.coordinators?.["11:30am"] || adjustedServiceData.ujieres?.["11:30am"] || adjustedServiceData.sound?.["11:30am"] || adjustedServiceData.luces?.["11:30am"] || adjustedServiceData.fotografia?.["11:30am"]) && (
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
-                {actualServiceData.coordinators?.["11:30am"] && (
-                  <span><strong>👤 Coord:</strong> {normalizeName(actualServiceData.coordinators["11:30am"])}</span>
+                {adjustedServiceData.coordinators?.["11:30am"] && (
+                  <span><strong>👤 Coord:</strong> {normalizeName(adjustedServiceData.coordinators["11:30am"])}</span>
                 )}
-                {actualServiceData.ujieres?.["11:30am"] && (
+                {adjustedServiceData.ujieres?.["11:30am"] && (
                   <>
                     <span className="text-gray-400">|</span>
-                    <span><strong>🚪 Ujieres:</strong> {normalizeName(actualServiceData.ujieres["11:30am"])}</span>
+                    <span><strong>🚪 Ujieres:</strong> {normalizeName(adjustedServiceData.ujieres["11:30am"])}</span>
                   </>
                 )}
-                {actualServiceData.sound?.["11:30am"] && (
+                {adjustedServiceData.sound?.["11:30am"] && (
                   <>
                     <span className="text-gray-400">|</span>
-                    <span><strong>🔊 Sonido:</strong> {normalizeName(actualServiceData.sound["11:30am"])}</span>
+                    <span><strong>🔊 Sonido:</strong> {normalizeName(adjustedServiceData.sound["11:30am"])}</span>
                   </>
                 )}
-                {actualServiceData.luces?.["11:30am"] && (
+                {adjustedServiceData.luces?.["11:30am"] && (
                   <>
                     <span className="text-gray-400">|</span>
-                    <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["11:30am"])}</span>
+                    <span><strong>💡 Luces:</strong> {normalizeName(adjustedServiceData.luces["11:30am"])}</span>
                   </>
                 )}
-                {actualServiceData.fotografia?.["11:30am"] && (
+                {adjustedServiceData.fotografia?.["11:30am"] && (
                   <>
                     <span className="text-gray-400">|</span>
-                    <span><strong>📸 Foto:</strong> {normalizeName(actualServiceData.fotografia["11:30am"])}</span>
+                    <span><strong>📸 Foto:</strong> {normalizeName(adjustedServiceData.fotografia["11:30am"])}</span>
                   </>
                 )}
               </div>
             )}
           </div>
           <div className="divide-y divide-gray-200">
-            {actualServiceData["11:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
+            {adjustedServiceData["11:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
               <PublicProgramSegment
                 key={segment.id || idx}
                 segment={segment}
                 isCurrent={isSegmentCurrent(segment)}
-                isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, actualServiceData["11:30am"])}
+                isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, adjustedServiceData["11:30am"])}
                 viewMode="simple"
                 isExpanded={true}
                 alwaysExpanded={true} // CRITICAL: Services always show all details
                 onToggleExpand={toggleSegmentExpanded}
                 onOpenVerses={onOpenVerses}
-                allSegments={actualServiceData["11:30am"]}
+                allSegments={adjustedServiceData["11:30am"]}
               />
             ))}
           </div>

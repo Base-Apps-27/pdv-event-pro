@@ -1017,6 +1017,7 @@ export default function PublicProgramView() {
             {viewType === "service" && actualServiceData && (
               <ServiceProgramView
                 actualServiceData={actualServiceData}
+                liveAdjustments={liveAdjustments}
                 currentTime={currentTime}
                 isSegmentCurrent={isSegmentCurrent}
                 isSegmentUpcoming={isSegmentUpcoming}
