@@ -52,17 +52,29 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
     return timeA - timeB;
   });
 
-  const currentSegment = validSegments.find(s => {
+  // Check if the service/event is happening today
+  const isToday = (() => {
+    if (!serviceDate) return true; // If no date provided, assume it's live
+    const [y, m, d] = serviceDate.split('-').map(Number);
+    const targetDate = new Date(y, m - 1, d);
+    targetDate.setHours(0, 0, 0, 0);
+    const today = new Date(currentTime);
+    today.setHours(0, 0, 0, 0);
+    return targetDate.getTime() === today.getTime();
+  })();
+
+  // Only show current/next if it's happening today
+  const currentSegment = isToday ? validSegments.find(s => {
     const start = getTimeDate(s.start_time, s.date);
     const end = getTimeDate(s.end_time, s.date);
     return start && end && currentTime >= start && currentTime <= end;
-  });
+  }) : null;
 
   // Next is the first segment starting after now
-  const nextSegment = validSegments.find(s => {
+  const nextSegment = isToday ? validSegments.find(s => {
     const start = getTimeDate(s.start_time, s.date);
     return start && start > currentTime;
-  });
+  }) : null;
 
   // Calculate times
   const getTimeRemaining = (targetDate) => {
