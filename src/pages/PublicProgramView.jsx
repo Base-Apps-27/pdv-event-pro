@@ -953,13 +953,13 @@ export default function PublicProgramView() {
                       adjustedDate.setHours(h, m + adj.offset_minutes, 0, 0);
                       const adjustedTimeStr = `${String(adjustedDate.getHours()).padStart(2, '0')}:${String(adjustedDate.getMinutes()).padStart(2, '0')}`;
                       
-                      // Convert UTC timestamp to EST by formatting directly
-                      const estTime = new Date(adj.created_date).toLocaleString('en-US', { 
+                      // Convert UTC timestamp to EST
+                      const estTime = new Date(adj.created_date).toLocaleTimeString('en-US', { 
                         hour: 'numeric', 
                         minute: '2-digit',
                         hour12: true,
                         timeZone: 'America/New_York'
-                      }).split(', ')[1]; // Extract just the time part
+                      });
                       
                       return (
                         <div key={adj.id} className="flex items-start justify-between gap-4 bg-white p-3 rounded border border-amber-300">
