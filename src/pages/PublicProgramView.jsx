@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks, BookOpen, BellRing, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -13,12 +13,14 @@ import { normalizeName } from "@/components/utils/textNormalization";
 import StructuredVersesModal from "@/components/service/StructuredVersesModal";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
+import LiveTimeAdjustmentModal from "@/components/service/LiveTimeAdjustmentModal";
 import { hasPermission } from "@/components/utils/permissions";
 import { useSegmentNotifications } from "@/components/service/useSegmentNotifications";
 import ServiceProgramView from "@/components/service/ServiceProgramView";
 import EventProgramView from "@/components/service/EventProgramView";
 
 export default function PublicProgramView() {
+  const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -53,12 +55,84 @@ export default function PublicProgramView() {
   const [versesModalOpen, setVersesModalOpen] = useState(false);
   const [versesModalData, setVersesModalData] = useState({ parsedData: null, rawText: "" });
   const [expandedSegments, setExpandedSegments] = useState({}); // Still needed for verse modal callback compatibility
+  const [timeAdjustmentModalOpen, setTimeAdjustmentModalOpen] = useState(false);
+  const [adjustmentModalTimeSlot, setAdjustmentModalTimeSlot] = useState(null);
+  const [currentAdjustment, setCurrentAdjustment] = useState(null);
 
   // Helper to parse date strings as local timezone dates at midnight
   const getLocalDateAtMidnight = (dateString) => {
     if (!dateString) return null;
     const [year, month, day] = dateString.split('-').map(Number);
     return new Date(year, month - 1, day, 0, 0, 0, 0);
+  };
+
+  // Fetch live time adjustment for weekly services
+  const { data: liveAdjustments = [] } = useQuery({
+    queryKey: ['liveAdjustments', selectedServiceId, actualServiceData?.date],
+    queryFn: async () => {
+      if (!selectedServiceId || !actualServiceData?.date) return [];
+      return await base44.entities.LiveTimeAdjustment.filter({ 
+        date: actualServiceData.date, 
+        service_id: selectedServiceId 
+      });
+    },
+    enabled: viewType === "service" && !!selectedServiceId && !!actualServiceData?.date,
+    refetchInterval: 3000,
+  });
+
+  // Subscribe to live adjustments for real-time updates
+  useEffect(() => {
+    if (viewType !== "service" || !selectedServiceId || !actualServiceData?.date) return;
+
+    const unsubscribe = base44.entities.LiveTimeAdjustment.subscribe((event) => {
+      if (event.data.date === actualServiceData.date && event.data.service_id === selectedServiceId) {
+        // Refetch to get updated data
+        queryClient.invalidateQueries(['liveAdjustments', selectedServiceId, actualServiceData.date]);
+      }
+    });
+
+    return unsubscribe;
+  }, [viewType, selectedServiceId, actualServiceData?.date]);
+
+  // Save time adjustment
+  const handleSaveTimeAdjustment = async (offsetMinutes, authorizedBy) => {
+    if (!selectedServiceId || !actualServiceData?.date || !adjustmentModalTimeSlot) return;
+
+    try {
+      // Check if adjustment exists
+      const existing = liveAdjustments.find(a => a.time_slot === adjustmentModalTimeSlot);
+      
+      if (existing) {
+        // Update existing
+        await base44.entities.LiveTimeAdjustment.update(existing.id, {
+          offset_minutes: offsetMinutes,
+          authorized_by: authorizedBy
+        });
+      } else {
+        // Create new
+        await base44.entities.LiveTimeAdjustment.create({
+          date: actualServiceData.date,
+          service_id: selectedServiceId,
+          time_slot: adjustmentModalTimeSlot,
+          offset_minutes: offsetMinutes,
+          authorized_by: authorizedBy
+        });
+      }
+
+      toast.success('Ajuste de tiempo guardado');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al guardar el ajuste');
+      throw err;
+    }
+  };
+
+  // Open adjustment modal
+  const openAdjustmentModal = (timeSlot) => {
+    const existing = liveAdjustments.find(a => a.time_slot === timeSlot);
+    setCurrentAdjustment(existing || null);
+    setAdjustmentModalTimeSlot(timeSlot);
+    setTimeAdjustmentModalOpen(true);
   };
 
   // Update current time every second for real-time countdowns
@@ -866,6 +940,79 @@ export default function PublicProgramView() {
               </Card>
             )}
 
+            {/* Live Time Adjustment Banner */}
+            {viewType === "service" && liveAdjustments.length > 0 && (
+              <Card className="bg-amber-50 border-2 border-amber-500">
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    {liveAdjustments.filter(adj => adj.offset_minutes !== 0).map((adj) => (
+                      <div key={adj.id} className="flex items-start justify-between gap-4 bg-white p-3 rounded border border-amber-300">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Clock className="w-4 h-4 text-amber-700" />
+                            <span className="font-bold text-amber-900">
+                              {adj.time_slot} ajustado {adj.offset_minutes > 0 ? '+' : ''}{adj.offset_minutes} minutos
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-700 space-y-0.5">
+                            <div><strong>Autorizado por:</strong> {adj.authorized_by}</div>
+                            <div><strong>Aplicado por:</strong> {adj.created_by}</div>
+                            <div><strong>Hora:</strong> {new Date(adj.created_date).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</div>
+                          </div>
+                        </div>
+                        {hasPermission(currentUser, 'manage_live_timing') && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => openAdjustmentModal(adj.time_slot)}
+                            className="shrink-0"
+                          >
+                            Editar
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Live Time Adjustment Controls for Coordinators */}
+            {viewType === "service" && hasPermission(currentUser, 'manage_live_timing') && actualServiceData && (
+              <Card className="bg-slate-900 text-white border-none">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-blue-400" />
+                      <span className="font-bold uppercase text-sm">Ajuste de Tiempo en Vivo</span>
+                    </div>
+                    <div className="flex gap-2">
+                      {actualServiceData["9:30am"] && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => openAdjustmentModal("9:30am")}
+                          className="bg-red-600 hover:bg-red-700 text-white border-none"
+                        >
+                          Ajustar 9:30 AM
+                        </Button>
+                      )}
+                      {actualServiceData["11:30am"] && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => openAdjustmentModal("11:30am")}
+                          className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+                        >
+                          Ajustar 11:30 AM
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Service Program View (Weekly and Custom Services) */}
             {viewType === "service" && actualServiceData && (
               <ServiceProgramView
@@ -1401,6 +1548,19 @@ export default function PublicProgramView() {
         parsedData={versesModalData.parsedData}
         rawText={versesModalData.rawText}
         language="es"
+      />
+
+      {/* Live Time Adjustment Modal */}
+      <LiveTimeAdjustmentModal
+        isOpen={timeAdjustmentModalOpen}
+        onClose={() => {
+          setTimeAdjustmentModalOpen(false);
+          setAdjustmentModalTimeSlot(null);
+          setCurrentAdjustment(null);
+        }}
+        timeSlot={adjustmentModalTimeSlot}
+        currentOffset={currentAdjustment?.offset_minutes || 0}
+        onSave={handleSaveTimeAdjustment}
       />
 
       {/* Footer */}
