@@ -68,35 +68,35 @@ export default function PublicProgramView() {
 
   // Fetch live time adjustment for weekly services
   const { data: liveAdjustments = [] } = useQuery({
-    queryKey: ['liveAdjustments', selectedServiceId, actualServiceData?.date],
+    queryKey: ['liveAdjustments', selectedServiceId, rawServiceData?.date],
     queryFn: async () => {
-      if (!selectedServiceId || !actualServiceData?.date) return [];
+      if (!selectedServiceId || !rawServiceData?.date) return [];
       return await base44.entities.LiveTimeAdjustment.filter({ 
-        date: actualServiceData.date, 
+        date: rawServiceData.date, 
         service_id: selectedServiceId 
       });
     },
-    enabled: viewType === "service" && !!selectedServiceId && !!actualServiceData?.date,
+    enabled: viewType === "service" && !!selectedServiceId && !!rawServiceData?.date,
     refetchInterval: 3000,
   });
 
   // Subscribe to live adjustments for real-time updates
   useEffect(() => {
-    if (viewType !== "service" || !selectedServiceId || !actualServiceData?.date) return;
+    if (viewType !== "service" || !selectedServiceId || !rawServiceData?.date) return;
 
     const unsubscribe = base44.entities.LiveTimeAdjustment.subscribe((event) => {
-      if (event.data.date === actualServiceData.date && event.data.service_id === selectedServiceId) {
+      if (event.data.date === rawServiceData.date && event.data.service_id === selectedServiceId) {
         // Refetch to get updated data
-        queryClient.invalidateQueries(['liveAdjustments', selectedServiceId, actualServiceData.date]);
+        queryClient.invalidateQueries(['liveAdjustments', selectedServiceId, rawServiceData.date]);
       }
     });
 
     return unsubscribe;
-  }, [viewType, selectedServiceId, actualServiceData?.date]);
+  }, [viewType, selectedServiceId, rawServiceData?.date]);
 
   // Save time adjustment
   const handleSaveTimeAdjustment = async (offsetMinutes, authorizedBy) => {
-    if (!selectedServiceId || !actualServiceData?.date || !adjustmentModalTimeSlot) return;
+    if (!selectedServiceId || !rawServiceData?.date || !adjustmentModalTimeSlot) return;
 
     try {
       // Check if adjustment exists
@@ -111,7 +111,7 @@ export default function PublicProgramView() {
       } else {
         // Create new
         await base44.entities.LiveTimeAdjustment.create({
-          date: actualServiceData.date,
+          date: rawServiceData.date,
           service_id: selectedServiceId,
           time_slot: adjustmentModalTimeSlot,
           offset_minutes: offsetMinutes,
