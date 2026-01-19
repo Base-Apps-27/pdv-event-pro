@@ -66,75 +66,6 @@ export default function PublicProgramView() {
     return new Date(year, month - 1, day, 0, 0, 0, 0);
   };
 
-  // Fetch live time adjustment for weekly services
-  const { data: liveAdjustments = [] } = useQuery({
-    queryKey: ['liveAdjustments', selectedServiceId, rawServiceData?.date],
-    queryFn: async () => {
-      if (!selectedServiceId || !rawServiceData?.date) return [];
-      return await base44.entities.LiveTimeAdjustment.filter({ 
-        date: rawServiceData.date, 
-        service_id: selectedServiceId 
-      });
-    },
-    enabled: viewType === "service" && !!selectedServiceId && !!rawServiceData?.date,
-    refetchInterval: 3000,
-  });
-
-  // Subscribe to live adjustments for real-time updates
-  useEffect(() => {
-    if (viewType !== "service" || !selectedServiceId || !rawServiceData?.date) return;
-
-    const unsubscribe = base44.entities.LiveTimeAdjustment.subscribe((event) => {
-      if (event.data.date === rawServiceData.date && event.data.service_id === selectedServiceId) {
-        // Refetch to get updated data
-        queryClient.invalidateQueries(['liveAdjustments', selectedServiceId, rawServiceData.date]);
-      }
-    });
-
-    return unsubscribe;
-  }, [viewType, selectedServiceId, rawServiceData?.date]);
-
-  // Save time adjustment
-  const handleSaveTimeAdjustment = async (offsetMinutes, authorizedBy) => {
-    if (!selectedServiceId || !rawServiceData?.date || !adjustmentModalTimeSlot) return;
-
-    try {
-      // Check if adjustment exists
-      const existing = liveAdjustments.find(a => a.time_slot === adjustmentModalTimeSlot);
-      
-      if (existing) {
-        // Update existing
-        await base44.entities.LiveTimeAdjustment.update(existing.id, {
-          offset_minutes: offsetMinutes,
-          authorized_by: authorizedBy
-        });
-      } else {
-        // Create new
-        await base44.entities.LiveTimeAdjustment.create({
-          date: rawServiceData.date,
-          service_id: selectedServiceId,
-          time_slot: adjustmentModalTimeSlot,
-          offset_minutes: offsetMinutes,
-          authorized_by: authorizedBy
-        });
-      }
-
-      toast.success('Ajuste de tiempo guardado');
-    } catch (err) {
-      console.error(err);
-      toast.error('Error al guardar el ajuste');
-      throw err;
-    }
-  };
-
-  // Open adjustment modal
-  const openAdjustmentModal = (timeSlot) => {
-    const existing = liveAdjustments.find(a => a.time_slot === timeSlot);
-    setCurrentAdjustment(existing || null);
-    setAdjustmentModalTimeSlot(timeSlot);
-    setTimeAdjustmentModalOpen(true);
-  };
-
   // Update current time every second for real-time countdowns
   useEffect(() => {
     const timer = setInterval(() => {
@@ -339,6 +270,75 @@ export default function PublicProgramView() {
   const selectedEvent = publicEvents.find(e => e.id === selectedEventId);
   const selectedService = services.find(s => s.id === selectedServiceId);
   const rawServiceData = weeklyServiceData?.[0] || null;
+
+  // Fetch live time adjustment for weekly services
+  const { data: liveAdjustments = [] } = useQuery({
+    queryKey: ['liveAdjustments', selectedServiceId, rawServiceData?.date],
+    queryFn: async () => {
+      if (!selectedServiceId || !rawServiceData?.date) return [];
+      return await base44.entities.LiveTimeAdjustment.filter({ 
+        date: rawServiceData.date, 
+        service_id: selectedServiceId 
+      });
+    },
+    enabled: viewType === "service" && !!selectedServiceId && !!rawServiceData?.date,
+    refetchInterval: 3000,
+  });
+
+  // Subscribe to live adjustments for real-time updates
+  useEffect(() => {
+    if (viewType !== "service" || !selectedServiceId || !rawServiceData?.date) return;
+
+    const unsubscribe = base44.entities.LiveTimeAdjustment.subscribe((event) => {
+      if (event.data.date === rawServiceData.date && event.data.service_id === selectedServiceId) {
+        // Refetch to get updated data
+        queryClient.invalidateQueries(['liveAdjustments', selectedServiceId, rawServiceData.date]);
+      }
+    });
+
+    return unsubscribe;
+  }, [viewType, selectedServiceId, rawServiceData?.date]);
+
+  // Save time adjustment
+  const handleSaveTimeAdjustment = async (offsetMinutes, authorizedBy) => {
+    if (!selectedServiceId || !rawServiceData?.date || !adjustmentModalTimeSlot) return;
+
+    try {
+      // Check if adjustment exists
+      const existing = liveAdjustments.find(a => a.time_slot === adjustmentModalTimeSlot);
+      
+      if (existing) {
+        // Update existing
+        await base44.entities.LiveTimeAdjustment.update(existing.id, {
+          offset_minutes: offsetMinutes,
+          authorized_by: authorizedBy
+        });
+      } else {
+        // Create new
+        await base44.entities.LiveTimeAdjustment.create({
+          date: rawServiceData.date,
+          service_id: selectedServiceId,
+          time_slot: adjustmentModalTimeSlot,
+          offset_minutes: offsetMinutes,
+          authorized_by: authorizedBy
+        });
+      }
+
+      toast.success('Ajuste de tiempo guardado');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al guardar el ajuste');
+      throw err;
+    }
+  };
+
+  // Open adjustment modal
+  const openAdjustmentModal = (timeSlot) => {
+    const existing = liveAdjustments.find(a => a.time_slot === timeSlot);
+    setCurrentAdjustment(existing || null);
+    setAdjustmentModalTimeSlot(timeSlot);
+    setTimeAdjustmentModalOpen(true);
+  };
   
   // Calculate start times for weekly service segments (which usually lack them)
   const actualServiceData = React.useMemo(() => {
