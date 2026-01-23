@@ -111,8 +111,10 @@ Return information in a structured, readable format. Be comprehensive and pull r
 4. CRITICAL: Always infer the correct field and its specific meaning based on context. Use the detailed schema below.
 
 ## SUPPORTED ACTION TYPES
-- update_sessions: Update session fields
-- update_segments: Update segment fields
+- create_sessions: Create new sessions (provide full session data including event_id, name, date, times)
+- update_sessions: Update existing session fields
+- create_segments: Create new segments (provide full segment data including session_id, title, segment_type, times)
+- update_segments: Update existing segment fields
 - update_event: Update event fields
 
 ## DETAILED SCHEMA KNOWLEDGE
@@ -202,10 +204,11 @@ CRITICAL: When user mentions song titles, map to these fields:
   "understood_request": "Brief summary",
   "query_result": { "summary": "...", "details": [...] },
   "actions": [{
-    "type": "update_sessions" | "update_segments" | "update_event",
+    "type": "create_sessions" | "update_sessions" | "create_segments" | "update_segments" | "update_event",
     "description": "Human readable",
-    "target_ids": ["id1"] or "all",
-    "changes": { "field_name": "value" },
+    "target_ids": ["id1"] or "all" (only for updates),
+    "create_data": [{ full object }] (only for creates),
+    "changes": { "field_name": "value" } (only for updates),
     "affected_count": number
   }],
   "warnings": ["..."],
@@ -240,6 +243,7 @@ CRITICAL: When user mentions song titles, map to these fields:
                   type: { type: "string" },
                   description: { type: "string" },
                   target_ids: {},
+                  create_data: { type: "array" },
                   changes: { type: "object" },
                   affected_count: { type: "number" }
                 }
@@ -271,7 +275,16 @@ CRITICAL: When user mentions song titles, map to these fields:
 
     try {
       for (const action of proposedActions.actions) {
-        if (action.type === 'update_sessions') {
+        if (action.type === 'create_sessions') {
+          // Create new sessions
+          for (const sessionData of action.create_data || []) {
+            await base44.entities.Session.create({
+              event_id: eventId,
+              ...sessionData
+            });
+          }
+        }
+        else if (action.type === 'update_sessions') {
           const targetIds = action.target_ids === 'all' 
             ? sessions.map(s => s.id) 
             : action.target_ids;
@@ -279,7 +292,13 @@ CRITICAL: When user mentions song titles, map to these fields:
           for (const sessionId of targetIds) {
             await base44.entities.Session.update(sessionId, action.changes);
           }
-        } 
+        }
+        else if (action.type === 'create_segments') {
+          // Create new segments
+          for (const segmentData of action.create_data || []) {
+            await base44.entities.Segment.create(segmentData);
+          }
+        }
         else if (action.type === 'update_segments') {
           const targetIds = action.target_ids === 'all'
             ? eventSegments.map(s => s.id)
@@ -459,6 +478,12 @@ ACCIONES:
                                 <span className="text-purple-600">{k}</span>: <span className="text-green-600">"{String(v)}"</span>
                               </div>
                             ))}
+                          </div>
+                        )}
+                        {action.create_data && (
+                          <div className="mt-2 text-xs bg-gray-50 p-2 rounded font-mono max-h-32 overflow-y-auto">
+                            <div className="text-purple-600 font-semibold mb-1">Datos a crear:</div>
+                            {JSON.stringify(action.create_data, null, 2)}
                           </div>
                         )}
                       </div>
