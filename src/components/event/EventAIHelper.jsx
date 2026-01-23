@@ -359,12 +359,13 @@ If user mentions a past event and you're uncertain which one they mean (< 80% co
     }
   };
 
-  const executeActions = async () => {
-    if (!proposedActions?.actions?.length) return;
+  const executeActions = async (actions = null, isDraft = false) => {
+    const actionsToExecute = actions || proposedActions?.actions;
+    if (!actionsToExecute?.length) return;
 
-    // Final validation check before execution
-    const finalValidation = validateAIActions(proposedActions.actions || []);
-    if (!finalValidation.isValid) {
+    // Allow execution if draft mode or validation passes
+    const finalValidation = validateAIActions(actionsToExecute || [], {}, isDraft);
+    if (!finalValidation.isValid && !isDraft) {
       toast.error(language === 'es' 
         ? 'No se puede ejecutar: hay errores de validación' 
         : 'Cannot execute: validation errors present');
