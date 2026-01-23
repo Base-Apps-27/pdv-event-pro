@@ -257,7 +257,7 @@ CRITICAL: When user mentions song titles, map to these fields:
                   type: { type: "string" },
                   description: { type: "string" },
                   target_ids: {},
-                  create_data: { type: "array" },
+                  create_data: { type: "array", items: { type: "object" } },
                   changes: { type: "object" },
                   affected_count: { type: "number" }
                 }
