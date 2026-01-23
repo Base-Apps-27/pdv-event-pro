@@ -78,11 +78,25 @@ export function buildTeamInfo(serviceData, globalScale = 1) {
 }
 
 export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
-  const globalScale = bodyFontScale; // For backward compat in segment building
-  
-  if (!segments || segments.length === 0) return [];
-  
-  return segments.flatMap((seg, idx) => {
+   const globalScale = bodyFontScale; // For backward compat in segment building
+
+   if (!segments || segments.length === 0) return [];
+
+   // Build a map of parent segment IDs to their children for efficient lookup
+   const childrenByParentId = {};
+   segments.forEach(seg => {
+     if (seg.parent_segment_id) {
+       if (!childrenByParentId[seg.parent_segment_id]) {
+         childrenByParentId[seg.parent_segment_id] = [];
+       }
+       childrenByParentId[seg.parent_segment_id].push(seg);
+     }
+   });
+
+   // Filter to only top-level segments (no parent_segment_id)
+   const topLevelSegments = segments.filter(seg => !seg.parent_segment_id);
+
+   return topLevelSegments.flatMap((seg, idx) => {
     const items = [];
     
     // Segment title with time
@@ -147,14 +161,46 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
     }
     
     // Songs
-    const songs = seg.data?.songs || seg.songs;
-    if (songs && Array.isArray(songs) && songs.some(s => s.title)) {
-      songs.filter(s => s.title).forEach(song => {
-        const songText = [{ text: `- ${song.title}`, fontSize: 10 * globalScale, color: BRAND.GRAY }];
-        if (song.lead) songText.push({ text: ` (${song.lead})`, fontSize: 9 * globalScale, color: BRAND.GRAY });
-        items.push({ text: songText, margin: [5, 0, 0, 1] });
-      });
-    }
+     const songs = seg.data?.songs || seg.songs;
+     if (songs && Array.isArray(songs) && songs.some(s => s.title)) {
+       songs.filter(s => s.title).forEach(song => {
+         const songText = [{ text: `- ${song.title}`, fontSize: 10 * globalScale, color: BRAND.GRAY }];
+         if (song.lead) songText.push({ text: ` (${song.lead})`, fontSize: 9 * globalScale, color: BRAND.GRAY });
+         items.push({ text: songText, margin: [5, 0, 0, 1] });
+       });
+     }
+
+     // Sub-asignaciones (Ministración within Alabanza)
+     const subAsignaciones = childrenByParentId[seg.id] || [];
+     if (subAsignaciones.length > 0) {
+       items.push({
+         text: 'Ministración:',
+         fontSize: 9 * globalScale,
+         bold: true,
+         color: BRAND.GRAY,
+         margin: [5, 4, 0, 2]
+       });
+       subAsignaciones.forEach(sub => {
+         const subText = [
+           { text: `- ${sub.title}`, fontSize: 10 * globalScale, bold: true, color: '#7C3AED' }
+         ];
+         if (sub.duration) {
+           subText.push({ text: ` (${sub.duration} min)`, fontSize: 9 * globalScale, color: BRAND.GRAY });
+         }
+         items.push({ text: subText, margin: [8, 0, 0, 1] });
+
+         // Sub presenter (ministra)
+         if (sub.presenter) {
+           items.push({
+             text: `P. ${sub.presenter}`,
+             fontSize: 9 * globalScale,
+             bold: true,
+             color: '#7C3AED',
+             margin: [10, 0, 0, 2]
+           });
+         }
+       });
+     }
     
     // Message title
     const messageTitle = seg.data?.messageTitle || seg.messageTitle;
