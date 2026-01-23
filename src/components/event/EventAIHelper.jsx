@@ -435,7 +435,7 @@ If user mentions a past event and you're uncertain which one they mean (< 80% co
       queryClient.invalidateQueries(['allSegments']);
       queryClient.invalidateQueries(['event', eventId]);
       
-      const actionVerb = proposedActions.actions.some(a => a.type.startsWith('create')) 
+      const actionVerb = actionsToExecute.some(a => a.type.startsWith('create')) 
         ? (language === 'es' ? 'creados' : 'created')
         : (language === 'es' ? 'actualizados' : 'updated');
       const message = language === 'es' 
