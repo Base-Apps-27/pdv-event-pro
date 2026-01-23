@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertCircle, CheckCircle2, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
+import MissingFieldsForm from "@/components/event/MissingFieldsForm";
 
 export default function AIProposalReview({
   isOpen,
@@ -16,6 +17,8 @@ export default function AIProposalReview({
 }) {
   const { language, t } = useLanguage();
   const [expandedActions, setExpandedActions] = React.useState({});
+  const [isDraft, setIsDraft] = React.useState(false);
+  const [filledValues, setFilledValues] = React.useState({});
 
   const toggleExpanded = (idx) => {
     setExpandedActions(prev => ({
