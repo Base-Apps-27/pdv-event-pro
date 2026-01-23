@@ -1609,11 +1609,95 @@ export default function CustomServiceBuilder() {
                                       </div>
                                     ))}
                                   </div>
-                                )}
-                              </>
-                            )}
+                                  )}
+                                  {/* Sub-Asignaciones (Ministración) within Alabanza */}
+                                  <div className="space-y-2 pt-3 border-t">
+                                   <div className="flex items-center justify-between">
+                                     <Label className="text-xs font-semibold text-pdv-green">Sub-Asignaciones (Ministración)</Label>
+                                     <Button 
+                                       type="button"
+                                       variant="ghost" 
+                                       size="sm" 
+                                       onClick={() => {
+                                         const newSubAsignaciones = [...(segment.sub_asignaciones || []), { _uiId: generateUiId(), title: "", presenter: "", duration: 5 }];
+                                         updateSegmentField(idx, 'sub_asignaciones', newSubAsignaciones);
+                                       }}
+                                       className="h-6 text-xs text-pdv-teal hover:bg-pdv-teal/10"
+                                     >
+                                       <Plus className="w-3 h-3 mr-1" />
+                                       Agregar
+                                     </Button>
+                                   </div>
+                                   {(segment.sub_asignaciones || []).length > 0 && (
+                                     <div className="space-y-2 bg-gray-50 p-2 rounded-md">
+                                       {segment.sub_asignaciones.map((sub, subIdx) => (
+                                         <div key={sub._uiId || subIdx} className="flex gap-2 items-start bg-white p-2 rounded border border-gray-200">
+                                           <div className="flex-1 grid grid-cols-12 gap-2">
+                                             <div className="col-span-6 space-y-1">
+                                               <Label className="text-xs text-gray-600">Título</Label>
+                                               <Input 
+                                                 type="text"
+                                                 value={sub.title || ""}
+                                                 onChange={(e) => {
+                                                   const updated = [...segment.sub_asignaciones];
+                                                   updated[subIdx].title = e.target.value;
+                                                   updateSegmentField(idx, 'sub_asignaciones', updated);
+                                                 }}
+                                                 placeholder="Ej. Sanidad y Milagros"
+                                                 className="text-xs h-8"
+                                               />
+                                             </div>
+                                             <div className="col-span-4 space-y-1">
+                                               <Label className="text-xs text-gray-600">Ministra</Label>
+                                               <AutocompleteInput 
+                                                 type="presenter"
+                                                 value={sub.presenter || ""}
+                                                 onChange={(e) => {
+                                                   const updated = [...segment.sub_asignaciones];
+                                                   updated[subIdx].presenter = e.target.value;
+                                                   updateSegmentField(idx, 'sub_asignaciones', updated);
+                                                 }}
+                                                 placeholder="Nombre"
+                                                 className="text-xs h-8"
+                                               />
+                                             </div>
+                                             <div className="col-span-2 space-y-1">
+                                               <Label className="text-xs text-gray-600">Min</Label>
+                                               <Input 
+                                                 type="number"
+                                                 min="1"
+                                                 max="60"
+                                                 value={sub.duration || 5}
+                                                 onChange={(e) => {
+                                                   const updated = [...segment.sub_asignaciones];
+                                                   updated[subIdx].duration = parseInt(e.target.value) || 5;
+                                                   updateSegmentField(idx, 'sub_asignaciones', updated);
+                                                 }}
+                                                 className="text-xs h-8"
+                                               />
+                                             </div>
+                                           </div>
+                                           <Button 
+                                             type="button"
+                                             variant="ghost" 
+                                             size="icon" 
+                                             onClick={() => {
+                                               const updated = segment.sub_asignaciones.filter((_, i) => i !== subIdx);
+                                               updateSegmentField(idx, 'sub_asignaciones', updated);
+                                             }}
+                                             className="h-8 w-8 text-red-400 hover:text-red-600 mt-6"
+                                           >
+                                             <Trash2 className="w-3 h-3" />
+                                           </Button>
+                                         </div>
+                                       ))}
+                                     </div>
+                                   )}
+                                  </div>
+                                  </>
+                                  )}
 
-                            {/* Message fields */}
+                                  {/* Message fields */}
                             {(segment.type === 'Plenaria' || segment.type === 'message') && (
                               <>
                                 <div className="grid md:grid-cols-2 gap-2">
