@@ -106,9 +106,12 @@ Return information in a structured, readable format. Be comprehensive and pull r
 
 ### For ACTIONS (requesting changes):
 1. Understand what the user wants to change.
-2. Propose specific actions to accomplish it.
-3. Be precise about which records will be affected.
-4. CRITICAL: Always infer the correct field and its specific meaning based on context. Use the detailed schema below.
+2. **CRITICAL DECISION**: Does the user want to CREATE NEW records or UPDATE EXISTING records?
+   - If creating NEW sessions/segments that don't exist yet → use create_sessions or create_segments
+   - If modifying EXISTING sessions/segments → use update_sessions or update_segments
+3. Propose specific actions to accomplish it.
+4. Be precise about which records will be affected.
+5. CRITICAL: Always infer the correct field and its specific meaning based on context. Use the detailed schema below.
 
 ## SUPPORTED ACTION TYPES
 - create_sessions: Create new sessions (provide full session data including event_id, name, date, times)
@@ -186,15 +189,26 @@ CRITICAL: When user mentions song titles, map to these fields:
 
 ## PARSING EXAMPLES
 
-**"Change worship songs in Session 2 to El Es, Su Vida, and He Is"**
+**"Create 3 sessions, Friday PM, Saturday AM, Saturday PM"** (NO SESSIONS EXIST YET)
+→ type: "create_sessions"
+→ create_data: [
+  { name: "Viernes PM", date: "2026-06-12", planned_start_time: "19:00" },
+  { name: "Sábado AM", date: "2026-06-13", planned_start_time: "09:00" },
+  { name: "Sábado PM", date: "2026-06-13", planned_start_time: "19:00" }
+]
+
+**"Change worship songs in Session 2 to El Es, Su Vida, and He Is"** (SESSION 2 EXISTS)
+→ type: "update_segments"
 → Find Alabanza segment in Session 2
 → changes: { number_of_songs: 3, song_1_title: "El Es", song_2_title: "Su Vida", song_3_title: "He Is" }
 
-**"Set Juan as translator for all Plenaria segments"**
+**"Set Juan as translator for all Plenaria segments"** (SEGMENTS EXIST)
+→ type: "update_segments"
 → Filter segments where segment_type="Plenaria"
 → changes: { translator_name: "Juan", requires_translation: true }
 
-**"Update sound team to Rick for all sessions"**
+**"Update sound team to Rick for all sessions"** (SESSIONS EXIST)
+→ type: "update_sessions"
 → target_ids: "all" sessions
 → changes: { sound_team: "Rick" }
 
@@ -274,6 +288,8 @@ CRITICAL: When user mentions song titles, map to these fields:
     setExecutionStatus('executing');
 
     try {
+      let totalAffected = 0;
+      
       for (const action of proposedActions.actions) {
         if (action.type === 'create_sessions') {
           // Create new sessions
@@ -282,6 +298,7 @@ CRITICAL: When user mentions song titles, map to these fields:
               event_id: eventId,
               ...sessionData
             });
+            totalAffected++;
           }
         }
         else if (action.type === 'update_sessions') {
@@ -289,14 +306,20 @@ CRITICAL: When user mentions song titles, map to these fields:
             ? sessions.map(s => s.id) 
             : action.target_ids;
           
+          if (targetIds.length === 0) {
+            throw new Error(`No se encontraron sesiones para actualizar`);
+          }
+          
           for (const sessionId of targetIds) {
             await base44.entities.Session.update(sessionId, action.changes);
+            totalAffected++;
           }
         }
         else if (action.type === 'create_segments') {
           // Create new segments
           for (const segmentData of action.create_data || []) {
             await base44.entities.Segment.create(segmentData);
+            totalAffected++;
           }
         }
         else if (action.type === 'update_segments') {
@@ -304,12 +327,18 @@ CRITICAL: When user mentions song titles, map to these fields:
             ? eventSegments.map(s => s.id)
             : action.target_ids;
           
+          if (targetIds.length === 0) {
+            throw new Error(`No se encontraron segmentos para actualizar`);
+          }
+          
           for (const segmentId of targetIds) {
             await base44.entities.Segment.update(segmentId, action.changes);
+            totalAffected++;
           }
         }
         else if (action.type === 'update_event' && event) {
           await base44.entities.Event.update(event.id, action.changes);
+          totalAffected++;
         }
       }
 
@@ -317,7 +346,9 @@ CRITICAL: When user mentions song titles, map to these fields:
       queryClient.invalidateQueries(['sessions', eventId]);
       queryClient.invalidateQueries(['allSegments']);
       queryClient.invalidateQueries(['event', eventId]);
-      toast.success("Cambios aplicados correctamente");
+      
+      const actionVerb = proposedActions.actions.some(a => a.type.startsWith('create')) ? 'creados' : 'actualizados';
+      toast.success(`${totalAffected} registros ${actionVerb} correctamente`);
     } catch (error) {
       console.error("Execution error:", error);
       setExecutionStatus('error');
