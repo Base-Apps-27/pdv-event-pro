@@ -1,6 +1,11 @@
 /**
- * pdfmake-based Service Program Helpers
- * Shared logic for building program segments and team info
+ * CUSTOM SERVICE PDF GENERATOR
+ * 
+ * SYNC PROTOCOL: See components/service/PDF_SYNC_PROTOCOL.md
+ * - Shares rendering standards with generateWeeklyProgramPDF.jsx (colors, fonts, presenter hierarchy)
+ * - Intentional divergence: Single-column layout, flat segment structure, sub_asignaciones array
+ * - When updating colors, fonts, or label hierarchy: UPDATE BOTH GENERATORS
+ * - When adding layout features: clarify if it's custom-only or applies to weekly too
  */
 
 import pdfMake from 'pdfmake/build/pdfmake';
@@ -187,7 +192,10 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
       });
     }
 
-    // Sub-asignaciones (Ministración) - boxed in purple theme
+    // DIVERGENCE (per PDF_SYNC_PROTOCOL.md): Sub-asignaciones are CUSTOM-ONLY
+    // Custom services use flat seg.sub_asignaciones[] array (new feature)
+    // Weekly services use seg.sub_assignments[] (legacy DB structure)
+    // Do NOT apply this logic to generateWeeklyProgramPDF.jsx
     const subAsignaciones = seg.sub_asignaciones || [];
     if (subAsignaciones.length > 0) {
       items.push({

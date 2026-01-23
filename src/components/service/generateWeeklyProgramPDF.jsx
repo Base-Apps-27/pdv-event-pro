@@ -1,3 +1,13 @@
+/**
+ * WEEKLY SERVICE PDF GENERATOR
+ * 
+ * SYNC PROTOCOL: See components/service/PDF_SYNC_PROTOCOL.md
+ * - Shares rendering standards with generateProgramPDF.jsx (colors, fonts, presenter hierarchy)
+ * - Intentional divergence: 2-column layout, time-slot segmentation, sub_assignments structure
+ * - When updating colors, fonts, or label hierarchy: UPDATE BOTH GENERATORS
+ * - When adding layout features: clarify if it's weekly-only or applies to custom too
+ */
+
 import pdfMake from 'pdfmake/build/pdfmake';
 import { getLogoDataUrl } from './pdfLogoData';
 import { es } from "date-fns/locale";
@@ -386,7 +396,10 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       });
     }
 
-    // Sub-assignments
+    // DIVERGENCE (per PDF_SYNC_PROTOCOL.md): Sub-assignments are WEEKLY-ONLY (legacy DB structure)
+    // Weekly services use structured seg.sub_assignments[] records with backwards-compatibility
+    // Custom services use flat seg.sub_asignaciones[] array (new feature)
+    // Do NOT apply custom sub_asignaciones logic here; use this pattern for weekly services only
     if (seg.sub_assignments) {
       seg.sub_assignments.forEach(sub => {
         const val = seg.data?.[sub.person_field_name];
