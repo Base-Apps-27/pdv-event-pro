@@ -82,20 +82,7 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
 
    if (!segments || segments.length === 0) return [];
 
-   // Build map of parent to children
-   const childrenByParentId = {};
-   segments.forEach(seg => {
-     if (seg.parent_segment_id) {
-       if (!childrenByParentId[seg.parent_segment_id]) {
-         childrenByParentId[seg.parent_segment_id] = [];
-       }
-       childrenByParentId[seg.parent_segment_id].push(seg);
-     }
-   });
-
-   const topLevelSegments = segments.filter(seg => !seg.parent_segment_id);
-
-   return topLevelSegments.flatMap((seg, idx) => {
+   return segments.flatMap((seg, idx) => {
      const items = [];
 
      // Weekly Service style: Time + Title + Type Tag + Duration
@@ -201,7 +188,7 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
     }
 
     // Sub-asignaciones (Ministración) - boxed in purple theme
-    const subAsignaciones = childrenByParentId[seg.id] || [];
+    const subAsignaciones = seg.sub_asignaciones || [];
     if (subAsignaciones.length > 0) {
       items.push({
         table: {
