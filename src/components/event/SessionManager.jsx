@@ -581,11 +581,19 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
             {/* Section Navigation Pills */}
             <div className="px-6 pt-4 pb-2 bg-white border-b shrink-0">
               <div className="flex gap-2">
-                <Badge variant="outline" className="bg-blue-50 border-blue-300 text-blue-700">
+                <Badge 
+                  variant="outline" 
+                  className="bg-blue-50 border-blue-300 text-blue-700 cursor-pointer hover:bg-blue-100 transition-colors"
+                  onClick={() => document.getElementById('section-basic-info')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                >
                   <Calendar className="w-3 h-3 mr-1" />
                   Información Básica
                 </Badge>
-                <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700">
+                <Badge 
+                  variant="outline" 
+                  className="bg-green-50 border-green-300 text-green-700 cursor-pointer hover:bg-green-100 transition-colors"
+                  onClick={() => document.getElementById('section-team')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                >
                   <Users className="w-3 h-3 mr-1" />
                   Equipo y Personal
                 </Badge>
@@ -594,7 +602,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
 
             <div ref={scrollContainerRef} className="space-y-0 overflow-y-auto flex-1 relative">
             {/* Section 1: Basic Info */}
-            <div className="bg-blue-50/30 border-l-4 border-blue-500 px-6 py-4">
+            <div id="section-basic-info" className="bg-blue-50/30 border-l-4 border-blue-500 px-6 py-4">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-white" />
@@ -777,7 +785,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
             </div>
 
             {/* Section 2: Team & Personnel */}
-            <div className="bg-green-50/30 border-l-4 border-green-500 px-6 py-4 mt-0">
+            <div id="section-team" className="bg-green-50/30 border-l-4 border-green-500 px-6 py-4 mt-0">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center">
                   <Users className="w-5 h-5 text-white" />
