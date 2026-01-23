@@ -261,8 +261,8 @@ export default function AIProposalReview({
             </Button>
 
             <Button
-              onClick={onApprove}
-              disabled={hasErrors || isExecuting}
+              onClick={handleApprove}
+              disabled={(hasErrors && !isDraft) || isExecuting}
               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
             >
               {isExecuting ? (
