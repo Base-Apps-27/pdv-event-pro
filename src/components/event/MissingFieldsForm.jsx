@@ -67,8 +67,8 @@ export default function MissingFieldsForm({
                             {FIELD_LABELS[err.field]?.[language] || err.field}
                           </Label>
                           <Input
-                            placeholder={language === 'es' ? 'Ingresa un valor...' : 'Enter a value...'}
-                            defaultValue={segment?.[err.field] || ''}
+                            placeholder={language === 'es' ? 'ej. ****Placeholder****' : 'e.g. ****Placeholder****'}
+                            defaultValue=""
                             onChange={(e) => onFieldChange(actionIndex, segmentIndex, err.field, e.target.value)}
                             className="text-sm"
                           />
