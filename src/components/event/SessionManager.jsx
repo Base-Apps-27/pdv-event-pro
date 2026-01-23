@@ -555,9 +555,15 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
             <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingSession ? 'Editar Sesión' : 'Nueva Sesión'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-            <div className="space-y-6 overflow-y-auto flex-1 px-6 py-4">
-            <div>
-              <h3 className="font-bold text-lg mb-4 text-slate-900">Información Básica</h3>
+            <div className="space-y-0 overflow-y-auto flex-1">
+            {/* Section 1: Basic Info */}
+            <div className="bg-blue-50/30 border-l-4 border-blue-500 px-6 py-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="font-bold text-xl text-slate-900 uppercase font-['Bebas_Neue'] tracking-wide">Información Básica</h3>
+              </div>
               <div className="space-y-4 max-w-full">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nombre de la Sesión *</Label>
@@ -733,10 +739,14 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
               </div>
             </div>
 
-            <Separator className="my-6" />
-              
-            <div>
-              <h3 className="font-bold text-lg mb-4 text-slate-900">Equipo y Personal</h3>
+            {/* Section 2: Team & Personnel */}
+            <div className="bg-green-50/30 border-l-4 border-green-500 px-6 py-4 mt-0">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="font-bold text-xl text-slate-900 uppercase font-['Bebas_Neue'] tracking-wide">Equipo y Personal</h3>
+              </div>
               <div className="grid md:grid-cols-2 gap-4 max-w-full">
                 <div className="space-y-2">
                   <Label htmlFor="admin_team">Administración</Label>
@@ -865,9 +875,10 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                   </div>
               </div>
             </div>
+            </div>
 
             </div>
-            <div className="flex justify-end gap-3 pt-4 border-t shrink-0 px-6 pb-4">
+            <div className="flex justify-end gap-3 pt-4 border-t shrink-0 px-6 pb-4 bg-white shadow-lg">
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
