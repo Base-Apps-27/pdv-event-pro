@@ -198,7 +198,7 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
               { text: 'MINISTRACIÓN DE SANIDAD Y MILAGROS:', bold: true, fontSize: 8.5 * globalScale, color: '#5B21B6', margin: [0, 0, 0, 2] },
               ...subAsignaciones.map(sub => ({
                 text: [
-                  { text: `P. ${sub.presenter || 'TBD'}`, bold: true, color: '#7C3AED', fontSize: 9 * globalScale },
+                  { text: sub.presenter || 'TBD', bold: true, color: '#7C3AED', fontSize: 9 * globalScale },
                   sub.duration ? { text: ` (${sub.duration} min)`, color: '#64748B', fontSize: 8.5 * globalScale } : ''
                 ],
                 margin: [0, 0, 0, 1]
