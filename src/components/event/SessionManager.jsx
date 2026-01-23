@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -38,31 +38,8 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
   const [showHospitalityTasksModal, setShowHospitalityTasksModal] = useState(false);
   const [formData, setFormData] = useState({});
   const [fieldOrigins, setFieldOrigins] = useState({});
-  const [showScrollHint, setShowScrollHint] = useState(false);
-  const scrollContainerRef = useRef(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-
-  // Detect if content is scrollable and user hasn't scrolled to bottom
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const checkScroll = () => {
-      const hasScroll = container.scrollHeight > container.clientHeight;
-      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
-      setShowScrollHint(hasScroll && !isAtBottom);
-    };
-
-    checkScroll();
-    container.addEventListener('scroll', checkScroll);
-    window.addEventListener('resize', checkScroll);
-
-    return () => {
-      container.removeEventListener('scroll', checkScroll);
-      window.removeEventListener('resize', checkScroll);
-    };
-  }, [showDialog]);
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Session.create(data),
@@ -600,7 +577,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
               </div>
             </div>
 
-            <div ref={scrollContainerRef} className="space-y-0 overflow-y-auto flex-1 relative">
+            <div className="space-y-0 overflow-y-auto flex-1">
             {/* Section 1: Basic Info */}
             <div id="section-basic-info" className="bg-blue-50/30 border-l-4 border-blue-500 px-6 py-4">
               <div className="flex items-center gap-2 mb-4">
@@ -920,17 +897,6 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                   </div>
               </div>
             </div>
-
-            {/* Scroll hint indicator */}
-            {showScrollHint && (
-              <div className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none bg-gradient-to-t from-white via-white/80 to-transparent flex items-end justify-center pb-2">
-                <div className="bg-blue-500 text-white px-4 py-1.5 rounded-full text-xs font-semibold shadow-lg animate-bounce flex items-center gap-1">
-                  <ChevronDown className="w-4 h-4" />
-                  Desplázate para ver "Equipo y Personal"
-                  <ChevronDown className="w-4 h-4" />
-                </div>
-              </div>
-            )}
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t shrink-0 px-6 pb-4 bg-white shadow-lg">
