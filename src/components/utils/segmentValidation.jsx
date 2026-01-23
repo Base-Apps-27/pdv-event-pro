@@ -20,6 +20,17 @@ const SEGMENT_TYPE_REQUIRED_FIELDS = {
   Breakout: ["breakout_rooms"]
 };
 
+// Map segment types to their missing fields for inline form display
+const FIELD_LABELS = {
+  message_title: "Mensaje Título / Message Title",
+  number_of_songs: "Número de Canciones / Number of Songs",
+  video_name: "Nombre del Video / Video Name",
+  video_location: "Ubicación del Video / Video Location",
+  announcement_title: "Título del Anuncio / Announcement Title",
+  art_types: "Tipos de Artes / Art Types",
+  breakout_rooms: "Salas de Sesión Paralela / Breakout Rooms"
+};
+
 /**
  * Validates AI-proposed actions before execution
  * Returns { isValid: boolean, errors: [], warnings: [] }
