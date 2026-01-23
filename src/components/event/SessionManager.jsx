@@ -276,7 +276,12 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
         </Card>
       ) : (
         <div className="grid gap-4">
-          {sessions.map((session) => {
+          {[...sessions].sort((a, b) => {
+            if (a.date !== b.date) return a.date.localeCompare(b.date);
+            const aTime = a.planned_start_time || '';
+            const bTime = b.planned_start_time || '';
+            return aTime.localeCompare(bTime);
+          }).map((session) => {
             const isExpanded = expandedSessionId === session.id;
             const sessionSegments = getSessionSegments(session.id);
 
