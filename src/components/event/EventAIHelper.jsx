@@ -516,7 +516,7 @@ If user mentions a past event and you're uncertain which one they mean (< 80% co
                   }}
                 />
                 <Button 
-                  onClick={analyzeRequest} 
+                  onClick={() => analyzeRequest()} 
                   disabled={!userInput.trim() || isProcessing}
                   style={tealStyle}
                   className="flex-1"
