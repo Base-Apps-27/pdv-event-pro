@@ -35,9 +35,10 @@ const FIELD_LABELS = {
  * Validates AI-proposed actions before execution
  * Returns { isValid: boolean, errors: [], warnings: [] }
  */
-export function validateAIActions(actions, context = {}) {
+export function validateAIActions(actions, context = {}, allowDraft = false) {
   const errors = [];
   const warnings = [];
+  const fixableErrors = []; // Errors that user can fix in form
   let actionIndex = 0;
 
   for (const action of actions) {
@@ -70,12 +71,19 @@ export function validateAIActions(actions, context = {}) {
           errors.push(`Segment ${idx + 1}: Invalid segment_type "${segmentData.segment_type}". Must be one of: ${VALID_SEGMENT_TYPES.join(", ")}`);
         }
 
-        // Check type-specific required fields
+        // Check type-specific required fields — track as fixable
         if (segmentData.segment_type && SEGMENT_TYPE_REQUIRED_FIELDS[segmentData.segment_type]) {
           const required = SEGMENT_TYPE_REQUIRED_FIELDS[segmentData.segment_type];
           for (const field of required) {
             if (!segmentData[field]) {
-              errors.push(`Segment ${idx + 1} (${segmentData.segment_type}): "${field}" is required for this segment type`);
+              const errorMsg = `Segment ${idx + 1} (${segmentData.segment_type}): "${field}" is required for this segment type`;
+              errors.push(errorMsg);
+              fixableErrors.push({
+                actionIndex,
+                segmentIndex: idx,
+                field,
+                message: errorMsg
+              });
             }
           }
         }
