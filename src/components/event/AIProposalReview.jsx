@@ -72,6 +72,17 @@ export default function AIProposalReview({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Missing Fields Form */}
+          {hasErrors && validation?.fixableErrors?.length > 0 && (
+            <MissingFieldsForm
+              fixableErrors={validation.fixableErrors}
+              proposedActions={proposedActions}
+              onFieldChange={handleFieldChange}
+              onDraftToggle={setIsDraft}
+              isDraft={isDraft}
+            />
+          )}
+
           {/* Validation Messages */}
           {(hasErrors || hasWarnings) && (
             <div className="space-y-2">
