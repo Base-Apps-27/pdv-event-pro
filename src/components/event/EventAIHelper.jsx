@@ -377,7 +377,7 @@ If user mentions a past event and you're uncertain which one they mean (< 80% co
     try {
       let totalAffected = 0;
       
-      for (const action of proposedActions.actions) {
+      for (const action of actionsToExecute) {
         if (action.type === 'create_sessions') {
           // Create new sessions
           for (const sessionData of action.create_data || []) {
