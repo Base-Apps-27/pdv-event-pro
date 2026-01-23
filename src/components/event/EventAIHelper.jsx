@@ -12,6 +12,8 @@ import { useLanguage } from "@/components/utils/i18n";
 import { validateAIActions, formatValidationForDisplay } from "@/components/utils/segmentValidation";
 import AIProposalReview from "@/components/event/AIProposalReview";
 import VoiceInputButton from "@/components/event/VoiceInputButton";
+import EventClarificationPicker from "@/components/event/EventClarificationPicker";
+import { fuzzySearchEvents } from "@/components/utils/eventFuzzySearch";
 
 export default function EventAIHelper({ eventId, isOpen, onClose }) {
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
@@ -26,6 +28,10 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
   const [executionStatus, setExecutionStatus] = useState(null); // null, 'executing', 'success', 'error'
   const [validation, setValidation] = useState(null);
   const [showReview, setShowReview] = useState(false);
+  const [clarificationOptions, setClarificationOptions] = useState(null);
+  const [showClarification, setShowClarification] = useState(false);
+  const [sourceEventData, setSourceEventData] = useState(null);
+  const [isLoadingSourceEvent, setIsLoadingSourceEvent] = useState(false);
 
   const { data: event } = useQuery({
     queryKey: ['event', eventId],
@@ -50,9 +56,10 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
     sessions.some(s => s.id === seg.session_id)
   );
 
-  const analyzeRequest = async () => {
-    if (!userInput.trim()) return;
-    
+  const analyzeRequest = async (inputText = null, sourceEventContext = null) => {
+    const finalInput = inputText || userInput;
+    if (!finalInput.trim()) return;
+
     setIsProcessing(true);
     setProposedActions(null);
     setQueryResult(null);
@@ -279,6 +286,12 @@ CRITICAL: When user mentions song titles, map to these fields:
 
       if (response.request_type === 'query') {
         setQueryResult(response);
+      } else if (response.type === 'ask_event_clarification') {
+        // AI is asking which event the user meant
+        // Use fuzzy search to find best matches and let user pick
+        const matches = fuzzySearchEvents(eventIndex, response.message || '');
+        setClarificationOptions(matches.length > 0 ? matches : response.options || []);
+        setShowClarification(true);
       } else {
         // Validate actions before showing confirmation
         const validationResult = validateAIActions(response.actions || []);
@@ -387,6 +400,38 @@ CRITICAL: When user mentions song titles, map to these fields:
     }
   };
 
+  const handleClarificationSelect = async (selectedEvent) => {
+    setIsLoadingSourceEvent(true);
+    try {
+      // Fetch source event's sessions and segments
+      const sessions = await base44.entities.Session.filter({ event_id: selectedEvent.id });
+      const sessionIds = sessions.map(s => s.id);
+      const segments = sessionIds.length > 0 
+        ? await base44.entities.Segment.filter({ session_id: { $in: sessionIds } })
+        : [];
+
+      setSourceEventData({
+        event: { id: selectedEvent.id, name: selectedEvent.name, year: selectedEvent.year },
+        sessions,
+        segments
+      });
+
+      // Re-run analysis with source event context
+      await analyzeRequest(userInput, {
+        sourceEvent: { id: selectedEvent.id, name: selectedEvent.name, year: selectedEvent.year },
+        sourceSessions: sessions,
+        sourceSegments: segments
+      });
+
+      setShowClarification(false);
+    } catch (error) {
+      console.error('Error loading source event:', error);
+      toast.error(language === 'es' ? 'Error al cargar evento' : 'Error loading event');
+    } finally {
+      setIsLoadingSourceEvent(false);
+    }
+  };
+
   const reset = () => {
     setUserInput("");
     setProposedActions(null);
@@ -394,6 +439,9 @@ CRITICAL: When user mentions song titles, map to these fields:
     setExecutionStatus(null);
     setValidation(null);
     setShowReview(false);
+    setClarificationOptions(null);
+    setShowClarification(false);
+    setSourceEventData(null);
   };
 
   return (
