@@ -104,14 +104,27 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
         }))
       };
 
+      // Build event index context for LLM
+      const availableEventsStr = eventIndex.length > 0
+        ? eventIndex.map(e => `${e.name} (${e.year})`).slice(0, 10).join(', ')
+        : 'None';
+
+      // Add source event context if user selected one
+      const sourceEventStr = sourceEventContext
+        ? `\n\nSOURCE EVENT CONTEXT (user selected):\nEvent: ${sourceEventContext.sourceEvent.name} (${sourceEventContext.sourceEvent.year})\nSessions: ${sourceEventContext.sourceSessions.length}\nSegments: ${sourceEventContext.sourceSegments.length}`
+        : '';
+
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `You are an AI assistant helping manage church event data. You can either QUERY information or PROPOSE actions.
 
 ## CURRENT EVENT CONTEXT
 ${JSON.stringify(contextSummary, null, 2)}
 
+## AVAILABLE EVENTS (last 2 years, for reference)
+${availableEventsStr}${sourceEventStr}
+
 ## USER REQUEST
-"${userInput}"
+"${finalInput}"
 
 ## YOUR TASK
 First, determine if this is a QUERY (asking for information) or an ACTION (requesting changes).
@@ -227,10 +240,19 @@ CRITICAL: When user mentions song titles, map to these fields:
 → target_ids: "all" sessions
 → changes: { sound_team: "Rick" }
 
+## IMPORTANT: HANDLING CROSS-EVENT REFERENCES
+If user mentions a past event and you're uncertain which one they mean (< 80% confidence):
+- Respond with: {"type": "ask_event_clarification", "message": "Event X or Y?", "options": [{id, name, year}, ...]}
+- Provide up to 3 best-guess options using fuzzy matching on available events
+- Do NOT proceed with action until user clarifies
+
 ## RESPONSE FORMAT (JSON only)
 {
   "request_type": "query" | "action",
+  "type": "ask_event_clarification" (optional, if asking for clarification),
   "understood_request": "Brief summary",
+  "message": "Question for user (if type=ask_event_clarification)",
+  "options": [{id, name, year}, ...] (if type=ask_event_clarification),
   "query_result": { "summary": "...", "details": [...] },
   "actions": [{
     "type": "create_sessions" | "update_sessions" | "create_segments" | "update_segments" | "update_event",
@@ -247,7 +269,10 @@ CRITICAL: When user mentions song titles, map to these fields:
           type: "object",
           properties: {
             request_type: { type: "string" },
+            type: { type: "string" },
             understood_request: { type: "string" },
+            message: { type: "string" },
+            options: { type: "array", items: { type: "object" } },
             query_result: {
               type: "object",
               properties: {
@@ -604,7 +629,7 @@ CRITICAL: When user mentions song titles, map to these fields:
           </div>
 
           {/* Review Modal */}
-          <AIProposalReview
+        <AIProposalReview
           isOpen={showReview}
           proposedActions={proposedActions}
           validation={validation}
@@ -614,8 +639,17 @@ CRITICAL: When user mentions song titles, map to these fields:
             reset();
           }}
           isExecuting={executionStatus === 'executing'}
-          />
-          </DialogContent>
-          </Dialog>
-          );
-          }
+        />
+
+        {/* Event Clarification Picker */}
+        <EventClarificationPicker
+          isOpen={showClarification}
+          options={clarificationOptions}
+          onSelect={handleClarificationSelect}
+          onCancel={() => setShowClarification(false)}
+          isLoading={isLoadingSourceEvent}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
