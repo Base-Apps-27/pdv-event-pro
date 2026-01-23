@@ -227,62 +227,100 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
       });
     }
     
-    // Message title
-    const messageTitle = seg.data?.messageTitle || seg.messageTitle;
-    if (messageTitle) {
-      items.push({
-        text: messageTitle,
-        fontSize: 9.5 * globalScale,
-        color: BRAND.GRAY,
-        italics: true,
-        margin: [5, 2, 0, 2]
-      });
-    }
-    
-    // Verse
-    const verse = seg.data?.verse || seg.verse;
-    if (verse) {
-      items.push({
-        text: `📖 ${verse}`,
-        fontSize: 9.5 * globalScale,
-        color: BRAND.GRAY,
-        italics: true,
-        margin: [5, 2, 0, 2]
-      });
-    }
-    
-    // Description (green box)
-    const description = seg.data?.description || seg.description;
-    if (description) {
-      items.push({
-        text: description,
-        fontSize: 10 * globalScale,
-        color: '#14532D',
-        background: '#F0FDF4',
-        margin: [0, 4, 0, 2],
-        padding: [4, 4, 4, 4]
-      });
-    }
-    
-    // Notes
-    const addNote = (label, content, color) => {
-      if (content) {
-        items.push({
+    // Message/Details box (Blue-50 style)
+    const messageTitle = seg.data?.messageTitle || seg.data?.title;
+    const verse = seg.data?.verse || seg.data?.scripture_references;
+    if ((messageTitle && isMessage) || verse) {
+      const msgContent = [];
+      if (messageTitle && isMessage) {
+        msgContent.push({
           text: [
-            { text: `${label}: `, bold: true, fontSize: 9 * globalScale },
-            { text: content, fontSize: 9 * globalScale }
+            { text: 'MENSAJE: ', bold: true, color: '#1E40AF' },
+            { text: messageTitle, color: '#1E3A8A' }
           ],
-          color: color,
-          margin: [5, 2, 0, 0]
+          fontSize: 9 * globalScale,
+          margin: [0, 0, 0, 2]
         });
       }
-    };
-    
-    addNote('📋 Coord', seg.data?.coordinator_notes || seg.coordinator_notes, '#1E40AF');
-    addNote('📽️ Proyección', seg.data?.projection_notes || seg.projection_notes, '#1E40AF');
-    addNote('🔊 Sonido', seg.data?.sound_notes || seg.sound_notes, '#991B1B');
-    addNote('🤝 Ujieres', seg.data?.ushers_notes || seg.ushers_notes, '#14532D');
-    
+      if (verse) {
+        msgContent.push({
+          text: [
+            { text: 'ESCRITURAS: ', bold: true, color: '#1E40AF' },
+            { text: verse, color: '#1E3A8A' }
+          ],
+          fontSize: 9 * globalScale
+        });
+      }
+      if (msgContent.length > 0) {
+        items.push({
+          table: {
+            widths: ['*'],
+            body: [[{
+              stack: msgContent,
+              fillColor: '#EFF6FF',
+              border: [true, true, true, true],
+              borderColor: ['#BFDBFE', '#BFDBFE', '#BFDBFE', '#BFDBFE'],
+              margin: [4, 4, 4, 4]
+            }]]
+          },
+          margin: [8, 2, 0, 2]
+        });
+      }
+    }
+
+    // Prep notes box (Gray-50)
+    const prepNotes = seg.data?.description_details || seg.description_details;
+    if (prepNotes) {
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: [
+              { text: 'PREPARACIÓN', bold: true, fontSize: 7.5 * globalScale, color: '#6B7280', margin: [0, 0, 0, 2] },
+              { text: prepNotes, color: '#4B5563', fontSize: 8 * globalScale }
+            ],
+            fillColor: '#F9FAFB',
+            border: [true, true, true, true],
+            borderColor: ['#E5E7EB', '#E5E7EB', '#E5E7EB', '#E5E7EB'],
+            margin: [4, 2, 4, 2]
+          }]]
+        },
+        margin: [8, 2, 0, 2]
+      });
+    }
+
+    // During segment notes
+    const duringNotes = [
+      { label: 'COORDINACIÓN', val: seg.data?.coordinator_notes },
+      { label: 'PROYECCIÓN', val: seg.data?.projection_notes },
+      { label: 'SONIDO', val: seg.data?.sound_notes },
+      { label: 'UJIERES', val: seg.data?.ushers_notes }
+    ].filter(n => n.val);
+
+    if (duringNotes.length > 0) {
+      const noteContent = duringNotes.map(n => ({
+        text: [
+          { text: `${n.label}: `, bold: true, color: '#6B7280', fontSize: 7.5 * globalScale },
+          { text: n.val, color: '#4B5563', fontSize: 7.5 * globalScale }
+        ],
+        margin: [0, 1, 0, 1]
+      }));
+
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: noteContent,
+            fillColor: '#F9FAFB',
+            border: [true, true, true, true],
+            borderColor: ['#E5E7EB', '#E5E7EB', '#E5E7EB', '#E5E7EB'],
+            margin: [4, 2, 4, 2]
+          }]]
+        },
+        margin: [8, 2, 0, 2]
+      });
+    }
+
     return items;
   });
 }
