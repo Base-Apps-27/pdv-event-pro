@@ -24,7 +24,7 @@ import PreSessionDetailsForm from "../session/PreSessionDetailsForm";
 import HospitalityTasksModal from "../session/HospitalityTasksModal";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
-export default function SessionManager({ eventId, serviceId, sessions, segments }) {
+export default function SessionManager({ eventId, serviceId, sessions, segments, event }) {
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
@@ -574,31 +574,52 @@ export default function SessionManager({ eventId, serviceId, sessions, segments 
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="date">Fecha *</Label>
-                    <div className="relative">
-                      <DatePicker
-                        value={formData.date}
-                        onChange={(val) => updateFormField('date', val)}
-                        placeholder="Seleccionar fecha"
-                        required
-                      />
-                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'date')} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Ubicación</Label>
-                    <div className="relative">
-                      <Input 
-                        id="location" 
-                        name="location" 
-                        value={formData.location}
-                        onChange={(e) => updateFormField('location', e.target.value)}
-                        placeholder="Santuario / Salón principal"
-                      />
-                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'location')} />
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="date">Fecha *</Label>
+                  <div className="relative">
+                    <Select 
+                      value={formData.date} 
+                      onValueChange={(val) => updateFormField('date', val)}
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar fecha del evento" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(() => {
+                          // Generate date range from event start_date to end_date
+                          if (!event?.start_date) return <SelectItem value={null}>No hay fechas disponibles</SelectItem>;
+                          
+                          const startDate = new Date(event.start_date + 'T00:00:00');
+                          const endDate = event.end_date ? new Date(event.end_date + 'T00:00:00') : startDate;
+                          const dates = [];
+                          
+                          // Generate all dates in range
+                          let currentDate = new Date(startDate);
+                          while (currentDate <= endDate) {
+                            const year = currentDate.getFullYear();
+                            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                            const day = String(currentDate.getDate()).padStart(2, '0');
+                            const dateStr = `${year}-${month}-${day}`;
+                            
+                            // Format display: "2/13/26 - Jueves"
+                            const displayMonth = currentDate.getMonth() + 1;
+                            const displayDay = currentDate.getDate();
+                            const displayYear = String(currentDate.getFullYear()).slice(-2);
+                            const dayName = currentDate.toLocaleDateString('es-ES', { weekday: 'long' });
+                            const displayText = `${displayMonth}/${displayDay}/${displayYear} - ${dayName.charAt(0).toUpperCase() + dayName.slice(1)}`;
+                            
+                            dates.push({ value: dateStr, label: displayText });
+                            currentDate.setDate(currentDate.getDate() + 1);
+                          }
+                          
+                          return dates.map(d => (
+                            <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
+                          ));
+                        })()}
+                      </SelectContent>
+                    </Select>
+                    <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'date')} />
                   </div>
                 </div>
 

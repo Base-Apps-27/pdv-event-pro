@@ -202,6 +202,7 @@ export default function EventDetail() {
         <TabsContent value="sessions" className="mt-6">
           <SessionManager 
             eventId={eventId} 
+            event={e}
             sessions={sessions} 
             segments={segments}
           />
