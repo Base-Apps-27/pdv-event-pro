@@ -27,6 +27,36 @@ export default function AIProposalReview({
     }));
   };
 
+  const handleFieldChange = (actionIndex, segmentIndex, field, value) => {
+    const key = `${actionIndex}-${segmentIndex}-${field}`;
+    setFilledValues(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const handleApprove = () => {
+    // Merge filled values into proposedActions before calling onApprove
+    if (filledValues && Object.keys(filledValues).length > 0) {
+      const updatedActions = JSON.parse(JSON.stringify(proposedActions.actions));
+      
+      Object.entries(filledValues).forEach(([key, value]) => {
+        const [actionIndex, segmentIndex, field] = key.split('-');
+        const aIdx = parseInt(actionIndex);
+        const sIdx = parseInt(segmentIndex);
+        
+        if (updatedActions[aIdx]?.create_data?.[sIdx]) {
+          updatedActions[aIdx].create_data[sIdx][field] = value;
+        }
+      });
+
+      // Call onApprove with merged data
+      onApprove(updatedActions, isDraft);
+    } else {
+      onApprove(proposedActions.actions, isDraft);
+    }
+  };
+
   if (!proposedActions || !isOpen) return null;
 
   const hasErrors = validation?.errors?.length > 0;
