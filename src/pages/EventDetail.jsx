@@ -54,13 +54,23 @@ export default function EventDetail() {
     }
   }, [wasValid, event?.name]);
 
-  const { data: sessions = [] } = useQuery({
+  const { data: sessionsRaw = [] } = useQuery({
     queryKey: ['sessions', eventId],
     queryFn: () => base44.entities.Session.filter({ event_id: eventId }, 'order'),
     enabled: !!eventId,
     staleTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
   });
+
+  // Sort sessions chronologically by date and start_time
+  const sessions = React.useMemo(() => {
+    return [...sessionsRaw].sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      const aTime = a.planned_start_time || '';
+      const bTime = b.planned_start_time || '';
+      return aTime.localeCompare(bTime);
+    });
+  }, [sessionsRaw]);
 
   const sessionIdsKey = React.useMemo(
     () => sessions.map(s => s.id).sort().join(','),
