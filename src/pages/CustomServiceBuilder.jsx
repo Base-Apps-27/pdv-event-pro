@@ -186,6 +186,7 @@ export default function CustomServiceBuilder() {
     title: "",
     type: "Especial",
     duration: 15,
+    sub_asignaciones: [], // For Alabanza sub-segments (Ministración)
     // Initialize with data object for canonical structure
     data: {
       presenter: "",
@@ -669,7 +670,7 @@ export default function CustomServiceBuilder() {
       await Promise.all(existingSegments.map(s => base44.entities.Segment.delete(s.id)));
     }
     
-    // 3. Create new Segments
+    // 3. Create new Segments (including parent/child for sub-asignaciones)
     const newSegments = [];
     let currentTime = parse(serviceResult.time, "HH:mm", new Date());
     
@@ -697,7 +698,7 @@ export default function CustomServiceBuilder() {
         });
       }
 
-      newSegments.push({
+      const parentSegmentData = {
         session_id: session.id,
         service_id: serviceId,
         order: i + 1,
@@ -707,35 +708,100 @@ export default function CustomServiceBuilder() {
         end_time: endTimeStr,
         duration_min: duration,
         presenter: getData('presenter'),
-        translator_name: getData('translator'), // Mapping translator
+        translator_name: getData('translator'),
         description_details: getData('description_details') || getData('description'),
-        // Map notes
         coordinator_notes: getData('coordinator_notes'),
         projection_notes: getData('projection_notes'),
         sound_notes: getData('sound_notes'),
         ushers_notes: getData('ushers_notes'),
         translation_notes: getData('translation_notes'),
         stage_decor_notes: getData('stage_decor_notes'),
-        // Map specific fields
         message_title: getData('messageTitle'),
         scripture_references: getData('verse'),
         parsed_verse_data: getData('parsed_verse_data'),
-        // Songs
         ...flatSongs,
-        // Actions
         segment_actions: getData('actions'),
-        // Flags
         requires_translation: !!getData('translator'),
         show_in_general: true
-      });
+      };
+      
+      newSegments.push(parentSegmentData);
+      
+      // If Alabanza with sub-asignaciones, add child Ministración segments
+      if (segData.type === 'Alabanza' && segData.sub_asignaciones && segData.sub_asignaciones.length > 0) {
+        let subStartTime = currentTime = parse(startTimeStr, "HH:mm", new Date());
+        
+        segData.sub_asignaciones.forEach((sub, subIdx) => {
+          const subDuration = sub.duration || 5;
+          const subStartStr = format(subStartTime, "HH:mm");
+          subStartTime = addMinutes(subStartTime, subDuration);
+          const subEndStr = format(subStartTime, "HH:mm");
+          
+          newSegments.push({
+            session_id: session.id,
+            service_id: serviceId,
+            parent_segment_id: "{PARENT_ID}", // Will be replaced after parent creation
+            order: subIdx + 1,
+            title: sub.title || `Ministración ${subIdx + 1}`,
+            segment_type: 'Ministración',
+            start_time: subStartStr,
+            end_time: subEndStr,
+            duration_min: subDuration,
+            presenter: sub.presenter || "",
+            show_in_general: true,
+            _isSubAsignacion: true // Temporary marker for post-processing
+          });
+        });
+        
+        // Update parent duration to sum of all sub-asignaciones
+        const totalSubDuration = segData.sub_asignaciones.reduce((sum, sub) => sum + (sub.duration || 5), 0);
+        if (totalSubDuration !== duration) {
+          parentSegmentData.duration_min = totalSubDuration;
+          const newEndTime = addMinutes(parse(startTimeStr, "HH:mm", new Date()), totalSubDuration);
+          parentSegmentData.end_time = format(newEndTime, "HH:mm");
+        }
+      }
     }
     
-    // Batch create if possible, or sequential
-    // Segment.create doesn't support bulk in standard SDK usually, check instructions?
-    // Instructions say: create_entity_records tool supports bulk. SDK?
-    // SDK: base44.entities.Todo.bulkCreate([...])
-    await base44.entities.Segment.bulkCreate(newSegments);
-    console.log('[SYNC] Completed sync to Session/Segments');
+    // Batch create parent segments first, then update sub-segments with parent_segment_id
+    const parentSegments = newSegments.filter(s => !s._isSubAsignacion);
+    const subSegments = newSegments.filter(s => s._isSubAsignacion);
+    
+    const createdParents = await base44.entities.Segment.bulkCreate(parentSegments);
+    
+    // Create mapping of original indices to created parent IDs
+    let parentIdMap = {};
+    let parentIdx = 0;
+    for (let i = 0; i < serviceData.segments.length; i++) {
+      if (serviceData.segments[i].type === 'Alabanza') {
+        parentIdMap[i] = createdParents[parentIdx]?.id;
+      }
+      parentIdx++;
+    }
+    
+    // Recreate sub-segments with correct parent_segment_id references
+    if (subSegments.length > 0) {
+      let segIdx = 0;
+      const subSegmentsWithParent = subSegments.map((sub) => {
+        // Find which parent this belongs to (iterate through original segments)
+        for (let i = 0; i < serviceData.segments.length; i++) {
+          if (serviceData.segments[i].type === 'Alabanza' && serviceData.segments[i].sub_asignaciones?.length > 0) {
+            if (parentIdMap[i]) {
+              return {
+                ...sub,
+                parent_segment_id: parentIdMap[i],
+                _isSubAsignacion: undefined
+              };
+            }
+          }
+        }
+        return sub;
+      });
+      
+      await base44.entities.Segment.bulkCreate(subSegmentsWithParent);
+    }
+    
+    console.log('[SYNC] Completed sync to Session/Segments with sub-asignaciones');
   };
 
 
