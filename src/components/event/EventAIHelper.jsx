@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -8,16 +8,24 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sparkles, Send, CheckCircle2, AlertCircle, Loader2, X, ChevronRight, Undo2 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/utils/i18n";
+import { validateAIActions, formatValidationForDisplay } from "@/components/utils/segmentValidation";
+import AIProposalReview from "@/components/event/AIProposalReview";
+import VoiceInputButton from "@/components/event/VoiceInputButton";
 
 export default function EventAIHelper({ eventId, isOpen, onClose }) {
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  const { language, t } = useLanguage();
   
   const queryClient = useQueryClient();
+  const textareaRef = useRef(null);
   const [userInput, setUserInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [proposedActions, setProposedActions] = useState(null);
   const [queryResult, setQueryResult] = useState(null);
   const [executionStatus, setExecutionStatus] = useState(null); // null, 'executing', 'success', 'error'
+  const [validation, setValidation] = useState(null);
+  const [showReview, setShowReview] = useState(false);
 
   const { data: event } = useQuery({
     queryKey: ['event', eventId],
@@ -272,7 +280,15 @@ CRITICAL: When user mentions song titles, map to these fields:
       if (response.request_type === 'query') {
         setQueryResult(response);
       } else {
+        // Validate actions before showing confirmation
+        const validationResult = validateAIActions(response.actions || []);
+        setValidation(validationResult);
         setProposedActions(response);
+        
+        // Auto-show review if there are warnings/errors
+        if (!validationResult.isValid || validationResult.warnings.length > 0) {
+          setShowReview(true);
+        }
       }
     } catch (error) {
       console.error("AI analysis error:", error);
@@ -284,6 +300,15 @@ CRITICAL: When user mentions song titles, map to these fields:
 
   const executeActions = async () => {
     if (!proposedActions?.actions?.length) return;
+
+    // Final validation check before execution
+    const finalValidation = validateAIActions(proposedActions.actions || []);
+    if (!finalValidation.isValid) {
+      toast.error(language === 'es' 
+        ? 'No se puede ejecutar: hay errores de validación' 
+        : 'Cannot execute: validation errors present');
+      return;
+    }
 
     setExecutionStatus('executing');
 
@@ -343,12 +368,18 @@ CRITICAL: When user mentions song titles, map to these fields:
       }
 
       setExecutionStatus('success');
+      setShowReview(false);
       queryClient.invalidateQueries(['sessions', eventId]);
       queryClient.invalidateQueries(['allSegments']);
       queryClient.invalidateQueries(['event', eventId]);
       
-      const actionVerb = proposedActions.actions.some(a => a.type.startsWith('create')) ? 'creados' : 'actualizados';
-      toast.success(`${totalAffected} registros ${actionVerb} correctamente`);
+      const actionVerb = proposedActions.actions.some(a => a.type.startsWith('create')) 
+        ? (language === 'es' ? 'creados' : 'created')
+        : (language === 'es' ? 'actualizados' : 'updated');
+      const message = language === 'es' 
+        ? `${totalAffected} registros ${actionVerb} correctamente`
+        : `${totalAffected} records ${actionVerb} successfully`;
+      toast.success(message);
     } catch (error) {
       console.error("Execution error:", error);
       setExecutionStatus('error');
@@ -361,6 +392,8 @@ CRITICAL: When user mentions song titles, map to these fields:
     setProposedActions(null);
     setQueryResult(null);
     setExecutionStatus(null);
+    setValidation(null);
+    setShowReview(false);
   };
 
   return (
@@ -369,18 +402,18 @@ CRITICAL: When user mentions song titles, map to these fields:
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5" style={{ color: '#1F8A70' }} />
-            Asistente IA para Eventos
+            {language === 'es' ? 'Asistente IA para Eventos' : 'Event AI Assistant'}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Context Badge */}
           {event && (
-            <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
-              <span className="font-medium">Evento:</span>
+            <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg flex-wrap">
+              <span className="font-medium">{language === 'es' ? 'Evento' : 'Event'}:</span>
               <Badge variant="outline">{event.name} {event.year}</Badge>
               <span className="text-gray-400">•</span>
-              <span>{sessions.length} sesiones, {eventSegments.length} segmentos</span>
+              <span>{sessions.length} {language === 'es' ? 'sesiones' : 'sessions'}, {eventSegments.length} {language === 'es' ? 'segmentos' : 'segments'}</span>
             </div>
           )}
 
@@ -388,41 +421,46 @@ CRITICAL: When user mentions song titles, map to these fields:
           {!proposedActions && !queryResult && executionStatus !== 'success' && (
             <div className="space-y-3">
               <Textarea
-                placeholder="Pregunta o solicita cambios. Ejemplos:
-
-CONSULTAS:
-• ¿Qué sesiones tienen traducción?
-• ¿Quién presenta los segmentos de Plenaria?
-• Muéstrame los horarios de la Sesión 3
-• ¿Qué equipo de sonido está asignado?
-
-ACCIONES:
-• Cambiar todas las sesiones a traducción en persona
-• Actualizar el traductor de todos los segmentos a 'Juan Pérez'
-• Marcar todos los segmentos de Plenaria como requieren traducción"
+                ref={textareaRef}
+                placeholder={language === 'es' 
+                  ? "Pregunta o solicita cambios. Ejemplos:\n\nCONSULTAS:\n• ¿Qué sesiones tienen traducción?\n• ¿Quién presenta los segmentos de Plenaria?\n\nACCIONES:\n• Cambiar todas las sesiones a traducción en persona"
+                  : "Ask a question or request changes. Examples:\n\nQUERIES:\n• What sessions have translation?\n• Who presents the Plenaria segments?\n\nACTIONS:\n• Change all sessions to in-person translation"}
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 rows={5}
                 className="resize-none"
               />
-              <Button 
-                onClick={analyzeRequest} 
-                disabled={!userInput.trim() || isProcessing}
-                style={tealStyle}
-                className="w-full"
-              >
-               {isProcessing ? (
-                 <>
-                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                   Procesando...
-                 </>
-               ) : (
-                 <>
-                   <Send className="w-4 h-4 mr-2" />
-                   Enviar
-                 </>
-               )}
-              </Button>
+
+              {/* Voice + Submit Controls */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <VoiceInputButton 
+                  textareaRef={textareaRef}
+                  onTranscriptionComplete={() => {
+                    // Update userInput state when voice completes
+                    if (textareaRef.current) {
+                      setUserInput(textareaRef.current.value);
+                    }
+                  }}
+                />
+                <Button 
+                  onClick={analyzeRequest} 
+                  disabled={!userInput.trim() || isProcessing}
+                  style={tealStyle}
+                  className="flex-1"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {language === 'es' ? 'Procesando...' : 'Processing...'}
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      {language === 'es' ? 'Enviar' : 'Submit'}
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           )}
 
@@ -430,7 +468,9 @@ ACCIONES:
           {queryResult && executionStatus !== 'success' && (
             <div className="space-y-4">
               <Card className="p-4 bg-blue-50 border-blue-200">
-                <h4 className="font-semibold text-blue-900 mb-2">Respuesta:</h4>
+                <h4 className="font-semibold text-blue-900 mb-2">
+                  {language === 'es' ? 'Respuesta' : 'Answer'}:
+                </h4>
                 <p className="text-blue-800">{queryResult.understood_request}</p>
               </Card>
 
@@ -457,100 +497,37 @@ ACCIONES:
                 className="w-full"
               >
                 <Undo2 className="w-4 h-4 mr-2" />
-                Nueva Consulta
+                {language === 'es' ? 'Nueva Consulta' : 'New Query'}
               </Button>
             </div>
           )}
 
-          {/* Proposed Actions */}
-          {proposedActions && executionStatus !== 'success' && (
+          {/* Proposed Actions - Show review modal instead */}
+          {proposedActions && executionStatus !== 'success' && !showReview && (
             <div className="space-y-4">
               <Card className="p-4 bg-blue-50 border-blue-200">
-                <h4 className="font-semibold text-blue-900 mb-2">Entendí tu solicitud:</h4>
+                <h4 className="font-semibold text-blue-900 mb-2">
+                  {language === 'es' ? 'Entendí tu solicitud' : 'I understood your request'}:
+                </h4>
                 <p className="text-blue-800">{proposedActions.understood_request}</p>
               </Card>
 
-              {proposedActions.warnings?.length > 0 && (
-                <Card className="p-4 bg-amber-50 border-amber-200">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-semibold text-amber-900">Advertencias:</h4>
-                      <ul className="text-amber-800 text-sm mt-1 space-y-1">
-                        {proposedActions.warnings.map((w, i) => (
-                          <li key={i}>• {w}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </Card>
-              )}
+              <Button 
+                onClick={() => setShowReview(true)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                {language === 'es' ? 'Revisar Cambios' : 'Review Changes'}
+              </Button>
 
-              <div className="space-y-2">
-                <h4 className="font-semibold text-gray-900">Acciones a ejecutar:</h4>
-                {proposedActions.actions?.map((action, idx) => (
-                  <Card key={idx} className="p-3 border-gray-200">
-                    <div className="flex items-start gap-3">
-                      <ChevronRight className="w-5 h-5 mt-0.5" style={{ color: '#1F8A70' }} />
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{action.description}</p>
-                        <div className="flex flex-wrap gap-2 mt-2 text-xs">
-                          <Badge variant="outline" className="bg-gray-50">
-                            Tipo: {action.type}
-                          </Badge>
-                          <Badge variant="outline" className="bg-gray-50">
-                            Afecta: {action.affected_count} registros
-                          </Badge>
-                        </div>
-                        {action.changes && (
-                          <div className="mt-2 text-xs bg-gray-50 p-2 rounded font-mono">
-                            {Object.entries(action.changes).map(([k, v]) => (
-                              <div key={k}>
-                                <span className="text-purple-600">{k}</span>: <span className="text-green-600">"{String(v)}"</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        {action.create_data && (
-                          <div className="mt-2 text-xs bg-gray-50 p-2 rounded font-mono max-h-32 overflow-y-auto">
-                            <div className="text-purple-600 font-semibold mb-1">Datos a crear:</div>
-                            {JSON.stringify(action.create_data, null, 2)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <Button 
-                  variant="outline" 
-                  onClick={reset}
-                  className="flex-1"
-                  disabled={executionStatus === 'executing'}
-                >
-                  <Undo2 className="w-4 h-4 mr-2" />
-                  Cancelar
-                </Button>
-                <Button 
-                  onClick={executeActions}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                  disabled={executionStatus === 'executing'}
-                >
-                  {executionStatus === 'executing' ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Ejecutando...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Confirmar y Ejecutar
-                    </>
-                  )}
-                </Button>
-              </div>
+              <Button 
+                variant="outline" 
+                onClick={reset}
+                className="w-full"
+              >
+                <Undo2 className="w-4 h-4 mr-2" />
+                {language === 'es' ? 'Cancelar' : 'Cancel'}
+              </Button>
             </div>
           )}
 
@@ -560,22 +537,37 @@ ACCIONES:
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">¡Cambios Aplicados!</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {language === 'es' ? '¡Cambios Aplicados!' : 'Changes Applied!'}
+              </h3>
               <p className="text-gray-600 mb-6">
-                {proposedActions?.actions?.reduce((sum, a) => sum + (a.affected_count || 0), 0)} registros actualizados
+                {proposedActions?.actions?.reduce((sum, a) => sum + (a.affected_count || 0), 0)} {language === 'es' ? 'registros actualizados' : 'records updated'}
               </p>
-              <div className="flex gap-3 justify-center">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button variant="outline" onClick={reset}>
-                  Nueva Solicitud
+                  {language === 'es' ? 'Nueva Solicitud' : 'New Request'}
                 </Button>
                 <Button onClick={onClose}>
-                  Cerrar
+                  {language === 'es' ? 'Cerrar' : 'Close'}
                 </Button>
               </div>
             </div>
           )}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
+          </div>
+
+          {/* Review Modal */}
+          <AIProposalReview
+          isOpen={showReview}
+          proposedActions={proposedActions}
+          validation={validation}
+          onApprove={executeActions}
+          onCancel={() => {
+            setShowReview(false);
+            reset();
+          }}
+          isExecuting={executionStatus === 'executing'}
+          />
+          </DialogContent>
+          </Dialog>
+          );
+          }
