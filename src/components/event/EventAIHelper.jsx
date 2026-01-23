@@ -629,8 +629,8 @@ If user mentions a past event and you're uncertain which one they mean (< 80% co
           </div>
 
           {/* Review Modal */}
-        <AIProposalReview
-          isOpen={showReview}
+          <AIProposalReview
+            isOpen={showReview}
           proposedActions={proposedActions}
           validation={validation}
           onApprove={executeActions}
