@@ -56,6 +56,29 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
     sessions.some(s => s.id === seg.session_id)
   );
 
+  // Lightweight event index (last 2 years) — cached, non-blocking
+  const { data: eventIndex = [] } = useQuery({
+    queryKey: ['eventIndex'],
+    queryFn: async () => {
+      const twoYearsAgo = new Date();
+      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+      const minYear = twoYearsAgo.getFullYear();
+      
+      const allEvents = await base44.entities.Event.list();
+      return allEvents
+        .filter(e => e.year >= minYear)
+        .map(e => ({
+          id: e.id,
+          name: e.name,
+          year: e.year,
+          session_count: 0
+        }))
+        .sort((a, b) => b.year - a.year || a.name.localeCompare(b.name));
+    },
+    staleTime: 1000 * 60 * 60,
+    enabled: isOpen
+  });
+
   const analyzeRequest = async (inputText = null, sourceEventContext = null) => {
     const finalInput = inputText || userInput;
     if (!finalInput.trim()) return;
