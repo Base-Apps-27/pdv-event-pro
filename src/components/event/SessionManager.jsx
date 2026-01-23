@@ -877,7 +877,6 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
             </div>
             </div>
 
-            </div>
             <div className="flex justify-end gap-3 pt-4 border-t shrink-0 px-6 pb-4 bg-white shadow-lg">
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
