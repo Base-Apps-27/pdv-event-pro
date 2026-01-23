@@ -138,7 +138,8 @@ export function validateAIActions(actions, context = {}, allowDraft = false) {
   return {
     isValid: errors.length === 0,
     errors,
-    warnings
+    warnings,
+    fixableErrors // Errors user can fix inline
   };
 }
 
