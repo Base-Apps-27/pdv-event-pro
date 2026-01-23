@@ -78,11 +78,11 @@ export function buildTeamInfo(serviceData, globalScale = 1) {
 }
 
 export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
-   const globalScale = bodyFontScale; // For backward compat in segment building
+   const globalScale = bodyFontScale;
 
    if (!segments || segments.length === 0) return [];
 
-   // Build a map of parent segment IDs to their children for efficient lookup
+   // Build map of parent to children
    const childrenByParentId = {};
    segments.forEach(seg => {
      if (seg.parent_segment_id) {
@@ -93,114 +93,139 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
      }
    });
 
-   // Filter to only top-level segments (no parent_segment_id)
    const topLevelSegments = segments.filter(seg => !seg.parent_segment_id);
 
    return topLevelSegments.flatMap((seg, idx) => {
-    const items = [];
+     const items = [];
+
+     // Weekly Service style: Time + Title + Type Tag + Duration
+     const titleParts = [];
+     if (seg.start_time) {
+       titleParts.push({ text: seg.start_time, bold: true, color: BRAND.BLACK, fontSize: 10 * globalScale });
+       titleParts.push({ text: '  ', fontSize: 10 * globalScale });
+     }
+
+     titleParts.push({ text: seg.title.toUpperCase(), bold: true, color: BRAND.BLACK, fontSize: 10.5 * globalScale });
+
+     // Segment type tag (WORSHIP, WELCOME, OFFERING, etc.)
+     const segmentType = seg.segment_type || seg.type;
+     if (segmentType) {
+       const typeLabel = segmentType.toUpperCase();
+       titleParts.push({ text: `  ${typeLabel}  `, color: '#374151', background: '#F3F4F6', fontSize: 7 * globalScale, bold: true });
+     }
+
+     if (seg.duration) {
+       titleParts.push({ text: ` (${seg.duration} min)`, color: BRAND.GRAY, fontSize: 9 * globalScale });
+     }
+
+     items.push({
+       text: titleParts,
+       margin: [0, idx > 0 ? 6 : 0, 0, 2]
+     });
+
+     // Presenter/Leader/Preacher
+     const segType = seg.segment_type || seg.type || '';
+     const isWorship = ['Alabanza', 'worship'].includes(segType);
+     const isMessage = ['Plenaria', 'message'].includes(segType);
+
+     const leader = seg.data?.leader || seg.leader;
+     const presenter = seg.data?.presenter || seg.presenter;
+     const preacher = seg.data?.preacher || seg.preacher;
     
-    // Segment title with time
-    const titleParts = [];
-    if (seg.start_time || seg.duration) {
-      const timeStr = seg.start_time || `+${seg.duration}min`;
-      titleParts.push({ text: timeStr, color: BRAND.GRAY, fontSize: 10.5 * globalScale, bold: true });
-      titleParts.push({ text: '  ', fontSize: 10.5 * globalScale });
-    }
-    titleParts.push({ text: seg.title, fontSize: 11 * globalScale, bold: true, color: BRAND.BLACK });
-    
-    if (seg.duration) {
-      titleParts.push({ text: ` (${seg.duration} min)`, fontSize: 10 * globalScale, color: BRAND.GRAY });
-    }
-    
-    items.push({
-      text: titleParts,
-      margin: [0, idx > 0 ? 8 : 0, 0, 3]
-    });
-    
-    // Leader/Presenter/Preacher (blue name)
-    const leader = seg.data?.leader || seg.leader;
-    const presenter = seg.data?.presenter || seg.presenter;
-    const preacher = seg.data?.preacher || seg.preacher;
-    
-    if (leader) {
+    // Strict hierarchy per segment type
+    if (isWorship && leader) {
       items.push({
         text: [
-          { text: 'Dirige: ', fontSize: 10 * globalScale, color: BRAND.GRAY },
-          { text: leader, fontSize: 11 * globalScale, bold: true, color: BRAND.BLUE }
+          { text: 'DIRIGE: ', bold: true, color: '#16A34A', fontSize: 9 * globalScale },
+          { text: leader, bold: true, color: '#16A34A', fontSize: 10 * globalScale }
         ],
-        margin: [5, 0, 0, 2]
+        margin: [8, 0, 0, 1]
       });
-    } else if (preacher) {
+    } else if (isMessage && preacher) {
       items.push({
-        text: preacher,
-        fontSize: 11 * globalScale,
-        bold: true,
-        color: BRAND.BLUE,
-        margin: [5, 0, 0, 2]
+        text: [
+          { text: 'PREDICA: ', bold: true, color: '#4F46E5', fontSize: 9 * globalScale },
+          { text: preacher, bold: true, color: '#4F46E5', fontSize: 10 * globalScale }
+        ],
+        margin: [8, 0, 0, 1]
       });
-    } else if (presenter) {
+    } else if (!isWorship && !isMessage && presenter) {
       items.push({
-        text: presenter,
-        fontSize: 11 * globalScale,
-        bold: true,
-        color: BRAND.BLUE,
-        margin: [5, 0, 0, 2]
+        text: [
+          { text: 'MINISTRA: ', bold: true, color: '#2563EB', fontSize: 9 * globalScale },
+          { text: presenter, bold: true, color: '#2563EB', fontSize: 10 * globalScale }
+        ],
+        margin: [8, 0, 0, 1]
       });
     }
     
-    // Translator
+    // Translator - purple italic (subordinate style)
     const translator = seg.data?.translator || seg.translator;
     if (translator) {
       items.push({
-        text: `🌐 ${translator}`,
-        fontSize: 9.5 * globalScale,
-        color: BRAND.GRAY,
-        italics: true,
-        margin: [5, 0, 0, 2]
+        text: [
+          { text: 'Traductor: ', fontSize: 8.5 * globalScale, color: '#7C3AED', italics: true },
+          { text: translator, fontSize: 8.5 * globalScale, color: '#5B21B6', italics: true, bold: true }
+        ],
+        margin: [8, 0, 0, 1]
       });
     }
-    
-    // Songs
-     const songs = seg.data?.songs || seg.songs;
-     if (songs && Array.isArray(songs) && songs.some(s => s.title)) {
-       songs.filter(s => s.title).forEach(song => {
-         const songText = [{ text: `- ${song.title}`, fontSize: 10 * globalScale, color: BRAND.GRAY }];
-         if (song.lead) songText.push({ text: ` (${song.lead})`, fontSize: 9 * globalScale, color: BRAND.GRAY });
-         items.push({ text: songText, margin: [5, 0, 0, 1] });
-       });
-     }
 
-     // Sub-asignaciones (Ministración within Alabanza)
-     const subAsignaciones = childrenByParentId[seg.id] || [];
-     if (subAsignaciones.length > 0) {
-       items.push({
-         text: 'Ministración:',
-         fontSize: 9 * globalScale,
-         bold: true,
-         color: BRAND.GRAY,
-         margin: [5, 4, 0, 2]
-       });
-       subAsignaciones.forEach(sub => {
-         const subText = [
-           { text: `- ${sub.title}`, fontSize: 10 * globalScale, bold: true, color: '#7C3AED' }
-         ];
-         if (sub.duration) {
-           subText.push({ text: ` (${sub.duration} min)`, fontSize: 9 * globalScale, color: BRAND.GRAY });
-         }
-         items.push({ text: subText, margin: [8, 0, 0, 1] });
+    // Songs - Boxed style (Slate-50)
+    const songs = seg.data?.songs || seg.songs;
+    if (songs && Array.isArray(songs) && songs.some(s => s.title)) {
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: [
+              { text: 'CANCIONES:', bold: true, fontSize: 8.5 * globalScale, color: '#334155', margin: [0, 0, 0, 2] },
+              ...songs.filter(s => s.title).map((song, i) => ({
+                text: [
+                  { text: `${i + 1}. `, color: '#64748B', fontSize: 8.5 * globalScale },
+                  { text: song.title, color: '#0F172A', fontSize: 9 * globalScale, bold: true },
+                  song.lead ? { text: ` (${song.lead})`, color: '#64748B', fontSize: 8.5 * globalScale, italics: true } : '',
+                  song.key ? { text: ` [${song.key}]`, color: '#64748B', fontSize: 8 * globalScale, bold: true } : ''
+                ],
+                margin: [0, 0, 0, 1]
+              }))
+            ],
+            fillColor: '#F8FAFC',
+            border: [true, true, true, true],
+            borderColor: ['#E2E8F0', '#E2E8F0', '#E2E8F0', '#E2E8F0'],
+            margin: [4, 4, 4, 4]
+          }]]
+        },
+        margin: [8, 4, 0, 4]
+      });
+    }
 
-         // Sub presenter (ministra)
-         if (sub.presenter) {
-           items.push({
-             text: `P. ${sub.presenter}`,
-             fontSize: 9 * globalScale,
-             bold: true,
-             color: '#7C3AED',
-             margin: [10, 0, 0, 2]
-           });
-         }
-       });
-     }
+    // Sub-asignaciones (Ministración) - boxed in purple theme
+    const subAsignaciones = childrenByParentId[seg.id] || [];
+    if (subAsignaciones.length > 0) {
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: [
+              { text: 'MINISTRACIÓN DE SANIDAD Y MILAGROS:', bold: true, fontSize: 8.5 * globalScale, color: '#5B21B6', margin: [0, 0, 0, 2] },
+              ...subAsignaciones.map(sub => ({
+                text: [
+                  { text: `P. ${sub.presenter || 'TBD'}`, bold: true, color: '#7C3AED', fontSize: 9 * globalScale },
+                  sub.duration ? { text: ` (${sub.duration} min)`, color: '#64748B', fontSize: 8.5 * globalScale } : ''
+                ],
+                margin: [0, 0, 0, 1]
+              }))
+            ],
+            fillColor: '#FAF5FF',
+            border: [true, true, true, true],
+            borderColor: ['#E9D5FF', '#E9D5FF', '#E9D5FF', '#E9D5FF'],
+            margin: [4, 4, 4, 4]
+          }]]
+        },
+        margin: [8, 2, 0, 4]
+      });
+    }
     
     // Message title
     const messageTitle = seg.data?.messageTitle || seg.messageTitle;
