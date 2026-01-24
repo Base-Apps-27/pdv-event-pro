@@ -739,10 +739,10 @@ export default function PublicProgramView() {
                       </SelectTrigger>
                       <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {upcomingServices.map((service) => (
-                          <SelectItem key={service.id} value={service.id}>
-                            {service.name.length > 25 ? service.name.substring(0, 25) + '...' : service.name} - {service.date} ({service.daysUntil === 0 ? 'Hoy' : service.daysUntil === 1 ? 'Mañana' : `en ${service.daysUntil} días`})
-                          </SelectItem>
-                        ))}
+                                                    <SelectItem key={service.id} value={service.id}>
+                                                      {service.name.length > 25 ? service.name.substring(0, 25) + '...' : service.name} - {formatDateET(service.date)} ({service.daysUntil === 0 ? 'Hoy' : service.daysUntil === 1 ? 'Mañana' : `en ${service.daysUntil} días`})
+                                                    </SelectItem>
+                                                  ))}
                       </SelectContent>
                     </Select>
                   </div>
