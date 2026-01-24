@@ -37,9 +37,18 @@ export default function ServiceProgramView({
     if (!actualServiceData) return null;
     
     // Helper to apply time offset
-    const applyTimeOffset = (segments, timeSlot) => {
-      const adjustment = liveAdjustments.find(a => a.time_slot === timeSlot);
-      if (!adjustment || adjustment.offset_minutes === 0) return segments;
+    const applyTimeOffset = (segments, timeSlot, globalOffset = null) => {
+      let offsetMinutes = 0;
+      
+      if (globalOffset !== null) {
+        // Global adjustment for custom services
+        offsetMinutes = globalOffset;
+      } else {
+        // Time slot adjustment for weekly services
+        const adjustment = liveAdjustments.find(a => a.time_slot === timeSlot);
+        if (!adjustment || adjustment.offset_minutes === 0) return segments;
+        offsetMinutes = adjustment.offset_minutes;
+      }
 
       return segments.map(seg => {
         const addMinutes = (timeStr, minutes) => {
@@ -52,8 +61,8 @@ export default function ServiceProgramView({
 
         return {
           ...seg,
-          start_time: addMinutes(seg.start_time, adjustment.offset_minutes),
-          end_time: addMinutes(seg.end_time, adjustment.offset_minutes)
+          start_time: addMinutes(seg.start_time, offsetMinutes),
+          end_time: addMinutes(seg.end_time, offsetMinutes)
         };
       });
     };
@@ -67,7 +76,11 @@ export default function ServiceProgramView({
       adjusted["11:30am"] = applyTimeOffset(adjusted["11:30am"], "11:30am");
     }
     if (adjusted.segments) {
-      // For custom services, we might need a general offset - for now, leave unchanged
+      // Apply global adjustment for custom services
+      const globalAdj = liveAdjustments.find(a => a.adjustment_type === 'global');
+      if (globalAdj && globalAdj.offset_minutes !== 0) {
+        adjusted.segments = applyTimeOffset(adjusted.segments, null, globalAdj.offset_minutes);
+      }
     }
     
     return adjusted;
