@@ -163,19 +163,27 @@ export default function ServiceProgramView({
             ))}
 
             {/* Team assignments */}
-            {(serviceData.coordinators?.['9:30am'] || serviceData.sound?.['9:30am']) && (
-              <div className="mt-4 pt-4 border-t text-sm space-y-1">
-                {serviceData.coordinators?.['9:30am'] && (
-                  <div><strong>{t('common.coordinators') || 'Coordinadores'}:</strong> {serviceData.coordinators['9:30am']}</div>
-                )}
-                {serviceData.sound?.['9:30am'] && (
-                  <div><strong>{t('common.sound') || 'Sonido'}:</strong> {serviceData.sound['9:30am']}</div>
-                )}
-                {serviceData.luces?.['9:30am'] && (
-                  <div><strong>{t('common.lights') || 'Luces'}:</strong> {serviceData.luces['9:30am']}</div>
-                )}
-              </div>
-            )}
+            {(() => {
+              const coord = typeof serviceData.coordinators === 'object' ? serviceData.coordinators?.['9:30am'] : serviceData.coordinators;
+              const sound = typeof serviceData.sound === 'object' ? serviceData.sound?.['9:30am'] : serviceData.sound;
+              const lights = typeof serviceData.luces === 'object' ? serviceData.luces?.['9:30am'] : serviceData.luces;
+              
+              if (!coord && !sound && !lights) return null;
+              
+              return (
+                <div className="mt-4 pt-4 border-t text-sm space-y-1">
+                  {coord && (
+                    <div><strong>{t('common.coordinators') || 'Coordinadores'}:</strong> {String(coord)}</div>
+                  )}
+                  {sound && (
+                    <div><strong>{t('common.sound') || 'Sonido'}:</strong> {String(sound)}</div>
+                  )}
+                  {lights && (
+                    <div><strong>{t('common.lights') || 'Luces'}:</strong> {String(lights)}</div>
+                  )}
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
       )}
@@ -226,19 +234,27 @@ export default function ServiceProgramView({
             ))}
 
             {/* Team assignments */}
-            {(serviceData.coordinators?.['11:30am'] || serviceData.sound?.['11:30am']) && (
-              <div className="mt-4 pt-4 border-t text-sm space-y-1">
-                {serviceData.coordinators?.['11:30am'] && (
-                  <div><strong>{t('common.coordinators') || 'Coordinadores'}:</strong> {serviceData.coordinators['11:30am']}</div>
-                )}
-                {serviceData.sound?.['11:30am'] && (
-                  <div><strong>{t('common.sound') || 'Sonido'}:</strong> {serviceData.sound['11:30am']}</div>
-                )}
-                {serviceData.luces?.['11:30am'] && (
-                  <div><strong>{t('common.lights') || 'Luces'}:</strong> {serviceData.luces['11:30am']}</div>
-                )}
-              </div>
-            )}
+            {(() => {
+              const coord = typeof serviceData.coordinators === 'object' ? serviceData.coordinators?.['11:30am'] : serviceData.coordinators;
+              const sound = typeof serviceData.sound === 'object' ? serviceData.sound?.['11:30am'] : serviceData.sound;
+              const lights = typeof serviceData.luces === 'object' ? serviceData.luces?.['11:30am'] : serviceData.luces;
+              
+              if (!coord && !sound && !lights) return null;
+              
+              return (
+                <div className="mt-4 pt-4 border-t text-sm space-y-1">
+                  {coord && (
+                    <div><strong>{t('common.coordinators') || 'Coordinadores'}:</strong> {String(coord)}</div>
+                  )}
+                  {sound && (
+                    <div><strong>{t('common.sound') || 'Sonido'}:</strong> {String(sound)}</div>
+                  )}
+                  {lights && (
+                    <div><strong>{t('common.lights') || 'Luces'}:</strong> {String(lights)}</div>
+                  )}
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
       )}
