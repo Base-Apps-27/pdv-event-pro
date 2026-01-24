@@ -123,9 +123,26 @@ export default function ServiceProgramView({
         />
 
         {/* Custom Service Segments */}
-        <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
-          <div className="bg-gradient-to-r from-pdv-teal/10 to-white p-3 sm:p-4 border-b">
-            <h3 className="text-xl sm:text-2xl font-bold uppercase text-pdv-teal break-words">{adjustedServiceData.name}</h3>
+         <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
+           <div className="bg-gradient-to-r from-pdv-teal/10 to-white p-3 sm:p-4 border-b">
+             {(() => {
+               const globalAdj = liveAdjustments.find(a => a.adjustment_type === 'global');
+               if (globalAdj && globalAdj.offset_minutes !== 0) {
+                 const adjustedTime = (() => {
+                   const serviceTime = adjustedServiceData.time || "10:00";
+                   const [h, m] = serviceTime.split(':').map(Number);
+                   const date = new Date();
+                   date.setHours(h, m + globalAdj.offset_minutes, 0, 0);
+                   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                 })();
+                 return (
+                   <h3 className="text-xl sm:text-2xl font-bold uppercase text-pdv-teal break-words mb-1">
+                     {adjustedServiceData.name} <span className="text-amber-600 text-lg">(inicio: {adjustedTime})</span>
+                   </h3>
+                 );
+               }
+               return <h3 className="text-xl sm:text-2xl font-bold uppercase text-pdv-teal break-words">{adjustedServiceData.name}</h3>;
+             })()}
             {adjustedServiceData.description && (
               <p className="text-xs sm:text-sm text-gray-600 mt-2">{adjustedServiceData.description}</p>
             )}
