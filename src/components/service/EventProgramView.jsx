@@ -242,7 +242,23 @@ export default function EventProgramView({
             <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-4 border-b">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <h3 className="text-2xl font-bold uppercase mb-1 text-gray-900">{session.name}</h3>
+                  {(() => {
+                    const sessionAdj = liveAdjustments.find(a => a.session_id === session.id);
+                    if (sessionAdj && sessionAdj.offset_minutes !== 0) {
+                      const adjustedTime = (() => {
+                        const [h, m] = (session.planned_start_time || "09:00").split(':').map(Number);
+                        const date = new Date();
+                        date.setHours(h, m + sessionAdj.offset_minutes, 0, 0);
+                        return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                      })();
+                      return (
+                        <h3 className="text-2xl font-bold uppercase mb-1 text-gray-900">
+                          {session.name} <span className="text-amber-600">(inicio: {adjustedTime})</span>
+                        </h3>
+                      );
+                    }
+                    return <h3 className="text-2xl font-bold uppercase mb-1 text-gray-900">{session.name}</h3>;
+                  })()}
                   <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                     {session.date && <span>{session.date}</span>}
                     {session.planned_start_time && (
