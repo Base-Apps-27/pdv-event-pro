@@ -984,13 +984,18 @@ export default function PublicProgramView() {
                       }
                       
                       // Format adjustment timestamp (HH:MM:SS EST) – use updated_date to capture re-adjustments
-                       const estTime = adj.updated_date ? new Date(adj.updated_date).toLocaleTimeString('en-US', { 
-                         hour: '2-digit', 
-                         minute: '2-digit',
-                         second: '2-digit',
-                         hour12: true,
-                         timeZone: 'America/New_York'
-                       }) : '—';
+                       const estTime = adj.updated_date ? (() => {
+                         const d = new Date(adj.updated_date);
+                         // Format directly to EST with explicit parsing
+                         const estFormatter = new Intl.DateTimeFormat('en-US', {
+                           hour: '2-digit',
+                           minute: '2-digit',
+                           second: '2-digit',
+                           hour12: true,
+                           timeZone: 'America/New_York'
+                         });
+                         return estFormatter.format(d);
+                       })() : '—';
                       
                       return (
                         <div key={adj.id} className="flex items-start justify-between gap-4 bg-white p-3 rounded border border-amber-300">
