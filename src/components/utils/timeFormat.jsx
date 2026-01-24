@@ -15,23 +15,26 @@ export function format24HourTime(time24) {
 export function formatTimestampToEST(isoTimestamp) {
   if (!isoTimestamp) return '—';
   
-  // Parse ISO string to Date in UTC
-  const date = new Date(isoTimestamp);
-  
-  // Create formatter for EST timezone, 24-hour format
-  const estFormatter = new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-    timeZone: 'America/New_York'
-  });
-  
-  // Get parts and reconstruct HH:MM:SS
-  const parts = estFormatter.formatToParts(date);
-  const hour = parts.find(p => p.type === 'hour')?.value || '00';
-  const minute = parts.find(p => p.type === 'minute')?.value || '00';
-  const second = parts.find(p => p.type === 'second')?.value || '00';
-  
-  return `${hour}:${minute}:${second}`;
+  try {
+    // Parse ISO string to Date
+    const date = new Date(isoTimestamp);
+    
+    // Validate the date is not invalid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid timestamp:', isoTimestamp);
+      return '—';
+    }
+    
+    // Format using toLocaleString with explicit EST timezone
+    return date.toLocaleString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+      timeZone: 'America/New_York'
+    });
+  } catch (e) {
+    console.error('Error formatting timestamp:', e);
+    return '—';
+  }
 }
