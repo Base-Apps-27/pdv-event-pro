@@ -11,7 +11,8 @@ export default function LiveTimeAdjustmentModal({
   onClose, 
   timeSlot, 
   currentOffset, 
-  onSave 
+  onSave,
+  serviceTime // Add serviceTime prop for custom services
 }) {
   const { t } = useLanguage();
   const [offsetMinutes, setOffsetMinutes] = useState(currentOffset || 0);
@@ -23,6 +24,7 @@ export default function LiveTimeAdjustmentModal({
     if (!originalTime) return '';
     const baseTime = originalTime.replace('am', '').replace('pm', '');
     const [h, m] = baseTime.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return '';
     const date = new Date();
     date.setHours(h, m + offset, 0, 0);
     const newH = String(date.getHours()).padStart(2, '0');
@@ -30,8 +32,11 @@ export default function LiveTimeAdjustmentModal({
     return `${newH}:${newM}`;
   };
 
-  const baseTime = timeSlot ? timeSlot.replace('am', '').replace('pm', '') : '';
-  const newTime = calculateNewTime(timeSlot, offsetMinutes);
+  // Handle custom services vs weekly services
+  const isCustomService = timeSlot === "custom";
+  const displayTime = isCustomService ? (serviceTime || "10:00") : timeSlot;
+  const baseTime = displayTime ? displayTime.replace('am', '').replace('pm', '') : '';
+  const newTime = calculateNewTime(displayTime, offsetMinutes);
 
   const handleSave = async () => {
     if (!authorizedBy.trim()) {
@@ -75,7 +80,7 @@ export default function LiveTimeAdjustmentModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clock className="w-5 h-5 text-blue-600" />
-            Ajustar Horario - Servicio {timeSlot}
+            Ajustar Horario - {isCustomService ? 'Servicio custom' : `Servicio ${timeSlot}`}
           </DialogTitle>
         </DialogHeader>
 

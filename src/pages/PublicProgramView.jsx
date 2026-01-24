@@ -1025,20 +1025,20 @@ export default function PublicProgramView() {
             {/* Live Time Adjustment Controls for Coordinators - Only for Services */}
             {viewType === "service" && hasPermission(currentUser, 'manage_live_timing') && actualServiceData && (
               <Card className="bg-slate-900 text-white border-none">
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-blue-400" />
-                      <span className="font-bold uppercase text-sm">Ajustar Hora de Inicio</span>
+                      <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-blue-400" />
+                      <span className="font-bold uppercase text-xs sm:text-sm">Ajustar Hora de Inicio</span>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                       {/* Custom services: show single button regardless of 9:30am/11:30am data */}
                       {actualServiceData.segments && actualServiceData.segments.length > 0 ? (
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => openAdjustmentModal("custom")}
-                          className="bg-pdv-teal hover:bg-pdv-teal/90 text-white border-none"
+                          className="bg-pdv-teal hover:bg-pdv-teal/90 text-white border-none text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
                         >
                           Ajustar Inicio
                         </Button>
@@ -1049,7 +1049,7 @@ export default function PublicProgramView() {
                               variant="outline" 
                               size="sm"
                               onClick={() => openAdjustmentModal("9:30am")}
-                              className="bg-red-600 hover:bg-red-700 text-white border-none"
+                              className="bg-red-600 hover:bg-red-700 text-white border-none text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
                             >
                               9:30 AM
                             </Button>
@@ -1059,7 +1059,7 @@ export default function PublicProgramView() {
                               variant="outline" 
                               size="sm"
                               onClick={() => openAdjustmentModal("11:30am")}
-                              className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+                              className="bg-blue-600 hover:bg-blue-700 text-white border-none text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
                             >
                               11:30 AM
                             </Button>
@@ -1621,6 +1621,7 @@ export default function PublicProgramView() {
         timeSlot={adjustmentModalTimeSlot}
         currentOffset={currentAdjustment?.offset_minutes || 0}
         onSave={handleSaveTimeAdjustment}
+        serviceTime={actualServiceData?.time}
       />
 
       {/* Footer */}

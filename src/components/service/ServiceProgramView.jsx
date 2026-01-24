@@ -124,14 +124,14 @@ export default function ServiceProgramView({
 
         {/* Custom Service Segments */}
         <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
-          <div className="bg-gradient-to-r from-pdv-teal/10 to-white p-4 border-b">
-            <h3 className="text-2xl font-bold uppercase text-pdv-teal">{adjustedServiceData.name}</h3>
+          <div className="bg-gradient-to-r from-pdv-teal/10 to-white p-3 sm:p-4 border-b">
+            <h3 className="text-xl sm:text-2xl font-bold uppercase text-pdv-teal break-words">{adjustedServiceData.name}</h3>
             {adjustedServiceData.description && (
-              <p className="text-sm text-gray-600 mt-2">{adjustedServiceData.description}</p>
+              <p className="text-xs sm:text-sm text-gray-600 mt-2">{adjustedServiceData.description}</p>
             )}
             {/* Team Info - Compact */}
             {(adjustedServiceData.coordinators || adjustedServiceData.ujieres || adjustedServiceData.sound || adjustedServiceData.luces || adjustedServiceData.fotografia) && (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
+              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs text-gray-700">
                 {adjustedServiceData.coordinators && Object.values(adjustedServiceData.coordinators).find(v => v) && (
                   <span><strong>👤 Coord:</strong> {normalizeName(adjustedServiceData.coordinators["9:30am"] || adjustedServiceData.coordinators["11:30am"] || Object.values(adjustedServiceData.coordinators).find(v => v))}</span>
                 )}
@@ -210,7 +210,7 @@ export default function ServiceProgramView({
       {/* 9:30am Service */}
       {adjustedServiceData["9:30am"] && (
         <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500">
-          <div className="bg-gradient-to-r from-red-50 to-white p-4 border-b">
+          <div className="bg-gradient-to-r from-red-50 to-white p-3 sm:p-4 border-b">
             {(() => {
               const adjustment = liveAdjustments.find(a => a.time_slot === "9:30am");
               if (adjustment && adjustment.offset_minutes !== 0) {
@@ -235,7 +235,7 @@ export default function ServiceProgramView({
             )}
             {/* Team Info - Compact */}
             {(adjustedServiceData.coordinators?.["9:30am"] || adjustedServiceData.ujieres?.["9:30am"] || adjustedServiceData.sound?.["9:30am"] || adjustedServiceData.luces?.["9:30am"] || adjustedServiceData.fotografia?.["9:30am"]) && (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
+              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs text-gray-700">
                 {adjustedServiceData.coordinators?.["9:30am"] && (
                   <span><strong>👤 Coord:</strong> {normalizeName(adjustedServiceData.coordinators["9:30am"])}</span>
                 )}
@@ -296,7 +296,7 @@ export default function ServiceProgramView({
       {/* 11:30am Service */}
       {adjustedServiceData["11:30am"] && (
         <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-blue-500">
-          <div className="bg-gradient-to-r from-blue-50 to-white p-4 border-b">
+          <div className="bg-gradient-to-r from-blue-50 to-white p-3 sm:p-4 border-b">
             {(() => {
               const adjustment = liveAdjustments.find(a => a.time_slot === "11:30am");
               if (adjustment && adjustment.offset_minutes !== 0) {
@@ -321,7 +321,7 @@ export default function ServiceProgramView({
             )}
             {/* Team Info - Compact */}
             {(adjustedServiceData.coordinators?.["11:30am"] || adjustedServiceData.ujieres?.["11:30am"] || adjustedServiceData.sound?.["11:30am"] || adjustedServiceData.luces?.["11:30am"] || adjustedServiceData.fotografia?.["11:30am"]) && (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
+              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs text-gray-700">
                 {adjustedServiceData.coordinators?.["11:30am"] && (
                   <span><strong>👤 Coord:</strong> {normalizeName(adjustedServiceData.coordinators["11:30am"])}</span>
                 )}
