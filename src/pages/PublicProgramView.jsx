@@ -983,18 +983,21 @@ export default function PublicProgramView() {
                         displayLabel = adj.time_slot;
                       }
                       
-                      // Format adjustment timestamp (HH:MM:SS EST) – use updated_date to capture re-adjustments
+                      // Convert adjustment timestamp to EST HH:MM:SS
                        const estTime = adj.updated_date ? (() => {
-                         const d = new Date(adj.updated_date);
-                         // Format directly to EST with explicit parsing
+                         const date = new Date(adj.updated_date);
                          const estFormatter = new Intl.DateTimeFormat('en-US', {
                            hour: '2-digit',
                            minute: '2-digit',
                            second: '2-digit',
-                           hour12: true,
+                           hour12: false, // 24-hour format for parsing
                            timeZone: 'America/New_York'
                          });
-                         return estFormatter.format(d);
+                         const parts = estFormatter.formatToParts(date);
+                         const hour = parts.find(p => p.type === 'hour').value;
+                         const minute = parts.find(p => p.type === 'minute').value;
+                         const second = parts.find(p => p.type === 'second').value;
+                         return `${hour}:${minute}:${second}`;
                        })() : '—';
                       
                       return (
