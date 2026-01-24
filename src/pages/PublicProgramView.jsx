@@ -969,7 +969,8 @@ export default function PublicProgramView() {
                         const [h, m] = serviceTime.split(':').map(Number);
                         const adjustedDate = new Date();
                         adjustedDate.setHours(h, m + adj.offset_minutes, 0, 0);
-                        adjustedTimeStr = `${String(adjustedDate.getHours()).padStart(2, '0')}:${String(adjustedDate.getMinutes()).padStart(2, '0')}`;
+                        const timeStr = `${String(adjustedDate.getHours()).padStart(2, '0')}:${String(adjustedDate.getMinutes()).padStart(2, '0')}`;
+                        adjustedTimeStr = formatTimeToEST(timeStr);
                         displayLabel = 'Servicio Especial';
                       } else {
                         // Weekly service - show time slot
@@ -977,17 +978,18 @@ export default function PublicProgramView() {
                         const [h, m] = baseTime.split(':').map(Number);
                         const adjustedDate = new Date();
                         adjustedDate.setHours(h, m + adj.offset_minutes, 0, 0);
-                        adjustedTimeStr = `${String(adjustedDate.getHours()).padStart(2, '0')}:${String(adjustedDate.getMinutes()).padStart(2, '0')}`;
+                        const timeStr = `${String(adjustedDate.getHours()).padStart(2, '0')}:${String(adjustedDate.getMinutes()).padStart(2, '0')}`;
+                        adjustedTimeStr = formatTimeToEST(timeStr);
                         displayLabel = adj.time_slot;
                       }
                       
                       // Convert UTC timestamp to EST
-                      const estTime = new Date(adj.created_date).toLocaleTimeString('en-US', { 
-                        hour: 'numeric', 
-                        minute: '2-digit',
-                        hour12: true,
-                        timeZone: 'America/New_York'
-                      });
+                       const estTime = adj.created_date ? new Date(adj.created_date).toLocaleTimeString('en-US', { 
+                         hour: 'numeric', 
+                         minute: '2-digit',
+                         hour12: true,
+                         timeZone: 'America/New_York'
+                       }) : '—';
                       
                       return (
                         <div key={adj.id} className="flex items-start justify-between gap-4 bg-white p-3 rounded border border-amber-300">
