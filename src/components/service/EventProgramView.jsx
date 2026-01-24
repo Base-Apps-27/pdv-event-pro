@@ -260,7 +260,7 @@ export default function EventProgramView({
                     return <h3 className="text-2xl font-bold uppercase mb-1 text-gray-900">{session.name}</h3>;
                   })()}
                   <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-                    {session.date && <span>{session.date}</span>}
+                    {session.date && <span>{formatDateET(session.date)}</span>}
                     {session.planned_start_time && (
                       <>
                         <span>•</span>
