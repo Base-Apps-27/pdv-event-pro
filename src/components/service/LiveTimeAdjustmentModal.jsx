@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/components/utils/i18n";
+import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { Clock, AlertTriangle } from "lucide-react";
 
 export default function LiveTimeAdjustmentModal({ 
@@ -19,7 +20,7 @@ export default function LiveTimeAdjustmentModal({
   const [authorizedBy, setAuthorizedBy] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Calculate new start time based on offset
+  // Calculate new start time based on offset (returns HH:MM format)
   const calculateNewTime = (originalTime, offset) => {
     if (!originalTime) return '';
     const baseTime = originalTime.replace('am', '').replace('pm', '');
@@ -97,9 +98,9 @@ export default function LiveTimeAdjustmentModal({
           {/* New Time Display */}
           <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 text-center">
             <p className="text-sm text-gray-600 mb-1">Hora Original</p>
-            <p className="text-2xl font-bold text-gray-400 line-through mb-3">{baseTime}</p>
+            <p className="text-2xl font-bold text-gray-400 line-through mb-3">{formatTimeToEST(baseTime)}</p>
             <p className="text-sm text-blue-700 font-semibold mb-1">Nueva Hora de Inicio</p>
-            <p className="text-4xl font-bold text-blue-600">{newTime}</p>
+            <p className="text-4xl font-bold text-blue-600">{formatTimeToEST(newTime)}</p>
           </div>
 
           <div>
