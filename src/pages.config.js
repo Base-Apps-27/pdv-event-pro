@@ -20,7 +20,6 @@ import TestFunctions from './pages/TestFunctions';
 import UserManagement from './pages/UserManagement';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import PublicProgramViewV2 from './pages/PublicProgramViewV2';
 import __Layout from './Layout.jsx';
 
 
@@ -47,7 +46,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "PublicProgramViewV2": PublicProgramViewV2,
 }
 
 export const pagesConfig = {
