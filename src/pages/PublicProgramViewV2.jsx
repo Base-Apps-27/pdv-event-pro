@@ -441,8 +441,8 @@ export default function PublicProgramViewV2() {
           />
         )}
 
-        {/* Live Admin Controls */}
-        {hasPermission(currentUser, 'manage_live_timing') && selectedData && (
+        {/* Live Admin Controls - Only for services */}
+        {hasPermission(currentUser, 'manage_live_timing') && viewType === 'service' && actualServiceData && (
           <LiveAdminControls
             viewType={viewType}
             serviceData={actualServiceData}

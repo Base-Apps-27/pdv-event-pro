@@ -12,47 +12,54 @@ import LiveStatusCard from '@/components/service/LiveStatusCard';
  * Preserves existing mobile-friendly layout
  */
 export default function ServiceProgramView({ 
-  serviceData, 
-  serviceType, // "weekly" | "custom"
+  actualServiceData, 
   liveAdjustments,
-  currentTime 
+  currentTime,
+  onOpenVerses
 }) {
   const { t } = useLanguage();
 
+  // Auto-detect service type from data structure
+  const serviceType = actualServiceData?.['9:30am'] || actualServiceData?.['11:30am'] 
+    ? 'weekly' 
+    : actualServiceData?.segments 
+      ? 'custom' 
+      : null;
+
   // Apply live adjustments to segments
   const { slot930Segments, slot1130Segments, customSegments } = useMemo(() => {
-    if (serviceType === 'weekly' && serviceData['9:30am'] && serviceData['11:30am']) {
+    if (serviceType === 'weekly' && actualServiceData['9:30am'] && actualServiceData['11:30am']) {
       return {
         slot930Segments: applyLiveAdjustments(
-          serviceData['9:30am'], 
+          actualServiceData['9:30am'], 
           liveAdjustments, 
           'weekly', 
           '9:30am'
         ),
         slot1130Segments: applyLiveAdjustments(
-          serviceData['11:30am'], 
+          actualServiceData['11:30am'], 
           liveAdjustments, 
           'weekly', 
           '11:30am'
         ),
         customSegments: []
       };
-    } else if (serviceType === 'custom' && serviceData.segments) {
+    } else if (serviceType === 'custom' && actualServiceData.segments) {
       return {
         slot930Segments: [],
         slot1130Segments: [],
         customSegments: applyLiveAdjustments(
-          serviceData.segments,
+          actualServiceData.segments,
           liveAdjustments,
           'custom'
         )
       };
     }
     return { slot930Segments: [], slot1130Segments: [], customSegments: [] };
-  }, [serviceData, liveAdjustments, serviceType]);
+  }, [actualServiceData, liveAdjustments, serviceType]);
 
   // Empty state
-  if (!serviceData || (!slot930Segments.length && !slot1130Segments.length && !customSegments.length)) {
+  if (!actualServiceData || (!slot930Segments.length && !slot1130Segments.length && !customSegments.length)) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Calendar className="w-16 h-16 text-gray-300 mb-4" />
@@ -71,51 +78,55 @@ export default function ServiceProgramView({
         <LiveStatusCard 
           segments={customSegments}
           currentTime={currentTime}
-          serviceDate={serviceData.date}
+          serviceDate={actualServiceData.date}
           liveAdjustmentEnabled={liveAdjustments?.length > 0}
         />
 
-        {/* Service Info */}
-        {serviceData.name && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{serviceData.name}</CardTitle>
-              {serviceData.description && (
-                <p className="text-sm text-muted-foreground">{serviceData.description}</p>
-              )}
-            </CardHeader>
-          </Card>
-        )}
-
-        {/* Segments */}
-        <div className="space-y-3">
-          {customSegments.map((segment, idx) => (
-            <PublicProgramSegment
-              key={segment.id || idx}
-              segment={segment}
-              isCurrent={false}
-              isUpcoming={false}
-              viewMode="simple"
-              alwaysExpanded={true}
-            />
-          ))}
-        </div>
+        {/* Custom Service Card */}
+        <Card className="bg-white border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
+          <CardHeader className="bg-gradient-to-r from-pdv-teal/10 to-white border-b">
+            <CardTitle className="text-2xl font-bold uppercase text-pdv-teal">
+              {actualServiceData.name}
+            </CardTitle>
+            {actualServiceData.description && (
+              <p className="text-sm text-gray-600 mt-2">{actualServiceData.description}</p>
+            )}
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-gray-200">
+              {customSegments.map((segment, idx) => (
+                <PublicProgramSegment
+                  key={segment.id || idx}
+                  segment={segment}
+                  isCurrent={false}
+                  isUpcoming={false}
+                  viewMode="simple"
+                  isExpanded={true}
+                  alwaysExpanded={true}
+                  onToggleExpand={() => {}}
+                  onOpenVerses={onOpenVerses}
+                  allSegments={customSegments}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Team Info (if present) */}
-        {(serviceData.coordinators || serviceData.sound || serviceData.luces) && (
+        {(actualServiceData.coordinators || actualServiceData.sound || actualServiceData.luces) && (
           <Card className="mt-6">
             <CardHeader>
               <CardTitle className="text-base">{t('common.team') || 'Equipo'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              {serviceData.coordinators && (
-                <div><strong>{t('common.coordinators') || 'Coordinadores'}:</strong> {typeof serviceData.coordinators === 'object' ? JSON.stringify(serviceData.coordinators) : String(serviceData.coordinators)}</div>
+              {actualServiceData.coordinators && (
+                <div><strong>{t('common.coordinators') || 'Coordinadores'}:</strong> {typeof actualServiceData.coordinators === 'object' ? JSON.stringify(actualServiceData.coordinators) : String(actualServiceData.coordinators)}</div>
               )}
-              {serviceData.sound && (
-                <div><strong>{t('common.sound') || 'Sonido'}:</strong> {typeof serviceData.sound === 'object' ? JSON.stringify(serviceData.sound) : String(serviceData.sound)}</div>
+              {actualServiceData.sound && (
+                <div><strong>{t('common.sound') || 'Sonido'}:</strong> {typeof actualServiceData.sound === 'object' ? JSON.stringify(actualServiceData.sound) : String(actualServiceData.sound)}</div>
               )}
-              {serviceData.luces && (
-                <div><strong>{t('common.lights') || 'Luces'}:</strong> {typeof serviceData.luces === 'object' ? JSON.stringify(serviceData.luces) : String(serviceData.luces)}</div>
+              {actualServiceData.luces && (
+                <div><strong>{t('common.lights') || 'Luces'}:</strong> {typeof actualServiceData.luces === 'object' ? JSON.stringify(actualServiceData.luces) : String(actualServiceData.luces)}</div>
               )}
             </CardContent>
           </Card>
@@ -129,74 +140,88 @@ export default function ServiceProgramView({
     <div className="space-y-6">
       {/* 9:30 AM Service */}
       {slot930Segments.length > 0 && (
-        <Card>
-          <CardHeader className="gradient-pdv text-white">
-            <CardTitle>9:30 AM</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 space-y-3">
-            {/* Live Status */}
-            <LiveStatusCard 
-              segments={slot930Segments}
-              currentTime={currentTime}
-              serviceDate={serviceData.date}
-              liveAdjustmentEnabled={liveAdjustments?.length > 0}
-            />
-
+        <Card className="bg-white border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500">
+          <CardHeader className="bg-gradient-to-r from-red-50 to-white border-b">
+            <CardTitle className="text-2xl font-bold uppercase text-red-600">9:30 A.M.</CardTitle>
             {/* Pre-service notes */}
-            {serviceData.pre_service_notes?.['9:30am'] && (
-              <div className="text-sm bg-blue-50 p-3 rounded">
-                <strong>{t('liveView.preServiceNotes') || 'Notas Pre-Servicio'}:</strong>
-                <p className="mt-1">{String(serviceData.pre_service_notes['9:30am'])}</p>
+            {actualServiceData.pre_service_notes?.['9:30am'] && (
+              <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
+                <p className="text-sm text-green-900 font-medium italic whitespace-pre-wrap">
+                  {String(actualServiceData.pre_service_notes['9:30am'])}
+                </p>
               </div>
             )}
-
-            {/* Segments */}
-            {slot930Segments.map((segment, idx) => (
-              <PublicProgramSegment
-                key={segment.id || `930-${idx}`}
-                segment={segment}
-                isCurrent={false}
-                isUpcoming={false}
-                viewMode="simple"
-                alwaysExpanded={true}
-              />
-            ))}
-
-            {/* Team assignments */}
+            {/* Team Info */}
             {(() => {
-              const coord = typeof serviceData.coordinators === 'object' ? serviceData.coordinators?.['9:30am'] : serviceData.coordinators;
-              const sound = typeof serviceData.sound === 'object' ? serviceData.sound?.['9:30am'] : serviceData.sound;
-              const lights = typeof serviceData.luces === 'object' ? serviceData.luces?.['9:30am'] : serviceData.luces;
+              const coord = typeof actualServiceData.coordinators === 'object' ? actualServiceData.coordinators?.['9:30am'] : actualServiceData.coordinators;
+              const ujieres = typeof actualServiceData.ujieres === 'object' ? actualServiceData.ujieres?.['9:30am'] : actualServiceData.ujieres;
+              const sound = typeof actualServiceData.sound === 'object' ? actualServiceData.sound?.['9:30am'] : actualServiceData.sound;
+              const lights = typeof actualServiceData.luces === 'object' ? actualServiceData.luces?.['9:30am'] : actualServiceData.luces;
+              const foto = typeof actualServiceData.fotografia === 'object' ? actualServiceData.fotografia?.['9:30am'] : actualServiceData.fotografia;
               
-              if (!coord && !sound && !lights) return null;
+              if (!coord && !ujieres && !sound && !lights && !foto) return null;
               
               return (
-                <div className="mt-4 pt-4 border-t text-sm space-y-1">
-                  {coord && (
-                    <div><strong>{t('common.coordinators') || 'Coordinadores'}:</strong> {String(coord)}</div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
+                  {coord && <span><strong>👤 Coord:</strong> {String(coord)}</span>}
+                  {ujieres && (
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span><strong>🚪 Ujieres:</strong> {String(ujieres)}</span>
+                    </>
                   )}
                   {sound && (
-                    <div><strong>{t('common.sound') || 'Sonido'}:</strong> {String(sound)}</div>
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span><strong>🔊 Sonido:</strong> {String(sound)}</span>
+                    </>
                   )}
                   {lights && (
-                    <div><strong>{t('common.lights') || 'Luces'}:</strong> {String(lights)}</div>
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span><strong>💡 Luces:</strong> {String(lights)}</span>
+                    </>
+                  )}
+                  {foto && (
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span><strong>📸 Foto:</strong> {String(foto)}</span>
+                    </>
                   )}
                 </div>
               );
             })()}
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-gray-200">
+              {slot930Segments.map((segment, idx) => (
+                <PublicProgramSegment
+                  key={segment.id || `930-${idx}`}
+                  segment={segment}
+                  isCurrent={false}
+                  isUpcoming={false}
+                  viewMode="simple"
+                  isExpanded={true}
+                  alwaysExpanded={true}
+                  onToggleExpand={() => {}}
+                  onOpenVerses={onOpenVerses}
+                  allSegments={slot930Segments}
+                />
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
 
       {/* Recess */}
-      {serviceData.receso_notes && (
+      {actualServiceData.receso_notes && (
         <Card className="bg-gray-50">
-          <CardContent className="p-4">
-            <strong>{t('liveView.recess') || 'RECESO'}:</strong>
-            <p className="text-sm mt-1">
-              {typeof serviceData.receso_notes === 'object' 
-                ? (serviceData.receso_notes['9:30am'] || serviceData.receso_notes['11:30am'] || '')
-                : String(serviceData.receso_notes)}
+          <CardContent className="p-4 text-center">
+            <strong>{t('liveView.recess') || 'RECESO (30 min)'}:</strong>
+            <p className="text-sm mt-1 text-gray-600">
+              {typeof actualServiceData.receso_notes === 'object' 
+                ? (actualServiceData.receso_notes['9:30am'] || actualServiceData.receso_notes['11:30am'] || '')
+                : String(actualServiceData.receso_notes)}
             </p>
           </CardContent>
         </Card>
@@ -204,61 +229,75 @@ export default function ServiceProgramView({
 
       {/* 11:30 AM Service */}
       {slot1130Segments.length > 0 && (
-        <Card>
-          <CardHeader className="gradient-pdv text-white">
-            <CardTitle>11:30 AM</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 space-y-3">
-            {/* Live Status */}
-            <LiveStatusCard 
-              segments={slot1130Segments}
-              currentTime={currentTime}
-              serviceDate={serviceData.date}
-              liveAdjustmentEnabled={liveAdjustments?.length > 0}
-            />
-
+        <Card className="bg-white border-2 border-gray-300 overflow-hidden border-l-4 border-l-blue-500">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-white border-b">
+            <CardTitle className="text-2xl font-bold uppercase text-blue-600">11:30 A.M.</CardTitle>
             {/* Pre-service notes */}
-            {serviceData.pre_service_notes?.['11:30am'] && (
-              <div className="text-sm bg-blue-50 p-3 rounded">
-                <strong>{t('liveView.preServiceNotes') || 'Notas Pre-Servicio'}:</strong>
-                <p className="mt-1">{String(serviceData.pre_service_notes['11:30am'])}</p>
+            {actualServiceData.pre_service_notes?.['11:30am'] && (
+              <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
+                <p className="text-sm text-green-900 font-medium italic whitespace-pre-wrap">
+                  {String(actualServiceData.pre_service_notes['11:30am'])}
+                </p>
               </div>
             )}
-
-            {/* Segments */}
-            {slot1130Segments.map((segment, idx) => (
-              <PublicProgramSegment
-                key={segment.id || `1130-${idx}`}
-                segment={segment}
-                isCurrent={false}
-                isUpcoming={false}
-                viewMode="simple"
-                alwaysExpanded={true}
-              />
-            ))}
-
-            {/* Team assignments */}
+            {/* Team Info */}
             {(() => {
-              const coord = typeof serviceData.coordinators === 'object' ? serviceData.coordinators?.['11:30am'] : serviceData.coordinators;
-              const sound = typeof serviceData.sound === 'object' ? serviceData.sound?.['11:30am'] : serviceData.sound;
-              const lights = typeof serviceData.luces === 'object' ? serviceData.luces?.['11:30am'] : serviceData.luces;
+              const coord = typeof actualServiceData.coordinators === 'object' ? actualServiceData.coordinators?.['11:30am'] : actualServiceData.coordinators;
+              const ujieres = typeof actualServiceData.ujieres === 'object' ? actualServiceData.ujieres?.['11:30am'] : actualServiceData.ujieres;
+              const sound = typeof actualServiceData.sound === 'object' ? actualServiceData.sound?.['11:30am'] : actualServiceData.sound;
+              const lights = typeof actualServiceData.luces === 'object' ? actualServiceData.luces?.['11:30am'] : actualServiceData.luces;
+              const foto = typeof actualServiceData.fotografia === 'object' ? actualServiceData.fotografia?.['11:30am'] : actualServiceData.fotografia;
               
-              if (!coord && !sound && !lights) return null;
+              if (!coord && !ujieres && !sound && !lights && !foto) return null;
               
               return (
-                <div className="mt-4 pt-4 border-t text-sm space-y-1">
-                  {coord && (
-                    <div><strong>{t('common.coordinators') || 'Coordinadores'}:</strong> {String(coord)}</div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
+                  {coord && <span><strong>👤 Coord:</strong> {String(coord)}</span>}
+                  {ujieres && (
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span><strong>🚪 Ujieres:</strong> {String(ujieres)}</span>
+                    </>
                   )}
                   {sound && (
-                    <div><strong>{t('common.sound') || 'Sonido'}:</strong> {String(sound)}</div>
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span><strong>🔊 Sonido:</strong> {String(sound)}</span>
+                    </>
                   )}
                   {lights && (
-                    <div><strong>{t('common.lights') || 'Luces'}:</strong> {String(lights)}</div>
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span><strong>💡 Luces:</strong> {String(lights)}</span>
+                    </>
+                  )}
+                  {foto && (
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span><strong>📸 Foto:</strong> {String(foto)}</span>
+                    </>
                   )}
                 </div>
               );
             })()}
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-gray-200">
+              {slot1130Segments.map((segment, idx) => (
+                <PublicProgramSegment
+                  key={segment.id || `1130-${idx}`}
+                  segment={segment}
+                  isCurrent={false}
+                  isUpcoming={false}
+                  viewMode="simple"
+                  isExpanded={true}
+                  alwaysExpanded={true}
+                  onToggleExpand={() => {}}
+                  onOpenVerses={onOpenVerses}
+                  allSegments={slot1130Segments}
+                />
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
