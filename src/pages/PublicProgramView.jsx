@@ -50,6 +50,8 @@ export default function PublicProgramView() {
   const [selectedEventId, setSelectedEventId] = useState(preloadedEventId);
   const [selectedServiceId, setSelectedServiceId] = useState(preloadedServiceId);
   const [showEventDetails, setShowEventDetails] = useState(false);
+  const [viewMode, setViewMode] = useState("simple");
+  const [selectedSessionId, setSelectedSessionId] = useState("all");
   
   // Shared state for both views
   const [currentTime, setCurrentTime] = useState(new Date());
