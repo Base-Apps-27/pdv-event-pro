@@ -334,6 +334,35 @@ export default function PublicProgramSegment({
                 </p>
               </div>
             )}
+
+            {/* Sub-asignaciones (custom service sub-segments) */}
+            {segment.sub_asignaciones && segment.sub_asignaciones.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {segment.sub_asignaciones.map((subSeg, idx) => (
+                  <div 
+                    key={subSeg._uiId || idx} 
+                    className="bg-purple-50 border-l-4 border-purple-500 rounded-r pl-3 py-2"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <Sparkles className="w-4 h-4 text-purple-600 fill-purple-100" />
+                      <span className="font-bold text-purple-900 text-sm">{subSeg.title}</span>
+                      {subSeg.duration && (
+                        <span className="text-xs text-purple-700">({subSeg.duration} min)</span>
+                      )}
+                    </div>
+                    {subSeg.presenter && (
+                      <div className="flex items-center gap-2 text-purple-700 text-xs ml-6">
+                        <Users className="w-3 h-3" />
+                        <span>{normalizeName(subSeg.presenter)}</span>
+                      </div>
+                    )}
+                    {subSeg.description && (
+                      <p className="text-xs text-purple-800 ml-6 mt-1">{subSeg.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
