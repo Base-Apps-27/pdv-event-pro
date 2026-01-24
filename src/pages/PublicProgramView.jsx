@@ -690,10 +690,10 @@ export default function PublicProgramView() {
                       </SelectTrigger>
                       <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {availableEvents.map((event) => (
-                          <SelectItem key={event.id} value={event.id}>
-                            {event.name.length > 25 ? event.name.substring(0, 25) + '...' : event.name} - {event.start_date}
-                          </SelectItem>
-                        ))}
+                                                        <SelectItem key={event.id} value={event.id}>
+                                                          {event.name.length > 25 ? event.name.substring(0, 25) + '...' : event.name} - {formatDateET(event.start_date)}
+                                                        </SelectItem>
+                                                      ))}
                       </SelectContent>
                     </Select>
                   </div>
