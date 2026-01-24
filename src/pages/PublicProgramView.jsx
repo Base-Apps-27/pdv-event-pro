@@ -690,7 +690,7 @@ export default function PublicProgramView() {
                       <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {availableEvents.map((event) => (
                           <SelectItem key={event.id} value={event.id}>
-                            {event.name} - {event.start_date}
+                            {event.name.length > 25 ? event.name.substring(0, 25) + '...' : event.name} - {event.start_date}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -739,7 +739,7 @@ export default function PublicProgramView() {
                       <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {upcomingServices.map((service) => (
                           <SelectItem key={service.id} value={service.id}>
-                            {service.name} - {service.date} ({service.daysUntil === 0 ? 'Hoy' : service.daysUntil === 1 ? 'Mañana' : `en ${service.daysUntil} días`})
+                            {service.name.length > 25 ? service.name.substring(0, 25) + '...' : service.name} - {service.date} ({service.daysUntil === 0 ? 'Hoy' : service.daysUntil === 1 ? 'Mañana' : `en ${service.daysUntil} días`})
                           </SelectItem>
                         ))}
                       </SelectContent>
