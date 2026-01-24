@@ -1032,27 +1032,8 @@ export default function PublicProgramView() {
                       <span className="font-bold uppercase text-sm">Ajustar Hora de Inicio</span>
                     </div>
                     <div className="flex gap-2">
-                      {actualServiceData["9:30am"] && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => openAdjustmentModal("9:30am")}
-                          className="bg-red-600 hover:bg-red-700 text-white border-none"
-                        >
-                          9:30 AM
-                        </Button>
-                      )}
-                      {actualServiceData["11:30am"] && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => openAdjustmentModal("11:30am")}
-                          className="bg-blue-600 hover:bg-blue-700 text-white border-none"
-                        >
-                          11:30 AM
-                        </Button>
-                      )}
-                      {actualServiceData.segments && !actualServiceData["9:30am"] && !actualServiceData["11:30am"] && (
+                      {/* Custom services: show single button regardless of 9:30am/11:30am data */}
+                      {actualServiceData.segments && actualServiceData.segments.length > 0 ? (
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -1061,6 +1042,29 @@ export default function PublicProgramView() {
                         >
                           Ajustar Inicio
                         </Button>
+                      ) : (
+                        <>
+                          {actualServiceData["9:30am"] && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openAdjustmentModal("9:30am")}
+                              className="bg-red-600 hover:bg-red-700 text-white border-none"
+                            >
+                              9:30 AM
+                            </Button>
+                          )}
+                          {actualServiceData["11:30am"] && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openAdjustmentModal("11:30am")}
+                              className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+                            >
+                              11:30 AM
+                            </Button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
