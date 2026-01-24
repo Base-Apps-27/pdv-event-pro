@@ -14,6 +14,7 @@ import StructuredVersesModal from "@/components/service/StructuredVersesModal";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import LiveTimeAdjustmentModal from "@/components/service/LiveTimeAdjustmentModal";
+import LiveAdminControls from "@/components/service/LiveAdminControls";
 import { hasPermission } from "@/components/utils/permissions";
 import { useSegmentNotifications } from "@/components/service/useSegmentNotifications";
 import ServiceProgramView from "@/components/service/ServiceProgramView";
