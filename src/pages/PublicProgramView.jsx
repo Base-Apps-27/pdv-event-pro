@@ -852,8 +852,8 @@ export default function PublicProgramView() {
               </CardContent>
             </Card>
 
-            {/* Live Admin Controls */}
-            {hasPermission(currentUser, 'manage_live_timing') && filteredSessions.length > 0 && (
+            {/* Live Admin Controls - Only for Events (EventProgramView handles this now) */}
+            {false && hasPermission(currentUser, 'manage_live_timing') && filteredSessions.length > 0 && (
               <LiveAdminControls 
                 session={filteredSessions[0]} // For now assume single session active or take first
                 currentSegment={(() => {
@@ -903,8 +903,8 @@ export default function PublicProgramView() {
               />
             )}
 
-            {/* View Mode and Filters Card - Only show for Events */}
-            {viewType === "event" && (
+            {/* View Mode and Filters Card - EventProgramView handles this now */}
+            {false && viewType === "event" && (
               <Card className="bg-white border-2 border-gray-300">
                 <CardHeader className="bg-gray-100 border-b-2 border-gray-300">
                   <div className="flex items-center justify-between">
@@ -1022,7 +1022,7 @@ export default function PublicProgramView() {
               </Card>
             )}
 
-            {/* Live Time Adjustment Controls for Coordinators */}
+            {/* Live Time Adjustment Controls for Coordinators - Only for Services */}
             {viewType === "service" && hasPermission(currentUser, 'manage_live_timing') && actualServiceData && (
               <Card className="bg-slate-900 text-white border-none">
                 <CardContent className="p-4">
