@@ -682,12 +682,12 @@ export default function PublicProgramView() {
                 const availableEvents = [...pastEvents, ...upcomingEvents];
                 
                 return (
-                  <div className="w-full">
+                  <div className="w-full max-w-full">
                     <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-                      <SelectTrigger className="w-full bg-white border-2 border-gray-400 text-gray-900 h-12">
+                      <SelectTrigger className="w-full max-w-full overflow-hidden bg-white border-2 border-gray-400 text-gray-900 h-12">
                         <SelectValue placeholder="Selecciona un evento" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white">
+                      <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {availableEvents.map((event) => (
                           <SelectItem key={event.id} value={event.id}>
                             {event.name} - {event.start_date}
@@ -731,17 +731,15 @@ export default function PublicProgramView() {
                   }, []);
 
                 return (
-                  <div className="w-full">
+                  <div className="w-full max-w-full">
                     <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
-                      <SelectTrigger className="w-full bg-white border-2 border-gray-400 text-gray-900 h-12">
-                        <SelectValue placeholder="Selecciona un servicio" className="truncate" />
+                      <SelectTrigger className="w-full max-w-full overflow-hidden bg-white border-2 border-gray-400 text-gray-900 h-12">
+                        <SelectValue placeholder="Selecciona un servicio" />
                       </SelectTrigger>
                       <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {upcomingServices.map((service) => (
-                          <SelectItem key={service.id} value={service.id} className="max-w-full">
-                            <span className="block truncate">
-                              {service.name} - {service.date} ({service.daysUntil === 0 ? 'Hoy' : service.daysUntil === 1 ? 'Mañana' : `en ${service.daysUntil} días`})
-                            </span>
+                          <SelectItem key={service.id} value={service.id}>
+                            {service.name} - {service.date} ({service.daysUntil === 0 ? 'Hoy' : service.daysUntil === 1 ? 'Mañana' : `en ${service.daysUntil} días`})
                           </SelectItem>
                         ))}
                       </SelectContent>
