@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatTimeToEST } from "../components/utils/timeFormat";
+import { formatTimeToEST, formatTimestampToEST } from "../components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import StructuredVersesModal from "@/components/service/StructuredVersesModal";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
