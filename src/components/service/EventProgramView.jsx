@@ -9,7 +9,7 @@ import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, 
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import LiveAdminControls from "@/components/service/LiveAdminControls";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
-import { formatTimeToEST } from "@/components/utils/timeFormat";
+import { formatTimeToEST, formatDateET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { hasPermission } from "@/components/utils/permissions";
 
