@@ -770,7 +770,7 @@ export default function PublicProgramView() {
                   {viewType === "event" && selectedEvent?.start_date && (
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-gray-600" />
-                      <span>{selectedEvent.start_date}</span>
+                      <span>{formatDateET(selectedEvent.start_date)}</span>
                       {selectedEvent.end_date && <span> - {selectedEvent.end_date}</span>}
                     </div>
                   )}
