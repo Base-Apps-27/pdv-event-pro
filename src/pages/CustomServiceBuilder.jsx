@@ -29,6 +29,7 @@ import { Download } from "lucide-react";
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
 import { generateServiceProgramPDFWithAutoFit } from "@/components/service/generateProgramPDFWithAutoFit";
 import { useLanguage } from "@/components/utils/i18n";
+import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { toast } from "sonner";
 
 // Helper: Detect service complexity and return compression level
@@ -1431,7 +1432,7 @@ export default function CustomServiceBuilder() {
                 {timeCalc.total} min total
               </Badge>
               <span className="text-sm text-gray-600">
-                Termina: {timeCalc.endTime}
+                Inicia: {formatTimeToEST(serviceData.time)} | Termina: {timeCalc.endTime}
               </span>
             </div>
           </div>

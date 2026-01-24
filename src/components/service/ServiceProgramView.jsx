@@ -4,6 +4,7 @@ import { Calendar } from "lucide-react";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import { normalizeName } from "@/components/utils/textNormalization";
+import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 /**
  * ServiceProgramView Component
@@ -133,7 +134,8 @@ export default function ServiceProgramView({
                    const [h, m] = serviceTime.split(':').map(Number);
                    const date = new Date();
                    date.setHours(h, m + globalAdj.offset_minutes, 0, 0);
-                   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                   const adjustedTimeStr = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                   return formatTimeToEST(adjustedTimeStr);
                  })();
                  return (
                    <h3 className="text-xl sm:text-2xl font-bold uppercase text-pdv-teal break-words mb-1">
@@ -235,15 +237,16 @@ export default function ServiceProgramView({
                   const [h, m] = "09:30".split(':').map(Number);
                   const date = new Date();
                   date.setHours(h, m + adjustment.offset_minutes, 0, 0);
-                  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                  const adjustedTimeStr = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                  return formatTimeToEST(adjustedTimeStr);
                 })();
                 return (
                   <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">
-                    9:30 A.M. <span className="text-amber-600">(inicio: {adjustedTime})</span>
+                    9:30 AM <span className="text-amber-600">(inicio: {adjustedTime})</span>
                   </h3>
                 );
               }
-              return <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 A.M.</h3>;
+              return <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 AM</h3>;
             })()}
             {adjustedServiceData.pre_service_notes?.["9:30am"] && (
               <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
@@ -321,15 +324,16 @@ export default function ServiceProgramView({
                   const [h, m] = "11:30".split(':').map(Number);
                   const date = new Date();
                   date.setHours(h, m + adjustment.offset_minutes, 0, 0);
-                  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                  const adjustedTimeStr = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                  return formatTimeToEST(adjustedTimeStr);
                 })();
                 return (
                   <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">
-                    11:30 A.M. <span className="text-amber-600">(inicio: {adjustedTime})</span>
+                    11:30 AM <span className="text-amber-600">(inicio: {adjustedTime})</span>
                   </h3>
                 );
               }
-              return <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 A.M.</h3>;
+              return <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 AM</h3>;
             })()}
             {adjustedServiceData.pre_service_notes?.["11:30am"] && (
               <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
