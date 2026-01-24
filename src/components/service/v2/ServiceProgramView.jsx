@@ -109,13 +109,13 @@ export default function ServiceProgramView({
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               {serviceData.coordinators && (
-                <div><strong>{t('common.coordinators') || 'Coordinadores'}:</strong> {serviceData.coordinators}</div>
+                <div><strong>{t('common.coordinators') || 'Coordinadores'}:</strong> {typeof serviceData.coordinators === 'object' ? JSON.stringify(serviceData.coordinators) : String(serviceData.coordinators)}</div>
               )}
               {serviceData.sound && (
-                <div><strong>{t('common.sound') || 'Sonido'}:</strong> {serviceData.sound}</div>
+                <div><strong>{t('common.sound') || 'Sonido'}:</strong> {typeof serviceData.sound === 'object' ? JSON.stringify(serviceData.sound) : String(serviceData.sound)}</div>
               )}
               {serviceData.luces && (
-                <div><strong>{t('common.lights') || 'Luces'}:</strong> {serviceData.luces}</div>
+                <div><strong>{t('common.lights') || 'Luces'}:</strong> {typeof serviceData.luces === 'object' ? JSON.stringify(serviceData.luces) : String(serviceData.luces)}</div>
               )}
             </CardContent>
           </Card>
@@ -146,7 +146,7 @@ export default function ServiceProgramView({
             {serviceData.pre_service_notes?.['9:30am'] && (
               <div className="text-sm bg-blue-50 p-3 rounded">
                 <strong>{t('liveView.preServiceNotes') || 'Notas Pre-Servicio'}:</strong>
-                <p className="mt-1">{serviceData.pre_service_notes['9:30am']}</p>
+                <p className="mt-1">{String(serviceData.pre_service_notes['9:30am'])}</p>
               </div>
             )}
 
@@ -193,7 +193,11 @@ export default function ServiceProgramView({
         <Card className="bg-gray-50">
           <CardContent className="p-4">
             <strong>{t('liveView.recess') || 'RECESO'}:</strong>
-            <p className="text-sm mt-1">{serviceData.receso_notes}</p>
+            <p className="text-sm mt-1">
+              {typeof serviceData.receso_notes === 'object' 
+                ? (serviceData.receso_notes['9:30am'] || serviceData.receso_notes['11:30am'] || '')
+                : String(serviceData.receso_notes)}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -217,7 +221,7 @@ export default function ServiceProgramView({
             {serviceData.pre_service_notes?.['11:30am'] && (
               <div className="text-sm bg-blue-50 p-3 rounded">
                 <strong>{t('liveView.preServiceNotes') || 'Notas Pre-Servicio'}:</strong>
-                <p className="mt-1">{serviceData.pre_service_notes['11:30am']}</p>
+                <p className="mt-1">{String(serviceData.pre_service_notes['11:30am'])}</p>
               </div>
             )}
 
