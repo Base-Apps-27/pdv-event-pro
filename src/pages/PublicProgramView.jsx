@@ -307,8 +307,14 @@ export default function PublicProgramView() {
     if (!selectedServiceId || !rawServiceData?.date || !adjustmentModalTimeSlot) return;
 
     try {
+      // Determine adjustment type: custom services use 'global', weekly use 'time_slot'
+      const isCustomService = adjustmentModalTimeSlot === "custom";
+      const adjustmentType = isCustomService ? "global" : "time_slot";
+      
       // Check if adjustment exists
-      const existing = liveAdjustments.find(a => a.time_slot === adjustmentModalTimeSlot);
+      const existing = liveAdjustments.find(a => 
+        isCustomService ? a.adjustment_type === 'global' : a.time_slot === adjustmentModalTimeSlot
+      );
       
       if (existing) {
         // Update existing
@@ -320,8 +326,9 @@ export default function PublicProgramView() {
         // Create new
         await base44.entities.LiveTimeAdjustment.create({
           date: rawServiceData.date,
+          adjustment_type: adjustmentType,
           service_id: selectedServiceId,
-          time_slot: adjustmentModalTimeSlot,
+          time_slot: isCustomService ? null : adjustmentModalTimeSlot,
           offset_minutes: offsetMinutes,
           authorized_by: authorizedBy
         });
@@ -337,7 +344,10 @@ export default function PublicProgramView() {
 
   // Open adjustment modal
   const openAdjustmentModal = (timeSlot) => {
-    const existing = liveAdjustments.find(a => a.time_slot === timeSlot);
+    // For custom services, find global adjustment; for weekly, find by time_slot
+    const existing = timeSlot === "custom" 
+      ? liveAdjustments.find(a => a.adjustment_type === 'global')
+      : liveAdjustments.find(a => a.time_slot === timeSlot);
     setCurrentAdjustment(existing || null);
     setAdjustmentModalTimeSlot(timeSlot);
     setTimeAdjustmentModalOpen(true);
@@ -944,17 +954,32 @@ export default function PublicProgramView() {
             )}
 
             {/* Live Time Adjustment Banner */}
-            {viewType === "service" && liveAdjustments.length > 0 && (
+            {viewType === "service" && liveAdjustments.length > 0 && liveAdjustments.some(adj => adj.offset_minutes !== 0) && (
               <Card className="bg-amber-50 border-2 border-amber-500">
                 <CardContent className="p-4">
                   <div className="space-y-2">
                     {liveAdjustments.filter(adj => adj.offset_minutes !== 0).map((adj) => {
                       // Calculate adjusted start time for display
-                      const baseTime = adj.time_slot.replace('am', '').replace('pm', '');
-                      const [h, m] = baseTime.split(':').map(Number);
-                      const adjustedDate = new Date();
-                      adjustedDate.setHours(h, m + adj.offset_minutes, 0, 0);
-                      const adjustedTimeStr = `${String(adjustedDate.getHours()).padStart(2, '0')}:${String(adjustedDate.getMinutes()).padStart(2, '0')}`;
+                      let displayLabel = '';
+                      let adjustedTimeStr = '';
+                      
+                      if (adj.adjustment_type === 'global') {
+                        // Custom service - show service time + offset
+                        const serviceTime = actualServiceData?.time || "10:00";
+                        const [h, m] = serviceTime.split(':').map(Number);
+                        const adjustedDate = new Date();
+                        adjustedDate.setHours(h, m + adj.offset_minutes, 0, 0);
+                        adjustedTimeStr = `${String(adjustedDate.getHours()).padStart(2, '0')}:${String(adjustedDate.getMinutes()).padStart(2, '0')}`;
+                        displayLabel = 'Servicio Especial';
+                      } else {
+                        // Weekly service - show time slot
+                        const baseTime = adj.time_slot.replace('am', '').replace('pm', '');
+                        const [h, m] = baseTime.split(':').map(Number);
+                        const adjustedDate = new Date();
+                        adjustedDate.setHours(h, m + adj.offset_minutes, 0, 0);
+                        adjustedTimeStr = `${String(adjustedDate.getHours()).padStart(2, '0')}:${String(adjustedDate.getMinutes()).padStart(2, '0')}`;
+                        displayLabel = adj.time_slot;
+                      }
                       
                       // Convert UTC timestamp to EST
                       const estTime = new Date(adj.created_date).toLocaleTimeString('en-US', { 
@@ -970,7 +995,7 @@ export default function PublicProgramView() {
                             <div className="flex items-center gap-2 mb-1">
                               <Clock className="w-4 h-4 text-amber-700" />
                               <span className="font-bold text-amber-900">
-                                {adj.time_slot} ajustado {adj.offset_minutes > 0 ? '+' : ''}{adj.offset_minutes} minutos (inicio: {adjustedTimeStr})
+                                {displayLabel} ajustado {adj.offset_minutes > 0 ? '+' : ''}{adj.offset_minutes} minutos (inicio: {adjustedTimeStr})
                               </span>
                             </div>
                             <div className="text-xs text-gray-700 space-y-0.5">
@@ -983,7 +1008,7 @@ export default function PublicProgramView() {
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => openAdjustmentModal(adj.time_slot)}
+                              onClick={() => openAdjustmentModal(adj.adjustment_type === 'global' ? 'custom' : adj.time_slot)}
                               className="shrink-0"
                             >
                               Editar
@@ -1025,6 +1050,16 @@ export default function PublicProgramView() {
                           className="bg-blue-600 hover:bg-blue-700 text-white border-none"
                         >
                           11:30 AM
+                        </Button>
+                      )}
+                      {actualServiceData.segments && !actualServiceData["9:30am"] && !actualServiceData["11:30am"] && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => openAdjustmentModal("custom")}
+                          className="bg-pdv-teal hover:bg-pdv-teal/90 text-white border-none"
+                        >
+                          Ajustar Inicio
                         </Button>
                       )}
                     </div>
