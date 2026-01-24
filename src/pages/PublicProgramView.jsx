@@ -734,12 +734,14 @@ export default function PublicProgramView() {
                   <div className="w-full">
                     <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
                       <SelectTrigger className="w-full bg-white border-2 border-gray-400 text-gray-900 h-12">
-                        <SelectValue placeholder="Selecciona un servicio" />
+                        <SelectValue placeholder="Selecciona un servicio" className="truncate" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white">
+                      <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {upcomingServices.map((service) => (
-                          <SelectItem key={service.id} value={service.id}>
-                            {service.name} - {service.date} ({service.daysUntil === 0 ? 'Hoy' : service.daysUntil === 1 ? 'Mañana' : `en ${service.daysUntil} días`})
+                          <SelectItem key={service.id} value={service.id} className="max-w-full">
+                            <span className="block truncate">
+                              {service.name} - {service.date} ({service.daysUntil === 0 ? 'Hoy' : service.daysUntil === 1 ? 'Mañana' : `en ${service.daysUntil} días`})
+                            </span>
                           </SelectItem>
                         ))}
                       </SelectContent>
