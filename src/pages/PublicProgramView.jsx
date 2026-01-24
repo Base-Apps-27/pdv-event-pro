@@ -317,10 +317,11 @@ export default function PublicProgramView() {
       );
       
       if (existing) {
-        // Update existing
+        // Update existing — force timestamp update by including current ISO datetime
         await base44.entities.LiveTimeAdjustment.update(existing.id, {
           offset_minutes: offsetMinutes,
-          authorized_by: authorizedBy
+          authorized_by: authorizedBy,
+          updated_at: new Date().toISOString() // Force timestamp refresh
         });
       } else {
         // Create new
