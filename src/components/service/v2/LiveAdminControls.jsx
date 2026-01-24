@@ -26,7 +26,11 @@ export default function LiveAdminControls({
   }
 
   // CRITICAL: Only show weekly controls for service view with 9:30/11:30 structure
-  const isWeekly = viewType === 'service' && serviceData && (serviceData['9:30am'] || serviceData['11:30am']);
+  // Custom services have a 'segments' array, weekly services have '9:30am'/'11:30am' properties
+  const isWeekly = viewType === 'service' && 
+                   serviceData && 
+                   (serviceData['9:30am'] || serviceData['11:30am']) && 
+                   !serviceData.segments;
 
   // Live Adjustments Banner (show active adjustments with history)
   const activeAdjustments = liveAdjustments.filter(adj => adj.offset_minutes !== 0);
