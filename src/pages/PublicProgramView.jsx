@@ -983,8 +983,8 @@ export default function PublicProgramView() {
                         displayLabel = adj.time_slot;
                       }
                       
-                      // Format adjustment creation time (HH:MM:SS EST)
-                       const estTime = adj.created_date ? new Date(adj.created_date).toLocaleTimeString('en-US', { 
+                      // Format adjustment timestamp (HH:MM:SS EST) – use updated_date to capture re-adjustments
+                       const estTime = adj.updated_date ? new Date(adj.updated_date).toLocaleTimeString('en-US', { 
                          hour: '2-digit', 
                          minute: '2-digit',
                          second: '2-digit',
