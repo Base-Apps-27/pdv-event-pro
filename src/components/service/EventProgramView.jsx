@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,6 +55,23 @@ export default function EventProgramView({
   const [viewMode, setViewMode] = useState("simple"); // "simple" or "full"
   const [expandedSegments, setExpandedSegments] = useState({});
   const [expandedSessions, setExpandedSessions] = useState({});
+
+  // Fetch live adjustments for event sessions
+  const { data: liveAdjustments = [] } = useQuery({
+    queryKey: ['eventLiveAdjustments', selectedEvent?.id, eventSessions.length > 0 ? eventSessions[0]?.date : null],
+    queryFn: async () => {
+      if (!selectedEvent?.id || eventSessions.length === 0) return [];
+      const firstSessionDate = eventSessions[0]?.date;
+      if (!firstSessionDate) return [];
+      return await base44.entities.LiveTimeAdjustment.filter({
+        event_id: selectedEvent.id,
+        date: firstSessionDate,
+        adjustment_type: 'session'
+      });
+    },
+    enabled: !!(selectedEvent?.id && eventSessions.length > 0),
+    refetchInterval: 3000
+  });
 
   // Session color classes for visual distinction
   const sessionColorClasses = {
