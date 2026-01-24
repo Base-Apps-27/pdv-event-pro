@@ -58,8 +58,8 @@ export default function ServiceProgramView({
     return { slot930Segments: [], slot1130Segments: [], customSegments: [] };
   }, [actualServiceData, liveAdjustments, serviceType]);
 
-  // Empty state
-  if (!actualServiceData || (!slot930Segments.length && !slot1130Segments.length && !customSegments.length)) {
+  // Empty state - Only if no service data at all
+  if (!actualServiceData) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Calendar className="w-16 h-16 text-gray-300 mb-4" />
@@ -70,31 +70,40 @@ export default function ServiceProgramView({
     );
   }
 
+  // CRITICAL: Don't block rendering if service exists but has no segments yet
+  // Custom services and weekly services should still show metadata/team info
+
   // CUSTOM SERVICE RENDERING
   if (serviceType === 'custom') {
     return (
       <div className="space-y-4">
-        {/* Live Status Card */}
-        <LiveStatusCard 
-          segments={customSegments}
-          currentTime={currentTime}
-          serviceDate={actualServiceData.date}
-          liveAdjustmentEnabled={liveAdjustments?.length > 0}
-        />
+        {/* Live Status Card - Only if segments exist */}
+        {customSegments.length > 0 && (
+          <LiveStatusCard 
+            segments={customSegments}
+            currentTime={currentTime}
+            serviceDate={actualServiceData.date}
+            liveAdjustmentEnabled={liveAdjustments?.length > 0}
+          />
+        )}
 
         {/* Custom Service Card */}
         <Card className="bg-white border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
           <CardHeader className="bg-gradient-to-r from-pdv-teal/10 to-white border-b">
             <CardTitle className="text-2xl font-bold uppercase text-pdv-teal">
-              {actualServiceData.name}
+              {actualServiceData.name || 'Servicio Especial'}
             </CardTitle>
             {actualServiceData.description && (
               <p className="text-sm text-gray-600 mt-2">{actualServiceData.description}</p>
             )}
+            {actualServiceData.time && (
+              <p className="text-sm text-gray-600 mt-1">⏰ {actualServiceData.time}</p>
+            )}
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-gray-200">
-              {customSegments.map((segment, idx) => (
+          {customSegments.length > 0 ? (
+            <CardContent className="p-0">
+              <div className="divide-y divide-gray-200">
+                {customSegments.map((segment, idx) => (
                 <PublicProgramSegment
                   key={segment.id || idx}
                   segment={segment}
@@ -110,6 +119,13 @@ export default function ServiceProgramView({
               ))}
             </div>
           </CardContent>
+          ) : (
+            <CardContent className="p-8 text-center">
+              <p className="text-gray-500 text-sm">
+                {t('liveView.noSegments') || 'No hay segmentos programados para este servicio'}
+              </p>
+            </CardContent>
+          )}
         </Card>
 
         {/* Team Info (if present) */}
