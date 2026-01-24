@@ -985,21 +985,7 @@ export default function PublicProgramView() {
                       }
                       
                       // Convert adjustment timestamp to EST HH:MM:SS
-                       const estTime = adj.updated_date ? (() => {
-                         const date = new Date(adj.updated_date);
-                         const estFormatter = new Intl.DateTimeFormat('en-US', {
-                           hour: '2-digit',
-                           minute: '2-digit',
-                           second: '2-digit',
-                           hour12: false, // 24-hour format for parsing
-                           timeZone: 'America/New_York'
-                         });
-                         const parts = estFormatter.formatToParts(date);
-                         const hour = parts.find(p => p.type === 'hour').value;
-                         const minute = parts.find(p => p.type === 'minute').value;
-                         const second = parts.find(p => p.type === 'second').value;
-                         return `${hour}:${minute}:${second}`;
-                       })() : '—';
+                       const estTime = formatTimestampToEST(adj.updated_date);
                       
                       return (
                         <div key={adj.id} className="flex items-start justify-between gap-4 bg-white p-3 rounded border border-amber-300">
