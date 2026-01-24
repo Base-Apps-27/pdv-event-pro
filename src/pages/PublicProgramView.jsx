@@ -983,13 +983,13 @@ export default function PublicProgramView() {
                         displayLabel = adj.time_slot;
                       }
                       
-                      // Convert UTC timestamp to EST
-                       const estTime = adj.created_date ? new Date(adj.created_date).toLocaleTimeString('en-US', { 
+                      // Use current time (when viewing banner) converted to EST
+                       const estTime = currentTime.toLocaleTimeString('en-US', { 
                          hour: 'numeric', 
                          minute: '2-digit',
                          hour12: true,
                          timeZone: 'America/New_York'
-                       }) : '—';
+                       });
                       
                       return (
                         <div key={adj.id} className="flex items-start justify-between gap-4 bg-white p-3 rounded border border-amber-300">
