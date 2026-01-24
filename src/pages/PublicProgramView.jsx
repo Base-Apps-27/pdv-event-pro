@@ -983,13 +983,14 @@ export default function PublicProgramView() {
                         displayLabel = adj.time_slot;
                       }
                       
-                      // Use current time (when viewing banner) converted to EST
-                       const estTime = currentTime.toLocaleTimeString('en-US', { 
-                         hour: 'numeric', 
+                      // Format adjustment creation time (HH:MM:SS EST)
+                       const estTime = adj.created_date ? new Date(adj.created_date).toLocaleTimeString('en-US', { 
+                         hour: '2-digit', 
                          minute: '2-digit',
+                         second: '2-digit',
                          hour12: true,
                          timeZone: 'America/New_York'
-                       });
+                       }) : '—';
                       
                       return (
                         <div key={adj.id} className="flex items-start justify-between gap-4 bg-white p-3 rounded border border-amber-300">
