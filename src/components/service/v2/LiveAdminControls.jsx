@@ -25,7 +25,8 @@ export default function LiveAdminControls({
     return null;
   }
 
-  const isWeekly = serviceData && (serviceData['9:30am'] || serviceData['11:30am']);
+  // CRITICAL: Only show weekly controls for service view with 9:30/11:30 structure
+  const isWeekly = viewType === 'service' && serviceData && (serviceData['9:30am'] || serviceData['11:30am']);
 
   // Live Adjustments Banner (show active adjustments with history)
   const activeAdjustments = liveAdjustments.filter(adj => adj.offset_minutes !== 0);
@@ -84,7 +85,7 @@ export default function LiveAdminControls({
         </Card>
       )}
 
-      {/* Control Buttons */}
+      {/* Weekly Service Controls - Only for services with 9:30/11:30 structure */}
       {isWeekly && (
         <Card className="bg-slate-900 text-white border-none">
           <CardContent className="p-4">
@@ -115,6 +116,28 @@ export default function LiveAdminControls({
                   </Button>
                 )}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Custom Service / Event Controls - Future: global offset or session-specific */}
+      {!isWeekly && viewType === 'service' && (
+        <Card className="bg-slate-900 text-white border-none">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-blue-400" />
+                <span className="font-bold uppercase text-sm">{t('liveView.globalAdjustment') || 'Ajuste Global'}</span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onOpenAdjustmentModal('global')}
+                className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+              >
+                {t('liveView.adjustTime') || 'Ajustar Tiempo'}
+              </Button>
             </div>
           </CardContent>
         </Card>
