@@ -65,7 +65,7 @@ const translations = {
     'voice.listening': 'Escuchando...',
     'voice.voice': 'Voz',
     'voice.mic_title': 'Micrófono',
-    'voice.start_dictation': 'Activar dictado nativo'
+    'voice.start_dictation': 'Activar dictado nativo',
     
     // Status
     'status.planning': 'EN PLANIFICACIÓN',
@@ -145,7 +145,7 @@ const translations = {
     'voice.listening': 'Listening...',
     'voice.voice': 'Voice',
     'voice.mic_title': 'Microphone',
-    'voice.start_dictation': 'Activate native dictation'
+    'voice.start_dictation': 'Activate native dictation',
     
     // Status
     'status.planning': 'PLANNING',
