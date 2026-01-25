@@ -76,15 +76,13 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
     return start && start > currentTime;
   }) : null;
 
-  // New: compute countdown to the first segment start (Up Next context)
+  // New: compute countdown ONLY to the FIRST segment start (pre-launch countdown)
   const upNextCountdown = (() => {
-    if (!isToday) return null;
-    const first = validSegments.find(s => {
-      const start = getTimeDate(s.start_time, s.date);
-      return start && start > currentTime;
-    });
-    if (!first) return null;
+    if (!isToday || validSegments.length === 0) return null;
+    // validSegments sorted by start time; take the first of the day (effective times)
+    const first = validSegments[0];
     const startAt = getTimeDate(first.start_time, first.date);
+    if (!startAt || currentTime >= startAt) return null; // Do not persist after start
     const hms = getTimeRemainingHMS(startAt);
     if (!hms) return null;
     return { hms, startAt, segment: first };
