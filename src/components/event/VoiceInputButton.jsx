@@ -110,7 +110,7 @@ export default function VoiceInputButton({ textareaRef, onTranscriptionComplete 
         {isListening ? (
           <>
             <Square className="w-4 h-4 mr-1 animate-pulse" />
-            {language === 'es' ? 'Escuchando...' : 'Listening...'}
+            {t('voice.listening')}
           </>
         ) : (
           <>
