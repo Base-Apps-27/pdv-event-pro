@@ -121,7 +121,7 @@ export default function VoiceInputButton({ textareaRef, onTranscriptionComplete 
       </Button>
       {isListening && (
         <span className="text-xs text-gray-600 animate-pulse">
-          {language === 'es' ? 'Escuchando...' : 'Listening...'}
+          {t('voice.listening')}
         </span>
       )}
     </div>
