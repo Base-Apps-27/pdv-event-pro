@@ -10,7 +10,7 @@ import { useLanguage } from "@/components/utils/i18n";
 export default function VoiceInputButton({ textareaRef, onTranscriptionComplete }) {
   const { language, t } = useLanguage();
   const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState("");
+  const transcriptRef = useRef("");
   const recognitionRef = useRef(null);
   const [hasSupport, setHasSupport] = useState(false);
   const [error, setError] = useState(null);
@@ -27,30 +27,30 @@ export default function VoiceInputButton({ textareaRef, onTranscriptionComplete 
 
       recognitionRef.current.onstart = () => {
         setIsListening(true);
-        setTranscript("");
+        // Reset the rolling transcript at start to avoid stale closure issues
+        transcriptRef.current = "";
       };
 
       recognitionRef.current.onresult = (event) => {
-        let interimTranscript = "";
+        // Accumulate only final segments into a ref so we don't depend on React state timing
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcriptSegment = event.results[i][0].transcript;
+          const segment = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            setTranscript(prev => prev + transcriptSegment + " ");
-          } else {
-            interimTranscript += transcriptSegment;
+            transcriptRef.current = `${(transcriptRef.current || "").trim()} ${segment}`.trim();
           }
         }
       };
 
       recognitionRef.current.onend = () => {
         setIsListening(false);
-        if (transcript && textareaRef?.current) {
-          // Append transcription to textarea
-          const currentValue = textareaRef.current.value;
-          textareaRef.current.value = currentValue + (currentValue ? " " : "") + transcript;
-          // Trigger onChange event for React to update state
-          textareaRef.current.dispatchEvent(new Event('input', { bubbles: true }));
-          setTranscript("");
+        const finalText = (transcriptRef.current || "").trim();
+        if (finalText && textareaRef?.current) {
+          // Append transcription to textarea and notify React state
+          const el = textareaRef.current;
+          const currentValue = el.value || "";
+          el.value = currentValue + (currentValue ? " " : "") + finalText;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          transcriptRef.current = "";
           if (onTranscriptionComplete) {
             onTranscriptionComplete();
           }
@@ -60,6 +60,7 @@ export default function VoiceInputButton({ textareaRef, onTranscriptionComplete 
       recognitionRef.current.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
         setIsListening(false);
+        transcriptRef.current = "";
         setError(event.error || 'unknown');
       };
     }
