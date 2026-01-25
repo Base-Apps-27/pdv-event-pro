@@ -58,6 +58,14 @@ const translations = {
     'btn.print_settings': 'Config. Impresión',
     'btn.print': 'Imprimir',
     'btn.saving': 'Guardando...',
+
+    // Voice
+    'voice.dictate': 'Dictar',
+    'voice.use_keyboard_mic': 'Usa el micrófono del teclado del dispositivo',
+    'voice.listening': 'Escuchando...',
+    'voice.voice': 'Voz',
+    'voice.mic_title': 'Micrófono',
+    'voice.start_dictation': 'Activar dictado nativo'
     
     // Status
     'status.planning': 'EN PLANIFICACIÓN',
