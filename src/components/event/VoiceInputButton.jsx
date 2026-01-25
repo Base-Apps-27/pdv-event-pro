@@ -7,13 +7,14 @@ import { useLanguage } from "@/components/utils/i18n";
  * Voice-to-text button using Web Speech API
  * Inserts transcribed text into a textarea
  */
-export default function VoiceInputButton({ textareaRef, onTranscriptionComplete }) {
+export default function VoiceInputButton({ textareaRef, onTranscriptionComplete, onAppendText }) {
   const { language, t } = useLanguage();
   const [isListening, setIsListening] = useState(false);
   const transcriptRef = useRef("");
   const recognitionRef = useRef(null);
   const [hasSupport, setHasSupport] = useState(false);
   const [error, setError] = useState(null);
+  const [interimText, setInterimText] = useState("");
 
   React.useEffect(() => {
     // Check if Web Speech API is supported
@@ -29,31 +30,43 @@ export default function VoiceInputButton({ textareaRef, onTranscriptionComplete 
         setIsListening(true);
         // Reset the rolling transcript at start to avoid stale closure issues
         transcriptRef.current = "";
+        setInterimText("");
       };
 
       recognitionRef.current.onresult = (event) => {
-        // Accumulate only final segments into a ref so we don't depend on React state timing
+        // Accumulate only final segments into a ref; show interim text for feedback
+        let interim = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const segment = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
             transcriptRef.current = `${(transcriptRef.current || "").trim()} ${segment}`.trim();
+          } else {
+            interim += segment;
           }
         }
+        setInterimText(interim);
       };
 
       recognitionRef.current.onend = () => {
         setIsListening(false);
         const finalText = (transcriptRef.current || "").trim();
-        if (finalText && textareaRef?.current) {
-          // Append transcription to textarea and notify React state
-          const el = textareaRef.current;
-          const currentValue = el.value || "";
-          el.value = currentValue + (currentValue ? " " : "") + finalText;
-          el.dispatchEvent(new Event('input', { bubbles: true }));
+        if (finalText) {
+          if (typeof onAppendText === 'function') {
+            onAppendText(finalText);
+          } else if (textareaRef?.current) {
+            // Fallback: append to DOM textarea and notify React state
+            const el = textareaRef.current;
+            const currentValue = el.value || "";
+            el.value = currentValue + (currentValue ? " " : "") + finalText;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+          }
           transcriptRef.current = "";
+          setInterimText("");
           if (onTranscriptionComplete) {
             onTranscriptionComplete();
           }
+        } else {
+          setInterimText("");
         }
       };
 
@@ -61,6 +74,7 @@ export default function VoiceInputButton({ textareaRef, onTranscriptionComplete 
         console.error("Speech recognition error:", event.error);
         setIsListening(false);
         transcriptRef.current = "";
+        setInterimText("");
         setError(event.error || 'unknown');
       };
     }
@@ -121,9 +135,12 @@ export default function VoiceInputButton({ textareaRef, onTranscriptionComplete 
         )}
       </Button>
       {isListening && (
-        <span className="text-xs text-gray-600 animate-pulse">
-          {t('voice.listening')}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-600 animate-pulse">{t('voice.listening')}</span>
+          {interimText && (
+            <span className="text-xs text-gray-500 italic truncate max-w-[12rem]">{interimText}</span>
+          )}
+        </div>
       )}
     </div>
   );
