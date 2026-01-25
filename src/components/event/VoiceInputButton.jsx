@@ -115,7 +115,7 @@ export default function VoiceInputButton({ textareaRef, onTranscriptionComplete 
         ) : (
           <>
             <Mic className="w-4 h-4 mr-1" />
-            {language === 'es' ? 'Voz' : 'Voice'}
+            {t('voice.voice')}
           </>
         )}
       </Button>
