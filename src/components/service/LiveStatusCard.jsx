@@ -166,9 +166,27 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
             )}
           </div>
         ) : (
-          <div className="p-4 bg-gray-50 flex items-center justify-center text-gray-400">
-            <span className="italic text-sm">Nada en curso en este momento</span>
-          </div>
+          upNextCountdown ? (
+            <div className="p-4 bg-gradient-to-r from-pdv-teal/10 to-pdv-green/10 border-2 border-pdv-teal/30 rounded-lg w-full">
+              <div className="flex items-center justify-between">
+                <div className="font-mono font-extrabold text-pdv-teal text-2xl md:text-3xl leading-none">
+                  T–{upNextCountdown.hms}
+                </div>
+                <Badge variant="outline" className="bg-white text-gray-700 border-gray-300 font-mono font-bold">
+                  {upNextCountdown.segment?.start_time ? formatTimeToEST(upNextCountdown.segment.start_time) : ''}
+                </Badge>
+              </div>
+              {(upNextCountdown.segment?.title || upNextCountdown.segment?.data?.title) && (
+                <div className="text-sm text-gray-600 mt-1 line-clamp-1">
+                  {upNextCountdown.segment.title || upNextCountdown.segment.data?.title}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="p-4 bg-gray-50 flex items-center justify-center text-gray-400">
+              <span className="italic text-sm">Nada en curso en este momento</span>
+            </div>
+          )
         )}
 
         {/* Next Segment Section */}
