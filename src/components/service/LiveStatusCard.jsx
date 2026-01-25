@@ -103,7 +103,8 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
   };
 
   // Added: detailed countdown in H:MM:SS for upcoming start times (same-day only)
-  const getTimeRemainingHMS = (targetDate) => {
+  // Hoisted function declaration to avoid TDZ when referenced above
+  function getTimeRemainingHMS(targetDate) {
     if (!targetDate) return null;
     const diff = targetDate - currentTime;
     if (diff <= 0) return null;
@@ -115,7 +116,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
       return `${hours}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
     }
     return `${minutes}:${String(seconds).padStart(2,'0')}`;
-  };
+  }
 
   // Helper: check same calendar day in local time
   const isSameDay = (a, b) => {
