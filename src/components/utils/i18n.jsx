@@ -138,6 +138,14 @@ const translations = {
     'btn.print_settings': 'Print Settings',
     'btn.print': 'Print',
     'btn.saving': 'Saving...',
+
+    // Voice
+    'voice.dictate': 'Dictate',
+    'voice.use_keyboard_mic': 'Use your keyboard microphone',
+    'voice.listening': 'Listening...',
+    'voice.voice': 'Voice',
+    'voice.mic_title': 'Microphone',
+    'voice.start_dictation': 'Activate native dictation'
     
     // Status
     'status.planning': 'PLANNING',
