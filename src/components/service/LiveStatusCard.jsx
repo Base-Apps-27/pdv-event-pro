@@ -76,6 +76,20 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
     return start && start > currentTime;
   }) : null;
 
+  // New: compute countdown to the first segment start (Up Next context)
+  const upNextCountdown = (() => {
+    if (!isToday) return null;
+    const first = validSegments.find(s => {
+      const start = getTimeDate(s.start_time, s.date);
+      return start && start > currentTime;
+    });
+    if (!first) return null;
+    const startAt = getTimeDate(first.start_time, first.date);
+    const hms = getTimeRemainingHMS(startAt);
+    if (!hms) return null;
+    return { hms, startAt, segment: first };
+  })();
+
   // Calculate times
   const getTimeRemaining = (targetDate) => {
     if (!targetDate) return null;
