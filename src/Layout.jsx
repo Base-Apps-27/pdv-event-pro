@@ -58,31 +58,17 @@ function LayoutContent({ children }) {
     checkAuth();
   }, []);
 
-  // Separate effect for role-based redirects (only once when user changes)
+  // Permission-based redirects
   useEffect(() => {
     if (!user || loading) return;
 
-    const userRole = user.app_role || 'EventDayViewer';
-    const currentPath = location.pathname;
-
-    // EventDayViewers can only access PublicProgramView
-    if (userRole === 'EventDayViewer' && !currentPath.includes('PublicProgramView')) {
+    const canViewDashboard = hasPermission(user, 'view_events') || hasPermission(user, 'view_services');
+    
+    // If a user has no permissions at all, they can only see the live program view.
+    // This is the effective equivalent of the old 'EventDayViewer' role.
+    if (!canViewDashboard && !location.pathname.includes('PublicProgramView')) {
       navigate(createPageUrl('PublicProgramView'), { replace: true });
-      return;
     }
-
-    // AdmAsst can access Events, Services, Reports, Announcements, People
-    if (userRole === 'AdmAsst') {
-      const allowedPaths = ['Events', 'EventDetail', 'Services', 'ServiceDetail', 'Reports', 'AnnouncementsReport', 'People', 'PublicProgramView', 'Dashboard'];
-      const hasAccess = allowedPaths.some(path => currentPath.includes(path));
-      
-      if (!hasAccess) {
-        navigate(createPageUrl('Dashboard'), { replace: true });
-        return;
-      }
-    }
-
-    // Admin has full access (no restrictions)
   }, [user, location.pathname, loading]);
 
   if (loading) {
@@ -94,10 +80,9 @@ function LayoutContent({ children }) {
     return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
   }
 
-  const userRole = user.app_role || 'EventDayViewer';
-
-  // EventDayViewers only see PublicProgramView
-  if (userRole === 'EventDayViewer') {
+  // If user cannot view dashboard, they only get the minimal shell (similar to anonymous)
+  // This covers the case for roles like EventDayViewer which only have view_live_program
+  if (!hasPermission(user, 'view_events') && !hasPermission(user, 'view_services')) {
     return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
   }
 
@@ -391,41 +376,41 @@ function LayoutContent({ children }) {
                     style={isActive(createPageUrl("Dashboard")) ? gradientStyle : {}}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Inicio
+                    {t('nav.dashboard')}
                   </Link>
 
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">En Vivo</div>
+                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">{t('section.live')}</div>
                   <Link
                     to={createPageUrl("PublicProgramView")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Programa en Vivo
+                    {t('nav.liveProgram')}
                   </Link>
 
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">Eventos</div>
+                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">{t('section.events')}</div>
                   <Link
                     to={createPageUrl("Events")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Eventos
+                    {t('nav.events')}
                   </Link>
                   <Link
                     to={createPageUrl("Reports")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Informes
+                    {t('nav.reports')}
                   </Link>
 
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">Servicios</div>
+                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">{t('section.services')}</div>
                   <Link
                     to={createPageUrl("WeeklyServiceManager")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Servicios Dominicales
+                    {t('nav.services')}
                   </Link>
                   <Link
                     to={createPageUrl("CustomServicesManager")}
@@ -435,43 +420,43 @@ function LayoutContent({ children }) {
                     Servicios Personalizados
                   </Link>
 
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">Recursos</div>
+                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">{t('section.resources')}</div>
                   <Link
                     to={createPageUrl("People")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Personas
+                    {t('nav.people')}
                   </Link>
 
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">Configuración</div>
+                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">{t('section.settings')}</div>
                   <Link
                     to={createPageUrl("Rooms")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Salas
+                    {t('nav.rooms')}
                   </Link>
                   <Link
                     to={createPageUrl("Templates")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Plantillas
+                    {t('nav.templates')}
                   </Link>
                   <Link
                     to={createPageUrl("ScheduleImporter")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Importador IA
+                    {t('nav.importer')}
                   </Link>
                   <Link
                     to={createPageUrl("SchemaGuide")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Guía de Datos
+                    {t('nav.schema')}
                   </Link>
                   </div>
               </div>
