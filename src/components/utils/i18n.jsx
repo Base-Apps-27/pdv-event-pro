@@ -89,7 +89,7 @@ const translations = {
     'error.required_fields_missing': 'Faltan campos obligatorios',
     'error.please_complete': 'Por favor completa:'
   },
-  en: {
+  en: {,
     // Navigation
     'nav.dashboard': 'Home',
     'nav.liveProgram': 'Live Program',
