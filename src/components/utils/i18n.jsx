@@ -175,7 +175,7 @@ const translations = {
     'field.presenter': 'Presenter',
     // Errors
     'error.required_fields_missing': 'Required fields are missing',
-    'error.please_complete': 'Please complete:'
+    'error.please_complete': 'Please complete:',
 
     // Live Admin
     'live.admin_mode': 'Live Director Mode',
