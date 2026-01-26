@@ -16,6 +16,8 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
 import SegmentTimelinePreview from "./SegmentTimelinePreview";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import AnnouncementSeriesManager from "../announcements/AnnouncementSeriesManager";
+import { useLanguage } from "@/components/utils/i18n";
+import { toast } from "sonner";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -53,6 +55,7 @@ const ACTION_TIMINGS = [
 
 export default function SegmentFormTwoColumn({ session, segment, templates, onClose, sessionId }) {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [breakoutRooms, setBreakoutRooms] = useState(segment?.breakout_rooms || []);
   const [showSeriesManager, setShowSeriesManager] = useState(false);
@@ -242,6 +245,22 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Basic required fields validation (bilingual toast)
+    const isBreakTypeNow = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
+    const isTechOnlyNow = formData.segment_type === "TechOnly";
+    const isBreakoutTypeNow = formData.segment_type === "Breakout";
+    const needsPresenterNow = !isBreakTypeNow && !isTechOnlyNow && !isBreakoutTypeNow;
+
+    const missing = [];
+    if (!formData.title?.trim()) missing.push(t('field.title'));
+    if (!formData.start_time) missing.push(t('field.start_time'));
+    if (!formData.duration_min || formData.duration_min <= 0) missing.push(t('field.duration_min'));
+    if (needsPresenterNow && !formData.presenter?.trim()) missing.push(t('field.presenter'));
+    if (missing.length > 0) {
+      toast.error(`${t('error.required_fields_missing')}: ${missing.join(', ')}`);
+      return;
+    }
 
     // Validate segment times don't overlap with other segments in the same session
     if (formData.start_time && times.end_time && allSegments) {

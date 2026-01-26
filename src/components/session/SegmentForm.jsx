@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, Zap, BookOpen } from "lucide-react";
 import TimePicker from "@/components/ui/TimePicker";
+import { useLanguage } from "@/components/utils/i18n";
+import { toast } from "sonner";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 
@@ -147,6 +149,8 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     }
   }, [selectedTemplate, templates]);
 
+  const { t } = useLanguage();
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Segment.create(data),
     onSuccess: () => {
@@ -167,6 +171,22 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Basic required fields validation (bilingual toast)
+    const isBreakTypeNow = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
+    const isTechOnlyNow = formData.segment_type === "TechOnly";
+    const isBreakoutTypeNow = formData.segment_type === "Breakout";
+    const needsPresenterNow = !isBreakTypeNow && !isTechOnlyNow && !isBreakoutTypeNow;
+
+    const missing = [];
+    if (!formData.title?.trim()) missing.push(t('field.title'));
+    if (!formData.start_time) missing.push(t('field.start_time'));
+    if (!formData.duration_min || formData.duration_min <= 0) missing.push(t('field.duration_min'));
+    if (needsPresenterNow && !formData.presenter?.trim()) missing.push(t('field.presenter'));
+    if (missing.length > 0) {
+      toast.error(`${t('error.required_fields_missing')}: ${missing.join(', ')}`);
+      return;
+    }
     
     const times = calculateTimes(
       formData.start_time,

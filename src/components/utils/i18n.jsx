@@ -80,6 +80,14 @@ const translations = {
     'common.location': 'Ubicación',
     'common.sessions': 'sesiones',
     'common.segments': 'segmentos',
+    // Fields
+    'field.title': 'Título',
+    'field.start_time': 'Hora de inicio',
+    'field.duration_min': 'Duración (min)',
+    'field.presenter': 'Presentador',
+    // Errors
+    'error.required_fields_missing': 'Faltan campos obligatorios',
+    'error.please_complete': 'Por favor completa:'
   },
   en: {
     // Navigation
@@ -160,6 +168,14 @@ const translations = {
     'common.location': 'Location',
     'common.sessions': 'sessions',
     'common.segments': 'segments',
+    // Fields
+    'field.title': 'Title',
+    'field.start_time': 'Start time',
+    'field.duration_min': 'Duration (min)',
+    'field.presenter': 'Presenter',
+    // Errors
+    'error.required_fields_missing': 'Required fields are missing',
+    'error.please_complete': 'Please complete:'
 
     // Live Admin
     'live.admin_mode': 'Live Director Mode',
