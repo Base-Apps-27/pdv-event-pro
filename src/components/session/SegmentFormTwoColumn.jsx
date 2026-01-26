@@ -226,6 +226,9 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       queryClient.invalidateQueries(['segments', sessionId]);
       onClose();
     },
+    onError: () => {
+      toast.error(t('error.save_failed'));
+    },
   });
 
   const updateMutation = useMutation({
@@ -233,6 +236,9 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     onSuccess: () => {
       queryClient.invalidateQueries(['segments', sessionId]);
       onClose();
+    },
+    onError: () => {
+      toast.error(t('error.save_failed'));
     },
   });
 
@@ -288,7 +294,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       session_id: sessionId,
       ...formData,
       ...times,
-      breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : null,
+      // Only include breakout_rooms for Breakout type; undefined fields are omitted by JSON.stringify
+      breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined,
       field_origins: fieldOrigins,
     };
 

@@ -87,7 +87,8 @@ const translations = {
     'field.presenter': 'Presentador',
     // Errors
     'error.required_fields_missing': 'Faltan campos obligatorios',
-    'error.please_complete': 'Por favor completa:'
+    'error.please_complete': 'Por favor completa:',
+      'error.save_failed': 'No se pudo guardar el segmento'
   },
   en: {
     // Navigation
@@ -176,6 +177,7 @@ const translations = {
     // Errors
     'error.required_fields_missing': 'Required fields are missing',
     'error.please_complete': 'Please complete:',
+      'error.save_failed': 'Failed to save segment',
 
     // Live Admin
     'live.admin_mode': 'Live Director Mode',
