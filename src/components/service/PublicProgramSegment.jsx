@@ -257,7 +257,7 @@ export default function PublicProgramSegment({
               <div className="space-y-1">
                 {duringActions.map((action, idx) => (
                   <div key={idx} className="text-xs px-2 py-1 rounded border border-gray-200 bg-white text-gray-600">
-                    {action.label}
+                    {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
                     {action.notes && <span className="ml-1">— {action.notes}</span>}
                   </div>
                 ))}
