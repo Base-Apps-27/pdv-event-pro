@@ -6,6 +6,7 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { getSegmentData, getNormalizedSongs } from "@/components/utils/segmentDataUtils";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useLanguage } from "@/components/utils/i18n";
 
 /**
  * PublicProgramSegment Component
@@ -37,6 +38,8 @@ export default function PublicProgramSegment({
   onOpenVerses,
   allSegments
 }) {
+  // Language (for type label mapping)
+  const { language } = useLanguage();
   // Helper to safely get segment data (checks data object first, then root)
   const getData = (field) => getSegmentData(segment, field);
   
@@ -46,6 +49,14 @@ export default function PublicProgramSegment({
   const isWorship = ['Alabanza', 'worship'].includes(segmentType);
   const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
   const isOffering = ['Ofrenda', 'offering'].includes(segmentType);
+  
+  // Display mapping for type chip (keeps behavior checks above on raw value)
+  const typeDisplayMap = {
+    es: { worship: 'Alabanza', welcome: 'Bienvenida', offering: 'Ofrenda', message: 'Plenaria' },
+    en: { worship: 'Worship', welcome: 'Welcome', offering: 'Offering', message: 'Message' }
+  };
+  const normalizedTypeKey = (segmentType || '').toString().toLowerCase();
+  const displaySegmentType = typeDisplayMap[language]?.[normalizedTypeKey] || segmentType;
   
   // Generate stable DOM ID for scrolling
   const title = getData('title') || 'Untitled';
@@ -126,7 +137,7 @@ export default function PublicProgramSegment({
               )}
               {getData('title')}
             </h4>
-            <Badge variant="outline" className="text-xs text-gray-700">{segmentType}</Badge>
+            <Badge variant="outline" className="text-xs text-gray-700">{displaySegmentType}</Badge>
             {segment.requires_translation && (
               <div className="flex items-center gap-1">
                 <Languages className="w-4 h-4 text-purple-600" />
