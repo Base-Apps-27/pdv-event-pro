@@ -57,7 +57,8 @@ export default function PublicProgramSegment({
   const songs = isWorship ? getNormalizedSongs(segment).filter(s => s.title) : [];
   
   // Get and filter actions
-  const rawActions = segment.actions || segment.segment_actions || getData('actions') || [];
+  // Prefer new schema actions; fall back to legacy for safety
+  const rawActions = segment.segment_actions || segment.actions || getData('actions') || [];
   const actions = isSpecial 
     ? rawActions.filter(a => {
         const label = (a.label || '').toLowerCase();
