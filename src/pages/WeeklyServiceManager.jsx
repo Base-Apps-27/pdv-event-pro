@@ -2746,32 +2746,7 @@ Return ONLY valid JSON:
         </div>
       </div>
 
-      {/* Print Size Warning */}
-      {(() => {
-        const programOverflow = calculateServiceProgramOverflow();
-        const announcementOverflow = calculateAnnouncementOverflow();
-        const hasAnyOverflow = programOverflow.hasOverflow || announcementOverflow.hasOverflow;
-        const worstLevel = programOverflow.level === 'high' || announcementOverflow.level === 'high' ? 'high' : 
-                          programOverflow.level === 'medium' || announcementOverflow.level === 'medium' ? 'medium' : 'low';
-        
-        const statusConfig = {
-          high: { color: 'bg-red-50 border-red-200 text-red-800', icon: '⚠', recommendation: 'Usa el botón ⚙️ (ajustes) para comprimir antes de imprimir' },
-          medium: { color: 'bg-yellow-50 border-yellow-200 text-yellow-800', icon: '⚡', recommendation: 'Recomendado: usa el botón ⚙️ (ajustes) para mejor ajuste' },
-          low: { color: 'bg-green-50 border-green-200 text-green-800', icon: '✓', recommendation: 'Todo se ajusta bien. Usa el botón 🖨️ (impresión rápida)' }
-        }[worstLevel];
 
-        return (
-          <div className={`border-l-4 ${statusConfig.color} rounded px-4 py-2 print:hidden`}>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm">{statusConfig.icon}</span>
-                <span className="font-semibold text-xs">Recomendación de Impresión:</span>
-              </div>
-              <span className="text-xs">{statusConfig.recommendation}</span>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Date Selection */}
       <Card className="print:hidden border-2 border-gray-300 bg-white">
