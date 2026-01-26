@@ -239,7 +239,7 @@ export default function PublicProgramSegment({
               <div className="space-y-1">
                 {prepActions.map((action, idx) => (
                   <div key={idx} className="text-xs px-2 py-1 rounded border border-gray-200 bg-white text-gray-600">
-                    <span className="font-bold">[{action.department}]</span> {action.label}
+                    {action.label}
                     {action.offset_min !== undefined && (
                       <span className="italic ml-1">({action.offset_min}m antes)</span>
                     )}
