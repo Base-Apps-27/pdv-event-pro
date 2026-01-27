@@ -348,6 +348,12 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const showSoundNotes = !isBreakType && !isBreakoutType;
   const showOtherNotes = !isBreakoutType;
   const showActions = !isBreakType;
+
+  // Computed submit readiness: enables the "Crear" button only when required fields are filled
+  const canSubmit = Boolean(formData.title?.trim()) &&
+    Boolean(formData.start_time) &&
+    Number(formData.duration_min) > 0 &&
+    (!needsPresenter || Boolean(formData.presenter?.trim()));
   
   const hasDrama = formData.art_types?.includes("DANCE");
   const hasDance = formData.art_types?.includes("DANCE");
