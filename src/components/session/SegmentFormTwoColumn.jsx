@@ -56,7 +56,7 @@ const ACTION_TIMINGS = [
 
 export default function SegmentFormTwoColumn({ session, segment, templates, onClose, sessionId }) {
   const queryClient = useQueryClient();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [breakoutRooms, setBreakoutRooms] = useState(segment?.breakout_rooms || []);
   const [showSeriesManager, setShowSeriesManager] = useState(false);
@@ -378,11 +378,12 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const hasArtVideo = formData.art_types?.includes("VIDEO");
   const hasOtherArt = formData.art_types?.includes("OTHER");
 
+  // Returns the dynamic label for the presenter field based on type and language
   const getPresenterLabel = () => {
-    if (isPlenariaType) return "Predicador";
-    if (isWorshipType) return "Líder de Alabanza";
-    if (isArtesType) return "Grupo / Director";
-    return "Presentador";
+    if (isPlenariaType) return language === 'es' ? 'Predicador' : 'Preacher';
+    if (isWorshipType) return language === 'es' ? 'Líder de Alabanza' : 'Worship Leader';
+    if (isArtesType) return language === 'es' ? 'Grupo / Director' : 'Group / Director';
+    return t('field.presenter');
   };
 
   // Auto-lock has_video for Video type
@@ -1349,7 +1350,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 {t('error.required_fields_missing')}: {[
                   !hasValueOrPlaceholder(formData.title) && t('field.title'),
                   !formData.segment_type && t('field.type'),
-                  (needsPresenter && !hasValueOrPlaceholder(formData.presenter)) && t('field.presenter'),
+                  (needsPresenter && !hasValueOrPlaceholder(formData.presenter)) && getPresenterLabel(),
                   (requiresSala && !formData.room_id) && t('field.room')
                 ].filter(Boolean).join(', ')}
                 <div className="mt-1 text-slate-500">{t('hint.allowed_placeholders')}</div>
