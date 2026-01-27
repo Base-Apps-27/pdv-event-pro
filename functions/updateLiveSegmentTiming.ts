@@ -14,19 +14,11 @@ export default async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
-    // Permission check
-    // Need to verify 'manage_live_timing' or admin role. 
-    // Since hasPermission is frontend util, we check roles directly or assume caller handles it? 
-    // Best practice: backend check.
-    // Assuming user permissions are available on user object or we fetch them.
-    // For simplicity, we'll check role 'LiveManager' or 'Admin' or explicit permission if stored.
-    // Base44 user object has `app_role` and `custom_permissions`.
-    const role = user.app_role || 'EventDayViewer';
-    const permissions = user.custom_permissions || [];
-    const isLiveManager = role === 'Admin' || role === 'LiveManager' || permissions.includes('manage_live_timing');
-
-    if (!isLiveManager) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+    // Permission check: require admin role or 'manage_live_timing' permission
+    const isAdmin = user.role === 'admin';
+    const hasManagePermission = Array.isArray(user.custom_permissions) && user.custom_permissions.includes('manage_live_timing');
+    if (!isAdmin && !hasManagePermission) {
+      return new Response(JSON.stringify({ error: 'Forbidden: manage_live_timing required' }), { status: 403 });
     }
 
     if (!sessionId) {

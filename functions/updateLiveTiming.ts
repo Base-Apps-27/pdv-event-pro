@@ -17,9 +17,14 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     
-    // Permission check
-    if (!user || !['admin', 'Coordinator', 'LiveManager'].includes(user.app_role)) {
-      return Response.json({ error: 'Unauthorized: manage_live_timing permission required' }, { status: 403 });
+    // Permission check: require admin role or 'manage_live_timing' permission
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const hasManagePermission = Array.isArray(user.custom_permissions) && user.custom_permissions.includes('manage_live_timing');
+    const isAdmin = user.role === 'admin';
+    if (!isAdmin && !hasManagePermission) {
+      return Response.json({ error: 'Forbidden: manage_live_timing required' }, { status: 403 });
     }
     
     const { adjustmentType, target, offsetMinutes, date } = await req.json();
