@@ -252,6 +252,18 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved }) 
           </div>
         </form>
       </DialogContent>
+
+      {/* Follow-up modal to fix sessions outside new event dates */}
+      <OutOfRangeSessionsModal
+        open={showRangeFix}
+        onOpenChange={(v) => {
+          setShowRangeFix(v);
+          if (!v) onOpenChange(false);
+        }}
+        eventId={event?.id}
+        newStartDate={pendingRange.start}
+        newEndDate={pendingRange.end}
+      />
     </Dialog>
   );
 }
