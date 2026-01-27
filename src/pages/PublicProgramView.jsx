@@ -19,7 +19,7 @@ import { hasPermission } from "@/components/utils/permissions";
 import { useSegmentNotifications } from "@/components/service/useSegmentNotifications";
 import ServiceProgramView from "@/components/service/ServiceProgramView";
 import EventProgramView from "@/components/service/EventProgramView";
-import { useTranslation } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n";
 
 export default function PublicProgramView() {
   const queryClient = useQueryClient();
