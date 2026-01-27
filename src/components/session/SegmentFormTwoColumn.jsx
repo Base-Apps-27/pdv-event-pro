@@ -1324,34 +1324,10 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
         <Tooltip>
           <TooltipTrigger asChild>
             <span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <Button type="submit" disabled={!canSubmit} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                      <Save className="w-4 h-4 mr-2" />
-                      {segment ? 'Guardar' : 'Crear'}
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                {!canSubmit && (
-                  <TooltipContent>
-                    <div className="text-xs">
-                      {t('error.required_fields_missing')}: {[
-                        !hasValueOrPlaceholder(formData.title) && t('field.title'),
-                        !formData.start_time && t('field.start_time'),
-                        !(Number(formData.duration_min) > 0) && t('field.duration_min'),
-                        (needsPresenter && !hasValueOrPlaceholder(formData.presenter)) && t('field.presenter')
-                      ].filter(Boolean).join(', ')}
-                      <div className="mt-1 text-slate-500">{t('hint.allowed_placeholders')}</div>
-                    </div>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-              {!canSubmit && (
-                <p className="mt-1 text-xs text-slate-500">
-                  {t('hint.allowed_placeholders')}
-                </p>
-              )}
+              <Button type="submit" disabled={!canSubmit} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                <Save className="w-4 h-4 mr-2" />
+                {segment ? (t('btn.save') || 'Guardar') : (t('btn.confirm') || 'Crear')}
+              </Button>
             </span>
           </TooltipTrigger>
           {!canSubmit && (
@@ -1363,13 +1339,11 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   !(Number(formData.duration_min) > 0) && t('field.duration_min'),
                   (needsPresenter && !hasValueOrPlaceholder(formData.presenter)) && t('field.presenter')
                 ].filter(Boolean).join(', ')}
+                <div className="mt-1 text-slate-500">{t('hint.allowed_placeholders')}</div>
               </div>
             </TooltipContent>
           )}
         </Tooltip>
-          <Save className="w-4 h-4 mr-2" />
-          {segment ? 'Guardar' : 'Crear'}
-        </Button>
       </div>
 
       {/* Series Manager Modal */}
