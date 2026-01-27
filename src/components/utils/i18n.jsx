@@ -86,6 +86,10 @@ const translations = {
     'field.start_time': 'Hora de inicio',
     'field.duration_min': 'Duración (min)',
     'field.presenter': 'Presentador',
+          'field.type': 'Tipo',
+          'field.room': 'Sala',
+          'field.type': 'Tipo',
+          'field.room': 'Sala',
     // Errors
     'error.required_fields_missing': 'Faltan campos obligatorios',
     'error.please_complete': 'Por favor completa:',
@@ -177,6 +181,8 @@ const translations = {
     'field.start_time': 'Start time',
     'field.duration_min': 'Duration (min)',
     'field.presenter': 'Presenter',
+          'field.type': 'Type',
+          'field.room': 'Room',
     // Errors
     'error.required_fields_missing': 'Required fields are missing',
     'error.please_complete': 'Please complete:',

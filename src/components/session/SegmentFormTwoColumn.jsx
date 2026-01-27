@@ -349,6 +349,17 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const showSoundNotes = !isBreakType && !isBreakoutType;
   const showOtherNotes = !isBreakoutType;
   const showActions = !isBreakType;
+  const requiresSala = !isBreakoutType;
+
+  // Auto-default Sala to 'Santuario' when required and empty
+  useEffect(() => {
+    if (requiresSala && !formData.room_id && rooms && rooms.length) {
+      const santuario = rooms.find(r => typeof r.name === 'string' && r.name.toLowerCase().includes('santuario'));
+      if (santuario) {
+        setFormData(prev => ({ ...prev, room_id: santuario.id }));
+      }
+    }
+  }, [requiresSala, rooms]);
 
   // Computed submit readiness: enables the "Crear" button only when required fields are filled
   // Allow placeholders: admins may intentionally leave fields as 'TBD' or '---' when scaffolding
@@ -356,9 +367,9 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const hasValueOrPlaceholder = (val) => Boolean(val && String(val).trim()) || isPlaceholder(val);
 
   const canSubmit = hasValueOrPlaceholder(formData.title) &&
-    Boolean(formData.start_time) &&
-    Number(formData.duration_min) > 0 &&
-    (!needsPresenter || hasValueOrPlaceholder(formData.presenter));
+    Boolean(formData.segment_type) &&
+    (!needsPresenter || hasValueOrPlaceholder(formData.presenter)) &&
+    (!requiresSala || Boolean(formData.room_id));
   
   const hasDrama = formData.art_types?.includes("DANCE");
   const hasDance = formData.art_types?.includes("DANCE");
@@ -528,7 +539,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
                 {!isBreakoutType && (
                   <div className="space-y-2">
-                    <Label htmlFor="room_id">Sala</Label>
+                    <Label htmlFor="room_id">Sala {requiresSala && <span className="text-red-500">*</span>}</Label>
                     <Select 
                       value={formData.room_id}
                       onValueChange={(value) => setFormData({...formData, room_id: value})}
