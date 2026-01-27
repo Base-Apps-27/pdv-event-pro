@@ -1328,6 +1328,11 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 <Save className="w-4 h-4 mr-2" />
                 {segment ? 'Guardar' : 'Crear'}
               </Button>
+              {!canSubmit && (
+                <p className="mt-1 text-xs text-slate-500">
+                  {t('hint.allowed_placeholders')}
+                </p>
+              )}
             </span>
           </TooltipTrigger>
           {!canSubmit && (
