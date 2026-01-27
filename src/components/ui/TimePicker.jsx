@@ -99,6 +99,7 @@ export default function TimePicker({
           className={cn(
             "w-full justify-start text-left font-normal",
             !value && "text-muted-foreground",
+            invalid && "ring-2 ring-red-400",
             className
           )}
           disabled={disabled}
