@@ -360,6 +360,17 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       }
     }
   }, [requiresSala, rooms]);
+  const requiresSala = !isBreakoutType;
+
+  // Auto-default Sala to 'Santuario' when required and empty
+  useEffect(() => {
+    if (requiresSala && !formData.room_id && rooms && rooms.length) {
+      const santuario = rooms.find(r => typeof r.name === 'string' && r.name.toLowerCase().includes('santuario'));
+      if (santuario) {
+        setFormData(prev => ({ ...prev, room_id: santuario.id }));
+      }
+    }
+  }, [requiresSala, rooms]);
 
   // Computed submit readiness: enables the "Crear" button only when required fields are filled
   // Allow placeholders: admins may intentionally leave fields as 'TBD' or '---' when scaffolding
