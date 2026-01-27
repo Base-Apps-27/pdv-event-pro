@@ -40,7 +40,6 @@ export default function PublicProgramView() {
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
-  const { t } = useTranslation();
   
   const urlParams = new URLSearchParams(window.location.search);
   const preloadedSlug = urlParams.get('slug');
