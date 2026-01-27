@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       const newH = String(date.getHours()).padStart(2, '0');
       const newM = String(date.getMinutes()).padStart(2, '0');
       return `${newH}:${newM}`;
-    };
+    });
 
     // Helper: Get difference in minutes between two HH:MM strings
     const getDiffMinutes = (startStr, endStr) => {
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
       const d1 = new Date(); d1.setHours(h1, m1, 0, 0);
       const d2 = new Date(); d2.setHours(h2, m2, 0, 0);
       return Math.round((d2 - d1) / 60000);
-    };
+    });
 
     if (action === 'toggle_live_adjustment') {
       const enabled = !!value;
@@ -161,4 +161,4 @@ Deno.serve(async (req) => {
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-};
+});
