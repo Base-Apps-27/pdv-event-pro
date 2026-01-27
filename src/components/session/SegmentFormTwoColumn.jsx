@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell, ListChecks, Zap } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TimePicker from "@/components/ui/TimePicker";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import SegmentTimelinePreview from "./SegmentTimelinePreview";
