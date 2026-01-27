@@ -88,8 +88,6 @@ const translations = {
     'field.presenter': 'Presentador',
           'field.type': 'Tipo',
           'field.room': 'Sala',
-          'field.type': 'Tipo',
-          'field.room': 'Sala',
     // Errors
     'error.required_fields_missing': 'Faltan campos obligatorios',
     'error.please_complete': 'Por favor completa:',
