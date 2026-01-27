@@ -91,7 +91,18 @@ export default function Reports() {
   });
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
-  const eventSessions = sessions.filter(s => s.event_id === selectedEventId).sort((a, b) => (a.order || 0) - (b.order || 0));
+  // Keep Reports in sync with Session Editor: primary sort by explicit 'order' if set, otherwise chronological
+  const eventSessions = sessions
+    .filter(s => s.event_id === selectedEventId)
+    .sort((a, b) => {
+      const ao = Number.isFinite(a.order) ? a.order : Number.MAX_SAFE_INTEGER;
+      const bo = Number.isFinite(b.order) ? b.order : Number.MAX_SAFE_INTEGER;
+      if (ao !== bo) return ao - bo;
+      if ((a.date || '') !== (b.date || '')) return (a.date || '').localeCompare(b.date || '');
+      const at = a.planned_start_time || '';
+      const bt = b.planned_start_time || '';
+      return at.localeCompare(bt);
+    });
   
   const getSessionSegments = (sessionId, filterKey) => {
     return allSegments
