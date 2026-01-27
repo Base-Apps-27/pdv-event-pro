@@ -37,8 +37,10 @@ export default function AnnouncementsReport() {
       
       // 3. Fetch Segment Anuncios (Legacy/Specific)
       const segments = await base44.entities.Segment.filter({ segment_type: 'Anuncio' });
-      const sessions = await base44.entities.Session.list(); // Need sessions for dates
-      const sessionMap = sessions.reduce((acc, s) => ({...acc, [s.id]: s}), {});
+      const sessionIds = Array.from(new Set(segments.map(s => s.session_id).filter(Boolean)));
+      const sessionResults = await Promise.all(sessionIds.map(id => base44.entities.Session.filter({ id })));
+      const sessions = sessionResults.flat();
+      const sessionMap = sessions.reduce((acc, s) => ({ ...acc, [s.id]: s }), {});
 
       // Normalize
       const unified = [];

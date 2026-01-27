@@ -33,13 +33,9 @@ export default function CustomServicesManager() {
   const { data: allServices = [], isLoading } = useQuery({
     queryKey: ['customServices'],
     queryFn: async () => {
-      const services = await base44.entities.Service.list('-date');
+      const services = await base44.entities.Service.filter({ status: 'active' }, '-date');
       // Filter to only custom services (those with segments array and not WeeklyServiceManager format)
-      return services.filter(s => 
-        s.segments && 
-        s.segments.length > 0 && 
-        s.status === 'active'
-      );
+      return services.filter(s => s.segments && s.segments.length > 0);
     },
   });
 

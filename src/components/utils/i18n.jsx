@@ -101,6 +101,7 @@ const translations = {
     'nav.people': 'People',
     'nav.rooms': 'Rooms',
     'nav.templates': 'Templates',
+          'nav.customServices': 'Custom Services',
     'nav.importer': 'AI Importer',
     'nav.schema': 'Data Guide',
     

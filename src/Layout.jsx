@@ -190,7 +190,7 @@ function LayoutContent({ children }) {
                   style={isActive(createPageUrl("WeeklyServiceManager")) ? gradientStyle : {}}
                 >
                   <Clock className="w-5 h-5" />
-                  Servicios Dominicales
+                  {t('nav.services')}
                 </Link>
                 <Link
                   to={createPageUrl("CustomServicesManager")}
