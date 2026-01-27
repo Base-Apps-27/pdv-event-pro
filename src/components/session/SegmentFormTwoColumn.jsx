@@ -11,6 +11,8 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell, ListChecks, Zap } from "lucide-react";
+import OverlapDetectedDialog from "./OverlapDetectedDialog";
+import ShiftPreviewModal from "./ShiftPreviewModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TimePicker from "@/components/ui/TimePicker";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
@@ -242,6 +244,11 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     },
   });
 
+  // State for conflict + preview modals
+  const [showOverlapDialog, setShowOverlapDialog] = useState(false);
+  const [overlapText, setOverlapText] = useState("");
+  const [showShiftPreview, setShowShiftPreview] = useState(false);
+
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Segment.update(id, data),
     onSuccess: () => {
@@ -294,7 +301,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
           if ((newStart >= existingStart && newStart < existingEnd) ||
               (newEnd > existingStart && newEnd <= existingEnd) ||
               (newStart <= existingStart && newEnd >= existingEnd)) {
-            alert(`El segmento se solapa con "${existingSegment.title}" (${formatTimeToEST(existingStart)} - ${formatTimeToEST(existingEnd)}). Por favor ajusta los horarios.`);
+            setOverlapText(`El segmento se solapa con "${existingSegment.title}" (${formatTimeToEST(existingStart)} - ${formatTimeToEST(existingEnd)}). ${language === 'es' ? 'Por favor ajusta los horarios o elige ajustar segmentos posteriores.' : 'Please adjust times or choose to shift downstream segments.'}`);
+            setShowOverlapDialog(true);
             return;
           }
         }
@@ -349,6 +357,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     };
 
     if (segment) {
+      // If an overlap was detected we halt earlier and show the guided fix.
       updateMutation.mutate({ id: segment.id, data });
     } else {
       createMutation.mutate(data);
@@ -1529,6 +1538,51 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
             onSelect={(seriesId) => updateField('announcement_series_id', seriesId)}
         />
       )}
+      {/* Overlap → Adjust flow */}
+      <OverlapDetectedDialog
+        open={showOverlapDialog}
+        message={overlapText}
+        onCancel={() => setShowOverlapDialog(false)}
+        onProceed={() => {
+          setShowOverlapDialog(false);
+          setShowShiftPreview(true);
+        }}
+      />
+      <ShiftPreviewModal
+        open={showShiftPreview}
+        onClose={() => setShowShiftPreview(false)}
+        session={session}
+        segments={allSegments}
+        editedSegment={segment}
+        newStartTime={formData.start_time}
+        onConfirm={async ({ affected }) => {
+          // Apply planned updates for affected segments + save current segment
+          const updates = [];
+          // Apply downstream
+          for (const a of affected) {
+            updates.push(base44.entities.Segment.update(a.id, { start_time: a.newStart, end_time: a.newEnd }));
+          }
+          // Save current segment with full form data and computed times
+          const currentTimes = calculateTimes(formData.start_time, formData.duration_min);
+          const currentData = {
+            session_id: sessionId,
+            ...formData,
+            ...currentTimes,
+            breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined,
+            field_origins: fieldOrigins,
+            // preserve order on edit
+          };
+          if (segment) {
+            updates.push(base44.entities.Segment.update(segment.id, currentData));
+          } else {
+            updates.push(base44.entities.Segment.create(currentData));
+          }
+          await Promise.all(updates);
+          await queryClient.invalidateQueries(['segments', sessionId]);
+          setShowShiftPreview(false);
+          onClose();
+        }}
+      />
     </form>
   );
 }
