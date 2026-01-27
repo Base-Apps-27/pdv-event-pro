@@ -12,6 +12,7 @@ const translations = {
     'nav.people': 'Personas',
     'nav.rooms': 'Salas',
     'nav.templates': 'Plantillas',
+          'nav.customServices': 'Servicios Personalizados',
     'nav.importer': 'Importador IA',
     'nav.schema': 'Guía de Datos',
     

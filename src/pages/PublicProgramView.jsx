@@ -231,7 +231,7 @@ export default function PublicProgramView() {
       return data.filter(s => s.status === 'active' && s.date);
     },
     enabled: !!(viewType === "service" && selectedServiceId),
-    refetchInterval: 5000,
+    refetchInterval: 15000,
   });
 
   // Fetch sessions for selected event OR service
