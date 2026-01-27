@@ -513,7 +513,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
                 {needsPresenter && (
                   <div className="space-y-2">
-                    <Label htmlFor="presenter">{getPresenterLabel()}</Label>
+                    <Label htmlFor="presenter">{getPresenterLabel()} {needsPresenter && <span className="text-red-500">*</span>}</Label>
                     <div className="relative">
                       <Input 
                         id="presenter" 
