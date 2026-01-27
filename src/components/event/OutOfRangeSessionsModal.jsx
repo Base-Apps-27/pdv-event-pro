@@ -61,6 +61,9 @@ export default function OutOfRangeSessionsModal({ open, onOpenChange, eventId, n
       const toUpdate = sessions.filter(s => updates[s.id] && updates[s.id] !== s.date);
       if (toUpdate.length > 0) {
         await Promise.all(toUpdate.map(s => base44.entities.Session.update(s.id, { date: updates[s.id] })));
+        // Invalidate common caches used across pages
+        queryClient.invalidateQueries(['sessions', eventId]);
+        queryClient.invalidateQueries(['allSessions', eventId]);
       }
       onOpenChange(false);
     } finally {
