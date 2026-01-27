@@ -340,7 +340,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const isMcLedType = ["Bienvenida", "Ofrenda", "Anuncio", "Dinámica", "Oración", "Especial", "Cierre", "MC", "Ministración"].includes(formData.segment_type);
   const isAnnouncementType = formData.segment_type === "Anuncio";
   
-  const needsPresenter = !isBreakType && !isTechOnly && !isBreakoutType;
+  const needsPresenter = !isBreakType && !isTechOnly && !isBreakoutType; // dynamic required depending on type
   const showDescription = !isTechOnly && !isVideoType;
   const showTranslation = !isBreakType && !isBreakoutType;
   const showUshersNotes = !isBreakType && !isTechOnly && !isBreakoutType;
