@@ -89,6 +89,7 @@ const translations = {
     // Errors
     'error.required_fields_missing': 'Faltan campos obligatorios',
     'error.please_complete': 'Por favor completa:',
+    'hint.allowed_placeholders': 'Se permiten marcadores como "TBD", "Por definir" o "---"',
       'error.save_failed': 'No se pudo guardar el segmento'
   },
   en: {
