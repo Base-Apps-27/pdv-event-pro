@@ -351,10 +351,14 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const showActions = !isBreakType;
 
   // Computed submit readiness: enables the "Crear" button only when required fields are filled
-  const canSubmit = Boolean(formData.title?.trim()) &&
+  // Allow placeholders: admins may intentionally leave fields as 'TBD' or '---' when scaffolding
+  const isPlaceholder = (val) => typeof val === 'string' && /^(tbd|por definir|---)$/i.test(val.trim());
+  const hasValueOrPlaceholder = (val) => Boolean(val && String(val).trim()) || isPlaceholder(val);
+
+  const canSubmit = hasValueOrPlaceholder(formData.title) &&
     Boolean(formData.start_time) &&
     Number(formData.duration_min) > 0 &&
-    (!needsPresenter || Boolean(formData.presenter?.trim()));
+    (!needsPresenter || hasValueOrPlaceholder(formData.presenter));
   
   const hasDrama = formData.art_types?.includes("DANCE");
   const hasDance = formData.art_types?.includes("DANCE");
