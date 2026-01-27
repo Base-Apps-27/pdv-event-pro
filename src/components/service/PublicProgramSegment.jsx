@@ -306,7 +306,7 @@ export default function PublicProgramSegment({
             )}
           </div>
 
-          {/* Additional Details (Songs, Message Title, Description) */}
+          {/* Additional Details (Songs, Message Title, Artes, Description) */}
           <div className="space-y-2">
             {/* Songs List (for worship segments) */}
             {songs.length > 0 && (
@@ -337,6 +337,46 @@ export default function PublicProgramSegment({
                 )}
               </div>
             )}
+
+            {/* Artes (Dance/Drama/Video/Other) */}
+            {(() => {
+              const isArts = (segment.segment_type || '').toString() === 'Artes';
+              const arts = getData('art_types') || segment.art_types;
+              if (!isArts || !Array.isArray(arts) || arts.length === 0) return null;
+              const hasDrama = arts.includes('DRAMA');
+              const hasDance = arts.includes('DANCE');
+              const hasOther = arts.includes('OTHER');
+              return (
+                <div className="bg-pink-50 p-2 rounded border border-pink-200 text-xs">
+                  <p className="font-semibold text-pink-800 mb-1">
+                    Artes: {arts.map(t => t === 'DANCE' ? 'Danza' : t === 'DRAMA' ? 'Drama' : t === 'VIDEO' ? 'Video' : 'Otro').join(', ')}
+                  </p>
+                  {hasDrama && (
+                    <div className="pl-2 border-l-2 border-pink-300 space-y-0.5">
+                      {getData('drama_handheld_mics') > 0 && <div>Mics mano: {getData('drama_handheld_mics')}</div>}
+                      {getData('drama_headset_mics') > 0 && <div>Mics diadema: {getData('drama_headset_mics')}</div>}
+                      {getData('drama_start_cue') && <div>Inicio: {getData('drama_start_cue')}</div>}
+                      {getData('drama_end_cue') && <div>Cierre: {getData('drama_end_cue')}</div>}
+                      {getData('drama_has_song') && getData('drama_song_title') && (
+                        <div>Canción: {getData('drama_song_title')}</div>
+                      )}
+                    </div>
+                  )}
+                  {hasDance && (
+                    <div className="pl-2 border-l-2 border-pink-300 space-y-0.5 mt-1">
+                      {getData('dance_has_song') && getData('dance_song_title') && (
+                        <div>Música: {getData('dance_song_title')}</div>
+                      )}
+                      {getData('dance_handheld_mics') > 0 && <div>Mics mano: {getData('dance_handheld_mics')}</div>}
+                      {getData('dance_headset_mics') > 0 && <div>Mics diadema: {getData('dance_headset_mics')}</div>}
+                    </div>
+                  )}
+                  {hasOther && getData('art_other_description') && (
+                    <div className="mt-1 text-gray-700">{getData('art_other_description')}</div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* General Description/Details */}
             {(getData('description_details') || getData('description')) && (
