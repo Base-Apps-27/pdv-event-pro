@@ -1082,7 +1082,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                       })()}
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs">Duración (min) *</Label>
+                      <Label className="text-xs">Duración (min) <span className="text-red-500">*</span></Label>
                       <Input 
                         type="number"
                         value={formData.duration_min}
