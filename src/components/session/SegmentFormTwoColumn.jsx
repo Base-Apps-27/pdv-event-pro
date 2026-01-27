@@ -298,6 +298,41 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       }
     }
 
+    // Determine auto-insertion order by time (Option 1 - Gap-Fit, order-only)
+    // Only for new segments, when live adjustments are OFF, and we have valid time/duration.
+    let insertionOrder = null;
+    if (!segment && !session?.live_adjustment_enabled && formData.start_time && formData.duration_min && allSegments?.length) {
+      const parse = (t) => {
+        const [h, m] = String(t).split(":").map(Number);
+        return (isFinite(h) && isFinite(m)) ? h * 60 + m : null;
+      };
+      const newStartMin = parse(formData.start_time);
+      const newEndMin = newStartMin != null ? newStartMin + Number(formData.duration_min) : null;
+      if (newStartMin != null && newEndMin != null) {
+        // Consider only segments with both start and end times; sort by time
+        const byTime = allSegments
+          .filter(s => s.start_time && s.end_time)
+          .sort((a, b) => (parse(a.start_time) ?? 0) - (parse(b.start_time) ?? 0));
+
+        const sessionStartMin = session?.planned_start_time ? parse(session.planned_start_time) : null;
+        let prev = null;
+        for (let i = 0; i < byTime.length; i++) {
+          const next = byTime[i];
+          const gapStart = prev ? parse(prev.end_time) : (sessionStartMin ?? parse(next.start_time));
+          const gapEnd = parse(next.start_time);
+          // Fits entirely within the gap (boundaries inclusive)
+          if (gapStart != null && gapEnd != null && newStartMin >= gapStart && newEndMin <= gapEnd) {
+            const prevOrder = prev ? Number(prev.order) || 0 : 0;
+            const nextOrderVal = Number(next.order) || (prevOrder + 1);
+            // Place between prev and next using fractional order to avoid touching others
+            insertionOrder = prev ? (prevOrder + nextOrderVal) / 2 : (nextOrderVal - 0.5);
+            break;
+          }
+          prev = next;
+        }
+      }
+    }
+
     const data = {
       session_id: sessionId,
       ...formData,
