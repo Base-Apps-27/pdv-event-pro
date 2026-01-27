@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SessionManager from "../components/event/SessionManager";
 import EventInfo from "../components/event/EventInfo";
+import EventEditDialog from "../components/event/EventEditDialog";
 import EventCalendar from "../components/event/EventCalendar";
 import EventAIHelper from "../components/event/EventAIHelper";
 
@@ -22,6 +23,7 @@ export default function EventDetail() {
   const [showAIHelper, setShowAIHelper] = useState(false);
   const [headerEvent, setHeaderEvent] = useState(null);
   const [wasValid, setWasValid] = React.useState(false);
+  const [showEditEvent, setShowEditEvent] = useState(false);
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['event', eventId],
@@ -184,6 +186,14 @@ export default function EventDetail() {
               Reportes
             </Button>
             <Button 
+              onClick={() => setShowEditEvent(true)}
+              variant="outline"
+              className="border-gray-300 hover:border-gray-400 text-gray-700"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Editar
+            </Button>
+            <Button 
               onClick={() => setShowAIHelper(true)}
               variant="outline"
               style={{ 
@@ -205,7 +215,14 @@ export default function EventDetail() {
         onClose={() => setShowAIHelper(false)} 
       />
 
-      <Tabs defaultValue="sessions" className="w-full">
+      <EventEditDialog 
+        open={showEditEvent}
+        onOpenChange={setShowEditEvent}
+        event={e}
+        onSaved={() => { queryClient.invalidateQueries(['event', eventId]); }}
+      />
+
+       <Tabs defaultValue="sessions" className="w-full">
         <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-gray-100">
           <TabsTrigger value="info" className="text-gray-700 data-[state=active]:text-gray-900 data-[state=active]:bg-white">Información</TabsTrigger>
           <TabsTrigger value="sessions" className="text-gray-700 data-[state=active]:text-gray-900 data-[state=active]:bg-white">Sesiones</TabsTrigger>
