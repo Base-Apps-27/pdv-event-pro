@@ -231,8 +231,11 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Segment.create(data),
     onSuccess: () => {
+      // Ensure the list re-sorts by time after a fractional-order insert
       queryClient.invalidateQueries(['segments', sessionId]);
       onClose();
+      // Optional: small success toast (bilingual)
+      // toast.success(language === 'es' ? 'Segmento creado' : 'Segment created');
     },
     onError: () => {
       toast.error(t('error.save_failed'));
