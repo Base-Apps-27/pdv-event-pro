@@ -662,7 +662,7 @@ export default function PublicProgramView() {
                   className="flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all shadow-md"
                   style={viewType === "service" ? { backgroundColor: '#8DC63F', color: '#ffffff' } : { backgroundColor: '#ffffff', border: '2px solid #9ca3af', color: '#111827' }}
                 >
-                  Servicios
+                  {t('public.services')}
                 </button>
               </div>
 
