@@ -421,10 +421,17 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     (!needsPresenter || hasValueOrPlaceholder(formData.presenter)) &&
     (!requiresSala || Boolean(formData.room_id));
   
-  const hasDrama = formData.art_types?.includes("DANCE");
+  const hasDrama = formData.art_types?.includes("DRAMA");
   const hasDance = formData.art_types?.includes("DANCE");
   const hasArtVideo = formData.art_types?.includes("VIDEO");
   const hasOtherArt = formData.art_types?.includes("OTHER");
+
+  // Toggle helper for Artes multiselect
+  const toggleArtType = (val) => {
+    const set = new Set(formData.art_types || []);
+    if (set.has(val)) set.delete(val); else set.add(val);
+    setFormData(prev => ({ ...prev, art_types: Array.from(set) }));
+  };
 
   // Returns the dynamic label for the presenter field based on type and language
   const getPresenterLabel = () => {
@@ -440,6 +447,13 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       setFormData(prev => ({ ...prev, has_video: true }));
     }
   }, [isVideoType]);
+
+  // Auto-enable video when Artes includes VIDEO type
+  React.useEffect(() => {
+    if (isArtesType && formData.art_types?.includes('VIDEO') && !formData.has_video) {
+      setFormData(prev => ({ ...prev, has_video: true }));
+    }
+  }, [isArtesType, formData.art_types]);
 
   const handleAddAction = () => {
     const newAction = {
@@ -754,6 +768,104 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     Añadir Video
                   </Button>
                 )}
+
+                {isArtesType && (
+                  <div className="space-y-3 bg-pink-50 p-4 rounded border border-pink-200">
+                    <div className="flex items-center justify-between mb-1">
+                      <Label className="font-semibold">Artes</Label>
+                    </div>
+
+                    {/* Art Types Selection */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {['DANCE','DRAMA','VIDEO','OTHER'].map((opt) => (
+                        <label key={opt} className="flex items-center gap-2 text-sm">
+                          <Checkbox
+                            checked={Array.isArray(formData.art_types) && formData.art_types.includes(opt)}
+                            onCheckedChange={() => toggleArtType(opt)}
+                          />
+                          <span>{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    {/* DANCE Block */}
+                    {hasDance && (
+                      <div className="grid md:grid-cols-2 gap-3 bg-white p-3 rounded border border-pink-100">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Canción</Label>
+                          <Input value={formData.dance_song_title} onChange={(e)=>setFormData({...formData, dance_song_title: e.target.value})} placeholder="Título de canción" className="h-8 text-sm" />
+                          <Input value={formData.dance_song_source} onChange={(e)=>setFormData({...formData, dance_song_source: e.target.value})} placeholder="Fuente (YouTube/archivo)" className="h-8 text-sm" />
+                          <Input value={formData.dance_song_owner} onChange={(e)=>setFormData({...formData, dance_song_owner: e.target.value})} placeholder="Propietario" className="h-8 text-sm" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Handheld</Label>
+                            <Input type="number" value={formData.dance_handheld_mics} onChange={(e)=>setFormData({...formData, dance_handheld_mics: parseInt(e.target.value)||0})} className="h-8 text-sm" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Headset</Label>
+                            <Input type="number" value={formData.dance_headset_mics} onChange={(e)=>setFormData({...formData, dance_headset_mics: parseInt(e.target.value)||0})} className="h-8 text-sm" />
+                          </div>
+                          <div className="space-y-1 col-span-2">
+                            <Label className="text-xs">Inicio / Fin</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Input value={formData.dance_start_cue} onChange={(e)=>setFormData({...formData, dance_start_cue: e.target.value})} placeholder="Cue inicio" className="h-8 text-sm" />
+                              <Input value={formData.dance_end_cue} onChange={(e)=>setFormData({...formData, dance_end_cue: e.target.value})} placeholder="Cue fin" className="h-8 text-sm" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* DRAMA Block */}
+                    {hasDrama && (
+                      <div className="grid md:grid-cols-2 gap-3 bg-white p-3 rounded border border-pink-100">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Handheld</Label>
+                            <Input type="number" value={formData.drama_handheld_mics} onChange={(e)=>setFormData({...formData, drama_handheld_mics: parseInt(e.target.value)||0})} className="h-8 text-sm" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Headset</Label>
+                            <Input type="number" value={formData.drama_headset_mics} onChange={(e)=>setFormData({...formData, drama_headset_mics: parseInt(e.target.value)||0})} className="h-8 text-sm" />
+                          </div>
+                          <div className="space-y-1 col-span-2">
+                            <Label className="text-xs">Inicio / Fin</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Input value={formData.drama_start_cue} onChange={(e)=>setFormData({...formData, drama_start_cue: e.target.value})} placeholder="Cue inicio" className="h-8 text-sm" />
+                              <Input value={formData.drama_end_cue} onChange={(e)=>setFormData({...formData, drama_end_cue: e.target.value})} placeholder="Cue fin" className="h-8 text-sm" />
+                            </div>
+                          </div>
+                          <div className="col-span-2 flex items-center gap-2 mt-1">
+                            <Checkbox id="drama_has_song" checked={formData.drama_has_song} onCheckedChange={(checked)=>setFormData({...formData, drama_has_song: checked})} />
+                            <label htmlFor="drama_has_song" className="text-xs">Incluye canción</label>
+                          </div>
+                          {formData.drama_has_song && (
+                            <div className="col-span-2 grid grid-cols-3 gap-2">
+                              <Input value={formData.drama_song_title} onChange={(e)=>setFormData({...formData, drama_song_title: e.target.value})} placeholder="Título" className="h-8 text-sm col-span-1" />
+                              <Input value={formData.drama_song_source} onChange={(e)=>setFormData({...formData, drama_song_source: e.target.value})} placeholder="Fuente" className="h-8 text-sm col-span-1" />
+                              <Input value={formData.drama_song_owner} onChange={(e)=>setFormData({...formData, drama_song_owner: e.target.value})} placeholder="Propietario" className="h-8 text-sm col-span-1" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* OTHER Block */}
+                    {hasOtherArt && (
+                      <div className="space-y-2 bg-white p-3 rounded border border-pink-100">
+                        <Label className="text-xs">Descripción (Otra)</Label>
+                        <Textarea rows={2} value={formData.art_other_description} onChange={(e)=>setFormData({...formData, art_other_description: e.target.value})} className="text-sm" />
+                      </div>
+                    )}
+
+                    {/* Video hint */}
+                    {hasArtVideo && !isVideoType && (
+                      <p className="text-xs text-pink-700">Este segmento incluye VIDEO; añade detalles en la sección "Video" arriba.</p>
+                    )}
+                  </div>
+                )}
+
                 {isBreakoutType && (
                   <div className="space-y-3 bg-amber-50 p-4 rounded border border-amber-200">
                     <div className="flex items-center justify-between mb-2">
