@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { ArrowDown } from "lucide-react";
 
+// Shows a read-only timeline; updated to tolerate fractional 'order' used during auto-insert.
 export default function SegmentTimelinePreview({ segments, currentSegmentId }) {
   if (!segments || segments.length === 0) {
     return (
