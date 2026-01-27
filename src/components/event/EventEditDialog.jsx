@@ -57,6 +57,17 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved }) 
       .replace(/^-|-$/g, '');
   };
 
+  const [previousRange, setPreviousRange] = useState({ start: '', end: '' });
+
+  useEffect(() => {
+    if (event) {
+      setPreviousRange({ start: event.start_date || '', end: event.end_date || '' });
+    }
+  }, [event]);
+
+  const [showRangeFix, setShowRangeFix] = useState(false);
+  const [pendingRange, setPendingRange] = useState({ start: '', end: '' });
+
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Event.update(id, data),
     onSuccess: () => {
@@ -64,7 +75,13 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved }) 
       queryClient.invalidateQueries(['events']);
       queryClient.invalidateQueries(['event', event?.id]);
       if (onSaved) onSaved();
-      onOpenChange(false);
+      // If range changed, open session-fix modal
+      const changed = (previousRange.start !== pendingRange.start) || (previousRange.end !== pendingRange.end);
+      if (changed) {
+        setShowRangeFix(true);
+      } else {
+        onOpenChange(false);
+      }
     },
   });
 
