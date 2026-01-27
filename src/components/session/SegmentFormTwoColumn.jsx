@@ -1067,6 +1067,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                         onChange={(val) => setFormData({...formData, start_time: val})}
                         placeholder="Seleccionar hora"
                         className="h-9"
+                        invalid={!formData.start_time}
                         required
                       />
                       {!segment && allSegments && allSegments.length > 0 && (() => {
