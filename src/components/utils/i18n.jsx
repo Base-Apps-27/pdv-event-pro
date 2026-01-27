@@ -180,6 +180,7 @@ const translations = {
     // Errors
     'error.required_fields_missing': 'Required fields are missing',
     'error.please_complete': 'Please complete:',
+    'hint.allowed_placeholders': 'Placeholders like "TBD", "To be defined", or "---" are allowed',
       'error.save_failed': 'Failed to save segment',
 
     // Live Admin
