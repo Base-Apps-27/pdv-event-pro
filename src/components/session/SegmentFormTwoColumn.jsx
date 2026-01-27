@@ -361,6 +361,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     }
   }, [requiresSala, rooms]);
 
+
+
   // Computed submit readiness: enables the "Crear" button only when required fields are filled
   // Allow placeholders: admins may intentionally leave fields as 'TBD' or '---' when scaffolding
   const isPlaceholder = (val) => typeof val === 'string' && /^(tbd|por definir|---)$/i.test(val.trim());
@@ -1346,9 +1348,9 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
               <div className="text-xs">
                 {t('error.required_fields_missing')}: {[
                   !hasValueOrPlaceholder(formData.title) && t('field.title'),
-                  !formData.start_time && t('field.start_time'),
-                  !(Number(formData.duration_min) > 0) && t('field.duration_min'),
-                  (needsPresenter && !hasValueOrPlaceholder(formData.presenter)) && t('field.presenter')
+                  !formData.segment_type && t('field.type'),
+                  (needsPresenter && !hasValueOrPlaceholder(formData.presenter)) && t('field.presenter'),
+                  (requiresSala && !formData.room_id) && t('field.room')
                 ].filter(Boolean).join(', ')}
                 <div className="mt-1 text-slate-500">{t('hint.allowed_placeholders')}</div>
               </div>
