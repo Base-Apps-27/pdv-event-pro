@@ -302,7 +302,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       session_id: sessionId,
       ...formData,
       // Ensure a proper sequential order for new segments
-      order: segment ? formData.order : nextOrder,
+      // Only assign order when creating; preserve existing order on edits
+      ...(segment ? {} : { order: nextOrder }),
       ...times,
       // Only include breakout_rooms for Breakout type; undefined fields are omitted by JSON.stringify
       breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined,
