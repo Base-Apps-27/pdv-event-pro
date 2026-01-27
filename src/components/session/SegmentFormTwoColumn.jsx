@@ -1061,7 +1061,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   <Label className="font-semibold mb-3 block">Horarios *</Label>
                   <div className="space-y-3">
                     <div className="space-y-2">
-                      <Label className="text-xs">Inicio *</Label>
+                      <Label className="text-xs">Inicio <span className="text-red-500">*</span></Label>
                       <TimePicker
                         value={formData.start_time}
                         onChange={(val) => setFormData({...formData, start_time: val})}
