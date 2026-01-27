@@ -189,6 +189,28 @@ const translations = {
     'live.time_adjusted': 'Time adjusted by {minutes} min',
     'live.active_warning': 'Changes override planned times',
     'live.current': 'Current',
+
+    // Public Program (essentials)
+    'public.headerTitle': 'Program',
+    'public.notificationsActive': 'Notifications active',
+    'public.explore': 'Explore the full program and stay updated',
+    'public.events': 'Events',
+    'public.services': 'Services',
+    'public.selectEvent': 'Select an event',
+    'public.selectService': 'Select a service',
+    'public.hideDetails': 'Hide Details',
+    'public.viewMoreDetails': 'View More Details',
+    'public.noSessions': 'No sessions available for this event',
+    'public.selectPromptEvent': 'Select an event to view its program',
+    'public.selectPromptService': 'Select a service to view its program',
+
+    // Announcements (essentials)
+    'ann.title': 'Announcements Management',
+    'ann.subtitle': 'Unified view of dynamic announcements, events, and segments',
+    'ann.new': 'New Announcement',
+    'ann.print': 'Print Report',
+    'ann.reportTitle': 'Announcements Report',
+    'ann.generatedOn': 'Generated on',
   }
 };
 

@@ -91,15 +91,22 @@ export default function EventDetail() {
   });
 
   const { data: allSessions = [] } = useQuery({
-    queryKey: ['allSessions'],
-    queryFn: () => base44.entities.Session.list(),
+    queryKey: ['allSessions', eventId],
+    queryFn: () => base44.entities.Session.filter({ event_id: eventId }, 'order'),
+    enabled: !!eventId,
     staleTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
   });
 
   const { data: allSegments = [] } = useQuery({
-    queryKey: ['allSegments'],
-    queryFn: () => base44.entities.Segment.list(),
+    queryKey: ['allSegments', eventId, sessionIdsKey],
+    queryFn: async () => {
+      if (sessions.length === 0) return [];
+      const sessionIds = sessions.map(s => s.id);
+      const response = await base44.functions.invoke('getSegmentsBySessionIds', { sessionIds });
+      return response.data.segments || [];
+    },
+    enabled: !!eventId && sessions.length > 0,
     staleTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
   });

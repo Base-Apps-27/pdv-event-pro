@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -24,6 +23,7 @@ import { useTranslation } from "@/components/utils/i18n";
 
 export default function PublicProgramView() {
   const queryClient = useQueryClient();
+  const { language, t } = useLanguage();
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -246,7 +246,7 @@ export default function PublicProgramView() {
       return [];
     },
     enabled: !!(selectedEventId || selectedServiceId),
-    refetchInterval: 5000,
+    refetchInterval: 15000,
   });
 
   // Fetch segments for selected sessions (fetch all, child components filter)
@@ -805,14 +805,14 @@ export default function PublicProgramView() {
                 {/* Toggle Event Details */}
                 {viewType === "event" && (
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowEventDetails(!showEventDetails)}
-                    className="mb-4 border-2 border-gray-400 bg-white text-gray-900 font-semibold"
-                  >
-                    {showEventDetails ? <ChevronUp className="w-4 h-4 mr-2" /> : <ChevronDown className="w-4 h-4 mr-2" />}
-                    {showEventDetails ? 'Ocultar Detalles' : 'Ver Más Detalles'}
-                  </Button>
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setShowEventDetails(!showEventDetails)}
+                                  className="mb-4 border-2 border-gray-400 bg-white text-gray-900 font-semibold"
+                                >
+                                  {showEventDetails ? <ChevronUp className="w-4 h-4 mr-2" /> : <ChevronDown className="w-4 h-4 mr-2" />}
+                                  {showEventDetails ? t('public.hideDetails') : t('public.viewMoreDetails')}
+                                </Button>
                 )}
 
                 {/* Expanded Details */}

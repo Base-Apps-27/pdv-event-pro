@@ -13,9 +13,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
+import { useLanguage } from "@/components/utils/i18n";
 import { es } from "date-fns/locale";
 
 export default function AnnouncementsReport() {
+  const { t } = useLanguage();
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -143,10 +145,10 @@ export default function AnnouncementsReport() {
         </div>
         <div className="flex gap-2">
             <Button onClick={() => openDialog()} style={tealStyle}>
-                <Plus className="w-4 h-4 mr-2" /> Nuevo Anuncio
+                <Plus className="w-4 h-4 mr-2" /> {t('ann.new') || 'Nuevo Anuncio'}
             </Button>
             <Button variant="outline" onClick={() => window.print()}>
-                <Printer className="w-4 h-4 mr-2" /> Imprimir Reporte
+                <Printer className="w-4 h-4 mr-2" /> {t('ann.print') || 'Imprimir Reporte'}
             </Button>
         </div>
       </div>
@@ -155,11 +157,11 @@ export default function AnnouncementsReport() {
       <div className="hidden print:block mb-8 border-b border-black pb-4">
           <div className="flex justify-between items-start">
               <div>
-                  <h1 className="text-3xl font-bold uppercase font-['Bebas_Neue']">Reporte de Anuncios</h1>
+                  <h1 className="text-3xl font-bold uppercase font-['Bebas_Neue']">{t('ann.reportTitle') || 'Reporte de Anuncios'}</h1>
                   <p className="text-sm text-gray-600">Palabras de Vida - {format(new Date(), 'PPP', { locale: es })}</p>
               </div>
               <div className="text-right">
-                  <div className="text-xs text-gray-500">Generado el {format(new Date(), 'dd/MM/yyyy HH:mm')}</div>
+                  <div className="text-xs text-gray-500">{t('ann.generatedOn') || 'Generado el'} {format(new Date(), 'dd/MM/yyyy HH:mm')}</div>
               </div>
           </div>
       </div>
