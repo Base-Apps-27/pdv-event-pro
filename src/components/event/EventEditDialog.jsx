@@ -99,6 +99,7 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved }) 
         .map(s => s.trim())
         .filter(Boolean),
     };
+    setPendingRange({ start: data.start_date || '', end: data.end_date || '' });
     updateMutation.mutate({ id: event.id, data });
   };
 
