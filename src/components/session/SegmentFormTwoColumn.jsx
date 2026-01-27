@@ -799,28 +799,64 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
                     {/* DANCE Block */}
                     {hasDance && (
-                      <div className="grid md:grid-cols-2 gap-3 bg-white p-3 rounded border border-pink-100">
-                        <div className="space-y-2">
-                          <Label className="text-xs">Canción</Label>
-                          <Input value={formData.dance_song_title} onChange={(e)=>setFormData({...formData, dance_song_title: e.target.value})} placeholder="Título de canción" className="h-8 text-sm" />
-                          <Input value={formData.dance_song_source} onChange={(e)=>setFormData({...formData, dance_song_source: e.target.value})} placeholder="Fuente (YouTube/archivo)" className="h-8 text-sm" />
-                          <Input value={formData.dance_song_owner} onChange={(e)=>setFormData({...formData, dance_song_owner: e.target.value})} placeholder="Propietario" className="h-8 text-sm" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <Label className="text-xs">Handheld</Label>
-                            <Input type="number" value={formData.dance_handheld_mics} onChange={(e)=>setFormData({...formData, dance_handheld_mics: parseInt(e.target.value)||0})} className="h-8 text-sm" />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">Headset</Label>
-                            <Input type="number" value={formData.dance_headset_mics} onChange={(e)=>setFormData({...formData, dance_headset_mics: parseInt(e.target.value)||0})} className="h-8 text-sm" />
-                          </div>
-                          <div className="space-y-1 col-span-2">
-                            <Label className="text-xs">Inicio / Fin</Label>
-                            <div className="grid grid-cols-2 gap-2">
-                              <Input value={formData.dance_start_cue} onChange={(e)=>setFormData({...formData, dance_start_cue: e.target.value})} placeholder="Cue inicio" className="h-8 text-sm" />
-                              <Input value={formData.dance_end_cue} onChange={(e)=>setFormData({...formData, dance_end_cue: e.target.value})} placeholder="Cue fin" className="h-8 text-sm" />
+                      <div className="space-y-3 bg-white p-3 rounded border border-pink-100">
+                        <div className="grid md:grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs">{language === 'es' ? 'Canción' : 'Song'}</Label>
+                            <Input 
+                              value={formData.dance_song_title} 
+                              onChange={(e)=>setFormData({...formData, dance_song_title: e.target.value})} 
+                              placeholder={language === 'es' ? 'Título de canción' : 'Song title'} 
+                              className="h-9 text-sm" 
+                            />
+                            <div>
+                              <Label className="text-[11px] text-gray-700">{language === 'es' ? 'Fuente / ubicación' : 'Source / location'}</Label>
+                              <Textarea 
+                                rows={2}
+                                value={formData.dance_song_source} 
+                                onChange={(e)=>setFormData({...formData, dance_song_source: e.target.value})} 
+                                placeholder={language === 'es' ? 'URL, ruta de ProPresenter u otras instrucciones' : 'URL, ProPresenter path, or other instructions'} 
+                                className="text-sm" 
+                              />
                             </div>
+                            <div>
+                              <Label className="text-[11px] text-gray-700">{language === 'es' ? 'Responsable del medio' : 'Media owner/responsible'}</Label>
+                              <Input 
+                                value={formData.dance_song_owner} 
+                                onChange={(e)=>setFormData({...formData, dance_song_owner: e.target.value})} 
+                                placeholder={language === 'es' ? 'Quién provee/controla este audio (equipo o persona)' : 'Who provides/controls this audio (team or person)'} 
+                                className="h-9 text-sm" 
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Handheld</Label>
+                              <Input type="number" value={formData.dance_handheld_mics} onChange={(e)=>setFormData({...formData, dance_handheld_mics: parseInt(e.target.value)||0})} className="h-9 text-sm" />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Headset</Label>
+                              <Input type="number" value={formData.dance_headset_mics} onChange={(e)=>setFormData({...formData, dance_headset_mics: parseInt(e.target.value)||0})} className="h-9 text-sm" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">{language === 'es' ? 'Cues de inicio y fin' : 'Start and end cues'}</Label>
+                          <div className="grid md:grid-cols-2 gap-2">
+                            <Textarea 
+                              rows={2}
+                              value={formData.dance_start_cue} 
+                              onChange={(e)=>setFormData({...formData, dance_start_cue: e.target.value})} 
+                              placeholder={language === 'es' ? 'Cue inicio (ej. "Bailarines por derecha, FOH preparado")' : 'Start cue (e.g., "Dancers from stage right, FOH ready")'} 
+                              className="text-sm" 
+                            />
+                            <Textarea 
+                              rows={2}
+                              value={formData.dance_end_cue} 
+                              onChange={(e)=>setFormData({...formData, dance_end_cue: e.target.value})} 
+                              placeholder={language === 'es' ? 'Cue fin (ej. "Fade a negro; MC entra por izquierda")' : 'End cue (e.g., "Fade to black; MC enters from left")'} 
+                              className="text-sm" 
+                            />
                           </div>
                         </div>
                       </div>
@@ -828,43 +864,64 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
                     {/* DRAMA Block */}
                     {hasDrama && (
-                      <div className="grid md:grid-cols-2 gap-3 bg-white p-3 rounded border border-pink-100">
-                        <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-3 bg-white p-3 rounded border border-pink-100">
+                        <div className="grid grid-cols-2 gap-2 md:max-w-md">
                           <div className="space-y-1">
                             <Label className="text-xs">Handheld</Label>
-                            <Input type="number" value={formData.drama_handheld_mics} onChange={(e)=>setFormData({...formData, drama_handheld_mics: parseInt(e.target.value)||0})} className="h-8 text-sm" />
+                            <Input type="number" value={formData.drama_handheld_mics} onChange={(e)=>setFormData({...formData, drama_handheld_mics: parseInt(e.target.value)||0})} className="h-9 text-sm" />
                           </div>
                           <div className="space-y-1">
                             <Label className="text-xs">Headset</Label>
-                            <Input type="number" value={formData.drama_headset_mics} onChange={(e)=>setFormData({...formData, drama_headset_mics: parseInt(e.target.value)||0})} className="h-8 text-sm" />
+                            <Input type="number" value={formData.drama_headset_mics} onChange={(e)=>setFormData({...formData, drama_headset_mics: parseInt(e.target.value)||0})} className="h-9 text-sm" />
                           </div>
-                          <div className="space-y-1 col-span-2">
-                            <Label className="text-xs">Inicio / Fin</Label>
-                            <div className="grid grid-cols-2 gap-2">
-                              <Input value={formData.drama_start_cue} onChange={(e)=>setFormData({...formData, drama_start_cue: e.target.value})} placeholder="Cue inicio" className="h-8 text-sm" />
-                              <Input value={formData.drama_end_cue} onChange={(e)=>setFormData({...formData, drama_end_cue: e.target.value})} placeholder="Cue fin" className="h-8 text-sm" />
-                            </div>
-                          </div>
-                          <div className="col-span-2 flex items-center gap-2 mt-1">
-                            <Checkbox id="drama_has_song" checked={formData.drama_has_song} onCheckedChange={(checked)=>setFormData({...formData, drama_has_song: checked})} />
-                            <label htmlFor="drama_has_song" className="text-xs">Incluye canción</label>
-                          </div>
-                          {formData.drama_has_song && (
-                            <div className="col-span-2 grid grid-cols-3 gap-2">
-                              <Input value={formData.drama_song_title} onChange={(e)=>setFormData({...formData, drama_song_title: e.target.value})} placeholder="Título" className="h-8 text-sm col-span-1" />
-                              <Input value={formData.drama_song_source} onChange={(e)=>setFormData({...formData, drama_song_source: e.target.value})} placeholder="Fuente" className="h-8 text-sm col-span-1" />
-                              <Input value={formData.drama_song_owner} onChange={(e)=>setFormData({...formData, drama_song_owner: e.target.value})} placeholder="Propietario" className="h-8 text-sm col-span-1" />
-                            </div>
-                          )}
                         </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">{language === 'es' ? 'Cues de inicio y fin' : 'Start and end cues'}</Label>
+                          <div className="grid md:grid-cols-2 gap-2">
+                            <Textarea 
+                              rows={2}
+                              value={formData.drama_start_cue} 
+                              onChange={(e)=>setFormData({...formData, drama_start_cue: e.target.value})} 
+                              placeholder={language === 'es' ? 'Cue inicio (ej. "Actores preparados; cortina a media")' : 'Start cue (e.g., "Actors ready; curtain half")'} 
+                              className="text-sm" 
+                            />
+                            <Textarea 
+                              rows={2}
+                              value={formData.drama_end_cue} 
+                              onChange={(e)=>setFormData({...formData, drama_end_cue: e.target.value})} 
+                              placeholder={language === 'es' ? 'Cue fin (ej. "Oscuro total; MC entra por centro")' : 'End cue (e.g., "Full blackout; MC enters center")'} 
+                              className="text-sm" 
+                            />
+                          </div>
+                        </div>
+                        <div className="col-span-2 flex items-center gap-2 mt-1">
+                          <Checkbox id="drama_has_song" checked={formData.drama_has_song} onCheckedChange={(checked)=>setFormData({...formData, drama_has_song: checked})} />
+                          <label htmlFor="drama_has_song" className="text-xs">{language === 'es' ? 'Incluye canción' : 'Includes song'}</label>
+                        </div>
+                        {formData.drama_has_song && (
+                          <div className="space-y-2">
+                            <Label className="text-xs">{language === 'es' ? 'Canción (opcional)' : 'Song (optional)'}</Label>
+                            <div className="grid md:grid-cols-3 gap-2">
+                              <Input value={formData.drama_song_title} onChange={(e)=>setFormData({...formData, drama_song_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-9 text-sm" />
+                              <Textarea rows={2} value={formData.drama_song_source} onChange={(e)=>setFormData({...formData, drama_song_source: e.target.value})} placeholder={language === 'es' ? 'Fuente / ubicación (URL, ruta, instrucciones)' : 'Source / location (URL, path, instructions)'} className="text-sm" />
+                              <Input value={formData.drama_song_owner} onChange={(e)=>setFormData({...formData, drama_song_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable del medio' : 'Media owner/responsible'} className="h-9 text-sm" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
                     {/* OTHER Block */}
                     {hasOtherArt && (
                       <div className="space-y-2 bg-white p-3 rounded border border-pink-100">
-                        <Label className="text-xs">Descripción (Otra)</Label>
-                        <Textarea rows={2} value={formData.art_other_description} onChange={(e)=>setFormData({...formData, art_other_description: e.target.value})} className="text-sm" />
+                        <Label className="text-xs">{language === 'es' ? 'Descripción (Otra)' : 'Description (Other)'}</Label>
+                        <Textarea 
+                          rows={3} 
+                          value={formData.art_other_description} 
+                          onChange={(e)=>setFormData({...formData, art_other_description: e.target.value})} 
+                          placeholder={language === 'es' ? 'Describe brevemente la presentación (elementos, accesos, transiciones)' : 'Briefly describe the presentation (elements, entrances, transitions)'}
+                          className="text-sm" 
+                        />
                       </div>
                     )}
 
