@@ -151,6 +151,12 @@ const translations = {
     'btn.cancel': 'Cancel',
     'btn.confirm': 'Confirm and Create',
     'btn.save': 'Save Changes',
+          'btn.skip': 'Skip',
+
+          // Session Date Fix modal
+          'sessionsDateFix.title': 'Update session dates',
+          'sessionsDateFix.subtitle': 'Some sessions fall outside the event\'s new date range. Adjust their dates below.',
+          'sessionsDateFix.none': 'No out-of-range sessions.' ,
     'btn.add': 'Add',
     'btn.edit': 'Edit',
     'btn.delete': 'Delete',
