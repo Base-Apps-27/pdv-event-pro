@@ -16,6 +16,7 @@ import { Calendar, AlertTriangle } from "lucide-react";
  */
 export default function OutOfRangeSessionsModal({ open, onOpenChange, eventId, newStartDate, newEndDate }) {
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [sessions, setSessions] = useState([]);
   const [updates, setUpdates] = useState({}); // sessionId -> newDate
