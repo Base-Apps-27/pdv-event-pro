@@ -52,6 +52,12 @@ const translations = {
     'btn.cancel': 'Cancelar',
     'btn.confirm': 'Confirmar y Crear',
     'btn.save': 'Guardar Cambios',
+          'btn.skip': 'Omitir',
+
+          // Session Date Fix modal
+          'sessionsDateFix.title': 'Actualizar fechas de sesiones',
+          'sessionsDateFix.subtitle': 'Algunas sesiones están fuera del nuevo rango del evento. Ajusta sus fechas a continuación.',
+          'sessionsDateFix.none': 'No hay sesiones fuera del rango.' ,
     'btn.add': 'Agregar',
     'btn.edit': 'Editar',
     'btn.delete': 'Eliminar',
