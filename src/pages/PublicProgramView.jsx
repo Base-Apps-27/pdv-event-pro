@@ -655,7 +655,7 @@ export default function PublicProgramView() {
                   className="flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all shadow-md"
                   style={viewType === "event" ? { backgroundColor: '#1F8A70', color: '#ffffff' } : { backgroundColor: '#ffffff', border: '2px solid #9ca3af', color: '#111827' }}
                 >
-                  Eventos
+                  {t('public.events')}
                 </button>
                 <button
                   onClick={() => setViewType("service")}
