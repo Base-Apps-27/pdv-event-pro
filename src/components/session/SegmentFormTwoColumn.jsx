@@ -490,7 +490,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2 space-y-2">
-                    <Label htmlFor="segment_type">Tipo *</Label>
+                    <Label htmlFor="segment_type">Tipo <span className="text-red-500">*</span></Label>
                     <Select 
                       value={formData.segment_type}
                       onValueChange={(value) => {
