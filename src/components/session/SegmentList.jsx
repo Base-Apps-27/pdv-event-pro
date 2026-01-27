@@ -251,7 +251,7 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                         <ChevronDown className="w-3 h-3" />
                       </Button>
                     </div>
-                    <span className="font-medium text-sm">{segment.order ?? (index + 1)}</span>
+                    <span className="font-medium text-sm">{index + 1}</span>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -472,7 +472,7 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                           {/* Left Column - Main Info */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-bold text-slate-600 text-sm">#{segment.order ?? (index + 1)}</span>
+                              <span className="font-bold text-slate-600 text-sm">#{index + 1}</span>
                               <Badge className={`${colorSchemes[segment.color_code || 'default']} border text-xs`}>
                                 {segment.segment_type}
                               </Badge>
