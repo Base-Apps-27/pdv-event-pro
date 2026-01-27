@@ -1315,7 +1315,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
           <X className="w-4 h-4 mr-2" />
           Cancelar
         </Button>
-        <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+        <Button type="submit" disabled={!canSubmit} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
           <Save className="w-4 h-4 mr-2" />
           {segment ? 'Guardar' : 'Crear'}
         </Button>
