@@ -1599,7 +1599,7 @@ export default function PublicProgramView() {
         {!selectedEventId && !selectedServiceId && (
           <Card className="p-12 text-center bg-white border-dashed border-2 border-gray-400">
             <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Selecciona un {viewType === "event" ? "evento" : "servicio"} para ver su programa</p>
+            <p className="text-gray-600">{viewType === 'event' ? t('public.selectPromptEvent') : t('public.selectPromptService')}</p>
           </Card>
         )}
       </div>
