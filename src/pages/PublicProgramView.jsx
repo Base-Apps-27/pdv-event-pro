@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -19,6 +20,7 @@ import { hasPermission } from "@/components/utils/permissions";
 import { useSegmentNotifications } from "@/components/service/useSegmentNotifications";
 import ServiceProgramView from "@/components/service/ServiceProgramView";
 import EventProgramView from "@/components/service/EventProgramView";
+import { useTranslation } from "@/components/utils/i18n";
 
 export default function PublicProgramView() {
   const queryClient = useQueryClient();
@@ -38,6 +40,7 @@ export default function PublicProgramView() {
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
+  const { t } = useTranslation();
   
   const urlParams = new URLSearchParams(window.location.search);
   const preloadedSlug = urlParams.get('slug');
@@ -87,17 +90,22 @@ export default function PublicProgramView() {
   const { data: publicEvents = [] } = useQuery({
     queryKey: ['publicEvents'],
     queryFn: async () => {
-      const events = await base44.entities.Event.list('-start_date');
-      return events.filter(e => e.status === 'confirmed' || e.status === 'in_progress');
+      const [confirmed, inProgress] = await Promise.all([
+        base44.entities.Event.filter({ status: 'confirmed' }, '-start_date'),
+        base44.entities.Event.filter({ status: 'in_progress' }, '-start_date'),
+      ]);
+      const map = new Map();
+      [...confirmed, ...inProgress].forEach(e => map.set(e.id, e));
+      return Array.from(map.values()).sort((a, b) => (b.start_date || '').localeCompare(a.start_date || ''));
     },
-    refetchInterval: 5000, // Poll every 5 seconds
+    refetchInterval: 15000,
   });
 
   // Fetch services (only WeeklyServiceManager date-specific instances)
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
     queryFn: async () => {
-      const allServices = await base44.entities.Service.list();
+      const allServices = await base44.entities.Service.filter({ status: 'active' }, '-date');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
@@ -249,13 +257,11 @@ export default function PublicProgramView() {
       
       if (sessionIds.length === 0) return [];
       
-      const allSegs = await base44.entities.Segment.list('order');
-      return allSegs.filter(seg => 
-        sessionIds.includes(seg.session_id) && seg.show_in_general !== false
-      );
+      const response = await base44.functions.invoke('getSegmentsBySessionIds', { sessionIds });
+      return response.data?.segments?.filter(seg => seg.show_in_general !== false) || [];
     },
     enabled: !!(selectedEventId || selectedServiceId) && sessions.length > 0,
-    refetchInterval: 5000,
+    refetchInterval: 15000,
   });
 
   const refetchData = () => {
@@ -267,7 +273,7 @@ export default function PublicProgramView() {
   const { data: rooms = [] } = useQuery({
     queryKey: ['rooms'],
     queryFn: () => base44.entities.Room.list(),
-    refetchInterval: 30000, // Rooms change less frequently
+    refetchInterval: 60000,
   });
 
   const selectedEvent = publicEvents.find(e => e.id === selectedEventId);
@@ -335,10 +341,10 @@ export default function PublicProgramView() {
         });
       }
 
-      toast.success('Ajuste de tiempo guardado');
+      toast.success(t('adjustments.saveSuccess'));
     } catch (err) {
       console.error(err);
-      toast.error('Error al guardar el ajuste');
+      toast.error(t('adjustments.saveError'));
       throw err;
     }
   };
@@ -625,16 +631,16 @@ export default function PublicProgramView() {
                 className="w-16 h-16 md:w-20 md:h-20"
               />
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight text-white">Programa del Evento</h1>
+                <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight text-white">{t('public.headerTitle')}</h1>
                 <p className="text-sm md:text-base text-white/95 mt-1">¡ATRÉVETE A CAMBIAR!</p>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur px-3 py-2 rounded-lg">
               <BellRing className="w-4 h-4 animate-pulse" />
-              <span className="text-xs font-medium">Notificaciones activas</span>
+              <span className="text-xs font-medium">{t('public.notificationsActive')}</span>
             </div>
           </div>
-          <p className="text-lg text-white/95">Explora el programa completo y mantente actualizado</p>
+          <p className="text-lg text-white/95">{t('public.explore')}</p>
         </div>
       </div>
 
@@ -686,7 +692,7 @@ export default function PublicProgramView() {
                   <div className="w-full max-w-full">
                     <Select value={selectedEventId} onValueChange={setSelectedEventId}>
                       <SelectTrigger className="w-full max-w-full overflow-hidden bg-white border-2 border-gray-400 text-gray-900 h-12">
-                        <SelectValue placeholder="Selecciona un evento" />
+                        <SelectValue placeholder={t('public.selectEvent')} />
                       </SelectTrigger>
                       <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {availableEvents.map((event) => (
@@ -735,7 +741,7 @@ export default function PublicProgramView() {
                   <div className="w-full max-w-full">
                     <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
                       <SelectTrigger className="w-full max-w-full overflow-hidden bg-white border-2 border-gray-400 text-gray-900 h-12">
-                        <SelectValue placeholder="Selecciona un servicio" />
+                        <SelectValue placeholder={t('public.selectService')} />
                       </SelectTrigger>
                       <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {upcomingServices.map((service) => (
@@ -972,7 +978,7 @@ export default function PublicProgramView() {
                         adjustedDate.setHours(h, m + adj.offset_minutes, 0, 0);
                         const timeStr = `${String(adjustedDate.getHours()).padStart(2, '0')}:${String(adjustedDate.getMinutes()).padStart(2, '0')}`;
                         adjustedTimeStr = formatTimeToEST(timeStr);
-                        displayLabel = 'Servicio Especial';
+                        displayLabel = t('service.specialService');
                       } else {
                         // Weekly service - show time slot
                         const baseTime = adj.time_slot.replace('am', '').replace('pm', '');
@@ -997,9 +1003,9 @@ export default function PublicProgramView() {
                               </span>
                             </div>
                             <div className="text-xs text-gray-700 space-y-0.5">
-                              <div><strong>Autorizado por:</strong> {adj.authorized_by}</div>
-                              <div><strong>Aplicado por:</strong> {adj.created_by}</div>
-                              <div><strong>Hora:</strong> {estTime}</div>
+                              <div><strong>{t('adjustments.authorizedBy')}:</strong> {adj.authorized_by}</div>
+                              <div><strong>{t('adjustments.appliedBy')}:</strong> {adj.created_by}</div>
+                              <div><strong>{t('adjustments.time')}:</strong> {estTime}</div>
                             </div>
                           </div>
                           {hasPermission(currentUser, 'manage_live_timing') && (
@@ -1038,7 +1044,7 @@ export default function PublicProgramView() {
                           onClick={() => openAdjustmentModal("custom")}
                           className="bg-pdv-teal hover:bg-pdv-teal/90 text-white border-none text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
                         >
-                          Ajustar Inicio
+                          {t('adjustments.adjustStart')}
                         </Button>
                       ) : (
                         <>
@@ -1049,7 +1055,7 @@ export default function PublicProgramView() {
                               onClick={() => openAdjustmentModal("9:30am")}
                               className="bg-red-600 hover:bg-red-700 text-white border-none text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
                             >
-                              9:30 AM
+                              {t('adjustments.timeSlot930am')}
                             </Button>
                           )}
                           {actualServiceData["11:30am"] && (
@@ -1059,7 +1065,7 @@ export default function PublicProgramView() {
                               onClick={() => openAdjustmentModal("11:30am")}
                               className="bg-blue-600 hover:bg-blue-700 text-white border-none text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
                             >
-                              11:30 AM
+                              {t('adjustments.timeSlot1130am')}
                             </Button>
                           )}
                         </>
@@ -1585,7 +1591,7 @@ export default function PublicProgramView() {
             {viewType === "event" && filteredSessions.length === 0 && (
                   <Card className="p-12 text-center bg-white border-2 border-gray-300">
                 <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No hay sesiones disponibles para este evento</p>
+                <p className="text-gray-600">{t('public.noSessions')}</p>
               </Card>
             )}
           </>
