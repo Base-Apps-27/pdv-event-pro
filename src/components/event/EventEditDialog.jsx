@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import DatePicker from "@/components/ui/DatePicker";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
+import OutOfRangeSessionsModal from "./OutOfRangeSessionsModal";
 
 // Edit dialog used in EventDetail (edit-only). Mirrors the Events page form for consistency.
 export default function EventEditDialog({ open, onOpenChange, event, onSaved }) {
