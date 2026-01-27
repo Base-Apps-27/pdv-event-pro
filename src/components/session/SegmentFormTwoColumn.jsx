@@ -1320,7 +1320,28 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
           <X className="w-4 h-4 mr-2" />
           Cancelar
         </Button>
-        <Button type="submit" disabled={!canSubmit} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <Button type="submit" disabled={!canSubmit} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                <Save className="w-4 h-4 mr-2" />
+                {segment ? 'Guardar' : 'Crear'}
+              </Button>
+            </span>
+          </TooltipTrigger>
+          {!canSubmit && (
+            <TooltipContent>
+              <div className="text-xs">
+                {t('error.required_fields_missing')}: {[
+                  !hasValueOrPlaceholder(formData.title) && t('field.title'),
+                  !formData.start_time && t('field.start_time'),
+                  !(Number(formData.duration_min) > 0) && t('field.duration_min'),
+                  (needsPresenter && !hasValueOrPlaceholder(formData.presenter)) && t('field.presenter')
+                ].filter(Boolean).join(', ')}
+              </div>
+            </TooltipContent>
+          )}
+        </Tooltip>
           <Save className="w-4 h-4 mr-2" />
           {segment ? 'Guardar' : 'Crear'}
         </Button>
