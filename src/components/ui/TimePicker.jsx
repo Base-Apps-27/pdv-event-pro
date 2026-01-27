@@ -9,6 +9,7 @@ export default function TimePicker({
   onChange, 
   placeholder = "Seleccionar hora",
   disabled = false,
+  invalid = false,
   className,
   ...props 
 }) {
