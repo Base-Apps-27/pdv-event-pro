@@ -73,6 +73,13 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     queryFn: () => base44.entities.Segment.filter({ session_id: sessionId }, 'order'),
     enabled: !!sessionId,
   });
+
+  // Determine next sequential order for new segments (fallback to 1)
+  const nextOrder = React.useMemo(() => {
+    if (!allSegments || allSegments.length === 0) return 1;
+    const max = Math.max(...allSegments.map(s => Number(s.order) || 0));
+    return (isFinite(max) ? max : 0) + 1;
+  }, [allSegments]);
   
   // Calculate suggested start time for new segments
   const getSuggestedStartTime = () => {
@@ -294,6 +301,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     const data = {
       session_id: sessionId,
       ...formData,
+      // Ensure a proper sequential order for new segments
+      order: segment ? formData.order : nextOrder,
       ...times,
       // Only include breakout_rooms for Breakout type; undefined fields are omitted by JSON.stringify
       breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined,

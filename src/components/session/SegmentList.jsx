@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -49,17 +49,32 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
     },
   });
 
+  // One-time normalization: if orders are missing/duplicated, renumber sequentially
+  const normalizedOnce = React.useRef(false);
+  React.useEffect(() => {
+    if (normalizedOnce.current || !segments || segments.length === 0) return;
+    const orders = segments.map(s => Number(s.order) || 0);
+    const hasDup = new Set(orders).size !== segments.length;
+    const hasZero = orders.some(o => o === 0);
+    if (hasDup || hasZero) {
+      Promise.all(
+        segments.map((s, i) => reorderMutation.mutateAsync({ segmentId: s.id, newOrder: i + 1 }))
+      ).then(() => { normalizedOnce.current = true; }).catch(() => {});
+    }
+  }, [segments]);
+
   const handleMoveSegment = async (index, direction) => {
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= segments.length) return;
 
-    const currentSeg = segments[index];
-    const targetSeg = segments[targetIndex];
+    // Build a new order sequence by moving the element, then renumber 1..n
+    const newList = [...segments];
+    const [moved] = newList.splice(index, 1);
+    newList.splice(targetIndex, 0, moved);
 
-    await Promise.all([
-      reorderMutation.mutateAsync({ segmentId: currentSeg.id, newOrder: targetSeg.order }),
-      reorderMutation.mutateAsync({ segmentId: targetSeg.id, newOrder: currentSeg.order })
-    ]);
+    await Promise.all(
+      newList.map((s, i) => reorderMutation.mutateAsync({ segmentId: s.id, newOrder: i + 1 }))
+    );
   };
 
   const getSegmentActions = (segmentId) => {
@@ -236,7 +251,7 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                         <ChevronDown className="w-3 h-3" />
                       </Button>
                     </div>
-                    <span className="font-medium text-sm">{segment.order}</span>
+                    <span className="font-medium text-sm">{segment.order ?? (index + 1)}</span>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -457,7 +472,7 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                           {/* Left Column - Main Info */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-bold text-slate-600 text-sm">#{segment.order}</span>
+                              <span className="font-bold text-slate-600 text-sm">#{segment.order ?? (index + 1)}</span>
                               <Badge className={`${colorSchemes[segment.color_code || 'default']} border text-xs`}>
                                 {segment.segment_type}
                               </Badge>
