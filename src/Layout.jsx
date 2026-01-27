@@ -474,9 +474,11 @@ function LayoutContent({ children }) {
     }
 
     export default function Layout({ children }) {
-      return (
-        <LanguageProvider>
-          <LayoutContent>{children}</LayoutContent>
-        </LanguageProvider>
-      );
-    }
+                return (
+                  <LanguageProvider>
+                    <TooltipProvider delayDuration={200}>
+                      <LayoutContent>{children}</LayoutContent>
+                    </TooltipProvider>
+                  </LanguageProvider>
+                );
+              }
