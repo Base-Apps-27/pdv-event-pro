@@ -87,6 +87,33 @@ const translations = {
     'common.location': 'Ubicación',
     'common.sessions': 'sesiones',
     'common.segments': 'segmentos',
+
+    // Public Program (es)
+    'public.headerTitle': 'Programa',
+    'public.notificationsActive': 'Notificaciones activas',
+    'public.explore': 'Explora el programa completo y mantente al día',
+    'public.events': 'Eventos',
+    'public.services': 'Servicios',
+    'public.selectEvent': 'Selecciona un evento',
+    'public.selectService': 'Selecciona un servicio',
+    'public.hideDetails': 'Ocultar detalles',
+    'public.viewMoreDetails': 'Ver más detalles',
+    'public.noSessions': 'No hay sesiones disponibles para este evento',
+    'public.selectPromptEvent': 'Selecciona un evento para ver su programa',
+    'public.selectPromptService': 'Selecciona un servicio para ver su programa',
+
+    // Live Adjustments (es)
+    'adjustments.saveSuccess': 'Ajuste guardado',
+    'adjustments.saveError': 'Error al guardar el ajuste',
+    'adjustments.authorizedBy': 'Autorizado por',
+    'adjustments.appliedBy': 'Aplicado por',
+    'adjustments.time': 'Hora',
+    'adjustments.adjustStart': 'Ajustar hora de inicio',
+    'adjustments.timeSlot930am': '9:30 A.M.',
+    'adjustments.timeSlot1130am': '11:30 A.M.',
+
+    // Services (es)
+    'service.specialService': 'Servicio especial',
     // Fields
     'field.title': 'Título',
     'field.start_time': 'Hora de inicio',
@@ -224,6 +251,19 @@ const translations = {
     'public.selectPromptEvent': 'Select an event to view its program',
     'public.selectPromptService': 'Select a service to view its program',
 
+    // Live Adjustments (en)
+    'adjustments.saveSuccess': 'Adjustment saved',
+    'adjustments.saveError': 'Failed to save adjustment',
+    'adjustments.authorizedBy': 'Authorized by',
+    'adjustments.appliedBy': 'Applied by',
+    'adjustments.time': 'Time',
+    'adjustments.adjustStart': 'Adjust Start Time',
+    'adjustments.timeSlot930am': '9:30 A.M.',
+    'adjustments.timeSlot1130am': '11:30 A.M.',
+
+    // Services (en)
+    'service.specialService': 'Special service',
+
     // Announcements (essentials)
     'ann.title': 'Announcements Management',
     'ann.subtitle': 'Unified view of dynamic announcements, events, and segments',
@@ -234,19 +274,30 @@ const translations = {
   }
 };
 
+// Normalize language codes like 'es-ES', 'en-US' to base keys we support
+function normalizeLang(lang) {
+  if (!lang) return 'es';
+  const l = String(lang).toLowerCase();
+  if (l.startsWith('en')) return 'en';
+  if (l.startsWith('es')) return 'es';
+  return 'es';
+}
+
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState(() => {
-    return localStorage.getItem('language') || 'es';
+    const stored = localStorage.getItem('language') || 'es';
+    return normalizeLang(stored);
   });
 
   useEffect(() => {
-    localStorage.setItem('language', language);
+    localStorage.setItem('language', normalizeLang(language));
   }, [language]);
 
   const t = (key) => {
-    return translations[language]?.[key] || key;
+    const lang = normalizeLang(language);
+    return translations[lang]?.[key] || key;
   };
 
   return (
