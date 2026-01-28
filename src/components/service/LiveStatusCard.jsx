@@ -186,7 +186,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
             </div>
           ) : (
             <div className="p-4 bg-gray-50 flex items-center justify-center text-gray-400">
-              <span className="italic text-sm">Nada en curso en este momento</span>
+              <span className="italic text-sm">{t('live.nothingNow')}</span>
             </div>
           )
         )}
@@ -199,7 +199,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">A Continuación</span>
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('live.upNext')}</span>
                 <div className="flex items-center gap-2">
                   {upNextCountdown && (
                     <Badge variant="default" className="bg-pdv-teal text-white font-mono font-bold">
@@ -228,7 +228,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
           </div>
         ) : (
           <div className="p-4 bg-gray-50 flex items-center justify-center text-gray-400">
-            <span className="italic text-sm">Fin del programa</span>
+            <span className="italic text-sm">{t('live.endOfProgram')}</span>
           </div>
         )}
       </div>

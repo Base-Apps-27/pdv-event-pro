@@ -1273,8 +1273,8 @@ export default function Reports() {
       <div className="p-6 md:p-8 space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 uppercase">Informes de Eventos</h1>
-            <p className="text-gray-600 mt-1">Visualiza y exporta reportes de eventos</p>
+            <h1 className="text-3xl font-bold text-gray-900 uppercase">{t('reports.title')}</h1>
+            <p className="text-gray-600 mt-1">{t('reports.subtitle')}</p>
           </div>
           <div className="flex gap-3">
             {selectedEventId && (
@@ -1340,7 +1340,7 @@ export default function Reports() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-gray-900">
               <Filter className="w-5 h-5" />
-              Seleccionar Evento
+              {t('reports.selectEvent')}
             </CardTitle>
           </CardHeader>
           <CardContent>
