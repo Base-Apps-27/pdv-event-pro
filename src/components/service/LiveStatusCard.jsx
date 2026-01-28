@@ -156,7 +156,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                   <PlayCircle className="w-3 h-3" /> {t('live.inProgress')}
                 </Badge>
                 {currentRemaining && (
-                  <span className="text-xs font-mono text-red-600 font-bold">{currentRemaining} restantes</span>
+                  <span className="text-xs font-mono text-red-600 font-bold">{currentRemaining} {t('live.remaining')}</span>
                 )}
               </div>
               <h3 className="text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">

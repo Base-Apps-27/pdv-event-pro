@@ -18,8 +18,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatTimeToEST } from "../components/utils/timeFormat";
+import { useLanguage } from "@/components/utils/i18n";
 
 export default function Reports() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const eventIdFromUrl = urlParams.get('eventId');
