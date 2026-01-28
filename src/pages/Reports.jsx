@@ -600,15 +600,18 @@ export default function Reports() {
                                 <span className="text-gray-700 ml-1">{segment.art_types.map(t => t === "DANCE" ? "Danza" : t === "DRAMA" ? "Drama" : t === "VIDEO" ? "Video" : "Otro").join(", ")}</span>
 
                                 {segment.art_types.includes("DRAMA") && (
-                                  <div className="mt-0.5 pl-2 border-l-2 border-pink-300">
-                                    {segment.drama_handheld_mics > 0 && <div>Mics mano: {segment.drama_handheld_mics}</div>}
-                                    {segment.drama_headset_mics > 0 && <div>Mics diadema: {segment.drama_headset_mics}</div>}
-                                    {segment.drama_start_cue && <div>Inicio: {segment.drama_start_cue}</div>}
-                                    {segment.drama_end_cue && <div>Cierre: {segment.drama_end_cue}</div>}
-                                    {segment.drama_has_song && segment.drama_song_title && (
-                                      <div>Canción: {segment.drama_song_title}</div>
-                                    )}
-                                  </div>
+                                 <div className="mt-0.5 pl-2 border-l-2 border-pink-300">
+                                   {segment.drama_handheld_mics > 0 && <div>Mics mano: {segment.drama_handheld_mics}</div>}
+                                   {segment.drama_headset_mics > 0 && <div>Mics diadema: {segment.drama_headset_mics}</div>}
+                                   {segment.drama_start_cue && <div>Inicio: {segment.drama_start_cue}</div>}
+                                   {segment.drama_end_cue && <div>Cierre: {segment.drama_end_cue}</div>}
+                                   {segment.drama_has_song && segment.drama_song_title && (
+                                     <div>Canción: {segment.drama_song_title}</div>
+                                   )}
+                                   {segment.microphone_assignments && (
+                                     <div className="mt-0.5 text-gray-700">Asignación de micrófonos: {segment.microphone_assignments}</div>
+                                   )}
+                                 </div>
                                 )}
 
                                 {segment.art_types.includes("DANCE") && (
