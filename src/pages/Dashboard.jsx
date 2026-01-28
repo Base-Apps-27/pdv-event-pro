@@ -258,9 +258,7 @@ export default function Dashboard() {
         {/* Recently Passed Events */}
         {recentPastEvents.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 uppercase mb-4">
-              Eventos Recientes / Recent Events
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900 uppercase mb-4">{t('dashboard.recent')}</h2>
             <div className="grid md:grid-cols-3 gap-4">
               {recentPastEvents.map((event) => (
                 <Card 
