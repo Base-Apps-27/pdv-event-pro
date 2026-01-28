@@ -114,6 +114,10 @@ const translations = {
 
     // Services (es)
     'service.specialService': 'Servicio especial',
+
+    // Panel
+    'panel.moderators': 'Moderador(es)',
+    'panel.panelists': 'Panelista(s)',
     // Fields
     'field.title': 'Título',
     'field.start_time': 'Hora de inicio',
@@ -263,6 +267,10 @@ const translations = {
 
     // Services (en)
     'service.specialService': 'Special service',
+
+    // Panel
+    'panel.moderators': 'Moderator(s)',
+    'panel.panelists': 'Panelist(s)',
 
     // Announcements (essentials)
     'ann.title': 'Announcements Management',

@@ -50,11 +50,12 @@ export default function PublicProgramSegment({
   const isWorship = ['Alabanza', 'worship'].includes(segmentType);
   const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
   const isOffering = ['Ofrenda', 'offering'].includes(segmentType);
+  const isPanel = ['Panel', 'panel'].includes(segmentType);
   
   // Display mapping for type chip (keeps behavior checks above on raw value)
   const typeDisplayMap = {
-    es: { worship: 'Alabanza', welcome: 'Bienvenida', offering: 'Ofrenda', message: 'Plenaria' },
-    en: { worship: 'Worship', welcome: 'Welcome', offering: 'Offering', message: 'Message' }
+    es: { worship: 'Alabanza', welcome: 'Bienvenida', offering: 'Ofrenda', message: 'Plenaria', panel: 'Panel' },
+    en: { worship: 'Worship', welcome: 'Welcome', offering: 'Offering', message: 'Message', panel: 'Panel' }
   };
   const normalizedTypeKey = (segmentType || '').toString().toLowerCase();
   const displaySegmentType = typeDisplayMap[language]?.[normalizedTypeKey] || segmentType;
@@ -149,44 +150,61 @@ export default function PublicProgramSegment({
 
           {/* Presenter/Leader/Preacher/Translator Info */}
           <div className="space-y-1 mt-1">
-            {/* Presenter: Show for non-worship, non-message segments */}
-            {!isWorship && !isMessage && getData('presenter') && (
-              <div className="flex items-center gap-2 text-blue-600 text-sm">
-                <Users className="w-4 h-4" />
-                <span className="font-semibold">
-                  {segmentType === 'Ministración' ? 'Ministra: ' : ''}
-                  {normalizeName(getData('presenter'))}
-                </span>
-              </div>
-            )}
-            {/* Leader: Show only for Worship segments */}
-            {isWorship && getData('leader') && (
-              <div className="flex items-center gap-2 text-green-600 text-sm">
-                <Users className="w-4 h-4" />
-                <span className="font-semibold">Dirige: {normalizeName(getData('leader'))}</span>
-              </div>
-            )}
-            {/* Preacher: Show only for Message segments */}
-            {isMessage && getData('preacher') && (
-              <div className="flex items-center gap-2 text-indigo-600 text-sm">
-                <Users className="w-4 h-4" />
-                <span className="font-semibold">Predica: {normalizeName(getData('preacher'))}</span>
-              </div>
-            )}
-            {/* Translator: Show for all segments if present */}
-            {getData('translator') && (
-              <div className="flex items-center gap-2 text-purple-600 text-sm">
-                <Languages className="w-4 h-4" />
-                <span className="font-semibold">Traductor: {normalizeName(getData('translator'))}</span>
-              </div>
-            )}
-            {/* Room: Show if segment has a specific room assignment */}
-            {segment.room_id && (
-              <div className="flex items-center gap-2 text-gray-600 text-sm">
-                <MapPin className="w-4 h-4" />
-                <span>Sala asignada</span>
-              </div>
-            )}
+           {/* Panel: Moderators & Panelists */}
+           {isPanel && (getData('panel_moderators') || getData('panel_panelists')) && (
+             <>
+               {getData('panel_moderators') && (
+                 <div className="flex items-center gap-2 text-amber-700 text-sm">
+                   <Users className="w-4 h-4" />
+                   <span className="font-semibold">{language === 'es' ? 'Moderador(es): ' : 'Moderator(s): '}{normalizeName(getData('panel_moderators'))}</span>
+                 </div>
+               )}
+               {getData('panel_panelists') && (
+                 <div className="flex items-center gap-2 text-amber-700 text-sm">
+                   <Users className="w-4 h-4" />
+                   <span className="font-semibold">{language === 'es' ? 'Panelista(s): ' : 'Panelist(s): '}{normalizeName(getData('panel_panelists'))}</span>
+                 </div>
+               )}
+             </>
+           )}
+           {/* Presenter: Show for non-worship, non-message segments */}
+           {!isWorship && !isMessage && !isPanel && getData('presenter') && (
+             <div className="flex items-center gap-2 text-blue-600 text-sm">
+               <Users className="w-4 h-4" />
+               <span className="font-semibold">
+                 {segmentType === 'Ministración' ? 'Ministra: ' : ''}
+                 {normalizeName(getData('presenter'))}
+               </span>
+             </div>
+           )}
+           {/* Leader: Show only for Worship segments */}
+           {isWorship && getData('leader') && (
+             <div className="flex items-center gap-2 text-green-600 text-sm">
+               <Users className="w-4 h-4" />
+               <span className="font-semibold">Dirige: {normalizeName(getData('leader'))}</span>
+             </div>
+           )}
+           {/* Preacher: Show only for Message segments */}
+           {isMessage && getData('preacher') && (
+             <div className="flex items-center gap-2 text-indigo-600 text-sm">
+               <Users className="w-4 h-4" />
+               <span className="font-semibold">Predica: {normalizeName(getData('preacher'))}</span>
+             </div>
+           )}
+           {/* Translator: Show for all segments if present */}
+           {getData('translator') && (
+             <div className="flex items-center gap-2 text-purple-600 text-sm">
+               <Languages className="w-4 h-4" />
+               <span className="font-semibold">Traductor: {normalizeName(getData('translator'))}</span>
+             </div>
+           )}
+           {/* Room: Show if segment has a specific room assignment */}
+           {segment.room_id && (
+             <div className="flex items-center gap-2 text-gray-600 text-sm">
+               <MapPin className="w-4 h-4" />
+               <span>Sala asignada</span>
+             </div>
+           )}
           </div>
 
           {/* Scripture References (for Message or Offering segments) */}

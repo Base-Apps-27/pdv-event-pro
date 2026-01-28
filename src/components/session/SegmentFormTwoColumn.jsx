@@ -25,12 +25,13 @@ import { toast } from "sonner";
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
   "Anuncio", "Dinámica", "Break", "TechOnly", "Oración", 
-  "Especial", "Cierre", "MC", "Ministración", "Receso", "Almuerzo", "Artes", "Breakout"
+  "Especial", "Cierre", "MC", "Ministración", "Receso", "Almuerzo", "Artes", "Panel", "Breakout"
 ];
 
 const TYPE_TO_COLOR = {
   "Alabanza": "worship",
   "Plenaria": "preach",
+  "Panel": "special",
   "Break": "break",
   "Receso": "break",
   "Almuerzo": "break",
@@ -131,6 +132,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     requires_translation: segment?.requires_translation || false,
     translation_mode: segment?.translation_mode || "InPerson",
     translator_name: segment?.translator_name || "",
+    panel_moderators: segment?.panel_moderators || "",
+    panel_panelists: segment?.panel_panelists || "",
     major_break: segment?.major_break || false,
     room_id: segment?.room_id || "",
     has_video: segment?.has_video || false,
@@ -395,10 +398,11 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const isBreakoutType = formData.segment_type === "Breakout";
   const isVideoType = formData.segment_type === "Video";
   const isArtesType = formData.segment_type === "Artes";
+  const isPanelType = formData.segment_type === "Panel";
   const isMcLedType = ["Bienvenida", "Ofrenda", "Anuncio", "Dinámica", "Oración", "Especial", "Cierre", "MC", "Ministración"].includes(formData.segment_type);
   const isAnnouncementType = formData.segment_type === "Anuncio";
   
-  const needsPresenter = !isBreakType && !isTechOnly && !isBreakoutType; // dynamic required depending on type
+  const needsPresenter = !isBreakType && !isTechOnly && !isBreakoutType && !isPanelType; // dynamic required depending on type
   const showDescription = !isTechOnly && !isVideoType;
   const showTranslation = !isBreakType && !isBreakoutType;
   const showUshersNotes = !isBreakType && !isTechOnly && !isBreakoutType;
@@ -1162,6 +1166,31 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                         placeholder="Detalles adicionales"
                       />
                       <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'description_details')} />
+                    </div>
+                  </div>
+                )}
+
+                {isPanelType && (
+                  <div className="space-y-3 bg-amber-50 p-4 rounded border border-amber-200">
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label>{language === 'es' ? 'Anfitrión(es) / Moderador(es)' : 'Host(s) / Moderator(s)'}</Label>
+                        <Input 
+                          value={formData.panel_moderators}
+                          onChange={(e) => setFormData({...formData, panel_moderators: e.target.value})}
+                          placeholder={language === 'es' ? 'Nombres de los moderadores' : 'Moderator names'}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label>{language === 'es' ? 'Panelista(s)' : 'Panelist(s)'}</Label>
+                        <Input 
+                          value={formData.panel_panelists}
+                          onChange={(e) => setFormData({...formData, panel_panelists: e.target.value})}
+                          placeholder={language === 'es' ? 'Nombres de los panelistas' : 'Panelist names'}
+                          className="text-sm"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

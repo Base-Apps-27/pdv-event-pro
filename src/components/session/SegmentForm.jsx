@@ -20,7 +20,7 @@ import AutocompleteInput from "@/components/ui/AutocompleteInput";
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
   "Anuncio", "Dinámica", "Break", "TechOnly", "Oración", 
-  "Especial", "Cierre", "MC", "Ministración", "Receso", "Almuerzo", "Artes"
+  "Especial", "Cierre", "MC", "Ministración", "Receso", "Almuerzo", "Artes", "Panel"
 ];
 
 const COLOR_CODES = [
@@ -101,6 +101,8 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     song_6_key: segment?.song_6_key || "",
     requires_translation: segment?.requires_translation || false,
     translator_name: segment?.translator_name || "",
+    panel_moderators: segment?.panel_moderators || "",
+    panel_panelists: segment?.panel_panelists || "",
     major_break: segment?.major_break || false,
     segment_actions: segment?.segment_actions || [],
     parsed_verse_data: segment?.parsed_verse_data || null,
@@ -176,7 +178,8 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     const isBreakTypeNow = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
     const isTechOnlyNow = formData.segment_type === "TechOnly";
     const isBreakoutTypeNow = formData.segment_type === "Breakout";
-    const needsPresenterNow = !isBreakTypeNow && !isTechOnlyNow && !isBreakoutTypeNow;
+    const isPanelTypeNow = formData.segment_type === "Panel";
+    const needsPresenterNow = !isBreakTypeNow && !isTechOnlyNow && !isBreakoutTypeNow && !isPanelTypeNow;
 
     const missing = [];
     if (!formData.title?.trim()) missing.push(t('field.title'));
@@ -212,7 +215,8 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
   const isBreakType = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
   const isTechOnly = formData.segment_type === "TechOnly";
   const isVideoType = formData.segment_type === "Video";
-  const needsPresenter = !isBreakType && !isTechOnly;
+  const isPanelType = formData.segment_type === "Panel";
+  const needsPresenter = !isBreakType && !isTechOnly && !isPanelType;
 
   const handleAddAction = () => {
     const newAction = {
@@ -318,6 +322,29 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
             rows={2}
             placeholder="Detalles adicionales"
           />
+        </div>
+      )}
+
+      {isPanelType && (
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="panel_moderators">{t('panel.moderators') || 'Moderador(es)'}</Label>
+            <Input 
+              id="panel_moderators"
+              value={formData.panel_moderators}
+              onChange={(e) => setFormData({...formData, panel_moderators: e.target.value})}
+              placeholder={t('panel.moderators') || 'Moderador(es)'}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="panel_panelists">{t('panel.panelists') || 'Panelista(s)'}</Label>
+            <Input 
+              id="panel_panelists"
+              value={formData.panel_panelists}
+              onChange={(e) => setFormData({...formData, panel_panelists: e.target.value})}
+              placeholder={t('panel.panelists') || 'Panelista(s)'}
+            />
+          </div>
         </div>
       )}
 
