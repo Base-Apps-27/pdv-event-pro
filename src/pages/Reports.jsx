@@ -1285,24 +1285,24 @@ export default function Reports() {
                     className="font-bold uppercase"
                   >
                     <Share2 className="w-4 h-4 mr-2" />
-                    Vista Pública
+                    {t('reports.publicView')}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={handleOpenPublicView}>
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    Abrir Vista Pública
+                    {t('reports.openPublicView')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleCopyLink}>
+                  <DropdownMenuItem onClick={handleCopyLink} aria-label={t('reports.copyLink')}>
                     {copySuccess ? (
                       <>
                         <Check className="w-4 h-4 mr-2 text-green-600" />
-                        ¡Copiado!
+                        {t('reports.copied')}
                       </>
                     ) : (
                       <>
                         <Copy className="w-4 h-4 mr-2" />
-                        Copiar Enlace
+                        {t('reports.copyLink')}
                       </>
                     )}
                   </DropdownMenuItem>
@@ -1346,7 +1346,7 @@ export default function Reports() {
           <CardContent>
             <Select value={selectedEventId} onValueChange={setSelectedEventId}>
               <SelectTrigger className="w-full max-w-md">
-                <SelectValue placeholder="Selecciona un evento..." />
+                <SelectValue placeholder={t('reports.selectEventPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {events.map((event) => (
@@ -1461,7 +1461,7 @@ export default function Reports() {
         {!selectedEventId && (
           <Card className="p-12 text-center border-dashed border-2 bg-white border-gray-300">
             <Filter className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Selecciona un evento para ver los informes disponibles</p>
+            <p className="text-gray-600">{t('reports.selectEventPrompt')}</p>
           </Card>
         )}
       </div>
