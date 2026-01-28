@@ -383,7 +383,7 @@ const translations = {
       'live.upNext': 'Up Next',
       'live.adjusted': 'ADJUSTED',
       'live.nothingNow': 'Nothing in progress right now',
-      'live.endOfProgram': 'End of program'
+      'live.endOfProgram': 'End of program',
 
     // Live Admin
     'live.admin_mode': 'Live Director Mode',
