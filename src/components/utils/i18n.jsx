@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 
 const translations = {
   es: {
@@ -392,14 +393,38 @@ function normalizeLang(lang) {
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState(() => {
+  const [language, setLangState] = useState(() => {
     const stored = localStorage.getItem('language') || 'es';
     return normalizeLang(stored);
   });
 
+  // Phase 1 i18n rollout: prefer user.ui_language when authenticated; otherwise fallback to localStorage
   useEffect(() => {
-    localStorage.setItem('language', normalizeLang(language));
-  }, [language]);
+    (async () => {
+      const authed = await base44.auth.isAuthenticated();
+      if (authed) {
+        const user = await base44.auth.me();
+        const pref = user?.ui_language ? normalizeLang(user.ui_language) : null;
+        if (pref && pref !== language) {
+          setLangState(pref);
+          localStorage.setItem('language', pref);
+        }
+      }
+    })();
+  }, []);
+
+  // Wrapper that persists locally, tracks analytics, and saves to user profile if logged in
+  const setLanguage = (lang) => {
+    const norm = normalizeLang(lang);
+    setLangState(norm);
+    localStorage.setItem('language', norm);
+    base44.analytics.track({ eventName: 'language_changed', properties: { lang: norm } });
+    base44.auth.isAuthenticated().then((authed) => {
+      if (authed) {
+        base44.auth.updateMe({ ui_language: norm });
+      }
+    });
+  };
 
   const t = (key) => {
     const lang = normalizeLang(language);
