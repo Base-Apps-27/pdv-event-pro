@@ -271,7 +271,7 @@ const translations = {
 
     // Panel
     'panel.moderators': 'Moderator(s)',
-    'panel.topic': 'Topic'
+    'panel.topic': 'Topic',
     'panel.panelists': 'Panelist(s)',
 
     // Announcements (essentials)
