@@ -1317,17 +1317,17 @@ export default function Reports() {
                   className="font-bold uppercase"
                 >
                   <Printer className="w-4 h-4 mr-2" />
-                  Imprimir/Exportar
+                  {t('reports.printExport')}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handlePrint}>
                   <FileText className="w-4 h-4 mr-2" />
-                  Imprimir Vista Actual
+                  {t('reports.printCurrent')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handlePrintAll}>
                   <List className="w-4 h-4 mr-2" />
-                  Imprimir Todos los Informes
+                  {t('reports.printAll')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -1377,7 +1377,7 @@ export default function Reports() {
               <TabsList className="grid w-full grid-cols-6 mb-6 no-print">
                 <TabsTrigger value="detailed" className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
-                  Detallado
+                  {t('reports.tabs.detailed')}
                 </TabsTrigger>
                 <TabsTrigger value="general" className="flex items-center gap-2">
                   <List className="w-4 h-4" />
