@@ -54,11 +54,19 @@ Deno.serve(async (req) => {
       allResults.push(...batchResults.flat());
     }
 
-    // Deterministic ordering: by session_id position (unknown sessions last), then by order
+    // Deterministic ordering: by session order, then by start_time (HH:MM), then by order as tie-breaker
+    const toMinutes = (t) => {
+      if (!t || typeof t !== 'string') return Number.POSITIVE_INFINITY;
+      const [h, m] = t.split(':').map(Number);
+      if (Number.isNaN(h) || Number.isNaN(m)) return Number.POSITIVE_INFINITY;
+      return h * 60 + m;
+    };
     const sorted = allResults.sort((a, b) => {
       const aIndex = orderMap.has(a.session_id) ? orderMap.get(a.session_id) : Number.MAX_SAFE_INTEGER;
       const bIndex = orderMap.has(b.session_id) ? orderMap.get(b.session_id) : Number.MAX_SAFE_INTEGER;
       if (aIndex !== bIndex) return aIndex - bIndex;
+      const tm = toMinutes(a.start_time) - toMinutes(b.start_time);
+      if (tm !== 0) return tm;
       return (a.order || 0) - (b.order || 0);
     });
 
