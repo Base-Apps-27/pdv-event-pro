@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { formatTimeToEST, formatTimestampToEST, formatDateET } from "../components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import StructuredVersesModal from "@/components/service/StructuredVersesModal";
+import VerseParserDialog from "@/components/service/VerseParserDialog";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import LiveTimeAdjustmentModal from "@/components/service/LiveTimeAdjustmentModal";
@@ -1115,7 +1116,12 @@ export default function PublicProgramView() {
                 scrollToSegment={scrollToSegment}
                 refetchData={refetchData}
                 getRoomName={getRoomName}
-              />
+                onOpenVerseParser={({ segment, initialText }) => {
+                  setVerseParserSegment(segment);
+                  setVerseParserInitial(initialText || "");
+                  setVerseParserOpen(true);
+                }}
+                />
             )}
 
             {/* Legacy rendering - Remove after confirming above works */}
