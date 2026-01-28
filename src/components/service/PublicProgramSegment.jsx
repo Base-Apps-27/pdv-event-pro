@@ -51,6 +51,7 @@ export default function PublicProgramSegment({
   const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
   const isOffering = ['Ofrenda', 'offering'].includes(segmentType);
   const isPanel = ['Panel', 'panel'].includes(segmentType);
+  // Hide scriptures in PDFs/Reports; live view still shows via this component when provided
   
   // Display mapping for type chip (keeps behavior checks above on raw value)
   const typeDisplayMap = {

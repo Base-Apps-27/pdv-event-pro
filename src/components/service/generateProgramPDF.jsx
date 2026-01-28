@@ -224,43 +224,29 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
     
     // Message/Details box (Blue-50 style)
     const messageTitle = seg.data?.messageTitle || seg.data?.title;
-    const verse = seg.data?.verse || seg.data?.scripture_references;
-    if ((messageTitle && isMessage) || verse) {
-      const msgContent = [];
-      if (messageTitle && isMessage) {
-        msgContent.push({
+    if (messageTitle && isMessage) {
+      const msgContent = [
+        {
           text: [
             { text: 'MENSAJE: ', bold: true, color: '#1E40AF' },
             { text: messageTitle, color: '#1E3A8A' }
           ],
-          fontSize: 9 * globalScale,
-          margin: [0, 0, 0, 2]
-        });
-      }
-      if (verse) {
-        msgContent.push({
-          text: [
-            { text: 'ESCRITURAS: ', bold: true, color: '#1E40AF' },
-            { text: verse, color: '#1E3A8A' }
-          ],
           fontSize: 9 * globalScale
-        });
-      }
-      if (msgContent.length > 0) {
-        items.push({
-          table: {
-            widths: ['*'],
-            body: [[{
-              stack: msgContent,
-              fillColor: '#EFF6FF',
-              border: [true, true, true, true],
-              borderColor: ['#BFDBFE', '#BFDBFE', '#BFDBFE', '#BFDBFE'],
-              margin: [4, 4, 4, 4]
-            }]]
-          },
-          margin: [8, 2, 0, 2]
-        });
-      }
+        }
+      ];
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: msgContent,
+            fillColor: '#EFF6FF',
+            border: [true, true, true, true],
+            borderColor: ['#BFDBFE', '#BFDBFE', '#BFDBFE', '#BFDBFE'],
+            margin: [4, 4, 4, 4]
+          }]]
+        },
+        margin: [8, 2, 0, 2]
+      });
     }
 
     // Prep notes box (Gray-50)

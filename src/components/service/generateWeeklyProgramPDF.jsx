@@ -366,6 +366,28 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       });
     }
 
+    // Panel moderators/panelists (rare in weekly, safe to render if present)
+    if (seg.data?.panel_moderators || seg.data?.panel_panelists) {
+      if (seg.data.panel_moderators) {
+        items.push({
+          text: [
+            { text: 'MODERADOR(ES): ', bold: true, color: '#B45309', fontSize: 9 * scale },
+            { text: seg.data.panel_moderators, bold: true, color: '#92400E', fontSize: 9.5 * scale }
+          ],
+          margin: [8, 0, 0, 1]
+        });
+      }
+      if (seg.data.panel_panelists) {
+        items.push({
+          text: [
+            { text: 'PANELISTA(S): ', bold: true, color: '#B45309', fontSize: 9 * scale },
+            { text: seg.data.panel_panelists, bold: true, color: '#92400E', fontSize: 9.5 * scale }
+          ],
+          margin: [8, 0, 0, 1]
+        });
+      }
+    }
+
     // Songs - Styled Box (Slate-50)
     if (seg.songs && seg.songs.some(s => s.title)) {
       items.push({
@@ -439,49 +461,32 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       });
     }
 
-    // Message/Special Details - Styled Box (Blue-50)
+    // Message Details - Styled Box (Blue-50), no scriptures in exports
     const messageTitle = seg.data?.title || seg.data?.messageTitle;
-    if ((messageTitle && seg.type === 'message') || seg.data?.scripture_references || seg.data?.verse) {
-      const msgContent = [];
-      if (messageTitle && seg.type === 'message') {
-        msgContent.push({ 
-          text: [
-            { text: 'MENSAJE: ', bold: true, color: '#1E40AF' }, // Blue-800
-            { text: messageTitle, color: '#1E3A8A' } // Blue-900
-          ], 
-          fontSize: 9 * scale,
-          margin: [0, 0, 0, 2] 
-        });
-      }
-      
-      const verseText = seg.data?.scripture_references || seg.data?.verse;
-      if (verseText) {
-        msgContent.push({
-          text: [
-            { text: 'ESCRITURAS: ', bold: true, color: '#1E40AF' },
-            { text: verseText, color: '#1E3A8A' }
-          ],
-          fontSize: 9 * scale
-        });
-      }
-
-      if (msgContent.length > 0) {
-        items.push({
-          table: {
-            widths: ['*'],
-            body: [[
-              {
-                stack: msgContent,
-                fillColor: '#EFF6FF', // Blue-50
-                border: [true, true, true, true],
-                borderColor: ['#BFDBFE', '#BFDBFE', '#BFDBFE', '#BFDBFE'], // Blue-200
-                margin: [4, 4, 4, 4]
-              }
-            ]]
-          },
-          margin: [8, 2, 0, 2]
-        });
-      }
+    if (messageTitle && seg.type === 'message') {
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[
+            {
+              stack: [
+                { 
+                  text: [
+                    { text: 'MENSAJE: ', bold: true, color: '#1E40AF' },
+                    { text: messageTitle, color: '#1E3A8A' }
+                  ],
+                  fontSize: 9 * scale
+                }
+              ],
+              fillColor: '#EFF6FF', // Blue-50
+              border: [true, true, true, true],
+              borderColor: ['#BFDBFE', '#BFDBFE', '#BFDBFE', '#BFDBFE'], // Blue-200
+              margin: [4, 4, 4, 4]
+            }
+          ]]
+        },
+        margin: [8, 2, 0, 2]
+      });
     }
 
     // Notes - Consolidated Block (Layout Efficiency)

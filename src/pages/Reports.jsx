@@ -571,13 +571,24 @@ export default function Reports() {
                                 <span className="text-gray-700 ml-1">{segment.message_title}</span>
                               </div>
                             )}
-
-                            {segment.segment_type === "Plenaria" && segment.scripture_references && (
+                            {segment.segment_type === "Panel" && (segment.panel_moderators || segment.panel_panelists) && (
                               <div className="mt-1 text-[10px] bg-amber-50 p-1 rounded border border-amber-200">
-                                <span className="text-amber-700 font-bold">ESCRITURAS:</span>
-                                <span className="text-gray-700 ml-1">{segment.scripture_references}</span>
+                                {segment.panel_moderators && (
+                                  <div>
+                                    <span className="text-amber-700 font-bold">MODERADOR(ES):</span>
+                                    <span className="text-gray-700 ml-1"> {segment.panel_moderators}</span>
+                                  </div>
+                                )}
+                                {segment.panel_panelists && (
+                                  <div>
+                                    <span className="text-amber-700 font-bold">PANELISTA(S):</span>
+                                    <span className="text-gray-700 ml-1"> {segment.panel_panelists}</span>
+                                  </div>
+                                )}
                               </div>
                             )}
+
+                            
 
                             {segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0 && (
                               <div className="mt-1 text-[10px] bg-pink-50 p-1 rounded border border-pink-200">
