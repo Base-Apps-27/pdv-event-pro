@@ -205,6 +205,46 @@ export default function Reports() {
     return room ? room.name : "";
   };
 
+  // Merge multiple PreSessionDetails records for a session into a single block.
+  // Non-destructive: prefers earliest times; for text fields, uses first non-empty value.
+  const parseHM = (t) => {
+    if (!t || typeof t !== 'string') return Number.POSITIVE_INFINITY;
+    const [h, m] = t.split(':').map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return Number.POSITIVE_INFINITY;
+    return h * 60 + m;
+  };
+
+  const mergePreSessionDetails = (records) => {
+    if (!Array.isArray(records) || records.length === 0) return null;
+    if (records.length > 1) {
+      // Breadcrumb for ops: duplicates exist; we consolidate at render time.
+      console.warn('Reports: multiple PreSessionDetails found for session, consolidating', records.map(r => r.id));
+    }
+    const merged = {};
+
+    // Simple pickers: first non-empty
+    const pickFirst = (key) => {
+      const found = records.find(r => r && r[key]);
+      if (found) merged[key] = found[key];
+    };
+    pickFirst('music_profile_id');
+    pickFirst('slide_pack_id');
+    pickFirst('facility_notes');
+    pickFirst('general_notes');
+
+    // Time pickers: earliest
+    const pickEarliest = (key) => {
+      const times = records.map(r => r && r[key]).filter(Boolean);
+      if (times.length === 0) return;
+      times.sort((a, b) => parseHM(a) - parseHM(b));
+      merged[key] = times[0];
+    };
+    pickEarliest('registration_desk_open_time');
+    pickEarliest('library_open_time');
+
+    return merged;
+  };
+
 
 
 
