@@ -117,7 +117,7 @@ const translations = {
 
     // Panel
     'panel.moderators': 'Moderador(es)',
-    'panel.topic': 'Tema/Tópico'
+    'panel.topic': 'Tema/Tópico',
     'panel.panelists': 'Panelista(s)',
     // Fields
     'field.title': 'Título',
