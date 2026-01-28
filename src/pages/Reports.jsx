@@ -44,7 +44,11 @@ export default function Reports() {
 
   const { data: sessions = [] } = useQuery({
     queryKey: ['sessions', selectedEventId],
-    queryFn: () => base44.entities.Session.filter({ event_id: selectedEventId }, 'order'),
+    queryFn: async () => {
+      if (!selectedEventId) return [];
+      const { data } = await base44.functions.invoke('getSortedSessions', { eventId: selectedEventId });
+      return data.sessions || [];
+    },
     enabled: !!selectedEventId,
   });
 

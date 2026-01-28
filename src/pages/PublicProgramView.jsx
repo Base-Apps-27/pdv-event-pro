@@ -241,11 +241,13 @@ export default function PublicProgramView() {
   // Fetch sessions for selected event OR service
   const { data: sessions = [], refetch: refetchSessions } = useQuery({
     queryKey: ['sessions', selectedEventId, selectedServiceId, viewType],
-    queryFn: () => {
+    queryFn: async () => {
       if (viewType === "event" && selectedEventId) {
-        return base44.entities.Session.filter({ event_id: selectedEventId }, 'order');
+        const { data } = await base44.functions.invoke('getSortedSessions', { eventId: selectedEventId });
+        return data.sessions || [];
       } else if (viewType === "service" && selectedServiceId) {
-        return base44.entities.Session.filter({ service_id: selectedServiceId }, 'order');
+        const { data } = await base44.functions.invoke('getSortedSessions', { serviceId: selectedServiceId });
+        return data.sessions || [];
       }
       return [];
     },
