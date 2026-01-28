@@ -176,7 +176,7 @@ export default function Events() {
             </Button>
             <Button onClick={() => openEditDialog(null)} className="text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6" style={gradientStyle}>
               <Plus className="w-5 h-5 mr-2" />
-              Nuevo Evento
+              {t('events.newEvent')}
             </Button>
           </div>
         )}
@@ -404,7 +404,7 @@ export default function Events() {
                   value={formData.description}
                   onChange={(e) => updateFormField('description', e.target.value)}
                   rows={3}
-                  placeholder="Descripción general del evento"
+                  placeholder={t('placeholder.eventDescription')}
                 />
                 <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'description')} />
               </div>

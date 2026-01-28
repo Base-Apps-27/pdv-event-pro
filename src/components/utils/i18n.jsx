@@ -207,6 +207,7 @@ const translations = {
       'placeholder.selectDate': 'Seleccionar fecha',
       'placeholder.announcementBlurb': 'Texto corto para leer en anuncios...',
       'placeholder.targets': 'Ej. Domingo AM, Jóvenes',
+      'placeholder.eventDescription': 'Descripción general del evento',
 
       // Colors
       'color.blue': 'Azul',
@@ -429,6 +430,7 @@ const translations = {
       'placeholder.selectDate': 'Select date',
       'placeholder.announcementBlurb': 'Short text to read in announcements...',
       'placeholder.targets': 'E.g. Sunday AM, Youth',
+      'placeholder.eventDescription': 'General event description',
 
       // Colors
       'color.blue': 'Blue',
