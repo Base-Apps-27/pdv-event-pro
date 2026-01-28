@@ -330,7 +330,57 @@ const translations = {
   }
 };
 
-// Normalize language codes like 'es-ES', 'en-US' to base keys we support
+// Defensive fallback map for live.* keys when a translation is missing
+const liveFallback = {
+  es: {
+    preacher: 'Predicador',
+    translator: 'Traductor',
+    preparation: 'Preparación',
+    during: 'Durante segmento',
+    songs: 'Canciones',
+    message: 'Mensaje',
+    scriptures: 'Escrituras',
+    viewVerses: 'Ver Versículos',
+    extractSaveVerses: 'Extraer/Guardar Versos',
+    coordination: 'Coordinación',
+    projection: 'Proyección',
+    sound: 'Sonido',
+    ushers: 'Ujieres',
+    translation: 'Traducción',
+    stageDecor: 'Stage & Decor',
+    notes: 'Notas',
+    roomAssigned: 'Sala asignada',
+    video: 'Video',
+    majorBreak: 'Receso mayor',
+    slides: 'Slides',
+    countdown: 'Cuenta regresiva',
+  },
+  en: {
+    preacher: 'Preacher',
+    translator: 'Translator',
+    preparation: 'Preparation',
+    during: 'During Segment',
+    songs: 'Songs',
+    message: 'Message',
+    scriptures: 'Scriptures',
+    viewVerses: 'View Verses',
+    extractSaveVerses: 'Extract/Save Verses',
+    coordination: 'Coordination',
+    projection: 'Projection',
+    sound: 'Sound',
+    ushers: 'Ushers',
+    translation: 'Translation',
+    stageDecor: 'Stage & Decor',
+    notes: 'Notes',
+    roomAssigned: 'Assigned room',
+    video: 'Video',
+    majorBreak: 'Major Break',
+    slides: 'Slides',
+    countdown: 'Countdown',
+  }
+};
+
+ // Normalize language codes like 'es-ES', 'en-US' to base keys we support
 function normalizeLang(lang) {
   if (!lang) return 'es';
   const l = String(lang).toLowerCase();
@@ -353,7 +403,16 @@ export function LanguageProvider({ children }) {
 
   const t = (key) => {
     const lang = normalizeLang(language);
-    return translations[lang]?.[key] || key;
+    const direct = translations[lang]?.[key];
+    if (direct) return direct;
+    // Fallback: support dotted keys like "live.preacher" when missing from translations
+    if (typeof key === 'string' && key.includes('.')) {
+      const [ns, short] = key.split('.');
+      if (ns === 'live' && liveFallback[lang]?.[short]) {
+        return liveFallback[lang][short];
+      }
+    }
+    return key; // final fallback shows the key to surface missing strings in dev
   };
 
   return (
