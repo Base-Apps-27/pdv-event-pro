@@ -395,9 +395,9 @@ export default function Reports() {
               <table className="w-full text-xs">
                 <thead className="bg-gray-100 border-b border-gray-300">
                   <tr>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-12 text-center text-xs">Hora</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-3/5">Detalles</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-2/5">Notas por Equipo</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-12 text-center text-xs">{t('reports.headers.time')}</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-3/5">{t('reports.headers.details')}</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-2/5">{t('reports.headers.teamNotes')}</th>
                   </tr>
                 </thead>
                 <tbody>
