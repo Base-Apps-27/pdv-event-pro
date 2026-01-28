@@ -249,6 +249,40 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
       });
     }
 
+    // Breakout rooms consolidated block (no scriptures; per-room summary)
+    const isBreakout = (seg.segment_type || seg.type) === 'Breakout';
+    const breakoutRooms = seg.breakout_rooms || [];
+    if (isBreakout && Array.isArray(breakoutRooms) && breakoutRooms.length > 0) {
+      const roomStack = [
+        { text: 'SESIONES PARALELAS', bold: true, color: '#B45309', fontSize: 9 * globalScale, margin: [0, 0, 0, 2] },
+        ...breakoutRooms.map((room, idx) => ({
+          stack: [
+            { text: `${room.topic || `Sala ${idx + 1}`}`, bold: true, color: '#111827', fontSize: 9.5 * globalScale },
+            room.hosts ? { text: `Anfitrión: ${room.hosts}`, color: '#4338CA', fontSize: 8 * globalScale } : '',
+            room.speakers ? { text: `Presentador: ${room.speakers}`, color: '#2563EB', fontSize: 8 * globalScale } : '',
+            room.requires_translation ? { text: `${room.translation_mode === 'RemoteBooth' ? 'Traducción Remota' : 'Traducción en Persona'}${room.translator_name ? ` — ${room.translator_name}` : ''}`, color: '#7C3AED', fontSize: 7.5 * globalScale, italics: true } : '',
+            room.general_notes ? { text: `Prod: ${room.general_notes}`, color: '#6B7280', fontSize: 7.5 * globalScale } : '',
+            room.other_notes ? { text: `Otras: ${room.other_notes}`, color: '#6B7280', fontSize: 7.5 * globalScale } : ''
+          ],
+          margin: [0, 1, 0, 2]
+        }))
+      ];
+
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: roomStack,
+            fillColor: '#FFFBEB',
+            border: [true, true, true, true],
+            borderColor: ['#FCD34D', '#FCD34D', '#FCD34D', '#FCD34D'],
+            margin: [4, 4, 4, 4]
+          }]]
+        },
+        margin: [8, 2, 0, 2]
+      });
+    }
+
     // Prep notes box (Gray-50)
     const prepNotes = seg.data?.description_details || seg.description_details;
     if (prepNotes) {
