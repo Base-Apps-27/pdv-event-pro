@@ -211,7 +211,7 @@ export default function Dashboard() {
                       <div className="flex flex-col justify-between">
                         <div>
                           <Badge className={statusColors[event.status] || "bg-gray-500"}>
-                            {event.status}
+                            {statusLabels[event.status]}
                           </Badge>
                           {sessions.filter(s => s.event_id === event.id).length > 0 && (
                             <div className="mt-3">
@@ -275,7 +275,7 @@ export default function Dashboard() {
                       </div>
                       <div className="flex justify-between items-center">
                         <Badge className={statusColors[event.status] || "bg-gray-500"}>
-                          {event.status}
+                          {statusLabels[event.status]}
                         </Badge>
                         <Button 
                           onClick={() => {
