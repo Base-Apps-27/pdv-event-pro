@@ -3,8 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PlayCircle } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
+import { useLanguage } from "@/components/utils/i18n";
 
 export default function LiveStatusCard({ segments, currentTime, onScrollTo, liveAdjustmentEnabled, serviceDate }) {
+  const { t } = useLanguage();
   // Helper to parse "HH:MM" to Date object
   const getTimeDate = (timeStr, segmentDate) => {
     if (!timeStr) return null;
@@ -151,7 +153,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="default" className="bg-red-500 hover:bg-red-600 animate-pulse flex items-center gap-1">
-                  <PlayCircle className="w-3 h-3" /> EN CURSO
+                  <PlayCircle className="w-3 h-3" /> {t('live.inProgress')}
                 </Badge>
                 {currentRemaining && (
                   <span className="text-xs font-mono text-red-600 font-bold">{currentRemaining} restantes</span>

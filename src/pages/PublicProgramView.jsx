@@ -757,7 +757,7 @@ export default function PublicProgramView() {
                       <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {upcomingServices.map((service) => (
                                                     <SelectItem key={service.id} value={service.id}>
-                                                      {service.name.length > 25 ? service.name.substring(0, 25) + '...' : service.name} - {formatDateET(service.date)} ({service.daysUntil === 0 ? 'Hoy' : service.daysUntil === 1 ? 'Mañana' : `en ${service.daysUntil} días`})
+                                                      {service.name.length > 25 ? service.name.substring(0, 25) + '...' : service.name} - {formatDateET(service.date)} ({service.daysUntil === 0 ? t('public.today') : service.daysUntil === 1 ? t('public.tomorrow') : `${t('public.in')} ${service.daysUntil} ${service.daysUntil === 1 ? t('public.day') : t('public.days')}`})
                                                     </SelectItem>
                                                   ))}
                       </SelectContent>
@@ -831,19 +831,19 @@ export default function PublicProgramView() {
                   <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
                     {viewType === "event" && selectedEvent?.description && (
                       <div>
-                        <p className="font-semibold text-gray-900 mb-1">Descripción:</p>
+                        <p className="font-semibold text-gray-900 mb-1">{t('public.description')}:</p>
                         <p className="text-gray-700">{selectedEvent.description}</p>
                       </div>
                     )}
                     {viewType === "event" && selectedEvent?.announcement_blurb && (
                       <div>
-                        <p className="font-semibold text-gray-900 mb-1">Anuncio:</p>
+                        <p className="font-semibold text-gray-900 mb-1">{t('public.announcement')}:</p>
                         <p className="text-gray-700">{selectedEvent.announcement_blurb}</p>
                       </div>
                     )}
                     {viewType === "event" && selectedEvent?.promotion_targets && selectedEvent.promotion_targets.length > 0 && (
                       <div>
-                        <p className="font-semibold text-gray-900 mb-1">Audiencia:</p>
+                        <p className="font-semibold text-gray-900 mb-1">{t('public.audience')}:</p>
                         <div className="flex flex-wrap gap-2">
                           {selectedEvent.promotion_targets.map((target, idx) => (
                             <Badge key={idx} variant="outline">{target}</Badge>
@@ -853,13 +853,13 @@ export default function PublicProgramView() {
                     )}
                     <div className="grid grid-cols-2 gap-4 pt-2">
                       <div>
-                        <p className="font-semibold text-gray-900 mb-1">Total Sesiones:</p>
+                        <p className="font-semibold text-gray-900 mb-1">{t('public.totalSessions')}:</p>
                         <p className={`text-2xl font-bold ${viewType === "event" ? "text-pdv-teal" : "text-pdv-green"}`}>
                           {eventSessions.length}
                         </p>
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900 mb-1">Total Segmentos:</p>
+                        <p className="font-semibold text-gray-900 mb-1">{t('public.totalSegments')}:</p>
                         <p className={`text-2xl font-bold ${viewType === "event" ? "text-pdv-teal" : "text-pdv-green"}`}>
                           {allSegments.filter(seg => eventSessions.some(s => s.id === seg.session_id)).length}
                         </p>
@@ -1010,7 +1010,7 @@ export default function PublicProgramView() {
                             <div className="flex items-center gap-2 mb-1">
                               <Clock className="w-4 h-4 text-amber-700" />
                               <span className="font-bold text-amber-900">
-                                {displayLabel} ajustado {adj.offset_minutes > 0 ? '+' : ''}{adj.offset_minutes} minutos (inicio: {adjustedTimeStr})
+                                {displayLabel} {t('public.adjusted')} {adj.offset_minutes > 0 ? '+' : ''}{adj.offset_minutes} {t('public.minutes')} ({t('public.start')}: {adjustedTimeStr})
                               </span>
                             </div>
                             <div className="text-xs text-gray-700 space-y-0.5">
@@ -1307,7 +1307,7 @@ export default function PublicProgramView() {
 
                 {/* Receso */}
                 <div className="bg-gray-100 rounded-lg p-4 text-center border border-gray-300">
-                  <p className="font-bold text-gray-600">RECESO (30 min)</p>
+                  <p className="font-bold text-gray-600">{t('public.break')} (30 min)</p>
                   {actualServiceData.receso_notes?.["9:30am"] && (
                     <p className="text-sm text-gray-600 mt-2">{actualServiceData.receso_notes["9:30am"]}</p>
                   )}
@@ -1384,7 +1384,7 @@ export default function PublicProgramView() {
                               ) : (
                               <Card className="p-12 text-center bg-white border-2 border-gray-300">
                                 <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                <p className="text-gray-600">Este servicio aún no tiene programa disponible</p>
+                                <p className="text-gray-600">{t('public.noProgramYet')}</p>
                               </Card>
                               )
                               )}
@@ -1627,7 +1627,7 @@ export default function PublicProgramView() {
         onOpenChange={setVersesModalOpen}
         parsedData={versesModalData.parsedData}
         rawText={versesModalData.rawText}
-        language="es"
+        language={language}
       />
 
       {/* Verse Parser Dialog (Admin only) */}
