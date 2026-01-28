@@ -562,26 +562,34 @@ export default function Reports() {
                             )}
 
                             {segment.segment_type === "Plenaria" && segment.message_title && (
-                              <div className="mt-1 text-[10px] bg-blue-50 p-1 rounded border border-blue-200">
-                                <span className="text-blue-700 font-bold">MENSAJE:</span>
-                                <span className="text-gray-700 ml-1">{segment.message_title}</span>
-                              </div>
+                             <div className="mt-1 text-[10px] bg-blue-50 p-1 rounded border border-blue-200">
+                               <span className="text-blue-700 font-bold">MENSAJE:</span>
+                               <span className="text-gray-700 ml-1">{segment.message_title}</span>
+                             </div>
+                            )}
+                            {segment.has_video && (
+                             <div className="mt-1 text-[10px] bg-blue-50 p-1 rounded border border-blue-200">
+                               <span className="text-blue-700 font-bold">VIDEO:</span>
+                               <span className="text-gray-700 ml-1">{segment.video_name}</span>
+                               {segment.video_location && <span className="text-gray-600 ml-1">({segment.video_location})</span>}
+                               {segment.video_length_sec && <span className="text-gray-600 ml-1">- {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}</span>}
+                             </div>
                             )}
                             {segment.segment_type === "Panel" && (segment.panel_moderators || segment.panel_panelists) && (
-                              <div className="mt-1 text-[10px] bg-amber-50 p-1 rounded border border-amber-200">
-                                {segment.panel_moderators && (
-                                  <div>
-                                    <span className="text-amber-700 font-bold">MODERADOR(ES):</span>
-                                    <span className="text-gray-700 ml-1"> {segment.panel_moderators}</span>
-                                  </div>
-                                )}
-                                {segment.panel_panelists && (
-                                  <div>
-                                    <span className="text-amber-700 font-bold">PANELISTA(S):</span>
-                                    <span className="text-gray-700 ml-1"> {segment.panel_panelists}</span>
-                                  </div>
-                                )}
-                              </div>
+                             <div className="mt-1 text-[10px] bg-amber-50 p-1 rounded border border-amber-200">
+                               {segment.panel_moderators && (
+                                 <div>
+                                   <span className="text-amber-700 font-bold">MODERADOR(ES):</span>
+                                   <span className="text-gray-700 ml-1"> {segment.panel_moderators}</span>
+                                 </div>
+                               )}
+                               {segment.panel_panelists && (
+                                 <div>
+                                   <span className="text-amber-700 font-bold">PANELISTA(S):</span>
+                                   <span className="text-gray-700 ml-1"> {segment.panel_panelists}</span>
+                                 </div>
+                               )}
+                             </div>
                             )}
 
                             
