@@ -1397,7 +1397,7 @@ export default function Reports() {
                 </TabsTrigger>
                 <TabsTrigger value="hospitality" className="flex items-center gap-2">
                   <Utensils className="w-4 h-4" />
-                  Hospitalidad
+                  {t('reports.tabs.hospitality')}
                 </TabsTrigger>
               </TabsList>
 
