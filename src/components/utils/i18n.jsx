@@ -172,6 +172,53 @@ const translations = {
       'public.noProgramYet': 'Este servicio aún no tiene programa disponible',
       'public.break': 'Receso',
 
+      // Events
+      'events.title': 'Eventos',
+      'events.subtitle': 'Gestiona tus congresos y actividades especiales',
+      'events.fromTemplate': 'Desde Plantilla',
+      'events.newEvent': 'Nuevo Evento',
+      'events.editEvent': 'Editar Evento',
+      'events.viewDetails': 'Ver Detalles',
+      'events.noLocation': 'Sin ubicación',
+      'events.duplicate': 'Duplicar evento',
+      'events.saveAsTemplate': 'Guardar como plantilla',
+      'events.deleteConfirm': '¿Estás seguro de que deseas iniciar el proceso de eliminación? Se requerirá una confirmación adicional.',
+
+      // Events form labels
+      'events.form.name': 'Nombre del Evento *',
+      'events.form.year': 'Año *',
+      'events.form.theme': 'Tema/Lema',
+      'events.form.location': 'Ubicación',
+      'events.form.startDate': 'Fecha Inicio',
+      'events.form.endDate': 'Fecha Fin',
+      'events.form.status': 'Estado',
+      'events.form.printColor': 'Color de Impresión',
+      'events.form.description': 'Descripción',
+      'events.form.promoteInAnnouncements': 'Promocionar en Anuncios',
+      'events.form.promotionStart': 'Inicio Promoción',
+      'events.form.promotionEnd': 'Fin Promoción',
+      'events.form.announcementBlurb': 'Blurb para Anuncio (Corto)',
+      'events.form.targets': 'Targets (Tags separados por coma)',
+
+      // Placeholders
+      'placeholder.eventName': 'Congreso 2025',
+      'placeholder.theme': 'Conquistando nuevas alturas',
+      'placeholder.location': 'Centro de Convenciones',
+      'placeholder.selectDate': 'Seleccionar fecha',
+      'placeholder.announcementBlurb': 'Texto corto para leer en anuncios...',
+      'placeholder.targets': 'Ej. Domingo AM, Jóvenes',
+
+      // Colors
+      'color.blue': 'Azul',
+      'color.green': 'Verde',
+      'color.pink': 'Rosa',
+      'color.orange': 'Naranja',
+      'color.yellow': 'Amarillo',
+      'color.purple': 'Morado',
+      'color.red': 'Rojo',
+      'color.teal': 'Turquesa',
+      'color.charcoal': 'Carbón',
+
       // Reports
       'reports.title': 'Informes de Eventos',
       'reports.subtitle': 'Visualiza y exporta reportes de eventos',
@@ -346,6 +393,53 @@ const translations = {
       'public.start': 'start',
       'public.noProgramYet': 'This service has no program yet',
       'public.break': 'Break',
+
+      // Events
+      'events.title': 'Events',
+      'events.subtitle': 'Manage your conferences and special activities',
+      'events.fromTemplate': 'From Template',
+      'events.newEvent': 'New Event',
+      'events.editEvent': 'Edit Event',
+      'events.viewDetails': 'View Details',
+      'events.noLocation': 'No location',
+      'events.duplicate': 'Duplicate event',
+      'events.saveAsTemplate': 'Save as template',
+      'events.deleteConfirm': 'Are you sure you want to start the deletion process? An additional confirmation will be required.',
+
+      // Events form labels
+      'events.form.name': 'Event Name *',
+      'events.form.year': 'Year *',
+      'events.form.theme': 'Theme/Motto',
+      'events.form.location': 'Location',
+      'events.form.startDate': 'Start Date',
+      'events.form.endDate': 'End Date',
+      'events.form.status': 'Status',
+      'events.form.printColor': 'Print Color',
+      'events.form.description': 'Description',
+      'events.form.promoteInAnnouncements': 'Promote in Announcements',
+      'events.form.promotionStart': 'Promotion Start',
+      'events.form.promotionEnd': 'Promotion End',
+      'events.form.announcementBlurb': 'Announcement Blurb (Short)',
+      'events.form.targets': 'Targets (Comma-separated tags)',
+
+      // Placeholders
+      'placeholder.eventName': 'Conference 2025',
+      'placeholder.theme': 'Reaching New Heights',
+      'placeholder.location': 'Convention Center',
+      'placeholder.selectDate': 'Select date',
+      'placeholder.announcementBlurb': 'Short text to read in announcements...',
+      'placeholder.targets': 'E.g. Sunday AM, Youth',
+
+      // Colors
+      'color.blue': 'Blue',
+      'color.green': 'Green',
+      'color.pink': 'Pink',
+      'color.orange': 'Orange',
+      'color.yellow': 'Yellow',
+      'color.purple': 'Purple',
+      'color.red': 'Red',
+      'color.teal': 'Teal',
+      'color.charcoal': 'Charcoal',
 
       // Reports
       'reports.title': 'Event Reports',

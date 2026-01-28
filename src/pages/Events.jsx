@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { hasPermission } from "@/components/utils/permissions";
+import { useLanguage } from "@/components/utils/i18n";
 import { Plus, Calendar, MapPin, Edit, Trash2, Copy, Save } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
@@ -21,6 +22,7 @@ import DuplicateEventDialog from "@/components/event/DuplicateEventDialog";
 import TemplateSelectorDialog from "@/components/event/TemplateSelectorDialog";
 
 export default function Events() {
+  const { t } = useLanguage();
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
@@ -79,7 +81,7 @@ export default function Events() {
 
   const handleDeleteClick = (event) => {
     // First confirmation: Browser alert
-    if (window.confirm("¿Estás seguro de que deseas iniciar el proceso de eliminación? Se requerirá una confirmación adicional.")) {
+    if (window.confirm(t('events.deleteConfirm'))) {
       setEventToDelete(event);
     }
   };
@@ -148,19 +150,19 @@ export default function Events() {
   };
 
   const statusLabels = {
-    planning: "En Planificación",
-    confirmed: "Confirmado",
-    in_progress: "En Curso",
-    completed: "Completado",
-    archived: "Archivado"
+    planning: t('status.planning'),
+    confirmed: t('status.confirmed'),
+    in_progress: t('status.in_progress'),
+    completed: t('status.completed'),
+    archived: t('status.archived')
   };
 
   return (
     <div className="p-6 md:p-8 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-gray-200 pb-6">
         <div>
-          <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">Eventos</h1>
-          <p className="text-gray-500 mt-1 font-medium">Gestiona tus congresos y actividades especiales</p>
+          <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">{t('events.title')}</h1>
+          <p className="text-gray-500 mt-1 font-medium">{t('events.subtitle')}</p>
         </div>
         {hasPermission(user, 'create_events') && (
           <div className="flex gap-3">
@@ -170,7 +172,7 @@ export default function Events() {
               className="shadow-sm hover:shadow-md transition-all font-bold uppercase px-4 border-gray-300 text-gray-600 hover:text-blue-600 hover:border-blue-300"
             >
               <Copy className="w-4 h-4 mr-2" />
-              Desde Plantilla
+              {t('events.fromTemplate')}
             </Button>
             <Button onClick={() => openEditDialog(null)} className="text-white shadow-md hover:shadow-lg hover:scale-105 transition-all font-bold uppercase px-6" style={gradientStyle}>
               <Plus className="w-5 h-5 mr-2" />
@@ -203,7 +205,7 @@ export default function Events() {
                 
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <MapPin className="w-4 h-4" />
-                  <span>{event.location || "Sin ubicación"}</span>
+                  <span>{event.location || t('events.noLocation')}</span>
                 </div>
 
                 {event.start_date && (
@@ -216,7 +218,7 @@ export default function Events() {
                 <div className="pt-3 border-t border-gray-200 flex gap-2">
                   <Link to={createPageUrl(`EventDetail?id=${event.id}`)} className="flex-1">
                     <Button variant="outline" size="sm" className="w-full" style={{ borderColor: '#1F8A70', color: '#1F8A70' }}>
-                      Ver Detalles
+                      {t('events.viewDetails')}
                     </Button>
                   </Link>
                   {hasPermission(user, 'edit_events') && (
@@ -230,7 +232,7 @@ export default function Events() {
                         variant="outline" 
                         size="sm" 
                         onClick={() => setEventToDuplicate(event)}
-                        title="Duplicar evento"
+                        title={t('events.duplicate')}
                       >
                         <Copy className="w-4 h-4 text-blue-500" />
                       </Button>
@@ -238,7 +240,7 @@ export default function Events() {
                         variant="outline" 
                         size="sm" 
                         onClick={() => setEventToTemplate(event)}
-                        title="Guardar como plantilla"
+                        title={t('events.saveAsTemplate')}
                       >
                         <Save className="w-4 h-4 text-amber-600" />
                       </Button>
@@ -263,12 +265,12 @@ export default function Events() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingEvent ? 'Editar Evento' : 'Nuevo Evento'}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingEvent ? t('events.editEvent') : t('events.newEvent')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nombre del Evento *</Label>
+                <Label htmlFor="name">{t('events.form.name')}</Label>
                 <div className="relative">
                   <Input 
                     id="name" 
@@ -276,13 +278,13 @@ export default function Events() {
                     value={formData.name}
                     onChange={(e) => updateFormField('name', e.target.value)}
                     required 
-                    placeholder="Congreso 2025"
+                    placeholder={t('placeholder.eventName')}
                   />
                   <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'name')} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="year">Año *</Label>
+                <Label htmlFor="year">{t('events.form.year')}</Label>
                 <div className="relative">
                   <Input 
                     id="year" 
@@ -298,28 +300,28 @@ export default function Events() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="theme">Tema/Lema</Label>
+              <Label htmlFor="theme">{t('events.form.theme')}</Label>
               <div className="relative">
                 <Input 
                   id="theme" 
                   name="theme" 
                   value={formData.theme}
                   onChange={(e) => updateFormField('theme', e.target.value)}
-                  placeholder="Conquistando nuevas alturas"
+                  placeholder={t('placeholder.theme')}
                 />
                 <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'theme')} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location">Ubicación</Label>
+              <Label htmlFor="location">{t('events.form.location')}</Label>
               <div className="relative">
                 <Input 
                   id="location" 
                   name="location" 
                   value={formData.location}
                   onChange={(e) => updateFormField('location', e.target.value)}
-                  placeholder="Centro de Convenciones"
+                  placeholder={t('placeholder.location')}
                 />
                 <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'location')} />
               </div>
@@ -327,23 +329,23 @@ export default function Events() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="start_date">Fecha Inicio</Label>
+                <Label htmlFor="start_date">{t('events.form.startDate')}</Label>
                 <div className="relative">
                   <DatePicker
                     value={formData.start_date}
                     onChange={(val) => updateFormField('start_date', val)}
-                    placeholder="Seleccionar fecha"
+                    placeholder={t('placeholder.selectDate')}
                   />
                   <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'start_date')} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="end_date">Fecha Fin</Label>
+                <Label htmlFor="end_date">{t('events.form.endDate')}</Label>
                 <div className="relative">
                   <DatePicker
                     value={formData.end_date}
                     onChange={(val) => updateFormField('end_date', val)}
-                    placeholder="Seleccionar fecha"
+                    placeholder={t('placeholder.selectDate')}
                   />
                   <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'end_date')} />
                 </div>
@@ -352,40 +354,40 @@ export default function Events() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="status">Estado</Label>
+                <Label htmlFor="status">{t('events.form.status')}</Label>
                 <div className="relative">
                   <Select name="status" value={formData.status} onValueChange={(value) => updateFormField('status', value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="planning">En Planificación</SelectItem>
-                      <SelectItem value="confirmed">Confirmado</SelectItem>
-                      <SelectItem value="in_progress">En Curso</SelectItem>
-                      <SelectItem value="completed">Completado</SelectItem>
-                      <SelectItem value="archived">Archivado</SelectItem>
+                      <SelectItem value="planning">{t('status.planning')}</SelectItem>
+                      <SelectItem value="confirmed">{t('status.confirmed')}</SelectItem>
+                      <SelectItem value="in_progress">{t('status.in_progress')}</SelectItem>
+                      <SelectItem value="completed">{t('status.completed')}</SelectItem>
+                      <SelectItem value="archived">{t('status.archived')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'status')} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="print_color">Color de Impresión</Label>
+                <Label htmlFor="print_color">{t('events.form.printColor')}</Label>
                 <div className="relative">
                   <Select name="print_color" value={formData.print_color} onValueChange={(value) => updateFormField('print_color', value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="blue">Azul</SelectItem>
-                      <SelectItem value="green">Verde</SelectItem>
-                      <SelectItem value="pink">Rosa</SelectItem>
-                      <SelectItem value="orange">Naranja</SelectItem>
-                      <SelectItem value="yellow">Amarillo</SelectItem>
-                      <SelectItem value="purple">Morado</SelectItem>
-                      <SelectItem value="red">Rojo</SelectItem>
-                      <SelectItem value="teal">Turquesa</SelectItem>
-                      <SelectItem value="charcoal">Carbón</SelectItem>
+                      <SelectItem value="blue">{t('color.blue')}</SelectItem>
+                      <SelectItem value="green">{t('color.green')}</SelectItem>
+                      <SelectItem value="pink">{t('color.pink')}</SelectItem>
+                      <SelectItem value="orange">{t('color.orange')}</SelectItem>
+                      <SelectItem value="yellow">{t('color.yellow')}</SelectItem>
+                      <SelectItem value="purple">{t('color.purple')}</SelectItem>
+                      <SelectItem value="red">{t('color.red')}</SelectItem>
+                      <SelectItem value="teal">{t('color.teal')}</SelectItem>
+                      <SelectItem value="charcoal">{t('color.charcoal')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'print_color')} />
@@ -394,7 +396,7 @@ export default function Events() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Descripción</Label>
+              <Label htmlFor="description">{t('events.form.description')}</Label>
               <div className="relative">
                 <Textarea 
                   id="description" 
@@ -415,44 +417,44 @@ export default function Events() {
                   checked={formData.promote_in_announcements}
                   onCheckedChange={(checked) => updateFormField('promote_in_announcements', checked)}
                 />
-                <Label htmlFor="promote_in_announcements" className="font-bold" style={{ color: '#1F8A70' }}>Promocionar en Anuncios</Label>
+                <Label htmlFor="promote_in_announcements" className="font-bold" style={{ color: '#1F8A70' }}>{t('events.form.promoteInAnnouncements')}</Label>
               </div>
 
               {formData.promote_in_announcements && (
                 <div className="space-y-4 pl-6 border-l-2" style={{ borderColor: 'rgba(31, 138, 112, 0.2)' }}>
                    <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                         <Label>Inicio Promoción</Label>
+                         <Label>{t('events.form.promotionStart')}</Label>
                          <DatePicker
                            value={formData.promotion_start_date}
                            onChange={(val) => updateFormField('promotion_start_date', val)}
-                           placeholder="Seleccionar fecha"
+                           placeholder={t('placeholder.selectDate')}
                          />
                        </div>
                        <div className="space-y-2">
-                         <Label>Fin Promoción</Label>
+                         <Label>{t('events.form.promotionEnd')}</Label>
                          <DatePicker
                            value={formData.promotion_end_date}
                            onChange={(val) => updateFormField('promotion_end_date', val)}
-                           placeholder="Seleccionar fecha"
+                           placeholder={t('placeholder.selectDate')}
                          />
                        </div>
                    </div>
                    <div className="space-y-2">
-                      <Label>Blurb para Anuncio (Corto)</Label>
+                      <Label>{t('events.form.announcementBlurb')}</Label>
                       <Textarea 
                         value={formData.announcement_blurb}
                         onChange={(e) => updateFormField('announcement_blurb', e.target.value)}
                         rows={2}
-                        placeholder="Texto corto para leer en anuncios..."
+                        placeholder={t('placeholder.announcementBlurb')}
                       />
                    </div>
                    <div className="space-y-2">
-                      <Label>Targets (Tags separados por coma)</Label>
+                      <Label>{t('events.form.targets')}</Label>
                       <Input 
                         value={formData.promotion_targets}
                         onChange={(e) => updateFormField('promotion_targets', e.target.value)}
-                        placeholder="Ej. Domingo AM, Jóvenes"
+                        placeholder={t('placeholder.targets')}
                       />
                    </div>
                 </div>
@@ -461,10 +463,10 @@ export default function Events() {
 
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
-                Cancelar
+                {t('btn.cancel')}
               </Button>
               <Button type="submit" className="text-white font-bold uppercase" style={gradientStyle}>
-                {editingEvent ? 'Guardar' : 'Crear'}
+                {editingEvent ? t('btn.save') : t('btn.create_event')}
               </Button>
             </div>
           </form>
