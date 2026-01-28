@@ -1381,19 +1381,19 @@ export default function Reports() {
                 </TabsTrigger>
                 <TabsTrigger value="general" className="flex items-center gap-2">
                   <List className="w-4 h-4" />
-                  General
+                  {t('reports.tabs.general')}
                 </TabsTrigger>
                 <TabsTrigger value="projection" className="flex items-center gap-2">
                   <Projector className="w-4 h-4" />
-                  Proyección
+                  {t('reports.tabs.projection')}
                 </TabsTrigger>
                 <TabsTrigger value="sound" className="flex items-center gap-2">
                   <Volume2 className="w-4 h-4" />
-                  Sonido
+                  {t('reports.tabs.sound')}
                 </TabsTrigger>
                 <TabsTrigger value="ushers" className="flex items-center gap-2">
                   <UsersIcon className="w-4 h-4" />
-                  Ujieres
+                  {t('reports.tabs.ushers')}
                 </TabsTrigger>
                 <TabsTrigger value="hospitality" className="flex items-center gap-2">
                   <Utensils className="w-4 h-4" />
