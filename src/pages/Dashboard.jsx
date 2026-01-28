@@ -9,11 +9,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { es, enUS } from "date-fns/locale";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
@@ -21,6 +21,8 @@ export default function Dashboard() {
   
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
   const blueStyle = { backgroundColor: '#2563eb', color: '#ffffff' };
+  // Locale for date-fns based on current UI language
+  const locale = language === 'es' ? es : enUS;
   
   const { data: events = [] } = useQuery({
     queryKey: ['events'],
@@ -87,7 +89,7 @@ export default function Dashboard() {
                   <Bell className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-base md:text-lg text-white uppercase tracking-wide">Programa en Vivo</h2>
+                  <h2 className="font-bold text-base md:text-lg text-white uppercase tracking-wide">{t('dashboard.liveProgram.title')}</h2>
                   <p className="text-white/95 text-[10px] md:text-xs">Ver qué está pasando ahora</p>
                 </div>
               </div>
@@ -107,15 +109,15 @@ export default function Dashboard() {
                   <Calendar className="w-8 h-8 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 uppercase">Servicios Dominicales</h3>
-                  <p className="text-sm text-gray-600">Sunday Weekly Service</p>
+                  <h3 className="text-lg font-bold text-gray-900 uppercase">{t('dashboard.weeklyServices.title')}</h3>
+                  <p className="text-sm text-gray-600">{t('dashboard.weeklyServices.subtitle')}</p>
                 </div>
               </div>
               <Button 
                 onClick={() => navigate(createPageUrl('WeeklyServiceManager'))}
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
               >
-                Gestionar / Manage
+                {t('btn.manage_services')}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>
@@ -128,15 +130,15 @@ export default function Dashboard() {
                   <Plus className="w-8 h-8 text-purple-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 uppercase">Otros Servicios</h3>
-                  <p className="text-sm text-gray-600">Other Services</p>
+                  <h3 className="text-lg font-bold text-gray-900 uppercase">{t('dashboard.otherServices.title')}</h3>
+                  <p className="text-sm text-gray-600">{t('dashboard.otherServices.subtitle')}</p>
                 </div>
               </div>
               <Button 
                 onClick={() => navigate(createPageUrl('CustomServiceBuilder'))}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
               >
-                Crear / Create
+                {t('btn.add')}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>
@@ -149,15 +151,15 @@ export default function Dashboard() {
                   <FileText className="w-8 h-8 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 uppercase">Eventos</h3>
-                  <p className="text-sm text-gray-600">Conferences & Events</p>
+                  <h3 className="text-lg font-bold text-gray-900 uppercase">{t('nav.events')}</h3>
+                  <p className="text-sm text-gray-600">{t('dashboard.events.subtitle')}</p>
                 </div>
               </div>
               <Button 
                 onClick={() => navigate(createPageUrl('Events'))}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
               >
-                Ver Todos / View All
+                {t('btn.view_all')}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>
@@ -188,7 +190,7 @@ export default function Dashboard() {
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
                             <span className="font-semibold">
-                              {format(new Date(event.start_date), 'MMMM d, yyyy', { locale: es })}
+                              {format(new Date(event.start_date), 'MMMM d, yyyy', { locale })}
                             </span>
                           </div>
                           {event.location && (
@@ -218,7 +220,7 @@ export default function Dashboard() {
                           style={gradientStyle}
                           className="w-full mt-4 text-white font-semibold"
                         >
-                          Ver Detalles / View Details
+                          {t('btn.view_details')}
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                       </div>
@@ -239,7 +241,7 @@ export default function Dashboard() {
                   className="text-white font-semibold"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Crear Evento / Create Event
+                  {t('btn.create_event')}
                 </Button>
               </CardContent>
             </Card>
@@ -263,7 +265,7 @@ export default function Dashboard() {
                       <div>
                         <h4 className="font-bold text-gray-900">{event.name}</h4>
                         <p className="text-sm text-gray-600">
-                          {format(new Date(event.start_date), 'MMM d, yyyy', { locale: es })}
+                          {format(new Date(event.start_date), 'MMM d, yyyy', { locale })}
                         </p>
                       </div>
                       <div className="flex justify-between items-center">
@@ -279,7 +281,7 @@ export default function Dashboard() {
                           size="sm"
                           style={blueStyle}
                         >
-                          Ver / View
+                          {t('btn.view')}
                         </Button>
                       </div>
                     </div>
