@@ -533,14 +533,7 @@ export default function Reports() {
                               </div>
                             )}
 
-                            {segment.has_video && (
-                              <div className="mt-1 text-[10px] bg-blue-50 p-1 rounded border border-blue-200">
-                                <span className="text-blue-700 font-bold">VIDEO:</span>
-                                <span className="text-gray-700 ml-1">{segment.video_name}</span>
-                                {segment.video_location && <span className="text-gray-600 ml-1">({segment.video_location})</span>}
-                                {segment.video_length_sec && <span className="text-gray-600 ml-1">- {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}</span>}
-                              </div>
-                            )}
+
 
                             {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
                               <div className="mt-1 text-[10px] bg-green-50 p-1 rounded border border-green-200">
