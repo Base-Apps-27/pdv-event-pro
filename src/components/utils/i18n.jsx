@@ -219,7 +219,18 @@ const translations = {
       'live.upNext': 'A Continuación',
       'live.adjusted': 'AJUSTADO',
       'live.nothingNow': 'Nada en curso en este momento',
-      'live.endOfProgram': 'Fin del programa'
+      'live.endOfProgram': 'Fin del programa',
+
+      // Live Admin
+      'live.admin_mode': 'Modo Director en Vivo',
+      'live.enabled': 'Ajustes en vivo habilitados',
+      'live.disabled': 'Ajustes en vivo deshabilitados',
+      'live.mark_ended': 'Terminar Ahora',
+      'live.delay': 'Retrasar',
+      'live.segment_ended': 'Segmento marcado como terminado',
+      'live.time_adjusted': 'Hora ajustada por {minutes} min',
+      'live.active_warning': 'Los cambios sobrescriben los tiempos planificados',
+      'live.current': 'Actual'
   },
   en: {
     // Navigation
