@@ -177,9 +177,7 @@ export default function Dashboard() {
 
         {/* Upcoming Events */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 uppercase mb-4">
-            Eventos Próximos / Upcoming Events
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 uppercase mb-4">{t('dashboard.upcoming')}</h2>
 
           {upcomingEvents.length > 0 ? (
             <div className="grid gap-4">
