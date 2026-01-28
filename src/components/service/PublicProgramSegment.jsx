@@ -36,7 +36,8 @@ export default function PublicProgramSegment({
   alwaysExpanded,
   onToggleExpand, 
   onOpenVerses,
-  allSegments
+  allSegments,
+  onOpenVerseParser
 }) {
   // Language (for type label mapping)
   const { language } = useLanguage();
@@ -209,6 +210,17 @@ export default function PublicProgramSegment({
                   title="Ver Versículos"
                 >
                   <BookOpen className="w-3.5 h-3.5" />
+                </Button>
+              )}
+              {isMessage && onOpenVerseParser && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onOpenVerseParser(segment)}
+                  className="h-6 w-6 p-0 border border-green-600 text-green-700 hover:bg-green-600 hover:text-white flex-shrink-0"
+                  title="Extraer/guardar versos"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
                 </Button>
               )}
             </div>

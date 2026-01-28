@@ -48,7 +48,8 @@ export default function EventProgramView({
   onOpenVerses,
   scrollToSegment,
   refetchData,
-  getRoomName
+  getRoomName,
+  onOpenVerseParser
 }) {
   // Event-specific state
   const [selectedSessionId, setSelectedSessionId] = useState("all");
@@ -404,6 +405,11 @@ export default function EventProgramView({
                     onToggleExpand={toggleSegmentExpanded}
                     onOpenVerses={onOpenVerses}
                     allSegments={allSegments}
+                    onOpenVerseParser={
+                      hasPermission(currentUser, 'manage_live_timing') && onOpenVerseParser
+                        ? ((seg) => onOpenVerseParser({ segment: seg, initialText: seg.description_details || seg.scripture_references || '' }))
+                        : undefined
+                    }
                   />
                 );
               })}

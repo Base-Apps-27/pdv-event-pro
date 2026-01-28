@@ -60,6 +60,10 @@ export default function PublicProgramView() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [versesModalOpen, setVersesModalOpen] = useState(false);
   const [versesModalData, setVersesModalData] = useState({ parsedData: null, rawText: "" });
+  // Admin verse parser state (Live-only for event Plenarias)
+  const [verseParserOpen, setVerseParserOpen] = useState(false);
+  const [verseParserInitial, setVerseParserInitial] = useState("");
+  const [verseParserSegment, setVerseParserSegment] = useState(null);
   const [expandedSegments, setExpandedSegments] = useState({}); // Still needed for verse modal callback compatibility
   const [timeAdjustmentModalOpen, setTimeAdjustmentModalOpen] = useState(false);
   const [adjustmentModalTimeSlot, setAdjustmentModalTimeSlot] = useState(null);
@@ -1099,29 +1103,29 @@ export default function PublicProgramView() {
             {/* Event Program View */}
             {viewType === "event" && selectedEvent && (
               <EventProgramView
-                selectedEvent={selectedEvent}
-                eventSessions={eventSessions}
-                allSegments={allSegments}
-                currentUser={currentUser}
-                currentTime={currentTime}
-                isSegmentCurrent={isSegmentCurrent}
-                isSegmentUpcoming={isSegmentUpcoming}
-                onOpenVerses={(data) => {
-                  setVersesModalData({
-                    parsedData: data.parsedData,
-                    rawText: data.rawText
-                  });
-                  setVersesModalOpen(true);
-                }}
-                scrollToSegment={scrollToSegment}
-                refetchData={refetchData}
-                getRoomName={getRoomName}
-                onOpenVerseParser={({ segment, initialText }) => {
-                  setVerseParserSegment(segment);
-                  setVerseParserInitial(initialText || "");
-                  setVerseParserOpen(true);
-                }}
-                />
+                               selectedEvent={selectedEvent}
+                               eventSessions={eventSessions}
+                               allSegments={allSegments}
+                               currentUser={currentUser}
+                               currentTime={currentTime}
+                               isSegmentCurrent={isSegmentCurrent}
+                               isSegmentUpcoming={isSegmentUpcoming}
+                               onOpenVerses={(data) => {
+                                 setVersesModalData({
+                                   parsedData: data.parsedData,
+                                   rawText: data.rawText
+                                 });
+                                 setVersesModalOpen(true);
+                               }}
+                               scrollToSegment={scrollToSegment}
+                               refetchData={refetchData}
+                               getRoomName={getRoomName}
+                               onOpenVerseParser={({ segment, initialText }) => {
+                                 setVerseParserSegment(segment);
+                                 setVerseParserInitial(initialText || "");
+                                 setVerseParserOpen(true);
+                               }}
+                               />
             )}
 
             {/* Legacy rendering - Remove after confirming above works */}
@@ -1617,6 +1621,24 @@ export default function PublicProgramView() {
         parsedData={versesModalData.parsedData}
         rawText={versesModalData.rawText}
         language="es"
+      />
+
+      {/* Verse Parser Dialog (Admin only) */}
+      <VerseParserDialog
+        open={verseParserOpen}
+        onOpenChange={setVerseParserOpen}
+        initialText={verseParserInitial}
+        onSave={async ({ parsed_data, verse }) => {
+          if (!verseParserSegment) return;
+          await base44.entities.Segment.update(verseParserSegment.id, {
+            scripture_references: verse,
+            parsed_verse_data: parsed_data
+          });
+          setVersesModalData({ parsedData: parsed_data, rawText: verse });
+          setVersesModalOpen(true);
+          refetchSegments();
+        }}
+        language={language}
       />
 
       {/* Live Time Adjustment Modal */}
