@@ -789,6 +789,38 @@ export default function Reports() {
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
 
+            {(() => {
+              const records = allPreSessionDetails.filter(psd => psd.session_id === session.id);
+              if (records.length === 0) return null;
+              const psd = mergePreSessionDetails(records);
+              if (!psd) return null;
+              return (
+                <div className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
+                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Previos (Segmento 0)</div>
+                  <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
+                    {psd.music_profile_id && (
+                      <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
+                    )}
+                    {psd.slide_pack_id && (
+                      <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Slides: {psd.slide_pack_id}</div>
+                    )}
+                    {psd.registration_desk_open_time && (
+                      <div><span className="font-semibold">Registro:</span> {formatTimeToEST(psd.registration_desk_open_time)}</div>
+                    )}
+                    {psd.library_open_time && (
+                      <div><span className="font-semibold">Librería:</span> {formatTimeToEST(psd.library_open_time)}</div>
+                    )}
+                    {psd.facility_notes && (
+                      <div className="col-span-2"><span className="font-semibold">Instalaciones:</span> {psd.facility_notes}</div>
+                    )}
+                    {psd.general_notes && (
+                      <div className="col-span-2"><span className="font-semibold">General:</span> {psd.general_notes}</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-100 border-b-2 border-gray-200">
@@ -828,6 +860,38 @@ export default function Reports() {
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
 
+            {(() => {
+              const records = allPreSessionDetails.filter(psd => psd.session_id === session.id);
+              if (records.length === 0) return null;
+              const psd = mergePreSessionDetails(records);
+              if (!psd) return null;
+              return (
+                <div className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
+                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Previos (Segmento 0)</div>
+                  <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
+                    {psd.music_profile_id && (
+                      <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
+                    )}
+                    {psd.slide_pack_id && (
+                      <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Slides: {psd.slide_pack_id}</div>
+                    )}
+                    {psd.registration_desk_open_time && (
+                      <div><span className="font-semibold">Registro:</span> {formatTimeToEST(psd.registration_desk_open_time)}</div>
+                    )}
+                    {psd.library_open_time && (
+                      <div><span className="font-semibold">Librería:</span> {formatTimeToEST(psd.library_open_time)}</div>
+                    )}
+                    {psd.facility_notes && (
+                      <div className="col-span-2"><span className="font-semibold">Instalaciones:</span> {psd.facility_notes}</div>
+                    )}
+                    {psd.general_notes && (
+                      <div className="col-span-2"><span className="font-semibold">General:</span> {psd.general_notes}</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-purple-50 border-b-2 border-purple-200">
@@ -866,6 +930,38 @@ export default function Reports() {
               <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
+
+            {(() => {
+              const records = allPreSessionDetails.filter(psd => psd.session_id === session.id);
+              if (records.length === 0) return null;
+              const psd = mergePreSessionDetails(records);
+              if (!psd) return null;
+              return (
+                <div className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
+                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Previos (Segmento 0)</div>
+                  <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
+                    {psd.music_profile_id && (
+                      <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
+                    )}
+                    {psd.slide_pack_id && (
+                      <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Slides: {psd.slide_pack_id}</div>
+                    )}
+                    {psd.registration_desk_open_time && (
+                      <div><span className="font-semibold">Registro:</span> {formatTimeToEST(psd.registration_desk_open_time)}</div>
+                    )}
+                    {psd.library_open_time && (
+                      <div><span className="font-semibold">Librería:</span> {formatTimeToEST(psd.library_open_time)}</div>
+                    )}
+                    {psd.facility_notes && (
+                      <div className="col-span-2"><span className="font-semibold">Instalaciones:</span> {psd.facility_notes}</div>
+                    )}
+                    {psd.general_notes && (
+                      <div className="col-span-2"><span className="font-semibold">General:</span> {psd.general_notes}</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             <table className="w-full border-collapse">
               <thead>
@@ -908,6 +1004,38 @@ export default function Reports() {
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
 
+            {(() => {
+              const records = allPreSessionDetails.filter(psd => psd.session_id === session.id);
+              if (records.length === 0) return null;
+              const psd = mergePreSessionDetails(records);
+              if (!psd) return null;
+              return (
+                <div className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
+                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Previos (Segmento 0)</div>
+                  <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
+                    {psd.music_profile_id && (
+                      <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
+                    )}
+                    {psd.slide_pack_id && (
+                      <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Slides: {psd.slide_pack_id}</div>
+                    )}
+                    {psd.registration_desk_open_time && (
+                      <div><span className="font-semibold">Registro:</span> {formatTimeToEST(psd.registration_desk_open_time)}</div>
+                    )}
+                    {psd.library_open_time && (
+                      <div><span className="font-semibold">Librería:</span> {formatTimeToEST(psd.library_open_time)}</div>
+                    )}
+                    {psd.facility_notes && (
+                      <div className="col-span-2"><span className="font-semibold">Instalaciones:</span> {psd.facility_notes}</div>
+                    )}
+                    {psd.general_notes && (
+                      <div className="col-span-2"><span className="font-semibold">General:</span> {psd.general_notes}</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-pink-50 border-b-2 border-pink-200">
@@ -948,6 +1076,38 @@ export default function Reports() {
               <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
+
+            {(() => {
+              const records = allPreSessionDetails.filter(psd => psd.session_id === session.id);
+              if (records.length === 0) return null;
+              const psd = mergePreSessionDetails(records);
+              if (!psd) return null;
+              return (
+                <div className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
+                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Previos (Segmento 0)</div>
+                  <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
+                    {psd.music_profile_id && (
+                      <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
+                    )}
+                    {psd.slide_pack_id && (
+                      <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Slides: {psd.slide_pack_id}</div>
+                    )}
+                    {psd.registration_desk_open_time && (
+                      <div><span className="font-semibold">Registro:</span> {formatTimeToEST(psd.registration_desk_open_time)}</div>
+                    )}
+                    {psd.library_open_time && (
+                      <div><span className="font-semibold">Librería:</span> {formatTimeToEST(psd.library_open_time)}</div>
+                    )}
+                    {psd.facility_notes && (
+                      <div className="col-span-2"><span className="font-semibold">Instalaciones:</span> {psd.facility_notes}</div>
+                    )}
+                    {psd.general_notes && (
+                      <div className="col-span-2"><span className="font-semibold">General:</span> {psd.general_notes}</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             <table className="w-full border-collapse">
               <thead>
