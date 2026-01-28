@@ -37,10 +37,13 @@ export default function PublicProgramSegment({
   onToggleExpand, 
   onOpenVerses,
   allSegments,
-  onOpenVerseParser
+  onOpenVerseParser,
+  getRoomName,
+  slidePackLookup,
+  assetLookup
 }) {
   // Language (for type label mapping)
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   // Helper to safely get segment data (checks data object first, then root)
   const getData = (field) => getSegmentData(segment, field);
   
@@ -73,16 +76,18 @@ export default function PublicProgramSegment({
   // Get and filter actions
   // Prefer new schema actions; fall back to legacy for safety
   const rawActions = segment.segment_actions || segment.actions || getData('actions') || [];
-  const actions = isSpecial 
-    ? rawActions.filter(a => {
-        const label = (a.label || '').toLowerCase();
-        // Filter out generic worship actions from special segments (data migration artifacts)
-        return !label.includes('pianista sube') && !label.includes('equipo de a&a sube');
-      })
-    : rawActions;
+    const actionsBase = isSpecial 
+      ? rawActions.filter(a => {
+          const label = (a.label || '').toLowerCase();
+          // Filter out generic worship actions from special segments (data migration artifacts)
+          return !label.includes('pianista sube') && !label.includes('equipo de a&a sube');
+        })
+      : rawActions;
+    // Hide Hospitality actions per product decision
+    const actions = actionsBase.filter(a => (a?.department || '') !== 'Hospitality');
 
-  const prepActions = actions.filter(a => a.timing === 'before_start');
-  const duringActions = actions.filter(a => a.timing !== 'before_start');
+    const prepActions = actions.filter(a => a.timing === 'before_start');
+    const duringActions = actions.filter(a => a.timing !== 'before_start');
 
   // CRITICAL: Determine if details should be shown
   // - Services (alwaysExpanded=true): Always show all details
@@ -141,6 +146,7 @@ export default function PublicProgramSegment({
               {getData('title')}
             </h4>
             <Badge variant="outline" className="text-xs text-gray-700">{displaySegmentType}</Badge>
+             {segment.major_break && (<Badge className="bg-orange-600 text-white text-xs">{t('live.majorBreak')}</Badge>)}
             {segment.requires_translation && (
               <div className="flex items-center gap-1">
                 <Languages className="w-4 h-4 text-purple-600" />
@@ -186,26 +192,28 @@ export default function PublicProgramSegment({
              </div>
            )}
            {/* Preacher: Show only for Message segments */}
-           {isMessage && getData('preacher') && (
-             <div className="flex items-center gap-2 text-indigo-600 text-sm">
-               <Users className="w-4 h-4" />
-               <span className="font-semibold">Predica: {normalizeName(getData('preacher'))}</span>
-             </div>
-           )}
+           {isMessage && (getData('presenter') || getData('preacher')) && (
+                         <div className="flex items-center gap-2 text-indigo-600 text-sm">
+                           <Users className="w-4 h-4" />
+                           <span className="font-semibold">{t('live.preacher')}: {normalizeName(getData('presenter') || getData('preacher'))}</span>
+                         </div>
+                       )}
            {/* Translator: Show for all segments if present */}
-           {getData('translator') && (
-             <div className="flex items-center gap-2 text-purple-600 text-sm">
-               <Languages className="w-4 h-4" />
-               <span className="font-semibold">Traductor: {normalizeName(getData('translator'))}</span>
-             </div>
-           )}
+           {getData('translator_name') && (
+                         <div className="flex items-center gap-2 text-purple-600 text-sm">
+                           <Languages className="w-4 h-4" />
+                           <span className="font-semibold">{t('live.translator')}: {normalizeName(getData('translator_name'))}</span>
+                         </div>
+                       )}
            {/* Room: Show if segment has a specific room assignment */}
            {segment.room_id && (
-             <div className="flex items-center gap-2 text-gray-600 text-sm">
-               <MapPin className="w-4 h-4" />
-               <span>Sala asignada</span>
-             </div>
-           )}
+                         <div className="flex items-center gap-2 text-gray-600 text-sm">
+                           <MapPin className="w-4 h-4" />
+                           <span>
+                             {t('live.roomAssigned')}{(typeof getRoomName === 'function' && getRoomName(segment.room_id)) ? `: ${getRoomName(segment.room_id)}` : ''}
+                           </span>
+                         </div>
+                       )}
           </div>
 
           {/* Scripture References (for Message or Offering segments) */}
@@ -226,7 +234,7 @@ export default function PublicProgramSegment({
                     rawText: getData('scripture_references') || getData('verse')
                   })}
                   className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
-                  title="Ver Versículos"
+                  title={t('live.viewVerses')}
                 >
                   <BookOpen className="w-3.5 h-3.5" />
                 </Button>
@@ -237,7 +245,7 @@ export default function PublicProgramSegment({
                   size="icon"
                   onClick={() => onOpenVerseParser(segment)}
                   className="h-6 w-6 p-0 border border-green-600 text-green-700 hover:bg-green-600 hover:text-white flex-shrink-0"
-                  title="Extraer/guardar versos"
+                  title={t('live.extractSaveVerses')}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                 </Button>
@@ -266,7 +274,7 @@ export default function PublicProgramSegment({
           {/* Prep Actions (Before-Start Tasks) */}
           {prepActions.length > 0 && (
             <div className="bg-gray-50 border border-gray-200 rounded p-3">
-              <p className="font-bold text-gray-700 text-sm mb-2">⚠ PREPARACIÓN</p>
+              <p className="font-bold text-gray-700 text-sm mb-2">⚠ {t('live.preparation')}</p>
               <div className="space-y-1">
                 {prepActions.map((action, idx) => (
                   <div key={idx} className="text-xs px-2 py-1 rounded border border-gray-200 bg-white text-gray-600">
@@ -284,7 +292,7 @@ export default function PublicProgramSegment({
           {/* During Actions (In-Segment Cues) */}
           {duringActions.length > 0 && (
             <div className="bg-gray-50 border border-gray-200 rounded p-3">
-              <p className="font-bold text-gray-700 text-sm mb-2">▶ DURANTE SEGMENTO</p>
+              <p className="font-bold text-gray-700 text-sm mb-2">▶ {t('live.during')}</p>
               <div className="space-y-1">
                 {duringActions.map((action, idx) => (
                   <div key={idx} className="text-xs px-2 py-1 rounded border border-gray-200 bg-white text-gray-600">
@@ -301,37 +309,37 @@ export default function PublicProgramSegment({
           <div className="grid md:grid-cols-2 gap-2">
             {getData('coordinator_notes') && (
               <div className="bg-orange-50 border-l-4 border-orange-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-orange-800 block mb-1">COORDINACIÓN:</span>
+                <span className="font-bold text-orange-800 block mb-1">{t('live.coordination')}:</span>
                 <p className="text-orange-900 leading-snug">{getData('coordinator_notes')}</p>
               </div>
             )}
             {getData('projection_notes') && (
               <div className="bg-blue-50 border-l-4 border-blue-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-blue-800 block mb-1">PROYECCIÓN:</span>
+                <span className="font-bold text-blue-800 block mb-1">{t('live.projection')}:</span>
                 <p className="text-blue-900 leading-snug">{getData('projection_notes')}</p>
               </div>
             )}
             {getData('sound_notes') && (
               <div className="bg-red-50 border-l-4 border-red-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-red-800 block mb-1">SONIDO:</span>
+                <span className="font-bold text-red-800 block mb-1">{t('live.sound')}:</span>
                 <p className="text-red-900 leading-snug">{getData('sound_notes')}</p>
               </div>
             )}
             {getData('ushers_notes') && (
               <div className="bg-green-50 border-l-4 border-green-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-green-800 block mb-1">UJIERES:</span>
+                <span className="font-bold text-green-800 block mb-1">{t('live.ushers')}:</span>
                 <p className="text-green-900 leading-snug">{getData('ushers_notes')}</p>
               </div>
             )}
             {getData('translation_notes') && (
               <div className="bg-purple-50 border-l-4 border-purple-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-purple-800 block mb-1">TRADUCCIÓN:</span>
+                <span className="font-bold text-purple-800 block mb-1">{t('live.translation')}:</span>
                 <p className="text-purple-900 leading-snug">{getData('translation_notes')}</p>
               </div>
             )}
             {getData('stage_decor_notes') && (
               <div className="bg-pink-50 border-l-4 border-pink-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-pink-800 block mb-1">STAGE & DECOR:</span>
+                <span className="font-bold text-pink-800 block mb-1">{t('live.stageDecor')}:</span>
                 <p className="text-pink-900 leading-snug">{getData('stage_decor_notes')}</p>
               </div>
             )}
@@ -342,7 +350,7 @@ export default function PublicProgramSegment({
             {/* Songs List (for worship segments) */}
             {songs.length > 0 && (
               <div className="bg-slate-50 p-2 rounded border border-slate-200 text-xs">
-                <p className="font-semibold text-slate-700 mb-1">Canciones:</p>
+                <p className="font-semibold text-slate-700 mb-1">{t('live.songs')}:</p>
                 <div className="space-y-1">
                   {songs.map((song, idx) => (
                     <div key={idx} className="flex items-center gap-1">
@@ -360,12 +368,24 @@ export default function PublicProgramSegment({
             )}
 
             {/* Message Title (for message segments) */}
-            {getData('messageTitle') && (
+            {getData('message_title') && (
               <div className="bg-blue-50 p-2 rounded border border-blue-200 text-xs">
-                <p className="font-semibold text-blue-800">Mensaje: {getData('messageTitle')}</p>
+                <p className="font-semibold text-blue-800">{t('live.message')}: {getData('message_title')}</p>
                 {(getData('scripture_references') || getData('verse')) && (
-                  <p className="mt-1">Escrituras: {getData('scripture_references') || getData('verse')}</p>
+                  <p className="mt-1">{t('live.scriptures')}: {getData('scripture_references') || getData('verse')}</p>
                 )}
+              </div>
+            )}
+
+            {/* Video (if attached) */}
+            {segment.has_video && (
+              <div className="bg-blue-50 p-2 rounded border border-blue-200 text-xs">
+                <p className="font-semibold text-blue-800">{t('live.video')}:</p>
+                <div className="text-gray-700">
+                  {segment.video_name && <span>{segment.video_name}</span>}
+                  {segment.video_location && <span className="ml-1 text-gray-600">({segment.video_location})</span>}
+                  {segment.video_length_sec && <span className="ml-1 text-gray-600">- {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}</span>}
+                </div>
               </div>
             )}
 
@@ -413,7 +433,7 @@ export default function PublicProgramSegment({
             {(getData('description_details') || getData('description')) && (
               <div className="bg-gray-100 border-l-4 border-gray-500 p-2 mt-2 rounded-r">
                 <p className="text-xs text-gray-900 font-medium">
-                  <strong>📝 Notas:</strong> {getData('description_details') || getData('description')}
+                  <strong>📝 {t('live.notes')}:</strong> {getData('description_details') || getData('description')}
                 </p>
               </div>
             )}
@@ -444,6 +464,22 @@ export default function PublicProgramSegment({
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Assets (Slides / Countdown) */}
+            {(segment.slide_pack_id || segment.countdown_asset_id) && (
+              <div className="flex gap-2 flex-wrap text-[11px]">
+                {segment.slide_pack_id && (
+                  <Badge variant="outline" className="border-gray-300 bg-white text-gray-700">
+                    {t('live.slides')}: {(slidePackLookup && slidePackLookup[segment.slide_pack_id]) || segment.slide_pack_id}
+                  </Badge>
+                )}
+                {segment.countdown_asset_id && (
+                  <Badge variant="outline" className="border-gray-300 bg-white text-gray-700">
+                    {t('live.countdown')}: {(assetLookup && assetLookup[segment.countdown_asset_id]) || segment.countdown_asset_id}
+                  </Badge>
+                )}
               </div>
             )}
           </div>
