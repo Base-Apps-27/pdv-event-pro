@@ -57,6 +57,15 @@ export default function Dashboard() {
     archived: "bg-slate-100 text-slate-600 border-slate-200"
   };
 
+  // Localized labels for event.status
+  const statusLabels = {
+    planning: t('status.planning'),
+    confirmed: t('status.confirmed'),
+    in_progress: t('status.in_progress'),
+    completed: t('status.completed'),
+    archived: t('status.archived'),
+  };
+
   const statusBorderColors = {
     planning: "border-l-yellow-400",
     confirmed: "border-l-green-500",
@@ -90,7 +99,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <h2 className="font-bold text-base md:text-lg text-white uppercase tracking-wide">{t('dashboard.liveProgram.title')}</h2>
-                  <p className="text-white/95 text-[10px] md:text-xs">Ver qué está pasando ahora</p>
+                  <p className="text-white/95 text-[10px] md:text-xs">{t('dashboard.liveProgram.subtitle')}</p>
                 </div>
               </div>
               <div className="hidden sm:flex items-center gap-2">
@@ -208,7 +217,7 @@ export default function Dashboard() {
                           </Badge>
                           {sessions.filter(s => s.event_id === event.id).length > 0 && (
                             <div className="mt-3">
-                              <p className="text-xs text-gray-600">Sesiones / Sessions</p>
+                              <p className="text-xs text-gray-600">{t('dashboard.events.sessions')}</p>
                               <p className="text-xl font-bold text-gray-900">
                                 {sessions.filter(s => s.event_id === event.id).length}
                               </p>
@@ -233,8 +242,8 @@ export default function Dashboard() {
             <Card className="bg-white shadow">
               <CardContent className="p-8 text-center">
                 <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-gray-900 mb-2">No hay eventos próximos / No Upcoming Events</h3>
-                <p className="text-gray-600 text-sm mb-4">Crea tu primer evento / Create your first event</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{t('dashboard.no_events')}</h3>
+                <p className="text-gray-600 text-sm mb-4">{t('dashboard.create_first')}</p>
                 <Button 
                   onClick={() => navigate(createPageUrl('Events'))}
                   style={gradientStyle}
