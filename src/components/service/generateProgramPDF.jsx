@@ -163,6 +163,30 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
       });
     }
 
+    // Panel moderators/panelists
+    const panelMods = seg.data?.panel_moderators || seg.panel_moderators;
+    const panelists = seg.data?.panel_panelists || seg.panel_panelists;
+    if (panelMods || panelists) {
+      if (panelMods) {
+        items.push({
+          text: [
+            { text: 'MODERADOR(ES): ', bold: true, color: '#B45309', fontSize: 9 * globalScale },
+            { text: panelMods, bold: true, color: '#92400E', fontSize: 9.5 * globalScale }
+          ],
+          margin: [8, 0, 0, 1]
+        });
+      }
+      if (panelists) {
+        items.push({
+          text: [
+            { text: 'PANELISTA(S): ', bold: true, color: '#B45309', fontSize: 9 * globalScale },
+            { text: panelists, bold: true, color: '#92400E', fontSize: 9.5 * globalScale }
+          ],
+          margin: [8, 0, 0, 1]
+        });
+      }
+    }
+
     // Songs - Boxed style (Slate-50)
     const songs = seg.data?.songs || seg.songs;
     if (songs && Array.isArray(songs) && songs.some(s => s.title)) {
