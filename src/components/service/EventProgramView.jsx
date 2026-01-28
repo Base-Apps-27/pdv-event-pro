@@ -410,6 +410,7 @@ export default function EventProgramView({
                         ? ((seg) => onOpenVerseParser({ segment: seg, initialText: seg.description_details || seg.scripture_references || '' }))
                         : undefined
                     }
+                    getRoomName={getRoomName}
                   />
                 );
               })}
