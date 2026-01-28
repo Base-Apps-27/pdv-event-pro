@@ -677,20 +677,25 @@ export default function PublicProgramView() {
               {viewType === "event" && (() => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                const sevenDaysOut = new Date(today);
-                sevenDaysOut.setDate(today.getDate() + 7);
+                const ninetyDaysOut = new Date(today);
+                ninetyDaysOut.setDate(today.getDate() + 90);
                 
+                // Last 1 past event (most recent), leveraging publicEvents pre-sort (desc by start_date)
                 const pastEvents = publicEvents.filter(e => {
                   if (!e.start_date) return false;
                   const eventDate = new Date(e.start_date);
                   return eventDate < today;
                 }).slice(0, 1);
                 
-                const upcomingEvents = publicEvents.filter(e => {
-                  if (!e.start_date) return false;
-                  const eventDate = new Date(e.start_date);
-                  return eventDate >= today && eventDate <= sevenDaysOut;
-                }).slice(0, 1);
+                // All future events within next 90 days
+                const upcomingEvents = publicEvents
+                  .filter(e => {
+                    if (!e.start_date) return false;
+                    const eventDate = new Date(e.start_date);
+                    return eventDate >= today && eventDate <= ninetyDaysOut;
+                  })
+                  // Sort ascending by date for better UX (soonest first)
+                  .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
                 
                 const availableEvents = [...pastEvents, ...upcomingEvents];
                 
