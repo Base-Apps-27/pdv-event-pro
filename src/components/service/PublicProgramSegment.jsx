@@ -384,7 +384,10 @@ export default function PublicProgramSegment({
                 <div className="text-gray-700">
                   {segment.video_name && <span>{segment.video_name}</span>}
                   {segment.video_location && <span className="ml-1 text-gray-600">({segment.video_location})</span>}
-                  {segment.video_length_sec && <span className="ml-1 text-gray-600">- {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}</span>}
+                  {typeof segment.video_length_sec === 'number' && (
+                    <span className="ml-1 text-gray-600">- {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}</span>
+                  )}
+                  {segment.video_owner && <span className="ml-1 text-gray-600">• {segment.video_owner}</span>}
                 </div>
               </div>
             )}
@@ -404,10 +407,10 @@ export default function PublicProgramSegment({
                   </p>
                   {hasDrama && (
                     <div className="pl-2 border-l-2 border-pink-300 space-y-0.5">
-                      {getData('drama_handheld_mics') > 0 && <div>Mics mano: {getData('drama_handheld_mics')}</div>}
-                      {getData('drama_headset_mics') > 0 && <div>Mics diadema: {getData('drama_headset_mics')}</div>}
-                      {getData('drama_start_cue') && <div>Inicio: {getData('drama_start_cue')}</div>}
-                      {getData('drama_end_cue') && <div>Cierre: {getData('drama_end_cue')}</div>}
+                      {getData('drama_handheld_mics') > 0 && <div>{t('arts.mics.handheld')}: {getData('drama_handheld_mics')}</div>}
+                      {getData('drama_headset_mics') > 0 && <div>{t('arts.mics.headset')}: {getData('drama_headset_mics')}</div>}
+                      {getData('drama_start_cue') && <div>{t('arts.cues.start')}: {getData('drama_start_cue')}</div>}
+                      {getData('drama_end_cue') && <div>{t('arts.cues.end')}: {getData('drama_end_cue')}</div>}
                       {getData('drama_has_song') && getData('drama_song_title') && (
                         <div>Canción: {getData('drama_song_title')}</div>
                       )}
@@ -418,8 +421,8 @@ export default function PublicProgramSegment({
                       {getData('dance_has_song') && getData('dance_song_title') && (
                         <div>Música: {getData('dance_song_title')}</div>
                       )}
-                      {getData('dance_handheld_mics') > 0 && <div>Mics mano: {getData('dance_handheld_mics')}</div>}
-                      {getData('dance_headset_mics') > 0 && <div>Mics diadema: {getData('dance_headset_mics')}</div>}
+                      {getData('dance_handheld_mics') > 0 && <div>{t('arts.mics.handheld')}: {getData('dance_handheld_mics')}</div>}
+                      {getData('dance_headset_mics') > 0 && <div>{t('arts.mics.headset')}: {getData('dance_headset_mics')}</div>}
                     </div>
                   )}
                   {hasOther && getData('art_other_description') && (

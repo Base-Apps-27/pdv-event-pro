@@ -78,6 +78,22 @@ export default function SegmentRow({ segment, onUpdate, onEditDetails }) {
                     {segment.message_title}
                 </Badge>
             )}
+            {segment.has_video && (
+                <Badge
+                  variant="outline"
+                  className="text-[9px] h-4 px-1 max-w-[160px] truncate cursor-pointer hover:bg-blue-50"
+                  onClick={onEditDetails}
+                  title={`${segment.video_location || ''}${segment.video_owner ? ` • ${segment.video_owner}` : ''}`.trim()}
+                >
+                  <Video className="w-3 h-3 mr-1" />
+                  {segment.video_name || 'Video'}
+                  {typeof segment.video_length_sec === 'number' && (
+                    <span className="ml-1 text-gray-500">
+                      {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}
+                    </span>
+                  )}
+                </Badge>
+            )}
         </div>
       </div>
 
