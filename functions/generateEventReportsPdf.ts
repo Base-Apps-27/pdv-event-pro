@@ -334,15 +334,17 @@ Deno.serve(async (req) => {
 
     // Hospitality tasks (badge logic handled in header if needed)
     const hospBySession = {};
+    const tasksBySession = {};
     for (const sid of sessionIds) {
       const tasks = await base44.entities.HospitalityTask.filter({ session_id: sid });
       hospBySession[sid] = tasks && tasks.length > 0;
+      tasksBySession[sid] = tasks || [];
     }
 
     // Build docDefinition
     const content = [];
 
-    const addSessionPage = (session, segments) => {
+    const addSessionPage = async (session, segments) => {
       const sizes = computeFontProfile(segments);
       content.push(headerBand(event, session, sizes));
       const psd = psdBySession[session.id];
@@ -361,10 +363,8 @@ Deno.serve(async (req) => {
         const filtered = filterSegments(segments, 'show_in_ushers');
         content.push(simpleNotesTable(session, filtered, 'Notas Ujieres', 'ushers_notes', sizes));
       } else if (reportType === 'hospitality') {
-        // Hospitality: table of tasks (if any) — simple placeholder if none
-        // Fetch tasks again for full data
-        // Keep simple for first pass
-        const tasks = await base44.entities.HospitalityTask.filter({ session_id: session.id });
+        // Hospitality: table of tasks (if any)
+        const tasks = tasksBySession[session.id] || [];
         const body = [[
           { text: 'Tiempo', style: 'th' },
           { text: 'Categoría', style: 'th' },
@@ -402,12 +402,13 @@ Deno.serve(async (req) => {
         content.push({ table: { widths: [70, '*', 180, 70], body }, layout: 'lightHorizontalLines' });
       }
 
+      // Ensure one session per page
       content.push({ text: '', pageBreak: 'after' });
     };
 
     for (const session of sessions) {
       const segs = segmentsBySession[session.id] || [];
-      addSessionPage(session, segs);
+      await addSessionPage(session, segs);
     }
 
     // Remove the last trailing pageBreak
@@ -436,12 +437,16 @@ Deno.serve(async (req) => {
     const pdfDoc = printer.createPdfKitDocument(docDefinition);
     const chunks = [];
     await new Promise((resolve, reject) => {
-      pdfDoc.on('data', (d) => chunks.push(d));
+      pdfDoc.on('data', (d) => chunks.push(new Uint8Array(d)));
       pdfDoc.on('end', resolve);
       pdfDoc.on('error', reject);
       pdfDoc.end();
     });
-    const blob = new Uint8Array(Buffer.concat(chunks));
+    let total = 0;
+    for (const c of chunks) total += c.length;
+    const blob = new Uint8Array(total);
+    let offset = 0;
+    for (const c of chunks) { blob.set(c, offset); offset += c.length; }
 
     return new Response(blob, {
       status: 200,
