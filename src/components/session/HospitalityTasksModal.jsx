@@ -33,9 +33,17 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
     }
   };
 
+  React.useEffect(() => {
+    if (sessionId) console.log('[HospitalityTasksModal] sessionId available:', sessionId);
+    else console.warn('[HospitalityTasksModal] sessionId is missing or undefined');
+  }, [sessionId, isOpen]);
+
   const { data: hospitalityTasks = [], isLoading } = useQuery({
     queryKey: ['hospitalityTasks', sessionId],
-    queryFn: () => base44.entities.HospitalityTask.filter({ session_id: sessionId }, 'order'),
+    queryFn: () => {
+      console.log('[HospitalityTasksModal] Fetching tasks for sessionId:', sessionId);
+      return base44.entities.HospitalityTask.filter({ session_id: sessionId }, 'order');
+    },
     enabled: isOpen && !!sessionId,
   });
 
@@ -102,16 +110,27 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
 
   const handleSubmitTask = (e) => {
     e.preventDefault();
+
+    // Defensive checks
+    if (!sessionId) {
+      console.error('[HospitalityTasksModal] Cannot submit: sessionId is missing', { sessionId });
+      alert('Error: No se pudo determinar la sesión. Por favor recarga la página.');
+      return;
+    }
+
     if (!taskForm.description.trim()) {
       alert('Por favor ingresa una descripción');
       return;
     }
+
     const dataToSubmit = {
       session_id: sessionId,
       order: editingTask ? editingTask.order : (hospitalityTasks.length + 1),
       ...taskForm,
       field_origins: fieldOrigins,
     };
+
+    console.log('[HospitalityTasksModal] Submitting task:', { sessionId, dataToSubmit });
 
     if (editingTask) {
       updateTaskMutation.mutate({ id: editingTask.id, data: dataToSubmit });
