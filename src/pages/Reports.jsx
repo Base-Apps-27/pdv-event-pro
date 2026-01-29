@@ -448,54 +448,53 @@ export default function Reports() {
               })()}
             </div>
 
-            {/* Flex-based segment list (independent column heights) */}
-            <div className="space-y-0 border border-gray-200 rounded">
-              {/* Header */}
-              <div className="flex gap-0 bg-gray-100 border-b border-gray-300 text-[10px]">
-                <div className="p-1 text-gray-900 font-bold uppercase text-center flex-shrink-0 w-20">{t('reports.headers.time')}</div>
-                <div className="p-1 text-gray-900 font-bold uppercase flex-grow min-w-0">{t('reports.headers.details')}</div>
-                <div className="p-1 text-gray-900 font-bold uppercase flex-grow min-w-0">{t('reports.headers.teamNotes')}</div>
-              </div>
-
-              {/* Segments */}
-              <div className="divide-y divide-gray-200">
-                {segments.map((segment, idx) => {
-                  if (segment.segment_type === "Breakout" && segment.breakout_rooms) {
-                    return (
-                      <React.Fragment key={segment.id}>
-                        {/* Prep Actions Row - full width above segment */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-100 border-b border-gray-300">
+                  <tr>
+                    <th className="p-1 text-gray-900 font-bold uppercase w-12 text-center text-xs">{t('reports.headers.time')}</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-3/5">{t('reports.headers.details')}</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-2/5">{t('reports.headers.teamNotes')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {segments.map((segment, idx) => {
+                    if (segment.segment_type === "Breakout" && segment.breakout_rooms) {
+                      return (
+                        <React.Fragment key={segment.id}>
+                        {/* Prep Actions Row - spans full width above segment */}
                         {getSegmentActions(segment).filter(a => isPrepAction(a)).length > 0 && (
-                          <div className="bg-amber-50 border-t-2 border-amber-300 p-2 mb-2">
-                            <div className="flex items-start gap-2">
-                              <div className="bg-amber-500 text-white px-2 py-1 rounded font-bold text-[10px] uppercase whitespace-nowrap">
-                                ⚠ PREP
+                          <tr className="bg-amber-50 border-t-2 border-amber-300">
+                            <td colSpan="3" className="p-2">
+                              <div className="flex items-start gap-2">
+                                <div className="bg-amber-500 text-white px-2 py-1 rounded font-bold text-[10px] uppercase whitespace-nowrap">
+                                  ⚠ PREP
+                                </div>
+                                <div className="flex-1 flex flex-wrap gap-2">
+                                  {getSegmentActions(segment).filter(a => isPrepAction(a)).map((action, actionIdx) => (
+                                    <div
+                                      key={actionIdx}
+                                      className={`text-[10px] px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
+                                    >
+                                      <span className="font-bold">[{action.department}]</span> {action.label}
+                                      {action.is_required && <span className="ml-1 text-red-600">*</span>}
+                                      {action.timing && action.offset_min !== undefined && (
+                                        <span className="italic ml-1">
+                                          ({action.timing === "before_start" && `${action.offset_min}m antes`}
+                                          {action.timing === "before_end" && `${action.offset_min}m antes de fin`}
+                                          {action.timing === "absolute" && action.absolute_time})
+                                        </span>
+                                      )}
+                                      {action.notes && <span className="ml-1">— {action.notes}</span>}
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                              <div className="flex-1 flex flex-wrap gap-2">
-                                {getSegmentActions(segment).filter(a => isPrepAction(a)).map((action, actionIdx) => (
-                                  <div
-                                    key={actionIdx}
-                                    className={`text-[10px] px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
-                                  >
-                                    <span className="font-bold">[{action.department}]</span> {action.label}
-                                    {action.is_required && <span className="ml-1 text-red-600">*</span>}
-                                    {action.timing && action.offset_min !== undefined && (
-                                      <span className="italic ml-1">
-                                        ({action.timing === "before_start" && `${action.offset_min}m antes`}
-                                        {action.timing === "before_end" && `${action.offset_min}m antes de fin`}
-                                        {action.timing === "absolute" && action.absolute_time})
-                                      </span>
-                                    )}
-                                    {action.notes && <span className="ml-1">— {action.notes}</span>}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
+                            </td>
+                          </tr>
                         )}
-
-                        {/* Breakout Row */}
-                        <div className={`flex gap-0 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
-                          <div className="p-2 font-bold text-center border-r border-gray-200 text-[10px] flex-shrink-0 w-20" style={{ color: '#8DC63F', verticalAlign: 'top' }}>
+                        <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
+                        <td className="p-1 font-bold text-center border-r border-gray-200 text-[10px] align-top w-12" style={{ color: '#8DC63F', verticalAlign: 'top' }}>
                             <div className="flex flex-col items-center leading-tight">
                               <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
                               {segment.end_time && (
@@ -508,40 +507,40 @@ export default function Reports() {
                                 <div className="text-[9px] text-gray-600 mt-0.5">({segment.duration_min}m)</div>
                               )}
                             </div>
-                          </div>
-                          <div className="p-2 border-r border-gray-200 flex-grow min-w-0" style={{ verticalAlign: 'top' }}>
-                            <div className="bg-amber-50 border border-amber-300 rounded p-2">
+                          </td>
+                          <td className="p-1 border-r border-gray-200 align-top" colSpan="2" style={{ verticalAlign: 'top' }}>
+                            <div className="bg-amber-50 border border-amber-300 rounded p-1">
                               <div className="text-amber-900 font-bold text-xs uppercase mb-2">
                                 {segment.title} - SESIONES PARALELAS
                               </div>
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                 {segment.breakout_rooms.map((room, roomIdx) => (
-                                  <div key={roomIdx} className="bg-white p-2 rounded border border-gray-200">
+                                  <div key={roomIdx} className="bg-white p-2 rounded border border-gray-200 text-[10px]">
                                     {room.room_id && (
                                       <Badge variant="outline" className="text-[9px] bg-blue-50 mb-1">
                                         {getRoomName(room.room_id)}
                                       </Badge>
                                     )}
-                                    <div className="font-bold text-xs text-gray-900 mb-1">{room.topic || `Sala ${roomIdx + 1}`}</div>
+                                    <div className="font-bold text-xs text-gray-900 mb-0.5">{room.topic || `Sala ${roomIdx + 1}`}</div>
                                     {room.hosts && (
                                       <div className="text-indigo-600 font-semibold text-[10px] mb-0.5">
                                         <span className="font-bold">Anfitrión:</span> {room.hosts}
                                       </div>
                                     )}
                                     {room.speakers && (
-                                      <div className="text-blue-600 font-semibold text-[10px] mb-1">
+                                      <div className="text-blue-600 font-semibold text-[10px] mb-0.5">
                                         <span className="font-bold">Presentador:</span> {room.speakers}
                                       </div>
                                     )}
                                     {room.requires_translation && (
-                                      <div className="flex items-center gap-1 text-[10px] text-purple-700 mb-1">
+                                      <div className="flex items-center gap-1 text-[10px] text-purple-700 mb-0.5">
                                         <Languages className="w-3 h-3" />
                                         {room.translation_mode === "InPerson" && <Mic className="w-3 h-3" />}
                                         {room.translator_name && <span>{room.translator_name}</span>}
                                       </div>
                                     )}
                                     {(room.general_notes || room.other_notes) && (
-                                      <div className="mt-1 text-[9px] space-y-0.5">
+                                      <div className="mt-0.5 text-[9px] space-y-0.5">
                                         {room.general_notes && (
                                           <div className="bg-purple-50 px-1 rounded">
                                             <span className="font-bold text-purple-700">PROD:</span>
@@ -560,29 +559,105 @@ export default function Reports() {
                                 ))}
                               </div>
                             </div>
-                          </div>
-                          <div className="p-2 text-gray-600 text-[10px] flex-grow min-w-0" style={{ verticalAlign: 'top' }}>
-                            <span className="text-gray-400">-</span>
+                          </td>
+                        </tr>
+                        </React.Fragment>
+                      );
+                    }
+
+                    return (
+                      <React.Fragment key={segment.id}>
+                      {/* Prep Actions Row - spans full width above segment */}
+                      {getSegmentActions(segment).filter(a => isPrepAction(a)).length > 0 && (
+                        <tr className="bg-amber-50 border-t-2 border-amber-300">
+                          <td colSpan="3" className="p-1">
+                            <div className="flex items-start gap-2">
+                              <div className="bg-amber-500 text-white px-2 py-0.5 rounded font-bold text-[9px] uppercase whitespace-nowrap">
+                                ⚠ PREP
+                              </div>
+                              <div className="flex-1 flex flex-wrap gap-1">
+                                {getSegmentActions(segment).filter(a => isPrepAction(a)).map((action, actionIdx) => (
+                                  <div
+                                    key={actionIdx}
+                                    className={`text-[9px] px-1 py-0.5 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
+                                  >
+                                    <span className="font-bold">[{action.department}]</span> {action.label}
+                                    {action.is_required && <span className="ml-1 text-red-600">*</span>}
+                                    {action.timing && action.offset_min !== undefined && (
+                                      <span className="italic ml-1">
+                                        ({action.timing === "before_start" && `${action.offset_min}m antes`}
+                                        {action.timing === "before_end" && `${action.offset_min}m antes de fin`}
+                                        {action.timing === "absolute" && action.absolute_time})
+                                      </span>
+                                    )}
+                                    {action.notes && <span className="ml-1">— {action.notes}</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
+                      <td className="p-1 font-bold text-center border-r border-gray-200 text-[10px] align-top w-12" style={{ color: '#8DC63F', verticalAlign: 'top' }}>
+                        <div className="flex flex-col items-center leading-tight">
+                          <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
+                          {segment.end_time && (
+                            <>
+                              <div className="text-gray-400 text-[8px]">↓</div>
+                              <div className="whitespace-nowrap">{formatTimeToEST(segment.end_time)}</div>
+                            </>
+                          )}
+                          {segment.duration_min && (
+                            <div className="text-[9px] text-gray-600 mt-0.5">({segment.duration_min}m)</div>
+                          )}
+                          <div className="flex gap-0.5 mt-1">
+                            {segment.requires_translation && segment.translation_mode === "InPerson" && (
+                              <>
+                                <Languages className="w-3 h-3 text-purple-600" title="Traducción en Persona" />
+                                <Mic className="w-3 h-3 text-purple-600" title="En Persona" />
+                              </>
+                            )}
+                            {segment.requires_translation && segment.translation_mode === "RemoteBooth" && (
+                              <Languages className="w-3 h-3 text-purple-600" title="Traducción Remota" />
+                            )}
+                            {segment.major_break && (
+                              <Utensils className="w-3 h-3 text-orange-600" title="Receso Mayor" />
+                            )}
                           </div>
                         </div>
-                      </React.Fragment>
+                      </td>
+                      <td className="p-1 border-r border-gray-200 align-top" style={{ verticalAlign: 'top' }}>
+                        <SegmentReportRow
+                          segment={segment}
+                          idx={idx}
+                          getSegmentActions={getSegmentActions}
+                          isPrepAction={isPrepAction}
+                          getRoomName={getRoomName}
+                          departmentColors={departmentColors}
+                          t={t}
+                          isTableMode={true}
+                        />
+                      </td>
+                      <td className="p-1 text-gray-600 text-[10px] align-top" style={{ verticalAlign: 'top' }}>
+                        <SegmentReportRow
+                          segment={segment}
+                          idx={idx}
+                          getSegmentActions={getSegmentActions}
+                          isPrepAction={isPrepAction}
+                          getRoomName={getRoomName}
+                          departmentColors={departmentColors}
+                          t={t}
+                          isTableMode={true}
+                          showOnlyTeamNotes={true}
+                        />
+                      </td>
+                    </tr>
+                    </React.Fragment>
                     );
-                  }
-
-                  return (
-                    <SegmentReportRow
-                      key={segment.id}
-                      segment={segment}
-                      idx={idx}
-                      getSegmentActions={getSegmentActions}
-                      isPrepAction={isPrepAction}
-                      getRoomName={getRoomName}
-                      departmentColors={departmentColors}
-                      t={t}
-                    />
-                  );
-                })}
-              </div>
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         );
