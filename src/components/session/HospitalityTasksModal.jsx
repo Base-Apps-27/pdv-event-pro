@@ -102,9 +102,13 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
 
   const handleSubmitTask = (e) => {
     e.preventDefault();
+    if (!taskForm.description.trim()) {
+      alert('Por favor ingresa una descripción');
+      return;
+    }
     const dataToSubmit = {
       session_id: sessionId,
-      order: editingTask ? editingTask.order : hospitalityTasks.length + 1,
+      order: editingTask ? editingTask.order : (hospitalityTasks.length + 1),
       ...taskForm,
       field_origins: fieldOrigins,
     };
@@ -243,9 +247,13 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
                     Cancelar Edición
                   </Button>
                 )}
-                <Button type="submit" className="gradient-pdv text-white font-bold uppercase">
+                <Button 
+                  type="submit" 
+                  className="gradient-pdv text-white font-bold uppercase"
+                  disabled={createTaskMutation.isPending || updateTaskMutation.isPending}
+                >
                   <Plus className="w-4 h-4 mr-2" />
-                  {editingTask ? 'Guardar Cambios' : 'Añadir Tarea'}
+                  {createTaskMutation.isPending || updateTaskMutation.isPending ? 'Guardando...' : (editingTask ? 'Guardar Cambios' : 'Añadir Tarea')}
                 </Button>
               </div>
             </form>
