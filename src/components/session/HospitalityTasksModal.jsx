@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Utensils } from "lucide-react";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
-import { toast } from "sonner";
 
 const HOSPITALITY_CATEGORIES = [
   "Breakfast", "Lunch", "Dinner", "Snacks", "Setup", "Cleanup", "Other"
@@ -34,26 +33,15 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
     }
   };
 
-  // Invalidate cache when modal opens — ensures fresh data for selected session
-  React.useEffect(() => {
-    if (isOpen && sessionId) {
-      queryClient.invalidateQueries({ queryKey: ['hospitalityTasks', sessionId] });
-    }
-  }, [isOpen, sessionId, queryClient]);
-
   const { data: hospitalityTasks = [], isLoading } = useQuery({
     queryKey: ['hospitalityTasks', sessionId],
-    queryFn: () => {
-      console.log('[HospitalityTasksModal] Fetching tasks for sessionId:', sessionId);
-      return base44.entities.HospitalityTask.filter({ session_id: sessionId }, 'order');
-    },
+    queryFn: () => base44.entities.HospitalityTask.filter({ session_id: sessionId }, 'order'),
     enabled: isOpen && !!sessionId,
   });
 
   const createTaskMutation = useMutation({
     mutationFn: (data) => base44.entities.HospitalityTask.create(data),
     onSuccess: () => {
-      toast.success('Tarea creada exitosamente');
       queryClient.invalidateQueries(['hospitalityTasks', sessionId]);
       setTaskForm({
         category: "Other",
@@ -63,17 +51,12 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
         notes: "",
       });
       setEditingTask(null);
-    },
-    onError: (error) => {
-      console.error('[HospitalityTasksModal] Failed to create task:', error);
-      toast.error(`Error al crear tarea: ${error?.message || 'Error desconocido'}`);
     },
   });
 
   const updateTaskMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.HospitalityTask.update(id, data),
     onSuccess: () => {
-      toast.success('Tarea actualizada exitosamente');
       queryClient.invalidateQueries(['hospitalityTasks', sessionId]);
       setTaskForm({
         category: "Other",
@@ -84,21 +67,12 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
       });
       setEditingTask(null);
     },
-    onError: (error) => {
-      console.error('[HospitalityTasksModal] Failed to update task:', error);
-      toast.error(`Error al actualizar tarea: ${error?.message || 'Error desconocido'}`);
-    },
   });
 
   const deleteTaskMutation = useMutation({
     mutationFn: (id) => base44.entities.HospitalityTask.delete(id),
     onSuccess: () => {
-      toast.success('Tarea eliminada');
       queryClient.invalidateQueries(['hospitalityTasks', sessionId]);
-    },
-    onError: (error) => {
-      console.error('[HospitalityTasksModal] Failed to delete task:', error);
-      toast.error(`Error al eliminar tarea: ${error?.message || 'Error desconocido'}`);
     },
   });
 
@@ -128,28 +102,12 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
 
   const handleSubmitTask = (e) => {
     e.preventDefault();
-
-    // Defensive checks
-    if (!sessionId) {
-      console.error('[HospitalityTasksModal] Cannot submit: sessionId is missing', { sessionId });
-      alert('Error: No se pudo determinar la sesión. Por favor recarga la página.');
-      return;
-    }
-
-    if (!taskForm.description.trim()) {
-      alert('Por favor ingresa una descripción');
-      return;
-    }
-
     const dataToSubmit = {
       session_id: sessionId,
-      origin: editingTask ? editingTask.origin || 'manual' : 'manual',
-      order: editingTask ? editingTask.order : (hospitalityTasks.length + 1),
+      order: editingTask ? editingTask.order : hospitalityTasks.length + 1,
       ...taskForm,
       field_origins: fieldOrigins,
     };
-
-    console.log('[HospitalityTasksModal] Submitting task:', { sessionId, dataToSubmit });
 
     if (editingTask) {
       updateTaskMutation.mutate({ id: editingTask.id, data: dataToSubmit });
@@ -285,13 +243,9 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
                     Cancelar Edición
                   </Button>
                 )}
-                <Button 
-                  type="submit" 
-                  className="gradient-pdv text-white font-bold uppercase"
-                  disabled={createTaskMutation.isPending || updateTaskMutation.isPending}
-                >
+                <Button type="submit" className="gradient-pdv text-white font-bold uppercase">
                   <Plus className="w-4 h-4 mr-2" />
-                  {createTaskMutation.isPending || updateTaskMutation.isPending ? 'Guardando...' : (editingTask ? 'Guardar Cambios' : 'Añadir Tarea')}
+                  {editingTask ? 'Guardar Cambios' : 'Añadir Tarea'}
                 </Button>
               </div>
             </form>

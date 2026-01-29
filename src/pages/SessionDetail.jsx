@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SegmentList from "../components/session/SegmentList.jsx";
 import SegmentFormTwoColumn from "../components/session/SegmentFormTwoColumn.jsx";
 import PreSessionDetailsForm from "../components/session/PreSessionDetailsForm.jsx";
-import HospitalityTasksModal from "../components/session/HospitalityTasksModal.jsx";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -31,7 +30,6 @@ export default function SessionDetail() {
   const [showForm, setShowForm] = useState(false);
   const [editingSegment, setEditingSegment] = useState(null);
   const [showPreSessionDetailsDialog, setShowPreSessionDetailsDialog] = useState(false);
-  const [showHospitalityModal, setShowHospitalityModal] = useState(false);
 
   const { data: session } = useQuery({
     queryKey: ['session', sessionId],
@@ -161,13 +159,10 @@ export default function SessionDetail() {
                 </div>
               )}
               {session.hospitality_team && (
-                <button 
-                  onClick={() => setShowHospitalityModal(true)}
-                  className="bg-yellow-50 px-3 py-2 rounded border border-yellow-200 hover:bg-yellow-100 transition-colors text-left cursor-pointer"
-                >
+                <div className="bg-yellow-50 px-3 py-2 rounded border border-yellow-200">
                   <span className="font-bold text-yellow-700 block text-xs mb-1">HOSPITALIDAD</span>
                   <span className="text-slate-800">{session.hospitality_team}</span>
-                </button>
+                </div>
               )}
               {session.photography_team && (
                 <div className="bg-slate-50 px-3 py-2 rounded border border-slate-200">
@@ -236,25 +231,19 @@ export default function SessionDetail() {
       </Dialog>
 
       <Dialog open={showPreSessionDetailsDialog} onOpenChange={setShowPreSessionDetailsDialog}>
-         <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
-           <DialogHeader className="shrink-0 border-b border-gray-100 p-6 pb-4">
-             <DialogTitle className="text-2xl font-bold text-gray-900 font['Bebas_Neue'] tracking-wide uppercase">Detalles Pre-Sesión</DialogTitle>
-           </DialogHeader>
-           <div className="flex-1 overflow-y-auto">
-             <PreSessionDetailsForm
-               sessionId={sessionId}
-               preSessionDetails={preSessionDetails.length > 0 ? preSessionDetails[0] : null}
-               onClose={() => setShowPreSessionDetailsDialog(false)}
-             />
-           </div>
-         </DialogContent>
-       </Dialog>
-
-       <HospitalityTasksModal
-         sessionId={sessionId}
-         isOpen={showHospitalityModal}
-         onClose={() => setShowHospitalityModal(false)}
-       />
-      </div>
-      );
-      }
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="shrink-0 border-b border-gray-100 p-6 pb-4">
+            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">Detalles Pre-Sesión</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto">
+            <PreSessionDetailsForm
+              sessionId={sessionId}
+              preSessionDetails={preSessionDetails.length > 0 ? preSessionDetails[0] : null}
+              onClose={() => setShowPreSessionDetailsDialog(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
