@@ -196,7 +196,7 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
             Tareas de Hospitalidad
           </DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4" style={{ minHeight: '450px' }}>
           <div className="flex flex-col h-full">
             <h3 className="font-bold text-md mb-2">Tareas Existentes ({hospitalityTasks.length})</h3>
             <p className="text-xs text-gray-500 mb-2">Arrastra para reordenar</p>
