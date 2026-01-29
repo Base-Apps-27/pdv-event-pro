@@ -658,8 +658,8 @@ export default function Reports() {
                                    {segment.drama_start_cue && <div>{t('arts.cues.start')}: {segment.drama_start_cue}</div>}
                                    {segment.drama_end_cue && <div>{t('arts.cues.end')}: {segment.drama_end_cue}</div>}
                                    {segment.drama_has_song && segment.drama_song_title && (
-                                     <div>Canción: {segment.drama_song_title}</div>
-                                   )}
+                                                                       <div>{t('arts.song')}: {segment.drama_song_title}</div>
+                                                                     )}
                                    {segment.microphone_assignments && (
                                      <div className="mt-0.5 text-gray-700">Asignación de micrófonos: {segment.microphone_assignments}</div>
                                    )}
