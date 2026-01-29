@@ -23,20 +23,20 @@ async function ensureFonts() {
   // Prefer Inter; robust CDN fallbacks. If all fail, fall back to Roboto (Google Fonts repo) to avoid 500s.
   const interSources = {
     normal: [
-      'https://cdn.jsdelivr.net/gh/rsms/inter@v3.19/packages/inter/static/Inter-Regular.ttf',
-      'https://github.com/rsms/inter/raw/v3.19/packages/inter/static/Inter-Regular.ttf',
+      'https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.8/files/inter-latin-400-normal.ttf',
+      'https://unpkg.com/@fontsource/inter@5.0.8/files/inter-latin-400-normal.ttf',
     ],
     bold: [
-      'https://cdn.jsdelivr.net/gh/rsms/inter@v3.19/packages/inter/static/Inter-Bold.ttf',
-      'https://github.com/rsms/inter/raw/v3.19/packages/inter/static/Inter-Bold.ttf',
+      'https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.8/files/inter-latin-700-normal.ttf',
+      'https://unpkg.com/@fontsource/inter@5.0.8/files/inter-latin-700-normal.ttf',
     ],
     italics: [
-      'https://cdn.jsdelivr.net/gh/rsms/inter@v3.19/packages/inter/static/Inter-Italic.ttf',
-      'https://github.com/rsms/inter/raw/v3.19/packages/inter/static/Inter-Italic.ttf',
+      'https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.8/files/inter-latin-400-italic.ttf',
+      'https://unpkg.com/@fontsource/inter@5.0.8/files/inter-latin-400-italic.ttf',
     ],
     bolditalics: [
-      'https://cdn.jsdelivr.net/gh/rsms/inter@v3.19/packages/inter/static/Inter-BoldItalic.ttf',
-      'https://github.com/rsms/inter/raw/v3.19/packages/inter/static/Inter-BoldItalic.ttf',
+      'https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.8/files/inter-latin-700-italic.ttf',
+      'https://unpkg.com/@fontsource/inter@5.0.8/files/inter-latin-700-italic.ttf',
     ],
   };
 
