@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { generateEventReportPDFClient } from "@/components/service/generateEventReportsPDFClient";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -1494,29 +1495,70 @@ export default function Reports() {
                   {t('reports.printAll')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={async () => {
-                  if (!selectedEventId) return;
-                  const typeMap = {
-                    detailed: 'detailed',
-                    projection: 'projection',
-                    sound: 'sound',
-                    ushers: 'ushers',
-                    hospitality: 'hospitality',
-                    general: 'general',
-                  };
-                  const rt = typeMap[activeReport] || 'detailed';
-                  const { data } = await base44.functions.invoke('generateEventReportsPdf', { eventId: selectedEventId, reportType: rt });
-                  await downloadPdf(rt, data);
+                 if (!selectedEventId) return;
+                 const typeMap = {
+                   detailed: 'detailed',
+                   projection: 'projection',
+                   sound: 'sound',
+                   ushers: 'ushers',
+                   hospitality: 'hospitality',
+                   general: 'general',
+                 };
+                 const rt = typeMap[activeReport] || 'detailed';
+                 // Build mappings from already-loaded data
+                 const segmentsBySession = sessions.reduce((acc, s) => {
+                   acc[s.id] = allSegments.filter(seg => seg.session_id === s.id).sort((a,b)=>(a.order||0)-(b.order||0));
+                   return acc;
+                 }, {});
+                 const preSessionDetailsBySession = sessions.reduce((acc, s) => {
+                   const records = allPreSessionDetails.filter(psd => psd.session_id === s.id);
+                   if (records.length > 0) acc[s.id] = mergePreSessionDetails(records);
+                   return acc;
+                 }, {});
+                 const hospitalityTasksBySession = sessions.reduce((acc, s) => {
+                   acc[s.id] = allHospitalityTasks.filter(t => t.session_id === s.id);
+                   return acc;
+                 }, {});
+                 const bytes = await generateEventReportPDFClient({
+                   event: selectedEvent,
+                   sessions: eventSessions,
+                   segmentsBySession,
+                   preSessionDetailsBySession,
+                   hospitalityTasksBySession,
+                   reportType: rt,
+                 });
+                 await downloadPdf(rt, bytes);
                 }}>
                   <FileText className="w-4 h-4 mr-2" />
                   Exportar vista actual (PDF)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={async () => {
-                  if (!selectedEventId) return;
-                  const types = ['detailed','general','projection','sound','ushers','hospitality'];
-                  for (const rt of types) {
-                    const { data } = await base44.functions.invoke('generateEventReportsPdf', { eventId: selectedEventId, reportType: rt });
-                    await downloadPdf(rt, data);
-                  }
+                 if (!selectedEventId) return;
+                 const segmentsBySession = sessions.reduce((acc, s) => {
+                   acc[s.id] = allSegments.filter(seg => seg.session_id === s.id).sort((a,b)=>(a.order||0)-(b.order||0));
+                   return acc;
+                 }, {});
+                 const preSessionDetailsBySession = sessions.reduce((acc, s) => {
+                   const records = allPreSessionDetails.filter(psd => psd.session_id === s.id);
+                   if (records.length > 0) acc[s.id] = mergePreSessionDetails(records);
+                   return acc;
+                 }, {});
+                 const hospitalityTasksBySession = sessions.reduce((acc, s) => {
+                   acc[s.id] = allHospitalityTasks.filter(t => t.session_id === s.id);
+                   return acc;
+                 }, {});
+                 const types = ['detailed','general','projection','sound','ushers','hospitality'];
+                 for (const rt of types) {
+                   const bytes = await generateEventReportPDFClient({
+                     event: selectedEvent,
+                     sessions: eventSessions,
+                     segmentsBySession,
+                     preSessionDetailsBySession,
+                     hospitalityTasksBySession,
+                     reportType: rt,
+                   });
+                   await downloadPdf(rt, bytes);
+                 }
                 }}>
                   <FileText className="w-4 h-4 mr-2" />
                   Exportar todo (PDFs separados)
