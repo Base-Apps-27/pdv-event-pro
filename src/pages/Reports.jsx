@@ -1486,15 +1486,7 @@ export default function Reports() {
                   };
                   const rt = typeMap[activeReport] || 'detailed';
                   const { data } = await base44.functions.invoke('generateEventReportsPdf', { eventId: selectedEventId, reportType: rt });
-                  const blob = new Blob([data], { type: 'application/pdf' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `${rt}.pdf`;
-                  document.body.appendChild(a);
-                  a.click();
-                  URL.revokeObjectURL(url);
-                  a.remove();
+                  await downloadPdf(rt, data);
                 }}>
                   <FileText className="w-4 h-4 mr-2" />
                   Exportar vista actual (PDF)
