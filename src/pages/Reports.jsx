@@ -493,7 +493,7 @@ export default function Reports() {
                           </tr>
                         )}
                         <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
-                        <td className="p-2 font-bold text-center border-r border-gray-200 text-[10px] align-top" style={{ color: '#8DC63F' }}>
+                        <td className="p-2 font-bold text-center border-r border-gray-200 text-[10px] align-top" style={{ color: '#8DC63F', verticalAlign: 'top' }}>
                             <div className="flex flex-col items-center leading-tight">
                               <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
                               {segment.end_time && (
@@ -507,7 +507,7 @@ export default function Reports() {
                               )}
                             </div>
                           </td>
-                          <td className="p-2 border-r border-gray-200" colSpan="2">
+                          <td className="p-2 border-r border-gray-200 align-top" colSpan="2" style={{ verticalAlign: 'top' }}>
                             <div className="bg-amber-50 border border-amber-300 rounded p-2">
                               <div className="text-amber-900 font-bold text-xs uppercase mb-2">
                                 {segment.title} - SESIONES PARALELAS
@@ -598,8 +598,8 @@ export default function Reports() {
                         </tr>
                       )}
                       <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
-                      <td className="p-2 font-bold text-center border-r border-gray-200 text-[10px] align-top" style={{ color: '#8DC63F' }}>
-                        <div className="flex flex-col items-center leading-tight">
+                      <td className="p-2 font-bold text-center border-r border-gray-200 text-[10px] align-top" style={{ color: '#8DC63F', verticalAlign: 'top' }}>
+                          <div className="flex flex-col items-center leading-tight">
                           <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
                           {segment.end_time && (
                             <>
@@ -626,7 +626,7 @@ export default function Reports() {
                           </div>
                         </div>
                       </td>
-                      <td className="p-2 border-r border-gray-200">
+                      <td className="p-2 border-r border-gray-200 align-top" style={{ verticalAlign: 'top' }}>
                         <div className={getSegmentActions(segment).filter(a => !isPrepAction(a)).length > 0 ? "grid grid-cols-2 gap-2" : ""}>
                           <div className={getSegmentActions(segment).filter(a => !isPrepAction(a)).length > 0 ? "space-y-1" : "grid grid-cols-2 gap-x-4 gap-y-1"}>
                             <div className="text-gray-900 font-bold text-xs uppercase">
@@ -783,7 +783,7 @@ export default function Reports() {
                           )}
                         </div>
                       </td>
-                      <td className="p-2 text-gray-600 text-[10px] align-top">
+                      <td className="p-2 text-gray-600 text-[10px] align-top" style={{ verticalAlign: 'top' }}>
                         <div className="space-y-1">
                           {segment.projection_notes && (
                             <div className="bg-purple-50 px-1 py-0.5 rounded border border-purple-200">
@@ -1394,6 +1394,7 @@ export default function Reports() {
           }
           .print-session th, .print-session td {
             padding: 2px 4px !important;
+            vertical-align: top !important;
           }
           .print-session .text-xl {
             font-size: 14px !important;
