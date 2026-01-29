@@ -102,14 +102,12 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     prep_instructions: segment?.prep_instructions || "",
     start_time: segment?.start_time || getSuggestedStartTime(),
     duration_min: segment?.duration_min || 30,
-    stage_call_offset_min: segment?.stage_call_offset_min || session?.default_stage_call_offset_min || 15,
     projection_notes: segment?.projection_notes || "",
     sound_notes: segment?.sound_notes || "",
     ushers_notes: segment?.ushers_notes || "",
     translation_notes: segment?.translation_notes || "",
     stage_decor_notes: segment?.stage_decor_notes || "",
     other_notes: segment?.other_notes || "",
-    microphone_assignments: segment?.microphone_assignments || "",
     show_in_general: segment?.show_in_general ?? true,
     show_in_projection: segment?.show_in_projection ?? true,
     show_in_sound: segment?.show_in_sound ?? true,
@@ -178,13 +176,12 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     }
   };
 
-  const calculateTimes = (startTime, durationMin, offsetMin) => {
-    if (!startTime || !durationMin) return { end_time: "", stage_call_time: "" };
+  const calculateTimes = (startTime, durationMin) => {
+    if (!startTime || !durationMin) return { end_time: "" };
     
     const [hours, minutes] = startTime.split(':').map(Number);
     const startMinutes = hours * 60 + minutes;
     const endMinutes = startMinutes + durationMin;
-    const stageCallMinutes = startMinutes - (Number(offsetMin) || 0);
 
     const formatTime = (totalMinutes) => {
       const h = Math.floor(totalMinutes / 60) % 24;
@@ -193,15 +190,13 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     };
 
     return {
-      end_time: formatTime(endMinutes),
-      stage_call_time: formatTime(stageCallMinutes)
+      end_time: formatTime(endMinutes)
     };
   };
 
   const times = calculateTimes(
     formData.start_time,
-    formData.duration_min,
-    formData.stage_call_offset_min
+    formData.duration_min
   );
 
   useEffect(() => {
@@ -1175,21 +1170,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   </div>
                 )}
 
-                {/* Prep instructions live in schema as prep_instructions; optional but useful */}
-                {!isTechOnly && (
-                  <div className="space-y-2">
-                    <Label htmlFor="prep_instructions">Instrucciones de preparación</Label>
-                    <Textarea 
-                      id="prep_instructions" 
-                      rows={2}
-                      value={formData.prep_instructions}
-                      onChange={(e) => setFormData({ ...formData, prep_instructions: e.target.value })}
-                      placeholder="Checklist, pruebas previas, etc."
-                      className="text-sm"
-                    />
-                  </div>
-                )}
-
                 {isPanelType && (
                   <div className="space-y-3 bg-amber-50 p-4 rounded border border-amber-200">
                     <div className="grid md:grid-cols-2 gap-3">
@@ -1382,31 +1362,14 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                         required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">Llegada de equipos (min antes)</Label>
-                      <Input 
-                        type="number"
-                        value={formData.stage_call_offset_min}
-                        onChange={(e) => setFormData({...formData, stage_call_offset_min: parseInt(e.target.value) || 0})}
-                        className="h-9"
-                      />
-                    </div>
                   </div>
 
-                  {(times.end_time || times.stage_call_time) && (
-                    <div className="mt-3 text-sm text-slate-600 border-t border-blue-300 pt-2 space-y-1">
-                      {times.end_time && (
-                        <div className="flex justify-between">
-                          <span>Fin estimado:</span>
-                          <span className="font-mono font-medium text-blue-700">{formatTimeToEST(times.end_time)}</span>
-                        </div>
-                      )}
-                      {times.stage_call_time && (
-                        <div className="flex justify-between">
-                          <span>Llegada equipos:</span>
-                          <span className="font-mono font-medium text-blue-700">{formatTimeToEST(times.stage_call_time)}</span>
-                        </div>
-                      )}
+                  {times.end_time && (
+                    <div className="mt-3 text-sm text-slate-600 border-t border-blue-300 pt-2">
+                      <div className="flex justify-between">
+                        <span>Fin estimado:</span>
+                        <span className="font-mono font-medium text-blue-700">{formatTimeToEST(times.end_time)}</span>
+                      </div>
                     </div>
                   )}
 
@@ -1686,7 +1649,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
             updates.push(base44.entities.Segment.update(a.id, { start_time: a.newStart, end_time: a.newEnd }));
           }
           // Save current segment with full form data and computed times
-          const currentTimes = calculateTimes(formData.start_time, formData.duration_min, formData.stage_call_offset_min);
+          const currentTimes = calculateTimes(formData.start_time, formData.duration_min);
           const currentData = {
             session_id: sessionId,
             ...formData,

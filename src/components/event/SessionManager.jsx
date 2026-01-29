@@ -149,8 +149,6 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
       worship_leader: session?.worship_leader || '',
       session_color: session?.session_color || 'blue',
       is_translated_session: session?.is_translated_session || false,
-      presenter: session?.presenter || '',
-      live_adjustment_enabled: session?.live_adjustment_enabled || false,
     });
     setShowDialog(true);
   };
@@ -778,20 +776,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
               </div>
               <div className="grid md:grid-cols-2 gap-4 max-w-full">
                 <div className="space-y-2">
-                  <Label htmlFor="presenter">Presentador general</Label>
-                  <div className="relative">
-                    <Input 
-                      id="presenter" 
-                      name="presenter" 
-                      value={formData.presenter}
-                      onChange={(e) => updateFormField('presenter', e.target.value)}
-                      placeholder="Nombre"
-                    />
-                    <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'presenter')} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="admin_team">Administración</Label
+                  <Label htmlFor="admin_team">Administración</Label>
                     <div className="relative">
                       <Input 
                         id="admin_team" 
