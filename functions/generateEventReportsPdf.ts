@@ -18,9 +18,8 @@ async function fetchFont(url) {
 }
 
 async function ensureFonts() {
-  if (fontCache.ready && fontCache.normal && fontCache.bold && fontCache.italics && fontCache.bolditalics) return fontCache;
+  if (fontCache.ready) return fontCache;
 
-  // Prefer Inter; robust CDN fallbacks. If all fail, fall back to Roboto (Google Fonts repo) to avoid 500s.
   const interSources = {
     normal: [
       'https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.8/files/inter-latin-400-normal.ttf',
@@ -40,13 +39,6 @@ async function ensureFonts() {
     ],
   };
 
-  const robotoFallback = {
-    normal: 'https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Regular.ttf',
-    bold: 'https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf',
-    italics: 'https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Italic.ttf',
-    bolditalics: 'https://github.com/google/fonts/raw/main/apache/roboto/Roboto-BoldItalic.ttf',
-  };
-
   async function tryFetchOne(list) {
     for (const url of list) {
       try { return await fetchFont(url); } catch (_) { /* try next */ }
@@ -54,36 +46,27 @@ async function ensureFonts() {
     return null;
   }
 
-  // Try Inter first (with per-face fallbacks)
-  const [n, b, i, bi] = await Promise.all([
-    tryFetchOne(interSources.normal),
-    tryFetchOne(interSources.bold),
-    tryFetchOne(interSources.italics),
-    tryFetchOne(interSources.bolditalics),
-  ]);
-
-  if (n && b) {
-    fontCache.normal = n;
-    fontCache.bold = b;
-    fontCache.italics = i || n;
-    fontCache.bolditalics = bi || b;
-    fontCache.ready = true;
-    return fontCache;
+  try {
+    const [n, b, i, bi] = await Promise.all([
+      tryFetchOne(interSources.normal),
+      tryFetchOne(interSources.bold),
+      tryFetchOne(interSources.italics),
+      tryFetchOne(interSources.bolditalics),
+    ]);
+    if (n && b) {
+      fontCache.normal = n;
+      fontCache.bold = b;
+      fontCache.italics = i || n;
+      fontCache.bolditalics = bi || b;
+      fontCache.ready = true;
+      return fontCache;
+    }
+  } catch (_) {
+    // ignore
   }
-
-  // Inter failed — fall back to Roboto to ensure PDF generation always works
-  const [rn, rb, ri, rbi] = await Promise.all([
-    fetchFont(robotoFallback.normal),
-    fetchFont(robotoFallback.bold),
-    fetchFont(robotoFallback.italics).catch(() => null),
-    fetchFont(robotoFallback.bolditalics).catch(() => null),
-  ]);
-
-  fontCache.normal = rn;
-  fontCache.bold = rb || rn;
-  fontCache.italics = ri || rn;
-  fontCache.bolditalics = rbi || rb || rn;
+  // Could not fetch Inter – mark to use standard fonts (Helvetica) without network
   fontCache.ready = true;
+  fontCache.useStandard = true;
   return fontCache;
 }
 
@@ -333,12 +316,24 @@ Deno.serve(async (req) => {
     }
 
     const fonts = await ensureFonts();
-    const printer = new PdfPrinter({ Inter: {
-      normal: fonts.normal,
-      bold: fonts.bold,
-      italics: fonts.italics,
-      bolditalics: fonts.bolditalics,
-    }});
+    const useStandard = fonts.useStandard === true;
+    const fontDefs = useStandard ? {
+      Helvetica: {
+        normal: 'Helvetica',
+        bold: 'Helvetica-Bold',
+        italics: 'Helvetica-Oblique',
+        bolditalics: 'Helvetica-BoldOblique',
+      }
+    } : {
+      Inter: {
+        normal: fonts.normal,
+        bold: fonts.bold,
+        italics: fonts.italics,
+        bolditalics: fonts.bolditalics,
+      }
+    };
+    const defaultFontName = useStandard ? 'Helvetica' : 'Inter';
+    const printer = new PdfPrinter(fontDefs);
 
     // Fetch event and sessions
     const events = await base44.entities.Event.filter({ id: eventId });
@@ -451,7 +446,7 @@ Deno.serve(async (req) => {
       pageSize: 'LETTER',
       pageOrientation: 'landscape',
       pageMargins: [24, 20, 24, 24],
-      defaultStyle: { font: 'Inter', fontSize: 9, color: '#111827' },
+      defaultStyle: { font: defaultFontName, fontSize: 9, color: '#111827' },
       styles: {
         th: { bold: true, fillColor: '#f3f4f6', fontSize: 9 },
         rowTitle: { bold: true, fontSize: 10 },
