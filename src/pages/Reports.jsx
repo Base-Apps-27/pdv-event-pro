@@ -610,7 +610,8 @@ export default function Reports() {
                           {segment.duration_min && (
                             <div className="text-[9px] text-gray-600 mt-0.5">({segment.duration_min}m)</div>
                           )}
-                          <div className="flex gap-1 mt-2">
+                          {(segment.requires_translation || segment.major_break) && (
+                          <div className="flex gap-1 mt-1">
                             {segment.requires_translation && segment.translation_mode === "InPerson" && (
                               <>
                                 <Languages className="w-3 h-3 text-purple-600" title="Traducción en Persona" />
@@ -624,14 +625,14 @@ export default function Reports() {
                               <Utensils className="w-3 h-3 text-orange-600" title="Receso Mayor" />
                             )}
                           </div>
+                          )}
                         </div>
                       </td>
-                      <td className="p-2 border-r border-gray-200">
-                        <div className={getSegmentActions(segment).filter(a => !isPrepAction(a)).length > 0 ? "grid grid-cols-2 gap-2" : ""}>
-                          <div className={getSegmentActions(segment).filter(a => !isPrepAction(a)).length > 0 ? "space-y-1" : "grid grid-cols-2 gap-x-4 gap-y-1"}>
-                            <div className="text-gray-900 font-bold text-xs uppercase">
-                              {segment.title}
-                            </div>
+                      <td className="p-1 border-r border-gray-200">
+                        <div className="space-y-0.5">
+                          <div className="text-gray-900 font-bold text-xs uppercase">
+                            {segment.title}
+                          </div>
                             
                             {segment.segment_type && (
                               <Badge variant="outline" className="text-[10px] px-1 py-0">
@@ -745,15 +746,11 @@ export default function Reports() {
                                 {segment.description_details}
                               </div>
                             )}
-                          </div>
-
-                          {/* In-segment cues shown in the details column */}
-                          {getSegmentActions(segment).filter(a => !isPrepAction(a)).length > 0 && (
-                          <div className="border-l border-gray-200 pl-2">
+                            {/* In-segment cues shown in the details column */}
+                            {getSegmentActions(segment).filter(a => !isPrepAction(a)).length > 0 && (
+                            <div className="border-t-2 border-blue-300 mt-0.5 pt-0.5">
+                            <div className="font-bold uppercase text-blue-700 text-[10px] mb-0.5">▶ DURANTE</div>
                               <div className="text-[10px] space-y-0.5">
-                                <div className="font-bold uppercase text-blue-700 mb-0.5 flex items-center gap-1">
-                                  <span className="bg-blue-100 px-1 rounded">▶ DURANTE</span>
-                                </div>
                                 {getSegmentActions(segment).filter(a => !isPrepAction(a)).map((action, actionIdx) => (
                                   <div
                                     key={actionIdx}
@@ -778,39 +775,39 @@ export default function Reports() {
                                     </div>
                                   </div>
                                 ))}
-                              </div>
-                          </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-2 text-gray-600 text-[10px] align-top">
-                        <div className="space-y-1">
-                          {segment.projection_notes && (
-                            <div className="bg-purple-50 px-1 py-0.5 rounded border border-purple-200">
-                              <span className="font-bold text-purple-700">PROYECCIÓN:</span>
-                              <span className="ml-1">{segment.projection_notes}</span>
-                            </div>
-                          )}
+                                </div>
+                                </div>
+                                )}
+                                </div>
+                                </td>
+                                <td className="p-1 text-gray-600 text-[10px] align-top">
+                                <div className="space-y-0.5">
                           {segment.sound_notes && (
-                            <div className="bg-red-50 px-1 py-0.5 rounded border border-red-200">
+                            <div className="bg-red-50 px-1 py-0.5 rounded border border-red-200 text-[10px]">
                               <span className="font-bold text-red-700">SONIDO:</span>
                               <span className="ml-1">{segment.sound_notes}</span>
                             </div>
                           )}
+                          {segment.projection_notes && (
+                            <div className="bg-purple-50 px-1 py-0.5 rounded border border-purple-200 text-[10px]">
+                              <span className="font-bold text-purple-700">PROYECCIÓN:</span>
+                              <span className="ml-1">{segment.projection_notes}</span>
+                            </div>
+                          )}
                           {segment.ushers_notes && (
-                            <div className="bg-green-50 px-1 py-0.5 rounded border border-green-200">
+                            <div className="bg-green-50 px-1 py-0.5 rounded border border-green-200 text-[10px]">
                               <span className="font-bold text-green-700">UJIERES:</span>
                               <span className="ml-1">{segment.ushers_notes}</span>
                             </div>
                           )}
                           {segment.stage_decor_notes && (
-                            <div className="bg-purple-50 px-1 py-0.5 rounded border border-purple-200">
+                            <div className="bg-purple-50 px-1 py-0.5 rounded border border-purple-200 text-[10px]">
                               <span className="font-bold text-purple-700">STAGE & DECOR:</span>
                               <span className="ml-1">{segment.stage_decor_notes}</span>
                             </div>
                           )}
                           {segment.requires_translation && (
-                            <div className="bg-blue-50 px-1 py-0.5 rounded border border-blue-200">
+                            <div className="bg-blue-50 px-1 py-0.5 rounded border border-blue-200 text-[10px]">
                               <span className="font-bold text-blue-700">TRADUCCIÓN:</span>
                               {segment.translator_name && (
                                 <span className="ml-1">{segment.translator_name}</span>
