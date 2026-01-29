@@ -41,14 +41,22 @@ export default function SegmentReportRow({
             <span className="ml-0.5">{segment.stage_decor_notes}</span>
           </div>
         )}
-        {segment.requires_translation && (
+        {segment.requires_translation && segment.translation_mode === "InPerson" && (
           <div className="bg-blue-50 px-0.5 py-0.5 rounded border border-blue-200 text-[9px]">
-            <span className="font-bold text-blue-700">TRAD:</span>
+            <span className="font-bold text-blue-700">TRAD (tarima):</span>
             {segment.translator_name && (
               <span className="ml-0.5">{segment.translator_name}</span>
             )}
-            {segment.translation_mode === "RemoteBooth" && (
-              <span className="ml-0.5 italic">(Remoto)</span>
+            {segment.translation_notes && (
+              <span className="ml-0.5">- {segment.translation_notes}</span>
+            )}
+          </div>
+        )}
+        {segment.requires_translation && segment.translation_mode === "RemoteBooth" && (
+          <div className="bg-purple-50 px-0.5 py-0.5 rounded border border-purple-200 text-[9px]">
+            <span className="font-bold text-purple-700">CABINA:</span>
+            {segment.translator_name && (
+              <span className="ml-0.5">{segment.translator_name}</span>
             )}
             {segment.translation_notes && (
               <span className="ml-0.5">- {segment.translation_notes}</span>

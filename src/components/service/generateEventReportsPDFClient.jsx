@@ -82,16 +82,29 @@ function buildDetailsLeftCell(seg) {
     });
   }
 
-  // Translation
-  if (seg.requires_translation) {
-    const parts = [{ text: '🎙️ TRAD', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm }];
-    if (seg.translation_mode === 'RemoteBooth') {
-      parts.push({ text: ' (R)', color: '#7C3AED', fontSize: pdfTheme.fontSize.xs, italics: true });
-    }
+  // Translation - InPerson (on stage)
+  if (seg.requires_translation && seg.translation_mode === 'InPerson') {
+    const parts = [{ text: '🎙️ TRAD (tarima)', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm }];
     if (seg.translator_name) {
       parts.push({
         text: `: ${seg.translator_name.substring(0, 25)}`,
-        color: '#7C3AED',
+        color: '#1E40AF',
+        fontSize: pdfTheme.fontSize.xs,
+      });
+    }
+    stack.push({
+      text: parts,
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    });
+  }
+
+  // Translation - RemoteBooth (headphones) - displayed separately
+  if (seg.requires_translation && seg.translation_mode === 'RemoteBooth') {
+    const parts = [{ text: '🎧 CABINA', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm }];
+    if (seg.translator_name) {
+      parts.push({
+        text: `: ${seg.translator_name.substring(0, 25)}`,
+        color: '#6D28D9',
         fontSize: pdfTheme.fontSize.xs,
       });
     }

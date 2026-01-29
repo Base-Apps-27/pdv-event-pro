@@ -1069,17 +1069,17 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                                   </Select>
                                 </div>
 
-                                {room.translation_mode === "InPerson" && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">Traductor</Label>
-                                    <Input 
-                                      value={room.translator_name}
-                                      onChange={(e) => updateBreakoutRoom(index, 'translator_name', e.target.value)}
-                                      placeholder="Nombre"
-                                      className="h-8 text-sm"
-                                    />
-                                  </div>
-                                )}
+                                <div className="space-y-1">
+                                  <Label className="text-xs">
+                                    {room.translation_mode === "InPerson" ? "Traductor (en persona)" : "Traductor (cabina)"}
+                                  </Label>
+                                  <Input 
+                                    value={room.translator_name}
+                                    onChange={(e) => updateBreakoutRoom(index, 'translator_name', e.target.value)}
+                                    placeholder="Nombre"
+                                    className="h-8 text-sm"
+                                  />
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1405,23 +1405,23 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="InPerson">En Persona</SelectItem>
-                              <SelectItem value="RemoteBooth">Cabina Remota</SelectItem>
+                              <SelectItem value="InPerson">En Persona (en tarima)</SelectItem>
+                              <SelectItem value="RemoteBooth">Cabina Remota (audífonos)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
 
-                        {formData.translation_mode === "InPerson" && (
-                          <div className="space-y-2">
-                            <Label className="text-xs">Traductor</Label>
-                            <Input 
-                              value={formData.translator_name}
-                              onChange={(e) => setFormData({...formData, translator_name: e.target.value})}
-                              placeholder="Nombre"
-                              className="h-9"
-                            />
-                          </div>
-                        )}
+                        <div className="space-y-2">
+                          <Label className="text-xs">
+                            {formData.translation_mode === "InPerson" ? "Traductor (en tarima)" : "Traductor (cabina)"}
+                          </Label>
+                          <Input 
+                            value={formData.translator_name}
+                            onChange={(e) => setFormData({...formData, translator_name: e.target.value})}
+                            placeholder="Nombre"
+                            className="h-9"
+                          />
+                        </div>
                       </div>
                     )}
                   </Card>
