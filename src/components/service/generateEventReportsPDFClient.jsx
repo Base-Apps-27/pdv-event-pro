@@ -17,41 +17,69 @@ function toESTTimeStr(hhmm) {
 }
 
 function headerBand(event, session) {
+  const dateStr = session?.date || '';
+  const timeStr = session?.planned_start_time ? toESTTimeStr(session.planned_start_time) : '';
+  const locStr = session?.location || '';
+  const meta = [dateStr, timeStr, locStr].filter(x => x).join(' • ');
+
   return {
     columns: [
-      { text: [{ text: event?.name || '', color: '#1F8A70', bold: true }, { text: ' — ' }, { text: session?.name || '', bold: true }], fontSize: 11 },
-      { text: [
-          session?.date ? session.date : '',
-          session?.planned_start_time ? ` • ${toESTTimeStr(session.planned_start_time)}` : '',
-          session?.location ? ` • ${session.location}` : ''
-        ].join(''), alignment: 'right', color: '#374151', fontSize: 9 }
+      { 
+        text: [
+          { text: event?.name || '', color: '#1F8A70', bold: true }, 
+          { text: ' — ', color: '#111827' }, 
+          { text: session?.name || '', bold: true, color: '#111827' }
+        ], 
+        fontSize: 12 
+      },
+      { text: meta, alignment: 'right', color: '#6B7280', fontSize: 10 }
     ],
-    margin: [0, 0, 0, 6]
+    margin: [0, 0, 0, 10]
   };
 }
 
 function simpleTable(body, widths) {
-  return { table: { widths, body }, layout: 'lightHorizontalLines' };
+  return { 
+    table: { widths, body, headerRows: 1 }, 
+    layout: {
+      fillColor: (rowIndex) => rowIndex === 0 ? '#F3F4F6' : null,
+      hLineWidth: (i, node) => i === 0 || i === 1 || i === node.table.body.length ? 1 : 0.5,
+      vLineWidth: () => 0,
+      hLineColor: () => '#E5E7EB',
+      paddingLeft: () => 8,
+      paddingRight: () => 8,
+      paddingTop: () => 6,
+      paddingBottom: () => 6
+    }
+  };
 }
 
 function buildDetailed(session, segments) {
   const body = [[
-    { text: 'Hora', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-    { text: 'Detalles', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-    { text: 'Notas de equipo', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
+    { text: 'Hora', bold: true, fontSize: 10, color: '#111827' },
+    { text: 'Detalles', bold: true, fontSize: 10, color: '#111827' },
+    { text: 'Notas de equipo', bold: true, fontSize: 10, color: '#111827' },
   ]];
+
   segments.forEach(seg => {
-    const left = [
-      { text: seg.start_time ? toESTTimeStr(seg.start_time) : '-', alignment: 'center' }
-    ];
-    if (seg.end_time) left.push({ text: toESTTimeStr(seg.end_time), alignment: 'center', color: '#6b7280', fontSize: 7 });
-    if (seg.duration_min) left.push({ text: `(${seg.duration_min}m)`, alignment: 'center', fontSize: 7, color: '#6b7280', margin: [0, 2, 0, 0] });
+    const left = [];
+    if (seg.start_time) {
+      left.push({ text: toESTTimeStr(seg.start_time), bold: true, fontSize: 10, color: '#111827' });
+      if (seg.end_time) left.push({ text: toESTTimeStr(seg.end_time), fontSize: 9, color: '#6B7280', margin: [0, 1, 0, 0] });
+      if (seg.duration_min) left.push({ text: `(${seg.duration_min}m)`, fontSize: 9, color: '#6B7280', margin: [0, 1, 0, 0] });
+    } else {
+      left.push({ text: '—', color: '#9CA3AF' });
+    }
 
     const details = [];
-    if (seg.title) details.push({ text: seg.title, bold: true, fontSize: 10 });
-    if (seg.segment_type) details.push({ text: seg.segment_type, fontSize: 8, color: '#374151' });
-    if (seg.presenter) details.push({ text: seg.presenter, color: '#2563eb', bold: true, fontSize: 9 });
-    if (seg.segment_type === 'Plenaria' && seg.message_title) details.push({ text: `MENSAJE: ${seg.message_title}`, color: '#1d4ed8', bold: true, fontSize: 9, margin: [0, 3, 0, 0] });
+    if (seg.title) details.push({ text: seg.title.toUpperCase(), bold: true, fontSize: 10, color: '#111827' });
+    if (seg.segment_type) details.push({ text: seg.segment_type, fontSize: 9, color: '#374151', margin: [0, 1, 0, 0] });
+    if (seg.presenter) details.push({ text: seg.presenter, color: '#2563EB', bold: true, fontSize: 9, margin: [0, 2, 0, 0] });
+    
+    if (seg.segment_type === 'Plenaria' && seg.message_title) {
+      details.push({ text: `MENSAJE: "${seg.message_title}"`, color: '#1D4ED8', bold: true, fontSize: 9, margin: [0, 2, 0, 0] });
+    }
+    
     if (seg.segment_type === 'Alabanza' && seg.number_of_songs > 0) {
       const songs = [];
       for (let i = 1; i <= seg.number_of_songs; i++) {
@@ -59,38 +87,60 @@ function buildDetailed(session, segments) {
         const l = seg[`song_${i}_lead`];
         if (t) songs.push(`${i}. ${t}${l ? ` (${l})` : ''}`);
       }
-      if (songs.length) details.push({ text: `CANCIONES: ${songs.join('  •  ')}`, color: '#166534', bold: true, fontSize: 8, margin: [0, 2, 0, 0] });
+      if (songs.length) {
+        details.push({ text: `CANCIONES: ${songs.join('  •  ')}`, color: '#16A34A', bold: true, fontSize: 9, margin: [0, 2, 0, 0] });
+      }
     }
+    
     if (seg.has_video) {
       const parts = [];
       if (seg.video_name) parts.push(seg.video_name);
-      if (seg.video_location) parts.push(`(${seg.video_location})`);
-      if (typeof seg.video_length_sec === 'number') parts.push(`- ${Math.floor(seg.video_length_sec/60)}:${String(seg.video_length_sec%60).padStart(2,'0')}`);
+      if (seg.video_location) parts.push(seg.video_location);
+      if (typeof seg.video_length_sec === 'number') {
+        const min = Math.floor(seg.video_length_sec / 60);
+        const sec = seg.video_length_sec % 60;
+        parts.push(`${min}:${String(sec).padStart(2, '0')}`);
+      }
       if (seg.video_owner) parts.push(`• ${seg.video_owner}`);
-      details.push({ text: `VIDEO: ${parts.join(' ')}`, color: '#1d4ed8', bold: true, fontSize: 9, margin: [0, 2, 0, 0] });
+      details.push({ text: `VIDEO: ${parts.filter(x=>x).join(' - ')}`, color: '#2563EB', bold: true, fontSize: 9, margin: [0, 2, 0, 0] });
     }
+    
     if (seg.segment_type === 'Artes' && Array.isArray(seg.art_types) && seg.art_types.length) {
       const at = seg.art_types.map(t => t === 'DANCE' ? 'Danza' : t === 'DRAMA' ? 'Drama' : t === 'VIDEO' ? 'Video' : 'Otro').join(', ');
-      details.push({ text: `ARTES: ${at}`, color: '#9d174d', bold: true, fontSize: 9, margin: [0, 2, 0, 0] });
+      details.push({ text: `ARTES: ${at}`, color: '#BE185D', bold: true, fontSize: 9, margin: [0, 2, 0, 0] });
     }
-    if (seg.description_details) details.push({ text: seg.description_details, fontSize: 8.5, color: '#374151', margin: [0, 3, 0, 0] });
+
+    if (seg.segment_type === 'Panel') {
+      if (seg.panel_panelists) details.push({ text: seg.panel_panelists, color: '#374151', fontSize: 9, margin: [0, 1, 0, 0] });
+      if (seg.description_details) details.push({ text: seg.description_details, color: '#374151', fontSize: 9, margin: [0, 1, 0, 0] });
+    }
+    
+    if (seg.description_details && seg.segment_type !== 'Panel') {
+      details.push({ text: seg.description_details, fontSize: 9, color: '#374151', margin: [0, 2, 0, 0] });
+    }
 
     const notes = [];
-    if (seg.projection_notes) notes.push({ text: `PROYECCIÓN: ${seg.projection_notes}`, color: '#6b21a8', fontSize: 9 });
-    if (seg.sound_notes) notes.push({ text: `SONIDO: ${seg.sound_notes}`, color: '#b91c1c', fontSize: 9 });
-    if (seg.ushers_notes) notes.push({ text: `UJIERES: ${seg.ushers_notes}`, color: '#166534', fontSize: 9 });
-    if (seg.stage_decor_notes) notes.push({ text: `STAGE & DECOR: ${seg.stage_decor_notes}`, color: '#6b21a8', fontSize: 9 });
+    if (seg.sound_notes) notes.push({ text: `SONIDO: ${seg.sound_notes}`, color: '#DC2626', bold: true, fontSize: 9 });
+    if (seg.projection_notes) notes.push({ text: `PROYECCIÓN: ${seg.projection_notes}`, color: '#7C3AED', bold: true, fontSize: 9, margin: [0, notes.length ? 2 : 0, 0, 0] });
+    if (seg.ushers_notes) notes.push({ text: `UJIERES: ${seg.ushers_notes}`, color: '#16A34A', bold: true, fontSize: 9, margin: [0, notes.length ? 2 : 0, 0, 0] });
+    if (seg.stage_decor_notes) notes.push({ text: `STAGE & DECOR: ${seg.stage_decor_notes}`, color: '#7C3AED', bold: true, fontSize: 9, margin: [0, notes.length ? 2 : 0, 0, 0] });
     if (seg.requires_translation) {
-      const extra = [];
-      if (seg.translator_name) extra.push(seg.translator_name);
-      if (seg.translation_mode === 'RemoteBooth') extra.push('(Remoto)');
-      if (seg.translation_notes) extra.push(`- ${seg.translation_notes}`);
-      notes.push({ text: `TRADUCCIÓN: ${extra.join(' ')}`, color: '#1d4ed8', fontSize: 9 });
+      const parts = [];
+      if (seg.translator_name) parts.push(seg.translator_name);
+      if (seg.translation_mode === 'RemoteBooth') parts.push('(Remoto)');
+      else if (seg.translation_mode === 'InPerson') parts.push('(En Persona)');
+      if (seg.translation_notes) parts.push(`- ${seg.translation_notes}`);
+      notes.push({ text: `TRADUCCIÓN: ${parts.filter(x=>x).join(' ')}`, color: '#2563EB', bold: true, fontSize: 9, margin: [0, notes.length ? 2 : 0, 0, 0] });
     }
 
-    body.push([{ stack: left }, { stack: details }, { stack: notes.length ? notes : [{ text: '—', color: '#9ca3af' }] }]);
+    body.push([
+      { stack: left, margin: [0, 4, 0, 4] }, 
+      { stack: details.length ? details : [{ text: '—', color: '#9CA3AF' }], margin: [0, 4, 0, 4] }, 
+      { stack: notes.length ? notes : [{ text: '—', color: '#9CA3AF' }], margin: [0, 4, 0, 4] }
+    ]);
   });
-  return simpleTable(body, [60, '*', '*']);
+
+  return simpleTable(body, [70, '*', '*']);
 }
 
 function buildSimple(session, segments, columnTitle, selector) {
@@ -154,17 +204,25 @@ export async function generateEventReportPDFClient({ event, sessions, segmentsBy
   sessions.forEach((session, idx) => {
     content.push(headerBand(event, session));
 
-    // Optional: Pre-session details block (compact)
+    // Optional: Pre-session details block
     const psd = preSessionDetailsBySession?.[session.id];
     if (psd && (psd.music_profile_id || psd.slide_pack_id || psd.registration_desk_open_time || psd.library_open_time || psd.facility_notes || psd.general_notes)) {
+      content.push({
+        text: 'Detalles Previos (Segmento 0)',
+        fontSize: 11,
+        bold: true,
+        color: '#2563EB',
+        decoration: 'underline',
+        margin: [0, 0, 0, 4]
+      });
       const rows = [];
-      if (psd.music_profile_id) rows.push({ text: `Música: ${psd.music_profile_id}`, margin: [0, 0, 8, 0] });
-      if (psd.slide_pack_id) rows.push({ text: `Slides: ${psd.slide_pack_id}`, margin: [0, 0, 8, 0] });
-      if (psd.registration_desk_open_time) rows.push({ text: `Registro: ${toESTTimeStr(psd.registration_desk_open_time)}`, margin: [0, 0, 8, 0] });
-      if (psd.library_open_time) rows.push({ text: `Librería: ${toESTTimeStr(psd.library_open_time)}`, margin: [0, 0, 8, 0] });
-      if (psd.facility_notes) rows.push({ text: `Instalaciones: ${psd.facility_notes}` });
-      if (psd.general_notes) rows.push({ text: `General: ${psd.general_notes}` });
-      content.push(simpleTable([[{ text: 'Detalles Previos (Segmento 0)', bold: true, color: '#1d4ed8', fontSize: 9 }], [{ stack: rows, fontSize: 8, color: '#374151' }]], ['*']));
+      if (psd.registration_desk_open_time) rows.push({ text: `Registro: ${toESTTimeStr(psd.registration_desk_open_time)}`, fontSize: 9, color: '#374151' });
+      if (psd.library_open_time) rows.push({ text: `Librería: ${toESTTimeStr(psd.library_open_time)}`, fontSize: 9, color: '#374151', margin: [0, 1, 0, 0] });
+      if (psd.music_profile_id) rows.push({ text: `Música: ${psd.music_profile_id}`, fontSize: 9, color: '#374151', margin: [0, 1, 0, 0] });
+      if (psd.slide_pack_id) rows.push({ text: `Slides: ${psd.slide_pack_id}`, fontSize: 9, color: '#374151', margin: [0, 1, 0, 0] });
+      if (psd.facility_notes) rows.push({ text: `Instalaciones: ${psd.facility_notes}`, fontSize: 9, color: '#374151', margin: [0, 1, 0, 0] });
+      if (psd.general_notes) rows.push({ text: `General: ${psd.general_notes}`, fontSize: 9, color: '#374151', margin: [0, 1, 0, 0] });
+      content.push({ stack: rows, margin: [0, 0, 0, 8] });
     }
 
     const allSegs = (segmentsBySession?.[session.id] || []).slice().sort((a,b)=> (a.order||0)-(b.order||0));
@@ -196,15 +254,15 @@ export async function generateEventReportPDFClient({ event, sessions, segmentsBy
   const docDefinition = {
     pageSize: 'LETTER',
     pageOrientation: 'landscape',
-    pageMargins: [24, 20, 24, 24],
-    defaultStyle: { fontSize: 9, color: '#111827' },
+    pageMargins: [30, 24, 30, 30],
+    defaultStyle: { fontSize: 10, color: '#111827', font: 'Roboto' },
     content,
     footer: (currentPage, pageCount) => ({
       columns: [
-        { text: new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }), color: '#6b7280', fontSize: 8 },
-        { text: `Página ${currentPage} de ${pageCount}`, alignment: 'right', color: '#6b7280', fontSize: 8 },
+        { text: new Date().toLocaleString('en-US', { timeZone: 'America/New_York', month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }), color: '#6B7280', fontSize: 9 },
+        { text: `Página ${currentPage} de ${pageCount}`, alignment: 'right', color: '#6B7280', fontSize: 9 },
       ],
-      margin: [24, 8],
+      margin: [30, 12],
     }),
   };
 
