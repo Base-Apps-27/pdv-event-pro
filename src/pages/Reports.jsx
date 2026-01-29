@@ -181,24 +181,43 @@ export default function Reports() {
 
   // Robust binary normalization for function responses (arraybuffer/object/base64/string)
   function normalizeToBytes(data) {
+    // 1) Native binary types
     if (data instanceof ArrayBuffer) return new Uint8Array(data);
     if (ArrayBuffer.isView(data)) return new Uint8Array(data.buffer);
+
+    // 2) Buffer-like object shapes from Axios/Node adapters
     if (data && typeof data === 'object') {
+      // { type: 'Buffer', data: [..] }
+      if (data.type === 'Buffer' && Array.isArray(data.data)) {
+        return new Uint8Array(data.data);
+      }
+      // { data: [..numbers..] }
+      if (Array.isArray(data.data) && typeof data.data[0] === 'number') {
+        return new Uint8Array(data.data);
+      }
+      // Plain numeric array
+      if (Array.isArray(data) && typeof data[0] === 'number') {
+        return new Uint8Array(data);
+      }
+      // Flat object of numeric values {0:..,1:..}
       const vals = Object.values(data);
       if (vals.length && typeof vals[0] === 'number') return new Uint8Array(vals);
     }
+
+    // 3) String payloads
     if (typeof data === 'string') {
+      // Base64 attempt
       try {
-        // Try base64 first
         const bstr = atob(data);
         const bytes = new Uint8Array(bstr.length);
         for (let i = 0; i < bstr.length; i++) bytes[i] = bstr.charCodeAt(i);
-        // Heuristic: valid PDF should start with %PDF
-        if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) return bytes;
+        if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) return bytes;
       } catch (_) { /* not base64 */ }
-      // Fallback: encode as text (rare)
+      // Raw text fallback (may work for ASCII-only PDFs)
       return new TextEncoder().encode(data);
     }
+
+    // 4) Last resort
     return new Uint8Array();
   }
 
