@@ -111,9 +111,8 @@ function buildDetailesColumn(seg) {
 }
 
 function buildDetailsColumn(seg) {
-  // Middle column: Title, type, presenter, details
+  // Middle column: Title, type, presenter, details (NO nested fillColor—row bg handles it)
   const stack = [];
-  const color = getSegmentColor(seg.segment_type);
 
   // Title + Type tag + Duration
   const titleParts = [
@@ -121,6 +120,7 @@ function buildDetailsColumn(seg) {
   ];
   
   if (seg.segment_type) {
+    const color = getSegmentColor(seg.segment_type);
     titleParts.push({
       text: `  ${seg.segment_type}`,
       color: color.hex,
@@ -176,10 +176,6 @@ function buildDetailsColumn(seg) {
         { text: 'MENSAJE: ', bold: true, color: '#1E40AF', fontSize: 7 },
         { text: seg.message_title.substring(0, 50), color: '#1E3A8A', fontSize: 7 }
       ],
-      fillColor: color.bg,
-      border: [true, true, true, true],
-      borderColor: [color.border, color.border, color.border, color.border],
-      padding: [1, 1, 1, 1],
       margin: [0, 0.5, 0, 0.5]
     });
   }
@@ -204,10 +200,6 @@ function buildDetailsColumn(seg) {
     if (songs.length > 1) {
       stack.push({
         stack: songs,
-        fillColor: color.bg,
-        border: [true, true, true, true],
-        borderColor: [color.border, color.border, color.border, color.border],
-        padding: [1, 1, 1, 1],
         margin: [0, 0.5, 0, 0.5]
       });
     }
@@ -221,10 +213,6 @@ function buildDetailsColumn(seg) {
         { text: seg.video_name || '', color: '#1E3A8A', fontSize: 6.5 },
         seg.video_location ? { text: ` (${seg.video_location.substring(0, 20)})`, color: '#6B7280', fontSize: 6 } : ''
       ],
-      fillColor: color.bg,
-      border: [true, true, true, true],
-      borderColor: [color.border, color.border, color.border, color.border],
-      padding: [1, 1, 1, 1],
       margin: [0, 0.5, 0, 0.5]
     });
   }
@@ -249,10 +237,6 @@ function buildDetailsColumn(seg) {
     }
     stack.push({
       stack: arts,
-      fillColor: color.bg,
-      border: [true, true, true, true],
-      borderColor: [color.border, color.border, color.border, color.border],
-      padding: [1, 1, 1, 1],
       margin: [0, 0.5, 0, 0.5]
     });
   }
@@ -279,10 +263,6 @@ function buildDetailsColumn(seg) {
     }
     stack.push({
       stack: panel,
-      fillColor: color.bg,
-      border: [true, true, true, true],
-      borderColor: [color.border, color.border, color.border, color.border],
-      padding: [1, 1, 1, 1],
       margin: [0, 0.5, 0, 0]
     });
   }
