@@ -36,10 +36,11 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose, hosp
 
   const createTaskMutation = useMutation({
     mutationFn: (data) => {
-      if (!sessionId) throw new Error('No session ID available');
+      console.log('[HospitalityTasksModal] mutationFn - creating with data:', data);
       return base44.entities.HospitalityTask.create(data);
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('[HospitalityTasksModal] Create success:', result);
       queryClient.invalidateQueries({ queryKey: ['hospitalityTasks', sessionId] });
       setTaskForm({
         category: "Other",
@@ -51,7 +52,9 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose, hosp
       setEditingTask(null);
     },
     onError: (error) => {
-      console.error('[HospitalityTasksModal] Create error:', error);
+      console.error('[HospitalityTasksModal] Create failed - Error:', error);
+      if (error.response?.data) console.error('  Response:', error.response.data);
+      if (error.message) console.error('  Message:', error.message);
     },
   });
 
@@ -109,12 +112,30 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose, hosp
 
   const handleSubmitTask = (e) => {
     e.preventDefault();
+    
+    if (!sessionId) {
+      console.error('[HospitalityTasksModal] No sessionId available');
+      return;
+    }
+
+    if (!taskForm.description || taskForm.description.trim() === '') {
+      console.error('[HospitalityTasksModal] Description is required');
+      return;
+    }
+
     const dataToSubmit = {
       session_id: sessionId,
-      order: editingTask ? editingTask.order : hospitalityTasks.length + 1,
-      ...taskForm,
-      field_origins: fieldOrigins,
+      origin: editingTask ? (editingTask.origin || 'manual') : 'manual',
+      order: editingTask ? editingTask.order : (hospitalityTasks.length + 1),
+      category: taskForm.category,
+      time_hint: taskForm.time_hint || '',
+      description: taskForm.description,
+      location_notes: taskForm.location_notes || '',
+      notes: taskForm.notes || '',
+      field_origins: fieldOrigins || {},
     };
+
+    console.log('[HospitalityTasksModal] Submitting:', { sessionId, dataToSubmit });
 
     if (editingTask) {
       updateTaskMutation.mutate({ id: editingTask.id, data: dataToSubmit });
