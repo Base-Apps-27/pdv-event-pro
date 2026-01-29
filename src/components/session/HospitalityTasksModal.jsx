@@ -15,11 +15,7 @@ const HOSPITALITY_CATEGORIES = [
   "Breakfast", "Lunch", "Dinner", "Snacks", "Setup", "Cleanup", "Other"
 ];
 
-export default function HospitalityTasksModal({ sessionId: sessionIdProp, isOpen, onClose }) {
-  // Read sessionId directly from URL as primary source, fallback to prop
-  const urlParams = new URLSearchParams(window.location.search);
-  const sessionId = urlParams.get('id') || sessionIdProp;
-  
+export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
   const queryClient = useQueryClient();
   const [editingTask, setEditingTask] = useState(null);
   const [taskForm, setTaskForm] = useState({
@@ -38,10 +34,12 @@ export default function HospitalityTasksModal({ sessionId: sessionIdProp, isOpen
     }
   };
 
+  // Invalidate cache when modal opens — ensures fresh data for selected session
   React.useEffect(() => {
-    if (sessionId) console.log('[HospitalityTasksModal] sessionId available:', sessionId);
-    else console.warn('[HospitalityTasksModal] sessionId is missing or undefined');
-  }, [sessionId, isOpen]);
+    if (isOpen && sessionId) {
+      queryClient.invalidateQueries({ queryKey: ['hospitalityTasks', sessionId] });
+    }
+  }, [isOpen, sessionId, queryClient]);
 
   const { data: hospitalityTasks = [], isLoading } = useQuery({
     queryKey: ['hospitalityTasks', sessionId],
