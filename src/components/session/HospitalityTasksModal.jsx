@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Utensils, GripVertical } from "lucide-react";
+import { Plus, Edit, Trash2, Utensils, ChevronUp, ChevronDown } from "lucide-react";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 
 const HOSPITALITY_CATEGORIES = [
@@ -93,38 +92,34 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
     },
   });
 
-  // Reorder mutation: updates order field for all affected tasks
-  const reorderTasksMutation = useMutation({
-    mutationFn: async (reorderedTasks) => {
-      // Update each task's order in parallel
-      await Promise.all(
-        reorderedTasks.map((task, index) =>
-          base44.entities.HospitalityTask.update(task.id, { order: index + 1 })
-        )
-      );
+  // Move task up or down in the list
+  const moveTaskMutation = useMutation({
+    mutationFn: async ({ taskId, direction }) => {
+      const currentIndex = hospitalityTasks.findIndex(t => t.id === taskId);
+      if (currentIndex === -1) return;
+      
+      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (newIndex < 0 || newIndex >= hospitalityTasks.length) return;
+
+      // Swap order values between the two tasks
+      const currentTask = hospitalityTasks[currentIndex];
+      const swapTask = hospitalityTasks[newIndex];
+      
+      await Promise.all([
+        base44.entities.HospitalityTask.update(currentTask.id, { order: newIndex + 1 }),
+        base44.entities.HospitalityTask.update(swapTask.id, { order: currentIndex + 1 })
+      ]);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hospitalityTasks', sessionId] });
     },
     onError: (error) => {
-      console.error('[HospitalityTasksModal] Reorder error:', error);
+      console.error('[HospitalityTasksModal] Move error:', error);
     },
   });
 
-  // Handle drag end for reordering
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
-    if (result.source.index === result.destination.index) return;
-
-    const items = Array.from(hospitalityTasks);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
-    // Optimistic update for immediate UI feedback
-    queryClient.setQueryData(['hospitalityTasks', sessionId], items);
-
-    // Persist to database
-    reorderTasksMutation.mutate(items);
+  const handleMoveTask = (taskId, direction) => {
+    moveTaskMutation.mutate({ taskId, direction });
   };
 
   const handleEditTask = (task) => {
@@ -199,58 +194,55 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4" style={{ minHeight: '450px' }}>
           <div className="flex flex-col h-full">
             <h3 className="font-bold text-md mb-2">Tareas Existentes ({hospitalityTasks.length})</h3>
-            <p className="text-xs text-gray-500 mb-2">Arrastra para reordenar</p>
             {isLoading ? (
               <p className="text-sm text-gray-500">Cargando tareas...</p>
             ) : hospitalityTasks.length === 0 ? (
               <p className="text-sm text-gray-500">No hay tareas de hospitalidad para esta sesión.</p>
             ) : (
-              <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="hospitalityTasks">
-                  {(provided) => (
-                    <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      className="space-y-2 flex-1 overflow-y-auto pr-2"
-                      style={{ maxHeight: '400px' }}
-                    >
-                      {hospitalityTasks.map((task, index) => (
-                        <Draggable key={task.id} draggableId={task.id} index={index}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className={`p-3 border rounded-md shadow-sm ${snapshot.isDragging ? 'bg-blue-50 border-blue-300' : 'bg-gray-50'}`}
-                            >
-                              <div className="flex justify-between items-center mb-1">
-                                <div className="flex items-center gap-2">
-                                  <div {...provided.dragHandleProps} className="cursor-grab text-gray-400 hover:text-gray-600">
-                                    <GripVertical className="w-4 h-4" />
-                                  </div>
-                                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">{task.category}</span>
-                                </div>
-                                <div className="flex gap-1">
-                                  <Button variant="ghost" size="sm" onClick={() => handleEditTask(task)} className="h-7 w-7 p-0">
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" onClick={() => deleteTaskMutation.mutate(task.id)} className="h-7 w-7 p-0 text-red-500">
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                              <p className="font-medium text-sm text-gray-800">{task.description}</p>
-                              {task.time_hint && <p className="text-xs text-gray-600">Hora: {task.time_hint}</p>}
-                              {task.location_notes && <p className="text-xs text-gray-600">Ubicación: {task.location_notes}</p>}
-                              {task.notes && <p className="text-xs text-gray-600">Notas: {task.notes}</p>}
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
+              <div className="space-y-2 flex-1 overflow-y-auto pr-2" style={{ maxHeight: '400px' }}>
+                {hospitalityTasks.map((task, index) => (
+                  <div key={task.id} className="p-3 border rounded-md shadow-sm bg-gray-50">
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center gap-2">
+                        {/* Up/Down reorder buttons */}
+                        <div className="flex flex-col">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-5 w-5 p-0" 
+                            disabled={index === 0 || moveTaskMutation.isPending}
+                            onClick={() => handleMoveTask(task.id, 'up')}
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-5 w-5 p-0" 
+                            disabled={index === hospitalityTasks.length - 1 || moveTaskMutation.isPending}
+                            onClick={() => handleMoveTask(task.id, 'down')}
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </Button>
+                        </div>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">{task.category}</span>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => handleEditTask(task)} className="h-7 w-7 p-0">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => deleteTaskMutation.mutate(task.id)} className="h-7 w-7 p-0 text-red-500">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
+                    <p className="font-medium text-sm text-gray-800">{task.description}</p>
+                    {task.time_hint && <p className="text-xs text-gray-600">Hora: {task.time_hint}</p>}
+                    {task.location_notes && <p className="text-xs text-gray-600">Ubicación: {task.location_notes}</p>}
+                    {task.notes && <p className="text-xs text-gray-600">Notas: {task.notes}</p>}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
