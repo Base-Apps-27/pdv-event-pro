@@ -412,7 +412,7 @@ export default function PublicProgramSegment({
                       {getData('drama_start_cue') && <div>{t('arts.cues.start')}: {getData('drama_start_cue')}</div>}
                       {getData('drama_end_cue') && <div>{t('arts.cues.end')}: {getData('drama_end_cue')}</div>}
                       {getData('drama_has_song') && getData('drama_song_title') && (
-                        <div>Canción: {getData('drama_song_title')}</div>
+                        <div>{t('arts.song')}: {getData('drama_song_title')}</div>
                       )}
                     </div>
                   )}
