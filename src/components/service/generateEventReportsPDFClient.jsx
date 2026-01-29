@@ -46,10 +46,10 @@ function simpleTable(body, widths) {
       hLineWidth: (i, node) => i === 0 || i === 1 || i === node.table.body.length ? 1 : 0.5,
       vLineWidth: () => 0,
       hLineColor: () => '#E5E7EB',
-      paddingLeft: () => 8,
-      paddingRight: () => 8,
-      paddingTop: () => 6,
-      paddingBottom: () => 6
+      paddingLeft: () => 4,
+      paddingRight: () => 4,
+      paddingTop: () => 2,
+      paddingBottom: () => 2
     }
   };
 }
@@ -65,19 +65,19 @@ function buildDetailed(session, segments) {
     const left = [];
     if (seg.start_time) {
       left.push({ text: toESTTimeStr(seg.start_time), bold: true, fontSize: 10, color: '#111827' });
-      if (seg.end_time) left.push({ text: toESTTimeStr(seg.end_time), fontSize: 9, color: '#6B7280', margin: [0, 1, 0, 0] });
-      if (seg.duration_min) left.push({ text: `(${seg.duration_min}m)`, fontSize: 9, color: '#6B7280', margin: [0, 1, 0, 0] });
+      if (seg.end_time) left.push({ text: toESTTimeStr(seg.end_time), fontSize: 8, color: '#6B7280', margin: [0, 0, 0, 0] });
+      if (seg.duration_min) left.push({ text: `(${seg.duration_min}m)`, fontSize: 8, color: '#6B7280', margin: [0, 0, 0, 0] });
     } else {
       left.push({ text: '—', color: '#9CA3AF' });
     }
 
     const details = [];
-    if (seg.title) details.push({ text: seg.title.toUpperCase(), bold: true, fontSize: 10, color: '#111827' });
-    if (seg.segment_type) details.push({ text: seg.segment_type, fontSize: 9, color: '#374151', margin: [0, 1, 0, 0] });
-    if (seg.presenter) details.push({ text: seg.presenter, color: '#2563EB', bold: true, fontSize: 9, margin: [0, 2, 0, 0] });
+    if (seg.title) details.push({ text: seg.title.toUpperCase(), bold: true, fontSize: 9, color: '#111827' });
+    if (seg.segment_type) details.push({ text: seg.segment_type, fontSize: 8, color: '#374151', margin: [0, 0.5, 0, 0] });
+    if (seg.presenter) details.push({ text: seg.presenter, color: '#2563EB', bold: true, fontSize: 8, margin: [0, 1, 0, 0] });
     
     if (seg.segment_type === 'Plenaria' && seg.message_title) {
-      details.push({ text: `MENSAJE: "${seg.message_title}"`, color: '#1D4ED8', bold: true, fontSize: 9, margin: [0, 2, 0, 0] });
+      details.push({ text: `MENSAJE: ${seg.message_title}`, color: '#1D4ED8', bold: true, fontSize: 8, margin: [0, 1, 0, 0] });
     }
     
     if (seg.segment_type === 'Alabanza' && seg.number_of_songs > 0) {
@@ -88,7 +88,7 @@ function buildDetailed(session, segments) {
         if (t) songs.push(`${i}. ${t}${l ? ` (${l})` : ''}`);
       }
       if (songs.length) {
-        details.push({ text: `CANCIONES: ${songs.join('  •  ')}`, color: '#16A34A', bold: true, fontSize: 9, margin: [0, 2, 0, 0] });
+        details.push({ text: `CANCIONES: ${songs.join(' • ')}`, color: '#16A34A', bold: true, fontSize: 8, margin: [0, 1, 0, 0] });
       }
     }
     
@@ -102,41 +102,65 @@ function buildDetailed(session, segments) {
         parts.push(`${min}:${String(sec).padStart(2, '0')}`);
       }
       if (seg.video_owner) parts.push(`• ${seg.video_owner}`);
-      details.push({ text: `VIDEO: ${parts.filter(x=>x).join(' - ')}`, color: '#2563EB', bold: true, fontSize: 9, margin: [0, 2, 0, 0] });
+      details.push({ text: `VIDEO: ${parts.filter(x=>x).join(' - ')}`, color: '#2563EB', bold: true, fontSize: 8, margin: [0, 1, 0, 0] });
     }
     
     if (seg.segment_type === 'Artes' && Array.isArray(seg.art_types) && seg.art_types.length) {
       const at = seg.art_types.map(t => t === 'DANCE' ? 'Danza' : t === 'DRAMA' ? 'Drama' : t === 'VIDEO' ? 'Video' : 'Otro').join(', ');
-      details.push({ text: `ARTES: ${at}`, color: '#BE185D', bold: true, fontSize: 9, margin: [0, 2, 0, 0] });
+      let artDetail = `ARTES: ${at}`;
+      
+      // Inline art details
+      if (seg.art_types.includes('DRAMA')) {
+        const parts = [];
+        if (seg.drama_handheld_mics > 0) parts.push(`HH: ${seg.drama_handheld_mics}`);
+        if (seg.drama_headset_mics > 0) parts.push(`HS: ${seg.drama_headset_mics}`);
+        if (seg.drama_start_cue) parts.push(`Start: ${seg.drama_start_cue}`);
+        if (seg.drama_end_cue) parts.push(`End: ${seg.drama_end_cue}`);
+        if (parts.length) artDetail += ` • ${parts.join(' • ')}`;
+      }
+      if (seg.art_types.includes('DANCE')) {
+        const parts = [];
+        if (seg.dance_has_song && seg.dance_song_title) parts.push(`${seg.dance_song_title}`);
+        if (seg.dance_handheld_mics > 0) parts.push(`HH: ${seg.dance_handheld_mics}`);
+        if (seg.dance_headset_mics > 0) parts.push(`HS: ${seg.dance_headset_mics}`);
+        if (parts.length) artDetail += ` • ${parts.join(' • ')}`;
+      }
+      
+      details.push({ text: artDetail, color: '#BE185D', bold: true, fontSize: 8, margin: [0, 1, 0, 0] });
     }
 
     if (seg.segment_type === 'Panel') {
-      if (seg.panel_panelists) details.push({ text: seg.panel_panelists, color: '#374151', fontSize: 9, margin: [0, 1, 0, 0] });
-      if (seg.description_details) details.push({ text: seg.description_details, color: '#374151', fontSize: 9, margin: [0, 1, 0, 0] });
+      if (seg.panel_moderators || seg.panel_panelists) {
+        const parts = [];
+        if (seg.panel_moderators) parts.push(`MOD: ${seg.panel_moderators}`);
+        if (seg.panel_panelists) parts.push(`PAN: ${seg.panel_panelists}`);
+        details.push({ text: parts.join(' • '), color: '#374151', fontSize: 8, margin: [0, 1, 0, 0] });
+      }
+      if (seg.description_details) details.push({ text: seg.description_details, color: '#374151', fontSize: 8, margin: [0, 0.5, 0, 0] });
     }
     
     if (seg.description_details && seg.segment_type !== 'Panel') {
-      details.push({ text: seg.description_details, fontSize: 9, color: '#374151', margin: [0, 2, 0, 0] });
+      details.push({ text: seg.description_details, fontSize: 8, color: '#374151', margin: [0, 1, 0, 0] });
     }
 
     const notes = [];
-    if (seg.sound_notes) notes.push({ text: `SONIDO: ${seg.sound_notes}`, color: '#DC2626', bold: true, fontSize: 9 });
-    if (seg.projection_notes) notes.push({ text: `PROYECCIÓN: ${seg.projection_notes}`, color: '#7C3AED', bold: true, fontSize: 9, margin: [0, notes.length ? 2 : 0, 0, 0] });
-    if (seg.ushers_notes) notes.push({ text: `UJIERES: ${seg.ushers_notes}`, color: '#16A34A', bold: true, fontSize: 9, margin: [0, notes.length ? 2 : 0, 0, 0] });
-    if (seg.stage_decor_notes) notes.push({ text: `STAGE & DECOR: ${seg.stage_decor_notes}`, color: '#7C3AED', bold: true, fontSize: 9, margin: [0, notes.length ? 2 : 0, 0, 0] });
+    if (seg.sound_notes) notes.push({ text: `SONIDO: ${seg.sound_notes}`, color: '#DC2626', bold: true, fontSize: 8 });
+    if (seg.projection_notes) notes.push({ text: `PROYECCIÓN: ${seg.projection_notes}`, color: '#7C3AED', bold: true, fontSize: 8, margin: [0, notes.length ? 1 : 0, 0, 0] });
+    if (seg.ushers_notes) notes.push({ text: `UJIERES: ${seg.ushers_notes}`, color: '#16A34A', bold: true, fontSize: 8, margin: [0, notes.length ? 1 : 0, 0, 0] });
+    if (seg.stage_decor_notes) notes.push({ text: `STAGE & DECOR: ${seg.stage_decor_notes}`, color: '#7C3AED', bold: true, fontSize: 8, margin: [0, notes.length ? 1 : 0, 0, 0] });
     if (seg.requires_translation) {
       const parts = [];
       if (seg.translator_name) parts.push(seg.translator_name);
       if (seg.translation_mode === 'RemoteBooth') parts.push('(Remoto)');
       else if (seg.translation_mode === 'InPerson') parts.push('(En Persona)');
       if (seg.translation_notes) parts.push(`- ${seg.translation_notes}`);
-      notes.push({ text: `TRADUCCIÓN: ${parts.filter(x=>x).join(' ')}`, color: '#2563EB', bold: true, fontSize: 9, margin: [0, notes.length ? 2 : 0, 0, 0] });
+      notes.push({ text: `TRAD: ${parts.filter(x=>x).join(' ')}`, color: '#2563EB', bold: true, fontSize: 8, margin: [0, notes.length ? 1 : 0, 0, 0] });
     }
 
     body.push([
-      { stack: left, margin: [0, 4, 0, 4] }, 
-      { stack: details.length ? details : [{ text: '—', color: '#9CA3AF' }], margin: [0, 4, 0, 4] }, 
-      { stack: notes.length ? notes : [{ text: '—', color: '#9CA3AF' }], margin: [0, 4, 0, 4] }
+      { stack: left, margin: [0, 1, 0, 1] }, 
+      { stack: details.length ? details : [{ text: '—', color: '#9CA3AF' }], margin: [0, 1, 0, 1] }, 
+      { stack: notes.length ? notes : [{ text: '—', color: '#9CA3AF' }], margin: [0, 1, 0, 1] }
     ]);
   });
 
