@@ -1175,6 +1175,21 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   </div>
                 )}
 
+                {/* Prep instructions live in schema as prep_instructions; optional but useful */}
+                {!isTechOnly && (
+                  <div className="space-y-2">
+                    <Label htmlFor="prep_instructions">Instrucciones de preparación</Label>
+                    <Textarea 
+                      id="prep_instructions" 
+                      rows={2}
+                      value={formData.prep_instructions}
+                      onChange={(e) => setFormData({ ...formData, prep_instructions: e.target.value })}
+                      placeholder="Checklist, pruebas previas, etc."
+                      className="text-sm"
+                    />
+                  </div>
+                )}
+
                 {isPanelType && (
                   <div className="space-y-3 bg-amber-50 p-4 rounded border border-amber-200">
                     <div className="grid md:grid-cols-2 gap-3">
@@ -1378,12 +1393,20 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     </div>
                   </div>
 
-                  {times.end_time && (
-                    <div className="mt-3 text-sm text-slate-600 border-t border-blue-300 pt-2">
-                      <div className="flex justify-between">
-                        <span>Fin estimado:</span>
-                        <span className="font-mono font-medium text-blue-700">{formatTimeToEST(times.end_time)}</span>
-                      </div>
+                  {(times.end_time || times.stage_call_time) && (
+                    <div className="mt-3 text-sm text-slate-600 border-t border-blue-300 pt-2 space-y-1">
+                      {times.end_time && (
+                        <div className="flex justify-between">
+                          <span>Fin estimado:</span>
+                          <span className="font-mono font-medium text-blue-700">{formatTimeToEST(times.end_time)}</span>
+                        </div>
+                      )}
+                      {times.stage_call_time && (
+                        <div className="flex justify-between">
+                          <span>Llegada equipos:</span>
+                          <span className="font-mono font-medium text-blue-700">{formatTimeToEST(times.stage_call_time)}</span>
+                        </div>
+                      )}
                     </div>
                   )}
 

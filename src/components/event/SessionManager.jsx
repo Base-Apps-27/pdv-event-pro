@@ -778,7 +778,20 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
               </div>
               <div className="grid md:grid-cols-2 gap-4 max-w-full">
                 <div className="space-y-2">
-                  <Label htmlFor="admin_team">Administración</Label>
+                  <Label htmlFor="presenter">Presentador general</Label>
+                  <div className="relative">
+                    <Input 
+                      id="presenter" 
+                      name="presenter" 
+                      value={formData.presenter}
+                      onChange={(e) => updateFormField('presenter', e.target.value)}
+                      placeholder="Nombre"
+                    />
+                    <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'presenter')} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin_team">Administración</Label
                     <div className="relative">
                       <Input 
                         id="admin_team" 
