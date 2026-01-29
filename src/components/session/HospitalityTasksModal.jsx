@@ -14,8 +14,9 @@ const HOSPITALITY_CATEGORIES = [
   "Breakfast", "Lunch", "Dinner", "Snacks", "Setup", "Cleanup", "Other"
 ];
 
-export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
-  const queryClient = useQueryClient();
+export default function HospitalityTasksModal({ sessionId, isOpen, onClose, hospitalityTasks = [], queryClient: externalQueryClient }) {
+  const localQueryClient = useQueryClient();
+  const queryClient = externalQueryClient || localQueryClient;
   const [editingTask, setEditingTask] = useState(null);
   const [taskForm, setTaskForm] = useState({
     category: "Other",
@@ -33,16 +34,13 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
     }
   };
 
-  const { data: hospitalityTasks = [], isLoading } = useQuery({
-    queryKey: ['hospitalityTasks', sessionId],
-    queryFn: () => base44.entities.HospitalityTask.filter({ session_id: sessionId }, 'order'),
-    enabled: isOpen && !!sessionId,
-  });
-
   const createTaskMutation = useMutation({
-    mutationFn: (data) => base44.entities.HospitalityTask.create(data),
+    mutationFn: (data) => {
+      if (!sessionId) throw new Error('No session ID available');
+      return base44.entities.HospitalityTask.create(data);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries(['hospitalityTasks', sessionId]);
+      queryClient.invalidateQueries({ queryKey: ['hospitalityTasks', sessionId] });
       setTaskForm({
         category: "Other",
         time_hint: "",
@@ -51,13 +49,16 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
         notes: "",
       });
       setEditingTask(null);
+    },
+    onError: (error) => {
+      console.error('[HospitalityTasksModal] Create error:', error);
     },
   });
 
   const updateTaskMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.HospitalityTask.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['hospitalityTasks', sessionId]);
+      queryClient.invalidateQueries({ queryKey: ['hospitalityTasks', sessionId] });
       setTaskForm({
         category: "Other",
         time_hint: "",
@@ -67,12 +68,18 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
       });
       setEditingTask(null);
     },
+    onError: (error) => {
+      console.error('[HospitalityTasksModal] Update error:', error);
+    },
   });
 
   const deleteTaskMutation = useMutation({
     mutationFn: (id) => base44.entities.HospitalityTask.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['hospitalityTasks', sessionId]);
+      queryClient.invalidateQueries({ queryKey: ['hospitalityTasks', sessionId] });
+    },
+    onError: (error) => {
+      console.error('[HospitalityTasksModal] Delete error:', error);
     },
   });
 
@@ -130,9 +137,7 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
           <div className="space-y-3">
             <h3 className="font-bold text-md">Tareas Existentes</h3>
-            {isLoading ? (
-              <p>Cargando tareas...</p>
-            ) : hospitalityTasks.length === 0 ? (
+            {hospitalityTasks.length === 0 ? (
               <p className="text-sm text-gray-500">No hay tareas de hospitalidad para esta sesión.</p>
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
