@@ -5,20 +5,17 @@ if (pdfMake && !pdfMake.vfs && pdfFonts && pdfFonts.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
 
-// Color palette matching report view
 const COLORS = {
-  alabanza: { bg: '#dcfce7', text: '#166534', border: '#86efac' },
-  plenaria: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' },
-  artes: { bg: '#fbf0f9', text: '#831843', border: '#f0abfc' },
-  panel: { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' },
-  video: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' },
+  alabanza: { bg: '#dcfce7', text: '#166534', border: '#86efac', hex: '#16A34A' },
+  plenaria: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', hex: '#1E40AF' },
+  artes: { bg: '#fbf0f9', text: '#831843', border: '#f0abfc', hex: '#BE185D' },
+  panel: { bg: '#fef3c7', text: '#92400e', border: '#fcd34d', hex: '#B45309' },
+  video: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', hex: '#2563EB' },
   sound: { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' },
   projection: { bg: '#f3e8ff', text: '#5b21b6', border: '#e9d5ff' },
   ushers: { bg: '#dcfce7', text: '#166534', border: '#86efac' },
-  translation: { bg: '#ede9fe', text: '#5b21b6', border: '#ddd6fe' },
   stage: { bg: '#f3e8ff', text: '#5b21b6', border: '#e9d5ff' },
   prep: { bg: '#fed7aa', text: '#92400e', border: '#fdba74' },
-  durante: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' },
 };
 
 function toESTTimeStr(hhmm) {
