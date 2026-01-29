@@ -295,28 +295,32 @@ function buildSessionTable(session, segments) {
   const rows = segments
     .slice()
     .sort((a, b) => (a.order || 0) - (b.order || 0))
-    .map(seg => [
-      // Column 1: Time
-      {
-        stack: [
-          { text: seg.start_time ? toESTTimeStr(seg.start_time) : '—', bold: true, color: '#111827', fontSize: 8 },
-          seg.end_time ? { text: toESTTimeStr(seg.end_time), color: '#6B7280', fontSize: 7, margin: [0, 0.5, 0, 0] } : null
-        ].filter(Boolean),
-        verticalAlign: 'top',
-        fillColor: '#F9FAFB'
-      },
-      // Column 2: Details
-      {
-        stack: buildDetailsColumn(seg),
-        verticalAlign: 'top'
-      },
-      // Column 3: Detalles
-      {
-        stack: buildDetailesColumn(seg),
-        verticalAlign: 'top',
-        fillColor: '#F0F1F3'
-      }
-    ]);
+    .map(seg => {
+      const color = getSegmentColor(seg.segment_type);
+      return [
+        // Column 1: Time
+        {
+          stack: [
+            { text: seg.start_time ? toESTTimeStr(seg.start_time) : '—', bold: true, color: '#111827', fontSize: 8 },
+            seg.end_time ? { text: toESTTimeStr(seg.end_time), color: '#6B7280', fontSize: 7, margin: [0, 0.5, 0, 0] } : null
+          ].filter(Boolean),
+          verticalAlign: 'top',
+          fillColor: '#F9FAFB'
+        },
+        // Column 2: Details (with segment-type background)
+        {
+          stack: buildDetailsColumn(seg),
+          verticalAlign: 'top',
+          fillColor: color.bg
+        },
+        // Column 3: Detalles
+        {
+          stack: buildDetailesColumn(seg),
+          verticalAlign: 'top',
+          fillColor: '#F0F1F3'
+        }
+      ];
+    });
 
   return {
     table: {
