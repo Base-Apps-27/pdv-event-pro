@@ -6,16 +6,11 @@ if (pdfMake && !pdfMake.vfs && pdfFonts && pdfFonts.vfs) {
 }
 
 const COLORS = {
-  alabanza: { bg: '#dcfce7', text: '#166534', border: '#86efac', hex: '#16A34A' },
-  plenaria: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', hex: '#1E40AF' },
-  artes: { bg: '#fbf0f9', text: '#831843', border: '#f0abfc', hex: '#BE185D' },
-  panel: { bg: '#fef3c7', text: '#92400e', border: '#fcd34d', hex: '#B45309' },
-  video: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', hex: '#2563EB' },
-  sound: { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' },
-  projection: { bg: '#f3e8ff', text: '#5b21b6', border: '#e9d5ff' },
-  ushers: { bg: '#dcfce7', text: '#166534', border: '#86efac' },
-  stage: { bg: '#f3e8ff', text: '#5b21b6', border: '#e9d5ff' },
-  prep: { bg: '#fed7aa', text: '#92400e', border: '#fdba74' },
+  alabanza: { bg: '#F0FDF4', text: '#166534', border: '#86EFAC', hex: '#16A34A' },
+  plenaria: { bg: '#EFF6FF', text: '#1E40AF', border: '#BFDBFE', hex: '#1E40AF' },
+  artes: { bg: '#FDF2F8', text: '#831843', border: '#F0ABFC', hex: '#BE185D' },
+  panel: { bg: '#FFFBEB', text: '#92400E', border: '#FCD34D', hex: '#B45309' },
+  video: { bg: '#EFF6FF', text: '#1E40AF', border: '#BFDBFE', hex: '#2563EB' },
 };
 
 function toESTTimeStr(hhmm) {
@@ -49,327 +44,311 @@ function headerBand(event, session) {
   };
 }
 
-function simpleTable(body, widths) {
-  return { 
-    table: { widths, body, headerRows: 1 }, 
-    layout: {
-      fillColor: (rowIndex) => rowIndex === 0 ? '#F3F4F6' : null,
-      hLineWidth: (i, node) => i === 0 || i === 1 || i === node.table.body.length ? 1 : 0.5,
-      vLineWidth: () => 0,
-      hLineColor: () => '#E5E7EB',
-      paddingLeft: () => 4,
-      paddingRight: () => 4,
-      paddingTop: () => 2,
-      paddingBottom: () => 2
-    }
-  };
-}
-
 function buildDetailedSegments(session, segments) {
-  // Build as block-style layout (like print view) instead of table
-  return segments.map((seg, idx) => [
-    // Time column
-    {
-      columns: [
-        {
-          width: 70,
-          stack: [
-            { text: seg.start_time ? toESTTimeStr(seg.start_time) : '—', bold: true, fontSize: 10, color: '#111827' },
-            seg.end_time ? { text: toESTTimeStr(seg.end_time), fontSize: 8, color: '#6B7280', margin: [0, 2, 0, 0] } : null,
-            seg.duration_min ? { text: `(${seg.duration_min}m)`, fontSize: 8, color: '#6B7280', margin: [0, 2, 0, 0] } : null,
-          ].filter(Boolean)
-        },
-        { width: '*', text: '' },
-      ]
-    },
+  return segments.flatMap((seg, idx) => {
+    const items = [];
 
-    // Main segment box (left column)
-    {
-      columns: [
-        {
-          width: '*',
-          stack: [
-            // Title + type
-            {
-              text: seg.title ? seg.title.toUpperCase() : '—',
-              bold: true,
-              fontSize: 9,
-              color: '#111827',
-              margin: [0, 0, 0, 3]
-            },
-            seg.segment_type ? {
-              text: seg.segment_type,
-              fontSize: 8,
-              bold: true,
-              color: COLORS[seg.segment_type.toLowerCase()] ? COLORS[seg.segment_type.toLowerCase()].text : '#374151',
-              margin: [0, 0, 0, 2]
-            } : null,
-            seg.presenter ? {
-              text: seg.presenter,
-              fontSize: 8,
-              color: '#2563EB',
-              bold: true,
-              margin: [0, 0, 0, 2]
-            } : null,
-            seg.requires_translation ? {
-              text: `🎙️ TRAD${seg.translator_name ? ': ' + seg.translator_name : ''}${seg.translation_mode === 'RemoteBooth' ? ' (Remoto)' : ''}`,
-              fontSize: 8,
-              color: '#7C3AED',
-              bold: true,
-              margin: [0, 0, 0, 2]
-            } : null,
-            
-            // Message title
-            seg.segment_type === 'Plenaria' && seg.message_title ? {
-              text: `MENSAJE: ${seg.message_title}`,
-              fontSize: 8,
-              color: '#1D4ED8',
-              bold: true,
-              margin: [0, 2, 0, 0],
-              fillColor: COLORS.plenaria.bg,
-              border: [1, 1, 1, 1],
-              borderColor: COLORS.plenaria.border,
-              padding: [2, 2, 2, 2]
-            } : null,
+    // Time header
+    const titleParts = [];
+    if (seg.start_time) {
+      titleParts.push({ text: toESTTimeStr(seg.start_time), bold: true, color: '#111827', fontSize: 10 });
+      titleParts.push({ text: '  ', fontSize: 10 });
+    }
+    titleParts.push({ text: seg.title ? seg.title.toUpperCase() : '—', bold: true, color: '#111827', fontSize: 10.5 });
 
-            // Songs
-            seg.segment_type === 'Alabanza' && seg.number_of_songs > 0 ? {
-              stack: [
-                { text: 'CANCIONES:', fontSize: 8, bold: true, color: COLORS.alabanza.text },
-                ...Array.from({ length: seg.number_of_songs }, (_, i) => {
-                  const t = seg[`song_${i + 1}_title`];
-                  const l = seg[`song_${i + 1}_lead`];
-                  return t ? { text: `${i + 1}. ${t}${l ? ` (${l})` : ''}`, fontSize: 8, color: '#374151', margin: [0, 1, 0, 0] } : null;
-                }).filter(Boolean)
-              ],
-              fillColor: COLORS.alabanza.bg,
-              border: [1, 1, 1, 1],
-              borderColor: COLORS.alabanza.border,
-              padding: [2, 2, 2, 2],
-              margin: [0, 2, 0, 0]
-            } : null,
+    const segType = (seg.segment_type || '').toLowerCase();
+    const typeColor = COLORS[segType]?.hex || '#6B7280';
+    if (seg.segment_type) {
+      titleParts.push({ text: `  ${seg.segment_type}  `, color: typeColor, background: '#F3F4F6', fontSize: 7, bold: true });
+    }
+    if (seg.duration_min) {
+      titleParts.push({ text: ` (${seg.duration_min} min)`, color: '#6B7280', fontSize: 9 });
+    }
+    if (seg.end_time) {
+      titleParts.push({ text: `  —  ${toESTTimeStr(seg.end_time)}`, color: '#6B7280', fontSize: 9 });
+    }
 
-            // Video
-            seg.has_video ? {
-              stack: [
-                { text: 'VIDEO:', fontSize: 8, bold: true, color: '#1e40af' },
-                {
-                  text: [
-                    seg.video_name || '',
-                    seg.video_location ? ` (${seg.video_location})` : '',
-                    typeof seg.video_length_sec === 'number' ? ` - ${Math.floor(seg.video_length_sec / 60)}:${String(seg.video_length_sec % 60).padStart(2, '0')}` : '',
-                    seg.video_owner ? ` • ${seg.video_owner}` : ''
-                  ].join(''),
-                  fontSize: 8,
-                  color: '#374151'
-                }
-              ],
-              fillColor: COLORS.video.bg,
-              border: [1, 1, 1, 1],
-              borderColor: COLORS.video.border,
-              padding: [2, 2, 2, 2],
-              margin: [0, 2, 0, 0]
-            } : null,
+    items.push({
+      text: titleParts,
+      margin: [0, idx > 0 ? 4 : 0, 0, 2]
+    });
 
-            // Artes
-            seg.segment_type === 'Artes' && Array.isArray(seg.art_types) && seg.art_types.length ? {
-              stack: [
-                {
-                  text: `ARTES: ${seg.art_types.map(t => t === 'DANCE' ? 'Danza' : t === 'DRAMA' ? 'Drama' : t === 'VIDEO' ? 'Video' : 'Otro').join(', ')}`,
-                  fontSize: 8,
-                  bold: true,
-                  color: COLORS.artes.text,
-                  margin: [0, 0, 0, 1]
-                },
-                seg.art_types.includes('DRAMA') ? {
-                  text: [
-                    seg.drama_handheld_mics > 0 ? `HH: ${seg.drama_handheld_mics} • ` : '',
-                    seg.drama_headset_mics > 0 ? `HS: ${seg.drama_headset_mics}` : ''
-                  ].join(''),
-                  fontSize: 7,
-                  color: '#374151'
-                } : null,
-                seg.art_types.includes('DANCE') && seg.dance_song_title ? {
-                  text: seg.dance_song_title,
-                  fontSize: 7,
-                  color: '#374151'
-                } : null
-              ].filter(Boolean),
-              fillColor: COLORS.artes.bg,
-              border: [1, 1, 1, 1],
-              borderColor: COLORS.artes.border,
-              padding: [2, 2, 2, 2],
-              margin: [0, 2, 0, 0]
-            } : null,
+    // Presenter/Leader
+    if (seg.presenter) {
+      items.push({
+        text: [
+          { text: 'MINISTRA: ', bold: true, color: '#2563EB', fontSize: 9 },
+          { text: seg.presenter, bold: true, color: '#2563EB', fontSize: 10 }
+        ],
+        margin: [8, 0, 0, 1]
+      });
+    }
 
-            // Panel
-            seg.segment_type === 'Panel' && (seg.panel_moderators || seg.panel_panelists) ? {
-              stack: [
-                seg.panel_moderators ? { text: `MOD: ${seg.panel_moderators}`, fontSize: 8, color: '#374151' } : null,
-                seg.panel_panelists ? { text: `PAN: ${seg.panel_panelists}`, fontSize: 8, color: '#374151', margin: [0, 1, 0, 0] } : null
-              ].filter(Boolean),
-              fillColor: COLORS.panel.bg,
-              border: [1, 1, 1, 1],
-              borderColor: COLORS.panel.border,
-              padding: [2, 2, 2, 2],
-              margin: [0, 2, 0, 0]
-            } : null,
+    // Translation badge
+    if (seg.requires_translation) {
+      const transParts = [{ text: '🎙️ ', fontSize: 9 }];
+      transParts.push({ text: 'TRAD', bold: true, color: '#7C3AED', fontSize: 9 });
+      if (seg.translation_mode === 'RemoteBooth') {
+        transParts.push({ text: ' (Remoto)', color: '#7C3AED', italics: true, fontSize: 8 });
+      }
+      if (seg.translator_name) {
+        transParts.push({ text: `: ${seg.translator_name}`, color: '#7C3AED', fontSize: 8 });
+      }
+      items.push({
+        text: transParts,
+        margin: [8, 0, 0, 1]
+      });
+    }
 
-            seg.description_details && seg.segment_type !== 'Panel' ? {
-              text: seg.description_details,
-              fontSize: 8,
-              color: '#374151',
-              margin: [0, 2, 0, 0]
-            } : null
-          ].filter(Boolean),
-          margin: [0, 2, 0, 2]
-        },
-
-        // Right column: prep/durante actions + team notes
-        {
-          width: 200,
-          stack: (() => {
-            const stack = [];
-            const prepActions = Array.isArray(seg.segment_actions) ? seg.segment_actions.filter(a => a.timing === 'before_start') : [];
-            const duringActions = Array.isArray(seg.segment_actions) ? seg.segment_actions.filter(a => a.timing !== 'before_start') : [];
-
-            // Prep
-            if (prepActions.length > 0) {
-              stack.push({
-                text: '⚠ PREP',
-                fontSize: 8,
-                bold: true,
-                color: COLORS.prep.text,
-                fillColor: COLORS.prep.bg,
-                padding: [2, 2, 2, 2],
-                margin: [0, 0, 2, 0]
-              });
-              prepActions.forEach(a => {
-                stack.push({
-                  text: `${(a.label || '').replace(/^\s*\[[^\]]+\]\s*/, '').substring(0, 50)}${a.offset_min !== undefined ? ` (${a.offset_min}m)` : ''}`,
-                  fontSize: 7,
-                  color: '#374151',
-                  margin: [0, 0, 1, 0]
-                });
-              });
-            }
-
-            // During
-            if (duringActions.length > 0) {
-              stack.push({
-                text: '▶ DURANTE',
-                fontSize: 8,
-                bold: true,
-                color: COLORS.durante.text,
-                fillColor: COLORS.durante.bg,
-                padding: [2, 2, 2, 2],
-                margin: [0, 0, 2, 0]
-              });
-              duringActions.forEach(a => {
-                stack.push({
-                  text: (a.label || '').replace(/^\s*\[[^\]]+\]\s*/, '').substring(0, 50),
-                  fontSize: 7,
-                  color: '#374151',
-                  margin: [0, 0, 1, 0]
-                });
-              });
-            }
-
-            // Team notes
-            const notes = [];
-            if (seg.sound_notes) notes.push({ label: 'SONIDO:', text: seg.sound_notes, color: COLORS.sound });
-            if (seg.projection_notes) notes.push({ label: 'PROYECCIÓN:', text: seg.projection_notes, color: COLORS.projection });
-            if (seg.ushers_notes) notes.push({ label: 'UJIERES:', text: seg.ushers_notes, color: COLORS.ushers });
-            if (seg.stage_decor_notes) notes.push({ label: 'STAGE:', text: seg.stage_decor_notes, color: COLORS.stage });
-            if (seg.requires_translation && seg.translation_notes) notes.push({ label: 'TRAD:', text: seg.translation_notes, color: COLORS.translation });
-
-            notes.forEach((n, ni) => {
-              stack.push({
+    // Message title (blue box)
+    if (seg.segment_type === 'Plenaria' && seg.message_title) {
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: [
+              {
                 text: [
-                  { text: n.label, bold: true, color: n.color.text },
-                  ' ',
-                  n.text.substring(0, 40)
-                ],
-                fontSize: 7,
-                color: '#374151',
-                fillColor: n.color.bg,
-                border: [1, 1, 1, 1],
-                borderColor: n.color.border,
-                padding: [1.5, 2, 1.5, 2],
-                margin: [0, 0, ni < notes.length - 1 ? 1 : 0, 0]
-              });
-            });
+                  { text: 'MENSAJE: ', bold: true, color: '#1E40AF', fontSize: 9 },
+                  { text: seg.message_title, color: '#1E3A8A', fontSize: 9 }
+                ]
+              }
+            ],
+            fillColor: COLORS.plenaria.bg,
+            border: [true, true, true, true],
+            borderColor: [COLORS.plenaria.border, COLORS.plenaria.border, COLORS.plenaria.border, COLORS.plenaria.border],
+            margin: [4, 4, 4, 4]
+          }]]
+        },
+        margin: [8, 2, 0, 2]
+      });
+    }
 
-            return stack.length ? stack : [{ text: '—', fontSize: 8, color: '#9CA3AF' }];
-          })(),
-          margin: [0, 2, 0, 2]
+    // Songs (green box)
+    if (seg.segment_type === 'Alabanza' && seg.number_of_songs > 0) {
+      const songStack = [{ text: 'CANCIONES:', bold: true, fontSize: 8.5, color: COLORS.alabanza.text, margin: [0, 0, 0, 2] }];
+      for (let i = 1; i <= seg.number_of_songs; i++) {
+        const title = seg[`song_${i}_title`];
+        const lead = seg[`song_${i}_lead`];
+        if (title) {
+          songStack.push({
+            text: [
+              { text: `${i}. `, color: '#6B7280', fontSize: 8.5 },
+              { text: title, color: '#0F172A', fontSize: 9, bold: true },
+              lead ? { text: ` (${lead})`, color: '#6B7280', fontSize: 8.5, italics: true } : ''
+            ],
+            margin: [0, 0, 0, 1]
+          });
         }
-      ]
-    },
+      }
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: songStack,
+            fillColor: COLORS.alabanza.bg,
+            border: [true, true, true, true],
+            borderColor: [COLORS.alabanza.border, COLORS.alabanza.border, COLORS.alabanza.border, COLORS.alabanza.border],
+            margin: [4, 4, 4, 4]
+          }]]
+        },
+        margin: [8, 2, 0, 2]
+      });
+    }
 
-    // Spacer between segments
-    { text: '', margin: [0, 2, 0, 0] }
-  ]);
-}
+    // Video
+    if (seg.has_video) {
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: [
+              { text: 'VIDEO:', bold: true, color: '#1E40AF', fontSize: 9, margin: [0, 0, 0, 2] },
+              {
+                text: [
+                  seg.video_name || '',
+                  seg.video_location ? ` (${seg.video_location})` : '',
+                  typeof seg.video_length_sec === 'number' ? ` - ${Math.floor(seg.video_length_sec / 60)}:${String(seg.video_length_sec % 60).padStart(2, '0')}` : '',
+                  seg.video_owner ? ` • ${seg.video_owner}` : ''
+                ].join(''),
+                color: '#1E3A8A',
+                fontSize: 8.5
+              }
+            ],
+            fillColor: COLORS.video.bg,
+            border: [true, true, true, true],
+            borderColor: [COLORS.video.border, COLORS.video.border, COLORS.video.border, COLORS.video.border],
+            margin: [4, 4, 4, 4]
+          }]]
+        },
+        margin: [8, 2, 0, 2]
+      });
+    }
 
-function buildSimple(session, segments, columnTitle, selector) {
-  const body = [[
-    { text: 'Hora', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-    { text: 'Título', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-    { text: columnTitle, bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-  ]];
-  segments.forEach(seg => {
-    body.push([
-      { text: seg.start_time ? toESTTimeStr(seg.start_time) : '-', fontSize: 9 },
-      { text: seg.title || '', bold: true, fontSize: 10 },
-      { text: seg[selector] || '—', fontSize: 9 },
-    ]);
+    // Artes
+    if (seg.segment_type === 'Artes' && Array.isArray(seg.art_types) && seg.art_types.length) {
+      const artStack = [
+        {
+          text: `ARTES: ${seg.art_types.map(t => t === 'DANCE' ? 'Danza' : t === 'DRAMA' ? 'Drama' : t === 'VIDEO' ? 'Video' : 'Otro').join(', ')}`,
+          bold: true,
+          color: COLORS.artes.text,
+          fontSize: 9,
+          margin: [0, 0, 0, 2]
+        }
+      ];
+
+      if (seg.art_types.includes('DRAMA')) {
+        const dramaParts = [];
+        if (seg.drama_handheld_mics > 0) dramaParts.push(`HH: ${seg.drama_handheld_mics}`);
+        if (seg.drama_headset_mics > 0) dramaParts.push(`HS: ${seg.drama_headset_mics}`);
+        if (dramaParts.length) {
+          artStack.push({ text: dramaParts.join(' • '), color: '#4B5563', fontSize: 8 });
+        }
+      }
+      if (seg.art_types.includes('DANCE') && seg.dance_song_title) {
+        artStack.push({ text: seg.dance_song_title, color: '#4B5563', fontSize: 8, margin: [0, 1, 0, 0] });
+      }
+
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: artStack,
+            fillColor: COLORS.artes.bg,
+            border: [true, true, true, true],
+            borderColor: [COLORS.artes.border, COLORS.artes.border, COLORS.artes.border, COLORS.artes.border],
+            margin: [4, 4, 4, 4]
+          }]]
+        },
+        margin: [8, 2, 0, 2]
+      });
+    }
+
+    // Panel
+    if (seg.segment_type === 'Panel' && (seg.panel_moderators || seg.panel_panelists)) {
+      const panelStack = [];
+      if (seg.panel_moderators) {
+        panelStack.push({
+          text: [
+            { text: 'MOD: ', bold: true, color: '#B45309', fontSize: 9 },
+            { text: seg.panel_moderators, color: '#92400E', fontSize: 9 }
+          ]
+        });
+      }
+      if (seg.panel_panelists) {
+        panelStack.push({
+          text: [
+            { text: 'PAN: ', bold: true, color: '#B45309', fontSize: 9 },
+            { text: seg.panel_panelists, color: '#92400E', fontSize: 9 }
+          ],
+          margin: [0, 1, 0, 0]
+        });
+      }
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: panelStack,
+            fillColor: COLORS.panel.bg,
+            border: [true, true, true, true],
+            borderColor: [COLORS.panel.border, COLORS.panel.border, COLORS.panel.border, COLORS.panel.border],
+            margin: [4, 4, 4, 4]
+          }]]
+        },
+        margin: [8, 2, 0, 2]
+      });
+    }
+
+    // Prep actions
+    const prepActions = Array.isArray(seg.segment_actions) ? seg.segment_actions.filter(a => a.timing === 'before_start' && a.department !== 'Hospitality') : [];
+    if (prepActions.length > 0) {
+      const prepStack = [{ text: '⚠ PREP', bold: true, color: '#92400E', fontSize: 9, margin: [0, 0, 0, 2] }];
+      prepActions.forEach(act => {
+        prepStack.push({
+          text: [
+            { text: (act.label || '').replace(/^\s*\[[^\]]+\]\s*/, '').substring(0, 60), color: '#4B5563', fontSize: 8 },
+            act.offset_min !== undefined ? { text: ` (${act.offset_min}m)`, color: '#9CA3AF', fontSize: 7 } : ''
+          ]
+        });
+      });
+
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: prepStack,
+            fillColor: '#FED7AA',
+            border: [true, true, true, true],
+            borderColor: ['#FDBA74', '#FDBA74', '#FDBA74', '#FDBA74'],
+            margin: [4, 4, 4, 4]
+          }]]
+        },
+        margin: [8, 2, 0, 2]
+      });
+    }
+
+    // During actions
+    const duringActions = Array.isArray(seg.segment_actions) ? seg.segment_actions.filter(a => a.timing !== 'before_start' && a.department !== 'Hospitality') : [];
+    if (duringActions.length > 0) {
+      const duringStack = [{ text: '▶ DURANTE', bold: true, color: '#1E40AF', fontSize: 9, margin: [0, 0, 0, 2] }];
+      duringActions.forEach(act => {
+        duringStack.push({
+          text: (act.label || '').replace(/^\s*\[[^\]]+\]\s*/, '').substring(0, 60),
+          color: '#4B5563',
+          fontSize: 8
+        });
+      });
+
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: duringStack,
+            fillColor: '#DBEAFE',
+            border: [true, true, true, true],
+            borderColor: ['#93C5FD', '#93C5FD', '#93C5FD', '#93C5FD'],
+            margin: [4, 4, 4, 4]
+          }]]
+        },
+        margin: [8, 2, 0, 2]
+      });
+    }
+
+    // Team notes
+    const notesList = [
+      { label: 'SONIDO', val: seg.sound_notes, color: '#991B1B', bg: '#FEE2E2', border: '#FCA5A5' },
+      { label: 'PROYECCIÓN', val: seg.projection_notes, color: '#5B21B6', bg: '#F3E8FF', border: '#E9D5FF' },
+      { label: 'UJIERES', val: seg.ushers_notes, color: '#166534', bg: '#F0FDF4', border: '#86EFAC' },
+      { label: 'STAGE', val: seg.stage_decor_notes, color: '#5B21B6', bg: '#F3E8FF', border: '#E9D5FF' },
+      { label: 'TRAD', val: seg.translation_notes, color: '#5B21B6', bg: '#EDE9FE', border: '#DDD6FE' }
+    ].filter(n => n.val);
+
+    notesList.forEach((n) => {
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            text: [
+              { text: `${n.label}: `, bold: true, color: n.color, fontSize: 8 },
+              { text: n.val.substring(0, 100), color: '#4B5563', fontSize: 7.5 }
+            ],
+            fillColor: n.bg,
+            border: [true, true, true, true],
+            borderColor: [n.border, n.border, n.border, n.border],
+            margin: [4, 3, 4, 3]
+          }]]
+        },
+        margin: [8, 1, 0, 1]
+      });
+    });
+
+    return items;
   });
-  return simpleTable(body, [70, 200, '*']);
-}
-
-function buildGeneral(session, segments) {
-  const body = [[
-    { text: 'Hora', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-    { text: 'Título', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-    { text: 'Responsable', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-    { text: 'Duración', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-  ]];
-  segments.forEach(seg => {
-    body.push([
-      { text: seg.start_time ? toESTTimeStr(seg.start_time) : '-', fontSize: 9 },
-      { text: seg.title || '—', bold: true, fontSize: 10 },
-      { text: seg.presenter || '—', fontSize: 9 },
-      { text: seg.duration_min ? `${seg.duration_min} min` : '—', fontSize: 9 },
-    ]);
-  });
-  return simpleTable(body, [70, '*', 180, 70]);
-}
-
-function buildHospitality(tasks) {
-  const body = [[
-    { text: 'Tiempo', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-    { text: 'Categoría', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-    { text: 'Descripción', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-    { text: 'Ubicación', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-    { text: 'Notas', bold: true, fillColor: '#F3F4F6', fontSize: 9 },
-  ]];
-  tasks.forEach(t => {
-    body.push([
-      t.time_hint || '—',
-      t.category || '—',
-      t.description || '—',
-      t.location_notes || '—',
-      t.notes || '—',
-    ]);
-  });
-  return simpleTable(body, [70, 80, '*', 120, 120]);
 }
 
 export async function generateEventReportPDFClient({ event, sessions, segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession, reportType }) {
   const content = [];
 
-  // Per-session rendering, one session per page
   sessions.forEach((session, idx) => {
     content.push(headerBand(event, session));
 
@@ -398,21 +377,6 @@ export async function generateEventReportPDFClient({ event, sessions, segmentsBy
 
     if (reportType === 'detailed') {
       content.push(...buildDetailedSegments(session, allSegs));
-    } else if (reportType === 'projection') {
-      const filtered = allSegs.filter(s => s.show_in_projection !== false);
-      content.push(buildSimple(session, filtered, 'Notas Proyección', 'projection_notes'));
-    } else if (reportType === 'sound') {
-      const filtered = allSegs.filter(s => s.show_in_sound !== false);
-      content.push(buildSimple(session, filtered, 'Notas Sonido', 'sound_notes'));
-    } else if (reportType === 'ushers') {
-      const filtered = allSegs.filter(s => s.show_in_ushers !== false);
-      content.push(buildSimple(session, filtered, 'Notas Ujieres', 'ushers_notes'));
-    } else if (reportType === 'hospitality') {
-      const tasks = (hospitalityTasksBySession?.[session.id] || []).slice().sort((a,b)=> (a.order||0)-(b.order||0));
-      content.push(buildHospitality(tasks));
-    } else if (reportType === 'general') {
-      const filtered = allSegs.filter(s => s.show_in_general !== false);
-      content.push(buildGeneral(session, filtered));
     }
 
     if (idx < sessions.length - 1) {
@@ -435,7 +399,6 @@ export async function generateEventReportPDFClient({ event, sessions, segmentsBy
     }),
   };
 
-  // Create PDF and return Uint8Array for consistent download handling
   const bytes = await new Promise((resolve, reject) => {
     try {
       const pdf = pdfMake.createPdf(docDefinition);
