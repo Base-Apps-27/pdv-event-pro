@@ -1,12 +1,26 @@
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 
-// Initialize embedded fonts once (same pattern as weekly/custom generators)
 if (pdfMake && !pdfMake.vfs && pdfFonts && pdfFonts.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
 
-// Simple ET time formatter: "HH:MM" -> "h:mm AM/PM"
+// Color palette matching report view
+const COLORS = {
+  alabanza: { bg: '#dcfce7', text: '#166534', border: '#86efac' },
+  plenaria: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' },
+  artes: { bg: '#fbf0f9', text: '#831843', border: '#f0abfc' },
+  panel: { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' },
+  video: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' },
+  sound: { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' },
+  projection: { bg: '#f3e8ff', text: '#5b21b6', border: '#e9d5ff' },
+  ushers: { bg: '#dcfce7', text: '#166534', border: '#86efac' },
+  translation: { bg: '#ede9fe', text: '#5b21b6', border: '#ddd6fe' },
+  stage: { bg: '#f3e8ff', text: '#5b21b6', border: '#e9d5ff' },
+  prep: { bg: '#fed7aa', text: '#92400e', border: '#fdba74' },
+  durante: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' },
+};
+
 function toESTTimeStr(hhmm) {
   if (!hhmm || typeof hhmm !== 'string') return '-';
   const [h, m] = hhmm.split(':').map(Number);
