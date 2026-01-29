@@ -448,12 +448,12 @@ export default function Reports() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-xs" style={{ tableLayout: 'fixed' }}>
                 <thead className="bg-gray-100 border-b border-gray-300">
                   <tr>
                     <th className="p-1 text-gray-900 font-bold uppercase w-12 text-center text-xs">{t('reports.headers.time')}</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-3/5">{t('reports.headers.details')}</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-2/5">{t('reports.headers.teamNotes')}</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase text-xs" style={{ width: '50%' }}>{t('reports.headers.details')}</th>
+                    <th className="p-1 text-gray-900 font-bold uppercase text-xs" style={{ width: '50%' }}>{t('reports.headers.teamNotes')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -628,7 +628,7 @@ export default function Reports() {
                           )}
                         </div>
                       </td>
-                      <td className="p-1 border-r border-gray-200">
+                      <td className="p-1 border-r border-gray-200 align-top" style={{ verticalAlign: 'top' }}>
                         <div className="space-y-0.5">
                           <div className="text-gray-900 font-bold text-xs uppercase">
                             {segment.title}
@@ -780,8 +780,8 @@ export default function Reports() {
                                 )}
                                 </div>
                                 </td>
-                                <td className="p-1 text-gray-600 text-[10px] align-top">
-                                <div className="space-y-0.5">
+                                <td className="p-1 text-gray-600 text-[10px]" style={{ verticalAlign: 'top' }}>
+                                  <div className="space-y-0.5">
                           {segment.sound_notes && (
                             <div className="bg-red-50 px-1 py-0.5 rounded border border-red-200 text-[10px]">
                               <span className="font-bold text-red-700">SONIDO:</span>
