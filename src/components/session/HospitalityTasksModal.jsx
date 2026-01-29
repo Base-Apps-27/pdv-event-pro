@@ -15,7 +15,11 @@ const HOSPITALITY_CATEGORIES = [
   "Breakfast", "Lunch", "Dinner", "Snacks", "Setup", "Cleanup", "Other"
 ];
 
-export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
+export default function HospitalityTasksModal({ sessionId: sessionIdProp, isOpen, onClose }) {
+  // Read sessionId directly from URL as primary source, fallback to prop
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionId = urlParams.get('id') || sessionIdProp;
+  
   const queryClient = useQueryClient();
   const [editingTask, setEditingTask] = useState(null);
   const [taskForm, setTaskForm] = useState({
