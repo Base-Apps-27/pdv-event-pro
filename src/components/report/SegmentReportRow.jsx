@@ -53,8 +53,8 @@ export default function SegmentReportRow({
           </div>
         )}
         {segment.requires_translation && segment.translation_mode === "RemoteBooth" && (
-          <div className="bg-purple-50 px-0.5 py-0.5 rounded border border-purple-200 text-[9px]">
-            <span className="font-bold text-purple-700">CABINA:</span>
+          <div className="bg-cyan-50 px-0.5 py-0.5 rounded border border-cyan-300 text-[9px]">
+            <span className="font-bold text-cyan-700">TRAD-CABINA:</span>
             {segment.translator_name && (
               <span className="ml-0.5">{segment.translator_name}</span>
             )}
