@@ -400,7 +400,7 @@ export async function generateEventReportPDFClient({ event, sessions, segmentsBy
     const allSegs = (segmentsBySession?.[session.id] || []).slice().sort((a,b)=> (a.order||0)-(b.order||0));
 
     if (reportType === 'detailed') {
-      content.push(buildDetailed(session, allSegs));
+      content.push(...buildDetailedSegments(session, allSegs));
     } else if (reportType === 'projection') {
       const filtered = allSegs.filter(s => s.show_in_projection !== false);
       content.push(buildSimple(session, filtered, 'Notas Proyección', 'projection_notes'));
