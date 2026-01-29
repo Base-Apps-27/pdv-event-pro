@@ -179,6 +179,42 @@ export default function Reports() {
     }
   };
 
+  // Robust binary normalization for function responses (arraybuffer/object/base64/string)
+  function normalizeToBytes(data) {
+    if (data instanceof ArrayBuffer) return new Uint8Array(data);
+    if (ArrayBuffer.isView(data)) return new Uint8Array(data.buffer);
+    if (data && typeof data === 'object') {
+      const vals = Object.values(data);
+      if (vals.length && typeof vals[0] === 'number') return new Uint8Array(vals);
+    }
+    if (typeof data === 'string') {
+      try {
+        // Try base64 first
+        const bstr = atob(data);
+        const bytes = new Uint8Array(bstr.length);
+        for (let i = 0; i < bstr.length; i++) bytes[i] = bstr.charCodeAt(i);
+        // Heuristic: valid PDF should start with %PDF
+        if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) return bytes;
+      } catch (_) { /* not base64 */ }
+      // Fallback: encode as text (rare)
+      return new TextEncoder().encode(data);
+    }
+    return new Uint8Array();
+  }
+
+  async function downloadPdf(filename, data) {
+    const bytes = normalizeToBytes(data);
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    a.remove();
+  }
+
   const getSegmentActions = (segment) => {
     return segment?.segment_actions || [];
   };
