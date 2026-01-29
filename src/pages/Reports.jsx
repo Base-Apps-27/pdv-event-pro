@@ -617,13 +617,16 @@ export default function Reports() {
                              </div>
                             )}
                             {segment.has_video && (
-                             <div className="mt-1 text-[10px] bg-blue-50 p-1 rounded border border-blue-200">
-                               <span className="text-blue-700 font-bold">VIDEO:</span>
-                               <span className="text-gray-700 ml-1">{segment.video_name}</span>
-                               {segment.video_location && <span className="text-gray-600 ml-1">({segment.video_location})</span>}
-                               {segment.video_length_sec && <span className="text-gray-600 ml-1">- {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}</span>}
-                             </div>
-                            )}
+                                                          <div className="mt-1 text-[10px] bg-blue-50 p-1 rounded border border-blue-200">
+                                                            <span className="text-blue-700 font-bold">VIDEO:</span>
+                                                            <span className="text-gray-700 ml-1">{segment.video_name}</span>
+                                                            {segment.video_location && <span className="text-gray-600 ml-1">({segment.video_location})</span>}
+                                                            {typeof segment.video_length_sec === 'number' && (
+                                                              <span className="text-gray-600 ml-1">- {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}</span>
+                                                            )}
+                                                            {segment.video_owner && <span className="text-gray-600 ml-1">• {segment.video_owner}</span>}
+                                                          </div>
+                                                         )}
                             {segment.segment_type === "Panel" && (segment.panel_moderators || segment.panel_panelists) && (
                              <div className="mt-1 text-[10px] bg-amber-50 p-1 rounded border border-amber-200">
                                {segment.panel_moderators && (
@@ -650,10 +653,10 @@ export default function Reports() {
 
                                 {segment.art_types.includes("DRAMA") && (
                                  <div className="mt-0.5 pl-2 border-l-2 border-pink-300">
-                                   {segment.drama_handheld_mics > 0 && <div>Mics mano: {segment.drama_handheld_mics}</div>}
-                                   {segment.drama_headset_mics > 0 && <div>Mics diadema: {segment.drama_headset_mics}</div>}
-                                   {segment.drama_start_cue && <div>Inicio: {segment.drama_start_cue}</div>}
-                                   {segment.drama_end_cue && <div>Cierre: {segment.drama_end_cue}</div>}
+                                   {segment.drama_handheld_mics > 0 && <div>{t('arts.mics.handheld')}: {segment.drama_handheld_mics}</div>}
+                                   {segment.drama_headset_mics > 0 && <div>{t('arts.mics.headset')}: {segment.drama_headset_mics}</div>}
+                                   {segment.drama_start_cue && <div>{t('arts.cues.start')}: {segment.drama_start_cue}</div>}
+                                   {segment.drama_end_cue && <div>{t('arts.cues.end')}: {segment.drama_end_cue}</div>}
                                    {segment.drama_has_song && segment.drama_song_title && (
                                      <div>Canción: {segment.drama_song_title}</div>
                                    )}
@@ -668,8 +671,8 @@ export default function Reports() {
                                     {segment.dance_has_song && segment.dance_song_title && (
                                       <div>Música: {segment.dance_song_title}</div>
                                     )}
-                                    {segment.dance_handheld_mics > 0 && <div>Mics mano: {segment.dance_handheld_mics}</div>}
-                                    {segment.dance_headset_mics > 0 && <div>Mics diadema: {segment.dance_headset_mics}</div>}
+                                    {segment.dance_handheld_mics > 0 && <div>{t('arts.mics.handheld')}: {segment.dance_handheld_mics}</div>}
+                                    {segment.dance_headset_mics > 0 && <div>{t('arts.mics.headset')}: {segment.dance_headset_mics}</div>}
                                   </div>
                                 )}
 
