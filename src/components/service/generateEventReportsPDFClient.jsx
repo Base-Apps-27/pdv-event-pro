@@ -58,7 +58,7 @@ function buildDetailed(session, segments) {
   const body = [[
     { text: 'Hora', bold: true, fontSize: 10, color: '#111827' },
     { text: 'Detalles', bold: true, fontSize: 10, color: '#111827' },
-    { text: 'Notas de equipo', bold: true, fontSize: 10, color: '#111827' },
+    { text: 'Acciones & Notas', bold: true, fontSize: 10, color: '#111827' },
   ]];
 
   segments.forEach(seg => {
@@ -73,8 +73,23 @@ function buildDetailed(session, segments) {
 
     const details = [];
     if (seg.title) details.push({ text: seg.title.toUpperCase(), bold: true, fontSize: 9, color: '#111827' });
-    if (seg.segment_type) details.push({ text: seg.segment_type, fontSize: 8, color: '#374151', margin: [0, 0.5, 0, 0] });
+    
+    // Type badge with color
+    if (seg.segment_type) {
+      const typeColors = { 'Alabanza': '#16A34A', 'Plenaria': '#1D4ED8', 'Artes': '#BE185D', 'Panel': '#92400E', 'Video': '#2563EB' };
+      details.push({ text: seg.segment_type, fontSize: 8, color: typeColors[seg.segment_type] || '#374151', bold: true, margin: [0, 0.5, 0, 0] });
+    }
+    
     if (seg.presenter) details.push({ text: seg.presenter, color: '#2563EB', bold: true, fontSize: 8, margin: [0, 1, 0, 0] });
+    
+    // Translation badge if needed
+    if (seg.requires_translation) {
+      const transParts = [];
+      if (seg.translation_mode === 'InPerson') transParts.push('🎙️');
+      transParts.push('TRAD');
+      if (seg.translator_name) transParts.push(seg.translator_name);
+      details.push({ text: transParts.join(' '), color: '#7C3AED', bold: true, fontSize: 8, margin: [0, 0.5, 0, 0] });
+    }
     
     if (seg.segment_type === 'Plenaria' && seg.message_title) {
       details.push({ text: `MENSAJE: ${seg.message_title}`, color: '#1D4ED8', bold: true, fontSize: 8, margin: [0, 1, 0, 0] });
@@ -108,59 +123,76 @@ function buildDetailed(session, segments) {
     if (seg.segment_type === 'Artes' && Array.isArray(seg.art_types) && seg.art_types.length) {
       const at = seg.art_types.map(t => t === 'DANCE' ? 'Danza' : t === 'DRAMA' ? 'Drama' : t === 'VIDEO' ? 'Video' : 'Otro').join(', ');
       let artDetail = `ARTES: ${at}`;
-      
-      // Inline art details
       if (seg.art_types.includes('DRAMA')) {
         const parts = [];
         if (seg.drama_handheld_mics > 0) parts.push(`HH: ${seg.drama_handheld_mics}`);
         if (seg.drama_headset_mics > 0) parts.push(`HS: ${seg.drama_headset_mics}`);
-        if (seg.drama_start_cue) parts.push(`Start: ${seg.drama_start_cue}`);
-        if (seg.drama_end_cue) parts.push(`End: ${seg.drama_end_cue}`);
         if (parts.length) artDetail += ` • ${parts.join(' • ')}`;
       }
       if (seg.art_types.includes('DANCE')) {
         const parts = [];
-        if (seg.dance_has_song && seg.dance_song_title) parts.push(`${seg.dance_song_title}`);
+        if (seg.dance_has_song && seg.dance_song_title) parts.push(seg.dance_song_title);
         if (seg.dance_handheld_mics > 0) parts.push(`HH: ${seg.dance_handheld_mics}`);
         if (seg.dance_headset_mics > 0) parts.push(`HS: ${seg.dance_headset_mics}`);
         if (parts.length) artDetail += ` • ${parts.join(' • ')}`;
       }
-      
       details.push({ text: artDetail, color: '#BE185D', bold: true, fontSize: 8, margin: [0, 1, 0, 0] });
     }
 
-    if (seg.segment_type === 'Panel') {
-      if (seg.panel_moderators || seg.panel_panelists) {
-        const parts = [];
-        if (seg.panel_moderators) parts.push(`MOD: ${seg.panel_moderators}`);
-        if (seg.panel_panelists) parts.push(`PAN: ${seg.panel_panelists}`);
-        details.push({ text: parts.join(' • '), color: '#374151', fontSize: 8, margin: [0, 1, 0, 0] });
-      }
-      if (seg.description_details) details.push({ text: seg.description_details, color: '#374151', fontSize: 8, margin: [0, 0.5, 0, 0] });
+    if (seg.segment_type === 'Panel' && (seg.panel_moderators || seg.panel_panelists)) {
+      const parts = [];
+      if (seg.panel_moderators) parts.push(`MOD: ${seg.panel_moderators}`);
+      if (seg.panel_panelists) parts.push(`PAN: ${seg.panel_panelists}`);
+      details.push({ text: parts.join(' • '), color: '#92400E', bold: true, fontSize: 8, margin: [0, 1, 0, 0] });
     }
     
     if (seg.description_details && seg.segment_type !== 'Panel') {
       details.push({ text: seg.description_details, fontSize: 8, color: '#374151', margin: [0, 1, 0, 0] });
     }
 
+    // Build actions + notes column
+    const actionsNotes = [];
+    
+    // Prep actions
+    const prepActions = Array.isArray(seg.segment_actions) ? seg.segment_actions.filter(a => a.timing === 'before_start' && a.department !== 'Hospitality') : [];
+    if (prepActions.length > 0) {
+      actionsNotes.push({ text: '⚠ PREP', bold: true, color: '#EA580C', fontSize: 8, margin: [0, 0, 0.5, 0] });
+      prepActions.forEach(act => {
+        const label = (act.label || '').replace(/^\s*\[[^\]]+\]\s*/, '').substring(0, 40);
+        const timing = act.offset_min !== undefined ? ` (${act.offset_min}m)` : '';
+        actionsNotes.push({ text: `${label}${timing}`, fontSize: 7, color: '#6B7280', margin: [0, 0.5, 0.25, 0] });
+      });
+    }
+    
+    // During actions
+    const duringActions = Array.isArray(seg.segment_actions) ? seg.segment_actions.filter(a => a.timing !== 'before_start' && a.department !== 'Hospitality') : [];
+    if (duringActions.length > 0) {
+      if (actionsNotes.length > 0) actionsNotes.push({ text: '', margin: [0, 0.5, 0, 0] });
+      actionsNotes.push({ text: '▶ DURANTE', bold: true, color: '#2563EB', fontSize: 8, margin: [0, 0, 0.5, 0] });
+      duringActions.forEach(act => {
+        const label = (act.label || '').replace(/^\s*\[[^\]]+\]\s*/, '').substring(0, 40);
+        actionsNotes.push({ text: label, fontSize: 7, color: '#6B7280', margin: [0, 0.5, 0.25, 0] });
+      });
+    }
+
+    // Team notes
     const notes = [];
-    if (seg.sound_notes) notes.push({ text: `SONIDO: ${seg.sound_notes}`, color: '#DC2626', bold: true, fontSize: 8 });
-    if (seg.projection_notes) notes.push({ text: `PROYECCIÓN: ${seg.projection_notes}`, color: '#7C3AED', bold: true, fontSize: 8, margin: [0, notes.length ? 1 : 0, 0, 0] });
-    if (seg.ushers_notes) notes.push({ text: `UJIERES: ${seg.ushers_notes}`, color: '#16A34A', bold: true, fontSize: 8, margin: [0, notes.length ? 1 : 0, 0, 0] });
-    if (seg.stage_decor_notes) notes.push({ text: `STAGE & DECOR: ${seg.stage_decor_notes}`, color: '#7C3AED', bold: true, fontSize: 8, margin: [0, notes.length ? 1 : 0, 0, 0] });
-    if (seg.requires_translation) {
-      const parts = [];
-      if (seg.translator_name) parts.push(seg.translator_name);
-      if (seg.translation_mode === 'RemoteBooth') parts.push('(Remoto)');
-      else if (seg.translation_mode === 'InPerson') parts.push('(En Persona)');
-      if (seg.translation_notes) parts.push(`- ${seg.translation_notes}`);
-      notes.push({ text: `TRAD: ${parts.filter(x=>x).join(' ')}`, color: '#2563EB', bold: true, fontSize: 8, margin: [0, notes.length ? 1 : 0, 0, 0] });
+    if (seg.sound_notes) notes.push({ text: `SONIDO: ${seg.sound_notes.substring(0, 60)}`, color: '#DC2626', bold: true, fontSize: 7 });
+    if (seg.projection_notes) notes.push({ text: `PROYECCIÓN: ${seg.projection_notes.substring(0, 50)}`, color: '#7C3AED', bold: true, fontSize: 7, margin: [0, notes.length ? 0.5 : 0, 0, 0] });
+    if (seg.ushers_notes) notes.push({ text: `UJIERES: ${seg.ushers_notes.substring(0, 50)}`, color: '#16A34A', bold: true, fontSize: 7, margin: [0, notes.length ? 0.5 : 0, 0, 0] });
+    if (seg.stage_decor_notes) notes.push({ text: `STAGE: ${seg.stage_decor_notes.substring(0, 50)}`, color: '#7C3AED', bold: true, fontSize: 7, margin: [0, notes.length ? 0.5 : 0, 0, 0] });
+
+    const actionNotesStack = [];
+    if (actionsNotes.length > 0) actionNotesStack.push(...actionsNotes);
+    if (notes.length > 0) {
+      if (actionNotesStack.length > 0) actionNotesStack.push({ text: '', margin: [0, 0.5, 0, 0] });
+      actionNotesStack.push(...notes);
     }
 
     body.push([
       { stack: left, margin: [0, 1, 0, 1] }, 
       { stack: details.length ? details : [{ text: '—', color: '#9CA3AF' }], margin: [0, 1, 0, 1] }, 
-      { stack: notes.length ? notes : [{ text: '—', color: '#9CA3AF' }], margin: [0, 1, 0, 1] }
+      { stack: actionNotesStack.length ? actionNotesStack : [{ text: '—', color: '#9CA3AF' }], margin: [0, 1, 0, 1] }
     ]);
   });
 
