@@ -5,9 +5,14 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 export default function SegmentReportRow({
   segment,
+  getSegmentActions,
+  isPrepAction,
   t,
   showOnlyTeamNotes = false,
+  departmentColors,
 }) {
+  const durantActions = getSegmentActions ? getSegmentActions(segment).filter(a => !isPrepAction(a)) : [];
+
   // If showOnlyTeamNotes, render only team notes column
   if (showOnlyTeamNotes) {
     return (
@@ -57,119 +62,150 @@ export default function SegmentReportRow({
     );
   }
 
-  // Render details column (default)
+  // Render details column with dual-column layout (compressed)
   return (
-    <div className="text-[10px] space-y-0.5">
-      <div className="text-gray-900 font-bold uppercase">
-        {segment.title}
-      </div>
-      
-      {segment.segment_type && (
-        <Badge variant="outline" className="text-[9px] px-0.5 py-0 h-fit">
-          {segment.segment_type}
-        </Badge>
-      )}
-
-      {segment.presenter && (
-        <div className="text-blue-600 font-semibold text-[10px]">
-          {segment.presenter}
+    <div className={durantActions.length > 0 ? "grid grid-cols-2 gap-1" : ""}>
+      <div className={durantActions.length > 0 ? "space-y-0.5" : "space-y-0.5"}>
+        <div className="text-gray-900 font-bold uppercase text-[10px]">
+          {segment.title}
         </div>
-      )}
+        
+        {segment.segment_type && (
+          <Badge variant="outline" className="text-[9px] px-0.5 py-0 h-fit w-fit">
+            {segment.segment_type}
+          </Badge>
+        )}
 
-      {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
-        <div className="text-[9px] bg-green-50 px-0.5 py-0.5 rounded border border-green-200">
-          <span className="text-green-700 font-bold">CANCIONES:</span>
-          {[...Array(segment.number_of_songs)].map((_, idx) => {
-            const songNum = idx + 1;
-            const title = segment[`song_${songNum}_title`];
-            const lead = segment[`song_${songNum}_lead`];
-            if (!title) return null;
-            return (
-              <div key={songNum} className="text-gray-700 leading-tight">
-                {songNum}. {title} {lead && `(${lead})`}
+        {segment.presenter && (
+          <div className="text-blue-600 font-semibold text-[10px]">
+            {segment.presenter}
+          </div>
+        )}
+
+        {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
+          <div className="text-[9px] bg-green-50 px-0.5 py-0.5 rounded border border-green-200">
+            <span className="text-green-700 font-bold">CANCIONES:</span>
+            {[...Array(segment.number_of_songs)].map((_, idx) => {
+              const songNum = idx + 1;
+              const title = segment[`song_${songNum}_title`];
+              const lead = segment[`song_${songNum}_lead`];
+              if (!title) return null;
+              return (
+                <div key={songNum} className="text-gray-700 leading-tight">
+                  {songNum}. {title} {lead && `(${lead})`}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {segment.segment_type === "Plenaria" && segment.message_title && (
+          <div className="text-[9px] bg-blue-50 px-0.5 py-0.5 rounded border border-blue-200">
+            <span className="text-blue-700 font-bold">MENSAJE:</span>
+            <span className="text-gray-700 ml-0.5">{segment.message_title}</span>
+          </div>
+        )}
+
+        {segment.has_video && (
+          <div className="text-[9px] bg-blue-50 px-0.5 py-0.5 rounded border border-blue-200">
+            <span className="text-blue-700 font-bold">VIDEO:</span>
+            <span className="text-gray-700 ml-0.5">{segment.video_name}</span>
+            {segment.video_location && <span className="text-gray-600 ml-0.5">({segment.video_location})</span>}
+            {typeof segment.video_length_sec === 'number' && (
+              <span className="text-gray-600 ml-0.5">- {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}</span>
+            )}
+            {segment.video_owner && <span className="text-gray-600 ml-0.5">• {segment.video_owner}</span>}
+          </div>
+        )}
+
+        {segment.segment_type === "Panel" && (segment.panel_moderators || segment.panel_panelists) && (
+          <div className="text-[9px] bg-amber-50 px-0.5 py-0.5 rounded border border-amber-200">
+            {segment.panel_moderators && (
+              <div>
+                <span className="text-amber-700 font-bold">MOD:</span>
+                <span className="text-gray-700 ml-0.5"> {segment.panel_moderators}</span>
               </div>
-            );
-          })}
-        </div>
-      )}
+            )}
+            {segment.panel_panelists && (
+              <div>
+                <span className="text-amber-700 font-bold">PAN:</span>
+                <span className="text-gray-700 ml-0.5"> {segment.panel_panelists}</span>
+              </div>
+            )}
+          </div>
+        )}
 
-      {segment.segment_type === "Plenaria" && segment.message_title && (
-        <div className="text-[9px] bg-blue-50 px-0.5 py-0.5 rounded border border-blue-200">
-          <span className="text-blue-700 font-bold">MENSAJE:</span>
-          <span className="text-gray-700 ml-0.5">{segment.message_title}</span>
-        </div>
-      )}
+        {segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0 && (
+          <div className="text-[9px] bg-pink-50 px-0.5 py-0.5 rounded border border-pink-200 leading-tight">
+            <span className="text-pink-700 font-bold">ARTES:</span>
+            <span className="text-gray-700 ml-0.5">{segment.art_types.map(t => t === "DANCE" ? "Danza" : t === "DRAMA" ? "Drama" : t === "VIDEO" ? "Video" : "Otro").join(", ")}</span>
 
-      {segment.has_video && (
-        <div className="text-[9px] bg-blue-50 px-0.5 py-0.5 rounded border border-blue-200">
-          <span className="text-blue-700 font-bold">VIDEO:</span>
-          <span className="text-gray-700 ml-0.5">{segment.video_name}</span>
-          {segment.video_location && <span className="text-gray-600 ml-0.5">({segment.video_location})</span>}
-          {typeof segment.video_length_sec === 'number' && (
-            <span className="text-gray-600 ml-0.5">- {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}</span>
-          )}
-          {segment.video_owner && <span className="text-gray-600 ml-0.5">• {segment.video_owner}</span>}
-        </div>
-      )}
+            {segment.art_types.includes("DRAMA") && (
+              <div className="mt-0.5 pl-1 border-l border-pink-300">
+                {segment.drama_handheld_mics > 0 && <span className="inline">{t('arts.mics.handheld')}: {segment.drama_handheld_mics} • </span>}
+                {segment.drama_headset_mics > 0 && <span className="inline">{t('arts.mics.headset')}: {segment.drama_headset_mics} • </span>}
+                {segment.drama_start_cue && <span className="inline">{t('arts.cues.start')}: {segment.drama_start_cue} • </span>}
+                {segment.drama_end_cue && <span className="inline">{t('arts.cues.end')}: {segment.drama_end_cue}</span>}
+                {segment.drama_has_song && segment.drama_song_title && (
+                  <div>{t('arts.song')}: {segment.drama_song_title}</div>
+                )}
+                {segment.microphone_assignments && (
+                  <div className="text-gray-700">Mics: {segment.microphone_assignments}</div>
+                )}
+              </div>
+            )}
 
-      {segment.segment_type === "Panel" && (segment.panel_moderators || segment.panel_panelists) && (
-        <div className="text-[9px] bg-amber-50 px-0.5 py-0.5 rounded border border-amber-200">
-          {segment.panel_moderators && (
-            <div>
-              <span className="text-amber-700 font-bold">MOD:</span>
-              <span className="text-gray-700 ml-0.5"> {segment.panel_moderators}</span>
-            </div>
-          )}
-          {segment.panel_panelists && (
-            <div>
-              <span className="text-amber-700 font-bold">PAN:</span>
-              <span className="text-gray-700 ml-0.5"> {segment.panel_panelists}</span>
-            </div>
-          )}
-        </div>
-      )}
+            {segment.art_types.includes("DANCE") && (
+              <div className="mt-0.5 pl-1 border-l border-pink-300">
+                {segment.dance_has_song && segment.dance_song_title && (
+                  <span className="inline">{t('arts.music')}: {segment.dance_song_title} • </span>
+                )}
+                {segment.dance_handheld_mics > 0 && <span className="inline">{t('arts.mics.handheld')}: {segment.dance_handheld_mics} • </span>}
+                {segment.dance_headset_mics > 0 && <span className="inline">{t('arts.mics.headset')}: {segment.dance_headset_mics}</span>}
+              </div>
+            )}
 
-      {segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0 && (
-        <div className="text-[9px] bg-pink-50 px-0.5 py-0.5 rounded border border-pink-200 leading-tight">
-          <span className="text-pink-700 font-bold">ARTES:</span>
-          <span className="text-gray-700 ml-0.5">{segment.art_types.map(t => t === "DANCE" ? "Danza" : t === "DRAMA" ? "Drama" : t === "VIDEO" ? "Video" : "Otro").join(", ")}</span>
+            {segment.art_types.includes("OTHER") && segment.art_other_description && (
+              <div className="mt-0.5 text-gray-600">
+                {segment.art_other_description}
+              </div>
+            )}
+          </div>
+        )}
 
-          {segment.art_types.includes("DRAMA") && (
-            <div className="mt-0.5 pl-1 border-l border-pink-300">
-              {segment.drama_handheld_mics > 0 && <span className="inline">{t('arts.mics.handheld')}: {segment.drama_handheld_mics} • </span>}
-              {segment.drama_headset_mics > 0 && <span className="inline">{t('arts.mics.headset')}: {segment.drama_headset_mics} • </span>}
-              {segment.drama_start_cue && <span className="inline">{t('arts.cues.start')}: {segment.drama_start_cue} • </span>}
-              {segment.drama_end_cue && <span className="inline">{t('arts.cues.end')}: {segment.drama_end_cue}</span>}
-              {segment.drama_has_song && segment.drama_song_title && (
-                <div>{t('arts.song')}: {segment.drama_song_title}</div>
-              )}
-              {segment.microphone_assignments && (
-                <div className="text-gray-700">Mics: {segment.microphone_assignments}</div>
-              )}
-            </div>
-          )}
+        {segment.description_details && (
+          <div className="text-gray-600 text-[9px]">
+            {segment.description_details}
+          </div>
+        )}
+      </div>
 
-          {segment.art_types.includes("DANCE") && (
-            <div className="mt-0.5 pl-1 border-l border-pink-300">
-              {segment.dance_has_song && segment.dance_song_title && (
-                <span className="inline">{t('arts.music')}: {segment.dance_song_title} • </span>
-              )}
-              {segment.dance_handheld_mics > 0 && <span className="inline">{t('arts.mics.handheld')}: {segment.dance_handheld_mics} • </span>}
-              {segment.dance_headset_mics > 0 && <span className="inline">{t('arts.mics.headset')}: {segment.dance_headset_mics}</span>}
-            </div>
-          )}
-
-          {segment.art_types.includes("OTHER") && segment.art_other_description && (
-            <div className="mt-0.5 text-gray-600">
-              {segment.art_other_description}
-            </div>
-          )}
-        </div>
-      )}
-
-      {segment.description_details && (
-        <div className="text-gray-600 text-[9px]">
-          {segment.description_details}
+      {/* During Actions Column - right side of details section */}
+      {durantActions.length > 0 && (
+        <div className="border-l border-gray-200 pl-1">
+          <div className="text-[9px] space-y-0.5">
+            <div className="font-bold uppercase text-blue-700 text-[8px]">▶ DURANTE</div>
+            {durantActions.map((action, actionIdx) => (
+              <div
+                key={actionIdx}
+                className={`p-0.5 rounded border text-[8px] leading-tight ${departmentColors[action.department] || departmentColors.Other}`}
+              >
+                <div className="font-semibold">
+                  [{action.department}] {action.label}
+                  {action.is_required && <span className="ml-0.5 text-red-600">*</span>}
+                </div>
+                {action.timing && action.offset_min !== undefined && (
+                  <div className="italic text-[8px]">
+                    {action.timing === "before_start" && `${action.offset_min}m antes`}
+                    {action.timing === "after_start" && `${action.offset_min}m después`}
+                    {action.timing === "before_end" && `${action.offset_min}m antes fin`}
+                    {action.timing === "absolute" && action.absolute_time}
+                  </div>
+                )}
+                {action.notes && <div className="text-[8px]">{action.notes}</div>}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
