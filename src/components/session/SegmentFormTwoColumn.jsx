@@ -1367,6 +1367,15 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                         required
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Llegada de equipos (min antes)</Label>
+                      <Input 
+                        type="number"
+                        value={formData.stage_call_offset_min}
+                        onChange={(e) => setFormData({...formData, stage_call_offset_min: parseInt(e.target.value) || 0})}
+                        className="h-9"
+                      />
+                    </div>
                   </div>
 
                   {times.end_time && (
