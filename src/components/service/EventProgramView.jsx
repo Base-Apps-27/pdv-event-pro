@@ -299,6 +299,30 @@ export default function EventProgramView({
                           <span><strong>💡 Tech:</strong> {normalizeName(session.tech_team)}</span>
                         </>
                       )}
+                      {session.admin_team && (
+                        <>
+                          <span className="text-gray-400">|</span>
+                          <span><strong>ADMIN:</strong> {normalizeName(session.admin_team)}</span>
+                        </>
+                      )}
+                      {session.translation_team && (
+                        <>
+                          <span className="text-gray-400">|</span>
+                          <span><strong>TRAD:</strong> {normalizeName(session.translation_team)}</span>
+                        </>
+                      )}
+                      {session.photography_team && (
+                        <>
+                          <span className="text-gray-400">|</span>
+                          <span><strong>FOTO:</strong> {normalizeName(session.photography_team)}</span>
+                        </>
+                      )}
+                      {session.worship_leader && (
+                        <>
+                          <span className="text-gray-400">|</span>
+                          <span><strong>ALABANZA:</strong> {normalizeName(session.worship_leader)}</span>
+                        </>
+                      )}
                     </div>
                   )}
 
