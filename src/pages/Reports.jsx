@@ -1438,6 +1438,50 @@ export default function Reports() {
                   <List className="w-4 h-4 mr-2" />
                   {t('reports.printAll')}
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={async () => {
+                  if (!selectedEventId) return;
+                  const typeMap = {
+                    detailed: 'detailed',
+                    projection: 'projection',
+                    sound: 'sound',
+                    ushers: 'ushers',
+                    hospitality: 'hospitality',
+                    general: 'general',
+                  };
+                  const rt = typeMap[activeReport] || 'detailed';
+                  const { data } = await base44.functions.invoke('generateEventReportsPdf', { eventId: selectedEventId, reportType: rt });
+                  const blob = new Blob([data], { type: 'application/pdf' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${rt}.pdf`;
+                  document.body.appendChild(a);
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  a.remove();
+                }}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Exportar vista actual (PDF)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={async () => {
+                  if (!selectedEventId) return;
+                  const types = ['detailed','general','projection','sound','ushers','hospitality'];
+                  for (const rt of types) {
+                    const { data } = await base44.functions.invoke('generateEventReportsPdf', { eventId: selectedEventId, reportType: rt });
+                    const blob = new Blob([data], { type: 'application/pdf' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${rt}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    a.remove();
+                  }
+                }}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Exportar todo (PDFs separados)
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
