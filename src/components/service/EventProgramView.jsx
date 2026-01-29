@@ -276,7 +276,7 @@ export default function EventProgramView({
                     )}
                   </div>
                   {/* Team Info - Compact */}
-                  {(session.coordinators || session.ushers_team || session.sound_team || session.tech_team) && (
+                  {(session.coordinators || session.ushers_team || session.sound_team || session.tech_team || session.admin_team || session.translation_team || session.photography_team || session.worship_leader) && (
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
                       {session.coordinators && (
                         <span><strong>👤 Coord:</strong> {normalizeName(session.coordinators)}</span>
