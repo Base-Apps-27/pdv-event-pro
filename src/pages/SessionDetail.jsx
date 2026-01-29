@@ -56,11 +56,7 @@ export default function SessionDetail() {
     enabled: !!sessionId,
   });
 
-  const { data: hospitalityTasks = [] } = useQuery({
-    queryKey: ['hospitalityTasks', sessionId],
-    queryFn: () => base44.entities.HospitalityTask.filter({ session_id: sessionId }, 'order'),
-    enabled: !!sessionId,
-  });
+
 
   const recalculateTimesMutation = useMutation({
     mutationFn: async () => {
@@ -260,8 +256,6 @@ export default function SessionDetail() {
          sessionId={sessionId}
          isOpen={showHospitalityModal}
          onClose={() => setShowHospitalityModal(false)}
-         hospitalityTasks={hospitalityTasks}
-         queryClient={queryClient}
        />
       </div>
       );

@@ -14,9 +14,8 @@ const HOSPITALITY_CATEGORIES = [
   "Breakfast", "Lunch", "Dinner", "Snacks", "Setup", "Cleanup", "Other"
 ];
 
-export default function HospitalityTasksModal({ sessionId, isOpen, onClose, hospitalityTasks = [], queryClient: externalQueryClient }) {
-  const localQueryClient = useQueryClient();
-  const queryClient = externalQueryClient || localQueryClient;
+export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
+  const queryClient = useQueryClient();
   const [editingTask, setEditingTask] = useState(null);
   const [taskForm, setTaskForm] = useState({
     category: "Other",
@@ -26,6 +25,13 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose, hosp
     notes: "",
   });
   const [fieldOrigins, setFieldOrigins] = useState({});
+
+  // Fetch hospitality tasks for this session
+  const { data: hospitalityTasks = [], isLoading } = useQuery({
+    queryKey: ['hospitalityTasks', sessionId],
+    queryFn: () => base44.entities.HospitalityTask.filter({ session_id: sessionId }, 'order'),
+    enabled: isOpen && !!sessionId,
+  });
 
   const updateField = (field, value) => {
     setTaskForm(prev => ({ ...prev, [field]: value }));
@@ -157,8 +163,10 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose, hosp
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
           <div className="space-y-3">
-            <h3 className="font-bold text-md">Tareas Existentes</h3>
-            {hospitalityTasks.length === 0 ? (
+            <h3 className="font-bold text-md">Tareas Existentes ({hospitalityTasks.length})</h3>
+            {isLoading ? (
+              <p className="text-sm text-gray-500">Cargando tareas...</p>
+            ) : hospitalityTasks.length === 0 ? (
               <p className="text-sm text-gray-500">No hay tareas de hospitalidad para esta sesión.</p>
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
