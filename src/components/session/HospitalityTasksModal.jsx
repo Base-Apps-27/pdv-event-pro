@@ -197,34 +197,60 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
           </DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-          <div className="space-y-3">
-            <h3 className="font-bold text-md">Tareas Existentes ({hospitalityTasks.length})</h3>
+          <div className="flex flex-col h-full">
+            <h3 className="font-bold text-md mb-2">Tareas Existentes ({hospitalityTasks.length})</h3>
+            <p className="text-xs text-gray-500 mb-2">Arrastra para reordenar</p>
             {isLoading ? (
               <p className="text-sm text-gray-500">Cargando tareas...</p>
             ) : hospitalityTasks.length === 0 ? (
               <p className="text-sm text-gray-500">No hay tareas de hospitalidad para esta sesión.</p>
             ) : (
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                {hospitalityTasks.map((task) => (
-                  <div key={task.id} className="p-3 border rounded-md shadow-sm bg-gray-50">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">{task.category}</span>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => handleEditTask(task)} className="h-7 w-7 p-0">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => deleteTaskMutation.mutate(task.id)} className="h-7 w-7 p-0 text-red-500">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="hospitalityTasks">
+                  {(provided) => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="space-y-2 flex-1 overflow-y-auto pr-2"
+                      style={{ maxHeight: '400px' }}
+                    >
+                      {hospitalityTasks.map((task, index) => (
+                        <Draggable key={task.id} draggableId={task.id} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className={`p-3 border rounded-md shadow-sm ${snapshot.isDragging ? 'bg-blue-50 border-blue-300' : 'bg-gray-50'}`}
+                            >
+                              <div className="flex justify-between items-center mb-1">
+                                <div className="flex items-center gap-2">
+                                  <div {...provided.dragHandleProps} className="cursor-grab text-gray-400 hover:text-gray-600">
+                                    <GripVertical className="w-4 h-4" />
+                                  </div>
+                                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">{task.category}</span>
+                                </div>
+                                <div className="flex gap-1">
+                                  <Button variant="ghost" size="sm" onClick={() => handleEditTask(task)} className="h-7 w-7 p-0">
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" onClick={() => deleteTaskMutation.mutate(task.id)} className="h-7 w-7 p-0 text-red-500">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <p className="font-medium text-sm text-gray-800">{task.description}</p>
+                              {task.time_hint && <p className="text-xs text-gray-600">Hora: {task.time_hint}</p>}
+                              {task.location_notes && <p className="text-xs text-gray-600">Ubicación: {task.location_notes}</p>}
+                              {task.notes && <p className="text-xs text-gray-600">Notas: {task.notes}</p>}
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
                     </div>
-                    <p className="font-medium text-sm text-gray-800">{task.description}</p>
-                    {task.time_hint && <p className="text-xs text-gray-600">Hora: {task.time_hint}</p>}
-                    {task.location_notes && <p className="text-xs text-gray-600">Ubicación: {task.location_notes}</p>}
-                    {task.notes && <p className="text-xs text-gray-600">Notas: {task.notes}</p>}
-                  </div>
-                ))}
-              </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
             )}
           </div>
 
