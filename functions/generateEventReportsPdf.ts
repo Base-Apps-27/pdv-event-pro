@@ -19,38 +19,71 @@ async function fetchFont(url) {
 
 async function ensureFonts() {
   if (fontCache.ready && fontCache.normal && fontCache.bold && fontCache.italics && fontCache.bolditalics) return fontCache;
-  // Inter static TTFs from rsms/inter (public repo). If italics missing, fall back to normal/bold.
-  // Using explicit commit paths minimizes 404 drift risk.
-  const base = 'https://raw.githubusercontent.com/rsms/inter/3.19/';
-  const fonts = {
-    normal: `${base}packages/inter/static/Inter-Regular.ttf`,
-    bold: `${base}packages/inter/static/Inter-Bold.ttf`,
-    italics: `${base}packages/inter/static/Inter-Italic.ttf`,
-    bolditalics: `${base}packages/inter/static/Inter-BoldItalic.ttf`,
+
+  // Prefer Inter; robust CDN fallbacks. If all fail, fall back to Roboto (Google Fonts repo) to avoid 500s.
+  const interSources = {
+    normal: [
+      'https://cdn.jsdelivr.net/gh/rsms/inter@v3.19/packages/inter/static/Inter-Regular.ttf',
+      'https://github.com/rsms/inter/raw/v3.19/packages/inter/static/Inter-Regular.ttf',
+    ],
+    bold: [
+      'https://cdn.jsdelivr.net/gh/rsms/inter@v3.19/packages/inter/static/Inter-Bold.ttf',
+      'https://github.com/rsms/inter/raw/v3.19/packages/inter/static/Inter-Bold.ttf',
+    ],
+    italics: [
+      'https://cdn.jsdelivr.net/gh/rsms/inter@v3.19/packages/inter/static/Inter-Italic.ttf',
+      'https://github.com/rsms/inter/raw/v3.19/packages/inter/static/Inter-Italic.ttf',
+    ],
+    bolditalics: [
+      'https://cdn.jsdelivr.net/gh/rsms/inter@v3.19/packages/inter/static/Inter-BoldItalic.ttf',
+      'https://github.com/rsms/inter/raw/v3.19/packages/inter/static/Inter-BoldItalic.ttf',
+    ],
   };
-  try {
-    const [n, b, i, bi] = await Promise.all([
-      fetchFont(fonts.normal),
-      fetchFont(fonts.bold),
-      fetchFont(fonts.italics).catch(() => null),
-      fetchFont(fonts.bolditalics).catch(() => null),
-    ]);
+
+  const robotoFallback = {
+    normal: 'https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Regular.ttf',
+    bold: 'https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf',
+    italics: 'https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Italic.ttf',
+    bolditalics: 'https://github.com/google/fonts/raw/main/apache/roboto/Roboto-BoldItalic.ttf',
+  };
+
+  async function tryFetchOne(list) {
+    for (const url of list) {
+      try { return await fetchFont(url); } catch (_) { /* try next */ }
+    }
+    return null;
+  }
+
+  // Try Inter first (with per-face fallbacks)
+  const [n, b, i, bi] = await Promise.all([
+    tryFetchOne(interSources.normal),
+    tryFetchOne(interSources.bold),
+    tryFetchOne(interSources.italics),
+    tryFetchOne(interSources.bolditalics),
+  ]);
+
+  if (n && b) {
     fontCache.normal = n;
     fontCache.bold = b;
-    fontCache.italics = i || n; // fallback to normal
-    fontCache.bolditalics = bi || b; // fallback to bold
+    fontCache.italics = i || n;
+    fontCache.bolditalics = bi || b;
     fontCache.ready = true;
-  } catch (e) {
-    // Last-resort: try only Regular as all faces
-    if (!fontCache.normal) {
-      const n = await fetchFont(fonts.normal);
-      fontCache.normal = n;
-      fontCache.bold = n;
-      fontCache.italics = n;
-      fontCache.bolditalics = n;
-      fontCache.ready = true;
-    }
+    return fontCache;
   }
+
+  // Inter failed — fall back to Roboto to ensure PDF generation always works
+  const [rn, rb, ri, rbi] = await Promise.all([
+    fetchFont(robotoFallback.normal),
+    fetchFont(robotoFallback.bold),
+    fetchFont(robotoFallback.italics).catch(() => null),
+    fetchFont(robotoFallback.bolditalics).catch(() => null),
+  ]);
+
+  fontCache.normal = rn;
+  fontCache.bold = rb || rn;
+  fontCache.italics = ri || rn;
+  fontCache.bolditalics = rbi || rb || rn;
+  fontCache.ready = true;
   return fontCache;
 }
 
