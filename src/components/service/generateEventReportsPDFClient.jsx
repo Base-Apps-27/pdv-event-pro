@@ -1,207 +1,139 @@
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { pdfTheme, getSegmentColor, getLabelStyle, toESTTimeStr } from './pdfThemeSystem';
 
 if (pdfMake && !pdfMake.vfs && pdfFonts && pdfFonts.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
 
-// Color palette by segment type
-const SEGMENT_COLORS = {
-  alabanza: { hex: '#16A34A', bg: '#F0FDF4', border: '#86EFAC' },
-  bienvenida: { hex: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
-  ofrenda: { hex: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
-  plenaria: { hex: '#1E40AF', bg: '#EFF6FF', border: '#BFDBFE' },
-  artes: { hex: '#BE185D', bg: '#FDF2F8', border: '#F0ABFC' },
-  panel: { hex: '#B45309', bg: '#FFFBEB', border: '#FCD34D' },
-  video: { hex: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
-  dinamica: { hex: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
-  cierre: { hex: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB' },
-  receso: { hex: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
-  mc: { hex: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
-  almuerzo: { hex: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB' },
-  breakout: { hex: '#8B5CF6', bg: '#F5F3FF', border: '#DDD6FE' },
-};
+// ============================================================================
+// CELL BUILDERS — Layout Intent System
+// ============================================================================
 
-function toESTTimeStr(hhmm) {
-  if (!hhmm || typeof hhmm !== 'string') return '—';
-  const [h, m] = hhmm.split(':').map(Number);
-  if (Number.isNaN(h) || Number.isNaN(m)) return '—';
-  const period = h >= 12 ? 'PM' : 'AM';
-  const h12 = (h % 12) || 12;
-  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+function buildTimeCell(seg) {
+  const color = getSegmentColor(seg.segment_type);
+  return {
+    stack: [
+      {
+        text: seg.start_time ? toESTTimeStr(seg.start_time) : '—',
+        bold: true,
+        color: pdfTheme.text.primary,
+        fontSize: pdfTheme.fontSize.lg,
+      },
+      seg.end_time
+        ? {
+            text: toESTTimeStr(seg.end_time),
+            color: pdfTheme.text.muted,
+            fontSize: pdfTheme.fontSize.base,
+            margin: [0, 1, 0, 0],
+          }
+        : null,
+      seg.duration_min
+        ? {
+            text: `(${seg.duration_min}m)`,
+            color: pdfTheme.text.muted,
+            fontSize: pdfTheme.fontSize.sm,
+            margin: [0, 1, 0, 0],
+          }
+        : null,
+    ].filter(Boolean),
+    verticalAlign: 'top',
+    fillColor: pdfTheme.fills.timeCell,
+    borderLeft: true,
+    borderLeftColor: color.hex,
+    borderLeftWidth: 3,
+  };
 }
 
-function getSegmentColor(segmentType) {
-  const type = (segmentType || '').toLowerCase().replace(/[áéíóú]/g, a => ({ á: 'a', é: 'e', í: 'i', ó: 'o', ú: 'u' }[a]));
-  return SEGMENT_COLORS[type] || { hex: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB' };
-}
-
-function buildDetailesColumn(seg) {
-  // Right column: Prep, Durante, Team notes (tight stacked)
+function buildDetailsLeftCell(seg) {
   const stack = [];
 
-  // Prep actions
-  const prepActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : [])
-    .filter(a => a.timing === 'before_start' && a.department !== 'Hospitality');
-  
-  if (prepActions.length > 0) {
-    stack.push({
-      text: '⚠ PREP',
-      fontSize: 7,
-      bold: true,
-      color: '#92400E',
-      margin: [0, 0, 0, 1]
-    });
-    prepActions.forEach(act => {
-      const label = (act.label || '').replace(/^\s*\[[^\]]+\]\s*/, '').substring(0, 45);
-      stack.push({
-        text: [
-          { text: label, color: '#374151', fontSize: 6.5 },
-          act.offset_min !== undefined ? { text: ` (${act.offset_min}m)`, color: '#9CA3AF', fontSize: 6 } : ''
-        ],
-        margin: [0, 0, 0, 0.5]
-      });
-    });
-  }
-
-  // Durante actions
-  const duringActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : [])
-    .filter(a => a.timing !== 'before_start' && a.department !== 'Hospitality');
-  
-  if (duringActions.length > 0) {
-    stack.push({
-      text: '▶ DURANTE',
-      fontSize: 7,
-      bold: true,
-      color: '#1E40AF',
-      margin: [0, 1, 0, 1]
-    });
-    duringActions.forEach(act => {
-      const label = (act.label || '').replace(/^\s*\[[^\]]+\]\s*/, '').substring(0, 45);
-      stack.push({
-        text: label,
-        color: '#374151',
-        fontSize: 6.5,
-        margin: [0, 0, 0, 0.5]
-      });
-    });
-  }
-
-  // Team notes (compressed)
-  const notes = [
-    { label: 'SONIDO:', val: seg.sound_notes, color: '#991B1B' },
-    { label: 'PROY:', val: seg.projection_notes, color: '#5B21B6' },
-    { label: 'UJIER:', val: seg.ushers_notes, color: '#166534' },
-    { label: 'STAGE:', val: seg.stage_decor_notes, color: '#5B21B6' },
-    { label: 'TRAD:', val: seg.translation_notes, color: '#5B21B6' }
-  ].filter(n => n.val);
-
-  notes.forEach(n => {
-    const text = n.val.substring(0, 35);
-    stack.push({
-      text: [
-        { text: `${n.label} `, bold: true, color: n.color, fontSize: 6 },
-        { text, color: '#4B5563', fontSize: 6 }
-      ],
-      margin: [0, 0.5, 0, 0.5]
-    });
-  });
-
-  return stack.length ? stack : [{ text: '—', fontSize: 6, color: '#D1D5DB' }];
-}
-
-function buildDetailsColumn(seg) {
-  // Middle column: Title, type, presenter, details (NO nested fillColor—row bg handles it)
-  const stack = [];
-
-  // Title + Type tag + Duration
+  // Title + Type badge
   const titleParts = [
-    { text: seg.title ? seg.title.toUpperCase() : '—', bold: true, color: '#111827', fontSize: 8.5 }
+    {
+      text: seg.title ? seg.title.toUpperCase() : '—',
+      bold: true,
+      color: pdfTheme.text.primary,
+      fontSize: pdfTheme.fontSize.lg,
+    },
   ];
-  
   if (seg.segment_type) {
     const color = getSegmentColor(seg.segment_type);
     titleParts.push({
       text: `  ${seg.segment_type}`,
       color: color.hex,
-      background: '#F3F4F6',
-      fontSize: 6.5,
-      bold: true
+      fontSize: pdfTheme.fontSize.sm,
+      bold: true,
     });
   }
-
-  if (seg.duration_min) {
-    titleParts.push({
-      text: `  (${seg.duration_min}m)`,
-      color: '#6B7280',
-      fontSize: 7
-    });
-  }
-
   stack.push({
     text: titleParts,
-    margin: [0, 0, 0, 1]
+    margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
   });
 
   // Presenter
   if (seg.presenter) {
     stack.push({
       text: [
-        { text: 'MINISTRA: ', bold: true, color: '#2563EB', fontSize: 7 },
-        { text: seg.presenter, color: '#1E40AF', fontSize: 7 }
+        { text: 'MINISTRA: ', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
+        { text: seg.presenter, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
       ],
-      margin: [0, 0, 0, 0.5]
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
-  // Translation badge
+  // Translation
   if (seg.requires_translation) {
-    const transParts = [{ text: '🎙️ TRAD', bold: true, color: '#7C3AED', fontSize: 7 }];
+    const parts = [{ text: '🎙️ TRAD', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm }];
     if (seg.translation_mode === 'RemoteBooth') {
-      transParts.push({ text: ' (R)', color: '#7C3AED', fontSize: 6, italics: true });
+      parts.push({ text: ' (R)', color: '#7C3AED', fontSize: pdfTheme.fontSize.xs, italics: true });
     }
     if (seg.translator_name) {
-      transParts.push({ text: `: ${seg.translator_name.substring(0, 25)}`, color: '#7C3AED', fontSize: 6 });
+      parts.push({
+        text: `: ${seg.translator_name.substring(0, 25)}`,
+        color: '#7C3AED',
+        fontSize: pdfTheme.fontSize.xs,
+      });
     }
     stack.push({
-      text: transParts,
-      margin: [0, 0, 0, 0.5]
+      text: parts,
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
-  // Message title (Plenaria)
+  // Message (Plenaria)
   if (seg.segment_type === 'Plenaria' && seg.message_title) {
     stack.push({
       text: [
-        { text: 'MENSAJE: ', bold: true, color: '#1E40AF', fontSize: 7 },
-        { text: seg.message_title.substring(0, 50), color: '#1E3A8A', fontSize: 7 }
+        { text: 'MENSAJE: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
+        { text: seg.message_title.substring(0, 60), color: '#1E3A8A', fontSize: pdfTheme.fontSize.sm },
       ],
-      margin: [0, 0.5, 0, 0.5]
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
   // Songs (Alabanza)
   if (seg.segment_type === 'Alabanza' && seg.number_of_songs > 0) {
-    const songs = [];
-    songs.push({ text: 'CANCIONES:', bold: true, color: '#166534', fontSize: 6.5, margin: [0, 0, 0, 0.5] });
+    stack.push({
+      text: 'CANCIONES:',
+      bold: true,
+      color: '#166534',
+      fontSize: pdfTheme.fontSize.sm,
+      margin: [0, 0, 0, 0.3],
+    });
     for (let i = 1; i <= seg.number_of_songs; i++) {
       const title = seg[`song_${i}_title`];
       if (title) {
-        songs.push({
+        const lead = seg[`song_${i}_lead`];
+        stack.push({
           text: [
-            { text: `${i}. `, color: '#6B7280', fontSize: 6 },
-            { text: title.substring(0, 40), color: '#0F172A', fontSize: 6.5, bold: true },
-            seg[`song_${i}_lead`] ? { text: ` (${seg[`song_${i}_lead`].substring(0, 15)})`, color: '#6B7280', fontSize: 6, italics: true } : ''
+            { text: `${i}. `, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs },
+            { text: title.substring(0, 40), color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.xs, bold: true },
+            lead ? { text: ` (${lead.substring(0, 15)})`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
           ],
-          margin: [0, 0, 0, 0.3]
+          margin: [0, 0, 0, 0.2],
         });
       }
-    }
-    if (songs.length > 1) {
-      stack.push({
-        stack: songs,
-        margin: [0, 0.5, 0, 0.5]
-      });
     }
   }
 
@@ -209,164 +141,307 @@ function buildDetailsColumn(seg) {
   if (seg.has_video) {
     stack.push({
       text: [
-        { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: 7 },
-        { text: seg.video_name || '', color: '#1E3A8A', fontSize: 6.5 },
-        seg.video_location ? { text: ` (${seg.video_location.substring(0, 20)})`, color: '#6B7280', fontSize: 6 } : ''
+        { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
+        { text: seg.video_name || '', color: '#1E3A8A', fontSize: pdfTheme.fontSize.xs },
       ],
-      margin: [0, 0.5, 0, 0.5]
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
   // Artes
   if (seg.segment_type === 'Artes' && Array.isArray(seg.art_types) && seg.art_types.length) {
-    const arts = [];
-    arts.push({
-      text: `ARTES: ${seg.art_types.map(t => t === 'DANCE' ? 'Danza' : t === 'DRAMA' ? 'Drama' : t === 'VIDEO' ? 'Video' : 'Otro').join(', ')}`,
-      bold: true,
-      color: '#831843',
-      fontSize: 7,
-      margin: [0, 0, 0, 0.5]
+    const artLabels = seg.art_types.map(t => (t === 'DANCE' ? 'Danza' : t === 'DRAMA' ? 'Drama' : t === 'VIDEO' ? 'Video' : 'Otro')).join(', ');
+    stack.push({
+      text: [{ text: 'ARTES: ', bold: true, color: '#831843', fontSize: pdfTheme.fontSize.sm }, { text: artLabels, fontSize: pdfTheme.fontSize.sm }],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
     if (seg.art_types.includes('DRAMA')) {
       const dramaParts = [];
       if (seg.drama_handheld_mics > 0) dramaParts.push(`HH: ${seg.drama_handheld_mics}`);
       if (seg.drama_headset_mics > 0) dramaParts.push(`HS: ${seg.drama_headset_mics}`);
       if (dramaParts.length) {
-        arts.push({ text: dramaParts.join(' • '), color: '#4B5563', fontSize: 6, margin: [0, 0, 0, 0.3] });
+        stack.push({
+          text: dramaParts.join(' • '),
+          color: pdfTheme.text.secondary,
+          fontSize: pdfTheme.fontSize.xs,
+          margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+        });
       }
     }
-    stack.push({
-      stack: arts,
-      margin: [0, 0.5, 0, 0.5]
-    });
   }
 
   // Panel
-  if (seg.segment_type === 'Panel' && (seg.panel_moderators || seg.panel_panelists)) {
-    const panel = [];
+  if (seg.segment_type === 'Panel') {
     if (seg.panel_moderators) {
-      panel.push({
+      stack.push({
         text: [
-          { text: 'MOD: ', bold: true, color: '#B45309', fontSize: 7 },
-          { text: seg.panel_moderators.substring(0, 40), color: '#92400E', fontSize: 6.5 }
-        ]
+          { text: 'MOD: ', bold: true, color: '#B45309', fontSize: pdfTheme.fontSize.sm },
+          { text: seg.panel_moderators.substring(0, 40), color: '#92400E', fontSize: pdfTheme.fontSize.sm },
+        ],
+        margin: [0, 0, 0, 0.3],
       });
     }
     if (seg.panel_panelists) {
-      panel.push({
+      stack.push({
         text: [
-          { text: 'PAN: ', bold: true, color: '#B45309', fontSize: 7 },
-          { text: seg.panel_panelists.substring(0, 40), color: '#92400E', fontSize: 6.5 }
+          { text: 'PAN: ', bold: true, color: '#B45309', fontSize: pdfTheme.fontSize.sm },
+          { text: seg.panel_panelists.substring(0, 40), color: '#92400E', fontSize: pdfTheme.fontSize.sm },
         ],
-        margin: [0, 0.3, 0, 0]
+        margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
       });
     }
+  }
+
+  const color = getSegmentColor(seg.segment_type);
+  return {
+    stack: stack.length ? stack : [{ text: '—', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted }],
+    verticalAlign: 'top',
+    fillColor: color.bg,
+  };
+}
+
+function buildDetailsRightCell(seg) {
+  const stack = [];
+
+  // DURANTE actions ALWAYS go in this center column
+  const duringActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : []).filter(a => a.timing !== 'before_start' && a.department !== 'Hospitality');
+
+  if (duringActions.length > 0) {
     stack.push({
-      stack: panel,
-      margin: [0, 0.5, 0, 0]
+      text: '▶ DURANTE',
+      fontSize: pdfTheme.fontSize.sm,
+      bold: true,
+      color: pdfTheme.labels.durante.text,
+      margin: [0, 0, 0, 0.3],
+    });
+    duringActions.forEach(act => {
+      const label = (act.label || '').replace(/^\s*\[[^\]]+\]\s*/, '').substring(0, 45);
+      stack.push({
+        text: [
+          { text: label, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
+          act.offset_min !== undefined ? { text: ` (${act.offset_min}m)`, color: pdfTheme.text.light, fontSize: pdfTheme.fontSize.xs } : '',
+        ],
+        margin: [0, 0, 0, 0.3],
+      });
     });
   }
 
-  return stack;
+  return {
+    stack: stack.length ? stack : [{ text: '—', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted }],
+    verticalAlign: 'top',
+  };
 }
 
-function buildSessionTable(session, segments) {
-  // Build 3-column table: time | details | detalles
-  const rows = segments
+function buildNotesCell(seg) {
+  const stack = [];
+
+  // PREP actions
+  const prepActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : []).filter(a => a.timing === 'before_start' && a.department !== 'Hospitality');
+
+  if (prepActions.length > 0) {
+    prepActions.forEach(act => {
+      const label = (act.label || '').replace(/^\s*\[[^\]]+\]\s*/, '').substring(0, 40);
+      const offset = act.offset_min !== undefined ? `(${act.offset_min}m antes)` : '';
+      const dept = act.department ? `[${act.department}]` : '';
+
+      stack.push({
+        columns: [
+          {
+            width: 28,
+            stack: [
+              {
+                text: '⚠ PREP',
+                bold: true,
+                fontSize: pdfTheme.fontSize.xs,
+                color: pdfTheme.labels.prep.badgeText,
+                fillColor: pdfTheme.labels.prep.badge,
+                alignment: 'center',
+                padding: [1, 1, 1, 1],
+              },
+            ],
+          },
+          {
+            width: '*',
+            stack: [
+              {
+                text: [
+                  dept ? { text: `${dept} `, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#92400E' } : '',
+                  { text: label, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary },
+                  offset ? { text: ` ${offset}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.light, italics: true } : '',
+                ],
+                margin: [1, 1, 1, 1],
+              },
+            ],
+          },
+        ],
+        margin: [0, 0, 0, 0.5],
+        fillColor: pdfTheme.labels.prep.bg,
+        border: [true, true, true, true],
+        borderColor: [pdfTheme.labels.prep.badge, pdfTheme.labels.prep.badge, pdfTheme.labels.prep.badge, pdfTheme.labels.prep.badge],
+      });
+    });
+  }
+
+  // Team notes: SONIDO, TRAD, UJIER, STAGE, VIDEO
+  const notes = [
+    { label: 'SONIDO', val: seg.sound_notes, style: pdfTheme.labels.sonido },
+    { label: 'TRAD', val: seg.translation_notes, style: pdfTheme.labels.trad },
+    { label: 'VIDEO', val: seg.video_location || seg.video_name, style: pdfTheme.labels.video },
+    { label: 'UJIER', val: seg.ushers_notes, style: pdfTheme.labels.ujier },
+    { label: 'STAGE', val: seg.stage_decor_notes, style: pdfTheme.labels.stage },
+    { label: 'PROY', val: seg.projection_notes, style: pdfTheme.labels.video },
+  ].filter(n => n.val);
+
+  notes.forEach(n => {
+    const text = n.val.substring(0, 35);
+    stack.push({
+      text: [{ text: `${n.label}: `, bold: true, color: n.style.text, fontSize: pdfTheme.fontSize.xs }, { text: text, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs }],
+      margin: [1, 1, 1, 1],
+      fillColor: n.style.bg,
+      border: [true, true, true, true],
+      borderColor: [n.style.badge, n.style.badge, n.style.badge, n.style.badge],
+    });
+  });
+
+  return {
+    stack: stack.length ? stack : [{ text: '—', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted }],
+    verticalAlign: 'top',
+    fillColor: pdfTheme.fills.notesCell,
+  };
+}
+
+// ============================================================================
+// TABLE BUILDER — 4-Column Grid
+// ============================================================================
+
+function buildDayTable(session, segments) {
+  const headerRow = [
+    {
+      text: 'HORA',
+      bold: true,
+      fontSize: pdfTheme.fontSize.base,
+      color: pdfTheme.text.primary,
+      alignment: 'center',
+      fillColor: pdfTheme.fills.header,
+    },
+    {
+      text: 'DETALLES',
+      bold: true,
+      fontSize: pdfTheme.fontSize.base,
+      color: pdfTheme.text.primary,
+      alignment: 'left',
+      colSpan: 2,
+      fillColor: pdfTheme.fills.header,
+    },
+    {}, // Dummy for colSpan
+    {
+      text: 'NOTAS POR EQUIPO',
+      bold: true,
+      fontSize: pdfTheme.fontSize.base,
+      color: pdfTheme.text.primary,
+      alignment: 'left',
+      fillColor: pdfTheme.fills.header,
+    },
+  ];
+
+  const rows = [headerRow];
+
+  segments
     .slice()
     .sort((a, b) => (a.order || 0) - (b.order || 0))
-    .map(seg => {
-      const color = getSegmentColor(seg.segment_type);
-      return [
-        // Column 1: Time
-        {
-          stack: [
-            { text: seg.start_time ? toESTTimeStr(seg.start_time) : '—', bold: true, color: '#111827', fontSize: 8 },
-            seg.end_time ? { text: toESTTimeStr(seg.end_time), color: '#6B7280', fontSize: 7, margin: [0, 0.5, 0, 0] } : null
-          ].filter(Boolean),
-          verticalAlign: 'top',
-          fillColor: '#F9FAFB'
-        },
-        // Column 2: Details (with segment-type background)
-        {
-          stack: buildDetailsColumn(seg),
-          verticalAlign: 'top',
-          fillColor: color.bg
-        },
-        // Column 3: Detalles
-        {
-          stack: buildDetailesColumn(seg),
-          verticalAlign: 'top',
-          fillColor: '#F0F1F3'
-        }
-      ];
+    .forEach(seg => {
+      rows.push([buildTimeCell(seg), buildDetailsLeftCell(seg), buildDetailsRightCell(seg), buildNotesCell(seg)]);
     });
 
   return {
     table: {
-      widths: [40, '*', 160],
+      widths: [50, '*', 120, 170],
       body: rows,
-      border: [true, true, true, true],
-      borderColor: ['#D1D5DB', '#D1D5DB', '#D1D5DB', '#D1D5DB'],
-      borderDashArray: null
+      headerRows: 1,
+      dontBreakRows: true,
     },
-    margin: [0, 0, 0, 0],
     layout: {
-      hLineWidth: (i, node) => 0.5,
+      hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 1 : 0.5),
       vLineWidth: (i, node) => 0.5,
-      hLineColor: '#E5E7EB',
-      vLineColor: '#E5E7EB'
-    }
+      hLineColor: pdfTheme.borders.color,
+      vLineColor: pdfTheme.borders.lightColor,
+    },
+    margin: [0, 0, 0, 4],
   };
 }
 
-function headerBand(event, session) {
-  const dateStr = session?.date ? new Date(session.date).toLocaleDateString('en-US') : '';
+// ============================================================================
+// DAY HEADER
+// ============================================================================
+
+function buildDayHeader(event, session) {
+  const dateStr = session?.date ? new Date(session.date).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-') : '';
   const timeStr = session?.planned_start_time ? toESTTimeStr(session.planned_start_time) : '';
   const locStr = session?.location || '';
-  const meta = [dateStr, timeStr, locStr].filter(x => x).join(' • ');
+  const arrivalStr = session?.default_stage_call_offset_min ? `Llegada: ${session.default_stage_call_offset_min} min antes` : '';
+
+  const meta = [dateStr, timeStr, locStr, arrivalStr].filter(x => x).join(' • ');
 
   return {
     columns: [
-      { 
+      {
         text: [
-          { text: event?.name || '', color: '#1F8A70', bold: true, fontSize: 12 }, 
-          { text: ' — ', color: '#111827' }, 
-          { text: session?.name || '', bold: true, color: '#111827', fontSize: 12 }
-        ]
+          { text: (event?.name || 'EVENT').toUpperCase() + ' — ', color: '#1F8A70', bold: true, fontSize: pdfTheme.fontSize.title },
+          { text: (session?.name || 'SESSION').toUpperCase(), bold: true, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.title },
+        ],
       },
-      { text: meta, alignment: 'right', color: '#6B7280', fontSize: 9 }
+      { text: meta, alignment: 'right', color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.header },
     ],
-    margin: [0, 0, 0, 6]
+    margin: [0, 0, 0, 4],
   };
 }
+
+// ============================================================================
+// PRE-SESSION DETAILS BLOCK
+// ============================================================================
+
+function buildPreSessionDetailsBlock(preSessionDetails) {
+  if (!preSessionDetails) return null;
+
+  const details = [];
+  if (preSessionDetails.registration_desk_open_time) {
+    details.push(`Registro: ${toESTTimeStr(preSessionDetails.registration_desk_open_time)}`);
+  }
+  if (preSessionDetails.library_open_time) {
+    details.push(`Librería: ${toESTTimeStr(preSessionDetails.library_open_time)}`);
+  }
+
+  if (details.length === 0) return null;
+
+  return {
+    text: details.join(' • '),
+    fontSize: pdfTheme.fontSize.header,
+    color: pdfTheme.text.muted,
+    margin: [0, 0, 0, 4],
+  };
+}
+
+// ============================================================================
+// MAIN EXPORT
+// ============================================================================
 
 export async function generateEventReportPDFClient({ event, sessions, segmentsBySession, preSessionDetailsBySession }) {
   const content = [];
 
   sessions.forEach((session, idx) => {
-    // Session header
-    content.push(headerBand(event, session));
+    // Day header
+    content.push(buildDayHeader(event, session));
 
-    // Pre-session details (optional)
+    // Pre-session details
     const psd = preSessionDetailsBySession?.[session.id];
-    if (psd && (psd.registration_desk_open_time || psd.library_open_time || psd.music_profile_id || psd.general_notes)) {
-      const details = [];
-      if (psd.registration_desk_open_time) details.push(`Registro: ${toESTTimeStr(psd.registration_desk_open_time)}`);
-      if (psd.library_open_time) details.push(`Librería: ${toESTTimeStr(psd.library_open_time)}`);
-      if (details.length) {
-        content.push({
-          text: details.join(' • '),
-          fontSize: 8,
-          color: '#6B7280',
-          margin: [0, 0, 0, 4]
-        });
-      }
+    if (psd) {
+      const psdBlock = buildPreSessionDetailsBlock(psd);
+      if (psdBlock) content.push(psdBlock);
     }
 
-    // Main session table
+    // Main table
     const allSegs = (segmentsBySession?.[session.id] || []);
-    content.push(buildSessionTable(session, allSegs));
+    content.push(buildDayTable(session, allSegs));
 
     // Page break after each session (except last)
     if (idx < sessions.length - 1) {
@@ -378,12 +453,25 @@ export async function generateEventReportPDFClient({ event, sessions, segmentsBy
     pageSize: 'LETTER',
     pageOrientation: 'portrait',
     pageMargins: [20, 15, 20, 20],
-    defaultStyle: { fontSize: 9, color: '#111827', font: 'Roboto' },
+    defaultStyle: { fontSize: pdfTheme.fontSize.base, color: pdfTheme.text.primary, font: 'Roboto' },
     content,
     footer: (currentPage, pageCount) => ({
       columns: [
-        { text: new Date().toLocaleString('en-US', { timeZone: 'America/New_York', month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }), color: '#6B7280', fontSize: 8 },
-        { text: `Página ${currentPage} de ${pageCount}`, alignment: 'right', color: '#6B7280', fontSize: 8 },
+        {
+          text: new Date().toLocaleString('en-US', {
+            timeZone: 'America/New_York',
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+          }),
+          color: pdfTheme.text.muted,
+          fontSize: pdfTheme.fontSize.sm,
+        },
+        { text: `Página ${currentPage} de ${pageCount}`, alignment: 'right', color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.sm },
       ],
       margin: [20, 10],
     }),
@@ -392,13 +480,15 @@ export async function generateEventReportPDFClient({ event, sessions, segmentsBy
   const bytes = await new Promise((resolve, reject) => {
     try {
       const pdf = pdfMake.createPdf(docDefinition);
-      pdf.getBase64((b64) => {
+      pdf.getBase64(b64 => {
         try {
           const bin = atob(b64);
           const out = new Uint8Array(bin.length);
           for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
           resolve(out);
-        } catch (e) { reject(e); }
+        } catch (e) {
+          reject(e);
+        }
       });
     } catch (err) {
       reject(err);
