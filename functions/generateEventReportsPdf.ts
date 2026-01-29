@@ -340,8 +340,21 @@ Deno.serve(async (req) => {
     const event = events[0];
     if (!event) return Response.json({ error: 'Event not found' }, { status: 404 });
 
-    const sessionsRaw = await base44.entities.Session.filter({ event_id: eventId });
-    const sessions = sortSessions(sessionsRaw);
+    // Sessions may be linked either directly by event_id OR indirectly via EventDay.event_id
+    const directSessions = await base44.entities.Session.filter({ event_id: eventId });
+
+    const eventDays = await base44.entities.EventDay.filter({ event_id: eventId });
+    let viaDaySessions = [];
+    if (eventDays.length) {
+      const dayIds = eventDays.map(d => d.id);
+      const results = await Promise.all(dayIds.map((did) => base44.entities.Session.filter({ event_day_id: did })));
+      viaDaySessions = results.flat();
+    }
+
+    // Merge + dedupe
+    const sessionsMap = new Map();
+    for (const s of [...directSessions, ...viaDaySessions]) sessionsMap.set(s.id, s);
+    const sessions = sortSessions([...sessionsMap.values()]);
 
     const sessionIds = sessions.map(s => s.id);
 
