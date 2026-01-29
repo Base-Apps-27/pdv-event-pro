@@ -93,6 +93,40 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
     },
   });
 
+  // Reorder mutation: updates order field for all affected tasks
+  const reorderTasksMutation = useMutation({
+    mutationFn: async (reorderedTasks) => {
+      // Update each task's order in parallel
+      await Promise.all(
+        reorderedTasks.map((task, index) =>
+          base44.entities.HospitalityTask.update(task.id, { order: index + 1 })
+        )
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hospitalityTasks', sessionId] });
+    },
+    onError: (error) => {
+      console.error('[HospitalityTasksModal] Reorder error:', error);
+    },
+  });
+
+  // Handle drag end for reordering
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    if (result.source.index === result.destination.index) return;
+
+    const items = Array.from(hospitalityTasks);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    // Optimistic update for immediate UI feedback
+    queryClient.setQueryData(['hospitalityTasks', sessionId], items);
+
+    // Persist to database
+    reorderTasksMutation.mutate(items);
+  };
+
   const handleEditTask = (task) => {
     setEditingTask(task);
     setFieldOrigins(task.field_origins || {});
