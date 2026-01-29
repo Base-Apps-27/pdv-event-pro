@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SegmentList from "../components/session/SegmentList.jsx";
 import SegmentFormTwoColumn from "../components/session/SegmentFormTwoColumn.jsx";
 import PreSessionDetailsForm from "../components/session/PreSessionDetailsForm.jsx";
+import HospitalityTasksModal from "../components/session/HospitalityTasksModal.jsx";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -30,6 +31,7 @@ export default function SessionDetail() {
   const [showForm, setShowForm] = useState(false);
   const [editingSegment, setEditingSegment] = useState(null);
   const [showPreSessionDetailsDialog, setShowPreSessionDetailsDialog] = useState(false);
+  const [showHospitalityModal, setShowHospitalityModal] = useState(false);
 
   const { data: session } = useQuery({
     queryKey: ['session', sessionId],
@@ -51,6 +53,12 @@ export default function SessionDetail() {
   const { data: preSessionDetails = [] } = useQuery({
     queryKey: ['preSessionDetails', sessionId],
     queryFn: () => base44.entities.PreSessionDetails.filter({ session_id: sessionId }),
+    enabled: !!sessionId,
+  });
+
+  const { data: hospitalityTasks = [] } = useQuery({
+    queryKey: ['hospitalityTasks', sessionId],
+    queryFn: () => base44.entities.HospitalityTask.filter({ session_id: sessionId }, 'order'),
     enabled: !!sessionId,
   });
 
@@ -159,10 +167,13 @@ export default function SessionDetail() {
                 </div>
               )}
               {session.hospitality_team && (
-                <div className="bg-yellow-50 px-3 py-2 rounded border border-yellow-200">
+                <button 
+                  onClick={() => setShowHospitalityModal(true)}
+                  className="bg-yellow-50 px-3 py-2 rounded border border-yellow-200 text-left hover:bg-yellow-100 transition-colors w-full"
+                >
                   <span className="font-bold text-yellow-700 block text-xs mb-1">HOSPITALIDAD</span>
                   <span className="text-slate-800">{session.hospitality_team}</span>
-                </div>
+                </button>
               )}
               {session.photography_team && (
                 <div className="bg-slate-50 px-3 py-2 rounded border border-slate-200">
@@ -231,19 +242,27 @@ export default function SessionDetail() {
       </Dialog>
 
       <Dialog open={showPreSessionDetailsDialog} onOpenChange={setShowPreSessionDetailsDialog}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader className="shrink-0 border-b border-gray-100 p-6 pb-4">
-            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">Detalles Pre-Sesión</DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 overflow-y-auto">
-            <PreSessionDetailsForm
-              sessionId={sessionId}
-              preSessionDetails={preSessionDetails.length > 0 ? preSessionDetails[0] : null}
-              onClose={() => setShowPreSessionDetailsDialog(false)}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+         <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
+           <DialogHeader className="shrink-0 border-b border-gray-100 p-6 pb-4">
+             <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">Detalles Pre-Sesión</DialogTitle>
+           </DialogHeader>
+           <div className="flex-1 overflow-y-auto">
+             <PreSessionDetailsForm
+               sessionId={sessionId}
+               preSessionDetails={preSessionDetails.length > 0 ? preSessionDetails[0] : null}
+               onClose={() => setShowPreSessionDetailsDialog(false)}
+             />
+           </div>
+         </DialogContent>
+       </Dialog>
+
+       <HospitalityTasksModal
+         sessionId={sessionId}
+         isOpen={showHospitalityModal}
+         onClose={() => setShowHospitalityModal(false)}
+         hospitalityTasks={hospitalityTasks}
+         queryClient={queryClient}
+       />
+      </div>
+      );
+      }
