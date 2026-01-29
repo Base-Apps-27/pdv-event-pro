@@ -419,7 +419,7 @@ export default function PublicProgramSegment({
                   {hasDance && (
                     <div className="pl-2 border-l-2 border-pink-300 space-y-0.5 mt-1">
                       {getData('dance_has_song') && getData('dance_song_title') && (
-                        <div>Música: {getData('dance_song_title')}</div>
+                        <div>{t('arts.music')}: {getData('dance_song_title')}</div>
                       )}
                       {getData('dance_handheld_mics') > 0 && <div>{t('arts.mics.handheld')}: {getData('dance_handheld_mics')}</div>}
                       {getData('dance_headset_mics') > 0 && <div>{t('arts.mics.headset')}: {getData('dance_headset_mics')}</div>}

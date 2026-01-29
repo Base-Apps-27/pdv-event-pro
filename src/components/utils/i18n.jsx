@@ -150,6 +150,13 @@ const translations = {
     'live.majorBreak': 'Receso mayor',
     'live.slides': 'Slides',
     'live.countdown': 'Cuenta regresiva',
+    // Arts
+    'arts.mics.handheld': 'Mics mano',
+    'arts.mics.headset': 'Headset',
+    'arts.cues.start': 'Inicio',
+    'arts.cues.end': 'Cierre',
+    'arts.song': 'Canción',
+    'arts.music': 'Música',
     // Fields
     'field.title': 'Título',
     'field.start_time': 'Hora de inicio',
@@ -539,6 +546,13 @@ const translations = {
     'live.majorBreak': 'Major Break',
     'live.slides': 'Slides',
     'live.countdown': 'Countdown',
+    // Arts
+    'arts.mics.handheld': 'Handheld mics',
+    'arts.mics.headset': 'Headset',
+    'arts.cues.start': 'Start',
+    'arts.cues.end': 'End',
+    'arts.song': 'Song',
+    'arts.music': 'Music',
 
     // Public Program (essentials)
     'public.headerTitle': 'Program',
