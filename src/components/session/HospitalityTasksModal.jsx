@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Utensils } from "lucide-react";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
+import { toast } from "sonner";
 
 const HOSPITALITY_CATEGORIES = [
   "Breakfast", "Lunch", "Dinner", "Snacks", "Setup", "Cleanup", "Other"
@@ -50,6 +51,7 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
   const createTaskMutation = useMutation({
     mutationFn: (data) => base44.entities.HospitalityTask.create(data),
     onSuccess: () => {
+      toast.success('Tarea creada exitosamente');
       queryClient.invalidateQueries(['hospitalityTasks', sessionId]);
       setTaskForm({
         category: "Other",
@@ -59,12 +61,17 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
         notes: "",
       });
       setEditingTask(null);
+    },
+    onError: (error) => {
+      console.error('[HospitalityTasksModal] Failed to create task:', error);
+      toast.error(`Error al crear tarea: ${error?.message || 'Error desconocido'}`);
     },
   });
 
   const updateTaskMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.HospitalityTask.update(id, data),
     onSuccess: () => {
+      toast.success('Tarea actualizada exitosamente');
       queryClient.invalidateQueries(['hospitalityTasks', sessionId]);
       setTaskForm({
         category: "Other",
@@ -75,12 +82,21 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
       });
       setEditingTask(null);
     },
+    onError: (error) => {
+      console.error('[HospitalityTasksModal] Failed to update task:', error);
+      toast.error(`Error al actualizar tarea: ${error?.message || 'Error desconocido'}`);
+    },
   });
 
   const deleteTaskMutation = useMutation({
     mutationFn: (id) => base44.entities.HospitalityTask.delete(id),
     onSuccess: () => {
+      toast.success('Tarea eliminada');
       queryClient.invalidateQueries(['hospitalityTasks', sessionId]);
+    },
+    onError: (error) => {
+      console.error('[HospitalityTasksModal] Failed to delete task:', error);
+      toast.error(`Error al eliminar tarea: ${error?.message || 'Error desconocido'}`);
     },
   });
 
@@ -125,6 +141,7 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
 
     const dataToSubmit = {
       session_id: sessionId,
+      origin: editingTask ? editingTask.origin || 'manual' : 'manual',
       order: editingTask ? editingTask.order : (hospitalityTasks.length + 1),
       ...taskForm,
       field_origins: fieldOrigins,
