@@ -149,6 +149,8 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
       worship_leader: session?.worship_leader || '',
       session_color: session?.session_color || 'blue',
       is_translated_session: session?.is_translated_session || false,
+      presenter: session?.presenter || '',
+      live_adjustment_enabled: session?.live_adjustment_enabled || false,
     });
     setShowDialog(true);
   };
