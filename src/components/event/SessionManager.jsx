@@ -35,7 +35,9 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
   const [showSegmentForm, setShowSegmentForm] = useState(false);
   const [editingSegment, setEditingSegment] = useState(null);
   const [showPreSessionDetailsDialog, setShowPreSessionDetailsDialog] = useState(false);
-  const [showHospitalityTasksModal, setShowHospitalityTasksModal] = useState(false);
+  // Hospitality modal has its own sessionId state to decouple from segment expansion
+  // This ensures the modal always knows which session it's operating on
+  const [hospitalityModalSessionId, setHospitalityModalSessionId] = useState(null);
   const [formData, setFormData] = useState({});
   const [fieldOrigins, setFieldOrigins] = useState({});
   const queryClient = useQueryClient();
@@ -461,7 +463,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => setShowHospitalityTasksModal(true)}
+                      onClick={() => setHospitalityModalSessionId(session.id)}
                       title="Tareas de Hospitalidad"
                     >
                       <Utensils className="w-4 h-4" />
@@ -549,9 +551,9 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
       </Dialog>
 
       <HospitalityTasksModal 
-        sessionId={expandedSessionId} 
-        isOpen={showHospitalityTasksModal} 
-        onClose={() => setShowHospitalityTasksModal(false)}
+        sessionId={hospitalityModalSessionId} 
+        isOpen={!!hospitalityModalSessionId} 
+        onClose={() => setHospitalityModalSessionId(null)}
       />
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
