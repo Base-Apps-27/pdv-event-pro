@@ -669,7 +669,7 @@ export default function Reports() {
                                 {segment.art_types.includes("DANCE") && (
                                   <div className="mt-0.5 pl-2 border-l-2 border-pink-300">
                                     {segment.dance_has_song && segment.dance_song_title && (
-                                      <div>Música: {segment.dance_song_title}</div>
+                                      <div>{t('arts.music')}: {segment.dance_song_title}</div>
                                     )}
                                     {segment.dance_handheld_mics > 0 && <div>{t('arts.mics.handheld')}: {segment.dance_handheld_mics}</div>}
                                     {segment.dance_headset_mics > 0 && <div>{t('arts.mics.headset')}: {segment.dance_headset_mics}</div>}
