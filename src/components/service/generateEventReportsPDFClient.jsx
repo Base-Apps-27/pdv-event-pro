@@ -661,7 +661,53 @@ function buildPreSessionDetailsBlock(psd) {
 }
 
 // ============================================================================
-// TABLE BUILDER — 4-Column Grid
+// PREP ACTION ROW — Full-width styled row matching HTML
+// ============================================================================
+
+function buildPrepActionRow(act) {
+  const dept = act.department ? `[${act.department}]` : '';
+  const label = act.label || '';
+  const offset = act.offset_min !== undefined ? `(${act.offset_min}m antes)` : '';
+
+  return [
+    {
+      colSpan: 4,
+      fillColor: '#FFFBEB',
+      stack: [{
+        columns: [
+          {
+            width: 55,
+            stack: [{
+              text: '⚠ PREP',
+              bold: true,
+              fontSize: pdfTheme.fontSize.xs,
+              color: '#FFFFFF',
+              background: '#F59E0B',
+              alignment: 'center',
+              margin: [0, 2, 0, 2],
+            }],
+            fillColor: '#F59E0B',
+          },
+          {
+            width: '*',
+            text: [
+              dept ? { text: `${dept} `, bold: true, fontSize: pdfTheme.fontSize.sm, color: '#92400E' } : '',
+              { text: label, fontSize: pdfTheme.fontSize.sm, color: pdfTheme.text.secondary },
+              offset ? { text: `  ${offset}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.light, italics: true } : '',
+            ],
+            margin: [4, 2, 0, 2],
+          },
+        ],
+      }],
+    },
+    {},
+    {},
+    {},
+  ];
+}
+
+// ============================================================================
+// TABLE BUILDER — 4-Column Grid with PREP rows
 // ============================================================================
 
 function buildDayTable(session, segments, allRooms = []) {
