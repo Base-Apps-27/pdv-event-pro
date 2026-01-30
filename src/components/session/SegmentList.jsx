@@ -90,16 +90,52 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
     default: "bg-slate-100 text-slate-700 border-slate-200"
   };
 
+  // Convert HH:MM to minutes since midnight for proper comparison
+  const timeToMinutes = (timeStr) => {
+    if (!timeStr) return null;
+    const [hours, minutes] = String(timeStr).split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return null;
+    return hours * 60 + minutes;
+  };
+
   const checkTimingIssues = (segment, index) => {
     const issues = [];
     
     if (!segment.start_time || !segment.end_time) return issues;
     
-    // CRITICAL: For multi-day sessions, timing issues should NOT be flagged
-    // The order field is authoritative, not the time sequence
-    // Time validation is only meaningful within same-day segments
-    // Since we don't have segment.date, we assume ordering is intentional
-    // and skip timing validation entirely to avoid false positives
+    const segStartMin = timeToMinutes(segment.start_time);
+    const segEndMin = timeToMinutes(segment.end_time);
+    if (segStartMin === null || segEndMin === null) return issues;
+    
+    // Check if out of order with previous segment (immediate predecessor only)
+    if (index > 0) {
+      const prevSegment = segments[index - 1];
+      const prevEndMin = timeToMinutes(prevSegment.end_time);
+      if (prevEndMin !== null && segStartMin < prevEndMin) {
+        issues.push({
+          type: 'out-of-order',
+          message: `Inicia antes del fin del segmento anterior (${formatTimeToEST(prevSegment.end_time)})`
+        });
+      }
+    }
+    
+    // Check overlaps only with previous segments (not future ones)
+    for (let i = 0; i < index; i++) {
+      const prevSegment = segments[i];
+      const prevStartMin = timeToMinutes(prevSegment.start_time);
+      const prevEndMin = timeToMinutes(prevSegment.end_time);
+      if (prevStartMin === null || prevEndMin === null) continue;
+      
+      // Check for overlap with previous segment using numeric comparison
+      if ((segStartMin >= prevStartMin && segStartMin < prevEndMin) ||
+          (segEndMin > prevStartMin && segEndMin <= prevEndMin) ||
+          (segStartMin <= prevStartMin && segEndMin >= prevEndMin)) {
+        issues.push({
+          type: 'overlap',
+          message: `Se solapa con "${prevSegment.title}" (${formatTimeToEST(prevSegment.start_time)} - ${formatTimeToEST(prevSegment.end_time)})`
+        });
+      }
+    }
     
     return issues;
   };

@@ -294,28 +294,29 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     }
 
     // Validate segment times don't overlap with other segments in the same session
-    // CRITICAL: Use datetime comparison for multi-day sessions (session.date + time)
-    if (formData.start_time && times.end_time && allSegments && session?.date) {
+    if (formData.start_time && times.end_time && allSegments) {
       const otherSegments = allSegments.filter(s => s.id !== segment?.id);
       
-      const toDateTime = (dateStr, timeStr) => {
-        if (!dateStr || !timeStr) return null;
-        return new Date(`${dateStr}T${timeStr}:00`);
+      // Convert HH:MM to minutes for proper numeric comparison
+      const toMinutes = (timeStr) => {
+        if (!timeStr) return null;
+        const [h, m] = String(timeStr).split(':').map(Number);
+        return (isFinite(h) && isFinite(m)) ? h * 60 + m : null;
       };
       
-      const newStartDT = toDateTime(session.date, formData.start_time);
-      const newEndDT = toDateTime(session.date, times.end_time);
+      const newStartMin = toMinutes(formData.start_time);
+      const newEndMin = toMinutes(times.end_time);
       
       for (const existingSegment of otherSegments) {
         if (existingSegment.start_time && existingSegment.end_time) {
-          const existingStartDT = toDateTime(session.date, existingSegment.start_time);
-          const existingEndDT = toDateTime(session.date, existingSegment.end_time);
+          const existingStartMin = toMinutes(existingSegment.start_time);
+          const existingEndMin = toMinutes(existingSegment.end_time);
           
-          // Check for overlap using datetime objects
-          if (newStartDT && newEndDT && existingStartDT && existingEndDT) {
-            if ((newStartDT >= existingStartDT && newStartDT < existingEndDT) ||
-                (newEndDT > existingStartDT && newEndDT <= existingEndDT) ||
-                (newStartDT <= existingStartDT && newEndDT >= existingEndDT)) {
+          // Check for overlap using numeric comparison
+          if (newStartMin !== null && newEndMin !== null && existingStartMin !== null && existingEndMin !== null) {
+            if ((newStartMin >= existingStartMin && newStartMin < existingEndMin) ||
+                (newEndMin > existingStartMin && newEndMin <= existingEndMin) ||
+                (newStartMin <= existingStartMin && newEndMin >= existingEndMin)) {
               setOverlapText(`El segmento se solapa con "${existingSegment.title}" (${formatTimeToEST(existingSegment.start_time)} - ${formatTimeToEST(existingSegment.end_time)}). ${language === 'es' ? 'Por favor ajusta los horarios o elige ajustar segmentos posteriores.' : 'Please adjust times or choose to shift downstream segments.'}`);
               setShowOverlapDialog(true);
               return;
