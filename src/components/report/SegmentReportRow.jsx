@@ -86,7 +86,21 @@ export default function SegmentReportRow({
 
         {segment.presenter && (
           <div className="text-blue-600 font-semibold text-[10px]">
-            {segment.presenter}
+            {['Break', 'Receso', 'Almuerzo'].includes(segment.segment_type) 
+              ? `Encargado: ${segment.presenter}` 
+              : segment.presenter}
+          </div>
+        )}
+
+        {/* Break type visual distinction */}
+        {['Receso', 'Almuerzo'].includes(segment.segment_type) && (
+          <div className={`text-[9px] px-1 py-0.5 rounded border mt-0.5 inline-flex items-center gap-1 ${
+            segment.segment_type === 'Almuerzo' 
+              ? 'bg-orange-100 border-orange-300 text-orange-800' 
+              : 'bg-gray-100 border-gray-300 text-gray-700'
+          }`}>
+            <span>{segment.segment_type === 'Almuerzo' ? '🍽️' : '☕'}</span>
+            <span className="font-semibold">{segment.duration_min} min</span>
           </div>
         )}
 
