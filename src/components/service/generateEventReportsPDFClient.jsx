@@ -607,7 +607,7 @@ function buildNotesCell(seg) {
 // SESSION HEADER - Matching HTML team grid exactly
 // ============================================================================
 
-function buildSessionHeader(event, session) {
+function buildSessionHeader(event, session, hasHospitalityTasks = false) {
   const stack = [];
 
   // Event name + Session name
@@ -618,12 +618,22 @@ function buildSessionHeader(event, session) {
   const locStr = session?.location || '';
   const arrivalStr = session?.default_stage_call_offset_min ? `Llegada: ${session.default_stage_call_offset_min} min antes` : '';
 
+  // Build session title with indicators
+  const titleParts = [
+    { text: (event?.name || 'EVENT').toUpperCase() + ' — ', color: '#1F8A70', bold: true, fontSize: pdfTheme.fontSize.title },
+    { text: (session?.name || 'SESSION').toUpperCase(), bold: true, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.title },
+  ];
+  // Hospitality tasks indicator (🍴)
+  if (hasHospitalityTasks) {
+    titleParts.push({ text: ' 🍴', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg, color: '#DB2777' });
+  }
+  // Translated session indicator (🌐)
+  if (session?.is_translated_session) {
+    titleParts.push({ text: ' 🌐', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg });
+  }
+
   stack.push({
-    text: [
-      { text: (event?.name || 'EVENT').toUpperCase() + ' — ', color: '#1F8A70', bold: true, fontSize: pdfTheme.fontSize.title },
-      { text: (session?.name || 'SESSION').toUpperCase(), bold: true, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.title },
-      session?.is_translated_session ? { text: ' 🌐', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg } : '',
-    ],
+    text: titleParts,
     margin: [0, 0, 0, 2],
   });
 
