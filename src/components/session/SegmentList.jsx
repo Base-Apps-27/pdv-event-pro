@@ -90,15 +90,28 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
     default: "bg-slate-100 text-slate-700 border-slate-200"
   };
 
+  // Convert HH:MM to minutes since midnight for proper comparison
+  const timeToMinutes = (timeStr) => {
+    if (!timeStr) return null;
+    const [hours, minutes] = String(timeStr).split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return null;
+    return hours * 60 + minutes;
+  };
+
   const checkTimingIssues = (segment, index) => {
     const issues = [];
     
     if (!segment.start_time || !segment.end_time) return issues;
     
-    // Check if out of order with previous segment
+    const segStartMin = timeToMinutes(segment.start_time);
+    const segEndMin = timeToMinutes(segment.end_time);
+    if (segStartMin === null || segEndMin === null) return issues;
+    
+    // Check if out of order with previous segment (immediate predecessor only)
     if (index > 0) {
       const prevSegment = segments[index - 1];
-      if (prevSegment.end_time && segment.start_time < prevSegment.end_time) {
+      const prevEndMin = timeToMinutes(prevSegment.end_time);
+      if (prevEndMin !== null && segStartMin < prevEndMin) {
         issues.push({
           type: 'out-of-order',
           message: `Inicia antes del fin del segmento anterior (${formatTimeToEST(prevSegment.end_time)})`
@@ -109,20 +122,17 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
     // Check overlaps only with previous segments (not future ones)
     for (let i = 0; i < index; i++) {
       const prevSegment = segments[i];
-      if (!prevSegment.start_time || !prevSegment.end_time) continue;
+      const prevStartMin = timeToMinutes(prevSegment.start_time);
+      const prevEndMin = timeToMinutes(prevSegment.end_time);
+      if (prevStartMin === null || prevEndMin === null) continue;
       
-      const segStart = segment.start_time;
-      const segEnd = segment.end_time;
-      const prevStart = prevSegment.start_time;
-      const prevEnd = prevSegment.end_time;
-      
-      // Check for overlap with previous segment
-      if ((segStart >= prevStart && segStart < prevEnd) ||
-          (segEnd > prevStart && segEnd <= prevEnd) ||
-          (segStart <= prevStart && segEnd >= prevEnd)) {
+      // Check for overlap with previous segment using numeric comparison
+      if ((segStartMin >= prevStartMin && segStartMin < prevEndMin) ||
+          (segEndMin > prevStartMin && segEndMin <= prevEndMin) ||
+          (segStartMin <= prevStartMin && segEndMin >= prevEndMin)) {
         issues.push({
           type: 'overlap',
-          message: `Se solapa con "${prevSegment.title}" (${formatTimeToEST(prevStart)} - ${formatTimeToEST(prevEnd)})`
+          message: `Se solapa con "${prevSegment.title}" (${formatTimeToEST(prevSegment.start_time)} - ${formatTimeToEST(prevSegment.end_time)})`
         });
       }
     }
