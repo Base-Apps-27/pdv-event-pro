@@ -636,23 +636,24 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
   const locStr = session?.location || '';
   const arrivalStr = session?.default_stage_call_offset_min ? `Llegada: ${session.default_stage_call_offset_min} min antes` : '';
 
-  // Build session title with indicators
+  // Build session title with indicators (matching HTML: green event name, em-dash, black session)
   const titleParts = [
-    { text: (event?.name || 'EVENT').toUpperCase() + ' — ', color: '#1F8A70', bold: true, fontSize: pdfTheme.fontSize.title },
+    { text: (event?.name || 'EVENT').toUpperCase(), color: '#1F8A70', bold: true, fontSize: pdfTheme.fontSize.title, italics: true },
+    { text: ' — ', color: pdfTheme.text.primary, bold: true, fontSize: pdfTheme.fontSize.title },
     { text: (session?.name || 'SESSION').toUpperCase(), bold: true, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.title },
   ];
-  // Hospitality tasks indicator (🍴)
+  // Hospitality tasks indicator (🍴) - matching HTML purple color
   if (hasHospitalityTasks) {
-    titleParts.push({ text: ' 🍴', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg, color: '#DB2777' });
+    titleParts.push({ text: '  🍴', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg, color: '#9333EA' });
   }
   // Translated session indicator (🌐)
   if (session?.is_translated_session) {
-    titleParts.push({ text: ' 🌐', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg });
+    titleParts.push({ text: '  🌐', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg, color: '#7C3AED' });
   }
 
   stack.push({
     text: titleParts,
-    margin: [0, 0, 0, 2],
+    margin: [0, 0, 0, 1],
   });
 
   // Date/time/location line
@@ -681,20 +682,20 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
   if (session?.presenter) teams.push({ label: 'PRES', value: session.presenter, color: '#2563EB' });
 
   if (teams.length > 0) {
-    // Build 4-column grid like HTML
+    // Build 4-column grid like HTML with thin borders
     const rows = [];
     for (let i = 0; i < teams.length; i += 4) {
       const rowCells = teams.slice(i, i + 4).map(t => ({
         text: [
           { text: `${t.label}: `, bold: true, color: t.color, fontSize: pdfTheme.fontSize.xs },
-          { text: t.value, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
+          { text: t.value, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.xs },
         ],
-        fillColor: '#FAFAFA',
-        margin: [2, 1, 2, 1],
+        fillColor: '#FFFFFF',
+        margin: [3, 2, 3, 2],
       }));
       // Pad to 4 columns
       while (rowCells.length < 4) {
-        rowCells.push({ text: '', fillColor: '#FAFAFA' });
+        rowCells.push({ text: '', fillColor: '#FFFFFF' });
       }
       rows.push(rowCells);
     }
@@ -709,8 +710,12 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
         vLineWidth: () => 0.5,
         hLineColor: () => '#E5E7EB',
         vLineColor: () => '#E5E7EB',
+        paddingTop: () => 2,
+        paddingBottom: () => 2,
+        paddingLeft: () => 4,
+        paddingRight: () => 4,
       },
-      margin: [0, 0, 0, 4],
+      margin: [0, 2, 0, 6],
     });
   }
 
