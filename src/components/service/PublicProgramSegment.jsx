@@ -365,6 +365,30 @@ export default function PublicProgramSegment({
             </div>
           )}
 
+          {/* Break-type segments (Receso/Almuerzo) - enhanced visual distinction */}
+          {isBreakSegment && (
+            <div className={`rounded-lg p-3 border-2 ${segment.segment_type === 'Almuerzo' ? 'bg-orange-50 border-orange-300' : 'bg-gray-100 border-gray-300'}`}>
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                {segment.segment_type === 'Almuerzo' ? (
+                  <>
+                    <span className="text-2xl">🍽️</span>
+                    <span className="text-orange-800">{segment.duration_min} min</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-2xl">☕</span>
+                    <span className="text-gray-700">{segment.duration_min} min</span>
+                  </>
+                )}
+              </div>
+              {segment.presenter && (
+                <div className="text-xs mt-1 text-gray-600">
+                  <span className="font-medium">{language === 'es' ? 'Encargado' : 'Host'}:</span> {segment.presenter}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Team Notes (Operational Instructions) */}
           {/* These are critical for staff execution, always shown when details are visible */}
           <div className="grid md:grid-cols-2 gap-2">

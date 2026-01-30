@@ -22,9 +22,11 @@ import AnnouncementSeriesManager from "../announcements/AnnouncementSeriesManage
 import { useLanguage } from "@/components/utils/i18n";
 import { toast } from "sonner";
 
+// Break type hidden from UI but kept in schema for backwards compatibility
+// Receso = short breaks (coffee, transition); Almuerzo = meal breaks
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
-  "Anuncio", "Dinámica", "Break", "TechOnly", "Oración", 
+  "Anuncio", "Dinámica", "TechOnly", "Oración", 
   "Especial", "Cierre", "MC", "Ministración", "Receso", "Almuerzo", "Artes", "Panel", "Breakout"
 ];
 
@@ -283,7 +285,9 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     if (!formData.title?.trim()) missing.push(t('field.title'));
     if (!formData.start_time) missing.push(t('field.start_time'));
     if (!formData.duration_min || formData.duration_min <= 0) missing.push(t('field.duration_min'));
-    if (needsPresenterNow && !formData.presenter?.trim()) missing.push(t('field.presenter'));
+    // Presenter not required for break types (Receso/Almuerzo) - it's optional
+    const isBreakTypeNowForValidation = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
+    if (needsPresenterNow && !isBreakTypeNowForValidation && !formData.presenter?.trim()) missing.push(t('field.presenter'));
     if (missing.length > 0) {
       toast.error(`${t('error.required_fields_missing')}: ${missing.join(', ')}`);
       return;
@@ -402,7 +406,9 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const isMcLedType = ["Bienvenida", "Ofrenda", "Anuncio", "Dinámica", "Oración", "Especial", "Cierre", "MC", "Ministración"].includes(formData.segment_type);
   const isAnnouncementType = formData.segment_type === "Anuncio";
   
-  const needsPresenter = !isBreakType && !isTechOnly && !isBreakoutType && !isPanelType; // dynamic required depending on type
+  // Break types (Receso/Almuerzo) can have optional presenter (person managing stage transition)
+  const needsPresenter = !isTechOnly && !isBreakoutType && !isPanelType; // dynamic required depending on type
+  const presenterOptionalForBreak = isBreakType; // presenter is optional but available for breaks
   const showDescription = !isTechOnly && !isVideoType;
   const showTranslation = !isBreakType && !isBreakoutType;
   const showUshersNotes = !isBreakType && !isTechOnly && !isBreakoutType;
@@ -429,9 +435,10 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const isPlaceholder = (val) => typeof val === 'string' && /^(tbd|por definir|---)$/i.test(val.trim());
   const hasValueOrPlaceholder = (val) => Boolean(val && String(val).trim()) || isPlaceholder(val);
 
+  // Presenter is optional for break types
   const canSubmit = hasValueOrPlaceholder(formData.title) &&
     Boolean(formData.segment_type) &&
-    (!needsPresenter || hasValueOrPlaceholder(formData.presenter)) &&
+    (!needsPresenter || presenterOptionalForBreak || hasValueOrPlaceholder(formData.presenter)) &&
     (!requiresSala || Boolean(formData.room_id));
   
   const hasDrama = formData.art_types?.includes("DRAMA");
@@ -451,6 +458,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     if (isPlenariaType) return language === 'es' ? 'Predicador' : 'Preacher';
     if (isWorshipType) return language === 'es' ? 'Líder de Alabanza' : 'Worship Leader';
     if (isArtesType) return language === 'es' ? 'Grupo / Director' : 'Group / Director';
+    if (isBreakType) return language === 'es' ? 'Encargado de Transición' : 'Transition Host';
     return t('field.presenter');
   };
 
@@ -602,16 +610,26 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
                 {needsPresenter && (
                   <div className="space-y-2">
-                    <Label htmlFor="presenter">{getPresenterLabel()} {needsPresenter && <span className="text-red-500">*</span>}</Label>
+                    <Label htmlFor="presenter">
+                      {isBreakType ? (language === 'es' ? 'Encargado de Transición' : 'Transition Host') : getPresenterLabel()}
+                      {!presenterOptionalForBreak && <span className="text-red-500">*</span>}
+                    </Label>
                     <div className="relative">
                       <Input 
                         id="presenter" 
                         value={formData.presenter}
                         onChange={(e) => updateField('presenter', e.target.value)}
-                        placeholder="Nombre"
+                        placeholder={isBreakType ? (language === 'es' ? 'Persona dando instrucciones (opcional)' : 'Person giving instructions (optional)') : "Nombre"}
                       />
                       <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'presenter')} />
                     </div>
+                    {isBreakType && (
+                      <p className="text-xs text-gray-500">
+                        {language === 'es' 
+                          ? 'Persona que da instrucciones desde la tarima durante el receso' 
+                          : 'Person giving stage instructions during the break'}
+                      </p>
+                    )}
                   </div>
                 )}
 
