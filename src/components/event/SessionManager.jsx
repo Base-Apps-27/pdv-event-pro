@@ -143,6 +143,8 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
       admin_team: session?.admin_team || '',
       coordinators: session?.coordinators || '',
       sound_team: session?.sound_team || '',
+      lights_team: session?.lights_team || '',
+      video_team: session?.video_team || '',
       tech_team: session?.tech_team || '',
       ushers_team: session?.ushers_team || '',
       translation_team: session?.translation_team || '',
@@ -393,6 +395,18 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                           <div className="bg-red-50 px-2 py-1 rounded border border-red-200">
                             <span className="font-bold text-red-700">SONIDO:</span>
                             <span className="text-slate-700 ml-1">{session.sound_team}</span>
+                          </div>
+                        )}
+                        {session.lights_team && (
+                          <div className="bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                            <span className="font-bold text-amber-700">LUCES:</span>
+                            <span className="text-slate-700 ml-1">{session.lights_team}</span>
+                          </div>
+                        )}
+                        {session.video_team && (
+                          <div className="bg-cyan-50 px-2 py-1 rounded border border-cyan-200">
+                            <span className="font-bold text-cyan-700">VIDEO:</span>
+                            <span className="text-slate-700 ml-1">{session.video_team}</span>
                           </div>
                         )}
                         {session.tech_team && (
@@ -816,6 +830,34 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                         placeholder="P. Randy G."
                       />
                       <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'sound_team')} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="lights_team">Equipo de Luces</Label>
+                    <div className="relative">
+                      <Input 
+                        id="lights_team" 
+                        name="lights_team" 
+                        value={formData.lights_team}
+                        onChange={(e) => updateFormField('lights_team', e.target.value)}
+                        placeholder="Danny M."
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'lights_team')} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="video_team">Equipo de Video</Label>
+                    <div className="relative">
+                      <Input 
+                        id="video_team" 
+                        name="video_team" 
+                        value={formData.video_team}
+                        onChange={(e) => updateFormField('video_team', e.target.value)}
+                        placeholder="Rick E."
+                      />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'video_team')} />
                     </div>
                   </div>
 

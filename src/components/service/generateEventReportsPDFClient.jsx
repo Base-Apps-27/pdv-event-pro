@@ -680,6 +680,8 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
   if (session?.coordinators) teams.push({ label: 'COORD', value: session.coordinators, color: '#4F46E5' });
   if (session?.admin_team) teams.push({ label: 'ADMIN', value: session.admin_team, color: '#EA580C' });
   if (session?.sound_team) teams.push({ label: 'SONIDO', value: session.sound_team, color: '#DC2626' });
+  if (session?.lights_team) teams.push({ label: 'LUCES', value: session.lights_team, color: '#D97706' });
+  if (session?.video_team) teams.push({ label: 'VIDEO', value: session.video_team, color: '#0891B2' });
   if (session?.tech_team) teams.push({ label: 'TÉC', value: session.tech_team, color: '#7C3AED' });
   if (session?.translation_team) teams.push({ label: 'TRAD', value: session.translation_team, color: '#7C3AED' });
   if (session?.hospitality_team) teams.push({ label: 'HOSP', value: session.hospitality_team, color: '#DB2777' });
