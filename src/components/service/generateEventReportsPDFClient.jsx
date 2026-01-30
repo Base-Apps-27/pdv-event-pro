@@ -117,27 +117,49 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
   });
 
-  // Presenter - use appropriate label based on segment type (ENCARGADO for breaks, MINISTRA for others)
+  // Presenter - use label only for breaks (ENCARGADO), otherwise just show name
   if (seg.presenter) {
     const isBreakType = ['Break', 'Receso', 'Almuerzo'].includes(seg.segment_type);
-    const presenterLabel = isBreakType ? 'ENCARGADO: ' : 'MINISTRA: ';
-    stack.push({
-      text: [
-        { text: presenterLabel, bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
-        { text: seg.presenter, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
-      ],
-      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
-    });
+    if (isBreakType) {
+      stack.push({
+        text: [
+          { text: 'ENCARGADO: ', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
+          { text: seg.presenter, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
+        ],
+        margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+      });
+    } else {
+      stack.push({
+        text: seg.presenter,
+        color: '#2563EB',
+        fontSize: pdfTheme.fontSize.sm,
+        bold: true,
+        margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+      });
+    }
   }
 
-  // Break type visual distinction (Receso/Almuerzo) with duration badge - emoji icons
+  // Break type visual distinction (Receso/Almuerzo) with duration badge - emoji icons + background box
   if (['Receso', 'Almuerzo'].includes(seg.segment_type)) {
     const isLunch = seg.segment_type === 'Almuerzo';
     stack.push({
-      text: [
-        { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.base },
-        { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.sm },
-      ],
+      table: {
+        widths: ['auto'],
+        body: [[{
+          text: [
+            { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.base },
+            { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.sm },
+          ],
+          fillColor: isLunch ? '#FFF7ED' : '#F3F4F6',
+          margin: [3, 2, 3, 2],
+        }]],
+      },
+      layout: {
+        hLineWidth: () => 0.5,
+        vLineWidth: () => 0.5,
+        hLineColor: () => isLunch ? '#FDBA74' : '#D1D5DB',
+        vLineColor: () => isLunch ? '#FDBA74' : '#D1D5DB',
+      },
       margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
@@ -646,7 +668,7 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
     stack.push({
       text: [
         { text: meta, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.header },
-        arrivalStr ? { text: ` • ${arrivalStr}`, color: '#2563EB', fontSize: pdfTheme.fontSize.header, bold: true } : '',
+        arrivalStr ? { text: ` • ${arrivalStr}`, color: '#EA580C', fontSize: pdfTheme.fontSize.header, bold: true } : '',
       ],
       margin: [0, 0, 0, 3],
     });
@@ -729,20 +751,18 @@ function buildPreSessionDetailsBlock(psd) {
   });
 
   if (details.length > 0) {
-    // Build text array with proper font switching for emojis
-    const textParts = [];
-    details.forEach((d, idx) => {
+    // Each detail on its own line
+    details.forEach(d => {
+      const lineParts = [];
       if (d.useEmoji && d.icon) {
-        textParts.push({ text: d.icon + ' ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs });
+        lineParts.push({ text: d.icon + ' ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs });
       }
-      textParts.push({ text: `${d.label}: ${d.value}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
-      if (idx < details.length - 1) {
-        textParts.push({ text: ' • ', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
-      }
-    });
-    stack.push({
-      text: textParts,
-      margin: [0, 0, 0, 2],
+      lineParts.push({ text: `${d.label}: `, bold: true, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
+      lineParts.push({ text: d.value, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.primary });
+      stack.push({
+        text: lineParts,
+        margin: [0, 0, 0, 1],
+      });
     });
   }
 
