@@ -499,102 +499,94 @@ function buildDetailsLeftCell(seg, allRooms = []) {
 function buildDetailsRightCell(seg) {
   const stack = [];
 
-  // DURANTE actions - center column
+  // DURANTE actions - center column (matching HTML: purple header with blue icon)
   const duringActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : []).filter(a => a.timing !== 'before_start');
 
   if (duringActions.length > 0) {
     stack.push({
-      text: '▶ DURANTE',
-      fontSize: pdfTheme.fontSize.sm,
-      bold: true,
-      color: pdfTheme.labels.durante.text,
-      margin: [0, 0, 0, 1],
+      text: [
+        { text: '▶ ', color: '#3B82F6', fontSize: pdfTheme.fontSize.sm },
+        { text: 'DURANTE', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm },
+      ],
+      margin: [0, 0, 0, 2],
     });
     duringActions.forEach(act => {
       const dept = act.department ? `[${act.department}] ` : '';
       const label = act.label || '';
       const required = act.is_required ? '*' : '';
       const timingParts = [];
-      if (act.timing === 'before_end' && act.offset_min !== undefined) timingParts.push(`${act.offset_min}m antes fin`);
-      if (act.timing === 'after_start' && act.offset_min !== undefined) timingParts.push(`${act.offset_min}m después`);
+      if (act.timing === 'before_end' && act.offset_min !== undefined) timingParts.push(`(${act.offset_min}m antes fin)`);
+      if (act.timing === 'after_start' && act.offset_min !== undefined) timingParts.push(`(${act.offset_min}m después)`);
       const notes = act.notes || '';
 
       stack.push({
         text: [
           dept ? { text: dept, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B7280' } : '',
-          { text: label, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.sm },
-          required ? { text: ` ${required}`, color: '#DC2626', fontSize: pdfTheme.fontSize.sm, bold: true } : '',
-          timingParts.length ? { text: ` (${timingParts.join(' • ')})`, color: pdfTheme.text.light, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
-          notes ? { text: `\n${notes}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
+          { text: label, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
+          required ? { text: ` ${required}`, color: '#DC2626', fontSize: pdfTheme.fontSize.xs, bold: true } : '',
+          timingParts.length ? { text: ` ${timingParts.join(' ')}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
         ],
-        margin: [0, 0, 0, 1],
+        margin: [0, 0, 0, 0],
       });
+      if (notes) {
+        stack.push({
+          text: notes,
+          color: pdfTheme.text.muted,
+          fontSize: pdfTheme.fontSize.xs,
+          italics: true,
+          margin: [0, 0, 0, 1],
+        });
+      }
     });
   }
 
   return {
     stack: stack.length ? stack : [{ text: '—', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted }],
     verticalAlign: 'top',
+    fillColor: '#FFFFFF',
   };
 }
 
 function buildNotesCell(seg) {
   const stack = [];
 
-  // NOTE: PREP actions are now rendered as separate full-width rows below the segment
-  // See buildPrepActionRow() function
-
-  // Team notes - ALL notes matching HTML (full labels, no truncation)
-  const notes = [
-    { label: 'PROYECCIÓN', val: seg.projection_notes, color: '#7C3AED', bg: '#F5F3FF' },
-    { label: 'SONIDO', val: seg.sound_notes, color: '#DC2626', bg: '#FEF2F2' },
-    { label: 'UJIERES', val: seg.ushers_notes, color: '#16A34A', bg: '#F0FDF4' },
-    { label: 'STAGE & DECOR', val: seg.stage_decor_notes, color: '#DB2777', bg: '#FDF2F8' },
-    { label: 'TRAD', val: seg.translation_notes, color: '#7C3AED', bg: '#F5F3FF' },
-    { label: 'OTRO', val: seg.other_notes, color: '#6B7280', bg: '#F9FAFB' },
-  ].filter(n => n.val);
-
-  // Microphone assignments (often shown in SONIDO context)
-  if (seg.microphone_assignments) {
-    stack.push({
-      text: [
-        { text: 'MICS: ', bold: true, color: '#DC2626', fontSize: pdfTheme.fontSize.xs },
-        { text: seg.microphone_assignments, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
-      ],
-      fillColor: '#FEF2F2',
-      margin: [0, 0, 0, 1],
-    });
-  }
-
-  // Video info in notes column (matching HTML) with timecode marker
+  // Video info in notes column (matching HTML) with timecode marker - show first
   if (seg.has_video && (seg.video_name || seg.video_location)) {
     const videoParts = [
       { text: '🎬 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
-      { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.xs },
-      { text: seg.video_name || seg.video_location || '', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary },
+      { text: 'VIDEO: ', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.xs },
+      { text: seg.video_name || seg.video_location || '', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.primary },
     ];
     // Include video length as timecode marker
     if (seg.video_length_sec !== undefined && seg.video_length_sec !== null) {
       const mins = Math.floor(seg.video_length_sec / 60);
       const secs = seg.video_length_sec % 60;
-      videoParts.push({ text: ` [${mins}:${String(secs).padStart(2, '0')}]`, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B21A8' });
+      videoParts.push({ text: ` [${mins}:${String(secs).padStart(2, '0')}]`, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#7C3AED' });
     } else {
-      videoParts.push({ text: ' [0:00]', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B21A8' });
+      videoParts.push({ text: ' [0:00]', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#7C3AED' });
     }
     stack.push({
       text: videoParts,
-      fillColor: '#EFF6FF',
       margin: [0, 0, 0, 1],
     });
   }
+
+  // Team notes - ALL notes matching HTML (full labels, proper colors)
+  const notes = [
+    { label: 'PROYECCIÓN', val: seg.projection_notes, color: '#7C3AED' },
+    { label: 'SONIDO', val: seg.sound_notes, color: '#DC2626' },
+    { label: 'UJIERES', val: seg.ushers_notes, color: '#16A34A' },
+    { label: 'STAGE & DECOR', val: seg.stage_decor_notes, color: '#DB2777' },
+    { label: 'TRAD', val: seg.translation_notes, color: '#7C3AED' },
+    { label: 'OTRO', val: seg.other_notes, color: '#6B7280' },
+  ].filter(n => n.val);
 
   notes.forEach(n => {
     stack.push({
       text: [
         { text: `${n.label}: `, bold: true, color: n.color, fontSize: pdfTheme.fontSize.xs },
-        { text: n.val, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
+        { text: n.val, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.xs },
       ],
-      fillColor: n.bg,
       margin: [0, 0, 0, 1],
     });
   });
@@ -602,14 +594,13 @@ function buildNotesCell(seg) {
   // Translation info for notes column if present (with emoji icons)
   if (seg.requires_translation) {
     const isInPerson = seg.translation_mode === 'InPerson';
-    const color = isInPerson ? '#2563EB' : '#0891B2';
+    const color = isInPerson ? '#0891B2' : '#7C3AED';
     stack.push({
       text: [
         { text: isInPerson ? '🎙 ' : '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
-        { text: isInPerson ? 'TRAD-TARIMA' : 'TRAD-CABINA', bold: true, color, fontSize: pdfTheme.fontSize.xs },
+        { text: isInPerson ? 'TRAD-TARIMA' : 'TRAD-CABINA', bold: false, color, fontSize: pdfTheme.fontSize.xs },
         seg.translator_name ? { text: `: ${seg.translator_name}`, color, fontSize: pdfTheme.fontSize.xs } : '',
       ],
-      fillColor: isInPerson ? '#EFF6FF' : '#ECFEFF',
       margin: [0, 0, 0, 1],
     });
   }
