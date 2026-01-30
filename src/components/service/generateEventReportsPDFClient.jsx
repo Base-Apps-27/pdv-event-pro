@@ -393,14 +393,33 @@ function buildDetailsLeftCell(seg, allRooms = []) {
           margin: [0, 0, 0, 0.5],
         });
       }
-      // Translation
+      // Translation indicator with emoji
       if (room.requires_translation) {
-        const mode = room.translation_mode === 'RemoteBooth' ? 'Traducción Remota' : 'Traducción en Persona';
+        const isInPerson = room.translation_mode === 'InPerson';
         cardStack.push({
           text: [
-            { text: mode, color: '#7C3AED', fontSize: pdfTheme.fontSize.xs, italics: true },
-            room.translator_name ? { text: ` — ${room.translator_name}`, color: '#7C3AED', fontSize: pdfTheme.fontSize.xs } : '',
+            { text: isInPerson ? '🎙 ' : '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+            room.translator_name ? { text: room.translator_name, color: '#7C3AED', fontSize: pdfTheme.fontSize.xs } : { text: 'Traducción', color: '#7C3AED', fontSize: pdfTheme.fontSize.xs, italics: true },
           ],
+          margin: [0, 0, 0, 0.5],
+        });
+      }
+      // General notes for room
+      if (room.general_notes) {
+        cardStack.push({
+          text: room.general_notes,
+          color: pdfTheme.text.muted,
+          fontSize: pdfTheme.fontSize.xs,
+          italics: true,
+          margin: [0, 0, 0, 0.5],
+        });
+      }
+      // Other notes for room
+      if (room.other_notes) {
+        cardStack.push({
+          text: room.other_notes,
+          color: pdfTheme.text.muted,
+          fontSize: pdfTheme.fontSize.xs,
           margin: [0, 0, 0, 0.5],
         });
       }
