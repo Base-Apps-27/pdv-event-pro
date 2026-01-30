@@ -182,14 +182,14 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
-  // Songs (Alabanza) - full list matching HTML
+  // Songs (Alabanza) - full list matching HTML (gray label, numbered list)
   if (seg.segment_type === 'Alabanza' && seg.number_of_songs > 0) {
     stack.push({
       text: 'CANCIONES:',
       bold: true,
-      color: '#166534',
-      fontSize: pdfTheme.fontSize.sm,
-      margin: [0, 0, 0, 1],
+      color: '#6B7280',
+      fontSize: pdfTheme.fontSize.xs,
+      margin: [0, 1, 0, 0],
     });
     for (let i = 1; i <= Math.min(seg.number_of_songs, 6); i++) {
       const title = seg[`song_${i}_title`];
@@ -199,23 +199,23 @@ function buildDetailsLeftCell(seg, allRooms = []) {
         stack.push({
           text: [
             { text: `${i}. `, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs },
-            { text: title, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.sm, bold: true },
-            lead ? { text: ` (${lead})`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
-            key ? { text: ` [${key}]`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, bold: true } : '',
+            { text: title, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.xs, bold: true },
+            lead ? { text: ` (${lead})`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs } : '',
+            key ? { text: ` [${key}]`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs } : '',
           ],
-          margin: [0, 0, 0, 0.5],
+          margin: [6, 0, 0, 0],
         });
       }
     }
   }
 
-  // Video info - full details matching HTML (in details left column)
+  // Video info - full details matching HTML (blue icon and label)
   if (seg.has_video) {
     const videoParts = [
       { text: '🎬 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
-      { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
+      { text: 'VIDEO: ', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
     ];
-    if (seg.video_name) videoParts.push({ text: seg.video_name, color: '#1E3A8A', fontSize: pdfTheme.fontSize.sm });
+    if (seg.video_name) videoParts.push({ text: seg.video_name, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.sm });
     if (seg.video_length_sec) {
       const mins = Math.floor(seg.video_length_sec / 60);
       const secs = seg.video_length_sec % 60;
@@ -225,7 +225,7 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     }
     if (seg.video_location) videoParts.push({ text: ` • ${seg.video_location}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
     if (seg.video_owner) videoParts.push({ text: ` • ${seg.video_owner}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
-    stack.push({ text: videoParts, margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom] });
+    stack.push({ text: videoParts, margin: [0, 0, 0, 1] });
   }
 
   // Prep instructions (if present and not shown elsewhere)
@@ -321,14 +321,14 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     }
   }
 
-  // Message (Plenaria) - full title
+  // Message (Plenaria) - full title (gray label, quoted title)
   if (seg.segment_type === 'Plenaria' && seg.message_title) {
     stack.push({
       text: [
-        { text: 'MENSAJE: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
-        { text: `"${seg.message_title}"`, color: '#1E3A8A', fontSize: pdfTheme.fontSize.sm },
+        { text: 'MENSAJE: ', bold: true, color: '#6B7280', fontSize: pdfTheme.fontSize.sm },
+        { text: `"${seg.message_title}"`, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.sm },
       ],
-      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+      margin: [0, 0, 0, 1],
     });
   }
 
