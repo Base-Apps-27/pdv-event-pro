@@ -97,9 +97,9 @@ function buildDetailsLeftCell(seg) {
     });
   }
 
-  // Translation - InPerson (on stage)
+  // Translation - InPerson (on stage) - emphasized with microphone icon
   if (seg.requires_translation && seg.translation_mode === 'InPerson') {
-    const parts = [{ text: '🎙️ TRAD (tarima)', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm }];
+    const parts = [{ text: '🎙️ TRAD-TARIMA', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm }];
     if (seg.translator_name) {
       parts.push({
         text: `: ${seg.translator_name.substring(0, 25)}`,
@@ -113,13 +113,13 @@ function buildDetailsLeftCell(seg) {
     });
   }
 
-  // Translation - RemoteBooth (headphones) - displayed separately
+  // Translation - RemoteBooth (headphones) - distinct visual with headphone icon
   if (seg.requires_translation && seg.translation_mode === 'RemoteBooth') {
-    const parts = [{ text: '🎧 CABINA', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm }];
+    const parts = [{ text: '🎧 TRAD-CABINA', bold: true, color: '#0891B2', fontSize: pdfTheme.fontSize.sm }];
     if (seg.translator_name) {
       parts.push({
         text: `: ${seg.translator_name.substring(0, 25)}`,
-        color: '#6D28D9',
+        color: '#0E7490',
         fontSize: pdfTheme.fontSize.xs,
       });
     }

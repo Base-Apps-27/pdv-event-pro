@@ -151,16 +151,20 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
       });
     }
     
-    // Translator - purple italic (subordinate style)
-    const translator = seg.data?.translator || seg.translator;
-    if (translator) {
-      items.push({
-        text: [
-          { text: 'Traductor: ', fontSize: 8.5 * globalScale, color: '#7C3AED', italics: true },
-          { text: translator, fontSize: 8.5 * globalScale, color: '#5B21B6', italics: true, bold: true }
-        ],
-        margin: [8, 0, 0, 1]
-      });
+    // Translator - with mode distinction (InPerson vs RemoteBooth)
+    const translator = seg.data?.translator || seg.translator || seg.translator_name;
+    const translationMode = seg.translation_mode || seg.data?.translation_mode;
+    if (translator || seg.requires_translation) {
+      const isRemoteBooth = translationMode === 'RemoteBooth';
+      if (translator) {
+        items.push({
+          text: [
+            { text: isRemoteBooth ? '🎧 Trad-Cabina: ' : '🎙️ Trad-Tarima: ', fontSize: 8.5 * globalScale, color: isRemoteBooth ? '#0891B2' : '#7C3AED', italics: true },
+            { text: translator, fontSize: 8.5 * globalScale, color: isRemoteBooth ? '#0E7490' : '#5B21B6', italics: true, bold: true }
+          ],
+          margin: [8, 0, 0, 1]
+        });
+      }
     }
 
     // Panel moderators/panelists

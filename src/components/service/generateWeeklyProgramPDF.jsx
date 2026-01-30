@@ -450,12 +450,14 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
       });
     }
 
-    // Translator - Subordinate Style (Moved to bottom of personnel list per user request)
+    // Translator - Subordinate Style with mode distinction
+    // InPerson = on stage with speaker, RemoteBooth = headphones for audience
     if (seg.requires_translation && seg.data?.translator) {
+      const isRemoteBooth = seg.translation_mode === 'RemoteBooth';
       items.push({
         text: [
-          { text: 'Traductor: ', fontSize: 8.5 * scale, color: '#7C3AED', italics: true }, // Purple-600
-          { text: seg.data.translator, fontSize: 8.5 * scale, color: '#5B21B6', italics: true, bold: true } // Purple-800
+          { text: isRemoteBooth ? '🎧 Trad-Cabina: ' : '🎙️ Trad-Tarima: ', fontSize: 8.5 * scale, color: isRemoteBooth ? '#0891B2' : '#7C3AED', italics: true },
+          { text: seg.data.translator, fontSize: 8.5 * scale, color: isRemoteBooth ? '#0E7490' : '#5B21B6', italics: true, bold: true }
         ],
         margin: [8, 0, 0, 1]
       });

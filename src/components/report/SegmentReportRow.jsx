@@ -43,23 +43,23 @@ export default function SegmentReportRow({
         )}
         {segment.requires_translation && segment.translation_mode === "InPerson" && (
           <div className="bg-blue-50 px-0.5 py-0.5 rounded border border-blue-200 text-[9px]">
-            <span className="font-bold text-blue-700">TRAD (tarima):</span>
+            <span className="font-bold text-blue-700">🎙️ TRAD-TARIMA:</span>
             {segment.translator_name && (
-              <span className="ml-0.5">{segment.translator_name}</span>
+              <span className="ml-0.5 font-semibold">{segment.translator_name}</span>
             )}
             {segment.translation_notes && (
-              <span className="ml-0.5">- {segment.translation_notes}</span>
+              <span className="ml-0.5 text-gray-600">- {segment.translation_notes}</span>
             )}
           </div>
         )}
         {segment.requires_translation && segment.translation_mode === "RemoteBooth" && (
           <div className="bg-cyan-50 px-0.5 py-0.5 rounded border border-cyan-300 text-[9px]">
-            <span className="font-bold text-cyan-700">TRAD-CABINA:</span>
+            <span className="font-bold text-cyan-700">🎧 TRAD-CABINA:</span>
             {segment.translator_name && (
-              <span className="ml-0.5">{segment.translator_name}</span>
+              <span className="ml-0.5 font-semibold">{segment.translator_name}</span>
             )}
             {segment.translation_notes && (
-              <span className="ml-0.5">- {segment.translation_notes}</span>
+              <span className="ml-0.5 text-gray-600">- {segment.translation_notes}</span>
             )}
           </div>
         )}
