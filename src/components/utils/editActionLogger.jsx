@@ -80,9 +80,20 @@ function calculateFieldChanges(previousState, newState) {
     const oldVal = previousState[key];
     const newVal = newState[key];
     
+    // Normalize values: treat undefined, null, empty strings, and empty arrays as equivalent
+    const normalizeValue = (val) => {
+      if (val === undefined || val === null) return null;
+      if (val === '') return null;
+      if (Array.isArray(val) && val.length === 0) return null;
+      return val;
+    };
+    
+    const normalizedOld = normalizeValue(oldVal);
+    const normalizedNew = normalizeValue(newVal);
+    
     // Deep comparison for objects/arrays
-    const oldStr = JSON.stringify(oldVal);
-    const newStr = JSON.stringify(newVal);
+    const oldStr = JSON.stringify(normalizedOld);
+    const newStr = JSON.stringify(normalizedNew);
     
     if (oldStr !== newStr) {
       changes[key] = {
