@@ -277,48 +277,90 @@ export default function PublicProgramSegment({
       {/* Shows conditionally for Events based on viewMode or isExpanded */}
       {showDetails && (
         <div className="space-y-3 mt-3">
-          {/* Prep Actions (Before-Start Tasks) - Highlighted style for Events */}
+          {/* Prep Actions (Before-Start Tasks) */}
+          {/* Services (alwaysExpanded): muted style, no department labels (standard reminders) */}
+          {/* Events (!alwaysExpanded): highlighted style with department labels (unique callouts) */}
           {prepActions.length > 0 && (
             <div className="space-y-1">
               {prepActions.map((action, idx) => (
-                <div key={idx} className="bg-amber-100 border border-amber-300 rounded px-3 py-2 text-sm">
-                  <div className="flex items-start gap-2">
-                    <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">⚠ PREP</span>
-                    <div className="flex-1">
-                      <span className="font-semibold text-amber-900">
-                        {action.department && `[${action.department}] `}
-                        {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
-                      </span>
-                      {action.offset_min !== undefined && (
-                        <span className="text-amber-700 italic ml-1">({action.offset_min}m antes)</span>
-                      )}
-                      {action.notes && <span className="text-amber-800 ml-1">— {action.notes}</span>}
+                alwaysExpanded ? (
+                  // Services: muted style without department prefix
+                  <div key={idx} className="bg-amber-50 border border-amber-200 rounded px-3 py-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="bg-amber-400 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">⚠ PREP</span>
+                      <div className="flex-1">
+                        <span className="text-amber-800">
+                          {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
+                        </span>
+                        {action.offset_min !== undefined && (
+                          <span className="text-amber-600 italic ml-1">({action.offset_min}m antes)</span>
+                        )}
+                        {action.notes && <span className="text-amber-700 ml-1">— {action.notes}</span>}
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  // Events: highlighted style with department prefix
+                  <div key={idx} className="bg-amber-100 border border-amber-300 rounded px-3 py-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">⚠ PREP</span>
+                      <div className="flex-1">
+                        <span className="font-semibold text-amber-900">
+                          {action.department && `[${action.department}] `}
+                          {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
+                        </span>
+                        {action.offset_min !== undefined && (
+                          <span className="text-amber-700 italic ml-1">({action.offset_min}m antes)</span>
+                        )}
+                        {action.notes && <span className="text-amber-800 ml-1">— {action.notes}</span>}
+                      </div>
+                    </div>
+                  </div>
+                )
               ))}
             </div>
           )}
 
-          {/* During Actions (In-Segment Cues) - Highlighted style for Events */}
+          {/* During Actions (In-Segment Cues) */}
+          {/* Services: muted style, no department labels */}
+          {/* Events: highlighted style with department labels */}
           {duringActions.length > 0 && (
             <div className="space-y-1">
               {duringActions.map((action, idx) => (
-                <div key={idx} className="bg-blue-100 border border-blue-300 rounded px-3 py-2 text-sm">
-                  <div className="flex items-start gap-2">
-                    <span className="bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">▶ DURANTE</span>
-                    <div className="flex-1">
-                      <span className="font-semibold text-blue-900">
-                        {action.department && `[${action.department}] `}
-                        {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
-                      </span>
-                      {action.offset_min !== undefined && (
-                        <span className="text-blue-700 italic ml-1">({action.offset_min}m)</span>
-                      )}
-                      {action.notes && <span className="text-blue-800 ml-1">— {action.notes}</span>}
+                alwaysExpanded ? (
+                  // Services: muted style without department prefix
+                  <div key={idx} className="bg-blue-50 border border-blue-200 rounded px-3 py-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="bg-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">▶ DURANTE</span>
+                      <div className="flex-1">
+                        <span className="text-blue-800">
+                          {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
+                        </span>
+                        {action.offset_min !== undefined && (
+                          <span className="text-blue-600 italic ml-1">({action.offset_min}m)</span>
+                        )}
+                        {action.notes && <span className="text-blue-700 ml-1">— {action.notes}</span>}
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  // Events: highlighted style with department prefix
+                  <div key={idx} className="bg-blue-100 border border-blue-300 rounded px-3 py-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">▶ DURANTE</span>
+                      <div className="flex-1">
+                        <span className="font-semibold text-blue-900">
+                          {action.department && `[${action.department}] `}
+                          {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
+                        </span>
+                        {action.offset_min !== undefined && (
+                          <span className="text-blue-700 italic ml-1">({action.offset_min}m)</span>
+                        )}
+                        {action.notes && <span className="text-blue-800 ml-1">— {action.notes}</span>}
+                      </div>
+                    </div>
+                  </div>
+                )
               ))}
             </div>
           )}
