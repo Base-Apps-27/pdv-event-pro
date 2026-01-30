@@ -644,10 +644,19 @@ function buildPreSessionDetailsBlock(psd) {
   });
 
   if (details.length > 0) {
+    // Build text array with proper font switching for emojis
+    const textParts = [];
+    details.forEach((d, idx) => {
+      if (d.useEmoji && d.icon) {
+        textParts.push({ text: d.icon + ' ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs });
+      }
+      textParts.push({ text: `${d.label}: ${d.value}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
+      if (idx < details.length - 1) {
+        textParts.push({ text: ' • ', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
+      }
+    });
     stack.push({
-      text: details.map(d => `${d.icon || ''}${d.label}: ${d.value}`).join(' • '),
-      fontSize: pdfTheme.fontSize.xs,
-      color: pdfTheme.text.secondary,
+      text: textParts,
       margin: [0, 0, 0, 2],
     });
   }
