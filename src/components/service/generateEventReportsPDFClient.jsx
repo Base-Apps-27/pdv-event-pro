@@ -130,12 +130,12 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
-  // Break type visual distinction (Receso/Almuerzo) with duration badge - text icons for PDF compatibility
+  // Break type visual distinction (Receso/Almuerzo) with duration badge - emoji icons
   if (['Receso', 'Almuerzo'].includes(seg.segment_type)) {
     const isLunch = seg.segment_type === 'Almuerzo';
     stack.push({
       text: [
-        { text: isLunch ? '[MEAL] ' : '[BREAK] ', bold: true, color: '#FFFFFF', background: isLunch ? '#C2410C' : '#6B7280', fontSize: pdfTheme.fontSize.xs },
+        { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.base },
         { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.sm },
       ],
       margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
