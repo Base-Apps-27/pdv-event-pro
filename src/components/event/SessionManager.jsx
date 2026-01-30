@@ -25,6 +25,8 @@ import HospitalityTasksModal from "../session/HospitalityTasksModal";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { logCreate, logUpdate, logDelete } from "@/components/utils/editActionLogger";
 
+// SessionManager - handles session CRUD with edit logging
+// user prop is required for audit logging of create/update/delete actions
 export default function SessionManager({ eventId, serviceId, sessions, segments, event, user }) {
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
