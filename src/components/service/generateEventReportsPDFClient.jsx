@@ -124,22 +124,24 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
-  // Translation - InPerson (on stage)
+  // Translation - InPerson (on stage) - [T] badge for TARIMA
   if (seg.requires_translation && seg.translation_mode === 'InPerson') {
     stack.push({
       text: [
-        { text: '🎙️ TRAD-TARIMA', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
+        { text: '[T] ', bold: true, color: '#FFFFFF', background: '#2563EB', fontSize: pdfTheme.fontSize.xs },
+        { text: 'TRAD-TARIMA', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
         seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm } : '',
       ],
       margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
-  // Translation - RemoteBooth (headphones)
+  // Translation - RemoteBooth (headphones) - [C] badge for CABINA
   if (seg.requires_translation && seg.translation_mode === 'RemoteBooth') {
     stack.push({
       text: [
-        { text: '🎧 TRAD-CABINA', bold: true, color: '#0891B2', fontSize: pdfTheme.fontSize.sm },
+        { text: '[C] ', bold: true, color: '#FFFFFF', background: '#0891B2', fontSize: pdfTheme.fontSize.xs },
+        { text: 'TRAD-CABINA', bold: true, color: '#0891B2', fontSize: pdfTheme.fontSize.sm },
         seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#0E7490', fontSize: pdfTheme.fontSize.sm } : '',
       ],
       margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
