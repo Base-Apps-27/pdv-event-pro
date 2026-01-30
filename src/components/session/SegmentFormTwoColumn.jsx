@@ -294,23 +294,32 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     }
 
     // Validate segment times don't overlap with other segments in the same session
-    if (formData.start_time && times.end_time && allSegments) {
+    // CRITICAL: Use datetime comparison for multi-day sessions (session.date + time)
+    if (formData.start_time && times.end_time && allSegments && session?.date) {
       const otherSegments = allSegments.filter(s => s.id !== segment?.id);
+      
+      const toDateTime = (dateStr, timeStr) => {
+        if (!dateStr || !timeStr) return null;
+        return new Date(`${dateStr}T${timeStr}:00`);
+      };
+      
+      const newStartDT = toDateTime(session.date, formData.start_time);
+      const newEndDT = toDateTime(session.date, times.end_time);
       
       for (const existingSegment of otherSegments) {
         if (existingSegment.start_time && existingSegment.end_time) {
-          const newStart = formData.start_time;
-          const newEnd = times.end_time;
-          const existingStart = existingSegment.start_time;
-          const existingEnd = existingSegment.end_time;
+          const existingStartDT = toDateTime(session.date, existingSegment.start_time);
+          const existingEndDT = toDateTime(session.date, existingSegment.end_time);
           
-          // Check for overlap
-          if ((newStart >= existingStart && newStart < existingEnd) ||
-              (newEnd > existingStart && newEnd <= existingEnd) ||
-              (newStart <= existingStart && newEnd >= existingEnd)) {
-            setOverlapText(`El segmento se solapa con "${existingSegment.title}" (${formatTimeToEST(existingStart)} - ${formatTimeToEST(existingEnd)}). ${language === 'es' ? 'Por favor ajusta los horarios o elige ajustar segmentos posteriores.' : 'Please adjust times or choose to shift downstream segments.'}`);
-            setShowOverlapDialog(true);
-            return;
+          // Check for overlap using datetime objects
+          if (newStartDT && newEndDT && existingStartDT && existingEndDT) {
+            if ((newStartDT >= existingStartDT && newStartDT < existingEndDT) ||
+                (newEndDT > existingStartDT && newEndDT <= existingEndDT) ||
+                (newStartDT <= existingStartDT && newEndDT >= existingEndDT)) {
+              setOverlapText(`El segmento se solapa con "${existingSegment.title}" (${formatTimeToEST(existingSegment.start_time)} - ${formatTimeToEST(existingSegment.end_time)}). ${language === 'es' ? 'Por favor ajusta los horarios o elige ajustar segmentos posteriores.' : 'Please adjust times or choose to shift downstream segments.'}`);
+              setShowOverlapDialog(true);
+              return;
+            }
           }
         }
       }
