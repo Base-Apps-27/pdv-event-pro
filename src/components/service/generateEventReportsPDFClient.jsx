@@ -509,16 +509,17 @@ function buildNotesCell(seg) {
     });
   });
 
-  // Translation info for notes column if present
+  // Translation info for notes column if present (with emoji icons)
   if (seg.requires_translation) {
-    const mode = seg.translation_mode === 'InPerson' ? '🎙️ TRAD-TARIMA' : '🎧 TRAD-CABINA';
-    const color = seg.translation_mode === 'InPerson' ? '#2563EB' : '#0891B2';
+    const isInPerson = seg.translation_mode === 'InPerson';
+    const color = isInPerson ? '#2563EB' : '#0891B2';
     stack.push({
       text: [
-        { text: mode, bold: true, color, fontSize: pdfTheme.fontSize.xs },
+        { text: isInPerson ? '🎙 ' : '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+        { text: isInPerson ? 'TRAD-TARIMA' : 'TRAD-CABINA', bold: true, color, fontSize: pdfTheme.fontSize.xs },
         seg.translator_name ? { text: `: ${seg.translator_name}`, color, fontSize: pdfTheme.fontSize.xs } : '',
       ],
-      fillColor: seg.translation_mode === 'InPerson' ? '#EFF6FF' : '#ECFEFF',
+      fillColor: isInPerson ? '#EFF6FF' : '#ECFEFF',
       margin: [0, 0, 0, 1],
     });
   }
