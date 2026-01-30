@@ -532,19 +532,6 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
         <>
           <Separator />
           <div className="space-y-4">
-            <h3 className="font-semibold text-slate-900">Opciones de Receso</h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="break_presenter">Encargado</Label>
-              <AutocompleteInput
-                type="presenter"
-                id="break_presenter" 
-                value={formData.presenter}
-                onChange={(e) => setFormData({...formData, presenter: e.target.value})}
-                placeholder="Persona encargada del receso"
-              />
-            </div>
-            
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="major_break"
@@ -555,47 +542,6 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
                 Receso Mayor (Almuerzo/Cena)
               </label>
             </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="break_requires_translation"
-                checked={formData.requires_translation}
-                onCheckedChange={(checked) => setFormData({...formData, requires_translation: checked})}
-              />
-              <label htmlFor="break_requires_translation" className="text-sm cursor-pointer">
-                Requiere traducción
-              </label>
-            </div>
-
-            {formData.requires_translation && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="break_translation_mode">Modo de Traducción</Label>
-                  <Select 
-                    value={formData.translation_mode || "InPerson"}
-                    onValueChange={(value) => setFormData({...formData, translation_mode: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="InPerson">🎙 En Tarima (In Person)</SelectItem>
-                      <SelectItem value="RemoteBooth">🎧 Cabina (Remote Booth)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="break_translator_name">Traductor</Label>
-                  <AutocompleteInput
-                    type="translator"
-                    id="break_translator_name" 
-                    value={formData.translator_name}
-                    onChange={(e) => setFormData({...formData, translator_name: e.target.value})}
-                    placeholder="Nombre del traductor"
-                  />
-                </div>
-              </>
-            )}
           </div>
         </>
       )}
