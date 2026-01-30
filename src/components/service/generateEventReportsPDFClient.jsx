@@ -626,8 +626,8 @@ function buildPreSessionDetailsBlock(psd) {
 
   const details = [];
 
-  if (psd.music_profile_id) details.push({ icon: '🎵', label: 'Música', value: psd.music_profile_id });
-  if (psd.slide_pack_id) details.push({ icon: '📊', label: 'Slides', value: psd.slide_pack_id });
+  if (psd.music_profile_id) details.push({ icon: '🎵', useEmoji: true, label: 'Música', value: psd.music_profile_id });
+  if (psd.slide_pack_id) details.push({ icon: '📊', useEmoji: true, label: 'Slides', value: psd.slide_pack_id });
   if (psd.registration_desk_open_time) details.push({ label: 'Registro', value: toESTTimeStr(psd.registration_desk_open_time) });
   if (psd.library_open_time) details.push({ label: 'Librería', value: toESTTimeStr(psd.library_open_time) });
 
