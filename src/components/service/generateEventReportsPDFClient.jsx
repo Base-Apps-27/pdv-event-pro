@@ -45,8 +45,8 @@ function buildTimeCell(seg) {
     stack.push({
       text: toESTTimeStr(seg.end_time),
       color: pdfTheme.text.muted,
-      fontSize: pdfTheme.fontSize.base,
-      margin: [0, 1, 0, 0],
+      fontSize: pdfTheme.fontSize.sm,
+      margin: [0, 0, 0, 0],
     });
   }
 
@@ -54,8 +54,8 @@ function buildTimeCell(seg) {
     stack.push({
       text: `(${seg.duration_min}m)`,
       color: pdfTheme.text.muted,
-      fontSize: pdfTheme.fontSize.sm,
-      margin: [0, 1, 0, 0],
+      fontSize: pdfTheme.fontSize.xs,
+      margin: [0, 0, 0, 0],
     });
   }
 
