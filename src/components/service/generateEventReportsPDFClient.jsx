@@ -801,39 +801,33 @@ function buildPrepActionRow(act) {
 
   return [
     {
-      colSpan: 4,
-      fillColor: '#FFFBEB',
-      stack: [{
-        columns: [
-          {
-            width: 55,
-            stack: [{
-              text: [
-                { text: '⚠ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
-                { text: 'PREP', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#FFFFFF' },
-              ],
-              alignment: 'center',
-              margin: [0, 2, 0, 2],
-            }],
-            fillColor: '#F59E0B',
-          },
-          {
-            width: '*',
-            text: [
-              dept ? { text: `${dept} `, bold: true, fontSize: pdfTheme.fontSize.sm, color: '#92400E' } : '',
-              { text: label, fontSize: pdfTheme.fontSize.sm, color: pdfTheme.text.secondary },
-              required ? { text: required, fontSize: pdfTheme.fontSize.sm, color: '#DC2626', bold: true } : '',
-              offset ? { text: `  ${offset}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.light, italics: true } : '',
-              notes ? { text: notes, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted, italics: true } : '',
-            ],
-            margin: [4, 2, 0, 2],
-          },
-        ],
-      }],
+      // Warning icon in time column
+      text: [
+        { text: '⚠', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm, color: '#F59E0B' },
+      ],
+      alignment: 'center',
+      fillColor: '#FFFFFF',
+      border: [false, false, false, false],
+    },
+    {
+      // PREP content spanning details columns
+      colSpan: 2,
+      text: [
+        dept ? { text: `${dept} `, bold: true, fontSize: pdfTheme.fontSize.sm, color: '#92400E' } : '',
+        { text: label, fontSize: pdfTheme.fontSize.sm, color: pdfTheme.text.secondary },
+        required ? { text: required, fontSize: pdfTheme.fontSize.sm, color: '#DC2626', bold: true } : '',
+        offset ? { text: `  ${offset}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.light, italics: true } : '',
+        notes ? { text: notes, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted, italics: true } : '',
+      ],
+      fillColor: '#FFFFFF',
+      border: [false, false, false, false],
     },
     {},
-    {},
-    {},
+    {
+      text: '',
+      fillColor: '#FFFFFF',
+      border: [false, false, false, false],
+    },
   ];
 }
 
@@ -846,28 +840,31 @@ function buildDayTable(session, segments, allRooms = []) {
     {
       text: 'HORA',
       bold: true,
-      fontSize: pdfTheme.fontSize.sm,
-      color: pdfTheme.text.primary,
+      fontSize: pdfTheme.fontSize.base,
+      color: '#6B7280',
       alignment: 'center',
-      fillColor: pdfTheme.fills.header,
+      fillColor: '#FFFFFF',
+      border: [false, false, false, true],
     },
     {
       text: 'DETALLES',
       bold: true,
-      fontSize: pdfTheme.fontSize.sm,
-      color: pdfTheme.text.primary,
+      fontSize: pdfTheme.fontSize.base,
+      color: '#6B7280',
       alignment: 'left',
       colSpan: 2,
-      fillColor: pdfTheme.fills.header,
+      fillColor: '#FFFFFF',
+      border: [false, false, false, true],
     },
     {},
     {
       text: 'NOTAS POR EQUIPO',
       bold: true,
-      fontSize: pdfTheme.fontSize.sm,
-      color: pdfTheme.text.primary,
-      alignment: 'left',
-      fillColor: pdfTheme.fills.header,
+      fontSize: pdfTheme.fontSize.base,
+      color: '#6B7280',
+      alignment: 'right',
+      fillColor: '#FFFFFF',
+      border: [false, false, false, true],
     },
   ];
 
@@ -900,14 +897,22 @@ function buildDayTable(session, segments, allRooms = []) {
       dontBreakRows: true,
     },
     layout: {
-      hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length ? 1 : 0.5),
-      vLineWidth: () => 0.5,
-      hLineColor: (i) => i === 1 ? '#9CA3AF' : pdfTheme.borders.color,
-      vLineColor: () => pdfTheme.borders.lightColor,
-      paddingTop: () => 3,
-      paddingBottom: () => 3,
-      paddingLeft: () => 4,
-      paddingRight: () => 4,
+      hLineWidth: (i, node) => {
+        if (i === 0) return 0; // No top border
+        if (i === 1) return 1; // Header bottom border
+        return 0.5;
+      },
+      vLineWidth: (i, node) => {
+        // Vertical lines only between columns, not at edges
+        if (i === 0 || i === node.table.widths.length) return 0;
+        return 0.5;
+      },
+      hLineColor: (i) => i === 1 ? '#E5E7EB' : '#F3F4F6',
+      vLineColor: () => '#F3F4F6',
+      paddingTop: () => 4,
+      paddingBottom: () => 4,
+      paddingLeft: () => 6,
+      paddingRight: () => 6,
     },
     margin: [0, 0, 0, 4],
   };
