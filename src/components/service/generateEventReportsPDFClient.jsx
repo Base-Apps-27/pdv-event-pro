@@ -486,13 +486,23 @@ function buildNotesCell(seg) {
     { label: 'TRAD', val: seg.translation_notes, color: '#7C3AED', bg: '#F5F3FF' },
   ].filter(n => n.val);
 
-  // Video info in notes column (matching HTML)
+  // Video info in notes column (matching HTML) with timecode marker
   if (seg.has_video && (seg.video_name || seg.video_location)) {
+    const videoParts = [
+      { text: '🎬 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+      { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.xs },
+      { text: seg.video_name || seg.video_location || '', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary },
+    ];
+    // Include video length as timecode marker
+    if (seg.video_length_sec !== undefined && seg.video_length_sec !== null) {
+      const mins = Math.floor(seg.video_length_sec / 60);
+      const secs = seg.video_length_sec % 60;
+      videoParts.push({ text: ` [${mins}:${String(secs).padStart(2, '0')}]`, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B21A8' });
+    } else {
+      videoParts.push({ text: ' [0:00]', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B21A8' });
+    }
     stack.push({
-      text: [
-        { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.xs },
-        { text: seg.video_name || seg.video_location || '', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary },
-      ],
+      text: videoParts,
       fillColor: '#EFF6FF',
       margin: [0, 0, 0, 1],
     });
