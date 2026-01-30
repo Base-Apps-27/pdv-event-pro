@@ -484,7 +484,20 @@ function buildNotesCell(seg) {
     { label: 'UJIERES', val: seg.ushers_notes, color: '#16A34A', bg: '#F0FDF4' },
     { label: 'STAGE & DECOR', val: seg.stage_decor_notes, color: '#DB2777', bg: '#FDF2F8' },
     { label: 'TRAD', val: seg.translation_notes, color: '#7C3AED', bg: '#F5F3FF' },
+    { label: 'OTRO', val: seg.other_notes, color: '#6B7280', bg: '#F9FAFB' },
   ].filter(n => n.val);
+
+  // Microphone assignments (often shown in SONIDO context)
+  if (seg.microphone_assignments) {
+    stack.push({
+      text: [
+        { text: 'MICS: ', bold: true, color: '#DC2626', fontSize: pdfTheme.fontSize.xs },
+        { text: seg.microphone_assignments, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
+      ],
+      fillColor: '#FEF2F2',
+      margin: [0, 0, 0, 1],
+    });
+  }
 
   // Video info in notes column (matching HTML) with timecode marker
   if (seg.has_video && (seg.video_name || seg.video_location)) {
