@@ -151,6 +151,19 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
+  // Translation for breaks (Receso/Almuerzo) - show if present
+  if (['Receso', 'Almuerzo'].includes(seg.segment_type) && seg.requires_translation) {
+    const isInPerson = seg.translation_mode === 'InPerson';
+    stack.push({
+      text: [
+        { text: isInPerson ? '🎙 ' : '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
+        { text: isInPerson ? 'TRAD-TARIMA' : 'TRAD-CABINA', bold: true, color: isInPerson ? '#2563EB' : '#0891B2', fontSize: pdfTheme.fontSize.sm },
+        seg.translator_name ? { text: `: ${seg.translator_name}`, color: isInPerson ? '#1E40AF' : '#0E7490', fontSize: pdfTheme.fontSize.sm } : '',
+      ],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    });
+  }
+
   // Translation - InPerson (on stage) - emoji icon for TARIMA
   if (seg.requires_translation && seg.translation_mode === 'InPerson') {
     stack.push({
@@ -837,6 +850,52 @@ function buildPrepActionRow(act) {
 // ============================================================================
 // TABLE BUILDER — 4-Column Grid with PREP rows
 // ============================================================================
+
+// Build PREP action rows for break types (Receso/Almuerzo) - same layout as regular segments
+function buildBreakPrepActionRow(act) {
+  const dept = act.department ? `[${act.department}]` : '';
+  const label = act.label || '';
+  const offset = act.offset_min !== undefined ? `(${act.offset_min}m antes)` : '';
+  const required = act.is_required ? ' *' : '';
+  const notes = act.notes ? ` — ${act.notes}` : '';
+
+  return [
+    {
+      colSpan: 4,
+      fillColor: '#FFFBEB',
+      stack: [{
+        columns: [
+          {
+            width: 55,
+            stack: [{
+              text: [
+                { text: '⚠ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+                { text: 'PREP', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#FFFFFF' },
+              ],
+              alignment: 'center',
+              margin: [0, 2, 0, 2],
+            }],
+            fillColor: '#F59E0B',
+          },
+          {
+            width: '*',
+            text: [
+              dept ? { text: `${dept} `, bold: true, fontSize: pdfTheme.fontSize.sm, color: '#92400E' } : '',
+              { text: label, fontSize: pdfTheme.fontSize.sm, color: pdfTheme.text.secondary },
+              required ? { text: required, fontSize: pdfTheme.fontSize.sm, color: '#DC2626', bold: true } : '',
+              offset ? { text: `  ${offset}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.light, italics: true } : '',
+              notes ? { text: notes, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted, italics: true } : '',
+            ],
+            margin: [4, 2, 0, 2],
+          },
+        ],
+      }],
+    },
+    {},
+    {},
+    {},
+  ];
+}
 
 function buildDayTable(session, segments, allRooms = []) {
   const headerRow = [

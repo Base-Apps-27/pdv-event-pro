@@ -410,12 +410,12 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const needsPresenter = !isTechOnly && !isBreakoutType && !isPanelType; // dynamic required depending on type
   const presenterOptionalForBreak = isBreakType; // presenter is optional but available for breaks
   const showDescription = !isTechOnly && !isVideoType;
-  const showTranslation = !isBreakType && !isBreakoutType;
+  const showTranslation = !isBreakoutType; // Now available for break types too
   const showUshersNotes = !isBreakType && !isTechOnly && !isBreakoutType;
   const showProjectionNotes = !isBreakType && !isBreakoutType;
   const showSoundNotes = !isBreakType && !isBreakoutType;
   const showOtherNotes = !isBreakoutType;
-  const showActions = !isBreakType;
+  const showActions = true; // Now available for all types including breaks
   const requiresSala = !isBreakoutType;
 
   // Auto-default Sala to 'Santuario' when required and empty
