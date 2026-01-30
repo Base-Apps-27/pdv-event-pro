@@ -71,14 +71,29 @@ function buildDetailsLeftCell(seg) {
     margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
   });
 
-  // Presenter
+  // Presenter - use appropriate label based on segment type
   if (seg.presenter) {
+    const isBreakType = ['Break', 'Receso', 'Almuerzo'].includes(seg.segment_type);
+    const presenterLabel = isBreakType ? 'ENCARGADO: ' : 'MINISTRA: ';
     stack.push({
       text: [
-        { text: 'MINISTRA: ', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
+        { text: presenterLabel, bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
         { text: seg.presenter, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
       ],
       margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    });
+  }
+
+  // Break type visual distinction (Receso/Almuerzo)
+  if (['Receso', 'Almuerzo'].includes(seg.segment_type)) {
+    const isLunch = seg.segment_type === 'Almuerzo';
+    stack.push({
+      text: [
+        { text: isLunch ? '🍽️ ' : '☕ ', fontSize: pdfTheme.fontSize.lg },
+        { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.sm },
+      ],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+      fillColor: isLunch ? '#FFF7ED' : '#F3F4F6',
     });
   }
 

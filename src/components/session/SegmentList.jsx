@@ -304,8 +304,15 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                     </div>
                     {getData('presenter') && (
                       <div className="text-xs text-slate-600 mt-0.5">
-                        {segment.segment_type === "Alabanza" ? "Líder: " : segment.segment_type === "Plenaria" ? "Predicador: " : ""}
+                        {segment.segment_type === "Alabanza" ? "Líder: " : segment.segment_type === "Plenaria" ? "Predicador: " : ['Break', 'Receso', 'Almuerzo'].includes(segment.segment_type) ? "Encargado: " : ""}
                         {getData('presenter')}
+                      </div>
+                    )}
+                    {/* Break type visual badge */}
+                    {['Receso', 'Almuerzo'].includes(segment.segment_type) && (
+                      <div className={`inline-flex items-center gap-1 text-xs mt-1 px-1.5 py-0.5 rounded ${segment.segment_type === 'Almuerzo' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-700'}`}>
+                        <span>{segment.segment_type === 'Almuerzo' ? '🍽️' : '☕'}</span>
+                        <span className="font-semibold">{segment.duration_min}m</span>
                       </div>
                     )}
                     {segment.segment_type === "Plenaria" && getData('message_title') && (
@@ -486,9 +493,16 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                             <h4 className="font-semibold text-sm text-slate-900 line-clamp-1">{segment.title}</h4>
                             {getData('presenter') && (
                               <p className="text-xs text-slate-600 mt-0.5 line-clamp-1">
-                                {segment.segment_type === "Alabanza" ? "L: " : segment.segment_type === "Plenaria" ? "P: " : ""}
+                                {segment.segment_type === "Alabanza" ? "L: " : segment.segment_type === "Plenaria" ? "P: " : ['Break', 'Receso', 'Almuerzo'].includes(segment.segment_type) ? "Enc: " : ""}
                                 {getData('presenter')}
                               </p>
+                            )}
+                            {/* Break type visual badge - mobile */}
+                            {['Receso', 'Almuerzo'].includes(segment.segment_type) && (
+                              <div className={`inline-flex items-center gap-1 text-xs mt-1 px-1.5 py-0.5 rounded ${segment.segment_type === 'Almuerzo' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-700'}`}>
+                                <span>{segment.segment_type === 'Almuerzo' ? '🍽️' : '☕'}</span>
+                                <span className="font-semibold">{segment.duration_min}m</span>
+                              </div>
                             )}
                             {segment.segment_type === "Plenaria" && getData('message_title') && (
                               <p className="text-xs text-blue-600 mt-0.5 italic line-clamp-1">{getData('message_title')}</p>
