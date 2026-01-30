@@ -21,6 +21,7 @@ import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOr
 import AnnouncementSeriesManager from "../announcements/AnnouncementSeriesManager";
 import { useLanguage } from "@/components/utils/i18n";
 import { toast } from "sonner";
+import { logCreate, logUpdate } from "@/components/utils/editActionLogger";
 
 // Break type hidden from UI but kept in schema for backwards compatibility
 // Receso = short breaks (coffee, transition); Almuerzo = meal breaks
@@ -59,7 +60,7 @@ const ACTION_TIMINGS = [
   { value: "absolute", label: "Hora exacta" }
 ];
 
-export default function SegmentFormTwoColumn({ session, segment, templates, onClose, sessionId }) {
+export default function SegmentFormTwoColumn({ session, segment, templates, onClose, sessionId, user }) {
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
   const [selectedTemplate, setSelectedTemplate] = useState("");
@@ -236,13 +237,16 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   }, [selectedTemplate, templates]);
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Segment.create(data),
+    mutationFn: async (data) => {
+      const created = await base44.entities.Segment.create(data);
+      await logCreate('Segment', created, sessionId, user);
+      return created;
+    },
     onSuccess: () => {
       // Ensure the list re-sorts by time after a fractional-order insert
       queryClient.invalidateQueries(['segments', sessionId]);
+      queryClient.invalidateQueries(['editActionLogs']);
       onClose();
-      // Optional: small success toast (bilingual)
-      // toast.success(language === 'es' ? 'Segmento creado' : 'Segment created');
     },
     onError: () => {
       toast.error(t('error.save_failed'));
@@ -255,9 +259,14 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const [showShiftPreview, setShowShiftPreview] = useState(false);
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Segment.update(id, data),
+    mutationFn: async ({ id, data, previousState }) => {
+      const updated = await base44.entities.Segment.update(id, data);
+      await logUpdate('Segment', id, previousState, { ...previousState, ...data }, sessionId, user);
+      return updated;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['segments', sessionId]);
+      queryClient.invalidateQueries(['editActionLogs']);
       onClose();
     },
     onError: () => {
@@ -375,7 +384,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
     if (segment) {
       // If an overlap was detected we halt earlier and show the guided fix.
-      updateMutation.mutate({ id: segment.id, data });
+      updateMutation.mutate({ id: segment.id, data, previousState: segment });
     } else {
       createMutation.mutate(data);
     }
