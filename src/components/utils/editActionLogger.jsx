@@ -113,10 +113,15 @@ export async function logCreate(entityType, newEntity, parentId = null, user = n
   try {
     const title = newEntity.title || newEntity.name || newEntity.description || '';
     
+    // Get session context for segments
+    const resolvedParentId = parentId || newEntity.session_id || null;
+    
+    console.log('[EditActionLog] Logging create for', entityType, newEntity.id);
+    
     await base44.entities.EditActionLog.create({
       entity_type: entityType,
       entity_id: newEntity.id,
-      parent_id: parentId,
+      parent_id: resolvedParentId,
       action_type: 'create',
       field_changes: null,
       previous_state: null,
@@ -140,14 +145,22 @@ export async function logUpdate(entityType, entityId, previousState, newState, p
     const fieldChanges = calculateFieldChanges(previousState, newState);
     
     // Don't log if nothing actually changed
-    if (!fieldChanges) return;
+    if (!fieldChanges) {
+      console.log('[EditActionLog] No changes detected, skipping log for', entityType, entityId);
+      return;
+    }
     
     const title = newState.title || newState.name || previousState.title || previousState.name || '';
+    
+    // Get session context for segments
+    const resolvedParentId = parentId || newState.session_id || previousState.session_id || null;
+    
+    console.log('[EditActionLog] Logging update for', entityType, entityId, 'with', Object.keys(fieldChanges).length, 'field changes');
     
     await base44.entities.EditActionLog.create({
       entity_type: entityType,
       entity_id: entityId,
-      parent_id: parentId,
+      parent_id: resolvedParentId,
       action_type: 'update',
       field_changes: fieldChanges,
       previous_state: { ...previousState },
@@ -169,10 +182,15 @@ export async function logDelete(entityType, deletedEntity, parentId = null, user
   try {
     const title = deletedEntity.title || deletedEntity.name || deletedEntity.description || '';
     
+    // Get session context for segments
+    const resolvedParentId = parentId || deletedEntity.session_id || null;
+    
+    console.log('[EditActionLog] Logging delete for', entityType, deletedEntity.id);
+    
     await base44.entities.EditActionLog.create({
       entity_type: entityType,
       entity_id: deletedEntity.id,
-      parent_id: parentId,
+      parent_id: resolvedParentId,
       action_type: 'delete',
       field_changes: null,
       previous_state: { ...deletedEntity },
