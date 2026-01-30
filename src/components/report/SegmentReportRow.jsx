@@ -116,6 +116,19 @@ export default function SegmentReportRow({
           </div>
         )}
 
+        {/* Translation for breaks */}
+        {['Receso', 'Almuerzo'].includes(segment.segment_type) && segment.requires_translation && (
+          <div className={`text-[9px] px-1 py-0.5 rounded border mt-0.5 inline-flex items-center gap-1 ${
+            segment.translation_mode === 'InPerson'
+              ? 'bg-blue-100 border-blue-300 text-blue-800'
+              : 'bg-cyan-100 border-cyan-300 text-cyan-800'
+          }`}>
+            <span>{segment.translation_mode === 'InPerson' ? '🎙️' : '🎧'}</span>
+            <span className="font-semibold">{segment.translation_mode === 'InPerson' ? 'TRAD-TARIMA' : 'TRAD-CABINA'}</span>
+            {segment.translator_name && <span>: {segment.translator_name}</span>}
+          </div>
+        )}
+
         {segment.segment_type === "Alabanza" && segment.number_of_songs > 0 && (
           <div className="text-[9px] bg-green-50 px-0.5 py-0.5 rounded border border-green-200">
             <span className="text-green-700 font-bold">CANCIONES:</span>
