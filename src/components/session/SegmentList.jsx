@@ -8,7 +8,7 @@ import { Edit, Trash2, Music, MessageSquare, Languages, ListOrdered, Circle, Use
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { getSegmentData } from "@/components/utils/segmentDataUtils";
-import { logDelete } from "@/components/utils/editActionLogger";
+import { logDelete, logReorder } from "@/components/utils/editActionLogger";
 
 export default function SegmentList({ segments, sessionId, onEdit, onEditPreSession, user }) {
   const queryClient = useQueryClient();
@@ -77,9 +77,18 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
     const [moved] = newList.splice(index, 1);
     newList.splice(targetIndex, 0, moved);
 
+    // Log the reorder for the moved segment
+    const movedSegment = segments[index];
+    const oldOrder = movedSegment.order || index + 1;
+    const newOrder = targetIndex + 1;
+    
     await Promise.all(
       newList.map((s, i) => reorderMutation.mutateAsync({ segmentId: s.id, newOrder: i + 1 }))
     );
+    
+    // Log after successful reorder
+    await logReorder('Segment', movedSegment.id, oldOrder, newOrder, sessionId, user, movedSegment.title);
+    queryClient.invalidateQueries(['editActionLogs']);
   };
 
   const getSegmentActions = (segmentId) => {
