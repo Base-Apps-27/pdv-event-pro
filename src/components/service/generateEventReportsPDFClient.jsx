@@ -94,7 +94,8 @@ function buildTimeCell(seg) {
 function buildDetailsLeftCell(seg, allRooms = []) {
   const stack = [];
 
-  // Title + Type badge (matching HTML exactly)
+  // Title + Type badge (matching HTML exactly - title in black, type in color)
+  const color = getSegmentColor(seg.segment_type);
   const titleParts = [
     {
       text: seg.title ? seg.title.toUpperCase() : '—',
@@ -104,17 +105,16 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     },
   ];
   if (seg.segment_type) {
-    const color = getSegmentColor(seg.segment_type);
     titleParts.push({
       text: `  ${seg.segment_type}`,
       color: color.hex,
       fontSize: pdfTheme.fontSize.sm,
-      bold: true,
+      bold: false,
     });
   }
   stack.push({
     text: titleParts,
-    margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    margin: [0, 0, 0, 1],
   });
 
   // Presenter - use appropriate label based on segment type (ENCARGADO for breaks, MINISTRA for others)
@@ -123,10 +123,10 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     const presenterLabel = isBreakType ? 'ENCARGADO: ' : 'MINISTRA: ';
     stack.push({
       text: [
-        { text: presenterLabel, bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
-        { text: seg.presenter, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
+        { text: presenterLabel, bold: true, color: '#16A34A', fontSize: pdfTheme.fontSize.sm },
+        { text: seg.presenter, color: '#16A34A', fontSize: pdfTheme.fontSize.sm },
       ],
-      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+      margin: [0, 0, 0, 1],
     });
   }
 
@@ -158,27 +158,27 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
-  // Translation - InPerson (on stage) - emoji icon for TARIMA
+  // Translation - InPerson (on stage) - emoji icon for TARIMA (cyan color matching HTML)
   if (seg.requires_translation && seg.translation_mode === 'InPerson') {
     stack.push({
       text: [
         { text: '🎙 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
-        { text: 'TRAD-TARIMA', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
-        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm } : '',
+        { text: 'TRAD-TARIMA', bold: false, color: '#0891B2', fontSize: pdfTheme.fontSize.sm },
+        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#0891B2', fontSize: pdfTheme.fontSize.sm } : '',
       ],
-      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+      margin: [0, 0, 0, 1],
     });
   }
 
-  // Translation - RemoteBooth (headphones) - emoji icon for CABINA
+  // Translation - RemoteBooth (headphones) - emoji icon for CABINA (purple color matching HTML)
   if (seg.requires_translation && seg.translation_mode === 'RemoteBooth') {
     stack.push({
       text: [
         { text: '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
-        { text: 'TRAD-CABINA', bold: true, color: '#0891B2', fontSize: pdfTheme.fontSize.sm },
-        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#0E7490', fontSize: pdfTheme.fontSize.sm } : '',
+        { text: 'TRAD-CABINA', bold: false, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm },
+        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm } : '',
       ],
-      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+      margin: [0, 0, 0, 1],
     });
   }
 
