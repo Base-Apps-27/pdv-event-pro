@@ -142,17 +142,28 @@ function buildDetailsLeftCell(seg, allRooms = []) {
   // Break type visual distinction (Receso/Almuerzo) - inline, no box
   if (['Receso', 'Almuerzo'].includes(seg.segment_type)) {
     const isLunch = seg.segment_type === 'Almuerzo';
+    const breakParts = [
+      { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
+      { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.xs },
+    ];
+    // Add translation indicator inline for breaks
+    if (seg.requires_translation) {
+      const isInPerson = seg.translation_mode === 'InPerson';
+      breakParts.push({ text: '  ' });
+      breakParts.push({ text: isInPerson ? '🎙 ' : '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs });
+      breakParts.push({ text: isInPerson ? 'TRAD-TARIMA' : 'TRAD-CABINA', bold: true, color: isInPerson ? '#2563EB' : '#0891B2', fontSize: pdfTheme.fontSize.xs });
+      if (seg.translator_name) {
+        breakParts.push({ text: `: ${seg.translator_name}`, color: isInPerson ? '#1E40AF' : '#0E7490', fontSize: pdfTheme.fontSize.xs });
+      }
+    }
     stack.push({
-      text: [
-        { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
-        { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.xs },
-      ],
+      text: breakParts,
       margin: [0, 0, 0, 0],
     });
   }
 
-  // Translation - InPerson (on stage) - emoji icon for TARIMA
-  if (seg.requires_translation && seg.translation_mode === 'InPerson') {
+  // Translation - InPerson (on stage) - emoji icon for TARIMA (skip for breaks, already handled above)
+  if (seg.requires_translation && seg.translation_mode === 'InPerson' && !['Receso', 'Almuerzo'].includes(seg.segment_type)) {
     stack.push({
       text: [
         { text: '🎙 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
@@ -163,8 +174,8 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
-  // Translation - RemoteBooth (headphones) - emoji icon for CABINA
-  if (seg.requires_translation && seg.translation_mode === 'RemoteBooth') {
+  // Translation - RemoteBooth (headphones) - emoji icon for CABINA (skip for breaks, already handled above)
+  if (seg.requires_translation && seg.translation_mode === 'RemoteBooth' && !['Receso', 'Almuerzo'].includes(seg.segment_type)) {
     stack.push({
       text: [
         { text: '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
