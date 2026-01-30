@@ -537,6 +537,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                         sessionId={session.id}
                         onEdit={(segment) => handleEditSegment(segment, session.id)}
                         onEditPreSession={() => setShowPreSessionDetailsDialog(true)}
+                        user={user}
                       />
                     </div>
                   )}
@@ -559,6 +560,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
               templates={templates}
               onClose={handleCloseSegmentForm}
               sessionId={expandedSessionId}
+              user={user}
             />
           </div>
         </DialogContent>
