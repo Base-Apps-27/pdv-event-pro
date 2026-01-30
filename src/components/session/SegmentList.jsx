@@ -8,8 +8,9 @@ import { Edit, Trash2, Music, MessageSquare, Languages, ListOrdered, Circle, Use
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { getSegmentData } from "@/components/utils/segmentDataUtils";
+import { logDelete } from "@/components/utils/editActionLogger";
 
-export default function SegmentList({ segments, sessionId, onEdit, onEditPreSession }) {
+export default function SegmentList({ segments, sessionId, onEdit, onEditPreSession, user }) {
   const queryClient = useQueryClient();
 
   const { data: allActions = [] } = useQuery({
@@ -34,9 +35,13 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
   };
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Segment.delete(id),
+    mutationFn: async (segmentToDelete) => {
+      await base44.entities.Segment.delete(segmentToDelete.id);
+      await logDelete('Segment', segmentToDelete, sessionId, user);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['segments', sessionId]);
+      queryClient.invalidateQueries(['editActionLogs']);
     },
   });
 
@@ -413,7 +418,7 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                       size="sm"
                       onClick={() => {
                         if (confirm('¿Eliminar este segmento?')) {
-                          deleteMutation.mutate(segment.id);
+                          deleteMutation.mutate(segment);
                         }
                       }}
                     >
