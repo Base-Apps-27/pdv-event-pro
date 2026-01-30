@@ -244,6 +244,7 @@ export default function EventDetail() {
         onOpenChange={setShowEditEvent}
         event={e}
         onSaved={() => { queryClient.invalidateQueries(['event', eventId]); }}
+        user={currentUser}
       />
 
       <EditHistoryModal
