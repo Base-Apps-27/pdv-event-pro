@@ -23,8 +23,9 @@ import SegmentFormTwoColumn from "../session/SegmentFormTwoColumn";
 import PreSessionDetailsForm from "../session/PreSessionDetailsForm";
 import HospitalityTasksModal from "../session/HospitalityTasksModal";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
+import { logCreate, logUpdate, logDelete } from "@/components/utils/editActionLogger";
 
-export default function SessionManager({ eventId, serviceId, sessions, segments, event }) {
+export default function SessionManager({ eventId, serviceId, sessions, segments, event, user }) {
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
@@ -44,27 +45,41 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
   const navigate = useNavigate();
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Session.create(data),
+    mutationFn: async (data) => {
+      const created = await base44.entities.Session.create(data);
+      await logCreate('Session', created, eventId || serviceId, user);
+      return created;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['sessions', eventId || serviceId]);
+      queryClient.invalidateQueries(['editActionLogs']);
       setShowDialog(false);
       setEditingSession(null);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Session.update(id, data),
+    mutationFn: async ({ id, data, previousState }) => {
+      const updated = await base44.entities.Session.update(id, data);
+      await logUpdate('Session', id, previousState, { ...previousState, ...data }, eventId || serviceId, user);
+      return updated;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['sessions', eventId || serviceId]);
+      queryClient.invalidateQueries(['editActionLogs']);
       setShowDialog(false);
       setEditingSession(null);
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Session.delete(id),
+    mutationFn: async (sessionToDelete) => {
+      await base44.entities.Session.delete(sessionToDelete.id);
+      await logDelete('Session', sessionToDelete, eventId || serviceId, user);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['sessions', eventId || serviceId]);
+      queryClient.invalidateQueries(['editActionLogs']);
     },
   });
 
@@ -195,7 +210,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
     };
 
     if (editingSession) {
-      updateMutation.mutate({ id: editingSession.id, data });
+      updateMutation.mutate({ id: editingSession.id, data, previousState: editingSession });
     } else {
       createMutation.mutate(data);
     }
@@ -495,7 +510,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                       size="sm"
                       onClick={() => {
                         if (confirm('¿Eliminar esta sesión y todos sus segmentos?')) {
-                          deleteMutation.mutate(session.id);
+                          deleteMutation.mutate(session);
                         }
                       }}
                     >
