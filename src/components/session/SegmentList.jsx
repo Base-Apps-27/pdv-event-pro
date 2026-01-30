@@ -590,7 +590,7 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                                 size="sm"
                                 onClick={() => {
                                   if (confirm('¿Eliminar este segmento?')) {
-                                    deleteMutation.mutate(segment.id);
+                                    deleteMutation.mutate(segment);
                                   }
                                 }}
                                 className="h-7 px-2"
