@@ -746,6 +746,13 @@ function buildDayTable(session, segments, allRooms = []) {
     .slice()
     .sort((a, b) => (a.order || 0) - (b.order || 0))
     .forEach(seg => {
+      // PREP actions rendered as separate full-width rows BEFORE the segment (matching HTML)
+      const prepActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : []).filter(a => a.timing === 'before_start');
+      prepActions.forEach(act => {
+        rows.push(buildPrepActionRow(act));
+      });
+
+      // Main segment row
       rows.push([
         buildTimeCell(seg),
         buildDetailsLeftCell(seg, allRooms),
