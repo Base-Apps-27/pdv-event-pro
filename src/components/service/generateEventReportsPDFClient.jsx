@@ -456,26 +456,8 @@ function buildDetailsRightCell(seg) {
 function buildNotesCell(seg) {
   const stack = [];
 
-  // PREP actions - matching HTML format exactly
-  const prepActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : []).filter(a => a.timing === 'before_start');
-
-  prepActions.forEach(act => {
-    const dept = act.department ? `[${act.department}]` : '';
-    const label = act.label || '';
-    const offset = act.offset_min !== undefined ? `(${act.offset_min}m antes)` : '';
-
-    stack.push({
-      text: [
-        { text: '⚠ PREP ', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#B45309' },
-        dept ? { text: `${dept} `, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#92400E' } : '',
-        { text: label, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary },
-        offset ? { text: ` ${offset}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.light, italics: true } : '',
-        act.notes ? { text: `\n${act.notes}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted } : '',
-      ],
-      fillColor: '#FFFBEB',
-      margin: [0, 0, 0, 2],
-    });
-  });
+  // NOTE: PREP actions are now rendered as separate full-width rows below the segment
+  // See buildPrepActionRow() function
 
   // Team notes - ALL notes matching HTML (no truncation)
   const notes = [
