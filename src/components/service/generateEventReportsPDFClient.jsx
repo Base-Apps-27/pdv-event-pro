@@ -130,14 +130,30 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
-  // Break type visual distinction (Receso/Almuerzo) with duration badge - emoji icons
+  // Break type visual distinction (Receso/Almuerzo) with duration badge - emoji icons + background
   if (['Receso', 'Almuerzo'].includes(seg.segment_type)) {
     const isLunch = seg.segment_type === 'Almuerzo';
     stack.push({
-      text: [
-        { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.base },
-        { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.sm },
-      ],
+      table: {
+        body: [[{
+          text: [
+            { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.base },
+            { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.sm },
+          ],
+          fillColor: isLunch ? '#FEF3C7' : '#F3F4F6',
+          margin: [4, 2, 4, 2],
+        }]],
+      },
+      layout: {
+        hLineWidth: () => 0.5,
+        vLineWidth: () => 0.5,
+        hLineColor: () => isLunch ? '#FCD34D' : '#D1D5DB',
+        vLineColor: () => isLunch ? '#FCD34D' : '#D1D5DB',
+        paddingTop: () => 0,
+        paddingBottom: () => 0,
+        paddingLeft: () => 0,
+        paddingRight: () => 0,
+      },
       margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
@@ -646,7 +662,7 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
     stack.push({
       text: [
         { text: meta, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.header },
-        arrivalStr ? { text: ` • ${arrivalStr}`, color: '#2563EB', fontSize: pdfTheme.fontSize.header, bold: true } : '',
+        arrivalStr ? { text: ` • ${arrivalStr}`, color: '#EA580C', fontSize: pdfTheme.fontSize.header, bold: true } : '',
       ],
       margin: [0, 0, 0, 3],
     });
@@ -720,31 +736,30 @@ function buildPreSessionDetailsBlock(psd) {
 
   const stack = [];
 
+  // Title with underline effect (using decoration)
   stack.push({
     text: 'DETALLES PREVIOS (SEGMENTO 0)',
     bold: true,
     color: '#1E40AF',
     fontSize: pdfTheme.fontSize.sm,
-    margin: [0, 0, 0, 2],
+    decoration: 'underline',
+    decorationColor: '#1E40AF',
+    margin: [0, 0, 0, 3],
   });
 
-  if (details.length > 0) {
-    // Build text array with proper font switching for emojis
-    const textParts = [];
-    details.forEach((d, idx) => {
-      if (d.useEmoji && d.icon) {
-        textParts.push({ text: d.icon + ' ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs });
-      }
-      textParts.push({ text: `${d.label}: ${d.value}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
-      if (idx < details.length - 1) {
-        textParts.push({ text: ' • ', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
-      }
-    });
+  // Each detail on its own line (matching HTML layout)
+  details.forEach(d => {
+    const lineParts = [];
+    if (d.useEmoji && d.icon) {
+      lineParts.push({ text: d.icon + ' ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs });
+    }
+    lineParts.push({ text: `${d.label}: `, bold: true, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
+    lineParts.push({ text: d.value, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.primary });
     stack.push({
-      text: textParts,
-      margin: [0, 0, 0, 2],
+      text: lineParts,
+      margin: [0, 0, 0, 1],
     });
-  }
+  });
 
   if (psd.facility_notes) {
     stack.push({
