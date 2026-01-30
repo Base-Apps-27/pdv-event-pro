@@ -11,9 +11,10 @@ import { Button } from "@/components/ui/button";
 import DatePicker from "@/components/ui/DatePicker";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import OutOfRangeSessionsModal from "./OutOfRangeSessionsModal";
+import { logUpdate } from "@/components/utils/editActionLogger";
 
 // Edit dialog used in EventDetail (edit-only). Mirrors the Events page form for consistency.
-export default function EventEditDialog({ open, onOpenChange, event, onSaved }) {
+export default function EventEditDialog({ open, onOpenChange, event, onSaved, user }) {
   const queryClient = useQueryClient();
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
@@ -70,11 +71,16 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved }) 
   const [pendingRange, setPendingRange] = useState({ start: '', end: '' });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Event.update(id, data),
+    mutationFn: async ({ id, data, previousState }) => {
+      const updated = await base44.entities.Event.update(id, data);
+      await logUpdate('Event', id, previousState, { ...previousState, ...data }, null, user);
+      return updated;
+    },
     onSuccess: () => {
       // Refresh both list and detail caches
       queryClient.invalidateQueries(['events']);
       queryClient.invalidateQueries(['event', event?.id]);
+      queryClient.invalidateQueries(['editActionLogs']);
       if (onSaved) onSaved();
       // If range changed, open session-fix modal
       const changed = (previousRange.start !== pendingRange.start) || (previousRange.end !== pendingRange.end);
@@ -101,7 +107,7 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved }) 
         .filter(Boolean),
     };
     setPendingRange({ start: data.start_date || '', end: data.end_date || '' });
-    updateMutation.mutate({ id: event.id, data });
+    updateMutation.mutate({ id: event.id, data, previousState: event });
   };
 
   return (
