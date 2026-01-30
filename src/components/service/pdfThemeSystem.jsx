@@ -2,15 +2,15 @@
 // Used by generateEventReportsPDFClient.js and future renderers
 
 export const pdfTheme = {
-  // Font sizing (compact for PDF)
+  // Font sizing (ultra-compact for single-page sessions)
   fontSize: {
-    xs: 6,
-    sm: 6.5,
-    base: 7,
-    lg: 8,
-    xl: 9,
-    header: 10,
-    title: 12,
+    xs: 5.5,
+    sm: 6,
+    base: 6.5,
+    lg: 7,
+    xl: 8,
+    header: 9,
+    title: 10,
   },
 
   // Colors by segment type (matches web UI)
@@ -79,11 +79,11 @@ export const pdfTheme = {
     },
   },
 
-  // Spacing / padding (tight)
+  // Spacing / padding (ultra-tight for single-page)
   spacing: {
-    cellPadding: [2, 2, 2, 2], // [top, right, bottom, left]
-    rowGap: 0.5,
-    textMarginBottom: 0.5,
+    cellPadding: [1, 1, 1, 1], // [top, right, bottom, left]
+    rowGap: 0,
+    textMarginBottom: 0,
   },
 
   // Borders (thin, light gray)

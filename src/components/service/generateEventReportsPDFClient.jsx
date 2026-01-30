@@ -65,10 +65,10 @@ function buildTimeCell(seg) {
     stack.push({
       text: isInPerson ? '🎙' : '🎧',
       font: 'NotoEmoji',
-      fontSize: pdfTheme.fontSize.sm,
+      fontSize: pdfTheme.fontSize.xs,
       color: '#7C3AED',
       alignment: 'center',
-      margin: [0, 2, 0, 0],
+      margin: [0, 0, 0, 0],
     });
   }
 
@@ -77,10 +77,10 @@ function buildTimeCell(seg) {
     stack.push({
       text: '🍽',
       font: 'NotoEmoji',
-      fontSize: pdfTheme.fontSize.sm,
+      fontSize: pdfTheme.fontSize.xs,
       color: '#EA580C',
       alignment: 'center',
-      margin: [0, 2, 0, 0],
+      margin: [0, 0, 0, 0],
     });
   }
 
@@ -139,28 +139,15 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     }
   }
 
-  // Break type visual distinction (Receso/Almuerzo) with duration badge - emoji icons + background box
+  // Break type visual distinction (Receso/Almuerzo) - inline, no box
   if (['Receso', 'Almuerzo'].includes(seg.segment_type)) {
     const isLunch = seg.segment_type === 'Almuerzo';
     stack.push({
-      table: {
-        widths: ['auto'],
-        body: [[{
-          text: [
-            { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.base },
-            { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.sm },
-          ],
-          fillColor: isLunch ? '#FFF7ED' : '#F3F4F6',
-          margin: [3, 2, 3, 2],
-        }]],
-      },
-      layout: {
-        hLineWidth: () => 0.5,
-        vLineWidth: () => 0.5,
-        hLineColor: () => isLunch ? '#FDBA74' : '#D1D5DB',
-        vLineColor: () => isLunch ? '#FDBA74' : '#D1D5DB',
-      },
-      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+      text: [
+        { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
+        { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.xs },
+      ],
+      margin: [0, 0, 0, 0],
     });
   }
 
@@ -659,7 +646,7 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
 
   stack.push({
     text: titleParts,
-    margin: [0, 0, 0, 2],
+    margin: [0, 0, 0, 1],
   });
 
   // Date/time/location line
@@ -667,10 +654,10 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
   if (meta || arrivalStr) {
     stack.push({
       text: [
-        { text: meta, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.header },
-        arrivalStr ? { text: ` • ${arrivalStr}`, color: '#EA580C', fontSize: pdfTheme.fontSize.header, bold: true } : '',
+        { text: meta, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.base },
+        arrivalStr ? { text: ` • ${arrivalStr}`, color: '#EA580C', fontSize: pdfTheme.fontSize.base, bold: true } : '',
       ],
-      margin: [0, 0, 0, 3],
+      margin: [0, 0, 0, 1],
     });
   }
 
@@ -688,19 +675,19 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
   if (session?.presenter) teams.push({ label: 'PRES', value: session.presenter, color: '#2563EB' });
 
   if (teams.length > 0) {
-    // Build 4-column grid like HTML
+    // Build 5-column grid for more compact layout
     const rows = [];
-    for (let i = 0; i < teams.length; i += 4) {
-      const rowCells = teams.slice(i, i + 4).map(t => ({
+    for (let i = 0; i < teams.length; i += 5) {
+      const rowCells = teams.slice(i, i + 5).map(t => ({
         text: [
           { text: `${t.label}: `, bold: true, color: t.color, fontSize: pdfTheme.fontSize.xs },
           { text: t.value, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
         ],
         fillColor: '#FAFAFA',
-        margin: [2, 1, 2, 1],
+        margin: [1, 0, 1, 0],
       }));
-      // Pad to 4 columns
-      while (rowCells.length < 4) {
+      // Pad to 5 columns
+      while (rowCells.length < 5) {
         rowCells.push({ text: '', fillColor: '#FAFAFA' });
       }
       rows.push(rowCells);
@@ -708,20 +695,22 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
 
     stack.push({
       table: {
-        widths: ['*', '*', '*', '*'],
+        widths: ['*', '*', '*', '*', '*'],
         body: rows,
       },
       layout: {
-        hLineWidth: () => 0.5,
-        vLineWidth: () => 0.5,
+        hLineWidth: () => 0.25,
+        vLineWidth: () => 0.25,
         hLineColor: () => '#E5E7EB',
         vLineColor: () => '#E5E7EB',
+        paddingTop: () => 1,
+        paddingBottom: () => 1,
       },
-      margin: [0, 0, 0, 4],
+      margin: [0, 0, 0, 2],
     });
   }
 
-  return { stack, margin: [0, 0, 0, 4] };
+  return { stack, margin: [0, 0, 0, 2] };
 }
 
 // ============================================================================
@@ -751,18 +740,21 @@ function buildPreSessionDetailsBlock(psd) {
   });
 
   if (details.length > 0) {
-    // Each detail on its own line
-    details.forEach(d => {
-      const lineParts = [];
+    // Inline details separated by bullets
+    const textParts = [];
+    details.forEach((d, idx) => {
       if (d.useEmoji && d.icon) {
-        lineParts.push({ text: d.icon + ' ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs });
+        textParts.push({ text: d.icon + ' ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs });
       }
-      lineParts.push({ text: `${d.label}: `, bold: true, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
-      lineParts.push({ text: d.value, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.primary });
-      stack.push({
-        text: lineParts,
-        margin: [0, 0, 0, 1],
-      });
+      textParts.push({ text: `${d.label}: `, bold: true, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
+      textParts.push({ text: d.value, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.primary });
+      if (idx < details.length - 1) {
+        textParts.push({ text: ' • ', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted });
+      }
+    });
+    stack.push({
+      text: textParts,
+      margin: [0, 0, 0, 1],
     });
   }
 
@@ -789,7 +781,7 @@ function buildPreSessionDetailsBlock(psd) {
   return {
     stack,
     fillColor: '#EFF6FF',
-    margin: [0, 0, 0, 6],
+    margin: [0, 0, 0, 2],
   };
 }
 
@@ -905,16 +897,16 @@ function buildDayTable(session, segments, allRooms = []) {
       dontBreakRows: true,
     },
     layout: {
-      hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length ? 1 : 0.5),
-      vLineWidth: () => 0.5,
+      hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length ? 0.5 : 0.25),
+      vLineWidth: () => 0.25,
       hLineColor: (i) => i === 1 ? '#9CA3AF' : pdfTheme.borders.color,
       vLineColor: () => pdfTheme.borders.lightColor,
-      paddingTop: () => 3,
-      paddingBottom: () => 3,
-      paddingLeft: () => 4,
-      paddingRight: () => 4,
+      paddingTop: () => 1,
+      paddingBottom: () => 1,
+      paddingLeft: () => 2,
+      paddingRight: () => 2,
     },
-    margin: [0, 0, 0, 4],
+    margin: [0, 0, 0, 2],
   };
 }
 
@@ -952,7 +944,7 @@ export async function generateEventReportPDFClient({ event, sessions, segmentsBy
   const docDefinition = {
     pageSize: 'LETTER',
     pageOrientation: 'landscape',
-    pageMargins: [18, 12, 18, 18],
+    pageMargins: [12, 8, 12, 14],
     defaultStyle: { fontSize: pdfTheme.fontSize.base, color: pdfTheme.text.primary, font: 'Roboto' },
     content,
     footer: (currentPage, pageCount) => ({
