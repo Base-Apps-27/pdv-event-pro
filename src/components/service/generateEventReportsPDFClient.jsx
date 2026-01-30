@@ -2,9 +2,29 @@ import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { pdfTheme, getSegmentColor, getLabelStyle, toESTTimeStr } from './pdfThemeSystem';
 
+// Initialize pdfMake fonts
 if (pdfMake && !pdfMake.vfs && pdfFonts && pdfFonts.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
+
+// Configure NotoEmoji font for emoji support in PDF
+// Using CDN-hosted Noto Emoji Monochrome font
+const NOTO_EMOJI_CDN = 'https://cdn.jsdelivr.net/gh/zjaco13/Noto-Emoji-Monochrome@24d8485dc7eeda9ec8d08788dfacad75127aebc7/fonts/NotoEmoji-Medium.ttf';
+
+pdfMake.fonts = {
+  Roboto: {
+    normal: 'Roboto-Regular.ttf',
+    bold: 'Roboto-Medium.ttf',
+    italics: 'Roboto-Italic.ttf',
+    bolditalics: 'Roboto-MediumItalic.ttf',
+  },
+  NotoEmoji: {
+    normal: NOTO_EMOJI_CDN,
+    bold: NOTO_EMOJI_CDN,
+    italics: NOTO_EMOJI_CDN,
+    bolditalics: NOTO_EMOJI_CDN,
+  },
+};
 
 // ============================================================================
 // CELL BUILDERS — Layout Intent System (Matching HTML Reports 1:1)
