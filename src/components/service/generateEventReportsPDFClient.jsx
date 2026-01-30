@@ -1,11 +1,15 @@
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
-import { pdfTheme, getSegmentColor, toESTTimeStr } from './pdfThemeSystem';
+import { pdfTheme, getSegmentColor, getLabelStyle, toESTTimeStr } from './pdfThemeSystem';
 
 // Initialize pdfMake fonts
 if (pdfMake && !pdfMake.vfs && pdfFonts && pdfFonts.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
+
+// Configure NotoEmoji font for emoji support in PDF
+// Using CDN-hosted Noto Emoji Monochrome font
+const NOTO_EMOJI_CDN = 'https://cdn.jsdelivr.net/gh/zjaco13/Noto-Emoji-Monochrome@24d8485dc7eeda9ec8d08788dfacad75127aebc7/fonts/NotoEmoji-Medium.ttf';
 
 pdfMake.fonts = {
   Roboto: {
@@ -14,568 +18,883 @@ pdfMake.fonts = {
     italics: 'Roboto-Italic.ttf',
     bolditalics: 'Roboto-MediumItalic.ttf',
   },
+  NotoEmoji: {
+    normal: NOTO_EMOJI_CDN,
+    bold: NOTO_EMOJI_CDN,
+    italics: NOTO_EMOJI_CDN,
+    bolditalics: NOTO_EMOJI_CDN,
+  },
 };
 
 // ============================================================================
-// CONSTANTS - HTML Print-Matching Layout
+// CELL BUILDERS — Layout Intent System (Matching HTML Reports 1:1)
 // ============================================================================
 
-// LETTER landscape: 11" x 8.5" = 792 x 612 pts
-// With 18pt margins on each side: usable width = 792 - 36 = 756pt
-const COL_TIME = 50;      // Narrow time column
-const COL_NOTES = 220;    // Notes sidebar (narrower than details)
-const COL_DETAILS = '*';  // Details gets remaining space (~486pt)
-
-// Muted label color (matches HTML's text-gray-600/700)
-const LABEL_COLOR = '#6B7280';
-const TEXT_COLOR = '#111827';
-const MUTED_COLOR = '#9CA3AF';
-
-// Zebra striping colors
-const ROW_WHITE = '#FFFFFF';
-const ROW_GRAY = '#F9FAFB';
-
-// ============================================================================
-// HELPER: Build inline label:value text runs (HTML print style)
-// ============================================================================
-
-function labelValue(label, value, labelColor = LABEL_COLOR) {
-  if (!value) return null;
-  return [
-    { text: `${label}: `, bold: true, color: labelColor, fontSize: 6.5 },
-    { text: value, color: TEXT_COLOR, fontSize: 6.5 },
-  ];
-}
-
-// ============================================================================
-// TIME CELL - Compact, matches HTML
-// ============================================================================
-
-function buildTimeCell(seg, rowIndex) {
-  const fill = rowIndex % 2 === 0 ? ROW_WHITE : ROW_GRAY;
-  const parts = [];
-
-  // Start time (bold)
-  parts.push({
-    text: seg.start_time ? toESTTimeStr(seg.start_time) : '—',
-    bold: true,
-    fontSize: 7.5,
-    color: TEXT_COLOR,
-  });
-
-  // End time (muted, same line or below)
-  if (seg.end_time) {
-    parts.push({
-      text: `\n${toESTTimeStr(seg.end_time)}`,
-      fontSize: 6.5,
-      color: MUTED_COLOR,
-    });
-  }
-
-  // Duration
-  if (seg.duration_min) {
-    parts.push({
-      text: `\n(${seg.duration_min}m)`,
-      fontSize: 6,
-      color: MUTED_COLOR,
-    });
-  }
-
-  // Translation indicator (text-based, no emoji font needed)
-  if (seg.requires_translation) {
-    const mode = seg.translation_mode === 'InPerson' ? 'T' : 'C';
-    parts.push({
-      text: `\n[${mode}]`,
-      fontSize: 6,
-      color: '#7C3AED',
+function buildTimeCell(seg) {
+  const color = getSegmentColor(seg.segment_type);
+  const stack = [
+    {
+      text: seg.start_time ? toESTTimeStr(seg.start_time) : '—',
       bold: true,
+      color: pdfTheme.text.primary,
+      fontSize: pdfTheme.fontSize.lg,
+    },
+  ];
+
+  if (seg.end_time) {
+    stack.push({
+      text: toESTTimeStr(seg.end_time),
+      color: pdfTheme.text.muted,
+      fontSize: pdfTheme.fontSize.base,
+      margin: [0, 1, 0, 0],
+    });
+  }
+
+  if (seg.duration_min) {
+    stack.push({
+      text: `(${seg.duration_min}m)`,
+      color: pdfTheme.text.muted,
+      fontSize: pdfTheme.fontSize.sm,
+      margin: [0, 1, 0, 0],
+    });
+  }
+
+  // Translation mode indicator in time cell with emoji icons (using NotoEmoji font)
+  if (seg.requires_translation) {
+    const isInPerson = seg.translation_mode === 'InPerson';
+    stack.push({
+      text: isInPerson ? '🎙' : '🎧',
+      font: 'NotoEmoji',
+      fontSize: pdfTheme.fontSize.sm,
+      color: '#7C3AED',
+      alignment: 'center',
+      margin: [0, 2, 0, 0],
+    });
+  }
+
+  // Major break indicator with emoji icon
+  if (seg.major_break) {
+    stack.push({
+      text: '🍽',
+      font: 'NotoEmoji',
+      fontSize: pdfTheme.fontSize.sm,
+      color: '#EA580C',
+      alignment: 'center',
+      margin: [0, 2, 0, 0],
     });
   }
 
   return {
-    text: parts,
-    fillColor: fill,
+    stack,
+    verticalAlign: 'top',
+    fillColor: pdfTheme.fills.timeCell,
   };
 }
 
-// ============================================================================
-// DETAILS CELL - Compact inline text, matches HTML SegmentReportRow
-// ============================================================================
+function buildDetailsLeftCell(seg, allRooms = []) {
+  const stack = [];
 
-function buildDetailsCell(seg, rowIndex, allRooms = []) {
-  const fill = rowIndex % 2 === 0 ? ROW_WHITE : ROW_GRAY;
-  const lines = [];
-
-  // Line 1: TITLE (Type) - inline type in muted gray
-  const titleLine = [
-    { text: (seg.title || '—').toUpperCase(), bold: true, fontSize: 7.5, color: TEXT_COLOR },
+  // Title + Type badge (matching HTML exactly)
+  const titleParts = [
+    {
+      text: seg.title ? seg.title.toUpperCase() : '—',
+      bold: true,
+      color: pdfTheme.text.primary,
+      fontSize: pdfTheme.fontSize.lg,
+    },
   ];
   if (seg.segment_type) {
-    titleLine.push({ text: ` (${seg.segment_type})`, fontSize: 6.5, color: MUTED_COLOR });
-  }
-  lines.push({ text: titleLine, margin: [0, 0, 0, 1] });
-
-  // Presenter (blue accent for names)
-  if (seg.presenter) {
-    const label = ['Break', 'Receso', 'Almuerzo'].includes(seg.segment_type) ? 'Encargado' : 'Ministra';
-    lines.push({
-      text: [
-        { text: `${label}: `, bold: true, fontSize: 6.5, color: LABEL_COLOR },
-        { text: seg.presenter, fontSize: 6.5, color: '#2563EB' },
-      ],
-      margin: [0, 0, 0, 1],
-    });
-  }
-
-  // Break visual (Receso/Almuerzo)
-  if (['Receso', 'Almuerzo'].includes(seg.segment_type)) {
-    const icon = seg.segment_type === 'Almuerzo' ? '[Almuerzo]' : '[Receso]';
-    lines.push({
-      text: `${icon} ${seg.duration_min || 0} min`,
-      fontSize: 6.5,
-      color: seg.segment_type === 'Almuerzo' ? '#C2410C' : LABEL_COLOR,
+    const color = getSegmentColor(seg.segment_type);
+    titleParts.push({
+      text: `  ${seg.segment_type}`,
+      color: color.hex,
+      fontSize: pdfTheme.fontSize.sm,
       bold: true,
-      margin: [0, 0, 0, 1],
     });
   }
+  stack.push({
+    text: titleParts,
+    margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+  });
 
-  // Translation info
-  if (seg.requires_translation) {
-    const mode = seg.translation_mode === 'InPerson' ? 'TRAD-TARIMA' : 'TRAD-CABINA';
-    const translatorText = seg.translator_name ? `: ${seg.translator_name}` : '';
-    lines.push({
+  // Presenter - use appropriate label based on segment type (ENCARGADO for breaks, MINISTRA for others)
+  if (seg.presenter) {
+    const isBreakType = ['Break', 'Receso', 'Almuerzo'].includes(seg.segment_type);
+    const presenterLabel = isBreakType ? 'ENCARGADO: ' : 'MINISTRA: ';
+    stack.push({
       text: [
-        { text: `${mode}`, bold: true, fontSize: 6.5, color: '#7C3AED' },
-        { text: translatorText, fontSize: 6.5, color: '#7C3AED' },
+        { text: presenterLabel, bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
+        { text: seg.presenter, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
       ],
-      margin: [0, 0, 0, 1],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
-  // Songs (Alabanza) - compact bullet list
+  // Break type visual distinction (Receso/Almuerzo) with duration badge - emoji icons
+  if (['Receso', 'Almuerzo'].includes(seg.segment_type)) {
+    const isLunch = seg.segment_type === 'Almuerzo';
+    stack.push({
+      text: [
+        { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.base },
+        { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.sm },
+      ],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    });
+  }
+
+  // Translation - InPerson (on stage) - emoji icon for TARIMA
+  if (seg.requires_translation && seg.translation_mode === 'InPerson') {
+    stack.push({
+      text: [
+        { text: '🎙 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
+        { text: 'TRAD-TARIMA', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
+        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm } : '',
+      ],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    });
+  }
+
+  // Translation - RemoteBooth (headphones) - emoji icon for CABINA
+  if (seg.requires_translation && seg.translation_mode === 'RemoteBooth') {
+    stack.push({
+      text: [
+        { text: '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
+        { text: 'TRAD-CABINA', bold: true, color: '#0891B2', fontSize: pdfTheme.fontSize.sm },
+        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#0E7490', fontSize: pdfTheme.fontSize.sm } : '',
+      ],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    });
+  }
+
+  // Songs (Alabanza) - full list matching HTML
   if (seg.segment_type === 'Alabanza' && seg.number_of_songs > 0) {
-    const songParts = [{ text: 'Canciones: ', bold: true, fontSize: 6.5, color: '#166534' }];
-    const songList = [];
+    stack.push({
+      text: 'CANCIONES:',
+      bold: true,
+      color: '#166534',
+      fontSize: pdfTheme.fontSize.sm,
+      margin: [0, 0, 0, 1],
+    });
     for (let i = 1; i <= Math.min(seg.number_of_songs, 6); i++) {
       const title = seg[`song_${i}_title`];
       if (title) {
-        const lead = seg[`song_${i}_lead`] ? ` (${seg[`song_${i}_lead`]})` : '';
-        const key = seg[`song_${i}_key`] ? ` [${seg[`song_${i}_key`]}]` : '';
-        songList.push(`${i}. ${title}${lead}${key}`);
+        const lead = seg[`song_${i}_lead`];
+        const key = seg[`song_${i}_key`];
+        stack.push({
+          text: [
+            { text: `${i}. `, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs },
+            { text: title, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.sm, bold: true },
+            lead ? { text: ` (${lead})`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
+            key ? { text: ` [${key}]`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, bold: true } : '',
+          ],
+          margin: [0, 0, 0, 0.5],
+        });
       }
     }
-    songParts.push({ text: songList.join(' • '), fontSize: 6.5, color: TEXT_COLOR });
-    lines.push({ text: songParts, margin: [0, 0, 0, 1] });
   }
 
-  // Message title (Plenaria)
-  if (seg.segment_type === 'Plenaria' && seg.message_title) {
-    const lv = labelValue('Mensaje', `"${seg.message_title}"`, '#1E40AF');
-    if (lv) lines.push({ text: lv, margin: [0, 0, 0, 1] });
-  }
-
-  // Scripture references
-  if (seg.scripture_references) {
-    const lv = labelValue('Citas', seg.scripture_references, '#1E40AF');
-    if (lv) lines.push({ text: lv, margin: [0, 0, 0, 1] });
-  }
-
-  // Video info
+  // Video info - full details matching HTML (in details left column)
   if (seg.has_video) {
-    const videoParts = [{ text: 'Video: ', bold: true, fontSize: 6.5, color: '#1E40AF' }];
-    const details = [];
-    if (seg.video_name) details.push(seg.video_name);
+    const videoParts = [
+      { text: '🎬 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
+      { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
+    ];
+    if (seg.video_name) videoParts.push({ text: seg.video_name, color: '#1E3A8A', fontSize: pdfTheme.fontSize.sm });
     if (seg.video_length_sec) {
       const mins = Math.floor(seg.video_length_sec / 60);
       const secs = seg.video_length_sec % 60;
-      details.push(`${mins}:${String(secs).padStart(2, '0')}`);
+      videoParts.push({ text: ` - ${mins}:${String(secs).padStart(2, '0')}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
+    } else {
+      videoParts.push({ text: ' - 0:00', color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
     }
-    if (seg.video_location) details.push(seg.video_location);
-    if (seg.video_owner) details.push(seg.video_owner);
-    videoParts.push({ text: details.join(' • '), fontSize: 6.5, color: TEXT_COLOR });
-    lines.push({ text: videoParts, margin: [0, 0, 0, 1] });
+    if (seg.video_location) videoParts.push({ text: ` • ${seg.video_location}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
+    if (seg.video_owner) videoParts.push({ text: ` • ${seg.video_owner}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
+    stack.push({ text: videoParts, margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom] });
   }
 
-  // Panel (moderators/panelists)
-  if (seg.segment_type === 'Panel') {
-    if (seg.panel_moderators) {
-      const lv = labelValue('Mod', seg.panel_moderators, '#B45309');
-      if (lv) lines.push({ text: lv, margin: [0, 0, 0, 1] });
-    }
-    if (seg.panel_panelists) {
-      const lv = labelValue('Pan', seg.panel_panelists, '#B45309');
-      if (lv) lines.push({ text: lv, margin: [0, 0, 0, 1] });
-    }
-  }
-
-  // Artes
-  if (seg.segment_type === 'Artes' && Array.isArray(seg.art_types) && seg.art_types.length) {
-    const artLabels = seg.art_types.map(t => 
-      t === 'DANCE' ? 'Danza' : t === 'DRAMA' ? 'Drama' : t === 'VIDEO' ? 'Video' : 'Otro'
-    ).join(', ');
-    lines.push({
+  // Prep instructions (if present and not shown elsewhere)
+  if (seg.prep_instructions) {
+    stack.push({
       text: [
-        { text: 'Artes: ', bold: true, fontSize: 6.5, color: '#BE185D' },
-        { text: artLabels, fontSize: 6.5, color: TEXT_COLOR },
+        { text: 'PREP: ', bold: true, color: '#B45309', fontSize: pdfTheme.fontSize.xs },
+        { text: seg.prep_instructions, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs, italics: true },
       ],
+      fillColor: '#FFFBEB',
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    });
+  }
+
+  // Scripture references (for Plenarias)
+  if (seg.scripture_references) {
+    stack.push({
+      text: [
+        { text: '📖 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+        { text: 'CITAS: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.xs },
+        { text: seg.scripture_references, color: '#1E3A8A', fontSize: pdfTheme.fontSize.xs },
+      ],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    });
+  }
+
+  // Artes - full details matching HTML (types, mics, cues, songs)
+  if (seg.segment_type === 'Artes' && Array.isArray(seg.art_types) && seg.art_types.length) {
+    const artLabels = seg.art_types.map(t => (t === 'DANCE' ? 'Danza' : t === 'DRAMA' ? 'Drama' : t === 'VIDEO' ? 'Video' : 'Otro')).join(', ');
+    stack.push({
+      text: [{ text: 'ARTES: ', bold: true, color: '#831843', fontSize: pdfTheme.fontSize.sm }, { text: artLabels, fontSize: pdfTheme.fontSize.sm }],
       margin: [0, 0, 0, 1],
     });
 
     // Drama details
     if (seg.art_types.includes('DRAMA')) {
       const dramaParts = [];
-      if (seg.drama_handheld_mics > 0) dramaParts.push(`Mano: ${seg.drama_handheld_mics}`);
+      if (seg.drama_handheld_mics > 0) dramaParts.push(`Mics mano: ${seg.drama_handheld_mics}`);
       if (seg.drama_headset_mics > 0) dramaParts.push(`Headset: ${seg.drama_headset_mics}`);
       if (seg.drama_start_cue) dramaParts.push(`Inicio: ${seg.drama_start_cue}`);
       if (seg.drama_end_cue) dramaParts.push(`Fin: ${seg.drama_end_cue}`);
-      if (seg.drama_has_song && seg.drama_song_title) dramaParts.push(`Canción: ${seg.drama_song_title}`);
       if (dramaParts.length) {
-        lines.push({ text: `  ${dramaParts.join(' • ')}`, fontSize: 6, color: MUTED_COLOR, margin: [0, 0, 0, 1] });
+        stack.push({
+          text: dramaParts.join(' • '),
+          color: pdfTheme.text.secondary,
+          fontSize: pdfTheme.fontSize.xs,
+          margin: [0, 0, 0, 1],
+        });
+      }
+      if (seg.drama_has_song && seg.drama_song_title) {
+        stack.push({
+          text: `Canción: ${seg.drama_song_title}`,
+          color: pdfTheme.text.secondary,
+          fontSize: pdfTheme.fontSize.xs,
+          margin: [0, 0, 0, 1],
+        });
       }
     }
 
     // Dance details
     if (seg.art_types.includes('DANCE')) {
       const danceParts = [];
-      if (seg.dance_has_song && seg.dance_song_title) danceParts.push(`Música: ${seg.dance_song_title}`);
-      if (seg.dance_handheld_mics > 0) danceParts.push(`Mano: ${seg.dance_handheld_mics}`);
+      if (seg.dance_handheld_mics > 0) danceParts.push(`Mics mano: ${seg.dance_handheld_mics}`);
       if (seg.dance_headset_mics > 0) danceParts.push(`Headset: ${seg.dance_headset_mics}`);
+      if (seg.dance_start_cue) danceParts.push(`Inicio: ${seg.dance_start_cue}`);
+      if (seg.dance_end_cue) danceParts.push(`Fin: ${seg.dance_end_cue}`);
       if (danceParts.length) {
-        lines.push({ text: `  ${danceParts.join(' • ')}`, fontSize: 6, color: MUTED_COLOR, margin: [0, 0, 0, 1] });
+        stack.push({
+          text: danceParts.join(' • '),
+          color: pdfTheme.text.secondary,
+          fontSize: pdfTheme.fontSize.xs,
+          margin: [0, 0, 0, 1],
+        });
+      }
+      if (seg.dance_has_song && seg.dance_song_title) {
+        stack.push({
+          text: `Música: ${seg.dance_song_title}`,
+          color: pdfTheme.text.secondary,
+          fontSize: pdfTheme.fontSize.xs,
+          margin: [0, 0, 0, 1],
+        });
       }
     }
 
+    // Other art description
     if (seg.art_types.includes('OTHER') && seg.art_other_description) {
-      lines.push({ text: `  ${seg.art_other_description}`, fontSize: 6, color: MUTED_COLOR, margin: [0, 0, 0, 1] });
+      stack.push({
+        text: seg.art_other_description,
+        color: pdfTheme.text.secondary,
+        fontSize: pdfTheme.fontSize.xs,
+        margin: [0, 0, 0, 1],
+      });
     }
   }
 
-  // Breakout Rooms - compact list
+  // Message (Plenaria) - full title
+  if (seg.segment_type === 'Plenaria' && seg.message_title) {
+    stack.push({
+      text: [
+        { text: 'MENSAJE: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
+        { text: `"${seg.message_title}"`, color: '#1E3A8A', fontSize: pdfTheme.fontSize.sm },
+      ],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    });
+  }
+
+  // Panel - moderators and panelists
+  if (seg.segment_type === 'Panel') {
+    if (seg.panel_moderators) {
+      stack.push({
+        text: [
+          { text: 'MOD: ', bold: true, color: '#B45309', fontSize: pdfTheme.fontSize.sm },
+          { text: seg.panel_moderators, color: '#92400E', fontSize: pdfTheme.fontSize.sm },
+        ],
+        margin: [0, 0, 0, 1],
+      });
+    }
+    if (seg.panel_panelists) {
+      stack.push({
+        text: [
+          { text: 'PAN: ', bold: true, color: '#B45309', fontSize: pdfTheme.fontSize.sm },
+          { text: seg.panel_panelists, color: '#92400E', fontSize: pdfTheme.fontSize.sm },
+        ],
+        margin: [0, 0, 0, 1],
+      });
+    }
+    if (seg.description_details) {
+      stack.push({
+        text: seg.description_details,
+        color: pdfTheme.text.secondary,
+        fontSize: pdfTheme.fontSize.xs,
+        margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+      });
+    }
+  }
+
+  // Breakout Rooms - 3-column card grid matching HTML
   if (seg.segment_type === 'Breakout' && Array.isArray(seg.breakout_rooms) && seg.breakout_rooms.length > 0) {
-    seg.breakout_rooms.forEach((room, idx) => {
+    const roomCards = seg.breakout_rooms.map((room, idx) => {
       const roomName = room.room_id && allRooms.length
         ? (allRooms.find(r => r.id === room.room_id)?.name || `Sala ${idx + 1}`)
         : `Sala ${idx + 1}`;
-      
-      const roomParts = [`[${roomName}]`];
-      if (room.topic) roomParts.push(`"${room.topic}"`);
-      if (room.hosts) roomParts.push(`Anfitrión: ${room.hosts}`);
-      if (room.speakers) roomParts.push(`Presentador: ${room.speakers}`);
-      if (room.requires_translation) {
-        const mode = room.translation_mode === 'InPerson' ? 'Tarima' : 'Cabina';
-        roomParts.push(`Trad: ${mode}${room.translator_name ? ` (${room.translator_name})` : ''}`);
-      }
-      
-      lines.push({
-        text: roomParts.join(' • '),
-        fontSize: 6,
-        color: TEXT_COLOR,
-        margin: [0, 0, 0, 1],
+
+      const cardStack = [];
+      // Room name badge
+      cardStack.push({
+        text: roomName,
+        bold: true,
+        color: '#1E40AF',
+        fontSize: pdfTheme.fontSize.xs,
+        fillColor: '#EFF6FF',
+        margin: [0, 0, 0, 2],
       });
-      
+      // Topic
+      if (room.topic) {
+        cardStack.push({
+          text: `"${room.topic}"`,
+          bold: true,
+          color: pdfTheme.text.primary,
+          fontSize: pdfTheme.fontSize.sm,
+          margin: [0, 0, 0, 1],
+        });
+      }
+      // Host
+      if (room.hosts) {
+        cardStack.push({
+          text: [
+            { text: 'Anfitrión: ', bold: true, color: '#4338CA', fontSize: pdfTheme.fontSize.xs },
+            { text: room.hosts.toUpperCase(), color: '#4338CA', fontSize: pdfTheme.fontSize.xs },
+          ],
+          margin: [0, 0, 0, 0.5],
+        });
+      }
+      // Speaker
+      if (room.speakers) {
+        cardStack.push({
+          text: [
+            { text: 'Presentador: ', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.xs },
+            { text: room.speakers, color: '#2563EB', fontSize: pdfTheme.fontSize.xs },
+          ],
+          margin: [0, 0, 0, 0.5],
+        });
+      }
+      // Translation indicator with emoji
+      if (room.requires_translation) {
+        const isInPerson = room.translation_mode === 'InPerson';
+        cardStack.push({
+          text: [
+            { text: isInPerson ? '🎙 ' : '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+            room.translator_name ? { text: room.translator_name, color: '#7C3AED', fontSize: pdfTheme.fontSize.xs } : { text: 'Traducción', color: '#7C3AED', fontSize: pdfTheme.fontSize.xs, italics: true },
+          ],
+          margin: [0, 0, 0, 0.5],
+        });
+      }
+      // General notes for room
       if (room.general_notes) {
-        lines.push({ text: `  ${room.general_notes}`, fontSize: 6, color: MUTED_COLOR, italics: true, margin: [0, 0, 0, 1] });
+        cardStack.push({
+          text: room.general_notes,
+          color: pdfTheme.text.muted,
+          fontSize: pdfTheme.fontSize.xs,
+          italics: true,
+          margin: [0, 0, 0, 0.5],
+        });
       }
+      // Other notes for room
       if (room.other_notes) {
-        lines.push({ text: `  ${room.other_notes}`, fontSize: 6, color: MUTED_COLOR, margin: [0, 0, 0, 1] });
+        cardStack.push({
+          text: room.other_notes,
+          color: pdfTheme.text.muted,
+          fontSize: pdfTheme.fontSize.xs,
+          margin: [0, 0, 0, 0.5],
+        });
       }
+
+      return {
+        stack: cardStack,
+        fillColor: '#FFFBEB',
+        margin: [2, 2, 2, 2],
+      };
+    });
+
+    // Build 3-column grid
+    const columnCount = 3;
+    const rows = [];
+    for (let i = 0; i < roomCards.length; i += columnCount) {
+      const rowCells = roomCards.slice(i, i + columnCount);
+      // Pad to 3 columns if needed
+      while (rowCells.length < columnCount) {
+        rowCells.push({ text: '', fillColor: '#FFFFFF' });
+      }
+      rows.push(rowCells);
+    }
+
+    stack.push({
+      table: {
+        widths: ['*', '*', '*'],
+        body: rows,
+      },
+      layout: {
+        hLineWidth: () => 0.5,
+        vLineWidth: () => 0.5,
+        hLineColor: () => '#FCD34D',
+        vLineColor: () => '#FCD34D',
+        paddingTop: () => 3,
+        paddingBottom: () => 3,
+        paddingLeft: () => 4,
+        paddingRight: () => 4,
+      },
+      margin: [0, 2, 0, 4],
     });
   }
 
-  // Prep instructions
-  if (seg.prep_instructions) {
-    lines.push({
-      text: [
-        { text: 'Prep: ', bold: true, fontSize: 6.5, color: '#B45309' },
-        { text: seg.prep_instructions, fontSize: 6.5, color: TEXT_COLOR, italics: true },
-      ],
-      margin: [0, 0, 0, 1],
-    });
-  }
-
-  // Description details
-  if (seg.description_details) {
-    lines.push({
+  // Description details (prep instructions) - if not already shown
+  if (seg.description_details && seg.segment_type !== 'Panel') {
+    stack.push({
       text: seg.description_details,
-      fontSize: 6,
-      color: MUTED_COLOR,
+      color: pdfTheme.text.secondary,
+      fontSize: pdfTheme.fontSize.xs,
       italics: true,
-      margin: [0, 0, 0, 1],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
-  // DURANTE actions (inline in details, not separate column)
-  const duringActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : [])
-    .filter(a => a.timing !== 'before_start');
-  
+  const color = getSegmentColor(seg.segment_type);
+  return {
+    stack: stack.length ? stack : [{ text: '—', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted }],
+    verticalAlign: 'top',
+    fillColor: color.bg,
+  };
+}
+
+function buildDetailsRightCell(seg) {
+  const stack = [];
+
+  // DURANTE actions - center column
+  const duringActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : []).filter(a => a.timing !== 'before_start');
+
   if (duringActions.length > 0) {
-    lines.push({
+    stack.push({
       text: '▶ DURANTE',
+      fontSize: pdfTheme.fontSize.sm,
       bold: true,
-      fontSize: 6,
-      color: '#1E40AF',
-      margin: [0, 2, 0, 1],
+      color: pdfTheme.labels.durante.text,
+      margin: [0, 0, 0, 1],
     });
     duringActions.forEach(act => {
-      const parts = [];
-      if (act.department) parts.push(`[${act.department}]`);
-      parts.push(act.label || '');
-      if (act.is_required) parts.push('*');
-      if (act.timing === 'after_start' && act.offset_min !== undefined) parts.push(`(${act.offset_min}m después)`);
-      if (act.timing === 'before_end' && act.offset_min !== undefined) parts.push(`(${act.offset_min}m antes fin)`);
-      if (act.notes) parts.push(`— ${act.notes}`);
-      
-      lines.push({
-        text: parts.join(' '),
-        fontSize: 6,
-        color: TEXT_COLOR,
-        margin: [0, 0, 0, 0.5],
+      const dept = act.department ? `[${act.department}] ` : '';
+      const label = act.label || '';
+      const required = act.is_required ? '*' : '';
+      const timingParts = [];
+      if (act.timing === 'before_end' && act.offset_min !== undefined) timingParts.push(`${act.offset_min}m antes fin`);
+      if (act.timing === 'after_start' && act.offset_min !== undefined) timingParts.push(`${act.offset_min}m después`);
+      const notes = act.notes || '';
+
+      stack.push({
+        text: [
+          dept ? { text: dept, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B7280' } : '',
+          { text: label, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.sm },
+          required ? { text: ` ${required}`, color: '#DC2626', fontSize: pdfTheme.fontSize.sm, bold: true } : '',
+          timingParts.length ? { text: ` (${timingParts.join(' • ')})`, color: pdfTheme.text.light, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
+          notes ? { text: `\n${notes}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
+        ],
+        margin: [0, 0, 0, 1],
       });
     });
   }
 
   return {
-    stack: lines.length ? lines : [{ text: '—', fontSize: 6.5, color: MUTED_COLOR }],
-    fillColor: fill,
+    stack: stack.length ? stack : [{ text: '—', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted }],
+    verticalAlign: 'top',
   };
 }
 
-// ============================================================================
-// NOTES CELL - Compact sidebar, muted labels
-// ============================================================================
+function buildNotesCell(seg) {
+  const stack = [];
 
-function buildNotesCell(seg, rowIndex) {
-  const fill = rowIndex % 2 === 0 ? ROW_WHITE : ROW_GRAY;
-  const lines = [];
+  // NOTE: PREP actions are now rendered as separate full-width rows below the segment
+  // See buildPrepActionRow() function
 
-  // All team notes with muted inline labels (matching HTML)
-  const noteItems = [
-    { label: 'PROYECCIÓN', val: seg.projection_notes },
-    { label: 'SONIDO', val: seg.sound_notes },
-    { label: 'MICS', val: seg.microphone_assignments },
-    { label: 'UJIERES', val: seg.ushers_notes },
-    { label: 'STAGE', val: seg.stage_decor_notes },
-    { label: 'TRAD', val: seg.translation_notes },
-    { label: 'OTRO', val: seg.other_notes },
+  // Team notes - ALL notes matching HTML (full labels, no truncation)
+  const notes = [
+    { label: 'PROYECCIÓN', val: seg.projection_notes, color: '#7C3AED', bg: '#F5F3FF' },
+    { label: 'SONIDO', val: seg.sound_notes, color: '#DC2626', bg: '#FEF2F2' },
+    { label: 'UJIERES', val: seg.ushers_notes, color: '#16A34A', bg: '#F0FDF4' },
+    { label: 'STAGE & DECOR', val: seg.stage_decor_notes, color: '#DB2777', bg: '#FDF2F8' },
+    { label: 'TRAD', val: seg.translation_notes, color: '#7C3AED', bg: '#F5F3FF' },
+    { label: 'OTRO', val: seg.other_notes, color: '#6B7280', bg: '#F9FAFB' },
   ].filter(n => n.val);
 
-  noteItems.forEach(n => {
-    lines.push({
+  // Microphone assignments (often shown in SONIDO context)
+  if (seg.microphone_assignments) {
+    stack.push({
       text: [
-        { text: `${n.label}: `, bold: true, fontSize: 6, color: LABEL_COLOR },
-        { text: n.val, fontSize: 6, color: TEXT_COLOR },
+        { text: 'MICS: ', bold: true, color: '#DC2626', fontSize: pdfTheme.fontSize.xs },
+        { text: seg.microphone_assignments, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
       ],
+      fillColor: '#FEF2F2',
+      margin: [0, 0, 0, 1],
+    });
+  }
+
+  // Video info in notes column (matching HTML) with timecode marker
+  if (seg.has_video && (seg.video_name || seg.video_location)) {
+    const videoParts = [
+      { text: '🎬 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+      { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.xs },
+      { text: seg.video_name || seg.video_location || '', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary },
+    ];
+    // Include video length as timecode marker
+    if (seg.video_length_sec !== undefined && seg.video_length_sec !== null) {
+      const mins = Math.floor(seg.video_length_sec / 60);
+      const secs = seg.video_length_sec % 60;
+      videoParts.push({ text: ` [${mins}:${String(secs).padStart(2, '0')}]`, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B21A8' });
+    } else {
+      videoParts.push({ text: ' [0:00]', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B21A8' });
+    }
+    stack.push({
+      text: videoParts,
+      fillColor: '#EFF6FF',
+      margin: [0, 0, 0, 1],
+    });
+  }
+
+  notes.forEach(n => {
+    stack.push({
+      text: [
+        { text: `${n.label}: `, bold: true, color: n.color, fontSize: pdfTheme.fontSize.xs },
+        { text: n.val, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
+      ],
+      fillColor: n.bg,
       margin: [0, 0, 0, 1],
     });
   });
 
-  // Video timecode in notes if present
-  if (seg.has_video && seg.video_length_sec) {
-    const mins = Math.floor(seg.video_length_sec / 60);
-    const secs = seg.video_length_sec % 60;
-    lines.push({
+  // Translation info for notes column if present (with emoji icons)
+  if (seg.requires_translation) {
+    const isInPerson = seg.translation_mode === 'InPerson';
+    const color = isInPerson ? '#2563EB' : '#0891B2';
+    stack.push({
       text: [
-        { text: 'VIDEO: ', bold: true, fontSize: 6, color: LABEL_COLOR },
-        { text: `[${mins}:${String(secs).padStart(2, '0')}]`, fontSize: 6, color: '#6B21A8', bold: true },
+        { text: isInPerson ? '🎙 ' : '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+        { text: isInPerson ? 'TRAD-TARIMA' : 'TRAD-CABINA', bold: true, color, fontSize: pdfTheme.fontSize.xs },
+        seg.translator_name ? { text: `: ${seg.translator_name}`, color, fontSize: pdfTheme.fontSize.xs } : '',
+      ],
+      fillColor: isInPerson ? '#EFF6FF' : '#ECFEFF',
+      margin: [0, 0, 0, 1],
+    });
+  }
+
+  return {
+    stack: stack.length ? stack : [{ text: '—', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted }],
+    verticalAlign: 'top',
+    fillColor: pdfTheme.fills.notesCell,
+  };
+}
+
+// ============================================================================
+// SESSION HEADER - Matching HTML team grid exactly
+// ============================================================================
+
+function buildSessionHeader(event, session, hasHospitalityTasks = false) {
+  const stack = [];
+
+  // Event name + Session name
+  const dateStr = session?.date
+    ? new Date(session.date + 'T12:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-')
+    : '';
+  const timeStr = session?.planned_start_time ? toESTTimeStr(session.planned_start_time) : '';
+  const locStr = session?.location || '';
+  const arrivalStr = session?.default_stage_call_offset_min ? `Llegada: ${session.default_stage_call_offset_min} min antes` : '';
+
+  // Build session title with indicators
+  const titleParts = [
+    { text: (event?.name || 'EVENT').toUpperCase() + ' — ', color: '#1F8A70', bold: true, fontSize: pdfTheme.fontSize.title },
+    { text: (session?.name || 'SESSION').toUpperCase(), bold: true, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.title },
+  ];
+  // Hospitality tasks indicator (🍴)
+  if (hasHospitalityTasks) {
+    titleParts.push({ text: ' 🍴', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg, color: '#DB2777' });
+  }
+  // Translated session indicator (🌐)
+  if (session?.is_translated_session) {
+    titleParts.push({ text: ' 🌐', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg });
+  }
+
+  stack.push({
+    text: titleParts,
+    margin: [0, 0, 0, 2],
+  });
+
+  // Date/time/location line
+  const meta = [dateStr, timeStr, locStr].filter(x => x).join(' • ');
+  if (meta || arrivalStr) {
+    stack.push({
+      text: [
+        { text: meta, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.header },
+        arrivalStr ? { text: ` • ${arrivalStr}`, color: '#2563EB', fontSize: pdfTheme.fontSize.header, bold: true } : '',
+      ],
+      margin: [0, 0, 0, 3],
+    });
+  }
+
+  // Team info grid - matching HTML exactly (full team roster)
+  const teams = [];
+  if (session?.worship_leader) teams.push({ label: 'ALAB', value: session.worship_leader, color: '#16A34A' });
+  if (session?.coordinators) teams.push({ label: 'COORD', value: session.coordinators, color: '#4F46E5' });
+  if (session?.admin_team) teams.push({ label: 'ADMIN', value: session.admin_team, color: '#EA580C' });
+  if (session?.sound_team) teams.push({ label: 'SONIDO', value: session.sound_team, color: '#DC2626' });
+  if (session?.tech_team) teams.push({ label: 'TÉC', value: session.tech_team, color: '#7C3AED' });
+  if (session?.translation_team) teams.push({ label: 'TRAD', value: session.translation_team, color: '#7C3AED' });
+  if (session?.hospitality_team) teams.push({ label: 'HOSP', value: session.hospitality_team, color: '#DB2777' });
+  if (session?.photography_team) teams.push({ label: 'FOTO', value: session.photography_team, color: '#0D9488' });
+  if (session?.ushers_team) teams.push({ label: 'UJIERES', value: session.ushers_team, color: '#2563EB' });
+  if (session?.presenter) teams.push({ label: 'PRES', value: session.presenter, color: '#2563EB' });
+
+  if (teams.length > 0) {
+    // Build 4-column grid like HTML
+    const rows = [];
+    for (let i = 0; i < teams.length; i += 4) {
+      const rowCells = teams.slice(i, i + 4).map(t => ({
+        text: [
+          { text: `${t.label}: `, bold: true, color: t.color, fontSize: pdfTheme.fontSize.xs },
+          { text: t.value, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
+        ],
+        fillColor: '#FAFAFA',
+        margin: [2, 1, 2, 1],
+      }));
+      // Pad to 4 columns
+      while (rowCells.length < 4) {
+        rowCells.push({ text: '', fillColor: '#FAFAFA' });
+      }
+      rows.push(rowCells);
+    }
+
+    stack.push({
+      table: {
+        widths: ['*', '*', '*', '*'],
+        body: rows,
+      },
+      layout: {
+        hLineWidth: () => 0.5,
+        vLineWidth: () => 0.5,
+        hLineColor: () => '#E5E7EB',
+        vLineColor: () => '#E5E7EB',
+      },
+      margin: [0, 0, 0, 4],
+    });
+  }
+
+  return { stack, margin: [0, 0, 0, 4] };
+}
+
+// ============================================================================
+// PRE-SESSION DETAILS - Matching HTML exactly
+// ============================================================================
+
+function buildPreSessionDetailsBlock(psd) {
+  if (!psd) return null;
+
+  const details = [];
+
+  if (psd.music_profile_id) details.push({ icon: '🎵', useEmoji: true, label: 'Música', value: psd.music_profile_id });
+  if (psd.slide_pack_id) details.push({ icon: '📊', useEmoji: true, label: 'Slides', value: psd.slide_pack_id });
+  if (psd.registration_desk_open_time) details.push({ label: 'Registro', value: toESTTimeStr(psd.registration_desk_open_time) });
+  if (psd.library_open_time) details.push({ label: 'Librería', value: toESTTimeStr(psd.library_open_time) });
+
+  if (details.length === 0 && !psd.facility_notes && !psd.general_notes) return null;
+
+  const stack = [];
+
+  stack.push({
+    text: 'DETALLES PREVIOS (SEGMENTO 0)',
+    bold: true,
+    color: '#1E40AF',
+    fontSize: pdfTheme.fontSize.sm,
+    margin: [0, 0, 0, 2],
+  });
+
+  if (details.length > 0) {
+    // Build text array with proper font switching for emojis
+    const textParts = [];
+    details.forEach((d, idx) => {
+      if (d.useEmoji && d.icon) {
+        textParts.push({ text: d.icon + ' ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs });
+      }
+      textParts.push({ text: `${d.label}: ${d.value}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
+      if (idx < details.length - 1) {
+        textParts.push({ text: ' • ', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
+      }
+    });
+    stack.push({
+      text: textParts,
+      margin: [0, 0, 0, 2],
+    });
+  }
+
+  if (psd.facility_notes) {
+    stack.push({
+      text: [
+        { text: 'Instalaciones: ', bold: true, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary },
+        { text: psd.facility_notes, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted },
+      ],
+      margin: [0, 0, 0, 1],
+    });
+  }
+
+  if (psd.general_notes) {
+    stack.push({
+      text: [
+        { text: 'General: ', bold: true, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary },
+        { text: psd.general_notes, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted },
       ],
       margin: [0, 0, 0, 1],
     });
   }
 
   return {
-    stack: lines.length ? lines : [{ text: '—', fontSize: 6, color: MUTED_COLOR }],
-    fillColor: fill,
+    stack,
+    fillColor: '#EFF6FF',
+    margin: [0, 0, 0, 6],
   };
 }
 
 // ============================================================================
-// PREP ACTION ROW - Full-width amber bar (matches HTML)
+// PREP ACTION ROW — Full-width styled row matching HTML
 // ============================================================================
 
-function buildPrepRow(act) {
-  const parts = [];
-  parts.push({ text: '⚠ PREP ', bold: true, fontSize: 6.5, color: '#92400E' });
-  if (act.department) parts.push({ text: `[${act.department}] `, bold: true, fontSize: 6.5, color: '#92400E' });
-  parts.push({ text: act.label || '', fontSize: 6.5, color: TEXT_COLOR });
-  if (act.is_required) parts.push({ text: ' *', bold: true, fontSize: 6.5, color: '#DC2626' });
-  if (act.offset_min !== undefined) parts.push({ text: ` (${act.offset_min}m antes)`, fontSize: 6, color: MUTED_COLOR, italics: true });
-  if (act.notes) parts.push({ text: ` — ${act.notes}`, fontSize: 6, color: MUTED_COLOR, italics: true });
+function buildPrepActionRow(act) {
+  const dept = act.department ? `[${act.department}]` : '';
+  const label = act.label || '';
+  const offset = act.offset_min !== undefined ? `(${act.offset_min}m antes)` : '';
+  const required = act.is_required ? ' *' : '';
+  const notes = act.notes ? ` — ${act.notes}` : '';
 
   return [
-    { text: '', fillColor: '#FEF3C7' },
-    { text: parts, colSpan: 2, fillColor: '#FEF3C7' },
+    {
+      colSpan: 4,
+      fillColor: '#FFFBEB',
+      stack: [{
+        columns: [
+          {
+            width: 55,
+            stack: [{
+              text: [
+                { text: '⚠ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+                { text: 'PREP', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#FFFFFF' },
+              ],
+              alignment: 'center',
+              margin: [0, 2, 0, 2],
+            }],
+            fillColor: '#F59E0B',
+          },
+          {
+            width: '*',
+            text: [
+              dept ? { text: `${dept} `, bold: true, fontSize: pdfTheme.fontSize.sm, color: '#92400E' } : '',
+              { text: label, fontSize: pdfTheme.fontSize.sm, color: pdfTheme.text.secondary },
+              required ? { text: required, fontSize: pdfTheme.fontSize.sm, color: '#DC2626', bold: true } : '',
+              offset ? { text: `  ${offset}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.light, italics: true } : '',
+              notes ? { text: notes, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted, italics: true } : '',
+            ],
+            margin: [4, 2, 0, 2],
+          },
+        ],
+      }],
+    },
+    {},
+    {},
     {},
   ];
 }
 
 // ============================================================================
-// SESSION HEADER - Light band with pills (matches HTML print)
+// TABLE BUILDER — 4-Column Grid with PREP rows
 // ============================================================================
 
-function buildSessionHeader(event, session, hasHospitalityTasks = false) {
-  const content = [];
-
-  // Title line: EVENT — SESSION
-  const titleParts = [
-    { text: (event?.name || 'EVENT').toUpperCase(), bold: true, fontSize: 11, color: '#1F8A70' },
-    { text: ' — ', fontSize: 11, color: MUTED_COLOR },
-    { text: (session?.name || 'SESSION').toUpperCase(), bold: true, fontSize: 11, color: TEXT_COLOR },
-  ];
-  if (hasHospitalityTasks) {
-    titleParts.push({ text: ' [H]', fontSize: 9, color: '#DB2777', bold: true });
-  }
-  if (session?.is_translated_session) {
-    titleParts.push({ text: ' [T]', fontSize: 9, color: '#7C3AED', bold: true });
-  }
-  content.push({ text: titleParts, margin: [0, 0, 0, 2] });
-
-  // Meta line: date • time • location • arrival
-  const metaParts = [];
-  if (session?.date) {
-    const d = new Date(session.date + 'T12:00:00');
-    metaParts.push(d.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }));
-  }
-  if (session?.planned_start_time) metaParts.push(toESTTimeStr(session.planned_start_time));
-  if (session?.location) metaParts.push(session.location);
-  
-  const metaText = [{ text: metaParts.join(' • '), fontSize: 8, color: MUTED_COLOR }];
-  if (session?.default_stage_call_offset_min) {
-    metaText.push({ text: ` • Llegada: ${session.default_stage_call_offset_min} min antes`, fontSize: 8, color: '#2563EB', bold: true });
-  }
-  content.push({ text: metaText, margin: [0, 0, 0, 3] });
-
-  // Team roster as compact pills-like text
-  const teams = [];
-  if (session?.presenter) teams.push({ label: 'PRES', value: session.presenter });
-  if (session?.worship_leader) teams.push({ label: 'ALAB', value: session.worship_leader });
-  if (session?.coordinators) teams.push({ label: 'COORD', value: session.coordinators });
-  if (session?.admin_team) teams.push({ label: 'ADMIN', value: session.admin_team });
-  if (session?.sound_team) teams.push({ label: 'SONIDO', value: session.sound_team });
-  if (session?.tech_team) teams.push({ label: 'TÉC', value: session.tech_team });
-  if (session?.ushers_team) teams.push({ label: 'UJIERES', value: session.ushers_team });
-  if (session?.translation_team) teams.push({ label: 'TRAD', value: session.translation_team });
-  if (session?.hospitality_team) teams.push({ label: 'HOSP', value: session.hospitality_team });
-  if (session?.photography_team) teams.push({ label: 'FOTO', value: session.photography_team });
-
-  if (teams.length > 0) {
-    const teamText = teams.map(t => `${t.label}: ${t.value}`).join('  |  ');
-    content.push({
-      text: teamText,
-      fontSize: 7,
-      color: TEXT_COLOR,
-      margin: [0, 0, 0, 2],
-    });
-  }
-
-  return {
-    stack: content,
-    fillColor: '#F3F4F6',
-    margin: [0, 0, 0, 4],
-  };
-}
-
-// ============================================================================
-// PRE-SESSION DETAILS (Segment 0)
-// ============================================================================
-
-function buildPreSessionBlock(psd) {
-  if (!psd) return null;
-
-  const parts = [];
-  if (psd.music_profile_id) parts.push(`Música: ${psd.music_profile_id}`);
-  if (psd.slide_pack_id) parts.push(`Slides: ${psd.slide_pack_id}`);
-  if (psd.registration_desk_open_time) parts.push(`Registro: ${toESTTimeStr(psd.registration_desk_open_time)}`);
-  if (psd.library_open_time) parts.push(`Librería: ${toESTTimeStr(psd.library_open_time)}`);
-
-  if (parts.length === 0 && !psd.facility_notes && !psd.general_notes) return null;
-
-  const content = [];
-  content.push({
-    text: 'DETALLES PREVIOS (SEGMENTO 0)',
-    bold: true,
-    fontSize: 7,
-    color: '#1E40AF',
-    margin: [0, 0, 0, 1],
-  });
-
-  if (parts.length > 0) {
-    content.push({ text: parts.join(' • '), fontSize: 6.5, color: TEXT_COLOR, margin: [0, 0, 0, 1] });
-  }
-  if (psd.facility_notes) {
-    content.push({
-      text: [
-        { text: 'Instalaciones: ', bold: true, fontSize: 6.5, color: LABEL_COLOR },
-        { text: psd.facility_notes, fontSize: 6.5, color: MUTED_COLOR },
-      ],
-      margin: [0, 0, 0, 1],
-    });
-  }
-  if (psd.general_notes) {
-    content.push({
-      text: [
-        { text: 'General: ', bold: true, fontSize: 6.5, color: LABEL_COLOR },
-        { text: psd.general_notes, fontSize: 6.5, color: MUTED_COLOR },
-      ],
-      margin: [0, 0, 0, 1],
-    });
-  }
-
-  return { stack: content, fillColor: '#EFF6FF', margin: [0, 0, 0, 4] };
-}
-
-// ============================================================================
-// MAIN TABLE BUILDER - 3 columns matching HTML ratio
-// ============================================================================
-
-function buildSessionTable(session, segments, allRooms = []) {
-  // Header row
+function buildDayTable(session, segments, allRooms = []) {
   const headerRow = [
-    { text: 'HORA', bold: true, fontSize: 7, color: TEXT_COLOR, fillColor: '#E5E7EB', alignment: 'center' },
-    { text: 'DETALLES', bold: true, fontSize: 7, color: TEXT_COLOR, fillColor: '#E5E7EB' },
-    { text: 'NOTAS EQUIPO', bold: true, fontSize: 7, color: TEXT_COLOR, fillColor: '#E5E7EB' },
+    {
+      text: 'HORA',
+      bold: true,
+      fontSize: pdfTheme.fontSize.sm,
+      color: pdfTheme.text.primary,
+      alignment: 'center',
+      fillColor: pdfTheme.fills.header,
+    },
+    {
+      text: 'DETALLES',
+      bold: true,
+      fontSize: pdfTheme.fontSize.sm,
+      color: pdfTheme.text.primary,
+      alignment: 'left',
+      colSpan: 2,
+      fillColor: pdfTheme.fills.header,
+    },
+    {},
+    {
+      text: 'NOTAS POR EQUIPO',
+      bold: true,
+      fontSize: pdfTheme.fontSize.sm,
+      color: pdfTheme.text.primary,
+      alignment: 'left',
+      fillColor: pdfTheme.fills.header,
+    },
   ];
 
   const rows = [headerRow];
-  let rowIndex = 0;
 
-  const sortedSegs = segments.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+  segments
+    .slice()
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .forEach(seg => {
+      // PREP actions rendered as separate full-width rows BEFORE the segment (matching HTML)
+      const prepActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : []).filter(a => a.timing === 'before_start');
+      prepActions.forEach(act => {
+        rows.push(buildPrepActionRow(act));
+      });
 
-  sortedSegs.forEach(seg => {
-    // PREP actions as full-width rows before segment
-    const prepActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : [])
-      .filter(a => a.timing === 'before_start');
-    
-    prepActions.forEach(act => {
-      rows.push(buildPrepRow(act));
+      // Main segment row
+      rows.push([
+        buildTimeCell(seg),
+        buildDetailsLeftCell(seg, allRooms),
+        buildDetailsRightCell(seg),
+        buildNotesCell(seg),
+      ]);
     });
-
-    // Main segment row
-    rows.push([
-      buildTimeCell(seg, rowIndex),
-      buildDetailsCell(seg, rowIndex, allRooms),
-      buildNotesCell(seg, rowIndex),
-    ]);
-    rowIndex++;
-  });
 
   return {
     table: {
-      widths: [COL_TIME, COL_DETAILS, COL_NOTES],
+      widths: [55, '*', 130, 180],
       body: rows,
       headerRows: 1,
       dontBreakRows: true,
     },
     layout: {
-      hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length) ? 0.5 : 0.25,
-      vLineWidth: () => 0.25,
-      hLineColor: () => '#D1D5DB',
-      vLineColor: () => '#E5E7EB',
-      paddingTop: () => 2,
-      paddingBottom: () => 2,
-      paddingLeft: () => 3,
-      paddingRight: () => 3,
+      hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length ? 1 : 0.5),
+      vLineWidth: () => 0.5,
+      hLineColor: (i) => i === 1 ? '#9CA3AF' : pdfTheme.borders.color,
+      vLineColor: () => pdfTheme.borders.lightColor,
+      paddingTop: () => 3,
+      paddingBottom: () => 3,
+      paddingLeft: () => 4,
+      paddingRight: () => 4,
     },
-    margin: [0, 0, 0, 0],
+    margin: [0, 0, 0, 4],
   };
 }
 
@@ -583,31 +902,26 @@ function buildSessionTable(session, segments, allRooms = []) {
 // MAIN EXPORT
 // ============================================================================
 
-export async function generateEventReportPDFClient({
-  event,
-  sessions,
-  segmentsBySession,
-  preSessionDetailsBySession,
-  rooms = [],
-  hospitalityTasksBySession = {},
-}) {
+export async function generateEventReportPDFClient({ event, sessions, segmentsBySession, preSessionDetailsBySession, rooms = [], hospitalityTasksBySession = {} }) {
   const content = [];
 
   sessions.forEach((session, idx) => {
-    const hasHospitalityTasks = Array.isArray(hospitalityTasksBySession?.[session.id]) && 
-      hospitalityTasksBySession[session.id].length > 0;
-
-    // Session header (light gray band)
+    // Check if session has hospitality tasks assigned
+    const hasHospitalityTasks = Array.isArray(hospitalityTasksBySession?.[session.id]) && hospitalityTasksBySession[session.id].length > 0;
+    
+    // Session header with team info
     content.push(buildSessionHeader(event, session, hasHospitalityTasks));
 
     // Pre-session details
     const psd = preSessionDetailsBySession?.[session.id];
-    const psdBlock = buildPreSessionBlock(psd);
-    if (psdBlock) content.push(psdBlock);
+    if (psd) {
+      const psdBlock = buildPreSessionDetailsBlock(psd);
+      if (psdBlock) content.push(psdBlock);
+    }
 
-    // Main segments table
-    const segs = segmentsBySession?.[session.id] || [];
-    content.push(buildSessionTable(session, segs, rooms));
+    // Main table
+    const allSegs = segmentsBySession?.[session.id] || [];
+    content.push(buildDayTable(session, allSegs, rooms));
 
     // Page break after each session (except last)
     if (idx < sessions.length - 1) {
@@ -619,11 +933,7 @@ export async function generateEventReportPDFClient({
     pageSize: 'LETTER',
     pageOrientation: 'landscape',
     pageMargins: [18, 12, 18, 18],
-    defaultStyle: {
-      fontSize: 7,
-      color: TEXT_COLOR,
-      font: 'Roboto',
-    },
+    defaultStyle: { fontSize: pdfTheme.fontSize.base, color: pdfTheme.text.primary, font: 'Roboto' },
     content,
     footer: (currentPage, pageCount) => ({
       columns: [
@@ -635,19 +945,15 @@ export async function generateEventReportPDFClient({
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
+            second: '2-digit',
             hour12: true,
           }),
-          fontSize: 6,
-          color: MUTED_COLOR,
+          color: pdfTheme.text.muted,
+          fontSize: pdfTheme.fontSize.xs,
         },
-        {
-          text: `Página ${currentPage} de ${pageCount}`,
-          alignment: 'right',
-          fontSize: 6,
-          color: MUTED_COLOR,
-        },
+        { text: `Página ${currentPage} de ${pageCount}`, alignment: 'right', color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs },
       ],
-      margin: [18, 4],
+      margin: [18, 8],
     }),
   };
 
