@@ -706,11 +706,10 @@ function buildPrepActionRow(act) {
           {
             width: 55,
             stack: [{
-              text: '⚠ PREP',
-              bold: true,
-              fontSize: pdfTheme.fontSize.xs,
-              color: '#FFFFFF',
-              background: '#F59E0B',
+              text: [
+                { text: '⚠ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+                { text: 'PREP', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#FFFFFF' },
+              ],
               alignment: 'center',
               margin: [0, 2, 0, 2],
             }],
