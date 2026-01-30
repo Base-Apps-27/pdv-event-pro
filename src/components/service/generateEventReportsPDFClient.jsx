@@ -298,23 +298,26 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     }
   }
 
-  // Breakout Rooms - matching HTML grid display
+  // Breakout Rooms - 3-column card grid matching HTML
   if (seg.segment_type === 'Breakout' && Array.isArray(seg.breakout_rooms) && seg.breakout_rooms.length > 0) {
-    seg.breakout_rooms.forEach((room, idx) => {
+    const roomCards = seg.breakout_rooms.map((room, idx) => {
       const roomName = room.room_id && allRooms.length
         ? (allRooms.find(r => r.id === room.room_id)?.name || `Sala ${idx + 1}`)
         : `Sala ${idx + 1}`;
 
-      const roomStack = [];
-      roomStack.push({
+      const cardStack = [];
+      // Room name badge
+      cardStack.push({
         text: roomName,
         bold: true,
         color: '#1E40AF',
         fontSize: pdfTheme.fontSize.xs,
-        margin: [0, 0, 0, 1],
+        fillColor: '#EFF6FF',
+        margin: [0, 0, 0, 2],
       });
+      // Topic
       if (room.topic) {
-        roomStack.push({
+        cardStack.push({
           text: `"${room.topic}"`,
           bold: true,
           color: pdfTheme.text.primary,
@@ -322,17 +325,19 @@ function buildDetailsLeftCell(seg, allRooms = []) {
           margin: [0, 0, 0, 1],
         });
       }
+      // Host
       if (room.hosts) {
-        roomStack.push({
+        cardStack.push({
           text: [
             { text: 'Anfitrión: ', bold: true, color: '#4338CA', fontSize: pdfTheme.fontSize.xs },
-            { text: room.hosts, color: '#4338CA', fontSize: pdfTheme.fontSize.xs },
+            { text: room.hosts.toUpperCase(), color: '#4338CA', fontSize: pdfTheme.fontSize.xs },
           ],
           margin: [0, 0, 0, 0.5],
         });
       }
+      // Speaker
       if (room.speakers) {
-        roomStack.push({
+        cardStack.push({
           text: [
             { text: 'Presentador: ', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.xs },
             { text: room.speakers, color: '#2563EB', fontSize: pdfTheme.fontSize.xs },
@@ -340,9 +345,10 @@ function buildDetailsLeftCell(seg, allRooms = []) {
           margin: [0, 0, 0, 0.5],
         });
       }
+      // Translation
       if (room.requires_translation) {
         const mode = room.translation_mode === 'RemoteBooth' ? 'Traducción Remota' : 'Traducción en Persona';
-        roomStack.push({
+        cardStack.push({
           text: [
             { text: mode, color: '#7C3AED', fontSize: pdfTheme.fontSize.xs, italics: true },
             room.translator_name ? { text: ` — ${room.translator_name}`, color: '#7C3AED', fontSize: pdfTheme.fontSize.xs } : '',
@@ -351,11 +357,41 @@ function buildDetailsLeftCell(seg, allRooms = []) {
         });
       }
 
-      stack.push({
-        stack: roomStack,
+      return {
+        stack: cardStack,
         fillColor: '#FFFBEB',
-        margin: [0, 2, 0, 2],
-      });
+        margin: [2, 2, 2, 2],
+      };
+    });
+
+    // Build 3-column grid
+    const columnCount = 3;
+    const rows = [];
+    for (let i = 0; i < roomCards.length; i += columnCount) {
+      const rowCells = roomCards.slice(i, i + columnCount);
+      // Pad to 3 columns if needed
+      while (rowCells.length < columnCount) {
+        rowCells.push({ text: '', fillColor: '#FFFFFF' });
+      }
+      rows.push(rowCells);
+    }
+
+    stack.push({
+      table: {
+        widths: ['*', '*', '*'],
+        body: rows,
+      },
+      layout: {
+        hLineWidth: () => 0.5,
+        vLineWidth: () => 0.5,
+        hLineColor: () => '#FCD34D',
+        vLineColor: () => '#FCD34D',
+        paddingTop: () => 3,
+        paddingBottom: () => 3,
+        paddingLeft: () => 4,
+        paddingRight: () => 4,
+      },
+      margin: [0, 2, 0, 4],
     });
   }
 
