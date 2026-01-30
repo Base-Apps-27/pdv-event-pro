@@ -459,12 +459,12 @@ function buildNotesCell(seg) {
   // NOTE: PREP actions are now rendered as separate full-width rows below the segment
   // See buildPrepActionRow() function
 
-  // Team notes - ALL notes matching HTML (no truncation)
+  // Team notes - ALL notes matching HTML (full labels, no truncation)
   const notes = [
-    { label: 'PROY', val: seg.projection_notes, color: '#7C3AED', bg: '#F5F3FF' },
+    { label: 'PROYECCIÓN', val: seg.projection_notes, color: '#7C3AED', bg: '#F5F3FF' },
     { label: 'SONIDO', val: seg.sound_notes, color: '#DC2626', bg: '#FEF2F2' },
-    { label: 'UJIER', val: seg.ushers_notes, color: '#16A34A', bg: '#F0FDF4' },
-    { label: 'STAGE', val: seg.stage_decor_notes, color: '#DB2777', bg: '#FDF2F8' },
+    { label: 'UJIERES', val: seg.ushers_notes, color: '#16A34A', bg: '#F0FDF4' },
+    { label: 'STAGE & DECOR', val: seg.stage_decor_notes, color: '#DB2777', bg: '#FDF2F8' },
     { label: 'TRAD', val: seg.translation_notes, color: '#7C3AED', bg: '#F5F3FF' },
   ].filter(n => n.val);
 
