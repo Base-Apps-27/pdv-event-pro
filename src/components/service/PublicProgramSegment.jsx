@@ -198,13 +198,19 @@ export default function PublicProgramSegment({
                            <span className="font-semibold">{t('live.preacher')}: {normalizeName(getData('presenter') || getData('preacher'))}</span>
                          </div>
                        )}
-           {/* Translator: Show for all segments if present */}
-           {getData('translator_name') && (
-                         <div className="flex items-center gap-2 text-purple-600 text-sm">
-                           <Languages className="w-4 h-4" />
-                           <span className="font-semibold">{t('live.translator')}: {normalizeName(getData('translator_name'))}</span>
-                         </div>
-                       )}
+           {/* Translator: Show for all segments if present, differentiate by mode */}
+           {getData('translator_name') && segment.translation_mode === "InPerson" && (
+                          <div className="flex items-center gap-2 text-blue-600 text-sm">
+                            <Mic className="w-4 h-4" />
+                            <span className="font-semibold">{t('live.translator')} (tarima): {normalizeName(getData('translator_name'))}</span>
+                          </div>
+                        )}
+           {getData('translator_name') && segment.translation_mode === "RemoteBooth" && (
+                          <div className="flex items-center gap-2 text-cyan-600 text-sm">
+                            <Languages className="w-4 h-4" />
+                            <span className="font-semibold">Trad-Cabina: {normalizeName(getData('translator_name'))}</span>
+                          </div>
+                        )}
            {/* Room: Show if segment has a specific room assignment */}
            {segment.room_id && (
                          <div className="flex items-center gap-2 text-gray-600 text-sm">
