@@ -142,11 +142,11 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
-  // Translation - InPerson (on stage) - [T] badge for TARIMA
+  // Translation - InPerson (on stage) - emoji icon for TARIMA
   if (seg.requires_translation && seg.translation_mode === 'InPerson') {
     stack.push({
       text: [
-        { text: '[T] ', bold: true, color: '#FFFFFF', background: '#2563EB', fontSize: pdfTheme.fontSize.xs },
+        { text: '🎙 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
         { text: 'TRAD-TARIMA', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
         seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm } : '',
       ],
@@ -154,11 +154,11 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
-  // Translation - RemoteBooth (headphones) - [C] badge for CABINA
+  // Translation - RemoteBooth (headphones) - emoji icon for CABINA
   if (seg.requires_translation && seg.translation_mode === 'RemoteBooth') {
     stack.push({
       text: [
-        { text: '[C] ', bold: true, color: '#FFFFFF', background: '#0891B2', fontSize: pdfTheme.fontSize.xs },
+        { text: '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
         { text: 'TRAD-CABINA', bold: true, color: '#0891B2', fontSize: pdfTheme.fontSize.sm },
         seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#0E7490', fontSize: pdfTheme.fontSize.sm } : '',
       ],
