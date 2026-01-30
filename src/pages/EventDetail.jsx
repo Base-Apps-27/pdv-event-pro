@@ -26,6 +26,20 @@ export default function EventDetail() {
   const [wasValid, setWasValid] = React.useState(false);
   const [showEditEvent, setShowEditEvent] = useState(false);
   const [showEditHistory, setShowEditHistory] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Fetch current user for logging
+  React.useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await base44.auth.me();
+        setCurrentUser(user);
+      } catch (e) {
+        console.error('Failed to fetch user:', e);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['event', eventId],
@@ -256,6 +270,7 @@ export default function EventDetail() {
             event={e}
             sessions={sessions} 
             segments={segments}
+            user={currentUser}
           />
         </TabsContent>
 
