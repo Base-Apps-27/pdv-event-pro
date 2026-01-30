@@ -577,7 +577,7 @@ function buildSessionHeader(event, session) {
     });
   }
 
-  // Team info grid - matching HTML exactly
+  // Team info grid - matching HTML exactly (full team roster)
   const teams = [];
   if (session?.worship_leader) teams.push({ label: 'ALAB', value: session.worship_leader, color: '#16A34A' });
   if (session?.coordinators) teams.push({ label: 'COORD', value: session.coordinators, color: '#4F46E5' });
@@ -587,7 +587,7 @@ function buildSessionHeader(event, session) {
   if (session?.translation_team) teams.push({ label: 'TRAD', value: session.translation_team, color: '#7C3AED' });
   if (session?.hospitality_team) teams.push({ label: 'HOSP', value: session.hospitality_team, color: '#DB2777' });
   if (session?.photography_team) teams.push({ label: 'FOTO', value: session.photography_team, color: '#0D9488' });
-  if (session?.ushers_team) teams.push({ label: 'UJIER', value: session.ushers_team, color: '#2563EB' });
+  if (session?.ushers_team) teams.push({ label: 'UJIERES', value: session.ushers_team, color: '#2563EB' });
   if (session?.presenter) teams.push({ label: 'PRES', value: session.presenter, color: '#2563EB' });
 
   if (teams.length > 0) {
