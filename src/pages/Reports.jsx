@@ -1350,6 +1350,7 @@ export default function Reports() {
                    segmentsBySession,
                    preSessionDetailsBySession,
                    hospitalityTasksBySession,
+                   rooms,
                    reportType: rt,
                  });
                  await downloadPdf(rt, bytes);
@@ -1380,6 +1381,7 @@ export default function Reports() {
                      segmentsBySession,
                      preSessionDetailsBySession,
                      hospitalityTasksBySession,
+                     rooms,
                      reportType: rt,
                    });
                    await downloadPdf(rt, bytes);
