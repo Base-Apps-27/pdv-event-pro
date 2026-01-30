@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText, History } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import EventInfo from "../components/event/EventInfo";
 import EventEditDialog from "../components/event/EventEditDialog";
 import EventCalendar from "../components/event/EventCalendar";
 import EventAIHelper from "../components/event/EventAIHelper";
+import EditHistoryModal from "../components/event/EditHistoryModal";
 
 export default function EventDetail() {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ export default function EventDetail() {
   const [headerEvent, setHeaderEvent] = useState(null);
   const [wasValid, setWasValid] = React.useState(false);
   const [showEditEvent, setShowEditEvent] = useState(false);
+  const [showEditHistory, setShowEditHistory] = useState(false);
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['event', eventId],
@@ -186,6 +188,14 @@ export default function EventDetail() {
               Reportes
             </Button>
             <Button 
+              onClick={() => setShowEditHistory(true)}
+              variant="outline"
+              className="border-gray-300 hover:border-gray-400 text-gray-700"
+            >
+              <History className="w-4 h-4 mr-2" />
+              Historial
+            </Button>
+            <Button 
               onClick={() => setShowEditEvent(true)}
               variant="outline"
               className="border-gray-300 hover:border-gray-400 text-gray-700"
@@ -220,6 +230,13 @@ export default function EventDetail() {
         onOpenChange={setShowEditEvent}
         event={e}
         onSaved={() => { queryClient.invalidateQueries(['event', eventId]); }}
+      />
+
+      <EditHistoryModal
+        open={showEditHistory}
+        onClose={() => setShowEditHistory(false)}
+        eventId={eventId}
+        sessions={sessions}
       />
 
        <Tabs defaultValue="sessions" className="w-full">
