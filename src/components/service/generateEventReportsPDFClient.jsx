@@ -479,7 +479,7 @@ export async function generateEventReportPDFClient({ event, sessions, segmentsBy
 
   const docDefinition = {
     pageSize: 'LETTER',
-    pageOrientation: 'portrait',
+    pageOrientation: 'landscape',
     pageMargins: [20, 15, 20, 20],
     defaultStyle: { fontSize: pdfTheme.fontSize.base, color: pdfTheme.text.primary, font: 'Roboto' },
     content,
