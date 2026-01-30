@@ -550,7 +550,7 @@ function buildSessionHeader(event, session) {
     text: [
       { text: (event?.name || 'EVENT').toUpperCase() + ' — ', color: '#1F8A70', bold: true, fontSize: pdfTheme.fontSize.title },
       { text: (session?.name || 'SESSION').toUpperCase(), bold: true, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.title },
-      session?.is_translated_session ? { text: ' 🌐', fontSize: pdfTheme.fontSize.lg } : '',
+      session?.is_translated_session ? { text: ' 🌐', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg } : '',
     ],
     margin: [0, 0, 0, 2],
   });
