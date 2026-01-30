@@ -39,31 +39,29 @@ function buildTimeCell(seg) {
     });
   }
 
-  // Translation mode icons in time cell (matching HTML)
+  // Translation mode indicator in time cell (matching HTML - text-based for PDF compatibility)
   if (seg.requires_translation) {
-    if (seg.translation_mode === 'InPerson') {
-      stack.push({
-        text: '🎙️',
-        fontSize: pdfTheme.fontSize.sm,
-        color: '#7C3AED',
-        margin: [0, 2, 0, 0],
-      });
-    } else if (seg.translation_mode === 'RemoteBooth') {
-      stack.push({
-        text: '🎧',
-        fontSize: pdfTheme.fontSize.sm,
-        color: '#7C3AED',
-        margin: [0, 2, 0, 0],
-      });
-    }
+    const isInPerson = seg.translation_mode === 'InPerson';
+    stack.push({
+      text: isInPerson ? 'T' : 'C',
+      fontSize: pdfTheme.fontSize.xs,
+      bold: true,
+      color: '#FFFFFF',
+      background: isInPerson ? '#2563EB' : '#0891B2',
+      alignment: 'center',
+      margin: [0, 2, 0, 0],
+    });
   }
 
-  // Major break icon
+  // Major break indicator
   if (seg.major_break) {
     stack.push({
-      text: '🍽️',
-      fontSize: pdfTheme.fontSize.sm,
-      color: '#EA580C',
+      text: 'M',
+      fontSize: pdfTheme.fontSize.xs,
+      bold: true,
+      color: '#FFFFFF',
+      background: '#EA580C',
+      alignment: 'center',
       margin: [0, 2, 0, 0],
     });
   }
