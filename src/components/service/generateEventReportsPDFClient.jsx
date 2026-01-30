@@ -498,16 +498,19 @@ function buildDetailsRightCell(seg) {
     duringActions.forEach(act => {
       const dept = act.department ? `[${act.department}] ` : '';
       const label = act.label || '';
-      const timing = [];
-      if (act.timing === 'before_end' && act.offset_min !== undefined) timing.push(`${act.offset_min}m antes fin`);
-      if (act.timing === 'after_start' && act.offset_min !== undefined) timing.push(`${act.offset_min}m después`);
-      if (act.notes) timing.push(act.notes);
+      const required = act.is_required ? '*' : '';
+      const timingParts = [];
+      if (act.timing === 'before_end' && act.offset_min !== undefined) timingParts.push(`${act.offset_min}m antes fin`);
+      if (act.timing === 'after_start' && act.offset_min !== undefined) timingParts.push(`${act.offset_min}m después`);
+      const notes = act.notes || '';
 
       stack.push({
         text: [
           dept ? { text: dept, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B7280' } : '',
           { text: label, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.sm },
-          timing.length ? { text: `\n${timing.join(' • ')}`, color: pdfTheme.text.light, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
+          required ? { text: ` ${required}`, color: '#DC2626', fontSize: pdfTheme.fontSize.sm, bold: true } : '',
+          timingParts.length ? { text: ` (${timingParts.join(' • ')})`, color: pdfTheme.text.light, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
+          notes ? { text: `\n${notes}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
         ],
         margin: [0, 0, 0, 1],
       });
@@ -778,6 +781,8 @@ function buildPrepActionRow(act) {
   const dept = act.department ? `[${act.department}]` : '';
   const label = act.label || '';
   const offset = act.offset_min !== undefined ? `(${act.offset_min}m antes)` : '';
+  const required = act.is_required ? ' *' : '';
+  const notes = act.notes ? ` — ${act.notes}` : '';
 
   return [
     {
@@ -802,7 +807,9 @@ function buildPrepActionRow(act) {
             text: [
               dept ? { text: `${dept} `, bold: true, fontSize: pdfTheme.fontSize.sm, color: '#92400E' } : '',
               { text: label, fontSize: pdfTheme.fontSize.sm, color: pdfTheme.text.secondary },
+              required ? { text: required, fontSize: pdfTheme.fontSize.sm, color: '#DC2626', bold: true } : '',
               offset ? { text: `  ${offset}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.light, italics: true } : '',
+              notes ? { text: notes, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted, italics: true } : '',
             ],
             margin: [4, 2, 0, 2],
           },

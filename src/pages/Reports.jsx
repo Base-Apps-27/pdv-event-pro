@@ -339,6 +339,9 @@ export default function Reports() {
                   {hasHospitalityTasks && (
                     <Utensils className="w-5 h-5 text-pink-600" title="Tiene instrucciones de hospitalidad" />
                   )}
+                  {session.is_translated_session && (
+                    <Languages className="w-5 h-5 text-purple-600" title="Sesión traducida" />
+                  )}
                 </div>
                   <div className="text-sm text-gray-700">
                     {session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}

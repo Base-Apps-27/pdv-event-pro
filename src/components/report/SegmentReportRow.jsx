@@ -63,7 +63,19 @@ export default function SegmentReportRow({
             )}
           </div>
         )}
-        {!segment.projection_notes && !segment.sound_notes && !segment.ushers_notes && !segment.requires_translation && !segment.stage_decor_notes && (
+        {segment.microphone_assignments && (
+          <div className="bg-red-50 px-0.5 py-0.5 rounded border border-red-200 text-[9px]">
+            <span className="font-bold text-red-700">MICS:</span>
+            <span className="ml-0.5">{segment.microphone_assignments}</span>
+          </div>
+        )}
+        {segment.other_notes && (
+          <div className="bg-gray-50 px-0.5 py-0.5 rounded border border-gray-200 text-[9px]">
+            <span className="font-bold text-gray-700">OTRO:</span>
+            <span className="ml-0.5">{segment.other_notes}</span>
+          </div>
+        )}
+        {!segment.projection_notes && !segment.sound_notes && !segment.ushers_notes && !segment.requires_translation && !segment.stage_decor_notes && !segment.microphone_assignments && !segment.other_notes && (
           <span className="text-gray-400 text-[9px]">-</span>
         )}
       </div>
@@ -111,10 +123,11 @@ export default function SegmentReportRow({
               const songNum = idx + 1;
               const title = segment[`song_${songNum}_title`];
               const lead = segment[`song_${songNum}_lead`];
+              const key = segment[`song_${songNum}_key`];
               if (!title) return null;
               return (
                 <div key={songNum} className="text-gray-700 leading-tight">
-                  {songNum}. {title} {lead && `(${lead})`}
+                  {songNum}. {title} {lead && `(${lead})`} {key && <span className="text-gray-500 font-semibold">[{key}]</span>}
                 </div>
               );
             })}
@@ -192,6 +205,13 @@ export default function SegmentReportRow({
                 {segment.art_other_description}
               </div>
             )}
+          </div>
+        )}
+
+        {segment.prep_instructions && (
+          <div className="text-[9px] bg-amber-50 px-0.5 py-0.5 rounded border border-amber-200">
+            <span className="text-amber-700 font-bold">PREP:</span>
+            <span className="text-gray-700 ml-0.5 italic">{segment.prep_instructions}</span>
           </div>
         )}
 
