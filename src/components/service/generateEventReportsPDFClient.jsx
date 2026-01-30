@@ -45,8 +45,8 @@ function buildTimeCell(seg) {
     stack.push({
       text: toESTTimeStr(seg.end_time),
       color: pdfTheme.text.muted,
-      fontSize: pdfTheme.fontSize.base,
-      margin: [0, 1, 0, 0],
+      fontSize: pdfTheme.fontSize.sm,
+      margin: [0, 0, 0, 0],
     });
   }
 
@@ -54,8 +54,8 @@ function buildTimeCell(seg) {
     stack.push({
       text: `(${seg.duration_min}m)`,
       color: pdfTheme.text.muted,
-      fontSize: pdfTheme.fontSize.sm,
-      margin: [0, 1, 0, 0],
+      fontSize: pdfTheme.fontSize.xs,
+      margin: [0, 0, 0, 0],
     });
   }
 
@@ -67,7 +67,7 @@ function buildTimeCell(seg) {
       font: 'NotoEmoji',
       fontSize: pdfTheme.fontSize.sm,
       color: '#7C3AED',
-      alignment: 'center',
+      alignment: 'left',
       margin: [0, 2, 0, 0],
     });
   }
@@ -79,7 +79,7 @@ function buildTimeCell(seg) {
       font: 'NotoEmoji',
       fontSize: pdfTheme.fontSize.sm,
       color: '#EA580C',
-      alignment: 'center',
+      alignment: 'left',
       margin: [0, 2, 0, 0],
     });
   }
@@ -87,7 +87,7 @@ function buildTimeCell(seg) {
   return {
     stack,
     verticalAlign: 'top',
-    fillColor: pdfTheme.fills.timeCell,
+    fillColor: '#FFFFFF',
   };
 }
 
@@ -489,11 +489,10 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
-  const color = getSegmentColor(seg.segment_type);
   return {
     stack: stack.length ? stack : [{ text: '—', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted }],
     verticalAlign: 'top',
-    fillColor: color.bg,
+    fillColor: '#FFFFFF',
   };
 }
 
@@ -618,7 +617,7 @@ function buildNotesCell(seg) {
   return {
     stack: stack.length ? stack : [{ text: '—', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted }],
     verticalAlign: 'top',
-    fillColor: pdfTheme.fills.notesCell,
+    fillColor: '#FFFFFF',
   };
 }
 
