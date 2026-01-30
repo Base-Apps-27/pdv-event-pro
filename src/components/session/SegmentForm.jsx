@@ -100,6 +100,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     song_6_lead: segment?.song_6_lead || "",
     song_6_key: segment?.song_6_key || "",
     requires_translation: segment?.requires_translation || false,
+    translation_mode: segment?.translation_mode || "RemoteBooth",
     translator_name: segment?.translator_name || "",
     panel_moderators: segment?.panel_moderators || "",
     panel_panelists: segment?.panel_panelists || "",
@@ -542,6 +543,51 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
                 Receso Mayor (Almuerzo/Cena)
               </label>
             </div>
+
+            <Card className="p-4 border-purple-200 bg-purple-50/30">
+              <div className="flex items-center space-x-2 mb-3">
+                <Checkbox 
+                  id="requires_translation_break"
+                  checked={formData.requires_translation}
+                  onCheckedChange={(checked) => setFormData({...formData, requires_translation: checked})}
+                />
+                <label htmlFor="requires_translation_break" className="text-sm cursor-pointer font-medium">
+                  Requiere Traducción
+                </label>
+              </div>
+
+              {formData.requires_translation && (
+                <div className="space-y-3 pl-6">
+                  <div className="space-y-2">
+                    <Label>Modo</Label>
+                    <Select 
+                      value={formData.translation_mode || "RemoteBooth"}
+                      onValueChange={(value) => setFormData({...formData, translation_mode: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="InPerson">En Tarima (en persona)</SelectItem>
+                        <SelectItem value="RemoteBooth">Cabina Remota (audífonos)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="translator_name_break">
+                      Traductor ({formData.translation_mode === 'InPerson' ? 'tarima' : 'cabina'})
+                    </Label>
+                    <AutocompleteInput
+                      type="translator"
+                      id="translator_name_break" 
+                      value={formData.translator_name}
+                      onChange={(e) => setFormData({...formData, translator_name: e.target.value})}
+                      placeholder="Nombre"
+                    />
+                  </div>
+                </div>
+              )}
+            </Card>
           </div>
         </>
       )}
