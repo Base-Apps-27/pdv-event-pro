@@ -193,17 +193,47 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     }
   }
 
-  // Video info - full details matching HTML
+  // Video info - full details matching HTML (in details left column)
   if (seg.has_video) {
-    const videoParts = [{ text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm }];
+    const videoParts = [
+      { text: '🎬 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
+      { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
+    ];
     if (seg.video_name) videoParts.push({ text: seg.video_name, color: '#1E3A8A', fontSize: pdfTheme.fontSize.sm });
     if (seg.video_length_sec) {
       const mins = Math.floor(seg.video_length_sec / 60);
       const secs = seg.video_length_sec % 60;
       videoParts.push({ text: ` - ${mins}:${String(secs).padStart(2, '0')}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
+    } else {
+      videoParts.push({ text: ' - 0:00', color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
     }
+    if (seg.video_location) videoParts.push({ text: ` • ${seg.video_location}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
     if (seg.video_owner) videoParts.push({ text: ` • ${seg.video_owner}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
     stack.push({ text: videoParts, margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom] });
+  }
+
+  // Prep instructions (if present and not shown elsewhere)
+  if (seg.prep_instructions) {
+    stack.push({
+      text: [
+        { text: 'PREP: ', bold: true, color: '#B45309', fontSize: pdfTheme.fontSize.xs },
+        { text: seg.prep_instructions, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs, italics: true },
+      ],
+      fillColor: '#FFFBEB',
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    });
+  }
+
+  // Scripture references (for Plenarias)
+  if (seg.scripture_references) {
+    stack.push({
+      text: [
+        { text: '📖 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+        { text: 'CITAS: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.xs },
+        { text: seg.scripture_references, color: '#1E3A8A', fontSize: pdfTheme.fontSize.xs },
+      ],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    });
   }
 
   // Artes - full details matching HTML (types, mics, cues, songs)
