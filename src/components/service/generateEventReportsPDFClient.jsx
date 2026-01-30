@@ -895,12 +895,15 @@ function buildDayTable(session, segments, allRooms = []) {
 // MAIN EXPORT
 // ============================================================================
 
-export async function generateEventReportPDFClient({ event, sessions, segmentsBySession, preSessionDetailsBySession, rooms = [] }) {
+export async function generateEventReportPDFClient({ event, sessions, segmentsBySession, preSessionDetailsBySession, rooms = [], hospitalityTasksBySession = {} }) {
   const content = [];
 
   sessions.forEach((session, idx) => {
+    // Check if session has hospitality tasks assigned
+    const hasHospitalityTasks = Array.isArray(hospitalityTasksBySession?.[session.id]) && hospitalityTasksBySession[session.id].length > 0;
+    
     // Session header with team info
-    content.push(buildSessionHeader(event, session));
+    content.push(buildSessionHeader(event, session, hasHospitalityTasks));
 
     // Pre-session details
     const psd = preSessionDetailsBySession?.[session.id];
