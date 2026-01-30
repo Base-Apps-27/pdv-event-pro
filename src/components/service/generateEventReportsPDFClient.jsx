@@ -45,8 +45,8 @@ function buildTimeCell(seg) {
     stack.push({
       text: toESTTimeStr(seg.end_time),
       color: pdfTheme.text.muted,
-      fontSize: pdfTheme.fontSize.sm,
-      margin: [0, 0, 0, 0],
+      fontSize: pdfTheme.fontSize.base,
+      margin: [0, 1, 0, 0],
     });
   }
 
@@ -54,8 +54,8 @@ function buildTimeCell(seg) {
     stack.push({
       text: `(${seg.duration_min}m)`,
       color: pdfTheme.text.muted,
-      fontSize: pdfTheme.fontSize.xs,
-      margin: [0, 0, 0, 0],
+      fontSize: pdfTheme.fontSize.sm,
+      margin: [0, 1, 0, 0],
     });
   }
 
@@ -67,7 +67,7 @@ function buildTimeCell(seg) {
       font: 'NotoEmoji',
       fontSize: pdfTheme.fontSize.sm,
       color: '#7C3AED',
-      alignment: 'left',
+      alignment: 'center',
       margin: [0, 2, 0, 0],
     });
   }
@@ -79,7 +79,7 @@ function buildTimeCell(seg) {
       font: 'NotoEmoji',
       fontSize: pdfTheme.fontSize.sm,
       color: '#EA580C',
-      alignment: 'left',
+      alignment: 'center',
       margin: [0, 2, 0, 0],
     });
   }
@@ -87,15 +87,14 @@ function buildTimeCell(seg) {
   return {
     stack,
     verticalAlign: 'top',
-    fillColor: '#FFFFFF',
+    fillColor: pdfTheme.fills.timeCell,
   };
 }
 
 function buildDetailsLeftCell(seg, allRooms = []) {
   const stack = [];
 
-  // Title + Type badge (matching HTML exactly - title in black, type in color)
-  const color = getSegmentColor(seg.segment_type);
+  // Title + Type badge (matching HTML exactly)
   const titleParts = [
     {
       text: seg.title ? seg.title.toUpperCase() : '—',
@@ -105,16 +104,17 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     },
   ];
   if (seg.segment_type) {
+    const color = getSegmentColor(seg.segment_type);
     titleParts.push({
       text: `  ${seg.segment_type}`,
       color: color.hex,
       fontSize: pdfTheme.fontSize.sm,
-      bold: false,
+      bold: true,
     });
   }
   stack.push({
     text: titleParts,
-    margin: [0, 0, 0, 1],
+    margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
   });
 
   // Presenter - use appropriate label based on segment type (ENCARGADO for breaks, MINISTRA for others)
@@ -123,73 +123,57 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     const presenterLabel = isBreakType ? 'ENCARGADO: ' : 'MINISTRA: ';
     stack.push({
       text: [
-        { text: presenterLabel, bold: true, color: '#16A34A', fontSize: pdfTheme.fontSize.sm },
-        { text: seg.presenter, color: '#16A34A', fontSize: pdfTheme.fontSize.sm },
+        { text: presenterLabel, bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
+        { text: seg.presenter, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
       ],
-      margin: [0, 0, 0, 1],
-    });
-  }
-
-  // Break type visual distinction (Receso/Almuerzo) with duration badge - emoji icons + background
-  if (['Receso', 'Almuerzo'].includes(seg.segment_type)) {
-    const isLunch = seg.segment_type === 'Almuerzo';
-    stack.push({
-      table: {
-        body: [[{
-          text: [
-            { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.base },
-            { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.sm },
-          ],
-          fillColor: isLunch ? '#FEF3C7' : '#F3F4F6',
-          margin: [4, 2, 4, 2],
-        }]],
-      },
-      layout: {
-        hLineWidth: () => 0.5,
-        vLineWidth: () => 0.5,
-        hLineColor: () => isLunch ? '#FCD34D' : '#D1D5DB',
-        vLineColor: () => isLunch ? '#FCD34D' : '#D1D5DB',
-        paddingTop: () => 0,
-        paddingBottom: () => 0,
-        paddingLeft: () => 0,
-        paddingRight: () => 0,
-      },
       margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
-  // Translation - InPerson (on stage) - emoji icon for TARIMA (cyan color matching HTML)
+  // Break type visual distinction (Receso/Almuerzo) with duration badge - emoji icons
+  if (['Receso', 'Almuerzo'].includes(seg.segment_type)) {
+    const isLunch = seg.segment_type === 'Almuerzo';
+    stack.push({
+      text: [
+        { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.base },
+        { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.sm },
+      ],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+    });
+  }
+
+  // Translation - InPerson (on stage) - emoji icon for TARIMA
   if (seg.requires_translation && seg.translation_mode === 'InPerson') {
     stack.push({
       text: [
         { text: '🎙 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
-        { text: 'TRAD-TARIMA', bold: false, color: '#0891B2', fontSize: pdfTheme.fontSize.sm },
-        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#0891B2', fontSize: pdfTheme.fontSize.sm } : '',
+        { text: 'TRAD-TARIMA', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
+        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm } : '',
       ],
-      margin: [0, 0, 0, 1],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
-  // Translation - RemoteBooth (headphones) - emoji icon for CABINA (purple color matching HTML)
+  // Translation - RemoteBooth (headphones) - emoji icon for CABINA
   if (seg.requires_translation && seg.translation_mode === 'RemoteBooth') {
     stack.push({
       text: [
         { text: '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
-        { text: 'TRAD-CABINA', bold: false, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm },
-        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm } : '',
+        { text: 'TRAD-CABINA', bold: true, color: '#0891B2', fontSize: pdfTheme.fontSize.sm },
+        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#0E7490', fontSize: pdfTheme.fontSize.sm } : '',
       ],
-      margin: [0, 0, 0, 1],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
-  // Songs (Alabanza) - full list matching HTML (gray label, numbered list)
+  // Songs (Alabanza) - full list matching HTML
   if (seg.segment_type === 'Alabanza' && seg.number_of_songs > 0) {
     stack.push({
       text: 'CANCIONES:',
       bold: true,
-      color: '#6B7280',
-      fontSize: pdfTheme.fontSize.xs,
-      margin: [0, 1, 0, 0],
+      color: '#166534',
+      fontSize: pdfTheme.fontSize.sm,
+      margin: [0, 0, 0, 1],
     });
     for (let i = 1; i <= Math.min(seg.number_of_songs, 6); i++) {
       const title = seg[`song_${i}_title`];
@@ -199,23 +183,23 @@ function buildDetailsLeftCell(seg, allRooms = []) {
         stack.push({
           text: [
             { text: `${i}. `, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs },
-            { text: title, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.xs, bold: true },
-            lead ? { text: ` (${lead})`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs } : '',
-            key ? { text: ` [${key}]`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs } : '',
+            { text: title, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.sm, bold: true },
+            lead ? { text: ` (${lead})`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
+            key ? { text: ` [${key}]`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, bold: true } : '',
           ],
-          margin: [6, 0, 0, 0],
+          margin: [0, 0, 0, 0.5],
         });
       }
     }
   }
 
-  // Video info - full details matching HTML (blue icon and label)
+  // Video info - full details matching HTML (in details left column)
   if (seg.has_video) {
     const videoParts = [
       { text: '🎬 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
-      { text: 'VIDEO: ', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
+      { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
     ];
-    if (seg.video_name) videoParts.push({ text: seg.video_name, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.sm });
+    if (seg.video_name) videoParts.push({ text: seg.video_name, color: '#1E3A8A', fontSize: pdfTheme.fontSize.sm });
     if (seg.video_length_sec) {
       const mins = Math.floor(seg.video_length_sec / 60);
       const secs = seg.video_length_sec % 60;
@@ -225,7 +209,7 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     }
     if (seg.video_location) videoParts.push({ text: ` • ${seg.video_location}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
     if (seg.video_owner) videoParts.push({ text: ` • ${seg.video_owner}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
-    stack.push({ text: videoParts, margin: [0, 0, 0, 1] });
+    stack.push({ text: videoParts, margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom] });
   }
 
   // Prep instructions (if present and not shown elsewhere)
@@ -321,14 +305,14 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     }
   }
 
-  // Message (Plenaria) - full title (gray label, quoted title)
+  // Message (Plenaria) - full title
   if (seg.segment_type === 'Plenaria' && seg.message_title) {
     stack.push({
       text: [
-        { text: 'MENSAJE: ', bold: true, color: '#6B7280', fontSize: pdfTheme.fontSize.sm },
-        { text: `"${seg.message_title}"`, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.sm },
+        { text: 'MENSAJE: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
+        { text: `"${seg.message_title}"`, color: '#1E3A8A', fontSize: pdfTheme.fontSize.sm },
       ],
-      margin: [0, 0, 0, 1],
+      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
@@ -489,104 +473,113 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
+  const color = getSegmentColor(seg.segment_type);
   return {
     stack: stack.length ? stack : [{ text: '—', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted }],
     verticalAlign: 'top',
-    fillColor: '#FFFFFF',
+    fillColor: color.bg,
   };
 }
 
 function buildDetailsRightCell(seg) {
   const stack = [];
 
-  // DURANTE actions - center column (matching HTML: purple header with blue icon)
+  // DURANTE actions - center column
   const duringActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : []).filter(a => a.timing !== 'before_start');
 
   if (duringActions.length > 0) {
     stack.push({
-      text: [
-        { text: '▶ ', color: '#3B82F6', fontSize: pdfTheme.fontSize.sm },
-        { text: 'DURANTE', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm },
-      ],
-      margin: [0, 0, 0, 2],
+      text: '▶ DURANTE',
+      fontSize: pdfTheme.fontSize.sm,
+      bold: true,
+      color: pdfTheme.labels.durante.text,
+      margin: [0, 0, 0, 1],
     });
     duringActions.forEach(act => {
       const dept = act.department ? `[${act.department}] ` : '';
       const label = act.label || '';
       const required = act.is_required ? '*' : '';
       const timingParts = [];
-      if (act.timing === 'before_end' && act.offset_min !== undefined) timingParts.push(`(${act.offset_min}m antes fin)`);
-      if (act.timing === 'after_start' && act.offset_min !== undefined) timingParts.push(`(${act.offset_min}m después)`);
+      if (act.timing === 'before_end' && act.offset_min !== undefined) timingParts.push(`${act.offset_min}m antes fin`);
+      if (act.timing === 'after_start' && act.offset_min !== undefined) timingParts.push(`${act.offset_min}m después`);
       const notes = act.notes || '';
 
       stack.push({
         text: [
           dept ? { text: dept, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B7280' } : '',
-          { text: label, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
-          required ? { text: ` ${required}`, color: '#DC2626', fontSize: pdfTheme.fontSize.xs, bold: true } : '',
-          timingParts.length ? { text: ` ${timingParts.join(' ')}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
+          { text: label, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.sm },
+          required ? { text: ` ${required}`, color: '#DC2626', fontSize: pdfTheme.fontSize.sm, bold: true } : '',
+          timingParts.length ? { text: ` (${timingParts.join(' • ')})`, color: pdfTheme.text.light, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
+          notes ? { text: `\n${notes}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
         ],
-        margin: [0, 0, 0, 0],
+        margin: [0, 0, 0, 1],
       });
-      if (notes) {
-        stack.push({
-          text: notes,
-          color: pdfTheme.text.muted,
-          fontSize: pdfTheme.fontSize.xs,
-          italics: true,
-          margin: [0, 0, 0, 1],
-        });
-      }
     });
   }
 
   return {
     stack: stack.length ? stack : [{ text: '—', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted }],
     verticalAlign: 'top',
-    fillColor: '#FFFFFF',
   };
 }
 
 function buildNotesCell(seg) {
   const stack = [];
 
-  // Video info in notes column (matching HTML) with timecode marker - show first
+  // NOTE: PREP actions are now rendered as separate full-width rows below the segment
+  // See buildPrepActionRow() function
+
+  // Team notes - ALL notes matching HTML (full labels, no truncation)
+  const notes = [
+    { label: 'PROYECCIÓN', val: seg.projection_notes, color: '#7C3AED', bg: '#F5F3FF' },
+    { label: 'SONIDO', val: seg.sound_notes, color: '#DC2626', bg: '#FEF2F2' },
+    { label: 'UJIERES', val: seg.ushers_notes, color: '#16A34A', bg: '#F0FDF4' },
+    { label: 'STAGE & DECOR', val: seg.stage_decor_notes, color: '#DB2777', bg: '#FDF2F8' },
+    { label: 'TRAD', val: seg.translation_notes, color: '#7C3AED', bg: '#F5F3FF' },
+    { label: 'OTRO', val: seg.other_notes, color: '#6B7280', bg: '#F9FAFB' },
+  ].filter(n => n.val);
+
+  // Microphone assignments (often shown in SONIDO context)
+  if (seg.microphone_assignments) {
+    stack.push({
+      text: [
+        { text: 'MICS: ', bold: true, color: '#DC2626', fontSize: pdfTheme.fontSize.xs },
+        { text: seg.microphone_assignments, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
+      ],
+      fillColor: '#FEF2F2',
+      margin: [0, 0, 0, 1],
+    });
+  }
+
+  // Video info in notes column (matching HTML) with timecode marker
   if (seg.has_video && (seg.video_name || seg.video_location)) {
     const videoParts = [
       { text: '🎬 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
-      { text: 'VIDEO: ', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.xs },
-      { text: seg.video_name || seg.video_location || '', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.primary },
+      { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.xs },
+      { text: seg.video_name || seg.video_location || '', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary },
     ];
     // Include video length as timecode marker
     if (seg.video_length_sec !== undefined && seg.video_length_sec !== null) {
       const mins = Math.floor(seg.video_length_sec / 60);
       const secs = seg.video_length_sec % 60;
-      videoParts.push({ text: ` [${mins}:${String(secs).padStart(2, '0')}]`, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#7C3AED' });
+      videoParts.push({ text: ` [${mins}:${String(secs).padStart(2, '0')}]`, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B21A8' });
     } else {
-      videoParts.push({ text: ' [0:00]', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#7C3AED' });
+      videoParts.push({ text: ' [0:00]', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B21A8' });
     }
     stack.push({
       text: videoParts,
+      fillColor: '#EFF6FF',
       margin: [0, 0, 0, 1],
     });
   }
-
-  // Team notes - ALL notes matching HTML (full labels, proper colors)
-  const notes = [
-    { label: 'PROYECCIÓN', val: seg.projection_notes, color: '#7C3AED' },
-    { label: 'SONIDO', val: seg.sound_notes, color: '#DC2626' },
-    { label: 'UJIERES', val: seg.ushers_notes, color: '#16A34A' },
-    { label: 'STAGE & DECOR', val: seg.stage_decor_notes, color: '#DB2777' },
-    { label: 'TRAD', val: seg.translation_notes, color: '#7C3AED' },
-    { label: 'OTRO', val: seg.other_notes, color: '#6B7280' },
-  ].filter(n => n.val);
 
   notes.forEach(n => {
     stack.push({
       text: [
         { text: `${n.label}: `, bold: true, color: n.color, fontSize: pdfTheme.fontSize.xs },
-        { text: n.val, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.xs },
+        { text: n.val, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
       ],
+      fillColor: n.bg,
       margin: [0, 0, 0, 1],
     });
   });
@@ -594,13 +587,14 @@ function buildNotesCell(seg) {
   // Translation info for notes column if present (with emoji icons)
   if (seg.requires_translation) {
     const isInPerson = seg.translation_mode === 'InPerson';
-    const color = isInPerson ? '#0891B2' : '#7C3AED';
+    const color = isInPerson ? '#2563EB' : '#0891B2';
     stack.push({
       text: [
         { text: isInPerson ? '🎙 ' : '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
-        { text: isInPerson ? 'TRAD-TARIMA' : 'TRAD-CABINA', bold: false, color, fontSize: pdfTheme.fontSize.xs },
+        { text: isInPerson ? 'TRAD-TARIMA' : 'TRAD-CABINA', bold: true, color, fontSize: pdfTheme.fontSize.xs },
         seg.translator_name ? { text: `: ${seg.translator_name}`, color, fontSize: pdfTheme.fontSize.xs } : '',
       ],
+      fillColor: isInPerson ? '#EFF6FF' : '#ECFEFF',
       margin: [0, 0, 0, 1],
     });
   }
@@ -608,7 +602,7 @@ function buildNotesCell(seg) {
   return {
     stack: stack.length ? stack : [{ text: '—', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted }],
     verticalAlign: 'top',
-    fillColor: '#FFFFFF',
+    fillColor: pdfTheme.fills.notesCell,
   };
 }
 
@@ -627,24 +621,23 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
   const locStr = session?.location || '';
   const arrivalStr = session?.default_stage_call_offset_min ? `Llegada: ${session.default_stage_call_offset_min} min antes` : '';
 
-  // Build session title with indicators (matching HTML: green event name, em-dash, black session)
+  // Build session title with indicators
   const titleParts = [
-    { text: (event?.name || 'EVENT').toUpperCase(), color: '#1F8A70', bold: true, fontSize: pdfTheme.fontSize.title, italics: true },
-    { text: ' — ', color: pdfTheme.text.primary, bold: true, fontSize: pdfTheme.fontSize.title },
+    { text: (event?.name || 'EVENT').toUpperCase() + ' — ', color: '#1F8A70', bold: true, fontSize: pdfTheme.fontSize.title },
     { text: (session?.name || 'SESSION').toUpperCase(), bold: true, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.title },
   ];
-  // Hospitality tasks indicator (🍴) - matching HTML purple color
+  // Hospitality tasks indicator (🍴)
   if (hasHospitalityTasks) {
-    titleParts.push({ text: '  🍴', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg, color: '#9333EA' });
+    titleParts.push({ text: ' 🍴', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg, color: '#DB2777' });
   }
   // Translated session indicator (🌐)
   if (session?.is_translated_session) {
-    titleParts.push({ text: '  🌐', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg, color: '#7C3AED' });
+    titleParts.push({ text: ' 🌐', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg });
   }
 
   stack.push({
     text: titleParts,
-    margin: [0, 0, 0, 1],
+    margin: [0, 0, 0, 2],
   });
 
   // Date/time/location line
@@ -653,7 +646,7 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
     stack.push({
       text: [
         { text: meta, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.header },
-        arrivalStr ? { text: ` • ${arrivalStr}`, color: '#EA580C', fontSize: pdfTheme.fontSize.header, bold: true } : '',
+        arrivalStr ? { text: ` • ${arrivalStr}`, color: '#2563EB', fontSize: pdfTheme.fontSize.header, bold: true } : '',
       ],
       margin: [0, 0, 0, 3],
     });
@@ -673,20 +666,20 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
   if (session?.presenter) teams.push({ label: 'PRES', value: session.presenter, color: '#2563EB' });
 
   if (teams.length > 0) {
-    // Build 4-column grid like HTML with thin borders
+    // Build 4-column grid like HTML
     const rows = [];
     for (let i = 0; i < teams.length; i += 4) {
       const rowCells = teams.slice(i, i + 4).map(t => ({
         text: [
           { text: `${t.label}: `, bold: true, color: t.color, fontSize: pdfTheme.fontSize.xs },
-          { text: t.value, color: pdfTheme.text.primary, fontSize: pdfTheme.fontSize.xs },
+          { text: t.value, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
         ],
-        fillColor: '#FFFFFF',
-        margin: [3, 2, 3, 2],
+        fillColor: '#FAFAFA',
+        margin: [2, 1, 2, 1],
       }));
       // Pad to 4 columns
       while (rowCells.length < 4) {
-        rowCells.push({ text: '', fillColor: '#FFFFFF' });
+        rowCells.push({ text: '', fillColor: '#FAFAFA' });
       }
       rows.push(rowCells);
     }
@@ -701,12 +694,8 @@ function buildSessionHeader(event, session, hasHospitalityTasks = false) {
         vLineWidth: () => 0.5,
         hLineColor: () => '#E5E7EB',
         vLineColor: () => '#E5E7EB',
-        paddingTop: () => 2,
-        paddingBottom: () => 2,
-        paddingLeft: () => 4,
-        paddingRight: () => 4,
       },
-      margin: [0, 2, 0, 6],
+      margin: [0, 0, 0, 4],
     });
   }
 
@@ -731,30 +720,31 @@ function buildPreSessionDetailsBlock(psd) {
 
   const stack = [];
 
-  // Title with underline effect (using decoration)
   stack.push({
     text: 'DETALLES PREVIOS (SEGMENTO 0)',
     bold: true,
     color: '#1E40AF',
     fontSize: pdfTheme.fontSize.sm,
-    decoration: 'underline',
-    decorationColor: '#1E40AF',
-    margin: [0, 0, 0, 3],
+    margin: [0, 0, 0, 2],
   });
 
-  // Each detail on its own line (matching HTML layout)
-  details.forEach(d => {
-    const lineParts = [];
-    if (d.useEmoji && d.icon) {
-      lineParts.push({ text: d.icon + ' ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs });
-    }
-    lineParts.push({ text: `${d.label}: `, bold: true, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
-    lineParts.push({ text: d.value, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.primary });
-    stack.push({
-      text: lineParts,
-      margin: [0, 0, 0, 1],
+  if (details.length > 0) {
+    // Build text array with proper font switching for emojis
+    const textParts = [];
+    details.forEach((d, idx) => {
+      if (d.useEmoji && d.icon) {
+        textParts.push({ text: d.icon + ' ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs });
+      }
+      textParts.push({ text: `${d.label}: ${d.value}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
+      if (idx < details.length - 1) {
+        textParts.push({ text: ' • ', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
+      }
     });
-  });
+    stack.push({
+      text: textParts,
+      margin: [0, 0, 0, 2],
+    });
+  }
 
   if (psd.facility_notes) {
     stack.push({
@@ -796,33 +786,39 @@ function buildPrepActionRow(act) {
 
   return [
     {
-      // Warning icon in time column
-      text: [
-        { text: '⚠', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm, color: '#F59E0B' },
-      ],
-      alignment: 'center',
-      fillColor: '#FFFFFF',
-      border: [false, false, false, false],
-    },
-    {
-      // PREP content spanning details columns
-      colSpan: 2,
-      text: [
-        dept ? { text: `${dept} `, bold: true, fontSize: pdfTheme.fontSize.sm, color: '#92400E' } : '',
-        { text: label, fontSize: pdfTheme.fontSize.sm, color: pdfTheme.text.secondary },
-        required ? { text: required, fontSize: pdfTheme.fontSize.sm, color: '#DC2626', bold: true } : '',
-        offset ? { text: `  ${offset}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.light, italics: true } : '',
-        notes ? { text: notes, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted, italics: true } : '',
-      ],
-      fillColor: '#FFFFFF',
-      border: [false, false, false, false],
+      colSpan: 4,
+      fillColor: '#FFFBEB',
+      stack: [{
+        columns: [
+          {
+            width: 55,
+            stack: [{
+              text: [
+                { text: '⚠ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+                { text: 'PREP', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#FFFFFF' },
+              ],
+              alignment: 'center',
+              margin: [0, 2, 0, 2],
+            }],
+            fillColor: '#F59E0B',
+          },
+          {
+            width: '*',
+            text: [
+              dept ? { text: `${dept} `, bold: true, fontSize: pdfTheme.fontSize.sm, color: '#92400E' } : '',
+              { text: label, fontSize: pdfTheme.fontSize.sm, color: pdfTheme.text.secondary },
+              required ? { text: required, fontSize: pdfTheme.fontSize.sm, color: '#DC2626', bold: true } : '',
+              offset ? { text: `  ${offset}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.light, italics: true } : '',
+              notes ? { text: notes, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted, italics: true } : '',
+            ],
+            margin: [4, 2, 0, 2],
+          },
+        ],
+      }],
     },
     {},
-    {
-      text: '',
-      fillColor: '#FFFFFF',
-      border: [false, false, false, false],
-    },
+    {},
+    {},
   ];
 }
 
@@ -835,31 +831,28 @@ function buildDayTable(session, segments, allRooms = []) {
     {
       text: 'HORA',
       bold: true,
-      fontSize: pdfTheme.fontSize.base,
-      color: '#6B7280',
+      fontSize: pdfTheme.fontSize.sm,
+      color: pdfTheme.text.primary,
       alignment: 'center',
-      fillColor: '#FFFFFF',
-      border: [false, false, false, true],
+      fillColor: pdfTheme.fills.header,
     },
     {
       text: 'DETALLES',
       bold: true,
-      fontSize: pdfTheme.fontSize.base,
-      color: '#6B7280',
+      fontSize: pdfTheme.fontSize.sm,
+      color: pdfTheme.text.primary,
       alignment: 'left',
       colSpan: 2,
-      fillColor: '#FFFFFF',
-      border: [false, false, false, true],
+      fillColor: pdfTheme.fills.header,
     },
     {},
     {
       text: 'NOTAS POR EQUIPO',
       bold: true,
-      fontSize: pdfTheme.fontSize.base,
-      color: '#6B7280',
-      alignment: 'right',
-      fillColor: '#FFFFFF',
-      border: [false, false, false, true],
+      fontSize: pdfTheme.fontSize.sm,
+      color: pdfTheme.text.primary,
+      alignment: 'left',
+      fillColor: pdfTheme.fills.header,
     },
   ];
 
@@ -892,22 +885,14 @@ function buildDayTable(session, segments, allRooms = []) {
       dontBreakRows: true,
     },
     layout: {
-      hLineWidth: (i, node) => {
-        if (i === 0) return 0; // No top border
-        if (i === 1) return 1; // Header bottom border
-        return 0.5;
-      },
-      vLineWidth: (i, node) => {
-        // Vertical lines only between columns, not at edges
-        if (i === 0 || i === node.table.widths.length) return 0;
-        return 0.5;
-      },
-      hLineColor: (i) => i === 1 ? '#E5E7EB' : '#F3F4F6',
-      vLineColor: () => '#F3F4F6',
-      paddingTop: () => 4,
-      paddingBottom: () => 4,
-      paddingLeft: () => 6,
-      paddingRight: () => 6,
+      hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length ? 1 : 0.5),
+      vLineWidth: () => 0.5,
+      hLineColor: (i) => i === 1 ? '#9CA3AF' : pdfTheme.borders.color,
+      vLineColor: () => pdfTheme.borders.lightColor,
+      paddingTop: () => 3,
+      paddingBottom: () => 3,
+      paddingLeft: () => 4,
+      paddingRight: () => 4,
     },
     margin: [0, 0, 0, 4],
   };
