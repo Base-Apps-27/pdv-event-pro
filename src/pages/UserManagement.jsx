@@ -19,6 +19,7 @@ export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingUser, setEditingUser] = useState(null);
   const [selectedRole, setSelectedRole] = useState("");
+  const [editingFullName, setEditingFullName] = useState("");
   const [customPermissions, setCustomPermissions] = useState([]);
   const [revokedPermissions, setRevokedPermissions] = useState([]);
   
@@ -79,6 +80,7 @@ export default function UserManagement() {
     setEditingUser(user);
     const role = user.app_role || 'EventDayViewer';
     setSelectedRole(role);
+    setEditingFullName(user.full_name || "");
     setCustomPermissions(user.custom_permissions || []);
     setRevokedPermissions(user.revoked_permissions || []);
   };
@@ -88,6 +90,7 @@ export default function UserManagement() {
       updateUserMutation.mutate({
         userId: editingUser.id,
         data: {
+          full_name: editingFullName.trim() || null,
           app_role: selectedRole,
           custom_permissions: customPermissions,
           revoked_permissions: revokedPermissions,
@@ -434,10 +437,15 @@ export default function UserManagement() {
               </div>
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'linear-gradient(135deg, #1F8A70 0%, #4DC15F 100%)' }}>
-                  {editingUser?.full_name?.charAt(0).toUpperCase() || editingUser?.email?.charAt(0).toUpperCase() || '?'}
+                  {editingFullName?.charAt(0).toUpperCase() || editingUser?.email?.charAt(0).toUpperCase() || '?'}
                 </div>
-                <div>
-                  <div className="font-semibold text-gray-900">{editingUser?.full_name || (language === 'es' ? 'Sin nombre' : 'No name')}</div>
+                <div className="flex-1 space-y-2">
+                  <Input
+                    value={editingFullName}
+                    onChange={(e) => setEditingFullName(e.target.value)}
+                    placeholder={language === 'es' ? 'Nombre completo' : 'Full name'}
+                    className="font-semibold"
+                  />
                   <div className="text-sm text-gray-500">{editingUser?.email}</div>
                 </div>
               </div>
