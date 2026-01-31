@@ -275,8 +275,30 @@ export default function EventProgramView({
                       </>
                     )}
                   </div>
+                  {/* Bilingual Session Badge */}
+                  {session.is_translated_session && (
+                    <Badge className="bg-purple-600 text-white text-xs mt-1 mb-1">
+                      <Languages className="w-3 h-3 mr-1" />
+                      Sesión Bilingüe
+                    </Badge>
+                  )}
+
+                  {/* Stage Call Offset */}
+                  {session.default_stage_call_offset_min && (
+                    <div className="text-xs text-blue-700 font-semibold mt-1">
+                      ⏱️ Citación de Equipos: {session.default_stage_call_offset_min} min antes
+                    </div>
+                  )}
+
+                  {/* Session Presenter */}
+                  {session.presenter && (
+                    <div className="text-sm text-indigo-700 font-semibold mt-1">
+                      <strong>Presentador de Sesión:</strong> {normalizeName(session.presenter)}
+                    </div>
+                  )}
+
                   {/* Team Info - Compact */}
-                  {(session.coordinators || session.ushers_team || session.sound_team || session.tech_team || session.admin_team || session.translation_team || session.photography_team || session.worship_leader) && (
+                  {(session.coordinators || session.ushers_team || session.sound_team || session.lights_team || session.video_team || session.tech_team || session.admin_team || session.translation_team || session.photography_team || session.worship_leader) && (
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
                       {session.coordinators && (
                         <span><strong>👤 Coord:</strong> {normalizeName(session.coordinators)}</span>
@@ -293,10 +315,22 @@ export default function EventProgramView({
                           <span><strong>🔊 Sonido:</strong> {normalizeName(session.sound_team)}</span>
                         </>
                       )}
+                      {session.lights_team && (
+                        <>
+                          <span className="text-gray-400">|</span>
+                          <span><strong>💡 Luces:</strong> {normalizeName(session.lights_team)}</span>
+                        </>
+                      )}
+                      {session.video_team && (
+                        <>
+                          <span className="text-gray-400">|</span>
+                          <span><strong>🎥 Video:</strong> {normalizeName(session.video_team)}</span>
+                        </>
+                      )}
                       {session.tech_team && (
                         <>
                           <span className="text-gray-400">|</span>
-                          <span><strong>💡 Tech:</strong> {normalizeName(session.tech_team)}</span>
+                          <span><strong>🔧 Tech:</strong> {normalizeName(session.tech_team)}</span>
                         </>
                       )}
                       {session.admin_team && (
@@ -407,6 +441,16 @@ export default function EventProgramView({
                                   {room.translation_mode === "InPerson" && <Mic className="w-4 h-4" />}
                                   {room.translator_name && <span>{room.translator_name}</span>}
                                 </div>
+                              )}
+                              {room.general_notes && (
+                                <p className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded border">
+                                  <strong>Notas:</strong> {room.general_notes}
+                                </p>
+                              )}
+                              {room.other_notes && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  <strong>Otras:</strong> {room.other_notes}
+                                </p>
                               )}
                             </CardContent>
                           </Card>
