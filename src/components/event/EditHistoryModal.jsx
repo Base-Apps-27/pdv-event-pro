@@ -1,8 +1,9 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { 
@@ -17,10 +18,13 @@ import {
   ChevronRight,
   FileText,
   Calendar,
-  Layers
+  Layers,
+  Undo2,
+  Loader2
 } from "lucide-react";
 import { formatTimestampToEST } from "@/components/utils/timeFormat";
 import { useLanguage } from "@/components/utils/i18n";
+import { undoUpdate, undoDelete } from "@/components/utils/editActionLogger";
 
 const ACTION_ICONS = {
   create: Plus,
