@@ -80,7 +80,8 @@ export default function UserManagement() {
     setEditingUser(user);
     const role = user.app_role || 'EventDayViewer';
     setSelectedRole(role);
-    setEditingFullName(user.full_name || "");
+    // Use display_name if set, otherwise fallback to built-in full_name
+    setEditingFullName(user.display_name || user.full_name || "");
     setCustomPermissions(user.custom_permissions || []);
     setRevokedPermissions(user.revoked_permissions || []);
   };
@@ -90,7 +91,8 @@ export default function UserManagement() {
       updateUserMutation.mutate({
         userId: editingUser.id,
         data: {
-          full_name: editingFullName.trim() || null,
+          // Use display_name (editable) instead of built-in full_name (read-only)
+          display_name: editingFullName.trim() || null,
           app_role: selectedRole,
           custom_permissions: customPermissions,
           revoked_permissions: revokedPermissions,
@@ -367,10 +369,10 @@ export default function UserManagement() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'linear-gradient(135deg, #1F8A70 0%, #4DC15F 100%)' }}>
-                            {user.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || '?'}
+                            {(user.display_name || user.full_name)?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || '?'}
                           </div>
                           <div className="font-semibold text-gray-900">
-                            {user.full_name || (language === 'es' ? 'Sin nombre' : 'No name')}
+                            {user.display_name || user.full_name || (language === 'es' ? 'Sin nombre' : 'No name')}
                           </div>
                         </div>
                       </td>
