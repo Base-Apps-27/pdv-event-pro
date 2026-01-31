@@ -1039,7 +1039,7 @@ export default function PublicProgramView() {
             )}
 
             {/* Live Time Adjustment Controls for Coordinators - Only for Services */}
-            {viewType === "service" && hasPermission(currentUser, 'manage_live_timing') && actualServiceData && (
+            {viewType === "service" && (hasPermission(currentUser, 'manage_live_timing') || hasPermission(currentUser, 'adjust_service_timing')) && actualServiceData && (
               <Card className="bg-slate-900 text-white border-none">
                 <CardContent className="p-3 sm:p-4">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

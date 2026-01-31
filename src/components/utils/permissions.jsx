@@ -34,6 +34,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     'view_live_program',
     'view_live_chat',
     'manage_live_timing',
+    'adjust_service_timing',
   ],
   AdmAsst: [
     'view_events', 'edit_events', 'create_events',
@@ -47,11 +48,12 @@ const DEFAULT_ROLE_PERMISSIONS = {
   EventDayViewer: [
     'view_live_program',
   ],
-  // EventDayCoordinator: Same as EventDayViewer + view_live_chat
-  // For coordinators who need to participate in live operations chat
+  // EventDayCoordinator: Same as EventDayViewer + view_live_chat + adjust_service_timing
+  // For coordinators who need to participate in live operations chat and adjust service times
   EventDayCoordinator: [
     'view_live_program',
     'view_live_chat',
+    'adjust_service_timing',
   ],
 };
 
@@ -192,5 +194,8 @@ export function getAllPermissionDefinitions() {
 
     // Live Chat
     { key: 'view_live_chat', resource: 'live_chat', action: 'view', category: 'live', hierarchy_level: 0, label_en: 'View Live Chat', label_es: 'Ver Chat en Vivo' },
+
+    // Service Time Adjustment (for service coordinators to adjust start times)
+    { key: 'adjust_service_timing', resource: 'service_timing', action: 'edit', category: 'live', hierarchy_level: 1, label_en: 'Adjust Service Timing', label_es: 'Ajustar Horario del Servicio' },
   ];
 }
