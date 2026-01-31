@@ -485,7 +485,6 @@ export default function EventProgramView({
                     onToggleExpand={toggleSegmentExpanded}
                     onOpenVerses={onOpenVerses}
                     allSegments={allSegments}
-                    onOpenVerses={onOpenVerses}
                     getRoomName={getRoomName}
                   />
                 );
