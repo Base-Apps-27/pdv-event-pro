@@ -26,54 +26,74 @@ export default function LiveChatMessage({
   const senderName = (() => {
     if (message.created_by) {
       const emailPrefix = message.created_by.split('@')[0];
-      // Capitalize first letter
-      return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+      // Clean up and capitalize - handle names with dots/underscores
+      const cleaned = emailPrefix.replace(/[._]/g, ' ').split(' ')[0];
+      return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
     }
     return 'Usuario';
   })();
 
-  // Format timestamp
+  // Get initials for avatar
+  const initials = senderName.substring(0, 2).toUpperCase();
+
+  // Format timestamp - show just time portion
   const timeDisplay = formatTimestampToEST(message.created_date);
+  // Extract just the time (e.g., "3:45 PM")
+  const shortTime = timeDisplay ? timeDisplay.split(' ').slice(0, 2).join(' ') : '';
 
   return (
-    <div className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'} group`}>
-      {/* Sender name (only for others' messages) */}
+    <div className={`flex gap-2 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} group`}>
+      {/* Avatar */}
       {!isOwnMessage && (
-        <span className="text-xs text-gray-500 mb-0.5 ml-1">{senderName}</span>
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
+          {initials}
+        </div>
       )}
       
-      <div className={`relative max-w-[85%] ${isOwnMessage ? 'order-1' : ''}`}>
-        {/* Message bubble */}
-        <div
-          className={`px-3 py-2 rounded-2xl text-sm ${
-            isOwnMessage
-              ? 'bg-pdv-teal text-white rounded-br-md'
-              : 'bg-gray-100 text-gray-900 rounded-bl-md'
-          } ${message.is_pinned ? 'ring-2 ring-amber-400' : ''}`}
-        >
-          {message.message}
+      <div className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'} max-w-[75%]`}>
+        {/* Sender name and time header */}
+        {!isOwnMessage && (
+          <div className="flex items-center gap-2 mb-1 px-1">
+            <span className="text-xs font-semibold text-gray-700">{senderName}</span>
+            <span className="text-[10px] text-gray-400">{shortTime}</span>
+          </div>
+        )}
+        
+        <div className="relative">
+          {/* Message bubble */}
+          <div
+            className={`px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${
+              isOwnMessage
+                ? 'bg-pdv-teal text-white rounded-2xl rounded-br-sm'
+                : 'bg-white text-gray-800 rounded-2xl rounded-bl-sm border border-gray-200'
+            } ${message.is_pinned ? 'ring-2 ring-amber-400 ring-offset-1' : ''}`}
+          >
+            <p className="whitespace-pre-wrap break-words">{message.message}</p>
+          </div>
+          
+          {/* Pin button (appears on hover for users with permission) */}
+          {canPin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onTogglePin(message)}
+              className={`absolute ${isOwnMessage ? '-left-7' : '-right-7'} top-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity ${
+                message.is_pinned ? 'text-amber-500' : 'text-gray-400 hover:text-amber-500'
+              }`}
+              title={message.is_pinned ? 'Desfijar mensaje' : 'Fijar mensaje'}
+            >
+              {message.is_pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+            </Button>
+          )}
         </div>
         
-        {/* Pin button (appears on hover for users with permission) */}
-        {canPin && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onTogglePin(message)}
-            className={`absolute -right-8 top-0 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity ${
-              message.is_pinned ? 'text-amber-500' : 'text-gray-400 hover:text-amber-500'
-            }`}
-            title={message.is_pinned ? 'Desfijar mensaje' : 'Fijar mensaje'}
-          >
-            {message.is_pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
-          </Button>
+        {/* Timestamp for own messages */}
+        {isOwnMessage && (
+          <span className="text-[10px] text-gray-400 mt-1 mr-1">
+            {shortTime}
+          </span>
         )}
       </div>
-      
-      {/* Timestamp */}
-      <span className={`text-[10px] text-gray-400 mt-0.5 ${isOwnMessage ? 'mr-1' : 'ml-1'}`}>
-        {timeDisplay}
-      </span>
     </div>
   );
 }

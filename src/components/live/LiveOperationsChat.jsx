@@ -174,21 +174,34 @@ export default function LiveOperationsChat({
 
       {/* Chat Panel Overlay */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-[360px] max-w-[calc(100vw-48px)] h-[500px] max-h-[calc(100vh-140px)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden">
+        <div className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-32px)] h-[520px] max-h-[calc(100vh-120px)] bg-white rounded-2xl shadow-2xl border border-gray-300 flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-pdv-teal to-pdv-green px-4 py-3 text-white">
+          <div className="bg-gradient-to-r from-pdv-teal to-pdv-green px-4 py-3.5 text-white">
             <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-sm uppercase tracking-wide truncate">
-                  Chat de Operaciones
-                </h3>
-                <p className="text-xs text-white/80 truncate">
-                  {contextName || (contextType === 'event' ? 'Evento' : 'Servicio')}
-                </p>
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-base tracking-wide truncate">
+                    Chat en Vivo
+                  </h3>
+                  <p className="text-xs text-white/90 truncate font-medium">
+                    {contextName || (contextType === 'event' ? 'Evento' : 'Servicio')}
+                  </p>
+                </div>
               </div>
-              <Badge variant="secondary" className="bg-white/20 text-white text-xs">
-                {messages.length} msgs
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="bg-white/25 text-white text-xs font-semibold px-2 py-0.5">
+                  {messages.length}
+                </Badge>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -200,16 +213,18 @@ export default function LiveOperationsChat({
           />
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-gray-50">
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-gradient-to-b from-gray-50 to-gray-100">
             {isLoading ? (
               <div className="flex items-center justify-center h-full text-gray-400">
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <Loader2 className="w-8 h-8 animate-spin" />
               </div>
             ) : regularMessages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm">
-                <MessageCircle className="w-10 h-10 mb-2 opacity-50" />
-                <p>Sin mensajes aún</p>
-                <p className="text-xs">Inicia la conversación</p>
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-3">
+                  <MessageCircle className="w-8 h-8 text-gray-400" />
+                </div>
+                <p className="font-semibold text-gray-600">Sin mensajes aún</p>
+                <p className="text-sm text-gray-400 mt-1">Inicia la conversación del equipo</p>
               </div>
             ) : (
               <>
@@ -228,22 +243,22 @@ export default function LiveOperationsChat({
           </div>
 
           {/* Input Area */}
-          <div className="border-t bg-white px-3 py-2">
-            <div className="flex items-center gap-2">
+          <div className="border-t-2 border-gray-200 bg-white px-4 py-3">
+            <div className="flex items-center gap-3">
               <Input
                 ref={inputRef}
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Escribe un mensaje..."
-                className="flex-1 text-sm h-9"
+                className="flex-1 text-sm h-10 rounded-full border-gray-300 px-4 focus:ring-2 focus:ring-pdv-teal focus:border-transparent"
                 disabled={sendMessageMutation.isLoading}
               />
               <Button
                 onClick={handleSend}
                 disabled={!messageText.trim() || sendMessageMutation.isLoading}
                 size="sm"
-                className="h-9 w-9 p-0 bg-pdv-teal hover:bg-pdv-teal/90"
+                className="h-10 w-10 p-0 bg-pdv-teal hover:bg-pdv-teal/90 rounded-full shadow-md"
               >
                 {sendMessageMutation.isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -252,10 +267,10 @@ export default function LiveOperationsChat({
                 )}
               </Button>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1 text-center">
+            <p className="text-[10px] text-gray-400 mt-2 text-center">
               {contextType === 'event' 
-                ? 'Chat archiva 24h después del evento' 
-                : 'Chat archiva a medianoche'}
+                ? 'Se archiva 24h después del evento' 
+                : 'Se archiva a medianoche'}
             </p>
           </div>
         </div>
