@@ -18,8 +18,8 @@ export default function SegmentReportRow({
     return (
       <div className="space-y-0.5">
         {segment.projection_notes && (
-          <div className="bg-purple-50 px-0.5 py-0.5 rounded border border-purple-200 text-[9px]">
-            <span className="font-bold text-purple-700">PROYECCIÓN:</span>
+          <div className="bg-slate-100 px-0.5 py-0.5 rounded border border-slate-300 text-[9px]">
+            <span className="font-bold text-slate-700">PROYECCIÓN:</span>
             <span className="ml-0.5">{segment.projection_notes}</span>
           </div>
         )}
@@ -43,8 +43,8 @@ export default function SegmentReportRow({
         )}
         {/* Only show booth translation in notes column - stage translation is shown inline with presenter */}
         {segment.requires_translation && segment.translation_mode === "RemoteBooth" && (
-          <div className="bg-cyan-50 px-0.5 py-0.5 rounded border border-cyan-300 text-[9px]">
-            <span className="font-bold text-cyan-700">🎧 TRAD-CABINA:</span>
+          <div className="bg-purple-50 px-0.5 py-0.5 rounded border border-purple-200 text-[9px]">
+            <span className="font-bold text-purple-700">🎧 TRAD-CABINA:</span>
             {segment.translator_name && (
               <span className="ml-0.5 font-semibold">{segment.translator_name}</span>
             )}
@@ -106,13 +106,9 @@ export default function SegmentReportRow({
           </div>
         )}
 
-        {/* Translation for breaks */}
+        {/* Translation for breaks - purple for all translation items */}
         {['Receso', 'Almuerzo'].includes(segment.segment_type) && segment.requires_translation && (
-          <div className={`text-[9px] px-1 py-0.5 rounded border mt-0.5 inline-flex items-center gap-1 ${
-            segment.translation_mode === 'InPerson'
-              ? 'bg-blue-100 border-blue-300 text-blue-800'
-              : 'bg-cyan-100 border-cyan-300 text-cyan-800'
-          }`}>
+          <div className="text-[9px] px-1 py-0.5 rounded border mt-0.5 inline-flex items-center gap-1 bg-purple-100 border-purple-300 text-purple-800">
             <span>{segment.translation_mode === 'InPerson' ? '🎙️' : '🎧'}</span>
             <span className="font-semibold">{segment.translation_mode === 'InPerson' ? 'TRAD-TARIMA' : 'TRAD-CABINA'}</span>
             {segment.translator_name && <span>: {segment.translator_name}</span>}
