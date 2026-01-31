@@ -118,14 +118,16 @@ export default function Reports() {
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   };
 
+  // Session left-border color mapping - used to visually distinguish sessions
+  // Note: green uses inline style for custom brand green (#8DC63F), others use Tailwind classes
   const sessionColorClasses = {
-    green: 'border-l-8',
-    blue: 'border-l-8 border-blue-500',
-    pink: 'border-l-8 border-pink-500',
-    orange: 'border-l-8 border-orange-500',
-    yellow: 'border-l-8 border-yellow-400',
-    purple: 'border-l-8 border-purple-500',
-    red: 'border-l-8 border-red-500',
+    green: 'border-l-8',  // Uses inline style for borderLeftColor
+    blue: 'border-l-8 border-l-blue-500',
+    pink: 'border-l-8 border-l-pink-500',
+    orange: 'border-l-8 border-l-orange-500',
+    yellow: 'border-l-8 border-l-yellow-400',
+    purple: 'border-l-8 border-l-purple-500',
+    red: 'border-l-8 border-l-red-500',
   };
 
   const eventColorClasses = {
@@ -326,10 +328,16 @@ export default function Reports() {
         const hasHospitalityTasks = allHospitalityTasks.some(task => task.session_id === session.id);
         if (segments.length === 0) return null;
 
-        // If event has a print_color, use it for top border. Otherwise fallback to session color (left border) or default
-        const borderClass = selectedEvent?.print_color 
-          ? `${eventColorClasses[selectedEvent.print_color] || 'border-t-8 border-blue-500'} border-l-2 border-r-2 border-b-2` 
-          : `${sessionColorClasses[session.session_color] || ''} border-2`;
+        // Session border logic:
+        // - Left border: ALWAYS uses session.session_color for visual distinction between sessions
+        // - Top border: Uses event.print_color if set (for event-level branding)
+        // - Other borders: thin gray
+        const sessionLeftBorderClass = sessionColorClasses[session.session_color] || 'border-l-8 border-l-gray-300';
+        const eventTopBorderClass = selectedEvent?.print_color 
+          ? (eventColorClasses[selectedEvent.print_color] || 'border-t-4 border-t-blue-500')
+          : '';
+        const borderClass = `${sessionLeftBorderClass} ${eventTopBorderClass} border-r-2 border-b-2 border-t-2 border-r-gray-200 border-b-gray-200`;
+        // Inline styles for custom brand green (not available in Tailwind)
         const leftBorderStyle = session.session_color === 'green' ? { borderLeftColor: '#8DC63F', borderLeftWidth: '8px' } : {};
         const topBorderStyle = selectedEvent?.print_color === 'green' ? { borderTopColor: '#8DC63F', borderTopWidth: '8px' } : {};
 
