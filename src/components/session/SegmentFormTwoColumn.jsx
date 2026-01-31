@@ -1199,13 +1199,12 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                           <span className="text-xs">{language === 'es' ? 'Añadir Versículos' : 'Add Verses'}</span>
                         </Button>
                       </div>
-                      {/* Read-only display of verses - must use button to add/edit */}
-                      <Input 
-                        value={formData.scripture_references}
-                        readOnly
-                        placeholder={language === 'es' ? 'Usa el botón para añadir versículos' : 'Use button to add verses'}
-                        className="bg-gray-50 cursor-not-allowed"
-                      />
+                      {/* Read-only display of verses - styled as inline text, not an input */}
+                      {formData.scripture_references ? (
+                        <p className="text-sm text-gray-700 py-2">{formData.scripture_references}</p>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic py-2">{language === 'es' ? 'Sin versículos añadidos' : 'No verses added'}</p>
+                      )}
                       {formData.parsed_verse_data && (
                         <p className="text-xs text-green-600 flex items-center gap-1">
                           <Sparkles className="w-3 h-3" />
