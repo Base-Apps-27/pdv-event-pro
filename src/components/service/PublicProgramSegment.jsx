@@ -400,10 +400,11 @@ export default function PublicProgramSegment({
                 <p className="text-orange-900 leading-snug">{getData('coordinator_notes')}</p>
               </div>
             )}
+            {/* Projection notes - slate color (distinct from purple/translation) */}
             {getData('projection_notes') && (
-              <div className="bg-blue-50 border-l-4 border-blue-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-blue-800 block mb-1">{t('live.projection')}:</span>
-                <p className="text-blue-900 leading-snug">{getData('projection_notes')}</p>
+              <div className="bg-slate-100 border-l-4 border-slate-500 pl-3 py-2 text-xs rounded-r">
+                <span className="font-bold text-slate-700 block mb-1">{t('live.projection')}:</span>
+                <p className="text-slate-800 leading-snug">{getData('projection_notes')}</p>
               </div>
             )}
             {getData('sound_notes') && (
@@ -424,10 +425,11 @@ export default function PublicProgramSegment({
                 <p className="text-purple-900 leading-snug">{getData('translation_notes')}</p>
               </div>
             )}
+            {/* Stage & Decor notes - purple color (same as translation) */}
             {getData('stage_decor_notes') && (
-              <div className="bg-pink-50 border-l-4 border-pink-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-pink-800 block mb-1">{t('live.stageDecor')}:</span>
-                <p className="text-pink-900 leading-snug">{getData('stage_decor_notes')}</p>
+              <div className="bg-purple-50 border-l-4 border-purple-500 pl-3 py-2 text-xs rounded-r">
+                <span className="font-bold text-purple-800 block mb-1">{t('live.stageDecor')}:</span>
+                <p className="text-purple-900 leading-snug">{getData('stage_decor_notes')}</p>
               </div>
             )}
             {getData('microphone_assignments') && (
