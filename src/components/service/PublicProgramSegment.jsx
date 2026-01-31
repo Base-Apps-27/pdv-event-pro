@@ -201,20 +201,31 @@ export default function PublicProgramSegment({
                          </div>
                        )}
            {/* Translator: Show for all segments if present, differentiate by mode */}
-           {/* NOTE: Services store 'translator', Events store 'translator_name' - check both */}
-           {/* NOTE: Must use getData() for translation_mode since Services nest data differently than Events */}
-           {(getData('translator_name') || getData('translator')) && getData('translation_mode') === "InPerson" && (
-                          <div className="flex items-center gap-2 text-blue-600 text-sm">
-                            <Mic className="w-4 h-4" />
-                            <span className="font-semibold">{t('live.translator')} (tarima): {normalizeName(getData('translator_name') || getData('translator'))}</span>
-                          </div>
-                        )}
-           {(getData('translator_name') || getData('translator')) && getData('translation_mode') === "RemoteBooth" && (
-                          <div className="flex items-center gap-2 text-cyan-600 text-sm">
-                            <Languages className="w-4 h-4" />
-                            <span className="font-semibold">Trad-Cabina: {normalizeName(getData('translator_name') || getData('translator'))}</span>
-                          </div>
-                        )}
+           {/* NOTE: Services store 'translator' in data object, Events store 'translator_name' at root */}
+           {/* NOTE: Weekly services often have requires_translation=true but no translation_mode (defaults to InPerson) */}
+           {(() => {
+             const translatorName = getData('translator_name') || getData('translator');
+             const translationMode = getData('translation_mode');
+             if (!translatorName) return null;
+             
+             // If translation_mode is explicitly "RemoteBooth", show booth style
+             if (translationMode === "RemoteBooth") {
+               return (
+                 <div className="flex items-center gap-2 text-cyan-600 text-sm">
+                   <Languages className="w-4 h-4" />
+                   <span className="font-semibold">Trad-Cabina: {normalizeName(translatorName)}</span>
+                 </div>
+               );
+             }
+             
+             // Default: InPerson or no mode specified (weekly services typically don't set mode)
+             return (
+               <div className="flex items-center gap-2 text-blue-600 text-sm">
+                 <Mic className="w-4 h-4" />
+                 <span className="font-semibold">{t('live.translator')}: {normalizeName(translatorName)}</span>
+               </div>
+             );
+           })()}
            {/* Room: Show if segment has a specific room assignment */}
            {segment.room_id && (
                          <div className="flex items-center gap-2 text-gray-600 text-sm">
