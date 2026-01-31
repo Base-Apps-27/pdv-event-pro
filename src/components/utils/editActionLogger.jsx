@@ -430,12 +430,20 @@ function invertFieldChanges(fieldChanges) {
 
 /**
  * Undo a delete action - recreates the entity from previous_state
- * Note: The recreated entity will have a NEW ID
+ * 
+ * IMPORTANT CONSTRAINTS:
+ * 1. The recreated entity will have a NEW ID (original ID cannot be restored)
+ * 2. Parent references (session_id, event_id) must still exist
+ * 3. For Segments: validates parent session still exists
+ * 4. For Sessions: validates parent event still exists
+ * 5. Logs creation with [UNDO-DELETE] prefix for traceability
+ * 
  * @param {object} log - The EditActionLog entry to undo
  * @param {object} user - Current user performing the undo
  * @returns {object} { success: boolean, newEntityId?: string, error?: string }
  */
 export async function undoDelete(log, user = null) {
+  // --- PRE-FLIGHT VALIDATION ---
   if (log.action_type !== 'delete') {
     return { success: false, error: 'Can only undo delete actions with this function' };
   }
@@ -454,27 +462,68 @@ export async function undoDelete(log, user = null) {
   }
   
   try {
-    // Remove system fields that shouldn't be set on create
+    // --- STEP 1: Validate parent still exists (critical for referential integrity) ---
+    const parentId = log.previous_state.session_id || log.previous_state.event_id || log.parent_id;
+    
+    if (log.entity_type === 'Segment' && log.previous_state.session_id) {
+      // Verify session still exists
+      const sessions = await base44.entities.Session.filter({ id: log.previous_state.session_id }, '-created_date', 1);
+      if (!sessions?.[0]) {
+        return { success: false, error: 'Parent session no longer exists - cannot restore segment' };
+      }
+    }
+    
+    if (log.entity_type === 'Session' && log.previous_state.event_id) {
+      // Verify event still exists
+      const events = await base44.entities.Event.filter({ id: log.previous_state.event_id }, '-created_date', 1);
+      if (!events?.[0]) {
+        return { success: false, error: 'Parent event no longer exists - cannot restore session' };
+      }
+    }
+    
+    // --- STEP 2: Prepare entity data (exclude system fields) ---
     const { id, created_date, updated_date, created_by, ...entityData } = log.previous_state;
     
-    console.log('[EditActionLog] Undoing delete for', log.entity_type, 'recreating entity');
+    // Ensure we don't have stale/invalid references
+    // Note: We keep the original parent references but the ID will be new
     
-    // Recreate the entity
+    console.log('[EditActionLog] Undoing delete for', log.entity_type, 'recreating entity with data keys:', Object.keys(entityData));
+    
+    // --- STEP 3: Recreate the entity ---
     const newEntity = await entitySdk.create(entityData);
     
-    // Mark the log entry as undone
+    if (!newEntity?.id) {
+      return { success: false, error: 'Entity creation returned no ID' };
+    }
+    
+    // --- STEP 4: Log the restoration (NOT using logCreate - custom description) ---
+    const title = newEntity.title || newEntity.name || entityData.title || entityData.name || '';
+    await base44.entities.EditActionLog.create({
+      entity_type: log.entity_type,
+      entity_id: newEntity.id,
+      parent_id: parentId || null,
+      action_type: 'create',
+      field_changes: null,
+      previous_state: null,
+      new_state: { ...newEntity },
+      description: `[UNDO-DELETE] Restored ${log.entity_type} "${title}" (original ID: ${log.entity_id})`,
+      user_email: user?.email || null,
+      user_name: user?.full_name || null,
+      undone: false
+    });
+    
+    // --- STEP 5: Mark the original log entry as undone ---
     await base44.entities.EditActionLog.update(log.id, {
       undone: true,
       undone_at: new Date().toISOString(),
       undone_by: user?.email || null
     });
     
-    // Log the recreation as a new create action
-    await logCreate(log.entity_type, newEntity, log.parent_id, user);
+    console.log('[EditActionLog] Successfully restored deleted', log.entity_type, 'with new ID:', newEntity.id);
     
     return { success: true, newEntityId: newEntity.id };
   } catch (error) {
-    console.error('Failed to undo delete:', error);
+    console.error('[EditActionLog] Failed to undo delete:', error);
     return { success: false, error: error.message || 'Failed to recreate entity' };
   }
 }
