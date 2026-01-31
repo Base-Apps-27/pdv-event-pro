@@ -1286,15 +1286,56 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   {formData.segment_actions.length === 0 ? (
                     <p className="text-sm text-gray-500 italic text-center py-2">No hay acciones definidas para este segmento.</p>
                   ) : (
-                    formData.segment_actions.map((action, idx) => (
+                    formData.segment_actions.map((action, idx) => {
+                      // Calculate the action time based on segment start/end and offset
+                      const calculateActionTime = () => {
+                        if (!formData.start_time) return null;
+                        const [startH, startM] = formData.start_time.split(':').map(Number);
+                        const startMinutes = startH * 60 + startM;
+                        const endMinutes = startMinutes + (formData.duration_min || 0);
+                        const offset = action.offset_min || 0;
+                        
+                        let targetMinutes;
+                        switch (action.timing) {
+                          case 'before_start':
+                            targetMinutes = startMinutes - offset;
+                            break;
+                          case 'after_start':
+                            targetMinutes = startMinutes + offset;
+                            break;
+                          case 'before_end':
+                            targetMinutes = endMinutes - offset;
+                            break;
+                          case 'absolute':
+                            return action.absolute_time ? formatTimeToEST(action.absolute_time) : null;
+                          default:
+                            return null;
+                        }
+                        
+                        if (targetMinutes < 0) targetMinutes += 24 * 60;
+                        const h = Math.floor(targetMinutes / 60) % 24;
+                        const m = targetMinutes % 60;
+                        return formatTimeToEST(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+                      };
+                      
+                      const actionTime = calculateActionTime();
+                      
+                      return (
                       <Card key={idx} className="p-3 bg-orange-50/30 border-orange-200">
                         <div className="flex items-start gap-2 mb-2">
-                          <Input 
-                            placeholder="Etiqueta (ej: A&A sube)" 
-                            className="flex-1 h-8 text-sm bg-white"
-                            value={action.label || ""}
-                            onChange={(e) => handleUpdateAction(idx, 'label', e.target.value)}
-                          />
+                          <div className="flex-1 flex items-center gap-2">
+                            <Input 
+                              placeholder="Etiqueta (ej: A&A sube)" 
+                              className="flex-1 h-8 text-sm bg-white"
+                              value={action.label || ""}
+                              onChange={(e) => handleUpdateAction(idx, 'label', e.target.value)}
+                            />
+                            {actionTime && (
+                              <span className="text-xs font-mono font-semibold text-orange-700 bg-orange-100 px-2 py-1 rounded whitespace-nowrap">
+                                @ {actionTime}
+                              </span>
+                            )}
+                          </div>
                           <Button 
                             type="button"
                             size="icon" 
@@ -1354,7 +1395,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                           onChange={(e) => handleUpdateAction(idx, 'notes', e.target.value)}
                         />
                       </Card>
-                    ))
+                    )}))
                   )}
                   <Button
                     type="button"
