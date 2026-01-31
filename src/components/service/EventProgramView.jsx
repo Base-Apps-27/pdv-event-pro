@@ -263,10 +263,10 @@ export default function EventProgramView({
                       }
                       return <h3 className="text-2xl font-bold uppercase text-gray-900">{session.name}</h3>;
                     })()}
-                    {/* Hospitality Icon - Prominent pill button */}
+                    {/* Hospitality Icon - Prominent rounded rectangle button */}
                     <button
                       onClick={() => setHospitalityModalSessionId(session.id)}
-                      className="flex items-center justify-center w-10 h-10 rounded-full bg-pink-100 hover:bg-pink-200 border-2 border-pink-300 transition-colors"
+                      className="flex items-center justify-center w-10 h-10 rounded-lg bg-pink-100 hover:bg-pink-200 border-2 border-pink-300 transition-colors"
                       title="Ver Tareas de Hospitalidad"
                     >
                       <Utensils className="w-5 h-5 text-pink-600" />
