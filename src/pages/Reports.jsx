@@ -504,17 +504,30 @@ export default function Reports() {
                           </tr>
                         )}
                         <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
-                        <td className="p-1 font-bold text-center border-r border-gray-200 text-[10px] align-top w-12" style={{ color: '#8DC63F', verticalAlign: 'top' }}>
+                        {/* Time cell for Breakout - filled with session color */}
+                        <td 
+                          className="p-1 font-bold text-center border-r border-gray-200 text-[10px] align-top w-12" 
+                          style={{ 
+                            verticalAlign: 'top',
+                            backgroundColor: session.session_color === 'green' ? '#dcfce7' :
+                                            session.session_color === 'blue' ? '#dbeafe' :
+                                            session.session_color === 'pink' ? '#fce7f3' :
+                                            session.session_color === 'orange' ? '#ffedd5' :
+                                            session.session_color === 'yellow' ? '#fef9c3' :
+                                            session.session_color === 'purple' ? '#f3e8ff' :
+                                            session.session_color === 'red' ? '#fee2e2' : '#f3f4f6'
+                          }}
+                        >
                             <div className="flex flex-col items-center leading-tight">
-                              <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
+                              <div className="whitespace-nowrap text-black font-bold">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
                               {segment.end_time && (
                                 <>
-                                  <div className="text-gray-400 text-[8px]">↓</div>
-                                  <div className="whitespace-nowrap">{formatTimeToEST(segment.end_time)}</div>
+                                  <div className="text-gray-600 text-[8px]">↓</div>
+                                  <div className="whitespace-nowrap text-black">{formatTimeToEST(segment.end_time)}</div>
                                 </>
                               )}
                               {segment.duration_min && (
-                                <div className="text-[9px] text-gray-600 mt-0.5">({segment.duration_min}m)</div>
+                                <div className="text-[9px] text-gray-700 mt-0.5">({segment.duration_min}m)</div>
                               )}
                             </div>
                           </td>
@@ -609,17 +622,30 @@ export default function Reports() {
                         </tr>
                       )}
                       <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
-                      <td className="p-1 font-bold text-center border-r border-gray-200 text-[10px] align-top w-12" style={{ color: '#8DC63F', verticalAlign: 'top' }}>
+                      {/* Time cell - filled with session color for visibility, black text for contrast */}
+                      <td 
+                        className="p-1 font-bold text-center border-r border-gray-200 text-[10px] align-top w-12" 
+                        style={{ 
+                          verticalAlign: 'top',
+                          backgroundColor: session.session_color === 'green' ? '#dcfce7' :
+                                          session.session_color === 'blue' ? '#dbeafe' :
+                                          session.session_color === 'pink' ? '#fce7f3' :
+                                          session.session_color === 'orange' ? '#ffedd5' :
+                                          session.session_color === 'yellow' ? '#fef9c3' :
+                                          session.session_color === 'purple' ? '#f3e8ff' :
+                                          session.session_color === 'red' ? '#fee2e2' : '#f3f4f6'
+                        }}
+                      >
                         <div className="flex flex-col items-center leading-tight">
-                          <div className="whitespace-nowrap">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
+                          <div className="whitespace-nowrap text-black font-bold">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
                           {segment.end_time && (
                             <>
-                              <div className="text-gray-400 text-[8px]">↓</div>
-                              <div className="whitespace-nowrap">{formatTimeToEST(segment.end_time)}</div>
+                              <div className="text-gray-600 text-[8px]">↓</div>
+                              <div className="whitespace-nowrap text-black">{formatTimeToEST(segment.end_time)}</div>
                             </>
                           )}
                           {segment.duration_min && (
-                            <div className="text-[9px] text-gray-600 mt-0.5">({segment.duration_min}m)</div>
+                            <div className="text-[9px] text-gray-700 mt-0.5">({segment.duration_min}m)</div>
                           )}
                           <div className="flex gap-0.5 mt-1">
                             {segment.requires_translation && segment.translation_mode === "InPerson" && (
