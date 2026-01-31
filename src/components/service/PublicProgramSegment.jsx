@@ -259,7 +259,8 @@ export default function PublicProgramSegment({
           </div>
 
           {/* Scripture References (for Message or Offering segments) */}
-          {(isMessage || isOffering) && (getData('scripture_references') || getData('verse') || getData('parsed_verse_data')) && (
+          {/* CRITICAL: Show this section if it's a message/offering AND has any verse data OR if onOpenVerseParser is available (admin can add) */}
+          {(isMessage || isOffering) && (getData('scripture_references') || getData('verse') || getData('parsed_verse_data') || (isMessage && onOpenVerseParser)) && (
             <div className="flex items-start gap-2 mt-2">
               {(getData('scripture_references') || getData('verse')) && (
                 <p className="text-xs text-gray-600 flex-1">
@@ -267,7 +268,8 @@ export default function PublicProgramSegment({
                 </p>
               )}
               {!(getData('scripture_references') || getData('verse')) && <div className="flex-1"></div>}
-              {getData('parsed_verse_data') && (
+              {/* BookOpen icon: Show when parsed_verse_data exists (viewable) */}
+              {getData('parsed_verse_data') && onOpenVerses && (
                 <Button
                   variant="outline"
                   size="icon"
@@ -275,21 +277,22 @@ export default function PublicProgramSegment({
                     parsedData: getData('parsed_verse_data'),
                     rawText: getData('scripture_references') || getData('verse')
                   })}
-                  className="h-6 w-6 p-0 border border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
-                  title={t('live.viewVerses')}
+                  className="h-7 w-7 p-0 border-2 border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
+                  title={t('live.viewVerses') || 'Ver Versos'}
                 >
-                  <BookOpen className="w-3.5 h-3.5" />
+                  <BookOpen className="w-4 h-4" />
                 </Button>
               )}
+              {/* Sparkles icon: Admin-only button to extract & save verses */}
               {isMessage && onOpenVerseParser && (
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => onOpenVerseParser(segment)}
-                  className="h-6 w-6 p-0 border border-green-600 text-green-700 hover:bg-green-600 hover:text-white flex-shrink-0"
-                  title={t('live.extractSaveVerses')}
+                  className="h-7 w-7 p-0 border-2 border-green-600 text-green-700 hover:bg-green-600 hover:text-white flex-shrink-0"
+                  title={t('live.extractSaveVerses') || 'Extraer y Guardar Versos'}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Sparkles className="w-4 h-4" />
                 </Button>
               )}
             </div>
