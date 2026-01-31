@@ -245,23 +245,33 @@ export default function EventProgramView({
             <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-4 border-b">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  {(() => {
-                    const sessionAdj = liveAdjustments.find(a => a.session_id === session.id);
-                    if (sessionAdj && sessionAdj.offset_minutes !== 0) {
-                      const adjustedTime = (() => {
-                        const [h, m] = (session.planned_start_time || "09:00").split(':').map(Number);
-                        const date = new Date();
-                        date.setHours(h, m + sessionAdj.offset_minutes, 0, 0);
-                        return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-                      })();
-                      return (
-                        <h3 className="text-2xl font-bold uppercase mb-1 text-gray-900">
-                          {session.name} <span className="text-amber-600">(inicio: {adjustedTime})</span>
-                        </h3>
-                      );
-                    }
-                    return <h3 className="text-2xl font-bold uppercase mb-1 text-gray-900">{session.name}</h3>;
-                  })()}
+                  <div className="flex items-center gap-3 mb-1">
+                    {(() => {
+                      const sessionAdj = liveAdjustments.find(a => a.session_id === session.id);
+                      if (sessionAdj && sessionAdj.offset_minutes !== 0) {
+                        const adjustedTime = (() => {
+                          const [h, m] = (session.planned_start_time || "09:00").split(':').map(Number);
+                          const date = new Date();
+                          date.setHours(h, m + sessionAdj.offset_minutes, 0, 0);
+                          return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                        })();
+                        return (
+                          <h3 className="text-2xl font-bold uppercase text-gray-900">
+                            {session.name} <span className="text-amber-600">(inicio: {adjustedTime})</span>
+                          </h3>
+                        );
+                      }
+                      return <h3 className="text-2xl font-bold uppercase text-gray-900">{session.name}</h3>;
+                    })()}
+                    {/* Hospitality Icon - Prominent pill button */}
+                    <button
+                      onClick={() => setHospitalityModalSessionId(session.id)}
+                      className="flex items-center justify-center w-10 h-10 rounded-full bg-pink-100 hover:bg-pink-200 border-2 border-pink-300 transition-colors"
+                      title="Ver Tareas de Hospitalidad"
+                    >
+                      <Utensils className="w-5 h-5 text-pink-600" />
+                    </button>
+                  </div>
                   <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                     {session.date && <span>{formatDateET(session.date)}</span>}
                     {session.planned_start_time && (
@@ -277,25 +287,13 @@ export default function EventProgramView({
                       </>
                     )}
                   </div>
-                  {/* Bilingual Session Badge + Hospitality Icon */}
-                  <div className="flex items-center gap-2 mt-1 mb-1">
-                    {session.is_translated_session && (
-                      <Badge className="bg-purple-600 text-white text-xs">
-                        <Languages className="w-3 h-3 mr-1" />
-                        Sesión Bilingüe
-                      </Badge>
-                    )}
-                    {/* Hospitality Icon - Interactive */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 hover:bg-pink-100"
-                      onClick={() => setHospitalityModalSessionId(session.id)}
-                      title="Ver Tareas de Hospitalidad"
-                    >
-                      <Utensils className="w-4 h-4 text-pink-600" />
-                    </Button>
-                  </div>
+                  {/* Bilingual Session Indicator (text only) */}
+                  {session.is_translated_session && (
+                    <div className="flex items-center gap-1 text-purple-600 text-sm font-semibold mt-1">
+                      <Languages className="w-4 h-4" />
+                      <span>Sesión Bilingüe</span>
+                    </div>
+                  )}
 
                   {/* Stage Call Offset */}
                   {session.default_stage_call_offset_min && (
