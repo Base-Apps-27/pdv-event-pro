@@ -30,13 +30,28 @@ pdfMake.fonts = {
 // CELL BUILDERS — Layout Intent System (Matching HTML Reports 1:1)
 // ============================================================================
 
-function buildTimeCell(seg) {
-  const color = getSegmentColor(seg.segment_type);
+// Session color to light background hex mapping for time cell visibility
+const SESSION_COLOR_BG_MAP = {
+  green: '#DCFCE7',   // green-100
+  blue: '#DBEAFE',    // blue-100
+  pink: '#FCE7F3',    // pink-100
+  orange: '#FFEDD5',  // orange-100
+  yellow: '#FEF9C3',  // yellow-100
+  purple: '#F3E8FF',  // purple-100
+  red: '#FEE2E2',     // red-100
+};
+
+function buildTimeCell(seg, sessionColor = null) {
+  // Use session color background for visibility, fall back to default
+  const bgColor = sessionColor && SESSION_COLOR_BG_MAP[sessionColor] 
+    ? SESSION_COLOR_BG_MAP[sessionColor] 
+    : pdfTheme.fills.timeCell;
+  
   const stack = [
     {
       text: seg.start_time ? toESTTimeStr(seg.start_time) : '—',
       bold: true,
-      color: pdfTheme.text.primary,
+      color: '#000000', // Black text for contrast on colored background
       fontSize: pdfTheme.fontSize.lg,
     },
   ];
@@ -44,7 +59,7 @@ function buildTimeCell(seg) {
   if (seg.end_time) {
     stack.push({
       text: toESTTimeStr(seg.end_time),
-      color: pdfTheme.text.muted,
+      color: '#374151', // gray-700 for better contrast
       fontSize: pdfTheme.fontSize.sm,
       margin: [0, 0, 0, 0],
     });
@@ -53,7 +68,7 @@ function buildTimeCell(seg) {
   if (seg.duration_min) {
     stack.push({
       text: `(${seg.duration_min}m)`,
-      color: pdfTheme.text.muted,
+      color: '#374151', // gray-700 for better contrast
       fontSize: pdfTheme.fontSize.xs,
       margin: [0, 0, 0, 0],
     });
@@ -87,7 +102,7 @@ function buildTimeCell(seg) {
   return {
     stack,
     verticalAlign: 'top',
-    fillColor: pdfTheme.fills.timeCell,
+    fillColor: bgColor,
   };
 }
 
@@ -907,6 +922,8 @@ function buildBreakPrepActionRow(act) {
 }
 
 function buildDayTable(session, segments, allRooms = []) {
+  const sessionColor = session?.session_color || null;
+  
   const headerRow = [
     {
       text: 'HORA',
@@ -948,9 +965,9 @@ function buildDayTable(session, segments, allRooms = []) {
         rows.push(buildPrepActionRow(act));
       });
 
-      // Main segment row
+      // Main segment row - pass session color for time cell background
       rows.push([
-        buildTimeCell(seg),
+        buildTimeCell(seg, sessionColor),
         buildDetailsLeftCell(seg, allRooms),
         buildDetailsRightCell(seg),
         buildNotesCell(seg),
