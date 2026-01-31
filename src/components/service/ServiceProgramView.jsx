@@ -249,8 +249,8 @@ export default function ServiceProgramView({
               return <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 AM</h3>;
             })()}
             {adjustedServiceData.pre_service_notes?.["9:30am"] && (
-              <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                <p className="text-sm text-green-900 font-medium italic whitespace-pre-wrap line-clamp-3">{adjustedServiceData.pre_service_notes["9:30am"]}</p>
+              <div className="bg-black border-l-4 border-yellow-400 p-2 mt-2 rounded-r">
+                <p className="text-sm text-white font-bold whitespace-pre-wrap line-clamp-3">{adjustedServiceData.pre_service_notes["9:30am"]}</p>
               </div>
             )}
             {/* Team Info - Compact */}
@@ -336,8 +336,8 @@ export default function ServiceProgramView({
               return <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 AM</h3>;
             })()}
             {adjustedServiceData.pre_service_notes?.["11:30am"] && (
-              <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
-                <p className="text-sm text-gray-600 font-medium italic whitespace-pre-wrap line-clamp-3">{adjustedServiceData.pre_service_notes["11:30am"]}</p>
+              <div className="bg-black border-l-4 border-yellow-400 p-2 mt-2 rounded-r">
+                <p className="text-sm text-white font-bold whitespace-pre-wrap line-clamp-3">{adjustedServiceData.pre_service_notes["11:30am"]}</p>
               </div>
             )}
             {/* Team Info - Compact */}
