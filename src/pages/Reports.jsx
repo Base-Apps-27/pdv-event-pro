@@ -247,6 +247,46 @@ export default function Reports() {
     return action.timing === 'before_start';
   };
 
+  // Helper to calculate action time based on segment timing and offset
+  const calculateActionTime = (segment, action) => {
+    const segmentStart = segment.start_time;
+    const segmentEnd = segment.end_time;
+    if (!segmentStart) return null;
+    
+    const [startH, startM] = segmentStart.split(':').map(Number);
+    const startMinutes = startH * 60 + startM;
+    
+    let endMinutes = startMinutes + (segment.duration_min || 0);
+    if (segmentEnd) {
+      const [endH, endM] = segmentEnd.split(':').map(Number);
+      endMinutes = endH * 60 + endM;
+    }
+    
+    const offset = action.offset_min || 0;
+    let targetMinutes;
+    
+    switch (action.timing) {
+      case 'before_start':
+        targetMinutes = startMinutes - offset;
+        break;
+      case 'after_start':
+        targetMinutes = startMinutes + offset;
+        break;
+      case 'before_end':
+        targetMinutes = endMinutes - offset;
+        break;
+      case 'absolute':
+        return action.absolute_time ? formatTimeToEST(action.absolute_time) : null;
+      default:
+        return null;
+    }
+    
+    if (targetMinutes < 0) targetMinutes += 24 * 60;
+    const h = Math.floor(targetMinutes / 60) % 24;
+    const m = targetMinutes % 60;
+    return formatTimeToEST(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+  };
+
   // Color coding by department:
   // - Projection: slate (neutral gray) - distinct from translation
   // - Translation & Stage & Decor: purple - all translation-related items
@@ -489,23 +529,22 @@ export default function Reports() {
                                   ⚠ PREP
                                 </div>
                                 <div className="flex-1 flex flex-wrap gap-2">
-                                  {getSegmentActions(segment).filter(a => isPrepAction(a)).map((action, actionIdx) => (
-                                    <div
-                                      key={actionIdx}
-                                      className={`text-[10px] px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
-                                    >
-                                      <span className="font-bold">[{action.department}]</span> {action.label}
-                                      {action.is_required && <span className="ml-1 text-red-600">*</span>}
-                                      {action.timing && action.offset_min !== undefined && (
-                                        <span className="italic ml-1">
-                                          ({action.timing === "before_start" && `${action.offset_min}m antes`}
-                                          {action.timing === "before_end" && `${action.offset_min}m antes de fin`}
-                                          {action.timing === "absolute" && action.absolute_time})
-                                        </span>
-                                      )}
-                                      {action.notes && <span className="ml-1">— {action.notes}</span>}
-                                    </div>
-                                  ))}
+                                  {getSegmentActions(segment).filter(a => isPrepAction(a)).map((action, actionIdx) => {
+                                    const actionTime = calculateActionTime(segment, action);
+                                    return (
+                                      <div
+                                        key={actionIdx}
+                                        className={`text-[10px] px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
+                                      >
+                                        <span className="font-bold">[{action.department}]</span> {action.label}
+                                        {action.is_required && <span className="ml-1 text-red-600">*</span>}
+                                        {actionTime && (
+                                          <span className="ml-1 font-mono font-semibold text-amber-700 bg-amber-100 px-1 rounded">@ {actionTime}</span>
+                                        )}
+                                        {action.notes && <span className="ml-1">— {action.notes}</span>}
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             </td>
@@ -607,23 +646,22 @@ export default function Reports() {
                                 ⚠ PREP
                               </div>
                               <div className="flex-1 flex flex-wrap gap-1">
-                                {getSegmentActions(segment).filter(a => isPrepAction(a)).map((action, actionIdx) => (
-                                  <div
-                                    key={actionIdx}
-                                    className={`text-[9px] px-1 py-0.5 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
-                                  >
-                                    <span className="font-bold">[{action.department}]</span> {action.label}
-                                    {action.is_required && <span className="ml-1 text-red-600">*</span>}
-                                    {action.timing && action.offset_min !== undefined && (
-                                      <span className="italic ml-1">
-                                        ({action.timing === "before_start" && `${action.offset_min}m antes`}
-                                        {action.timing === "before_end" && `${action.offset_min}m antes de fin`}
-                                        {action.timing === "absolute" && action.absolute_time})
-                                      </span>
-                                    )}
-                                    {action.notes && <span className="ml-1">— {action.notes}</span>}
-                                  </div>
-                                ))}
+                                {getSegmentActions(segment).filter(a => isPrepAction(a)).map((action, actionIdx) => {
+                                  const actionTime = calculateActionTime(segment, action);
+                                  return (
+                                    <div
+                                      key={actionIdx}
+                                      className={`text-[9px] px-1 py-0.5 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
+                                    >
+                                      <span className="font-bold">[{action.department}]</span> {action.label}
+                                      {action.is_required && <span className="ml-1 text-red-600">*</span>}
+                                      {actionTime && (
+                                        <span className="ml-1 font-mono font-semibold text-amber-700 bg-amber-100 px-1 rounded">@ {actionTime}</span>
+                                      )}
+                                      {action.notes && <span className="ml-1">— {action.notes}</span>}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           </td>
