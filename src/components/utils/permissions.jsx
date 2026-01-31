@@ -26,11 +26,13 @@ const DEFAULT_ROLE_PERMISSIONS = {
     'view_reports',
     'access_importer',
     'view_live_program',
+    'view_live_chat',
     'manage_live_timing',
     'manage_users',
   ],
   LiveManager: [
     'view_live_program',
+    'view_live_chat',
     'manage_live_timing',
   ],
   AdmAsst: [
@@ -40,9 +42,16 @@ const DEFAULT_ROLE_PERMISSIONS = {
     'view_announcements', 'edit_announcements', 'create_announcements',
     'view_people', 'edit_people', 'create_people',
     'view_live_program',
+    'view_live_chat',
   ],
   EventDayViewer: [
     'view_live_program',
+  ],
+  // EventDayCoordinator: Same as EventDayViewer + view_live_chat
+  // For coordinators who need to participate in live operations chat
+  EventDayCoordinator: [
+    'view_live_program',
+    'view_live_chat',
   ],
 };
 
@@ -180,5 +189,8 @@ export function getAllPermissionDefinitions() {
 
     // Live Timing
     { key: 'manage_live_timing', resource: 'live_timing', action: 'manage', category: 'live', hierarchy_level: 2, label_en: 'Manage Live Timing', label_es: 'Gestionar Tiempos en Vivo' },
+
+    // Live Chat
+    { key: 'view_live_chat', resource: 'live_chat', action: 'view', category: 'live', hierarchy_level: 0, label_en: 'View Live Chat', label_es: 'Ver Chat en Vivo' },
   ];
 }
