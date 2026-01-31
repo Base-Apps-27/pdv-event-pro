@@ -193,39 +193,52 @@ export default function PublicProgramSegment({
                <span className="font-semibold">Dirige: {normalizeName(getData('leader'))}</span>
              </div>
            )}
-           {/* Preacher: Show only for Message segments */}
+           {/* Preacher: Show only for Message segments - BLUE color */}
            {isMessage && (getData('presenter') || getData('preacher')) && (
-                         <div className="flex items-center gap-2 text-indigo-600 text-sm">
-                           <Users className="w-4 h-4" />
-                           <span className="font-semibold">{t('live.preacher')}: {normalizeName(getData('presenter') || getData('preacher'))}</span>
-                         </div>
-                       )}
-           {/* Translator: Show for all segments if present, differentiate by mode */}
+                          <div className="flex items-center gap-2 text-blue-600 text-sm">
+                            <Users className="w-4 h-4" />
+                            <span className="font-semibold">{t('live.preacher')}: {normalizeName(getData('presenter') || getData('preacher'))}</span>
+                          </div>
+                        )}
+           {/* Translator: Show for all segments if present - PURPLE color */}
            {/* NOTE: Services store 'translator' in data object, Events store 'translator_name' at root */}
-           {/* NOTE: Weekly services often have requires_translation=true but no translation_mode (defaults to InPerson) */}
            {(() => {
              const translatorName = getData('translator_name') || getData('translator');
              const translationMode = getData('translation_mode');
              if (!translatorName) return null;
-             
-             // If translation_mode is explicitly "RemoteBooth", show booth style
+
+             // If translation_mode is explicitly "RemoteBooth", show booth style (still purple)
              if (translationMode === "RemoteBooth") {
                return (
-                 <div className="flex items-center gap-2 text-cyan-600 text-sm">
+                 <div className="flex items-center gap-2 text-purple-600 text-sm">
                    <Languages className="w-4 h-4" />
                    <span className="font-semibold">Trad-Cabina: {normalizeName(translatorName)}</span>
                  </div>
                );
              }
-             
-             // Default: InPerson or no mode specified (weekly services typically don't set mode)
+
+             // Default: InPerson or no mode specified - PURPLE color
              return (
-               <div className="flex items-center gap-2 text-blue-600 text-sm">
+               <div className="flex items-center gap-2 text-purple-600 text-sm">
                  <Mic className="w-4 h-4" />
                  <span className="font-semibold">{t('live.translator')}: {normalizeName(translatorName)}</span>
                </div>
              );
            })()}
+
+           {/* Sub-assignments (Ministración, Cierre, etc.) - PURPLE color for consistency */}
+           {/* Weekly services store these in segment.sub_assignments with person value in segment.data */}
+           {segment.sub_assignments && segment.sub_assignments.length > 0 && segment.sub_assignments.map((subAssign, idx) => {
+             const personValue = getData(subAssign.person_field_name);
+             if (!personValue) return null;
+             return (
+               <div key={idx} className="flex items-center gap-2 text-purple-600 text-sm">
+                 <Sparkles className="w-4 h-4" />
+                 <span className="font-semibold">{subAssign.label}: {normalizeName(personValue)}</span>
+                 {subAssign.duration_min && <span className="text-purple-500 text-xs">({subAssign.duration_min} min)</span>}
+               </div>
+             );
+           })}
            {/* Room: Show if segment has a specific room assignment */}
            {segment.room_id && (
                          <div className="flex items-center gap-2 text-gray-600 text-sm">
