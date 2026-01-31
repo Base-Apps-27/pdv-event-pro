@@ -239,15 +239,23 @@ export default function PublicProgramSegment({
                </div>
              );
            })}
-           {/* Room: Show if segment has a specific room assignment */}
-           {segment.room_id && (
-                         <div className="flex items-center gap-2 text-gray-600 text-sm">
-                           <MapPin className="w-4 h-4" />
-                           <span>
-                             {t('live.roomAssigned')}{(typeof getRoomName === 'function' && getRoomName(segment.room_id)) ? `: ${getRoomName(segment.room_id)}` : ''}
-                           </span>
-                         </div>
-                       )}
+           {/* Room: Only show for Breakout segments OR non-Santuario locations */}
+           {(() => {
+             if (!segment.room_id) return null;
+             const roomName = typeof getRoomName === 'function' ? getRoomName(segment.room_id) : '';
+             const isBreakout = segmentType === 'Breakout';
+             // Hide if not breakout AND room is Santuario (case-insensitive check)
+             const isSantuario = roomName && /santuario/i.test(roomName);
+             if (!isBreakout && isSantuario) return null;
+             return (
+               <div className="flex items-center gap-2 text-gray-600 text-sm">
+                 <MapPin className="w-4 h-4" />
+                 <span>
+                   {t('live.roomAssigned')}{roomName ? `: ${roomName}` : ''}
+                 </span>
+               </div>
+             );
+           })()}
           </div>
 
           {/* Scripture References (for Message or Offering segments) */}
