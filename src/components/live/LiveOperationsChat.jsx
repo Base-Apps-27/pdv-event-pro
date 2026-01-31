@@ -160,7 +160,7 @@ export default function LiveOperationsChat({
         context_date: contextDate,
         message: text?.trim() || "",
         image_url: imageUrl || null,
-        created_by_name: currentUser?.full_name || null,
+        created_by_name: currentUser?.display_name || currentUser?.full_name || null,
         is_pinned: false,
         is_archived: false,
         reactions: []
@@ -190,7 +190,7 @@ export default function LiveOperationsChat({
         newReactions = reactions.filter(r => r.user_email !== currentUser?.email);
         newReactions.push({
           user_email: currentUser?.email,
-          user_name: currentUser?.full_name || null,
+          user_name: currentUser?.display_name || currentUser?.full_name || null,
           reaction_type: reactionType,
           timestamp: new Date().toISOString()
         });
