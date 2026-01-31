@@ -1397,7 +1397,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                       </Card>
                     );
                     })
-                  )
                   )}
                   <Button
                     type="button"
