@@ -1395,7 +1395,9 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                           onChange={(e) => handleUpdateAction(idx, 'notes', e.target.value)}
                         />
                       </Card>
-                    )}))
+                    );
+                    })
+                  )
                   )}
                   <Button
                     type="button"
