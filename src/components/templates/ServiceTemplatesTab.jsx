@@ -631,13 +631,13 @@ export default function ServiceTemplatesTab() {
 
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                  <Label className="text-xs font-semibold">🏅 Acciones para Coordinador</Label>
+                                  <Label className="text-xs font-semibold">⏰ Acciones Cronometradas</Label>
                                   <Button
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => {
                                       const actions = segment.actions || [];
-                                      updateSegmentField(service, idx, 'actions', [...actions, { label: '', timing: 'before_start', offset_min: 0 }]);
+                                      updateSegmentField(service, idx, 'actions', [...actions, { label: '', timing: 'before_start', offset_min: 0, department: 'Coordinador' }]);
                                     }}
                                     className="h-6 text-xs"
                                   >
@@ -645,14 +645,16 @@ export default function ServiceTemplatesTab() {
                                     Añadir
                                   </Button>
                                 </div>
+                                <p className="text-[10px] text-gray-500 italic">
+                                  Estas acciones aparecen en Vista en Vivo con hora calculada automáticamente.
+                                </p>
                                 {(segment.actions || []).map((action, aIdx) => {
-                                  // Ensure action is an object
-                                  const safeAction = typeof action === 'object' && action !== null ? action : { label: '', timing: 'before_start', offset_min: 0 };
+                                  const safeAction = typeof action === 'object' && action !== null ? action : { label: '', timing: 'before_start', offset_min: 0, department: 'Coordinador' };
                                   return (
-                                  <div key={aIdx} className="bg-amber-50 border border-amber-200 rounded p-2 space-y-1">
+                                  <div key={aIdx} className="bg-amber-50 border border-amber-200 rounded p-2 space-y-2">
                                     <div className="flex gap-2">
                                       <Input
-                                        placeholder="Ej: Enviar texto: 844-555-5555"
+                                        placeholder="Descripción de la acción"
                                         value={safeAction.label || ''}
                                         onChange={(e) => {
                                           const actions = [...(segment.actions || [])];
@@ -673,6 +675,71 @@ export default function ServiceTemplatesTab() {
                                         <Trash2 className="w-3 h-3 text-red-500" />
                                       </Button>
                                     </div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                      <div className="space-y-1">
+                                        <Label className="text-[10px] text-gray-600">Momento</Label>
+                                        <Select
+                                          value={safeAction.timing || 'before_start'}
+                                          onValueChange={(value) => {
+                                            const actions = [...(segment.actions || [])];
+                                            actions[aIdx] = { ...actions[aIdx], timing: value };
+                                            updateSegmentField(service, idx, 'actions', actions);
+                                          }}
+                                        >
+                                          <SelectTrigger className="text-xs h-7">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="before_start">Antes de iniciar</SelectItem>
+                                            <SelectItem value="after_start">Después de iniciar</SelectItem>
+                                            <SelectItem value="before_end">Antes de terminar</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <Label className="text-[10px] text-gray-600">Minutos</Label>
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          value={safeAction.offset_min || 0}
+                                          onChange={(e) => {
+                                            const actions = [...(segment.actions || [])];
+                                            actions[aIdx] = { ...actions[aIdx], offset_min: parseInt(e.target.value) || 0 };
+                                            updateSegmentField(service, idx, 'actions', actions);
+                                          }}
+                                          className="text-xs h-7"
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <Label className="text-[10px] text-gray-600">Departamento</Label>
+                                        <Select
+                                          value={safeAction.department || 'Coordinador'}
+                                          onValueChange={(value) => {
+                                            const actions = [...(segment.actions || [])];
+                                            actions[aIdx] = { ...actions[aIdx], department: value };
+                                            updateSegmentField(service, idx, 'actions', actions);
+                                          }}
+                                        >
+                                          <SelectTrigger className="text-xs h-7">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="Admin">Admin</SelectItem>
+                                            <SelectItem value="Coordinador">Coordinador</SelectItem>
+                                            <SelectItem value="Projection">Proyección</SelectItem>
+                                            <SelectItem value="Sound">Sonido</SelectItem>
+                                            <SelectItem value="Alabanza">Alabanza</SelectItem>
+                                            <SelectItem value="Ujieres">Ujieres</SelectItem>
+                                            <SelectItem value="Translation">Traducción</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                    <p className="text-[9px] text-amber-700 bg-amber-100 px-2 py-1 rounded">
+                                      {safeAction.timing === 'before_start' && `⏰ ${safeAction.offset_min || 0} min ANTES de iniciar segmento`}
+                                      {safeAction.timing === 'after_start' && `⏰ ${safeAction.offset_min || 0} min DESPUÉS de iniciar segmento`}
+                                      {safeAction.timing === 'before_end' && `⏰ ${safeAction.offset_min || 0} min ANTES de terminar segmento`}
+                                    </p>
                                   </div>
                                   );
                                 })}
