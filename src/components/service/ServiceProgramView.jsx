@@ -121,6 +121,7 @@ export default function ServiceProgramView({
           segments={adjustedServiceData.segments || []} 
           currentTime={currentTime}
           onScrollTo={scrollToSegment}
+          serviceDate={adjustedServiceData.date}
         />
 
         {/* Custom Service Segments */}
@@ -222,6 +223,7 @@ export default function ServiceProgramView({
             segments={allServiceSegments} 
             currentTime={currentTime}
             onScrollTo={scrollToSegment}
+            serviceDate={adjustedServiceData.date}
           />
         );
       })()}

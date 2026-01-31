@@ -169,7 +169,10 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
           </div>
         ) : (
           upNextCountdown ? (
-            <div className="p-4 bg-gradient-to-r from-pdv-teal/10 to-pdv-green/10 border-2 border-pdv-teal/30 rounded-lg w-full">
+            <div 
+              style={{ background: 'linear-gradient(to right, rgba(31,138,112,0.1), rgba(141,198,63,0.1))', border: '2px solid rgba(31,138,112,0.3)' }}
+              className="p-4 rounded-lg w-full"
+            >
               <div className="flex items-center justify-between">
                 <div className="font-mono font-extrabold text-pdv-teal text-2xl md:text-3xl leading-none">
                   T–{upNextCountdown.hms}
