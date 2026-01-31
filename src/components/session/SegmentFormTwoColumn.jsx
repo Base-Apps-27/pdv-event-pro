@@ -170,6 +170,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     announcement_tone: segment?.announcement_tone || "",
     announcement_series_id: segment?.announcement_series_id || "",
     segment_actions: segment?.segment_actions || [],
+    parsed_verse_data: segment?.parsed_verse_data || null,
   });
 
   const [fieldOrigins, setFieldOrigins] = useState(segment?.field_origins || {});
