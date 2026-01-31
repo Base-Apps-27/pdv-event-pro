@@ -74,15 +74,15 @@ export default function EventProgramView({
     refetchInterval: 3000
   });
 
-  // Session color classes for visual distinction
+  // Session color classes for visual distinction - full border matches session color
   const sessionColorClasses = {
-    green: 'border-l-4 border-pdv-green',
-    blue: 'border-l-4 border-blue-500',
-    pink: 'border-l-4 border-pink-500',
-    orange: 'border-l-4 border-orange-500',
-    yellow: 'border-l-4 border-yellow-400',
-    purple: 'border-l-4 border-purple-500',
-    red: 'border-l-4 border-red-500',
+    green: 'border-2 border-green-500',
+    blue: 'border-2 border-blue-500',
+    pink: 'border-2 border-pink-500',
+    orange: 'border-2 border-orange-500',
+    yellow: 'border-2 border-yellow-400',
+    purple: 'border-2 border-purple-500',
+    red: 'border-2 border-red-500',
   };
 
   // Filter sessions based on selection
@@ -238,7 +238,7 @@ export default function EventProgramView({
         if (segments.length === 0) return null;
 
         return (
-          <div key={session.id} className={`bg-white rounded-lg border-2 border-gray-300 overflow-hidden ${sessionColorClasses[session.session_color] || ''}`}>
+          <div key={session.id} className={`bg-white rounded-lg overflow-hidden ${sessionColorClasses[session.session_color] || 'border-2 border-gray-300'}`}>
             {/* Session Header */}
             <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-4 border-b">
               <div className="flex justify-between items-start">
