@@ -3,6 +3,46 @@ import { Badge } from "@/components/ui/badge";
 import { Languages, Mic, Utensils } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
+// Helper to calculate action time based on segment timing and offset
+function calculateActionTime(segment, action) {
+  const segmentStart = segment.start_time;
+  const segmentEnd = segment.end_time;
+  if (!segmentStart) return null;
+  
+  const [startH, startM] = segmentStart.split(':').map(Number);
+  const startMinutes = startH * 60 + startM;
+  
+  let endMinutes = startMinutes + (segment.duration_min || 0);
+  if (segmentEnd) {
+    const [endH, endM] = segmentEnd.split(':').map(Number);
+    endMinutes = endH * 60 + endM;
+  }
+  
+  const offset = action.offset_min || 0;
+  let targetMinutes;
+  
+  switch (action.timing) {
+    case 'before_start':
+      targetMinutes = startMinutes - offset;
+      break;
+    case 'after_start':
+      targetMinutes = startMinutes + offset;
+      break;
+    case 'before_end':
+      targetMinutes = endMinutes - offset;
+      break;
+    case 'absolute':
+      return action.absolute_time ? formatTimeToEST(action.absolute_time) : null;
+    default:
+      return null;
+  }
+  
+  if (targetMinutes < 0) targetMinutes += 24 * 60;
+  const h = Math.floor(targetMinutes / 60) % 24;
+  const m = targetMinutes % 60;
+  return formatTimeToEST(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+}
+
 export default function SegmentReportRow({
   segment,
   getSegmentActions,
@@ -226,26 +266,24 @@ export default function SegmentReportRow({
         <div className="border-l border-gray-200 pl-1">
           <div className="text-[9px] space-y-0.5">
             <div className="font-bold uppercase text-blue-700 text-[8px]">▶ DURANTE</div>
-            {durantActions.map((action, actionIdx) => (
-              <div
-                key={actionIdx}
-                className={`p-0.5 rounded border text-[8px] leading-tight ${departmentColors[action.department] || departmentColors.Other}`}
-              >
-                <div className="font-semibold">
-                  [{action.department}] {action.label}
-                  {action.is_required && <span className="ml-0.5 text-red-600">*</span>}
-                </div>
-                {action.timing && action.offset_min !== undefined && (
-                  <div className="italic text-[8px]">
-                    {action.timing === "before_start" && `${action.offset_min}m antes`}
-                    {action.timing === "after_start" && `${action.offset_min}m después`}
-                    {action.timing === "before_end" && `${action.offset_min}m antes fin`}
-                    {action.timing === "absolute" && action.absolute_time}
+            {durantActions.map((action, actionIdx) => {
+              const actionTime = calculateActionTime(segment, action);
+              return (
+                <div
+                  key={actionIdx}
+                  className={`p-0.5 rounded border text-[8px] leading-tight ${departmentColors[action.department] || departmentColors.Other}`}
+                >
+                  <div className="font-semibold flex items-center gap-1 flex-wrap">
+                    <span>[{action.department}] {action.label}</span>
+                    {action.is_required && <span className="text-red-600">*</span>}
+                    {actionTime && (
+                      <span className="font-mono text-[7px] bg-blue-100 text-blue-700 px-1 rounded">@ {actionTime}</span>
+                    )}
                   </div>
-                )}
-                {action.notes && <div className="text-[8px]">{action.notes}</div>}
-              </div>
-            ))}
+                  {action.notes && <div className="text-[8px]">{action.notes}</div>}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

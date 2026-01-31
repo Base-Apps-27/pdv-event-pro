@@ -565,6 +565,38 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
     }
 
     // Actions (Prep & During) - Demoted Visuals (No Icons, Small Text)
+    // Helper to calculate action time for weekly PDF
+    const calcActionTime = (action) => {
+      if (!currentTime) return null;
+      const segStartMinutes = currentTime.getHours() * 60 + currentTime.getMinutes() - (seg.duration || 0);
+      const segEndMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+      const offset = action.offset_min || 0;
+      let targetMinutes;
+      
+      switch (action.timing) {
+        case 'before_start':
+          targetMinutes = segStartMinutes - offset;
+          break;
+        case 'after_start':
+          targetMinutes = segStartMinutes + offset;
+          break;
+        case 'before_end':
+          targetMinutes = segEndMinutes - offset;
+          break;
+        case 'absolute':
+          return action.absolute_time || null;
+        default:
+          return null;
+      }
+      
+      if (targetMinutes < 0) targetMinutes += 24 * 60;
+      const h = Math.floor(targetMinutes / 60) % 24;
+      const m = targetMinutes % 60;
+      const period = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+    };
+
     if (seg.actions?.length > 0) {
       const prepActions = seg.actions.filter(a => a.timing === 'before_start');
       const duringActions = seg.actions.filter(a => a.timing !== 'before_start');
@@ -578,14 +610,17 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
               {
                 stack: [
                   { text: 'PREPARACIÓN', bold: true, fontSize: 7.5 * scale, color: '#6B7280', margin: [0, 0, 0, 2] },
-                  ...prepActions.map(a => ({
-                    text: [
-                      { text: `[${a.department || 'General'}] `, bold: true, color: '#6B7280', fontSize: 7.5 * scale },
-                      { text: a.label, color: '#4B5563', fontSize: 8 * scale },
-                      a.offset_min ? { text: ` (${a.offset_min}m antes)`, italics: true, color: '#9CA3AF', fontSize: 7.5 * scale } : ''
-                    ],
-                    margin: [0, 0, 0, 1]
-                  }))
+                  ...prepActions.map(a => {
+                    const actionTime = calcActionTime(a);
+                    return {
+                      text: [
+                        { text: `[${a.department || 'General'}] `, bold: true, color: '#6B7280', fontSize: 7.5 * scale },
+                        { text: a.label, color: '#4B5563', fontSize: 8 * scale },
+                        actionTime ? { text: ` @ ${actionTime}`, bold: true, color: '#B45309', fontSize: 7.5 * scale } : ''
+                      ],
+                      margin: [0, 0, 0, 1]
+                    };
+                  })
                 ],
                 fillColor: '#F9FAFB', // Gray-50
                 border: [true, true, true, true],
@@ -607,13 +642,17 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
               {
                 stack: [
                   { text: 'DURANTE SEGMENTO', bold: true, fontSize: 7.5 * scale, color: '#6B7280', margin: [0, 0, 0, 2] },
-                  ...duringActions.map(a => ({
-                    text: [
-                      { text: `[${a.department || 'General'}] `, bold: true, color: '#6B7280', fontSize: 7.5 * scale },
-                      { text: a.label, color: '#4B5563', fontSize: 8 * scale }
-                    ],
-                    margin: [0, 0, 0, 1]
-                  }))
+                  ...duringActions.map(a => {
+                    const actionTime = calcActionTime(a);
+                    return {
+                      text: [
+                        { text: `[${a.department || 'General'}] `, bold: true, color: '#6B7280', fontSize: 7.5 * scale },
+                        { text: a.label, color: '#4B5563', fontSize: 8 * scale },
+                        actionTime ? { text: ` @ ${actionTime}`, bold: true, color: '#1D4ED8', fontSize: 7.5 * scale } : ''
+                      ],
+                      margin: [0, 0, 0, 1]
+                    };
+                  })
                 ],
                 fillColor: '#F9FAFB', // Gray-50
                 border: [true, true, true, true],

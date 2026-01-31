@@ -511,6 +511,46 @@ function buildDetailsLeftCell(seg, allRooms = []) {
   };
 }
 
+// Helper to calculate action time for PDF
+function calculateActionTimeForPDF(seg, act) {
+  const segmentStart = seg.start_time;
+  const segmentEnd = seg.end_time;
+  if (!segmentStart) return null;
+  
+  const [startH, startM] = segmentStart.split(':').map(Number);
+  const startMinutes = startH * 60 + startM;
+  
+  let endMinutes = startMinutes + (seg.duration_min || 0);
+  if (segmentEnd) {
+    const [endH, endM] = segmentEnd.split(':').map(Number);
+    endMinutes = endH * 60 + endM;
+  }
+  
+  const offset = act.offset_min || 0;
+  let targetMinutes;
+  
+  switch (act.timing) {
+    case 'before_start':
+      targetMinutes = startMinutes - offset;
+      break;
+    case 'after_start':
+      targetMinutes = startMinutes + offset;
+      break;
+    case 'before_end':
+      targetMinutes = endMinutes - offset;
+      break;
+    case 'absolute':
+      return act.absolute_time ? toESTTimeStr(act.absolute_time) : null;
+    default:
+      return null;
+  }
+  
+  if (targetMinutes < 0) targetMinutes += 24 * 60;
+  const h = Math.floor(targetMinutes / 60) % 24;
+  const m = targetMinutes % 60;
+  return toESTTimeStr(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+}
+
 function buildDetailsRightCell(seg) {
   const stack = [];
 
@@ -529,9 +569,7 @@ function buildDetailsRightCell(seg) {
       const dept = act.department ? `[${act.department}] ` : '';
       const label = act.label || '';
       const required = act.is_required ? '*' : '';
-      const timingParts = [];
-      if (act.timing === 'before_end' && act.offset_min !== undefined) timingParts.push(`${act.offset_min}m antes fin`);
-      if (act.timing === 'after_start' && act.offset_min !== undefined) timingParts.push(`${act.offset_min}m después`);
+      const actionTime = calculateActionTimeForPDF(seg, act);
       const notes = act.notes || '';
 
       stack.push({
@@ -539,7 +577,7 @@ function buildDetailsRightCell(seg) {
           dept ? { text: dept, bold: true, fontSize: pdfTheme.fontSize.xs, color: '#6B7280' } : '',
           { text: label, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.sm },
           required ? { text: ` ${required}`, color: '#DC2626', fontSize: pdfTheme.fontSize.sm, bold: true } : '',
-          timingParts.length ? { text: ` (${timingParts.join(' • ')})`, color: pdfTheme.text.light, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
+          actionTime ? { text: ` @ ${actionTime}`, color: '#1D4ED8', fontSize: pdfTheme.fontSize.xs, bold: true } : '',
           notes ? { text: `\n${notes}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs, italics: true } : '',
         ],
         margin: [0, 0, 0, 1],
@@ -816,10 +854,10 @@ function buildPreSessionDetailsBlock(psd) {
 // PREP ACTION ROW — Full-width styled row matching HTML
 // ============================================================================
 
-function buildPrepActionRow(act) {
+function buildPrepActionRow(act, seg) {
   const dept = act.department ? `[${act.department}]` : '';
   const label = act.label || '';
-  const offset = act.offset_min !== undefined ? `(${act.offset_min}m antes)` : '';
+  const actionTime = seg ? calculateActionTimeForPDF(seg, act) : null;
   const required = act.is_required ? ' *' : '';
   const notes = act.notes ? ` — ${act.notes}` : '';
 
@@ -847,7 +885,7 @@ function buildPrepActionRow(act) {
               dept ? { text: `${dept} `, bold: true, fontSize: pdfTheme.fontSize.sm, color: '#92400E' } : '',
               { text: label, fontSize: pdfTheme.fontSize.sm, color: pdfTheme.text.secondary },
               required ? { text: required, fontSize: pdfTheme.fontSize.sm, color: '#DC2626', bold: true } : '',
-              offset ? { text: `  ${offset}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.light, italics: true } : '',
+              actionTime ? { text: `  @ ${actionTime}`, fontSize: pdfTheme.fontSize.xs, color: '#B45309', bold: true } : '',
               notes ? { text: notes, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted, italics: true } : '',
             ],
             margin: [4, 2, 0, 2],
@@ -866,10 +904,10 @@ function buildPrepActionRow(act) {
 // ============================================================================
 
 // Build PREP action rows for break types (Receso/Almuerzo) - same layout as regular segments
-function buildBreakPrepActionRow(act) {
+function buildBreakPrepActionRow(act, seg) {
   const dept = act.department ? `[${act.department}]` : '';
   const label = act.label || '';
-  const offset = act.offset_min !== undefined ? `(${act.offset_min}m antes)` : '';
+  const actionTime = seg ? calculateActionTimeForPDF(seg, act) : null;
   const required = act.is_required ? ' *' : '';
   const notes = act.notes ? ` — ${act.notes}` : '';
 
@@ -897,7 +935,7 @@ function buildBreakPrepActionRow(act) {
               dept ? { text: `${dept} `, bold: true, fontSize: pdfTheme.fontSize.sm, color: '#92400E' } : '',
               { text: label, fontSize: pdfTheme.fontSize.sm, color: pdfTheme.text.secondary },
               required ? { text: required, fontSize: pdfTheme.fontSize.sm, color: '#DC2626', bold: true } : '',
-              offset ? { text: `  ${offset}`, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.light, italics: true } : '',
+              actionTime ? { text: `  @ ${actionTime}`, fontSize: pdfTheme.fontSize.xs, color: '#B45309', bold: true } : '',
               notes ? { text: notes, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.muted, italics: true } : '',
             ],
             margin: [4, 2, 0, 2],
@@ -952,7 +990,7 @@ function buildDayTable(session, segments, allRooms = []) {
       // PREP actions rendered as separate full-width rows BEFORE the segment (matching HTML)
       const prepActions = (Array.isArray(seg.segment_actions) ? seg.segment_actions : []).filter(a => a.timing === 'before_start');
       prepActions.forEach(act => {
-        rows.push(buildPrepActionRow(act));
+        rows.push(buildPrepActionRow(act, seg));
       });
 
       // Main segment row - pass session color for time cell background
