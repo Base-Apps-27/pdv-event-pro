@@ -423,6 +423,14 @@ export default function EditHistoryModal({ open, onClose, eventId, sessions = []
                         log={log} 
                         language={language}
                         sessions={sessions}
+                        currentUser={currentUser}
+                        onUndo={() => {
+                          // Invalidate logs and entity queries
+                          queryClient.invalidateQueries(['editActionLogs']);
+                          queryClient.invalidateQueries(['sessions']);
+                          queryClient.invalidateQueries(['segments']);
+                          queryClient.invalidateQueries(['event']);
+                        }}
                       />
                     ))}
                   </div>
