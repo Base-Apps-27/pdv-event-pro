@@ -310,8 +310,9 @@ function LogEntry({ log, language, sessions, onUndo, currentUser }) {
   );
 }
 
-export default function EditHistoryModal({ open, onClose, eventId, sessions = [] }) {
+export default function EditHistoryModal({ open, onClose, eventId, sessions = [], currentUser = null }) {
   const { language } = useLanguage();
+  const queryClient = useQueryClient();
   
   // Fetch logs for this event and all its sessions
   const sessionIds = React.useMemo(() => sessions.map(s => s.id), [sessions]);
