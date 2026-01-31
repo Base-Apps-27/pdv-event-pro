@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, X, Send, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MessageCircle, X, Send, Loader2, ImagePlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { hasPermission } from "@/components/utils/permissions";
 import LiveChatMessage from "./LiveChatMessage";
 import LiveChatPinnedSection from "./LiveChatPinnedSection";
@@ -34,9 +32,22 @@ export default function LiveOperationsChat({
   const [isOpen, setIsOpen] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [lastSeenCount, setLastSeenCount] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState('default');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(perm => setNotificationPermission(perm));
+      }
+    }
+  }, []);
 
   // Check if user can access chat
   const canViewChat = hasPermission(currentUser, 'view_live_chat');
@@ -60,18 +71,50 @@ export default function LiveOperationsChat({
     enabled: !!contextId
   });
 
-  // Subscribe to real-time updates
+  // Subscribe to real-time updates + browser notifications
   useEffect(() => {
     if (!contextId) return;
 
     const unsubscribe = base44.entities.LiveOperationsMessage.subscribe((event) => {
       if (event.data.context_type === contextType && event.data.context_id === contextId) {
         queryClient.invalidateQueries(['liveChat', contextType, contextId]);
+        
+        // Show browser notification if panel is closed and message is from someone else
+        if (!isOpen && event.type === 'create' && event.data.created_by !== currentUser?.email) {
+          showBrowserNotification(event.data);
+        }
       }
     });
 
     return unsubscribe;
-  }, [contextType, contextId, queryClient]);
+  }, [contextType, contextId, queryClient, isOpen, currentUser?.email]);
+
+  // Browser notification helper
+  const showBrowserNotification = (msgData) => {
+    if (notificationPermission !== 'granted' || !('Notification' in window)) return;
+    
+    const senderEmail = msgData.created_by || '';
+    const senderName = senderEmail.split('@')[0].replace(/[._]/g, ' ').split(' ')[0];
+    const displayName = senderName.charAt(0).toUpperCase() + senderName.slice(1);
+    
+    const notification = new Notification(
+      `💬 ${contextName || (contextType === 'event' ? 'Evento' : 'Servicio')}`,
+      {
+        body: msgData.image_url 
+          ? `${displayName}: 📷 Imagen` 
+          : `${displayName}: ${msgData.message?.substring(0, 80)}${msgData.message?.length > 80 ? '...' : ''}`,
+        icon: '/favicon.ico',
+        tag: `live-chat-${contextId}`,
+        renotify: true
+      }
+    );
+    
+    notification.onclick = () => {
+      window.focus();
+      setIsOpen(true);
+      notification.close();
+    };
+  };
 
   // Scroll to bottom when messages change (if panel is open)
   useEffect(() => {
@@ -101,16 +144,18 @@ export default function LiveOperationsChat({
   const pinnedMessages = messages.filter(m => m.is_pinned);
   const regularMessages = messages.filter(m => !m.is_pinned);
 
-  // Send message mutation
+  // Send message mutation (supports text and/or image)
   const sendMessageMutation = useMutation({
-    mutationFn: async (text) => {
+    mutationFn: async ({ text, imageUrl }) => {
       return await base44.entities.LiveOperationsMessage.create({
         context_type: contextType,
         context_id: contextId,
         context_date: contextDate,
-        message: text.trim(),
+        message: text?.trim() || "",
+        image_url: imageUrl || null,
         is_pinned: false,
-        is_archived: false
+        is_archived: false,
+        reactions: []
       });
     },
     onSuccess: () => {
@@ -118,6 +163,68 @@ export default function LiveOperationsChat({
       setMessageText("");
     }
   });
+
+  // Reaction mutation
+  const toggleReactionMutation = useMutation({
+    mutationFn: async ({ messageId, reactionType, currentReactions }) => {
+      const reactions = currentReactions || [];
+      const existingIndex = reactions.findIndex(
+        r => r.user_email === currentUser?.email && r.reaction_type === reactionType
+      );
+      
+      let newReactions;
+      if (existingIndex >= 0) {
+        // Remove existing reaction
+        newReactions = reactions.filter((_, i) => i !== existingIndex);
+      } else {
+        // Add new reaction (remove any other reaction from same user first)
+        newReactions = reactions.filter(r => r.user_email !== currentUser?.email);
+        newReactions.push({
+          user_email: currentUser?.email,
+          reaction_type: reactionType,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      return await base44.entities.LiveOperationsMessage.update(messageId, {
+        reactions: newReactions
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['liveChat', contextType, contextId]);
+    }
+  });
+
+  // Image upload handler
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Solo se permiten imágenes');
+      return;
+    }
+    
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen debe ser menor a 5MB');
+      return;
+    }
+    
+    setIsUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // Send message with image
+      await sendMessageMutation.mutateAsync({ text: messageText, imageUrl: file_url });
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      alert('Error al subir imagen');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   // Toggle pin mutation
   const togglePinMutation = useMutation({
@@ -136,7 +243,7 @@ export default function LiveOperationsChat({
 
   const handleSend = () => {
     if (!messageText.trim()) return;
-    sendMessageMutation.mutate(messageText);
+    sendMessageMutation.mutate({ text: messageText, imageUrl: null });
   };
 
   const handleKeyPress = (e) => {
@@ -254,6 +361,11 @@ export default function LiveOperationsChat({
                     currentUserEmail={currentUser?.email}
                     canPin={canPin}
                     onTogglePin={(m) => togglePinMutation.mutate(m)}
+                    onToggleReaction={(reactionType) => toggleReactionMutation.mutate({
+                      messageId: msg.id,
+                      reactionType,
+                      currentReactions: msg.reactions
+                    })}
                   />
                 ))}
                 <div ref={messagesEndRef} />
@@ -266,7 +378,29 @@ export default function LiveOperationsChat({
             style={{ backgroundColor: '#FFFFFF', borderTopColor: '#E5E7EB' }}
             className="border-t-2 px-4 py-3"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              {/* Image upload button */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading || sendMessageMutation.isLoading}
+                style={{ backgroundColor: '#F3F4F6' }}
+                className="h-10 w-10 p-0 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 disabled:opacity-50 shrink-0"
+                title="Subir imagen"
+              >
+                {isUploading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ImagePlus className="w-5 h-5" />
+                )}
+              </button>
               <Input
                 ref={inputRef}
                 value={messageText}
@@ -275,13 +409,13 @@ export default function LiveOperationsChat({
                 placeholder="Escribe un mensaje..."
                 style={{ backgroundColor: '#FFFFFF' }}
                 className="flex-1 text-sm h-10 rounded-full border-gray-300 px-4 focus:ring-2 focus:ring-pdv-teal focus:border-transparent"
-                disabled={sendMessageMutation.isLoading}
+                disabled={sendMessageMutation.isLoading || isUploading}
               />
               <button
                 onClick={handleSend}
-                disabled={!messageText.trim() || sendMessageMutation.isLoading}
+                disabled={!messageText.trim() || sendMessageMutation.isLoading || isUploading}
                 style={{ backgroundColor: '#1F8A70' }}
-                className="h-10 w-10 p-0 rounded-full shadow-md flex items-center justify-center text-white disabled:opacity-50"
+                className="h-10 w-10 p-0 rounded-full shadow-md flex items-center justify-center text-white disabled:opacity-50 shrink-0"
               >
                 {sendMessageMutation.isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
