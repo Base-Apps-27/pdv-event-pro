@@ -149,11 +149,45 @@ function FieldChangeItem({ field, change, language }) {
   );
 }
 
-function LogEntry({ log, language, sessions }) {
+function LogEntry({ log, language, sessions, onUndo, currentUser }) {
   const [expanded, setExpanded] = React.useState(false);
+  const [undoing, setUndoing] = React.useState(false);
   const ActionIcon = ACTION_ICONS[log.action_type] || Pencil;
   const EntityIcon = ENTITY_ICONS[log.entity_type] || FileText;
   const actionColor = ACTION_COLORS[log.action_type] || ACTION_COLORS.update;
+  
+  // Determine if this log entry can be undone
+  // - update and delete can be undone
+  // - create cannot be undone (would need to delete, which is destructive)
+  // - reorder could be undone but adds complexity
+  const canUndo = !log.undone && (log.action_type === 'update' || log.action_type === 'delete');
+  
+  const handleUndo = async (e) => {
+    e.stopPropagation();
+    if (undoing || !canUndo) return;
+    
+    setUndoing(true);
+    try {
+      let result;
+      if (log.action_type === 'update') {
+        result = await undoUpdate(log, currentUser);
+      } else if (log.action_type === 'delete') {
+        result = await undoDelete(log, currentUser);
+      }
+      
+      if (result?.success) {
+        onUndo?.();
+      } else {
+        console.error('Undo failed:', result?.error);
+        alert(result?.error || 'Failed to undo');
+      }
+    } catch (error) {
+      console.error('Undo error:', error);
+      alert('Error undoing action');
+    } finally {
+      setUndoing(false);
+    }
+  };
   
   const entityLabel = ENTITY_LABELS[log.entity_type]?.[language] || log.entity_type;
   const actionLabel = ACTION_LABELS[log.action_type]?.[language] || log.action_type;
