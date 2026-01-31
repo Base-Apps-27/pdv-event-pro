@@ -97,15 +97,28 @@ export const normalizeServiceTeams = (rawService) => {
 /**
  * Accessor helper to safely get a value from a segment, checking data first then root
  * Useful for read-only views during transition
+ * 
+ * IMPORTANT: Services and Events store data differently:
+ * - Services: Many fields like translation_mode, requires_translation are at segment root
+ * - Events (Segment entity): Fields may be at root or in data object
+ * This function handles both patterns.
  */
 export const getSegmentData = (segment, field) => {
   if (!segment) return "";
-  // Check data object first (Canonical)
+  
+  // Check data object first (Canonical for custom service segments)
   if (segment.data && segment.data[field] !== undefined && segment.data[field] !== null) {
     return segment.data[field];
   }
-  // Fallback to root (Legacy)
-  return segment[field];
+  
+  // Fallback to root (Entity segments and weekly service blueprint fields)
+  // This handles fields like translation_mode, requires_translation, translator_name
+  // that are stored at segment root in weekly services
+  if (segment[field] !== undefined && segment[field] !== null) {
+    return segment[field];
+  }
+  
+  return "";
 };
 
 /**
