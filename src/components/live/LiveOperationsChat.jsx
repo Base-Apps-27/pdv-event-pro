@@ -148,12 +148,11 @@ export default function LiveOperationsChat({
 
   return (
     <>
-      {/* Floating Action Button */}
+      {/* Floating Action Button - hardcoded colors to prevent transparency */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 ${
-          isOpen ? 'bg-gray-700' : 'bg-pdv-teal'
-        }`}
+        style={{ backgroundColor: isOpen ? '#374151' : '#1F8A70' }}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105"
         title={isOpen ? 'Cerrar chat' : 'Abrir chat de operaciones'}
       >
         {isOpen ? (
@@ -162,41 +161,55 @@ export default function LiveOperationsChat({
           <>
             <MessageCircle className="w-6 h-6 text-white" />
             {unreadCount > 0 && (
-              <Badge 
-                className="absolute -top-1 -right-1 h-5 min-w-5 px-1.5 bg-red-500 text-white text-xs font-bold"
+              <span 
+                style={{ backgroundColor: '#EF4444' }}
+                className="absolute -top-1 -right-1 h-5 min-w-5 px-1.5 rounded-full text-white text-xs font-bold flex items-center justify-center"
               >
                 {unreadCount > 99 ? '99+' : unreadCount}
-              </Badge>
+              </span>
             )}
           </>
         )}
       </button>
 
-      {/* Chat Panel Overlay */}
+      {/* Chat Panel Overlay - hardcoded colors to prevent transparency */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-32px)] h-[520px] max-h-[calc(100vh-120px)] bg-white rounded-2xl shadow-2xl border border-gray-300 flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-pdv-teal to-pdv-green px-4 py-3.5 text-white">
+        <div 
+          style={{ backgroundColor: '#FFFFFF' }}
+          className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-32px)] h-[520px] max-h-[calc(100vh-120px)] rounded-2xl shadow-2xl border border-gray-300 flex flex-col overflow-hidden"
+        >
+          {/* Header - hardcoded gradient */}
+          <div 
+            style={{ background: 'linear-gradient(to right, #1F8A70, #8DC63F)' }}
+            className="px-4 py-3.5 text-white"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                <div 
+                  style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                >
                   <MessageCircle className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-bold text-base tracking-wide truncate">
                     Chat en Vivo
                   </h3>
-                  <p className="text-xs text-white/90 truncate font-medium">
+                  <p style={{ color: 'rgba(255,255,255,0.9)' }} className="text-xs truncate font-medium">
                     {contextName || (contextType === 'event' ? 'Evento' : 'Servicio')}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-white/25 text-white text-xs font-semibold px-2 py-0.5">
+                <span 
+                  style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}
+                  className="text-white text-xs font-semibold px-2 py-0.5 rounded-md"
+                >
                   {messages.length}
-                </Badge>
+                </span>
                 <button
                   onClick={() => setIsOpen(false)}
+                  style={{ backgroundColor: 'transparent' }}
                   className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
                 >
                   <X className="w-5 h-5" />
@@ -212,19 +225,25 @@ export default function LiveOperationsChat({
             onUnpin={(msg) => togglePinMutation.mutate(msg)}
           />
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-gradient-to-b from-gray-50 to-gray-100">
+          {/* Messages Area - hardcoded gradient background */}
+          <div 
+            style={{ background: 'linear-gradient(to bottom, #F9FAFB, #F3F4F6)' }}
+            className="flex-1 overflow-y-auto px-4 py-4 space-y-4"
+          >
             {isLoading ? (
-              <div className="flex items-center justify-center h-full text-gray-400">
+              <div className="flex items-center justify-center h-full" style={{ color: '#9CA3AF' }}>
                 <Loader2 className="w-8 h-8 animate-spin" />
               </div>
             ) : regularMessages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-3">
-                  <MessageCircle className="w-8 h-8 text-gray-400" />
+              <div className="flex flex-col items-center justify-center h-full" style={{ color: '#6B7280' }}>
+                <div 
+                  style={{ backgroundColor: '#E5E7EB' }}
+                  className="w-16 h-16 rounded-full flex items-center justify-center mb-3"
+                >
+                  <MessageCircle className="w-8 h-8" style={{ color: '#9CA3AF' }} />
                 </div>
-                <p className="font-semibold text-gray-600">Sin mensajes aún</p>
-                <p className="text-sm text-gray-400 mt-1">Inicia la conversación del equipo</p>
+                <p className="font-semibold" style={{ color: '#4B5563' }}>Sin mensajes aún</p>
+                <p className="text-sm mt-1" style={{ color: '#9CA3AF' }}>Inicia la conversación del equipo</p>
               </div>
             ) : (
               <>
@@ -242,8 +261,11 @@ export default function LiveOperationsChat({
             )}
           </div>
 
-          {/* Input Area */}
-          <div className="border-t-2 border-gray-200 bg-white px-4 py-3">
+          {/* Input Area - hardcoded background */}
+          <div 
+            style={{ backgroundColor: '#FFFFFF', borderTopColor: '#E5E7EB' }}
+            className="border-t-2 px-4 py-3"
+          >
             <div className="flex items-center gap-3">
               <Input
                 ref={inputRef}
@@ -251,23 +273,24 @@ export default function LiveOperationsChat({
                 onChange={(e) => setMessageText(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Escribe un mensaje..."
+                style={{ backgroundColor: '#FFFFFF' }}
                 className="flex-1 text-sm h-10 rounded-full border-gray-300 px-4 focus:ring-2 focus:ring-pdv-teal focus:border-transparent"
                 disabled={sendMessageMutation.isLoading}
               />
-              <Button
+              <button
                 onClick={handleSend}
                 disabled={!messageText.trim() || sendMessageMutation.isLoading}
-                size="sm"
-                className="h-10 w-10 p-0 bg-pdv-teal hover:bg-pdv-teal/90 rounded-full shadow-md"
+                style={{ backgroundColor: '#1F8A70' }}
+                className="h-10 w-10 p-0 rounded-full shadow-md flex items-center justify-center text-white disabled:opacity-50"
               >
                 {sendMessageMutation.isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Send className="w-4 h-4" />
                 )}
-              </Button>
+              </button>
             </div>
-            <p className="text-[10px] text-gray-400 mt-2 text-center">
+            <p className="text-[10px] mt-2 text-center" style={{ color: '#9CA3AF' }}>
               {contextType === 'event' 
                 ? 'Se archiva 24h después del evento' 
                 : 'Se archiva a medianoche'}
