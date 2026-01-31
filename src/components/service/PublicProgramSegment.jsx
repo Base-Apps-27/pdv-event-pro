@@ -320,7 +320,7 @@ export default function PublicProgramSegment({
             <div className="space-y-1">
               {prepActions.map((action, idx) => (
                 alwaysExpanded ? (
-                  // Services: muted style without department prefix
+                  // Services: muted style without department prefix or timing
                   <div key={idx} className="bg-amber-50 border border-amber-200 rounded px-3 py-2 text-sm">
                     <div className="flex items-start gap-2">
                       <span className="bg-amber-400 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">⚠ PREP</span>
@@ -328,9 +328,6 @@ export default function PublicProgramSegment({
                         <span className="text-amber-800">
                           {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
                         </span>
-                        {action.offset_min !== undefined && (
-                          <span className="text-amber-600 italic ml-1">({action.offset_min}m antes)</span>
-                        )}
                         {action.notes && <span className="text-amber-700 ml-1">— {action.notes}</span>}
                       </div>
                     </div>
