@@ -128,7 +128,7 @@ export async function logCreate(entityType, newEntity, parentId = null, user = n
       new_state: { ...newEntity },
       description: generateChangeDescription(entityType, 'create', null, title),
       user_email: user?.email || null,
-      user_name: user?.full_name || null,
+      user_name: user?.display_name || user?.full_name || null,
       undone: false
     });
   } catch (error) {
@@ -167,7 +167,7 @@ export async function logUpdate(entityType, entityId, previousState, newState, p
       new_state: { ...newState },
       description: generateChangeDescription(entityType, 'update', fieldChanges, title),
       user_email: user?.email || null,
-      user_name: user?.full_name || null,
+      user_name: user?.display_name || user?.full_name || null,
       undone: false
     });
   } catch (error) {
@@ -197,7 +197,7 @@ export async function logDelete(entityType, deletedEntity, parentId = null, user
       new_state: null,
       description: generateChangeDescription(entityType, 'delete', null, title),
       user_email: user?.email || null,
-      user_name: user?.full_name || null,
+      user_name: user?.display_name || user?.full_name || null,
       undone: false
     });
   } catch (error) {
@@ -222,7 +222,7 @@ export async function logReorder(entityType, entityId, previousOrder, newOrder, 
       new_state: { order: newOrder },
       description: generateChangeDescription(entityType, 'reorder', null, entityTitle),
       user_email: user?.email || null,
-      user_name: user?.full_name || null,
+      user_name: user?.display_name || user?.full_name || null,
       undone: false
     });
   } catch (error) {
@@ -395,7 +395,7 @@ export async function undoUpdate(log, user = null) {
       new_state: restoredEntity ? { ...restoredEntity } : { ...log.previous_state },
       description: `[UNDO] ${log.description}`,
       user_email: user?.email || null,
-      user_name: user?.full_name || null,
+      user_name: user?.display_name || user?.full_name || null,
       undone: false
     });
     
@@ -508,7 +508,7 @@ export async function undoDelete(log, user = null) {
       new_state: { ...newEntity },
       description: `[UNDO-DELETE] Restored ${log.entity_type} "${title}" (original ID: ${log.entity_id})`,
       user_email: user?.email || null,
-      user_name: user?.full_name || null,
+      user_name: user?.display_name || user?.full_name || null,
       undone: false
     });
     
