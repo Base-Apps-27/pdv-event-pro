@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin } from "lucide-react";
+import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils } from "lucide-react";
+import HospitalityTasksModal from "@/components/session/HospitalityTasksModal";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import LiveAdminControls from "@/components/service/LiveAdminControls";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
@@ -56,6 +57,7 @@ export default function EventProgramView({
   const [viewMode, setViewMode] = useState("simple"); // "simple" or "full"
   const [expandedSegments, setExpandedSegments] = useState({});
   const [expandedSessions, setExpandedSessions] = useState({});
+  const [hospitalityModalSessionId, setHospitalityModalSessionId] = useState(null);
 
   // Fetch live adjustments for event sessions
   const { data: liveAdjustments = [] } = useQuery({
@@ -275,13 +277,25 @@ export default function EventProgramView({
                       </>
                     )}
                   </div>
-                  {/* Bilingual Session Badge */}
-                  {session.is_translated_session && (
-                    <Badge className="bg-purple-600 text-white text-xs mt-1 mb-1">
-                      <Languages className="w-3 h-3 mr-1" />
-                      Sesión Bilingüe
-                    </Badge>
-                  )}
+                  {/* Bilingual Session Badge + Hospitality Icon */}
+                  <div className="flex items-center gap-2 mt-1 mb-1">
+                    {session.is_translated_session && (
+                      <Badge className="bg-purple-600 text-white text-xs">
+                        <Languages className="w-3 h-3 mr-1" />
+                        Sesión Bilingüe
+                      </Badge>
+                    )}
+                    {/* Hospitality Icon - Interactive */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 hover:bg-pink-100"
+                      onClick={() => setHospitalityModalSessionId(session.id)}
+                      title="Ver Tareas de Hospitalidad"
+                    >
+                      <Utensils className="w-4 h-4 text-pink-600" />
+                    </Button>
+                  </div>
 
                   {/* Stage Call Offset */}
                   {session.default_stage_call_offset_min && (
@@ -486,6 +500,13 @@ export default function EventProgramView({
           </div>
         );
       })}
+
+      {/* Hospitality Tasks Modal */}
+      <HospitalityTasksModal
+        sessionId={hospitalityModalSessionId}
+        isOpen={!!hospitalityModalSessionId}
+        onClose={() => setHospitalityModalSessionId(null)}
+      />
     </div>
   );
 }
