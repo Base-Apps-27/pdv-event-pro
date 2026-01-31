@@ -166,6 +166,15 @@ function LogEntry({ log, language, sessions, onUndo, currentUser }) {
     e.stopPropagation();
     if (undoing || !canUndo) return;
     
+    // Confirmation prompt - undo is a significant action
+    const confirmMessage = language === 'es' 
+      ? `¿Deshacer este cambio?\n\n${log.description}\n\nEsta acción no se puede revertir automáticamente.`
+      : `Undo this change?\n\n${log.description}\n\nThis action cannot be automatically reverted.`;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+    
     setUndoing(true);
     try {
       let result;
@@ -177,13 +186,24 @@ function LogEntry({ log, language, sessions, onUndo, currentUser }) {
       
       if (result?.success) {
         onUndo?.();
+        // Show success feedback (could use toast, but alert is simple and reliable)
+        const successMessage = log.action_type === 'delete' && result.newEntityId
+          ? (language === 'es' ? `Restaurado con nuevo ID: ${result.newEntityId}` : `Restored with new ID: ${result.newEntityId}`)
+          : (language === 'es' ? 'Cambio deshecho exitosamente' : 'Change undone successfully');
+        alert(successMessage);
       } else {
         console.error('Undo failed:', result?.error);
-        alert(result?.error || 'Failed to undo');
+        // Display conflict fields if present
+        const errorMessage = result?.conflictFields
+          ? (language === 'es' 
+              ? `No se puede deshacer: campos modificados posteriormente: ${result.conflictFields.join(', ')}`
+              : `Cannot undo: fields modified since: ${result.conflictFields.join(', ')}`)
+          : (result?.error || 'Failed to undo');
+        alert(errorMessage);
       }
     } catch (error) {
       console.error('Undo error:', error);
-      alert('Error undoing action');
+      alert(language === 'es' ? 'Error al deshacer' : 'Error undoing action');
     } finally {
       setUndoing(false);
     }
