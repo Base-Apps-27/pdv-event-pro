@@ -20,12 +20,22 @@ export default function LiveChatPinnedSection({
   if (pinnedMessages.length === 0) return null;
 
   return (
-    <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b-2 border-amber-300 px-3 py-2.5">
+    <div 
+      style={{ 
+        background: 'linear-gradient(to right, #FFFBEB, #FFF7ED)', 
+        borderBottomColor: '#FCD34D',
+        borderBottomWidth: '2px'
+      }}
+      className="px-3 py-2.5"
+    >
       <div className="flex items-center gap-2 mb-2">
-        <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
+        <div 
+          style={{ backgroundColor: '#F59E0B' }}
+          className="w-5 h-5 rounded-full flex items-center justify-center"
+        >
           <Pin className="w-3 h-3 text-white" />
         </div>
-        <span className="text-xs font-bold text-amber-800 uppercase tracking-wide">
+        <span style={{ color: '#92400E' }} className="text-xs font-bold uppercase tracking-wide">
           Fijados ({pinnedMessages.length})
         </span>
       </div>
@@ -40,27 +50,27 @@ export default function LiveChatPinnedSection({
           return (
             <div
               key={msg.id}
-              className="flex items-start gap-2 bg-white rounded-xl px-3 py-2 border border-amber-200 shadow-sm"
+              style={{ backgroundColor: '#FFFFFF', borderColor: '#FDE68A' }}
+              className="flex items-start gap-2 rounded-xl px-3 py-2 border shadow-sm"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-xs font-bold text-amber-700">{senderName}</span>
+                  <span style={{ color: '#B45309' }} className="text-xs font-bold">{senderName}</span>
                 </div>
-                <p className="text-sm text-gray-800 leading-snug whitespace-pre-wrap break-words">
+                <p style={{ color: '#1F2937' }} className="text-sm leading-snug whitespace-pre-wrap break-words">
                   {msg.message}
                 </p>
               </div>
               
               {canUnpin && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   onClick={() => onUnpin(msg)}
-                  className="h-6 w-6 p-0 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full shrink-0"
+                  style={{ color: '#9CA3AF' }}
+                  className="h-6 w-6 p-0 rounded-full shrink-0 flex items-center justify-center hover:text-red-500 hover:bg-red-50"
                   title="Desfijar"
                 >
                   <X className="w-4 h-4" />
-                </Button>
+                </button>
               )}
             </div>
           );
