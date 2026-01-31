@@ -193,18 +193,8 @@ function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
-  // Translation - RemoteBooth (headphones) - emoji icon for CABINA
-  // All translation items use purple color scheme
-  if (seg.requires_translation && seg.translation_mode === 'RemoteBooth' && !['Receso', 'Almuerzo'].includes(seg.segment_type)) {
-    stack.push({
-      text: [
-        { text: '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
-        { text: 'TRAD-CABINA', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm },
-        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#6D28D9', fontSize: pdfTheme.fontSize.sm } : '',
-      ],
-      margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
-    });
-  }
+  // NOTE: RemoteBooth (headphones/booth) translation is shown ONLY in the notes column
+  // to avoid duplication - see buildNotesCell() for booth translation display
 
   // Songs (Alabanza) - full list matching HTML
   if (seg.segment_type === 'Alabanza' && seg.number_of_songs > 0) {
