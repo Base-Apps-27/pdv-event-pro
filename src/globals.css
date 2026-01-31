@@ -1,4 +1,11 @@
 css
+/* 
+ * Font Loading Strategy for Cross-Browser Compatibility (Safari, Chrome, Firefox)
+ * - Using @import with display=swap for FOUT over FOIT
+ * - Inter: variable weights for body text
+ * - Bebas Neue: display font for headers (only has weight 400)
+ * - Fallback stacks ensure text remains visible during font load
+ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
@@ -69,13 +76,20 @@ css
   
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* Inter with robust system font fallback for Safari/iOS compatibility */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Ensure text rendering optimization for Safari */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Bebas Neue', 'Inter', sans-serif;
-    font-weight: 400;
+    /* Bebas Neue only has weight 400 - do not use font-weight: bold/700 with it */
+    /* Fallback chain: Bebas Neue → system UI fonts → generic sans-serif */
+    font-family: 'Bebas Neue', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-weight: 400; /* Bebas Neue only ships 400; using other weights triggers fallback */
     letter-spacing: 0.02em;
     text-transform: uppercase;
   }
