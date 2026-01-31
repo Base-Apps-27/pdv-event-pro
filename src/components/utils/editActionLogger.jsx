@@ -267,3 +267,122 @@ export async function getUndoableLogs(parentId = null, limit = 2) {
     return [];
   }
 }
+
+/**
+ * Entity SDK mapping for undo operations
+ */
+const ENTITY_SDK_MAP = {
+  Event: () => base44.entities.Event,
+  Session: () => base44.entities.Session,
+  Segment: () => base44.entities.Segment,
+  EventDay: () => base44.entities.EventDay,
+  PreSessionDetails: () => base44.entities.PreSessionDetails
+};
+
+/**
+ * Undo an update action - restores previous_state to the entity
+ * @param {object} log - The EditActionLog entry to undo
+ * @param {object} user - Current user performing the undo
+ * @returns {object} { success: boolean, error?: string }
+ */
+export async function undoUpdate(log, user = null) {
+  if (log.action_type !== 'update') {
+    return { success: false, error: 'Can only undo update actions with this function' };
+  }
+  
+  if (log.undone) {
+    return { success: false, error: 'This action has already been undone' };
+  }
+  
+  if (!log.previous_state) {
+    return { success: false, error: 'No previous state available to restore' };
+  }
+  
+  const entitySdk = ENTITY_SDK_MAP[log.entity_type]?.();
+  if (!entitySdk) {
+    return { success: false, error: `Unknown entity type: ${log.entity_type}` };
+  }
+  
+  try {
+    // Extract only the fields that were changed (from field_changes)
+    // This prevents overwriting changes made after this log entry
+    const fieldsToRestore = {};
+    if (log.field_changes) {
+      for (const [field, change] of Object.entries(log.field_changes)) {
+        fieldsToRestore[field] = change.old_value;
+      }
+    } else {
+      // Fallback: restore all fields from previous_state (excluding system fields)
+      const { id, created_date, updated_date, created_by, ...restorableFields } = log.previous_state;
+      Object.assign(fieldsToRestore, restorableFields);
+    }
+    
+    console.log('[EditActionLog] Undoing update for', log.entity_type, log.entity_id, 'restoring fields:', Object.keys(fieldsToRestore));
+    
+    // Apply the restoration
+    await entitySdk.update(log.entity_id, fieldsToRestore);
+    
+    // Mark the log entry as undone
+    await base44.entities.EditActionLog.update(log.id, {
+      undone: true,
+      undone_at: new Date().toISOString(),
+      undone_by: user?.email || null
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to undo update:', error);
+    return { success: false, error: error.message || 'Failed to restore entity' };
+  }
+}
+
+/**
+ * Undo a delete action - recreates the entity from previous_state
+ * Note: The recreated entity will have a NEW ID
+ * @param {object} log - The EditActionLog entry to undo
+ * @param {object} user - Current user performing the undo
+ * @returns {object} { success: boolean, newEntityId?: string, error?: string }
+ */
+export async function undoDelete(log, user = null) {
+  if (log.action_type !== 'delete') {
+    return { success: false, error: 'Can only undo delete actions with this function' };
+  }
+  
+  if (log.undone) {
+    return { success: false, error: 'This action has already been undone' };
+  }
+  
+  if (!log.previous_state) {
+    return { success: false, error: 'No previous state available to restore' };
+  }
+  
+  const entitySdk = ENTITY_SDK_MAP[log.entity_type]?.();
+  if (!entitySdk) {
+    return { success: false, error: `Unknown entity type: ${log.entity_type}` };
+  }
+  
+  try {
+    // Remove system fields that shouldn't be set on create
+    const { id, created_date, updated_date, created_by, ...entityData } = log.previous_state;
+    
+    console.log('[EditActionLog] Undoing delete for', log.entity_type, 'recreating entity');
+    
+    // Recreate the entity
+    const newEntity = await entitySdk.create(entityData);
+    
+    // Mark the log entry as undone
+    await base44.entities.EditActionLog.update(log.id, {
+      undone: true,
+      undone_at: new Date().toISOString(),
+      undone_by: user?.email || null
+    });
+    
+    // Log the recreation as a new create action
+    await logCreate(log.entity_type, newEntity, log.parent_id, user);
+    
+    return { success: true, newEntityId: newEntity.id };
+  } catch (error) {
+    console.error('Failed to undo delete:', error);
+    return { success: false, error: error.message || 'Failed to recreate entity' };
+  }
+}
