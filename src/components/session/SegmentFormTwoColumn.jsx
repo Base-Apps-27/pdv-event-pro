@@ -1196,15 +1196,17 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                           className="h-7 px-2 bg-white border-orange-300 text-orange-700 hover:bg-orange-50"
                         >
                           <BookOpen className="w-3.5 h-3.5 mr-1" />
-                          <span className="text-xs">{language === 'es' ? 'Extraer Versos' : 'Extract Verses'}</span>
+                          <span className="text-xs">{language === 'es' ? 'Añadir Versículos' : 'Add Verses'}</span>
                         </Button>
                       </div>
+                      {/* Read-only display of verses - must use button to add/edit */}
                       <Input 
                         value={formData.scripture_references}
-                        onChange={(e) => setFormData({...formData, scripture_references: e.target.value})}
-                        placeholder="Juan 3:16, Romanos 8:28"
+                        readOnly
+                        placeholder={language === 'es' ? 'Usa el botón para añadir versículos' : 'Use button to add verses'}
+                        className="bg-gray-50 cursor-not-allowed"
                       />
-                      {segment?.parsed_verse_data && (
+                      {formData.parsed_verse_data && (
                         <p className="text-xs text-green-600 flex items-center gap-1">
                           <Sparkles className="w-3 h-3" />
                           {language === 'es' ? 'Versos estructurados guardados' : 'Structured verses saved'}
