@@ -382,6 +382,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       ...times,
       // Only include breakout_rooms for Breakout type; undefined fields are omitted by JSON.stringify
       breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined,
+      // Include parsed_verse_data for Plenaria segments with scripture references
+      parsed_verse_data: formData.parsed_verse_data || undefined,
       field_origins: fieldOrigins,
     };
 
