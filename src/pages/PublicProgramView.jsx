@@ -20,6 +20,7 @@ import { hasPermission } from "@/components/utils/permissions";
 import { useSegmentNotifications } from "@/components/service/useSegmentNotifications";
 import ServiceProgramView from "@/components/service/ServiceProgramView";
 import EventProgramView from "@/components/service/EventProgramView";
+import LiveOperationsChat from "@/components/live/LiveOperationsChat";
 import { useLanguage } from "@/components/utils/i18n";
 
 export default function PublicProgramView() {
@@ -1661,6 +1662,17 @@ export default function PublicProgramView() {
         onSave={handleSaveTimeAdjustment}
         serviceTime={actualServiceData?.time}
       />
+
+      {/* Live Operations Chat - Floating FAB */}
+      {currentUser && (viewType === "event" ? selectedEvent : selectedService) && (
+        <LiveOperationsChat
+          currentUser={currentUser}
+          contextType={viewType}
+          contextId={viewType === "event" ? selectedEventId : selectedServiceId}
+          contextDate={viewType === "event" ? selectedEvent?.end_date : rawServiceData?.date}
+          contextName={viewType === "event" ? selectedEvent?.name : selectedService?.name}
+        />
+      )}
 
       {/* Footer */}
       <div style={gradientStyle} className="mt-12 py-6">
