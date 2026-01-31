@@ -201,17 +201,18 @@ export default function PublicProgramSegment({
                          </div>
                        )}
            {/* Translator: Show for all segments if present, differentiate by mode */}
+           {/* NOTE: Services store 'translator', Events store 'translator_name' - check both */}
            {/* NOTE: Must use getData() for translation_mode since Services nest data differently than Events */}
-           {getData('translator_name') && getData('translation_mode') === "InPerson" && (
+           {(getData('translator_name') || getData('translator')) && getData('translation_mode') === "InPerson" && (
                           <div className="flex items-center gap-2 text-blue-600 text-sm">
                             <Mic className="w-4 h-4" />
-                            <span className="font-semibold">{t('live.translator')} (tarima): {normalizeName(getData('translator_name'))}</span>
+                            <span className="font-semibold">{t('live.translator')} (tarima): {normalizeName(getData('translator_name') || getData('translator'))}</span>
                           </div>
                         )}
-           {getData('translator_name') && getData('translation_mode') === "RemoteBooth" && (
+           {(getData('translator_name') || getData('translator')) && getData('translation_mode') === "RemoteBooth" && (
                           <div className="flex items-center gap-2 text-cyan-600 text-sm">
                             <Languages className="w-4 h-4" />
-                            <span className="font-semibold">Trad-Cabina: {normalizeName(getData('translator_name'))}</span>
+                            <span className="font-semibold">Trad-Cabina: {normalizeName(getData('translator_name') || getData('translator'))}</span>
                           </div>
                         )}
            {/* Room: Show if segment has a specific room assignment */}
