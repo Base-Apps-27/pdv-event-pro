@@ -56,10 +56,18 @@ export default function LiveChatPinnedSection({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <span style={{ color: '#B45309' }} className="text-xs font-bold">{senderName}</span>
+                  <span style={{ color: '#9CA3AF' }} className="text-[10px]">
+                    {msg.created_date ? new Date(msg.created_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''}
+                  </span>
                 </div>
-                <p style={{ color: '#1F2937' }} className="text-sm leading-snug whitespace-pre-wrap break-words">
-                  {msg.message}
-                </p>
+                {msg.image_url && (
+                  <img src={msg.image_url} alt="📷" className="max-w-24 max-h-16 rounded mb-1 object-cover" />
+                )}
+                {msg.message && (
+                  <p style={{ color: '#1F2937' }} className="text-sm leading-snug whitespace-pre-wrap break-words">
+                    {msg.message}
+                  </p>
+                )}
               </div>
               
               {canUnpin && (
