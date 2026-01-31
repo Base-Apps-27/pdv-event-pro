@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Users, Search, Shield, Mail, Calendar, Edit2, Plus, Minus } from "lucide-react";
+import { Users, Search, Shield, Mail, Calendar, Edit2, Plus, Minus, CheckSquare, Square, UserCog } from "lucide-react";
+import { toast } from "sonner";
 import { getAllPermissionDefinitions } from "@/components/utils/permissions";
 import { useLanguage } from "@/components/utils/i18n";
 
@@ -20,6 +21,13 @@ export default function UserManagement() {
   const [selectedRole, setSelectedRole] = useState("");
   const [customPermissions, setCustomPermissions] = useState([]);
   const [revokedPermissions, setRevokedPermissions] = useState([]);
+  
+  // Bulk selection state
+  const [selectedUserIds, setSelectedUserIds] = useState(new Set());
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkAction, setBulkAction] = useState(""); // "role", "addPerm", "removePerm"
+  const [bulkRole, setBulkRole] = useState("");
+  const [bulkPermission, setBulkPermission] = useState("");
 
   const allPermissions = getAllPermissionDefinitions();
 
@@ -37,6 +45,34 @@ export default function UserManagement() {
       setCustomPermissions([]);
       setRevokedPermissions([]);
     },
+  });
+
+  // Bulk update mutation
+  const bulkUpdateMutation = useMutation({
+    mutationFn: async ({ userIds, updateFn }) => {
+      const targetUsers = users.filter(u => userIds.has(u.id));
+      const updates = targetUsers.map(user => {
+        const data = updateFn(user);
+        return base44.entities.User.update(user.id, data);
+      });
+      return Promise.all(updates);
+    },
+    onSuccess: (_, { userIds }) => {
+      queryClient.invalidateQueries(['users']);
+      setSelectedUserIds(new Set());
+      setBulkDialogOpen(false);
+      setBulkAction("");
+      setBulkRole("");
+      setBulkPermission("");
+      toast.success(
+        language === 'es' 
+          ? `${userIds.size} usuarios actualizados` 
+          : `${userIds.size} users updated`
+      );
+    },
+    onError: (err) => {
+      toast.error(language === 'es' ? 'Error al actualizar usuarios' : 'Failed to update users');
+    }
   });
 
   const handleEditUser = (user) => {
@@ -88,6 +124,52 @@ export default function UserManagement() {
     user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Bulk selection helpers
+  const toggleUserSelection = (userId) => {
+    setSelectedUserIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.size === filteredUsers.length) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(filteredUsers.map(u => u.id)));
+    }
+  };
+
+  const handleBulkApply = () => {
+    if (selectedUserIds.size === 0) return;
+
+    let updateFn;
+    if (bulkAction === "role" && bulkRole) {
+      updateFn = (user) => ({ app_role: bulkRole });
+    } else if (bulkAction === "addPerm" && bulkPermission) {
+      updateFn = (user) => {
+        const existing = new Set(user.custom_permissions || []);
+        existing.add(bulkPermission);
+        return { custom_permissions: Array.from(existing) };
+      };
+    } else if (bulkAction === "removePerm" && bulkPermission) {
+      updateFn = (user) => {
+        const existing = new Set(user.revoked_permissions || []);
+        existing.add(bulkPermission);
+        return { revoked_permissions: Array.from(existing) };
+      };
+    } else {
+      return;
+    }
+
+    bulkUpdateMutation.mutate({ userIds: selectedUserIds, updateFn });
+  };
 
   const getRoleBadge = (role) => {
     const styles = {
@@ -164,12 +246,65 @@ export default function UserManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Input
-            placeholder={language === 'es' ? 'Buscar por nombre o email...' : 'Search by name or email...'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-md"
-          />
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Input
+              placeholder={language === 'es' ? 'Buscar por nombre o email...' : 'Search by name or email...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="max-w-md"
+            />
+            {/* Bulk Actions */}
+            {selectedUserIds.size > 0 && (
+              <div className="flex items-center gap-2 ml-auto">
+                <Badge className="bg-pdv-teal text-white">
+                  {selectedUserIds.size} {language === 'es' ? 'seleccionados' : 'selected'}
+                </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setBulkAction("role");
+                    setBulkDialogOpen(true);
+                  }}
+                  className="gap-1"
+                >
+                  <UserCog className="w-4 h-4" />
+                  {language === 'es' ? 'Cambiar Rol' : 'Change Role'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setBulkAction("addPerm");
+                    setBulkDialogOpen(true);
+                  }}
+                  className="gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  {language === 'es' ? 'Añadir Permiso' : 'Add Permission'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setBulkAction("removePerm");
+                    setBulkDialogOpen(true);
+                  }}
+                  className="gap-1"
+                >
+                  <Minus className="w-4 h-4" />
+                  {language === 'es' ? 'Revocar Permiso' : 'Revoke Permission'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedUserIds(new Set())}
+                >
+                  {language === 'es' ? 'Limpiar' : 'Clear'}
+                </Button>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -179,6 +314,12 @@ export default function UserManagement() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
+                  <th className="px-3 py-3 text-center w-10">
+                    <Checkbox
+                      checked={filteredUsers.length > 0 && selectedUserIds.size === filteredUsers.length}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     {language === 'es' ? 'Usuario' : 'User'}
                   </th>
@@ -197,19 +338,25 @@ export default function UserManagement() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
                       {language === 'es' ? 'Cargando usuarios...' : 'Loading users...'}
                     </td>
                   </tr>
                 ) : filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
                       {language === 'es' ? 'No se encontraron usuarios' : 'No users found'}
                     </td>
                   </tr>
                 ) : (
                   filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
+                    <tr key={user.id} className={`hover:bg-gray-50 ${selectedUserIds.has(user.id) ? 'bg-blue-50' : ''}`}>
+                      <td className="px-3 py-4 text-center">
+                        <Checkbox
+                          checked={selectedUserIds.has(user.id)}
+                          onCheckedChange={() => toggleUserSelection(user.id)}
+                        />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'linear-gradient(135deg, #1F8A70 0%, #4DC15F 100%)' }}>
@@ -401,6 +548,89 @@ export default function UserManagement() {
               style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', color: '#ffffff' }}
             >
               {updateUserMutation.isPending ? (language === 'es' ? 'Guardando...' : 'Saving...') : (language === 'es' ? 'Guardar Cambios' : 'Save Changes')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Action Dialog */}
+      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {bulkAction === "role" && (language === 'es' ? 'Cambiar Rol en Masa' : 'Bulk Change Role')}
+              {bulkAction === "addPerm" && (language === 'es' ? 'Añadir Permiso en Masa' : 'Bulk Add Permission')}
+              {bulkAction === "removePerm" && (language === 'es' ? 'Revocar Permiso en Masa' : 'Bulk Revoke Permission')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <p className="text-sm text-gray-600">
+              {language === 'es' 
+                ? `Esta acción afectará a ${selectedUserIds.size} usuario(s).`
+                : `This action will affect ${selectedUserIds.size} user(s).`}
+            </p>
+
+            {bulkAction === "role" && (
+              <Select value={bulkRole} onValueChange={setBulkRole}>
+                <SelectTrigger>
+                  <SelectValue placeholder={language === 'es' ? 'Selecciona un rol...' : 'Select a role...'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Admin">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-purple-600" />
+                      <span>Super Admin</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="AdmAsst">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-blue-600" />
+                      <span>{language === 'es' ? 'Asistente Admin' : 'Assistant Admin'}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="EventDayViewer">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-gray-600" />
+                      <span>{language === 'es' ? 'Visualizador' : 'Viewer'}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="EventDayCoordinator">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-teal-600" />
+                      <span>{language === 'es' ? 'Coordinador del Día' : 'Day Coordinator'}</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+
+            {(bulkAction === "addPerm" || bulkAction === "removePerm") && (
+              <Select value={bulkPermission} onValueChange={setBulkPermission}>
+                <SelectTrigger>
+                  <SelectValue placeholder={language === 'es' ? 'Selecciona un permiso...' : 'Select a permission...'} />
+                </SelectTrigger>
+                <SelectContent className="max-h-64">
+                  {allPermissions.map(perm => (
+                    <SelectItem key={perm.key} value={perm.key}>
+                      {language === 'es' ? perm.label_es : perm.label_en}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkDialogOpen(false)}>
+              {language === 'es' ? 'Cancelar' : 'Cancel'}
+            </Button>
+            <Button 
+              onClick={handleBulkApply}
+              disabled={bulkUpdateMutation.isPending || (bulkAction === "role" && !bulkRole) || ((bulkAction === "addPerm" || bulkAction === "removePerm") && !bulkPermission)}
+              style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', color: '#ffffff' }}
+            >
+              {bulkUpdateMutation.isPending 
+                ? (language === 'es' ? 'Aplicando...' : 'Applying...') 
+                : (language === 'es' ? 'Aplicar a Todos' : 'Apply to All')}
             </Button>
           </DialogFooter>
         </DialogContent>
