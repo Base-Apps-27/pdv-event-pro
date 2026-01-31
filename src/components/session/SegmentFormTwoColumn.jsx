@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell, ListChecks, Zap } from "lucide-react";
+import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell, ListChecks, Zap, BookOpen, Sparkles } from "lucide-react";
 import OverlapDetectedDialog from "./OverlapDetectedDialog";
 import ShiftPreviewModal from "./ShiftPreviewModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -19,6 +19,7 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
 import SegmentTimelinePreview from "./SegmentTimelinePreview";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import AnnouncementSeriesManager from "../announcements/AnnouncementSeriesManager";
+import VerseParserDialog from "@/components/service/VerseParserDialog";
 import { useLanguage } from "@/components/utils/i18n";
 import { toast } from "sonner";
 import { logCreate, logUpdate } from "@/components/utils/editActionLogger";
@@ -66,6 +67,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [breakoutRooms, setBreakoutRooms] = useState(segment?.breakout_rooms || []);
   const [showSeriesManager, setShowSeriesManager] = useState(false);
+  const [showVerseParser, setShowVerseParser] = useState(false);
   
   // Fetch announcement series for selection
   const { data: announcementSeries = [] } = useQuery({
@@ -1181,12 +1183,30 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Citas Bíblicas</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Citas Bíblicas</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowVerseParser(true)}
+                          className="h-7 px-2 bg-white border-orange-300 text-orange-700 hover:bg-orange-50"
+                        >
+                          <BookOpen className="w-3.5 h-3.5 mr-1" />
+                          <span className="text-xs">{language === 'es' ? 'Extraer Versos' : 'Extract Verses'}</span>
+                        </Button>
+                      </div>
                       <Input 
                         value={formData.scripture_references}
                         onChange={(e) => setFormData({...formData, scripture_references: e.target.value})}
                         placeholder="Juan 3:16, Romanos 8:28"
                       />
+                      {segment?.parsed_verse_data && (
+                        <p className="text-xs text-green-600 flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" />
+                          {language === 'es' ? 'Versos estructurados guardados' : 'Structured verses saved'}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1661,6 +1681,21 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
             onSelect={(seriesId) => updateField('announcement_series_id', seriesId)}
         />
       )}
+
+      {/* Verse Parser Dialog for Plenaria segments */}
+      <VerseParserDialog
+        open={showVerseParser}
+        onOpenChange={setShowVerseParser}
+        initialText={formData.scripture_references}
+        onSave={({ parsed_data, verse }) => {
+          // Update formData with the formatted verse string
+          setFormData(prev => ({ ...prev, scripture_references: verse }));
+          // Note: parsed_verse_data will be saved when the segment is saved
+          // We need to also store it in formData for persistence
+          setFormData(prev => ({ ...prev, parsed_verse_data: parsed_data }));
+        }}
+        language={language}
+      />
       {/* Overlap → Adjust flow */}
       <OverlapDetectedDialog
         open={showOverlapDialog}
