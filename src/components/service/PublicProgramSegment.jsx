@@ -259,8 +259,8 @@ export default function PublicProgramSegment({
           </div>
 
           {/* Scripture References (for Message or Offering segments) */}
-          {/* CRITICAL: Show this section if it's a message/offering AND has any verse data OR if onOpenVerseParser is available (admin can add) */}
-          {(isMessage || isOffering) && (getData('scripture_references') || getData('verse') || getData('parsed_verse_data') || (isMessage && onOpenVerseParser)) && (
+          {/* Live view is READ-ONLY: Only show BookOpen when parsed_verse_data already exists */}
+          {(isMessage || isOffering) && (getData('scripture_references') || getData('verse') || getData('parsed_verse_data')) && (
             <div className="flex items-start gap-2 mt-2">
               {(getData('scripture_references') || getData('verse')) && (
                 <p className="text-xs text-gray-600 flex-1">
@@ -268,7 +268,7 @@ export default function PublicProgramSegment({
                 </p>
               )}
               {!(getData('scripture_references') || getData('verse')) && <div className="flex-1"></div>}
-              {/* BookOpen icon: Show when parsed_verse_data exists (viewable) */}
+              {/* BookOpen icon: Show ONLY when parsed_verse_data exists for this specific segment */}
               {getData('parsed_verse_data') && onOpenVerses && (
                 <Button
                   variant="outline"
@@ -281,18 +281,6 @@ export default function PublicProgramSegment({
                   title={t('live.viewVerses') || 'Ver Versos'}
                 >
                   <BookOpen className="w-4 h-4" />
-                </Button>
-              )}
-              {/* Sparkles icon: Admin-only button to extract & save verses */}
-              {isMessage && onOpenVerseParser && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onOpenVerseParser(segment)}
-                  className="h-7 w-7 p-0 border-2 border-green-600 text-green-700 hover:bg-green-600 hover:text-white flex-shrink-0"
-                  title={t('live.extractSaveVerses') || 'Extraer y Guardar Versos'}
-                >
-                  <Sparkles className="w-4 h-4" />
                 </Button>
               )}
             </div>
