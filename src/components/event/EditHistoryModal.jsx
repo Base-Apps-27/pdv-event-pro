@@ -373,15 +373,23 @@ export default function EditHistoryModal({ open, onClose, eventId, sessions = []
     staleTime: 30 * 1000, // 30 seconds
   });
   
-  // Group logs by date
+  // Group logs by date in America/New_York timezone (ET)
+  // This ensures consistent date grouping matching the timestamp display format
   const groupedLogs = React.useMemo(() => {
     const groups = {};
     for (const log of logs) {
-      const date = new Date(log.created_date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+      // Normalize timestamp: if no timezone info, assume UTC
+      let ts = String(log.created_date);
+      if (!(/[zZ]|[+\-]\d{2}:?\d{2}$/.test(ts))) ts += 'Z';
+      
+      const d = new Date(ts);
+      // Format date in America/New_York timezone for grouping
+      const date = d.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: 'America/New_York'
       });
       if (!groups[date]) groups[date] = [];
       groups[date].push(log);
