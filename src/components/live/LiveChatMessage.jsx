@@ -25,11 +25,15 @@ export default function LiveChatMessage({
   const [showReactors, setShowReactors] = useState(null); // 'thumbs_up' or 'thumbs_down' or null
   const isOwnMessage = message.created_by === currentUserEmail;
   
-  // Extract first name or email prefix for display
+  // Use stored full_name when available, fallback to email extraction for older messages
   const senderName = (() => {
+    // Prefer denormalized full_name from User entity
+    if (message.created_by_name) {
+      return message.created_by_name;
+    }
+    // Fallback for backwards compatibility with messages created before this field existed
     if (message.created_by) {
       const emailPrefix = message.created_by.split('@')[0];
-      // Clean up and capitalize - handle names with dots/underscores
       const cleaned = emailPrefix.replace(/[._]/g, ' ').split(' ')[0];
       return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
     }
@@ -51,11 +55,13 @@ export default function LiveChatMessage({
   const userThumbsUp = reactions.some(r => r.user_email === currentUserEmail && r.reaction_type === 'thumbs_up');
   const userThumbsDown = reactions.some(r => r.user_email === currentUserEmail && r.reaction_type === 'thumbs_down');
 
-  // Get reactor names for tooltip
+  // Get reactor names for tooltip - uses stored full_name when available
   const getReactorNames = (reactionType) => {
     return reactions
       .filter(r => r.reaction_type === reactionType)
       .map(r => {
+        // Prefer stored user_name (full_name), fallback to email extraction
+        if (r.user_name) return r.user_name;
         const email = r.user_email || '';
         const name = email.split('@')[0].replace(/[._]/g, ' ').split(' ')[0];
         return name.charAt(0).toUpperCase() + name.slice(1);

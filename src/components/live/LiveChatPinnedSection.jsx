@@ -42,10 +42,14 @@ export default function LiveChatPinnedSection({
       
       <div className="space-y-2 max-h-28 overflow-y-auto">
         {pinnedMessages.map((msg) => {
-          // Extract sender name - handle emails with dots/underscores
-          const emailPrefix = msg.created_by ? msg.created_by.split('@')[0] : '';
-          const cleanName = emailPrefix.replace(/[._]/g, ' ').split(' ')[0];
-          const senderName = cleanName ? cleanName.charAt(0).toUpperCase() + cleanName.slice(1) : 'Usuario';
+          // Use stored full_name when available, fallback to email extraction for older messages
+          let senderName = msg.created_by_name;
+          if (!senderName && msg.created_by) {
+            const emailPrefix = msg.created_by.split('@')[0];
+            const cleanName = emailPrefix.replace(/[._]/g, ' ').split(' ')[0];
+            senderName = cleanName ? cleanName.charAt(0).toUpperCase() + cleanName.slice(1) : 'Usuario';
+          }
+          senderName = senderName || 'Usuario';
 
           return (
             <div

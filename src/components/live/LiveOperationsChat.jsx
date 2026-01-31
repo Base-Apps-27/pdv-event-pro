@@ -90,12 +90,18 @@ export default function LiveOperationsChat({
   }, [contextType, contextId, queryClient, isOpen, currentUser?.email]);
 
   // Browser notification helper
+  // Uses created_by_name (full_name) when available, falls back to email extraction for older messages
   const showBrowserNotification = (msgData) => {
     if (notificationPermission !== 'granted' || !('Notification' in window)) return;
     
-    const senderEmail = msgData.created_by || '';
-    const senderName = senderEmail.split('@')[0].replace(/[._]/g, ' ').split(' ')[0];
-    const displayName = senderName.charAt(0).toUpperCase() + senderName.slice(1);
+    // Prefer stored full_name, fallback to email extraction for backwards compatibility
+    let displayName = msgData.created_by_name;
+    if (!displayName && msgData.created_by) {
+      const senderEmail = msgData.created_by;
+      const senderName = senderEmail.split('@')[0].replace(/[._]/g, ' ').split(' ')[0];
+      displayName = senderName.charAt(0).toUpperCase() + senderName.slice(1);
+    }
+    displayName = displayName || 'Usuario';
     
     const notification = new Notification(
       `💬 ${contextName || (contextType === 'event' ? 'Evento' : 'Servicio')}`,
@@ -145,6 +151,7 @@ export default function LiveOperationsChat({
   const regularMessages = messages.filter(m => !m.is_pinned);
 
   // Send message mutation (supports text and/or image)
+  // Stores user's full_name for display (denormalized for performance)
   const sendMessageMutation = useMutation({
     mutationFn: async ({ text, imageUrl }) => {
       return await base44.entities.LiveOperationsMessage.create({
@@ -153,6 +160,7 @@ export default function LiveOperationsChat({
         context_date: contextDate,
         message: text?.trim() || "",
         image_url: imageUrl || null,
+        created_by_name: currentUser?.full_name || null,
         is_pinned: false,
         is_archived: false,
         reactions: []
@@ -165,6 +173,7 @@ export default function LiveOperationsChat({
   });
 
   // Reaction mutation
+  // Stores user's full_name with reaction for display
   const toggleReactionMutation = useMutation({
     mutationFn: async ({ messageId, reactionType, currentReactions }) => {
       const reactions = currentReactions || [];
@@ -181,6 +190,7 @@ export default function LiveOperationsChat({
         newReactions = reactions.filter(r => r.user_email !== currentUser?.email);
         newReactions.push({
           user_email: currentUser?.email,
+          user_name: currentUser?.full_name || null,
           reaction_type: reactionType,
           timestamp: new Date().toISOString()
         });
