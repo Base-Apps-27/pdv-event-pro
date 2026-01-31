@@ -152,37 +152,40 @@ function buildDetailsLeftCell(seg, allRooms = []) {
   }
 
   // Translation for breaks (Receso/Almuerzo) - show if present
+  // All translation items use purple color scheme
   if (['Receso', 'Almuerzo'].includes(seg.segment_type) && seg.requires_translation) {
     const isInPerson = seg.translation_mode === 'InPerson';
     stack.push({
       text: [
         { text: isInPerson ? '🎙 ' : '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
-        { text: isInPerson ? 'TRAD-TARIMA' : 'TRAD-CABINA', bold: true, color: isInPerson ? '#2563EB' : '#0891B2', fontSize: pdfTheme.fontSize.sm },
-        seg.translator_name ? { text: `: ${seg.translator_name}`, color: isInPerson ? '#1E40AF' : '#0E7490', fontSize: pdfTheme.fontSize.sm } : '',
+        { text: isInPerson ? 'TRAD-TARIMA' : 'TRAD-CABINA', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm },
+        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#6D28D9', fontSize: pdfTheme.fontSize.sm } : '',
       ],
       margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
   // Translation - InPerson (on stage) - emoji icon for TARIMA
-  if (seg.requires_translation && seg.translation_mode === 'InPerson') {
+  // All translation items use purple color scheme
+  if (seg.requires_translation && seg.translation_mode === 'InPerson' && !['Receso', 'Almuerzo'].includes(seg.segment_type)) {
     stack.push({
       text: [
         { text: '🎙 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
-        { text: 'TRAD-TARIMA', bold: true, color: '#2563EB', fontSize: pdfTheme.fontSize.sm },
-        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm } : '',
+        { text: 'TRAD-TARIMA', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm },
+        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#6D28D9', fontSize: pdfTheme.fontSize.sm } : '',
       ],
       margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
   }
 
   // Translation - RemoteBooth (headphones) - emoji icon for CABINA
-  if (seg.requires_translation && seg.translation_mode === 'RemoteBooth') {
+  // All translation items use purple color scheme
+  if (seg.requires_translation && seg.translation_mode === 'RemoteBooth' && !['Receso', 'Almuerzo'].includes(seg.segment_type)) {
     stack.push({
       text: [
         { text: '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
-        { text: 'TRAD-CABINA', bold: true, color: '#0891B2', fontSize: pdfTheme.fontSize.sm },
-        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#0E7490', fontSize: pdfTheme.fontSize.sm } : '',
+        { text: 'TRAD-CABINA', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm },
+        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#6D28D9', fontSize: pdfTheme.fontSize.sm } : '',
       ],
       margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
     });
@@ -552,11 +555,16 @@ function buildNotesCell(seg) {
   // See buildPrepActionRow() function
 
   // Team notes - ALL notes matching HTML (full labels, no truncation)
+  // Color coding:
+  // - Projection: slate (#475569 text, #F1F5F9 bg) - distinct from translation
+  // - Translation & Stage & Decor: purple (#7C3AED text, #F5F3FF bg)
+  // - Sound: red
+  // - Ujieres: green
   const notes = [
-    { label: 'PROYECCIÓN', val: seg.projection_notes, color: '#7C3AED', bg: '#F5F3FF' },
+    { label: 'PROYECCIÓN', val: seg.projection_notes, color: '#475569', bg: '#F1F5F9' },
     { label: 'SONIDO', val: seg.sound_notes, color: '#DC2626', bg: '#FEF2F2' },
     { label: 'UJIERES', val: seg.ushers_notes, color: '#16A34A', bg: '#F0FDF4' },
-    { label: 'STAGE & DECOR', val: seg.stage_decor_notes, color: '#DB2777', bg: '#FDF2F8' },
+    { label: 'STAGE & DECOR', val: seg.stage_decor_notes, color: '#7C3AED', bg: '#F5F3FF' },
     { label: 'TRAD', val: seg.translation_notes, color: '#7C3AED', bg: '#F5F3FF' },
     { label: 'OTRO', val: seg.other_notes, color: '#6B7280', bg: '#F9FAFB' },
   ].filter(n => n.val);
@@ -606,17 +614,16 @@ function buildNotesCell(seg) {
     });
   });
 
-  // Translation info for notes column if present (with emoji icons)
-  if (seg.requires_translation) {
-    const isInPerson = seg.translation_mode === 'InPerson';
-    const color = isInPerson ? '#2563EB' : '#0891B2';
+  // Translation info for notes column - ONLY booth translation (stage is shown inline with presenter)
+  // All translation items use purple color scheme
+  if (seg.requires_translation && seg.translation_mode === 'RemoteBooth') {
     stack.push({
       text: [
-        { text: isInPerson ? '🎙 ' : '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
-        { text: isInPerson ? 'TRAD-TARIMA' : 'TRAD-CABINA', bold: true, color, fontSize: pdfTheme.fontSize.xs },
-        seg.translator_name ? { text: `: ${seg.translator_name}`, color, fontSize: pdfTheme.fontSize.xs } : '',
+        { text: '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+        { text: 'TRAD-CABINA', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.xs },
+        seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#7C3AED', fontSize: pdfTheme.fontSize.xs } : '',
       ],
-      fillColor: isInPerson ? '#EFF6FF' : '#ECFEFF',
+      fillColor: '#F5F3FF',
       margin: [0, 0, 0, 1],
     });
   }

@@ -245,16 +245,23 @@ export default function Reports() {
     return action.timing === 'before_start';
   };
 
+  // Color coding by department:
+  // - Projection: slate (neutral gray) - distinct from translation
+  // - Translation & Stage & Decor: purple - all translation-related items
+  // - Sound: red
+  // - Ujieres: green
+  // - Hospitality: pink
   const departmentColors = {
     Admin: "bg-orange-50 border-orange-200 text-orange-700",
     MC: "bg-blue-50 border-blue-200 text-blue-700",
     Sound: "bg-red-50 border-red-200 text-red-700",
-    Projection: "bg-purple-50 border-purple-200 text-purple-700",
+    Projection: "bg-slate-100 border-slate-300 text-slate-700",
     Hospitality: "bg-pink-50 border-pink-200 text-pink-700",
     Ujieres: "bg-green-50 border-green-200 text-green-700",
     Kids: "bg-yellow-50 border-yellow-200 text-yellow-700",
     Coordinador: "bg-orange-50 border-orange-200 text-orange-700",
     "Stage & Decor": "bg-purple-50 border-purple-200 text-purple-700",
+    Translation: "bg-purple-50 border-purple-200 text-purple-700",
     Other: "bg-gray-50 border-gray-200 text-gray-700"
   };
 
@@ -747,7 +754,8 @@ export default function Reports() {
 
         return (
           <div key={session.id} className="print-session">
-            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg mb-4 border border-purple-200">
+            {/* Projection report header - slate color scheme (distinct from purple/translation) */}
+            <div className="bg-gradient-to-r from-slate-100 to-gray-100 p-4 rounded-lg mb-4 border border-slate-300">
               <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
@@ -786,7 +794,8 @@ export default function Reports() {
 
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-purple-50 border-b-2 border-purple-200">
+                {/* Projection table header - slate color scheme */}
+                <tr className="bg-slate-100 border-b-2 border-slate-300">
                   <th className="p-3 text-left font-bold text-gray-900 w-24">Hora</th>
                   <th className="p-3 text-left font-bold text-gray-900">Título</th>
                   <th className="p-3 text-left font-bold text-gray-900">Notas Proyección</th>
@@ -840,8 +849,8 @@ export default function Reports() {
                         )}
 
                         {segment.projection_notes && (
-                          <div className="bg-purple-50 px-1 py-0.5 rounded border border-purple-200">
-                            <span className="font-bold text-purple-700">PROYECCIÓN:</span>
+                          <div className="bg-slate-100 px-1 py-0.5 rounded border border-slate-300">
+                            <span className="font-bold text-slate-700">PROYECCIÓN:</span>
                             <span className="ml-1">{segment.projection_notes}</span>
                           </div>
                         )}
