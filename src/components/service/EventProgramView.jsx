@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils } from "lucide-react";
-import HospitalityTasksModal from "@/components/session/HospitalityTasksModal";
+import HospitalityTasksViewModal from "@/components/service/HospitalityTasksViewModal";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import LiveAdminControls from "@/components/service/LiveAdminControls";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
@@ -501,9 +501,10 @@ export default function EventProgramView({
         );
       })}
 
-      {/* Hospitality Tasks Modal */}
-      <HospitalityTasksModal
+      {/* Hospitality Tasks View Modal (Read-Only for Live View) */}
+      <HospitalityTasksViewModal
         sessionId={hospitalityModalSessionId}
+        sessionName={eventSessions.find(s => s.id === hospitalityModalSessionId)?.name}
         isOpen={!!hospitalityModalSessionId}
         onClose={() => setHospitalityModalSessionId(null)}
       />
