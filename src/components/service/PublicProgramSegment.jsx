@@ -364,7 +364,7 @@ export default function PublicProgramSegment({
             <div className="space-y-1">
               {duringActions.map((action, idx) => (
                 alwaysExpanded ? (
-                  // Services: muted style without department prefix
+                  // Services: muted style without department prefix or timing
                   <div key={idx} className="bg-blue-50 border border-blue-200 rounded px-3 py-2 text-sm">
                     <div className="flex items-start gap-2">
                       <span className="bg-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">▶ DURANTE</span>
@@ -372,9 +372,6 @@ export default function PublicProgramSegment({
                         <span className="text-blue-800">
                           {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
                         </span>
-                        {action.offset_min !== undefined && (
-                          <span className="text-blue-600 italic ml-1">({action.offset_min}m)</span>
-                        )}
                         {action.notes && <span className="text-blue-700 ml-1">— {action.notes}</span>}
                       </div>
                     </div>
