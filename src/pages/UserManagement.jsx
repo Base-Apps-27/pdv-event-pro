@@ -445,10 +445,15 @@ export default function UserManagement() {
                   <Input
                     value={editingFullName}
                     onChange={(e) => setEditingFullName(e.target.value)}
-                    placeholder={language === 'es' ? 'Nombre completo' : 'Full name'}
+                    placeholder={language === 'es' ? 'Nombre para mostrar' : 'Display name'}
                     className="font-semibold"
                   />
                   <div className="text-sm text-gray-500">{editingUser?.email}</div>
+                  <p className="text-xs text-gray-400 italic">
+                    {language === 'es' 
+                      ? 'Este nombre se muestra en toda la aplicación (chat, reportes, etc.)' 
+                      : 'This name is shown throughout the app (chat, reports, etc.)'}
+                  </p>
                 </div>
               </div>
             </div>
