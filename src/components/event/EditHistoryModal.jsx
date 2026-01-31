@@ -259,12 +259,30 @@ function LogEntry({ log, language, sessions, onUndo, currentUser }) {
           </div>
         </div>
         
-        {/* Expand indicator */}
-        {hasFieldChanges && (
-          <div className="flex-shrink-0 text-slate-400">
-            {expanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-          </div>
-        )}
+        {/* Undo button and Expand indicator */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {canUndo && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleUndo}
+              disabled={undoing}
+              className="h-8 px-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+              title={language === 'es' ? 'Deshacer' : 'Undo'}
+            >
+              {undoing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Undo2 className="w-4 h-4" />
+              )}
+            </Button>
+          )}
+          {hasFieldChanges && (
+            <div className="text-slate-400">
+              {expanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+            </div>
+          )}
+        </div>
       </div>
       
       {/* Expanded Field Changes */}
