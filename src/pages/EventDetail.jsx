@@ -252,6 +252,7 @@ export default function EventDetail() {
         onClose={() => setShowEditHistory(false)}
         eventId={eventId}
         sessions={sessions}
+        currentUser={currentUser}
       />
 
        <Tabs defaultValue="sessions" className="w-full">
