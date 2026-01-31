@@ -281,11 +281,18 @@ const ENTITY_SDK_MAP = {
 
 /**
  * Undo an update action - restores previous_state to the entity
+ * 
+ * SAFETY CHECKS:
+ * 1. Verifies entity still exists before attempting restore
+ * 2. Detects if entity was modified AFTER this log entry (conflict detection)
+ * 3. Logs the undo operation as a new 'update' action for audit trail
+ * 
  * @param {object} log - The EditActionLog entry to undo
  * @param {object} user - Current user performing the undo
- * @returns {object} { success: boolean, error?: string }
+ * @returns {object} { success: boolean, error?: string, conflictFields?: string[] }
  */
 export async function undoUpdate(log, user = null) {
+  // --- PRE-FLIGHT VALIDATION ---
   if (log.action_type !== 'update') {
     return { success: false, error: 'Can only undo update actions with this function' };
   }
@@ -298,31 +305,101 @@ export async function undoUpdate(log, user = null) {
     return { success: false, error: 'No previous state available to restore' };
   }
   
+  if (!log.field_changes || Object.keys(log.field_changes).length === 0) {
+    return { success: false, error: 'No field changes recorded to undo' };
+  }
+  
   const entitySdk = ENTITY_SDK_MAP[log.entity_type]?.();
   if (!entitySdk) {
     return { success: false, error: `Unknown entity type: ${log.entity_type}` };
   }
   
   try {
-    // Extract only the fields that were changed (from field_changes)
-    // This prevents overwriting changes made after this log entry
-    const fieldsToRestore = {};
-    if (log.field_changes) {
-      for (const [field, change] of Object.entries(log.field_changes)) {
-        fieldsToRestore[field] = change.old_value;
+    // --- STEP 1: Verify entity still exists ---
+    let currentEntity;
+    try {
+      const entities = await entitySdk.filter({ id: log.entity_id }, '-created_date', 1);
+      currentEntity = entities?.[0];
+    } catch (fetchError) {
+      console.error('[EditActionLog] Failed to fetch entity for undo check:', fetchError);
+      return { success: false, error: 'Failed to verify entity exists' };
+    }
+    
+    if (!currentEntity) {
+      return { success: false, error: 'Entity no longer exists - cannot undo' };
+    }
+    
+    // --- STEP 2: Conflict detection ---
+    // Check if any of the fields we want to restore have been modified since this log entry
+    const conflictFields = [];
+    for (const [field, change] of Object.entries(log.field_changes)) {
+      const currentValue = currentEntity[field];
+      const expectedValue = change.new_value;
+      
+      // Normalize for comparison
+      const normalizeForComparison = (val) => {
+        if (val === undefined || val === null || val === '') return null;
+        if (Array.isArray(val) && val.length === 0) return null;
+        return JSON.stringify(val);
+      };
+      
+      const currentNorm = normalizeForComparison(currentValue);
+      const expectedNorm = normalizeForComparison(expectedValue);
+      
+      // If current value doesn't match what we expect from the log's new_value,
+      // someone modified this field after the log entry was created
+      if (currentNorm !== expectedNorm) {
+        conflictFields.push(field);
       }
-    } else {
-      // Fallback: restore all fields from previous_state (excluding system fields)
-      const { id, created_date, updated_date, created_by, ...restorableFields } = log.previous_state;
-      Object.assign(fieldsToRestore, restorableFields);
+    }
+    
+    if (conflictFields.length > 0) {
+      console.warn('[EditActionLog] Conflict detected on fields:', conflictFields);
+      return { 
+        success: false, 
+        error: `Entity was modified after this change. Conflicting fields: ${conflictFields.join(', ')}`,
+        conflictFields 
+      };
+    }
+    
+    // --- STEP 3: Build restoration payload ---
+    const fieldsToRestore = {};
+    for (const [field, change] of Object.entries(log.field_changes)) {
+      fieldsToRestore[field] = change.old_value;
     }
     
     console.log('[EditActionLog] Undoing update for', log.entity_type, log.entity_id, 'restoring fields:', Object.keys(fieldsToRestore));
     
-    // Apply the restoration
+    // --- STEP 4: Apply the restoration ---
     await entitySdk.update(log.entity_id, fieldsToRestore);
     
-    // Mark the log entry as undone
+    // --- STEP 5: Fetch the restored entity for audit logging ---
+    let restoredEntity;
+    try {
+      const entities = await entitySdk.filter({ id: log.entity_id }, '-created_date', 1);
+      restoredEntity = entities?.[0];
+    } catch (e) {
+      // Non-fatal - we still succeeded with the undo
+      console.warn('[EditActionLog] Could not fetch restored entity for logging');
+    }
+    
+    // --- STEP 6: Log the undo as a new action (for audit trail) ---
+    // This creates a traceable record that an undo occurred
+    await base44.entities.EditActionLog.create({
+      entity_type: log.entity_type,
+      entity_id: log.entity_id,
+      parent_id: log.parent_id,
+      action_type: 'update',
+      field_changes: invertFieldChanges(log.field_changes), // Swap old/new
+      previous_state: { ...currentEntity },
+      new_state: restoredEntity ? { ...restoredEntity } : { ...log.previous_state },
+      description: `[UNDO] ${log.description}`,
+      user_email: user?.email || null,
+      user_name: user?.full_name || null,
+      undone: false
+    });
+    
+    // --- STEP 7: Mark the original log entry as undone ---
     await base44.entities.EditActionLog.update(log.id, {
       undone: true,
       undone_at: new Date().toISOString(),
@@ -331,9 +408,24 @@ export async function undoUpdate(log, user = null) {
     
     return { success: true };
   } catch (error) {
-    console.error('Failed to undo update:', error);
+    console.error('[EditActionLog] Failed to undo update:', error);
     return { success: false, error: error.message || 'Failed to restore entity' };
   }
+}
+
+/**
+ * Helper: Invert field_changes for undo logging (swap old_value and new_value)
+ */
+function invertFieldChanges(fieldChanges) {
+  if (!fieldChanges) return null;
+  const inverted = {};
+  for (const [field, change] of Object.entries(fieldChanges)) {
+    inverted[field] = {
+      old_value: change.new_value,
+      new_value: change.old_value
+    };
+  }
+  return inverted;
 }
 
 /**
