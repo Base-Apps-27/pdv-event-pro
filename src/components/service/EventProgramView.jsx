@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils } from "lucide-react";
 import HospitalityTasksViewModal from "@/components/service/HospitalityTasksViewModal";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
-import LiveAdminControls from "@/components/service/LiveAdminControls";
+import LiveDirectorPanel from "@/components/service/LiveDirectorPanel";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import { formatTimeToEST, formatDateET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
@@ -125,51 +125,11 @@ export default function EventProgramView({
 
   return (
     <div className="space-y-6">
-      {/* Live Admin Controls (for admin users only) */}
+      {/* Live Director Panel (for admin users only) - Manual timing control */}
       {hasPermission(currentUser, 'manage_live_timing') && filteredSessions.length > 0 && (
-        <LiveAdminControls 
-          session={filteredSessions[0]} // Use first session for controls
-          currentSegment={(() => {
-            const sessionSegments = getSessionSegments(filteredSessions[0].id);
-            const effectiveSegments = sessionSegments.map(s => {
-              if (filteredSessions[0].live_adjustment_enabled && s.is_live_adjusted) {
-                return { ...s, start_time: s.actual_start_time || s.start_time, end_time: s.actual_end_time || s.end_time };
-              }
-              return s;
-            });
-            const getTimeDate = (timeStr) => {
-              if (!timeStr) return null;
-              const [hours, mins] = timeStr.split(':').map(Number);
-              const date = new Date(currentTime);
-              date.setHours(hours, mins, 0, 0);
-              return date;
-            };
-            return effectiveSegments.find(s => {
-              const start = getTimeDate(s.start_time);
-              const end = getTimeDate(s.end_time);
-              return start && end && currentTime >= start && currentTime <= end;
-            });
-          })()}
-          nextSegment={(() => {
-            const sessionSegments = getSessionSegments(filteredSessions[0].id);
-            const effectiveSegments = sessionSegments.map(s => {
-              if (filteredSessions[0].live_adjustment_enabled && s.is_live_adjusted) {
-                return { ...s, start_time: s.actual_start_time || s.start_time, end_time: s.actual_end_time || s.end_time };
-              }
-              return s;
-            });
-            const getTimeDate = (timeStr) => {
-              if (!timeStr) return null;
-              const [hours, mins] = timeStr.split(':').map(Number);
-              const date = new Date(currentTime);
-              date.setHours(hours, mins, 0, 0);
-              return date;
-            };
-            return effectiveSegments.find(s => {
-              const start = getTimeDate(s.start_time);
-              return start && start > currentTime;
-            });
-          })()}
+        <LiveDirectorPanel 
+          session={filteredSessions[0]}
+          segments={getSessionSegments(filteredSessions[0].id)}
           refetchData={refetchData}
         />
       )}
