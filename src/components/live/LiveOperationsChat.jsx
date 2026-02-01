@@ -145,6 +145,8 @@ export default function LiveOperationsChat({
   }, [messages, isOpen]);
 
   // Persist last seen message ID when opening panel (marks all as read)
+  // Also updates whenever new messages arrive while panel is open
+  const persistTimeoutRef = useRef(null);
   useEffect(() => {
     if (isOpen && messages.length > 0) {
       const latestMessageId = messages[messages.length - 1]?.id;
@@ -152,16 +154,23 @@ export default function LiveOperationsChat({
         // Update local state immediately for responsive UI
         setLastSeenMessageId(latestMessageId);
         
-        // Persist to user profile (fire-and-forget, non-blocking)
-        const updatedChatLastSeen = {
-          ...(currentUser?.chat_last_seen || {}),
-          [chatContextKey]: latestMessageId
-        };
-        base44.auth.updateMe({ chat_last_seen: updatedChatLastSeen }).catch(err => {
-          console.error('Failed to persist chat_last_seen:', err);
-        });
+        // Debounce persistence to avoid rapid updates when messages stream in
+        if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
+        persistTimeoutRef.current = setTimeout(() => {
+          const updatedChatLastSeen = {
+            ...(currentUser?.chat_last_seen || {}),
+            [chatContextKey]: latestMessageId
+          };
+          base44.auth.updateMe({ chat_last_seen: updatedChatLastSeen }).catch(err => {
+            console.error('Failed to persist chat_last_seen:', err);
+          });
+        }, 500);
       }
     }
+    
+    return () => {
+      if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
+    };
   }, [isOpen, messages, lastSeenMessageId, chatContextKey, currentUser?.chat_last_seen]);
 
   // Focus input when panel opens
