@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
   }
 
   const base44 = createClientFromRequest(req);
-  const { sessionId, segmentId, action, value } = await req.json();
+  const { sessionId, segmentId, action, value, field } = await req.json();
 
   try {
     const user = await base44.auth.me();
@@ -130,12 +130,25 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Live adjustment not enabled for this session' }), { status: 400 });
       }
 
-      const { field } = await req.json().catch(() => ({})); // field passed separately
-      // Re-parse since we already consumed req.json() above - use the original parsed values
-      // Actually, we need to get 'field' from the original parse. Let me fix this.
-      
-      // Note: field should be passed in the original request body
-      return new Response(JSON.stringify({ error: 'set_time requires field parameter' }), { status: 400 });
+      if (!field || !['actual_start_time', 'actual_end_time'].includes(field)) {
+        return new Response(JSON.stringify({ error: 'set_time requires valid field parameter (actual_start_time or actual_end_time)' }), { status: 400 });
+      }
+
+      if (!segmentId) {
+        return new Response(JSON.stringify({ error: 'set_time requires segmentId' }), { status: 400 });
+      }
+
+      // Update the single field on the segment
+      await base44.asServiceRole.entities.Segment.update(segmentId, {
+        [field]: value,
+        is_live_adjusted: true
+      });
+
+      await base44.asServiceRole.entities.Session.update(sessionId, {
+        last_live_adjustment_time: new Date().toISOString()
+      });
+
+      return new Response(JSON.stringify({ success: true, field, value }), { status: 200 });
     }
 
     // ============================================================
