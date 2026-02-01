@@ -61,7 +61,7 @@ export default function LiveChatPinnedSection({
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <span style={{ color: '#B45309' }} className="text-xs font-bold">{senderName}</span>
                   <span style={{ color: '#9CA3AF' }} className="text-[10px]">
-                    {msg.created_date ? new Date(msg.created_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''}
+                    {msg.created_date ? new Date(msg.created_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }) : ''}
                   </span>
                 </div>
                 {msg.image_url && (
