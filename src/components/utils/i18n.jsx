@@ -598,6 +598,16 @@ const translations = {
 
 // Defensive fallback map for live.* keys when a translation is missing
 const liveFallback = {
+  // New LiveDirectorPanel translations
+  'live.manual_mode': { es: 'Modo Manual', en: 'Manual Mode' },
+  'live.manual_instructions': { es: 'Haz clic en cualquier hora para editar. "Marcar Terminado" establece la hora de fin a AHORA e inicia el siguiente segmento.', en: 'Click any time to edit. "Mark Ended" sets end time to NOW and starts the next segment.' },
+  'live.segment': { es: 'Segmento', en: 'Segment' },
+  'live.planned': { es: 'Planificado', en: 'Planned' },
+  'live.actual': { es: 'Actual', en: 'Actual' },
+  'live.start': { es: 'Inicio', en: 'Start' },
+  'live.end': { es: 'Fin', en: 'End' },
+  'live.time_updated': { es: 'Hora actualizada', en: 'Time updated' },
+  // Existing fallbacks below
   es: {
     preacher: 'Predicador',
     translator: 'Traductor',
