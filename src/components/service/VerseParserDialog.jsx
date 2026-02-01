@@ -140,13 +140,16 @@ function parseScriptureReferences(rawText) {
       }
     }
     
+    // Create clean reference key for deduplication (Book + chapter:verse)
+    const cleanRef = `${bookRaw} ${restOfRef}`;
+    
     // Only add if not already seen
-    if (!seenRefs.has(fullMatch)) {
-      seenRefs.add(fullMatch);
+    if (!seenRefs.has(cleanRef)) {
+      seenRefs.add(cleanRef);
       verses.push({
         type: 'verse',
         content: formattedContent,
-        original: fullMatch
+        original: cleanRef
       });
     }
   });
