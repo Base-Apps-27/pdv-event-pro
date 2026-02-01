@@ -871,56 +871,7 @@ export default function PublicProgramView() {
               </CardContent>
             </Card>
 
-            {/* Live Admin Controls - Only for Events (EventProgramView handles this now) */}
-            {false && hasPermission(currentUser, 'manage_live_timing') && filteredSessions.length > 0 && (
-              <LiveAdminControls 
-                session={filteredSessions[0]} // For now assume single session active or take first
-                currentSegment={(() => {
-                  // Re-use logic to find current segment for controls
-                  const sessionSegments = getSessionSegments(filteredSessions[0].id);
-                  const effectiveSegments = sessionSegments.map(s => {
-                    if (filteredSessions[0].live_adjustment_enabled && s.is_live_adjusted) {
-                      return { ...s, start_time: s.actual_start_time || s.start_time, end_time: s.actual_end_time || s.end_time };
-                    }
-                    return s;
-                  });
-                  // Helper to parse times
-                  const getTimeDate = (timeStr) => {
-                    if (!timeStr) return null;
-                    const [hours, mins] = timeStr.split(':').map(Number);
-                    const date = new Date(currentTime);
-                    date.setHours(hours, mins, 0, 0);
-                    return date;
-                  };
-                  return effectiveSegments.find(s => {
-                    const start = getTimeDate(s.start_time);
-                    const end = getTimeDate(s.end_time);
-                    return start && end && currentTime >= start && currentTime <= end;
-                  });
-                })()}
-                nextSegment={(() => {
-                   const sessionSegments = getSessionSegments(filteredSessions[0].id);
-                   const effectiveSegments = sessionSegments.map(s => {
-                    if (filteredSessions[0].live_adjustment_enabled && s.is_live_adjusted) {
-                      return { ...s, start_time: s.actual_start_time || s.start_time, end_time: s.actual_end_time || s.end_time };
-                    }
-                    return s;
-                  });
-                   const getTimeDate = (timeStr) => {
-                    if (!timeStr) return null;
-                    const [hours, mins] = timeStr.split(':').map(Number);
-                    const date = new Date(currentTime);
-                    date.setHours(hours, mins, 0, 0);
-                    return date;
-                  };
-                  return effectiveSegments.find(s => {
-                    const start = getTimeDate(s.start_time);
-                    return start && start > currentTime;
-                  });
-                })()}
-                refetchData={refetchData}
-              />
-            )}
+            {/* Live Admin Controls moved to EventProgramView - LiveDirectorPanel */}
 
             {/* View Mode and Filters Card - EventProgramView handles this now */}
             {false && viewType === "event" && (
