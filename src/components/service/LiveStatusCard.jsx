@@ -51,6 +51,10 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
   ).sort((a, b) => {
     const timeA = getTimeDate(a.start_time, a.date);
     const timeB = getTimeDate(b.start_time, b.date);
+    // Handle null dates - put segments without dates at the end
+    if (!timeA && !timeB) return 0;
+    if (!timeA) return 1;
+    if (!timeB) return -1;
     return timeA - timeB;
   });
 
