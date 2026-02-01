@@ -1,12 +1,30 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+/**
+ * Live Director Timing Control Backend
+ * 
+ * Features:
+ * - Single-user ownership: Only one person can be Live Director at a time
+ * - Takeover mechanism with notification to previous director
+ * - Action logging for undo functionality
+ * - Undo last action capability
+ * 
+ * Actions:
+ * - toggle_live_adjustment: Enable/disable live mode (requires confirmation on frontend)
+ * - mark_ended_manual: Set segment end time and auto-start next
+ * - set_time: Manually set a time field on a segment
+ * - takeover: Take control from another Live Director
+ * - undo_last: Undo the most recent action
+ * - release_control: Release Live Director control without disabling
+ */
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS' } });
   }
 
   const base44 = createClientFromRequest(req);
-  const { sessionId, segmentId, action, value, field } = await req.json();
+  const { sessionId, segmentId, action, value, field, confirmTakeover } = await req.json();
 
   try {
     const user = await base44.auth.me();
@@ -46,18 +64,111 @@ Deno.serve(async (req) => {
       return Math.round((d2 - d1) / 60000);
     };
 
+    // Helper: Log an action for undo capability
+    const logAction = async (actionType, segmentId, previousState, newState, notes = null) => {
+      await base44.asServiceRole.entities.LiveDirectorActionLog.create({
+        session_id: sessionId,
+        segment_id: segmentId || null,
+        action_type: actionType,
+        performed_by_user_id: user.id,
+        performed_by_user_name: user.full_name || user.email,
+        previous_state: previousState,
+        new_state: newState,
+        is_undone: false,
+        notes: notes
+      });
+    };
+
+    // Helper: Check if user is the current Live Director
+    const checkOwnership = (session) => {
+      if (!session.live_adjustment_enabled) return { isOwner: false, blocked: false };
+      if (!session.live_director_user_id) return { isOwner: true, blocked: false }; // No one claimed it yet
+      if (session.live_director_user_id === user.id) return { isOwner: true, blocked: false };
+      return { 
+        isOwner: false, 
+        blocked: true, 
+        currentDirector: {
+          userId: session.live_director_user_id,
+          userName: session.live_director_user_name,
+          startedAt: session.live_director_started_at
+        }
+      };
+    };
+
+    // ============================================================
+    // ACTION: toggle_live_adjustment
+    // Enable/disable live mode. When enabling, claim ownership.
+    // ============================================================
     if (action === 'toggle_live_adjustment') {
       const enabled = !!value;
+      const [session] = await base44.asServiceRole.entities.Session.filter({ id: sessionId });
       
-      // Update session
-      await base44.asServiceRole.entities.Session.update(sessionId, {
-        live_adjustment_enabled: enabled,
-        last_live_adjustment_time: new Date().toISOString()
-      });
+      if (enabled) {
+        // Check if someone else is already the Live Director
+        const ownership = checkOwnership(session);
+        if (ownership.blocked && !confirmTakeover) {
+          return new Response(JSON.stringify({ 
+            error: 'blocked', 
+            currentDirector: ownership.currentDirector,
+            requiresConfirmation: true
+          }), { status: 409 });
+        }
 
-      if (!enabled) {
-        // Reset all segments in session
+        // Capture previous state for logging
+        const previousState = {
+          live_adjustment_enabled: session.live_adjustment_enabled,
+          live_director_user_id: session.live_director_user_id,
+          live_director_user_name: session.live_director_user_name
+        };
+
+        // Enable and claim ownership
+        await base44.asServiceRole.entities.Session.update(sessionId, {
+          live_adjustment_enabled: true,
+          live_director_user_id: user.id,
+          live_director_user_name: user.full_name || user.email,
+          live_director_started_at: new Date().toISOString(),
+          last_live_adjustment_time: new Date().toISOString()
+        });
+
+        await logAction('toggle_live_mode', null, previousState, {
+          live_adjustment_enabled: true,
+          live_director_user_id: user.id,
+          live_director_user_name: user.full_name || user.email
+        });
+
+        return new Response(JSON.stringify({ 
+          success: true, 
+          enabled: true,
+          director: { userId: user.id, userName: user.full_name || user.email }
+        }), { status: 200 });
+
+      } else {
+        // Disabling - capture segment states for undo
         const segments = await base44.asServiceRole.entities.Segment.filter({ session_id: sessionId }, 'order');
+        const previousSegmentStates = segments.map(seg => ({
+          id: seg.id,
+          actual_start_time: seg.actual_start_time,
+          actual_end_time: seg.actual_end_time,
+          is_live_adjusted: seg.is_live_adjusted
+        }));
+
+        const previousState = {
+          live_adjustment_enabled: session.live_adjustment_enabled,
+          live_director_user_id: session.live_director_user_id,
+          live_director_user_name: session.live_director_user_name,
+          segments: previousSegmentStates
+        };
+
+        // Update session
+        await base44.asServiceRole.entities.Session.update(sessionId, {
+          live_adjustment_enabled: false,
+          live_director_user_id: null,
+          live_director_user_name: null,
+          live_director_started_at: null,
+          last_live_adjustment_time: new Date().toISOString()
+        });
+
+        // Reset all segments
         await Promise.all(segments.map(seg => 
           base44.asServiceRole.entities.Segment.update(seg.id, {
             actual_start_time: null,
@@ -65,21 +176,188 @@ Deno.serve(async (req) => {
             is_live_adjusted: false
           })
         ));
-      } else {
-        // Initialize segments if not already set (optional, or just leave them null until adjusted)
-        // Leaving null allows frontend to fallback to planned time, which is desired.
+
+        await logAction('toggle_live_mode', null, previousState, {
+          live_adjustment_enabled: false,
+          segments_reset: true
+        });
+
+        return new Response(JSON.stringify({ success: true, enabled: false }), { status: 200 });
+      }
+    }
+
+    // ============================================================
+    // ACTION: takeover
+    // Take control from another Live Director
+    // ============================================================
+    if (action === 'takeover') {
+      const [session] = await base44.asServiceRole.entities.Session.filter({ id: sessionId });
+      
+      if (!session.live_adjustment_enabled) {
+        return new Response(JSON.stringify({ error: 'Live mode is not enabled' }), { status: 400 });
       }
 
-      return new Response(JSON.stringify({ success: true, enabled }), { status: 200 });
+      const previousDirector = {
+        userId: session.live_director_user_id,
+        userName: session.live_director_user_name
+      };
+
+      // Update ownership
+      await base44.asServiceRole.entities.Session.update(sessionId, {
+        live_director_user_id: user.id,
+        live_director_user_name: user.full_name || user.email,
+        live_director_started_at: new Date().toISOString(),
+        last_live_adjustment_time: new Date().toISOString()
+      });
+
+      await logAction('takeover', null, previousDirector, {
+        live_director_user_id: user.id,
+        live_director_user_name: user.full_name || user.email
+      }, `Takeover from ${previousDirector.userName}`);
+
+      // Send notification to previous director via LiveOperationsMessage
+      if (previousDirector.userId) {
+        try {
+          // Find the event_id from session to scope the message
+          const eventId = session.event_id;
+          if (eventId) {
+            await base44.asServiceRole.entities.LiveOperationsMessage.create({
+              event_id: eventId,
+              author_name: 'Sistema',
+              author_email: 'system@pdv.app',
+              content: `⚠️ ${user.full_name || user.email} ha tomado el control de Live Director.`,
+              message_type: 'text',
+              is_pinned: false
+            });
+          }
+        } catch (e) {
+          // Non-critical, continue even if notification fails
+          console.error('Failed to send takeover notification:', e);
+        }
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        previousDirector,
+        newDirector: { userId: user.id, userName: user.full_name || user.email }
+      }), { status: 200 });
+    }
+
+    // ============================================================
+    // ACTION: release_control
+    // Release Live Director control without disabling live mode
+    // ============================================================
+    if (action === 'release_control') {
+      const [session] = await base44.asServiceRole.entities.Session.filter({ id: sessionId });
+      
+      if (session.live_director_user_id !== user.id) {
+        return new Response(JSON.stringify({ error: 'You are not the current Live Director' }), { status: 403 });
+      }
+
+      await base44.asServiceRole.entities.Session.update(sessionId, {
+        live_director_user_id: null,
+        live_director_user_name: null,
+        live_director_started_at: null,
+        last_live_adjustment_time: new Date().toISOString()
+      });
+
+      return new Response(JSON.stringify({ success: true, released: true }), { status: 200 });
+    }
+
+    // ============================================================
+    // ACTION: undo_last
+    // Undo the most recent action
+    // ============================================================
+    if (action === 'undo_last') {
+      const [session] = await base44.asServiceRole.entities.Session.filter({ id: sessionId });
+      
+      // Verify ownership
+      const ownership = checkOwnership(session);
+      if (ownership.blocked) {
+        return new Response(JSON.stringify({ 
+          error: 'blocked', 
+          currentDirector: ownership.currentDirector 
+        }), { status: 409 });
+      }
+
+      // Find the most recent non-undone action (excluding toggles and takeovers)
+      const logs = await base44.asServiceRole.entities.LiveDirectorActionLog.filter({ 
+        session_id: sessionId,
+        is_undone: false
+      }, '-created_date');
+
+      // Filter to undoable actions (mark_ended, set_time)
+      const undoableLog = logs.find(l => ['mark_ended', 'set_time'].includes(l.action_type));
+
+      if (!undoableLog) {
+        return new Response(JSON.stringify({ error: 'No action to undo' }), { status: 404 });
+      }
+
+      // Restore previous state
+      const prevState = undoableLog.previous_state;
+
+      if (undoableLog.action_type === 'mark_ended' && undoableLog.segment_id) {
+        // Restore segment and potentially next segment
+        if (prevState.segment) {
+          await base44.asServiceRole.entities.Segment.update(undoableLog.segment_id, {
+            actual_start_time: prevState.segment.actual_start_time,
+            actual_end_time: prevState.segment.actual_end_time,
+            is_live_adjusted: prevState.segment.is_live_adjusted ?? false
+          });
+        }
+        if (prevState.nextSegment && prevState.nextSegment.id) {
+          await base44.asServiceRole.entities.Segment.update(prevState.nextSegment.id, {
+            actual_start_time: prevState.nextSegment.actual_start_time,
+            is_live_adjusted: prevState.nextSegment.is_live_adjusted ?? false
+          });
+        }
+      } else if (undoableLog.action_type === 'set_time' && undoableLog.segment_id) {
+        // Restore single segment field
+        const field = prevState.field;
+        const prevValue = prevState.previousValue;
+        
+        await base44.asServiceRole.entities.Segment.update(undoableLog.segment_id, {
+          [field]: prevValue,
+          is_live_adjusted: prevValue !== null
+        });
+      }
+
+      // Mark the action as undone
+      await base44.asServiceRole.entities.LiveDirectorActionLog.update(undoableLog.id, {
+        is_undone: true,
+        undone_at: new Date().toISOString(),
+        undone_by_user_id: user.id
+      });
+
+      await base44.asServiceRole.entities.Session.update(sessionId, {
+        last_live_adjustment_time: new Date().toISOString()
+      });
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        undoneAction: undoableLog.action_type,
+        segmentId: undoableLog.segment_id
+      }), { status: 200 });
+    }
+
+    // ============================================================
+    // For all other actions, verify ownership first
+    // ============================================================
+    const [session] = await base44.asServiceRole.entities.Session.filter({ id: sessionId });
+    const ownership = checkOwnership(session);
+    
+    if (ownership.blocked) {
+      return new Response(JSON.stringify({ 
+        error: 'blocked', 
+        currentDirector: ownership.currentDirector 
+      }), { status: 409 });
     }
 
     // ============================================================
     // ACTION: mark_ended_manual
     // Sets segment's actual_end_time to NOW, and auto-sets next segment's actual_start_time to NOW.
-    // NO cascade to subsequent segments - user manually adjusts those.
     // ============================================================
     if (action === 'mark_ended_manual') {
-      const [session] = await base44.asServiceRole.entities.Session.filter({ id: sessionId });
       if (!session || !session.live_adjustment_enabled) {
         return new Response(JSON.stringify({ error: 'Live adjustment not enabled for this session' }), { status: 400 });
       }
@@ -93,8 +371,23 @@ Deno.serve(async (req) => {
       }
 
       const targetSegment = segments[targetIndex];
+      const nextSegment = targetIndex + 1 < segments.length ? segments[targetIndex + 1] : null;
       const now = new Date();
       const currentHHMM = value || `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      // Capture previous state for undo
+      const previousState = {
+        segment: {
+          actual_start_time: targetSegment.actual_start_time,
+          actual_end_time: targetSegment.actual_end_time,
+          is_live_adjusted: targetSegment.is_live_adjusted
+        },
+        nextSegment: nextSegment ? {
+          id: nextSegment.id,
+          actual_start_time: nextSegment.actual_start_time,
+          is_live_adjusted: nextSegment.is_live_adjusted
+        } : null
+      };
 
       // Update current segment with end time
       await base44.asServiceRole.entities.Segment.update(targetSegment.id, {
@@ -104,8 +397,7 @@ Deno.serve(async (req) => {
       });
 
       // Auto-set next segment's start time to NOW (single cascade)
-      if (targetIndex + 1 < segments.length) {
-        const nextSegment = segments[targetIndex + 1];
+      if (nextSegment) {
         await base44.asServiceRole.entities.Segment.update(nextSegment.id, {
           actual_start_time: currentHHMM,
           is_live_adjusted: true
@@ -116,16 +408,19 @@ Deno.serve(async (req) => {
         last_live_adjustment_time: new Date().toISOString()
       });
 
+      await logAction('mark_ended', segmentId, previousState, {
+        segment: { actual_end_time: currentHHMM },
+        nextSegment: nextSegment ? { actual_start_time: currentHHMM } : null
+      });
+
       return new Response(JSON.stringify({ success: true, endedAt: currentHHMM }), { status: 200 });
     }
 
     // ============================================================
     // ACTION: set_time
     // Manually set a single field (actual_start_time or actual_end_time) on a segment.
-    // NO cascade - user is in full manual control.
     // ============================================================
     if (action === 'set_time') {
-      const [session] = await base44.asServiceRole.entities.Session.filter({ id: sessionId });
       if (!session || !session.live_adjustment_enabled) {
         return new Response(JSON.stringify({ error: 'Live adjustment not enabled for this session' }), { status: 400 });
       }
@@ -138,6 +433,10 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'set_time requires segmentId' }), { status: 400 });
       }
 
+      // Get current segment state for undo
+      const [currentSegment] = await base44.asServiceRole.entities.Segment.filter({ id: segmentId });
+      const previousValue = currentSegment ? currentSegment[field] : null;
+
       // Update the single field on the segment
       await base44.asServiceRole.entities.Segment.update(segmentId, {
         [field]: value,
@@ -148,21 +447,19 @@ Deno.serve(async (req) => {
         last_live_adjustment_time: new Date().toISOString()
       });
 
+      await logAction('set_time', segmentId, { field, previousValue }, { field, newValue: value });
+
       return new Response(JSON.stringify({ success: true, field, value }), { status: 200 });
     }
 
     // ============================================================
     // LEGACY ACTIONS: mark_ended, adjust_start (kept for backward compatibility)
-    // These cascade to all subsequent segments.
     // ============================================================
     if (action === 'mark_ended' || action === 'adjust_start') {
-      // 1. Verify session is enabled
-      const [session] = await base44.asServiceRole.entities.Session.filter({ id: sessionId });
       if (!session || !session.live_adjustment_enabled) {
         return new Response(JSON.stringify({ error: 'Live adjustment not enabled for this session' }), { status: 400 });
       }
 
-      // 2. Fetch segments
       let segments = await base44.asServiceRole.entities.Segment.filter({ session_id: sessionId }, 'order');
       segments = segments.sort((a, b) => (a.order || 0) - (b.order || 0));
 
@@ -204,7 +501,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      // 3. Propagate to subsequent segments (legacy cascade behavior)
+      // Propagate to subsequent segments (legacy cascade behavior)
       const updates = [];
       for (let i = targetIndex + 1; i < segments.length; i++) {
         const seg = segments[i];
