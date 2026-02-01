@@ -76,6 +76,144 @@ const formatDiff = (diff) => {
   return `${sign}${diff}m`;
 };
 
+// Mobile segment card component for responsive display
+function MobileSegmentCard({ 
+  segment, 
+  index, 
+  isCurrentSegment,
+  isPastSegment,
+  onMarkEnded, 
+  onUpdateTime,
+  isLoading,
+  isBlocked,
+  t,
+  language 
+}) {
+  const [editingField, setEditingField] = useState(null);
+  const [editValue, setEditValue] = useState('');
+
+  const plannedStart = segment.start_time;
+  const plannedEnd = segment.end_time;
+  const actualStart = segment.actual_start_time;
+  const actualEnd = segment.actual_end_time;
+
+  const startDiff = getTimeDiff(plannedStart, actualStart);
+  const endDiff = getTimeDiff(plannedEnd, actualEnd);
+
+  let status = 'pending';
+  if (actualEnd) status = 'completed';
+  else if (actualStart) status = 'in_progress';
+
+  const handleSaveEdit = async () => {
+    if (!editValue.match(/^\d{2}:\d{2}$/)) {
+      toast.error('HH:MM');
+      return;
+    }
+    const field = editingField === 'start' ? 'actual_start_time' : 'actual_end_time';
+    await onUpdateTime(segment.id, field, editValue);
+    setEditingField(null);
+    setEditValue('');
+  };
+
+  const cardClasses = `
+    p-3 rounded-lg border transition-colors
+    ${isCurrentSegment ? 'bg-amber-900/40 border-amber-500' : 'bg-slate-800 border-slate-700'}
+    ${isPastSegment && !isCurrentSegment ? 'opacity-50' : ''}
+    ${status === 'completed' ? 'bg-green-900/20 border-green-700' : ''}
+  `;
+
+  return (
+    <div className={cardClasses}>
+      {/* Header: Status + Title */}
+      <div className="flex items-center gap-2 mb-2">
+        {status === 'completed' && <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />}
+        {status === 'in_progress' && <Radio className="w-4 h-4 text-amber-500 animate-pulse flex-shrink-0" />}
+        {status === 'pending' && <Clock className="w-4 h-4 text-slate-500 flex-shrink-0" />}
+        <span className="font-medium text-sm text-slate-200 truncate flex-1">{segment.title}</span>
+        {segment.segment_type && (
+          <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400 px-1.5 py-0">
+            {segment.segment_type}
+          </Badge>
+        )}
+      </div>
+
+      {/* Times Grid */}
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        {/* Planned */}
+        <div className="bg-slate-900/50 rounded p-2">
+          <div className="text-slate-500 mb-1">{language === 'es' ? 'Planif.' : 'Planned'}</div>
+          <div className="font-mono text-slate-400">{plannedStart || '—'} - {plannedEnd || '—'}</div>
+        </div>
+
+        {/* Actual */}
+        <div className="bg-slate-900/50 rounded p-2">
+          <div className="text-slate-500 mb-1">{language === 'es' ? 'Actual' : 'Actual'}</div>
+          {editingField ? (
+            <div className="flex items-center gap-1">
+              <Input
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="w-16 h-6 text-center text-xs bg-slate-800 border-slate-600 px-1"
+                placeholder="HH:MM"
+                autoFocus
+              />
+              <Button size="icon" variant="ghost" className="h-5 w-5" onClick={handleSaveEdit} disabled={isLoading}>
+                <Check className="w-3 h-3 text-green-500" />
+              </Button>
+              <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setEditingField(null)}>
+                <X className="w-3 h-3 text-red-500" />
+              </Button>
+            </div>
+          ) : (
+            <div 
+              className={`font-mono ${!isBlocked ? 'cursor-pointer' : ''}`}
+              onClick={() => !isBlocked && setEditingField('start') && setEditValue(actualStart || '')}
+            >
+              <span className={actualStart ? 'text-white' : 'text-slate-600'}>{actualStart || '—'}</span>
+              {startDiff !== null && startDiff !== 0 && (
+                <span className={`ml-1 ${startDiff > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                  {formatDiff(startDiff)}
+                </span>
+              )}
+              <span className="text-slate-600"> - </span>
+              <span className={actualEnd ? 'text-white' : 'text-slate-600'}>{actualEnd || '—'}</span>
+              {endDiff !== null && endDiff !== 0 && (
+                <span className={`ml-1 ${endDiff > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                  {formatDiff(endDiff)}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Action Button */}
+      {!isBlocked && status === 'in_progress' && (
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => onMarkEnded(segment)}
+          disabled={isLoading}
+          className="w-full mt-2 text-xs h-8"
+        >
+          {t('live.mark_ended')}
+        </Button>
+      )}
+      {!isBlocked && status === 'pending' && !actualStart && index === 0 && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onUpdateTime(segment.id, 'actual_start_time', getNowHHMM())}
+          disabled={isLoading}
+          className="w-full mt-2 text-xs h-8 border-slate-600 text-slate-300"
+        >
+          {language === 'es' ? 'Iniciar Ahora' : 'Start Now'}
+        </Button>
+      )}
+    </div>
+  );
+}
+
 // Single segment row component
 function SegmentRow({ 
   segment, 
