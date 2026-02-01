@@ -621,41 +621,7 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
             </div>
           </div>
 
-          {/* Blocked state banner */}
-          {isBlocked && (
-            <div className="mt-3 p-3 bg-amber-900/50 rounded-lg flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Shield className="w-5 h-5 text-amber-400" />
-                <div>
-                  <p className="text-sm font-semibold text-amber-200">
-                    {language === 'es' ? 'Live Director Activo:' : 'Live Director Active:'}{' '}
-                    <span className="text-white">{session.live_director_user_name}</span>
-                  </p>
-                  <p className="text-xs text-amber-300/80">
-                    {language === 'es' 
-                      ? 'Otro usuario está controlando los ajustes en vivo' 
-                      : 'Another user is controlling live adjustments'}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setBlockedByDirector({
-                    userId: session.live_director_user_id,
-                    userName: session.live_director_user_name
-                  });
-                  setShowTakeoverConfirm(true);
-                }}
-                disabled={isLoading}
-                className="border-amber-500 text-amber-200 hover:bg-amber-800"
-              >
-                <UserCheck className="w-4 h-4 mr-1" />
-                {language === 'es' ? 'Tomar Control' : 'Take Over'}
-              </Button>
-            </div>
-          )}
+
 
           {/* Current Director indicator */}
           {session.live_adjustment_enabled && isCurrentDirector && (
