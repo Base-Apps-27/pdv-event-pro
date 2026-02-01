@@ -88,7 +88,9 @@ function parseScriptureReferences(rawText) {
   // - Handles "S." prefix (S. Juan)
   // - Handles optional trailing dot in book name
   // - Handles en-dash (–), em-dash (—) and hyphen (-) for ranges
-  const versePattern = /\b(([1-3]\s)?(?:S\.\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3}):(\d{1,3})([–—-](\d{1,3}))?(:(\d{1,3}))?(?:\s+(?:[A-ZÑ]{3,6}\d{0,4}|\([A-ZÑ]{3,6}\d{0,4}\)))?/gi;
+  // - Version codes are now explicitly matched only if they are known patterns (NVI, RVR, NIV, ESV, etc.)
+  //   to avoid capturing regular Spanish words like "Pero", "Una", "Eso" that follow verses
+  const versePattern = /\b(([1-3]\s)?(?:S\.\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3}):(\d{1,3})([–—-](\d{1,3}))?(:(\d{1,3}))?/gi;
   
   const verses = [];
   const seenRefs = new Set(); // Deduplicate
