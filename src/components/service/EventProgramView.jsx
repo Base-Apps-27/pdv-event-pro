@@ -131,6 +131,7 @@ export default function EventProgramView({
           session={filteredSessions[0]}
           segments={getSessionSegments(filteredSessions[0].id)}
           refetchData={refetchData}
+          currentUser={currentUser}
         />
       )}
 
