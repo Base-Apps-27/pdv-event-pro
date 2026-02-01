@@ -269,7 +269,7 @@ export default function LiveOperationsChat({
       <button
         onClick={() => setIsOpen(!isOpen)}
         style={{ backgroundColor: isOpen ? '#374151' : '#1F8A70' }}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105"
+        className="fixed bottom-20 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105"
         title={isOpen ? 'Cerrar chat' : 'Abrir chat de operaciones'}
       >
         {isOpen ? (
@@ -293,7 +293,7 @@ export default function LiveOperationsChat({
       {isOpen && (
         <div 
           style={{ backgroundColor: '#FFFFFF' }}
-          className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-32px)] h-[520px] max-h-[calc(100vh-120px)] rounded-2xl shadow-2xl border border-gray-300 flex flex-col overflow-hidden"
+          className="fixed bottom-36 right-6 z-50 w-[380px] max-w-[calc(100vw-32px)] h-[520px] max-h-[calc(100vh-160px)] rounded-2xl shadow-2xl border border-gray-300 flex flex-col overflow-hidden"
         >
           {/* Header - hardcoded gradient */}
           <div 
