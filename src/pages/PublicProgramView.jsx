@@ -101,7 +101,11 @@ export default function PublicProgramView() {
       ]);
       const map = new Map();
       [...confirmed, ...inProgress].forEach(e => map.set(e.id, e));
-      return Array.from(map.values()).sort((a, b) => (b.start_date || '').localeCompare(a.start_date || ''));
+      return Array.from(map.values()).sort((a, b) => {
+        const dateA = a.start_date || '';
+        const dateB = b.start_date || '';
+        return dateB.localeCompare(dateA);
+      });
     },
     refetchInterval: 15000,
   });
