@@ -268,7 +268,7 @@ export default function LiveOperationsChat({
       {/* Floating Action Button - hardcoded colors to prevent transparency */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        style={{ backgroundColor: isOpen ? '#374151' : '#1F8A70' }}
+        style={{ background: isOpen ? '#374151' : 'linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D7DF23 100%)' }}
         className="fixed bottom-20 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105"
         title={isOpen ? 'Cerrar chat' : 'Abrir chat de operaciones'}
       >
