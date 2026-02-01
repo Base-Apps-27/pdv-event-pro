@@ -172,21 +172,29 @@ export default function LiveOperationsChat({
   }, [isOpen]);
 
   // Calculate unread count based on persisted last seen message ID
+  // Only counts messages from OTHER users (excludes current user's own messages)
   const unreadCount = React.useMemo(() => {
+    if (isOpen) return 0; // Panel open = everything is "read"
+    
+    const otherUsersMessages = messages.filter(m => m.created_by !== currentUser?.email);
+    
     if (!lastSeenMessageId) {
-      // No last seen = all messages are unread (unless panel is currently open)
-      return isOpen ? 0 : messages.length;
+      // No last seen = all messages from others are unread
+      return otherUsersMessages.length;
     }
-    // Find the index of the last seen message
+    
+    // Find the index of the last seen message in the full messages array
     const lastSeenIndex = messages.findIndex(m => m.id === lastSeenMessageId);
     if (lastSeenIndex === -1) {
-      // Last seen message not found (possibly deleted/archived) = treat all as unread
-      return isOpen ? 0 : messages.length;
+      // Last seen message not found (possibly deleted/archived) = treat all from others as unread
+      return otherUsersMessages.length;
     }
-    // Count messages after the last seen one
-    const count = messages.length - lastSeenIndex - 1;
-    return isOpen ? 0 : Math.max(0, count);
-  }, [messages, lastSeenMessageId, isOpen]);
+    
+    // Count messages from OTHER users that came AFTER the last seen message
+    const messagesAfterLastSeen = messages.slice(lastSeenIndex + 1);
+    const unreadFromOthers = messagesAfterLastSeen.filter(m => m.created_by !== currentUser?.email);
+    return unreadFromOthers.length;
+  }, [messages, lastSeenMessageId, isOpen, currentUser?.email]);
 
   // Separate pinned and regular messages
   const pinnedMessages = messages.filter(m => m.is_pinned);
