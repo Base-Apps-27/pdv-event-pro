@@ -289,6 +289,97 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
   const isBlocked = session.live_adjustment_enabled && 
                     session.live_director_user_id && 
                     session.live_director_user_id !== currentUser?.id;
+  
+  // If live mode is active and user is NOT the director, show blocked-only view
+  if (isBlocked) {
+    return (
+      <Card className="bg-slate-900 text-white border-none shadow-xl mb-6">
+        <CardHeader className="pb-4">
+          <div className="p-4 bg-amber-900/50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Shield className="w-6 h-6 text-amber-400" />
+                <div>
+                  <p className="text-base font-bold text-amber-200">
+                    {language === 'es' ? 'Live Director Activo:' : 'Live Director Active:'}{' '}
+                    <span className="text-white">{session.live_director_user_name}</span>
+                  </p>
+                  <p className="text-sm text-amber-300/80 mt-1">
+                    {language === 'es' 
+                      ? 'Este usuario está controlando los ajustes en vivo. Debes tomar el control para hacer cambios.' 
+                      : 'This user is controlling live adjustments. You must take over to make changes.'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => {
+                  setBlockedByDirector({
+                    userId: session.live_director_user_id,
+                    userName: session.live_director_user_name
+                  });
+                  setShowTakeoverConfirm(true);
+                }}
+                disabled={isLoading}
+                className="border-amber-500 text-amber-200 hover:bg-amber-800 ml-4"
+              >
+                <UserCheck className="w-4 h-4 mr-2" />
+                {language === 'es' ? 'Tomar Control' : 'Take Over'}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+
+        {/* Takeover Confirmation Dialog */}
+        <AlertDialog open={showTakeoverConfirm} onOpenChange={setShowTakeoverConfirm}>
+          <AlertDialogContent className="bg-slate-900 text-white border-slate-700">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-amber-500" />
+                {language === 'es' ? 'Tomar Control de Live Director' : 'Take Over Live Director Control'}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-slate-400">
+                {language === 'es' 
+                  ? `${blockedByDirector?.userName || 'Otro usuario'} es actualmente el Live Director. Si tomas el control, se les notificará que ya no tienen acceso para hacer cambios.`
+                  : `${blockedByDirector?.userName || 'Another user'} is currently the Live Director. If you take over, they will be notified that they no longer have control to make changes.`}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-slate-800 text-white border-slate-600 hover:bg-slate-700">
+                {language === 'es' ? 'Cancelar' : 'Cancel'}
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={async () => {
+                  setShowTakeoverConfirm(false);
+                  setIsLoading(true);
+                  try {
+                    await base44.functions.invoke('updateLiveSegmentTiming', {
+                      sessionId: session.id,
+                      action: 'takeover'
+                    });
+                    toast.success(language === 'es' 
+                      ? `Has tomado el control de Live Director` 
+                      : `You have taken over Live Director control`);
+                    refetchData();
+                  } catch (err) {
+                    console.error(err);
+                    toast.error(t('error.generic'));
+                  } finally {
+                    setIsLoading(false);
+                    setBlockedByDirector(null);
+                  }
+                }}
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                {language === 'es' ? 'Confirmar Toma de Control' : 'Confirm Takeover'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </Card>
+    );
+  }
 
   // Sort segments by order
   const sortedSegments = useMemo(() => {
