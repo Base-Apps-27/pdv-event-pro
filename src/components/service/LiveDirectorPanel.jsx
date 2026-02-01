@@ -420,13 +420,28 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
   const [showTakeoverConfirm, setShowTakeoverConfirm] = useState(false);
   const [blockedByDirector, setBlockedByDirector] = useState(null);
 
+  // Subscribe to real-time session updates for ownership changes
+  useEffect(() => {
+    if (!session?.id) return;
+    
+    const unsubscribe = base44.entities.Session.subscribe((event) => {
+      if (event.id === session.id) {
+        // Session was updated, refetch to get latest ownership info
+        refetchData();
+      }
+    });
+    
+    return unsubscribe;
+  }, [session?.id, refetchData]);
+
   if (!session) return null;
+  if (!currentUser) return null; // Don't render if no user
 
   // Check if current user is the Live Director
-  const isCurrentDirector = session.live_director_user_id === currentUser?.id;
+  const isCurrentDirector = session.live_director_user_id === currentUser.id;
   const isBlocked = session.live_adjustment_enabled && 
                     session.live_director_user_id && 
-                    session.live_director_user_id !== currentUser?.id;
+                    session.live_director_user_id !== currentUser.id;
   
   // If live mode is active and user is NOT the director, show blocked-only view
   if (isBlocked) {
