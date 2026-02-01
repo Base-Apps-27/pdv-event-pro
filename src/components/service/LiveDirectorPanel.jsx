@@ -704,9 +704,10 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
   return (
     <>
       <Card className="bg-slate-900 text-white border-none shadow-xl mb-6">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <CardHeader className="pb-2 px-3 sm:px-6">
+          {/* Mobile-optimized header layout */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+            <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4">
               <div className="flex items-center space-x-2">
                 <Switch 
                   id="live-mode" 
@@ -715,23 +716,33 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
                   disabled={isLoading || isBlocked}
                   className="data-[state=checked]:bg-red-600"
                 />
-                <Label htmlFor="live-mode" className="font-bold uppercase tracking-wider text-sm flex items-center gap-2">
-                  {t('live.admin_mode') || 'Live Director'}
+                <Label htmlFor="live-mode" className="font-bold uppercase tracking-wider text-xs sm:text-sm flex items-center gap-2">
+                  <span className="hidden sm:inline">{t('live.admin_mode') || 'Live Director'}</span>
+                  <span className="sm:hidden">Live</span>
                   {session.live_adjustment_enabled && (
                     <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />
                   )}
                 </Label>
               </div>
               
+              {/* Mobile: show time inline with toggle */}
               {session.live_adjustment_enabled && (
-                <div className="flex items-center gap-2 text-xs text-slate-400">
+                <div className="flex items-center gap-1 text-xs text-slate-400 sm:hidden">
+                  <Clock className="w-3 h-3" />
+                  <span>{getNowHHMM()}</span>
+                </div>
+              )}
+              
+              {/* Desktop: show time separately */}
+              {session.live_adjustment_enabled && (
+                <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400">
                   <Clock className="w-3 h-3" />
                   <span>Now: {getNowHHMM()}</span>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-end">
               {/* Undo button */}
               {session.live_adjustment_enabled && isCurrentDirector && (
                 <Button
@@ -739,10 +750,11 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
                   size="sm"
                   onClick={handleUndo}
                   disabled={isLoading}
-                  className="text-slate-400 hover:text-white border-slate-600 hover:border-slate-500"
+                  className="text-slate-400 hover:text-white border-slate-600 hover:border-slate-500 h-8 px-2 sm:px-3"
                   title={language === 'es' ? 'Deshacer última acción' : 'Undo last action'}
                 >
                   <Undo2 className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-1 text-xs">{language === 'es' ? 'Deshacer' : 'Undo'}</span>
                 </Button>
               )}
 
@@ -751,7 +763,7 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="text-slate-400 hover:text-white"
+                  className="text-slate-400 hover:text-white h-8 w-8 p-0"
                 >
                   {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </Button>
@@ -759,13 +771,12 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
             </div>
           </div>
 
-
-
           {/* Current Director indicator */}
           {session.live_adjustment_enabled && isCurrentDirector && (
             <div className="mt-2 flex items-center gap-2 text-xs text-green-400">
-              <UserCheck className="w-4 h-4" />
-              <span>{language === 'es' ? 'Eres el Live Director activo' : 'You are the active Live Director'}</span>
+              <UserCheck className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">{language === 'es' ? 'Eres el Live Director activo' : 'You are the active Live Director'}</span>
+              <span className="sm:hidden">{language === 'es' ? 'Director activo' : 'Active director'}</span>
             </div>
           )}
         </CardHeader>
