@@ -125,8 +125,8 @@ export default function EventProgramView({
 
   return (
     <div className="space-y-6">
-      {/* Live Director Panel (for admin users only) - Manual timing control */}
-      {hasPermission(currentUser, 'manage_live_timing') && filteredSessions.length > 0 && (
+      {/* Live Director Panel (for users with manage_live_timing permission) */}
+      {hasPermission(currentUser, 'manage_live_timing') && filteredSessions.length > 0 && currentUser && (
         <LiveDirectorPanel 
           session={filteredSessions[0]}
           segments={getSessionSegments(filteredSessions[0].id)}
