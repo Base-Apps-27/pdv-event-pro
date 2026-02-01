@@ -300,29 +300,22 @@ export default function PublicProgramSegment({
 
           {/* Scripture References (for Message or Offering segments) */}
           {/* Live view is READ-ONLY: Only show BookOpen when parsed_verse_data already exists */}
-          {(isMessage || isOffering) && (getData('scripture_references') || getData('verse') || getData('parsed_verse_data')) && (
-            <div className="flex items-start gap-2 mt-2">
-              {(getData('scripture_references') || getData('verse')) && (
-                <p className="text-xs text-gray-600 flex-1">
-                  📖 {getData('scripture_references') || getData('verse')}
-                </p>
-              )}
-              {!(getData('scripture_references') || getData('verse')) && <div className="flex-1"></div>}
-              {/* BookOpen icon: Show ONLY when parsed_verse_data exists for this specific segment */}
-              {getData('parsed_verse_data') && onOpenVerses && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onOpenVerses({
-                    parsedData: getData('parsed_verse_data'),
-                    rawText: getData('scripture_references') || getData('verse')
-                  })}
-                  className="h-7 w-7 p-0 border-2 border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
-                  title={t('live.viewVerses') || 'Ver Versos'}
-                >
-                  <BookOpen className="w-4 h-4" />
-                </Button>
-              )}
+          {/* NOTE: Raw verse text is hidden to save space; users click the BookOpen icon to view full verses in modal */}
+          {(isMessage || isOffering) && getData('parsed_verse_data') && onOpenVerses && (
+            <div className="flex items-center gap-2 mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenVerses({
+                  parsedData: getData('parsed_verse_data'),
+                  rawText: getData('scripture_references') || getData('verse')
+                })}
+                className="h-7 px-2 border-2 border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white text-xs gap-1"
+                title={t('live.viewVerses') || 'Ver Versos'}
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>{t('live.viewVerses') || 'Ver Escrituras'}</span>
+              </Button>
             </div>
           )}
         </div>
