@@ -31,13 +31,16 @@ export default function LiveOperationsChat({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messageText, setMessageText] = useState("");
-  const [lastSeenCount, setLastSeenCount] = useState(0);
+  const [lastSeenMessageId, setLastSeenMessageId] = useState(null); // Persisted last seen message ID
   const [isUploading, setIsUploading] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState('default');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
+  
+  // Unique key for this chat context (used in chat_last_seen object)
+  const chatContextKey = `${contextType}:${contextId}`;
 
   // Request notification permission on mount
   useEffect(() => {
@@ -48,6 +51,18 @@ export default function LiveOperationsChat({
       }
     }
   }, []);
+
+  // Load persisted last seen message ID from user profile on mount/context change
+  useEffect(() => {
+    if (currentUser?.chat_last_seen && chatContextKey) {
+      const storedLastSeen = currentUser.chat_last_seen[chatContextKey];
+      if (storedLastSeen) {
+        setLastSeenMessageId(storedLastSeen);
+      } else {
+        setLastSeenMessageId(null);
+      }
+    }
+  }, [currentUser?.chat_last_seen, chatContextKey]);
 
   // Check if user can access chat
   const canViewChat = hasPermission(currentUser, 'view_live_chat');
@@ -129,12 +144,25 @@ export default function LiveOperationsChat({
     }
   }, [messages, isOpen]);
 
-  // Update last seen count when opening panel
+  // Persist last seen message ID when opening panel (marks all as read)
   useEffect(() => {
-    if (isOpen) {
-      setLastSeenCount(messages.length);
+    if (isOpen && messages.length > 0) {
+      const latestMessageId = messages[messages.length - 1]?.id;
+      if (latestMessageId && latestMessageId !== lastSeenMessageId) {
+        // Update local state immediately for responsive UI
+        setLastSeenMessageId(latestMessageId);
+        
+        // Persist to user profile (fire-and-forget, non-blocking)
+        const updatedChatLastSeen = {
+          ...(currentUser?.chat_last_seen || {}),
+          [chatContextKey]: latestMessageId
+        };
+        base44.auth.updateMe({ chat_last_seen: updatedChatLastSeen }).catch(err => {
+          console.error('Failed to persist chat_last_seen:', err);
+        });
+      }
     }
-  }, [isOpen, messages.length]);
+  }, [isOpen, messages, lastSeenMessageId, chatContextKey, currentUser?.chat_last_seen]);
 
   // Focus input when panel opens
   useEffect(() => {
@@ -143,8 +171,22 @@ export default function LiveOperationsChat({
     }
   }, [isOpen]);
 
-  // Calculate unread count
-  const unreadCount = messages.length - lastSeenCount;
+  // Calculate unread count based on persisted last seen message ID
+  const unreadCount = React.useMemo(() => {
+    if (!lastSeenMessageId) {
+      // No last seen = all messages are unread (unless panel is currently open)
+      return isOpen ? 0 : messages.length;
+    }
+    // Find the index of the last seen message
+    const lastSeenIndex = messages.findIndex(m => m.id === lastSeenMessageId);
+    if (lastSeenIndex === -1) {
+      // Last seen message not found (possibly deleted/archived) = treat all as unread
+      return isOpen ? 0 : messages.length;
+    }
+    // Count messages after the last seen one
+    const count = messages.length - lastSeenIndex - 1;
+    return isOpen ? 0 : Math.max(0, count);
+  }, [messages, lastSeenMessageId, isOpen]);
 
   // Separate pinned and regular messages
   const pinnedMessages = messages.filter(m => m.is_pinned);
