@@ -294,26 +294,26 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
   if (isBlocked) {
     return (
       <Card className="bg-slate-900 text-white border-none shadow-xl mb-6">
-        <CardHeader className="pb-4">
-          <div className="p-4 bg-amber-900/50 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Shield className="w-6 h-6 text-amber-400" />
+        <CardHeader className="pb-4 px-3 sm:px-6">
+          <div className="p-3 sm:p-4 bg-amber-900/50 rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+              <div className="flex items-start sm:items-center gap-3">
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400 flex-shrink-0 mt-0.5 sm:mt-0" />
                 <div>
-                  <p className="text-base font-bold text-amber-200">
+                  <p className="text-sm sm:text-base font-bold text-amber-200">
                     {language === 'es' ? 'Live Director Activo:' : 'Live Director Active:'}{' '}
                     <span className="text-white">{session.live_director_user_name}</span>
                   </p>
-                  <p className="text-sm text-amber-300/80 mt-1">
+                  <p className="text-xs sm:text-sm text-amber-300/80 mt-1">
                     {language === 'es' 
-                      ? 'Este usuario está controlando los ajustes en vivo. Debes tomar el control para hacer cambios.' 
-                      : 'This user is controlling live adjustments. You must take over to make changes.'}
+                      ? 'Debes tomar el control para hacer cambios.' 
+                      : 'You must take over to make changes.'}
                   </p>
                 </div>
               </div>
               <Button
                 variant="outline"
-                size="default"
+                size="sm"
                 onClick={() => {
                   setBlockedByDirector({
                     userId: session.live_director_user_id,
@@ -322,7 +322,7 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
                   setShowTakeoverConfirm(true);
                 }}
                 disabled={isLoading}
-                className="border-amber-500 text-amber-200 hover:bg-amber-800 ml-4"
+                className="border-amber-500 text-amber-200 hover:bg-amber-800 w-full sm:w-auto"
               >
                 <UserCheck className="w-4 h-4 mr-2" />
                 {language === 'es' ? 'Tomar Control' : 'Take Over'}
@@ -633,9 +633,9 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
         </CardHeader>
 
         {session.live_adjustment_enabled && isExpanded && (
-          <CardContent className="pt-2">
-            {/* Help text */}
-            <div className="mb-3 p-2 bg-slate-800 rounded text-xs text-slate-400 flex items-start gap-2">
+          <CardContent className="pt-2 px-2 sm:px-6">
+            {/* Help text - hidden on mobile to save space */}
+            <div className="hidden sm:flex mb-3 p-2 bg-slate-800 rounded text-xs text-slate-400 items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
               <div>
                 <strong className="text-slate-300">{t('live.manual_mode') || 'Manual Mode'}:</strong>{' '}
@@ -643,8 +643,27 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
               </div>
             </div>
 
-            {/* Segments table */}
-            <div className="overflow-x-auto">
+            {/* Mobile: Card-based segment list */}
+            <div className="sm:hidden space-y-2">
+              {sortedSegments.map((segment, index) => (
+                <MobileSegmentCard
+                  key={segment.id}
+                  segment={segment}
+                  index={index}
+                  isCurrentSegment={index === currentSegmentIndex}
+                  isPastSegment={currentSegmentIndex > -1 && index < currentSegmentIndex}
+                  onMarkEnded={handleMarkEnded}
+                  onUpdateTime={handleUpdateTime}
+                  isLoading={isLoading}
+                  isBlocked={isBlocked}
+                  t={t}
+                  language={language}
+                />
+              ))}
+            </div>
+
+            {/* Desktop: Segments table */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-700 text-slate-400 text-xs uppercase">
