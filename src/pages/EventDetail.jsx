@@ -83,7 +83,10 @@ export default function EventDetail() {
   // Sort sessions chronologically by date and start_time
   const sessions = React.useMemo(() => {
     return [...sessionsRaw].sort((a, b) => {
-      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      // Handle null dates - put sessions without dates at the end
+      const aDate = a.date || '';
+      const bDate = b.date || '';
+      if (aDate !== bDate) return aDate.localeCompare(bDate);
       const aTime = a.planned_start_time || '';
       const bTime = b.planned_start_time || '';
       return aTime.localeCompare(bTime);
