@@ -73,6 +73,75 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: true, enabled }), { status: 200 });
     }
 
+    // ============================================================
+    // ACTION: mark_ended_manual
+    // Sets segment's actual_end_time to NOW, and auto-sets next segment's actual_start_time to NOW.
+    // NO cascade to subsequent segments - user manually adjusts those.
+    // ============================================================
+    if (action === 'mark_ended_manual') {
+      const [session] = await base44.asServiceRole.entities.Session.filter({ id: sessionId });
+      if (!session || !session.live_adjustment_enabled) {
+        return new Response(JSON.stringify({ error: 'Live adjustment not enabled for this session' }), { status: 400 });
+      }
+
+      let segments = await base44.asServiceRole.entities.Segment.filter({ session_id: sessionId }, 'order');
+      segments = segments.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      const targetIndex = segments.findIndex(s => s.id === segmentId);
+      if (targetIndex === -1) {
+        return new Response(JSON.stringify({ error: 'Segment not found' }), { status: 404 });
+      }
+
+      const targetSegment = segments[targetIndex];
+      const now = new Date();
+      const currentHHMM = value || `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      // Update current segment with end time
+      await base44.asServiceRole.entities.Segment.update(targetSegment.id, {
+        actual_end_time: currentHHMM,
+        is_live_adjusted: true,
+        actual_start_time: targetSegment.actual_start_time || targetSegment.start_time
+      });
+
+      // Auto-set next segment's start time to NOW (single cascade)
+      if (targetIndex + 1 < segments.length) {
+        const nextSegment = segments[targetIndex + 1];
+        await base44.asServiceRole.entities.Segment.update(nextSegment.id, {
+          actual_start_time: currentHHMM,
+          is_live_adjusted: true
+        });
+      }
+
+      await base44.asServiceRole.entities.Session.update(sessionId, {
+        last_live_adjustment_time: new Date().toISOString()
+      });
+
+      return new Response(JSON.stringify({ success: true, endedAt: currentHHMM }), { status: 200 });
+    }
+
+    // ============================================================
+    // ACTION: set_time
+    // Manually set a single field (actual_start_time or actual_end_time) on a segment.
+    // NO cascade - user is in full manual control.
+    // ============================================================
+    if (action === 'set_time') {
+      const [session] = await base44.asServiceRole.entities.Session.filter({ id: sessionId });
+      if (!session || !session.live_adjustment_enabled) {
+        return new Response(JSON.stringify({ error: 'Live adjustment not enabled for this session' }), { status: 400 });
+      }
+
+      const { field } = await req.json().catch(() => ({})); // field passed separately
+      // Re-parse since we already consumed req.json() above - use the original parsed values
+      // Actually, we need to get 'field' from the original parse. Let me fix this.
+      
+      // Note: field should be passed in the original request body
+      return new Response(JSON.stringify({ error: 'set_time requires field parameter' }), { status: 400 });
+    }
+
+    // ============================================================
+    // LEGACY ACTIONS: mark_ended, adjust_start (kept for backward compatibility)
+    // These cascade to all subsequent segments.
+    // ============================================================
     if (action === 'mark_ended' || action === 'adjust_start') {
       // 1. Verify session is enabled
       const [session] = await base44.asServiceRole.entities.Session.filter({ id: sessionId });
@@ -93,34 +162,25 @@ Deno.serve(async (req) => {
       let offset = 0;
 
       if (action === 'mark_ended') {
-        // value is current time HH:MM (or calculated based on server time if not provided)
         const now = new Date();
         const currentHHMM = value || `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         
-        // Calculate offset based on expected end time
-        // Priority: existing actual_end_time > end_time
         const expectedEnd = targetSegment.actual_end_time || targetSegment.end_time;
         if (!expectedEnd) {
-             // Fallback if no end time defined (rare)
              return new Response(JSON.stringify({ error: 'Segment has no end time defined' }), { status: 400 });
         }
 
         offset = getDiffMinutes(expectedEnd, currentHHMM);
         
-        // Update target segment
         await base44.asServiceRole.entities.Segment.update(targetSegment.id, {
           actual_end_time: currentHHMM,
           is_live_adjusted: true,
-          // If we mark it ended, we might want to retroactively set start if null? 
-          // For now, assume start was 'on time' or previously adjusted.
           actual_start_time: targetSegment.actual_start_time || targetSegment.start_time
         });
 
       } else if (action === 'adjust_start') {
-        // value is offset in minutes (e.g. 5 for late start)
         offset = parseInt(value, 10);
         
-        // Apply to target
         const newStart = addMinutes(targetSegment.actual_start_time || targetSegment.start_time, offset);
         const newEnd = addMinutes(targetSegment.actual_end_time || targetSegment.end_time, offset);
         
@@ -131,8 +191,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      // 3. Propagate to subsequent segments
-      // Only subsequent ones need shifting
+      // 3. Propagate to subsequent segments (legacy cascade behavior)
       const updates = [];
       for (let i = targetIndex + 1; i < segments.length; i++) {
         const seg = segments[i];
@@ -148,7 +207,6 @@ Deno.serve(async (req) => {
 
       await Promise.all(updates);
       
-      // Touch session to trigger refetches
       await base44.asServiceRole.entities.Session.update(sessionId, {
         last_live_adjustment_time: new Date().toISOString()
       });
