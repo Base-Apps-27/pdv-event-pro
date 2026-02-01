@@ -99,10 +99,16 @@ function parseScriptureReferences(rawText) {
   const matches = [...rawText.matchAll(versePattern)];
   
   matches.forEach(match => {
+    // Clean up the matched reference - strip any trailing words that aren't part of the verse
+    // The regex may capture trailing characters; we only want Book Chapter:Verse[-Verse]
     const fullMatch = match[0].trim();
     const bookRaw = match[1].trim().replace(/\.$/, ''); // Remove trailing dot
-    // Normalize dashes in reference part
-    const restOfRef = fullMatch.substring(match[1].length).trim().replace(/[–—]/g, '-'); 
+    
+    // Extract only the chapter:verse portion (with optional range), discard anything else
+    const chapterVerseMatch = fullMatch.substring(match[1].length).trim().match(/^(\d{1,3}:\d{1,3}(?:[–—-]\d{1,3})?(?::\d{1,3})?)/);
+    if (!chapterVerseMatch) return; // Skip if no valid chapter:verse found
+    
+    const restOfRef = chapterVerseMatch[1].replace(/[–—]/g, '-'); 
     
     // Normalize book name to find in map
     const bookLower = bookRaw.toLowerCase().replace(/\./g, '');
