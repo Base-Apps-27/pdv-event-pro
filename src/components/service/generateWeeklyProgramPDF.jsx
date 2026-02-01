@@ -452,11 +452,12 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
 
     // Translator - Subordinate Style with mode distinction
     // InPerson = on stage with speaker, RemoteBooth = headphones for audience
+    // NOTE: Using text labels instead of emojis for PDF compatibility (pdfmake font limitations)
     if (seg.requires_translation && seg.data?.translator) {
       const isRemoteBooth = seg.translation_mode === 'RemoteBooth';
       items.push({
         text: [
-          { text: isRemoteBooth ? '🎧 Trad-Cabina: ' : '🎙️ Trad-Tarima: ', fontSize: 8.5 * scale, color: isRemoteBooth ? '#0891B2' : '#7C3AED', italics: true },
+          { text: isRemoteBooth ? 'Trad-Cabina: ' : 'Trad-Tarima: ', fontSize: 8.5 * scale, color: isRemoteBooth ? '#0891B2' : '#7C3AED', italics: true },
           { text: seg.data.translator, fontSize: 8.5 * scale, color: isRemoteBooth ? '#0E7490' : '#5B21B6', italics: true, bold: true }
         ],
         margin: [8, 0, 0, 1]
