@@ -439,9 +439,14 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       }
     }
 
+    // Strip internal UI state flags (prefixed with _) before saving
+    const cleanedFormData = Object.fromEntries(
+      Object.entries(formData).filter(([key]) => !key.startsWith('_'))
+    );
+
     const data = {
       session_id: sessionId,
-      ...formData,
+      ...cleanedFormData,
       // Merge auto-fetched metadata
       ...metaUpdates,
       // Ensure a proper sequential order for new segments
