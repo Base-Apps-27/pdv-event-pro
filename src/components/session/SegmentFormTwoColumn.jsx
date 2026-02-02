@@ -201,7 +201,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
 
   // CRITICAL: Re-sync formData when parent passes fresh segment after DB refetch
   // Prevents stale display after save-without-close workflow
-  // Only syncs on segment.id change to avoid overwriting user typing during value-only updates
+  // Watch segment.updated_date to detect when React Query refetches fresh data
   useEffect(() => {
     if (segment) {
       setFormData({
@@ -302,7 +302,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       setBreakoutRooms(segment.breakout_rooms || []);
       setFieldOrigins(segment.field_origins || {});
     }
-  }, [segment?.id]);
+  }, [segment?.id, segment?.updated_date]);
 
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
