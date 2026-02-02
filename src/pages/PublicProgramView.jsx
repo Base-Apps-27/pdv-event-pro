@@ -1662,7 +1662,7 @@ export default function PublicProgramView() {
       <TimeAdjustmentHistoryModal
         isOpen={historyModalOpen}
         onClose={() => setHistoryModalOpen(false)}
-        adjustments={liveAdjustments}
+        logs={adjustmentLogs}
         selectedDate={rawServiceData?.date ? formatDateET(rawServiceData.date) : ''}
       />
 
