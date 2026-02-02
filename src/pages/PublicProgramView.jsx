@@ -335,15 +335,29 @@ export default function PublicProgramView() {
         isCustomService ? a.adjustment_type === 'global' : a.time_slot === adjustmentModalTimeSlot
       );
       
+      const previousOffset = existing?.offset_minutes || 0;
+      const action = offsetMinutes === 0 ? 'clear' : (existing ? 'update' : 'set');
+      
+      // Always log to immutable history first
+      await base44.entities.TimeAdjustmentLog.create({
+        date: rawServiceData.date,
+        service_id: selectedServiceId,
+        time_slot: isCustomService ? 'custom' : adjustmentModalTimeSlot,
+        previous_offset: previousOffset,
+        new_offset: offsetMinutes,
+        authorized_by: authorizedBy,
+        action: action
+      });
+      
       if (existing) {
-        // Update existing — force timestamp update by including current ISO datetime
+        // Update existing LiveTimeAdjustment
         await base44.entities.LiveTimeAdjustment.update(existing.id, {
           offset_minutes: offsetMinutes,
           authorized_by: authorizedBy,
-          updated_at: new Date().toISOString() // Force timestamp refresh
+          updated_at: new Date().toISOString()
         });
       } else {
-        // Create new
+        // Create new LiveTimeAdjustment
         await base44.entities.LiveTimeAdjustment.create({
           date: rawServiceData.date,
           adjustment_type: adjustmentType,
