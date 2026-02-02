@@ -211,7 +211,7 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment }) {
   // Arts Directions PDF
   if (segment.arts_run_of_show_url) {
     resources.push({
-      category: t('resources.artsDirections'),
+      category: language === 'es' ? 'Guía de Artes' : 'Arts Directions',
       items: [{
         title: segment.arts_run_of_show_url_meta?.title || (language === 'es' ? 'Guía de Artes' : 'Arts Directions'),
         url: segment.arts_run_of_show_url,
