@@ -550,6 +550,10 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
         </div>
       )}
 
+      {/* CRITICAL: Use fresh segment from query, not stale editingSegment state
+          editingSegment holds the snapshot from when user clicked edit
+          segments array is refetched after save, so lookup by ID gets fresh data
+          This prevents stale display after save-and-reopen without closing dialog */}
       <Dialog open={showSegmentForm} onOpenChange={setShowSegmentForm}>
         <DialogContent className="max-w-6xl max-h-[95vh] p-0 flex flex-col overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-3 shrink-0 border-b border-gray-100">
@@ -558,7 +562,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
           <div className="flex-1 overflow-y-auto">
             <SegmentFormTwoColumn 
               session={sessions.find(s => s.id === expandedSessionId)}
-              segment={editingSegment}
+              segment={editingSegment ? segments.find(s => s.id === editingSegment.id) || editingSegment : null}
               templates={templates}
               onClose={handleCloseSegmentForm}
               sessionId={expandedSessionId}
