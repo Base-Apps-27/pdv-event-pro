@@ -308,6 +308,24 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     queryFn: () => base44.entities.Room.list(),
   });
 
+  // Helper to fetch metadata for a URL (silent, non-blocking)
+  const fetchMetaForUrl = async (url) => {
+    if (!url || !url.trim() || !url.startsWith('http')) return null;
+    try {
+      const response = await base44.functions.invoke('fetchUrlMetadata', { url: url.trim() });
+      if (response.data && !response.data.error) {
+        return {
+          title: response.data.title,
+          thumbnail: response.data.thumbnail,
+          fetched_at: response.data.fetched_at || new Date().toISOString()
+        };
+      }
+    } catch (e) {
+      console.warn('Auto-fetch metadata failed for', url, e);
+    }
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -362,6 +380,30 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       }
     }
 
+    // Auto-fetch metadata for URLs (fire-and-forget style, but wait for results)
+    const metaUpdates = {};
+    const urlsToFetch = [
+      { url: formData.video_url, metaField: 'video_url_meta', currentMeta: formData.video_url_meta },
+      { url: formData.drama_song_source, metaField: 'drama_song_1_url_meta', currentMeta: formData.drama_song_1_url_meta },
+      { url: formData.drama_song_2_url, metaField: 'drama_song_2_url_meta', currentMeta: formData.drama_song_2_url_meta },
+      { url: formData.drama_song_3_url, metaField: 'drama_song_3_url_meta', currentMeta: formData.drama_song_3_url_meta },
+      { url: formData.dance_song_source, metaField: 'dance_song_1_url_meta', currentMeta: formData.dance_song_1_url_meta },
+      { url: formData.dance_song_2_url, metaField: 'dance_song_2_url_meta', currentMeta: formData.dance_song_2_url_meta },
+      { url: formData.dance_song_3_url, metaField: 'dance_song_3_url_meta', currentMeta: formData.dance_song_3_url_meta },
+      { url: formData.arts_run_of_show_url, metaField: 'arts_run_of_show_url_meta', currentMeta: formData.arts_run_of_show_url_meta },
+    ];
+    
+    // Only fetch for URLs that don't already have metadata or URL changed
+    const fetchPromises = urlsToFetch
+      .filter(({ url, currentMeta }) => url && url.trim() && !currentMeta)
+      .map(async ({ url, metaField }) => {
+        const meta = await fetchMetaForUrl(url);
+        if (meta) metaUpdates[metaField] = meta;
+      });
+    
+    // Wait for all fetches (parallel)
+    await Promise.all(fetchPromises);
+
     // Determine auto-insertion order by time (Option 1 - Gap-Fit, order-only)
     // Only for new segments, when live adjustments are OFF, and we have valid time/duration.
     let insertionOrder = null;
@@ -400,6 +442,8 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     const data = {
       session_id: sessionId,
       ...formData,
+      // Merge auto-fetched metadata
+      ...metaUpdates,
       // Ensure a proper sequential order for new segments
       // Only assign order when creating; preserve existing order on edits
       ...(segment ? {} : { order: insertionOrder ?? nextOrder }),
