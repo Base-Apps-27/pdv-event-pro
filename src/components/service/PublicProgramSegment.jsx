@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Sparkles, Languages, Mic, Users, MapPin, BookOpen } from "lucide-react";
+import { Clock, Sparkles, Languages, Mic, Users, MapPin, BookOpen, ExternalLink } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { getSegmentData, getNormalizedSongs } from "@/components/utils/segmentDataUtils";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
+import SegmentResourcesModal from "./SegmentResourcesModal";
 
 /**
  * PublicProgramSegment Component
@@ -44,6 +45,13 @@ export default function PublicProgramSegment({
 }) {
   // Language (for type label mapping)
   const { language, t } = useLanguage();
+  const [showResourcesModal, setShowResourcesModal] = useState(false);
+
+  // Check if segment has any resource links
+  const hasResourceLinks = segment.video_url || 
+    segment.drama_song_source || segment.drama_song_2_url || segment.drama_song_3_url ||
+    segment.dance_song_source || segment.dance_song_2_url || segment.dance_song_3_url ||
+    segment.arts_run_of_show_url;
   // Helper to safely get segment data (checks data object first, then root)
   const getData = (field) => getSegmentData(segment, field);
   
@@ -298,11 +306,11 @@ export default function PublicProgramSegment({
            })()}
           </div>
 
-          {/* Scripture References (for Message or Offering segments) */}
-          {/* Live view is READ-ONLY: Only show BookOpen when parsed_verse_data already exists */}
-          {/* NOTE: Raw verse text is hidden to save space; users click the BookOpen icon to view full verses in modal */}
-          {(isMessage || isOffering) && getData('parsed_verse_data') && onOpenVerses && (
-            <div className="flex items-center gap-2 mt-2">
+          {/* Action Buttons Row (Scriptures, Resources) */}
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            {/* Scripture References (for Message or Offering segments) */}
+            {/* Live view is READ-ONLY: Only show BookOpen when parsed_verse_data already exists */}
+            {(isMessage || isOffering) && getData('parsed_verse_data') && onOpenVerses && (
               <Button
                 variant="outline"
                 size="sm"
@@ -316,8 +324,22 @@ export default function PublicProgramSegment({
                 <BookOpen className="w-4 h-4" />
                 <span>{t('live.viewVerses') || 'Ver Escrituras'}</span>
               </Button>
-            </div>
-          )}
+            )}
+
+            {/* Resources Button - only show if segment has resource links */}
+            {hasResourceLinks && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowResourcesModal(true)}
+                className="h-7 px-2 border-2 border-pink-500 text-pink-600 hover:bg-pink-500 hover:text-white text-xs gap-1"
+                title={t('resources.title')}
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span>{t('resources.title')}</span>
+              </Button>
+            )}
+          </div>
         </div>
         
         {/* Expand/Collapse Button (Only for Events in simple mode) */}
@@ -655,6 +677,13 @@ export default function PublicProgramSegment({
           </div>
         </div>
       )}
+
+      {/* Resources Modal */}
+      <SegmentResourcesModal
+        open={showResourcesModal}
+        onOpenChange={setShowResourcesModal}
+        segment={segment}
+      />
     </div>
   );
 }
