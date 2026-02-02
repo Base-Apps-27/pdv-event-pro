@@ -307,6 +307,20 @@ export default function PublicProgramView() {
     refetchInterval: 3000,
   });
 
+  // Fetch immutable adjustment history logs
+  const { data: adjustmentLogs = [] } = useQuery({
+    queryKey: ['adjustmentLogs', selectedServiceId, rawServiceData?.date],
+    queryFn: async () => {
+      if (!selectedServiceId || !rawServiceData?.date) return [];
+      return await base44.entities.TimeAdjustmentLog.filter({ 
+        date: rawServiceData.date, 
+        service_id: selectedServiceId 
+      }, '-created_date');
+    },
+    enabled: viewType === "service" && !!selectedServiceId && !!rawServiceData?.date,
+    refetchInterval: 5000,
+  });
+
   // Subscribe to live adjustments for real-time updates
   useEffect(() => {
     if (viewType !== "service" || !selectedServiceId || !rawServiceData?.date) return;
