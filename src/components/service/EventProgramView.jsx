@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils } from "lucide-react";
 import HospitalityTasksViewModal from "@/components/service/HospitalityTasksViewModal";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
-import LiveDirectorPanel from "@/components/service/LiveDirectorPanel";
+// LiveDirectorPanel shelved - preserved for future iteration
+// import LiveDirectorPanel from "@/components/service/LiveDirectorPanel";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import { formatTimeToEST, formatDateET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
@@ -125,15 +126,11 @@ export default function EventProgramView({
 
   return (
     <div className="space-y-6">
-      {/* Live Director Panel (for users with manage_live_timing permission) */}
-      {hasPermission(currentUser, 'manage_live_timing') && filteredSessions.length > 0 && currentUser && (
-        <LiveDirectorPanel 
-          session={filteredSessions[0]}
-          segments={getSessionSegments(filteredSessions[0].id)}
-          refetchData={refetchData}
-          currentUser={currentUser}
-        />
-      )}
+      {/* Live Director Panel - SHELVED for future iteration
+         Reasons: blocking not working reliably, any user can change at any time, 
+         feature is cumbersome and rarely needed in current form.
+         Component preserved at: components/service/LiveDirectorPanel.jsx
+      */}
 
       {/* Live Status Card - with date awareness */}
       <LiveStatusCard 
