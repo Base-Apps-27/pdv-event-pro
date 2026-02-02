@@ -40,7 +40,8 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
       await logDelete('Segment', segmentToDelete, sessionId, user);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['segments', sessionId]);
+      // CRITICAL: Invalidate ALL segment queries (parent uses eventId, child uses sessionId)
+      queryClient.invalidateQueries({ queryKey: ['segments'] });
       queryClient.invalidateQueries(['editActionLogs']);
     },
   });
@@ -50,7 +51,8 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
       return base44.entities.Segment.update(segmentId, { order: newOrder });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['segments', sessionId]);
+      // CRITICAL: Invalidate ALL segment queries (parent uses eventId, child uses sessionId)
+      queryClient.invalidateQueries({ queryKey: ['segments'] });
     },
   });
 

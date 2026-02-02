@@ -375,8 +375,10 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       return created;
     },
     onSuccess: () => {
-      // Ensure the list re-sorts by time after a fractional-order insert
-      queryClient.invalidateQueries(['segments', sessionId]);
+      // CRITICAL: Invalidate ALL segment queries to ensure parent (EventDetail) refetches
+      // Parent uses ['segments', eventId], child uses ['segments', sessionId]
+      // Prefix match catches both, preventing stale data in segment editor
+      queryClient.invalidateQueries({ queryKey: ['segments'] });
       queryClient.invalidateQueries(['editActionLogs']);
       onClose();
     },
@@ -397,7 +399,10 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       return updated;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['segments', sessionId]);
+      // CRITICAL: Invalidate ALL segment queries to ensure parent (EventDetail) refetches
+      // Parent uses ['segments', eventId], child uses ['segments', sessionId]
+      // Prefix match catches both, preventing stale data in segment editor
+      queryClient.invalidateQueries({ queryKey: ['segments'] });
       queryClient.invalidateQueries(['editActionLogs']);
       onClose();
     },
