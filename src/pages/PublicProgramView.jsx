@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks, BookOpen, BellRing, Sparkles } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks, BookOpen, BellRing, Sparkles, History } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import VerseParserDialog from "@/components/service/VerseParserDialog";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import LiveTimeAdjustmentModal from "@/components/service/LiveTimeAdjustmentModal";
+import TimeAdjustmentHistoryModal from "@/components/service/TimeAdjustmentHistoryModal";
 
 import { hasPermission } from "@/components/utils/permissions";
 import { useSegmentNotifications } from "@/components/service/useSegmentNotifications";
@@ -69,6 +70,7 @@ export default function PublicProgramView() {
   const [timeAdjustmentModalOpen, setTimeAdjustmentModalOpen] = useState(false);
   const [adjustmentModalTimeSlot, setAdjustmentModalTimeSlot] = useState(null);
   const [currentAdjustment, setCurrentAdjustment] = useState(null);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
 
   // Helper to parse date strings as local timezone dates at midnight
   const getLocalDateAtMidnight = (dateString) => {
@@ -1002,7 +1004,7 @@ export default function PublicProgramView() {
                       <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-blue-400" />
                       <span className="font-bold uppercase text-xs sm:text-sm">Ajustar Hora de Inicio</span>
                     </div>
-                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center">
                       {/* Custom services: show single button regardless of 9:30am/11:30am data */}
                       {actualServiceData.segments && actualServiceData.segments.length > 0 ? (
                         <Button 
@@ -1037,6 +1039,16 @@ export default function PublicProgramView() {
                           )}
                         </>
                       )}
+                      {/* History button */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setHistoryModalOpen(true)}
+                        className="text-gray-400 hover:text-white hover:bg-white/10 px-2"
+                        title="Ver historial de ajustes"
+                      >
+                        <History className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -1616,6 +1628,14 @@ export default function PublicProgramView() {
         currentOffset={currentAdjustment?.offset_minutes || 0}
         onSave={handleSaveTimeAdjustment}
         serviceTime={actualServiceData?.time}
+      />
+
+      {/* Time Adjustment History Modal */}
+      <TimeAdjustmentHistoryModal
+        isOpen={historyModalOpen}
+        onClose={() => setHistoryModalOpen(false)}
+        adjustments={liveAdjustments}
+        selectedDate={rawServiceData?.date ? formatDateET(rawServiceData.date) : ''}
       />
 
       {/* Live Operations Chat - Floating FAB */}
