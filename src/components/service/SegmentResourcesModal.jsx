@@ -208,12 +208,12 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment }) {
     });
   }
 
-  // Run of Show PDF
+  // Arts Directions PDF
   if (segment.arts_run_of_show_url) {
     resources.push({
-      category: t('resources.runOfShow'),
+      category: t('resources.artsDirections'),
       items: [{
-        title: segment.arts_run_of_show_url_meta?.title || 'Run of Show PDF',
+        title: segment.arts_run_of_show_url_meta?.title || (language === 'es' ? 'Guía de Artes' : 'Arts Directions'),
         url: segment.arts_run_of_show_url,
         type: 'pdf'
       }]

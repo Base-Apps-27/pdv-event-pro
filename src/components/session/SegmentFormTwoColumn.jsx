@@ -1123,9 +1123,9 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                       <p className="text-xs text-pink-700">Este segmento incluye VIDEO; añade detalles en la sección "Video" arriba.</p>
                     )}
 
-                    {/* Run of Show PDF - simple input */}
+                    {/* Arts Directions PDF - simple input */}
                     <div className="border-t border-pink-200 pt-3 mt-3 space-y-2">
-                      <Label className="text-xs">{language === 'es' ? 'Run of Show (PDF/Documento)' : 'Run of Show (PDF/Document)'}</Label>
+                      <Label className="text-xs">{language === 'es' ? 'Guía de Artes (PDF/Documento)' : 'Arts Directions (PDF/Document)'}</Label>
                       <Input
                         value={formData.arts_run_of_show_url}
                         onChange={(e) => setFormData({...formData, arts_run_of_show_url: e.target.value, arts_run_of_show_url_meta: null})}
