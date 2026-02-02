@@ -157,6 +157,24 @@ const translations = {
     'arts.cues.end': 'Cierre',
     'arts.song': 'Canción',
     'arts.music': 'Música',
+
+    // Resource Links (Segment)
+    'resources.title': 'Recursos',
+    'resources.video': 'Video',
+    'resources.dramaSongs': 'Canciones de Drama',
+    'resources.danceSongs': 'Canciones de Danza',
+    'resources.runOfShow': 'Orden del Show',
+    'resources.open': 'Abrir',
+    'resources.play': 'Reproducir',
+    'resources.viewPdf': 'Ver PDF',
+    'resources.fetchInfo': 'Obtener Info',
+    'resources.fetching': 'Obteniendo...',
+    'resources.noResources': 'Sin recursos vinculados',
+    'resources.fetchFailed': 'No se pudo obtener info',
+    'resources.fetchSuccess': 'Info obtenida',
+    'resources.songNumber': 'Canción {n}',
+    'resources.owner': 'Propietario',
+    'resources.location': 'Ubicación',
     // Fields
     'field.title': 'Título',
     'field.start_time': 'Hora de inicio',
@@ -593,6 +611,24 @@ const translations = {
     'ann.print': 'Print Report',
     'ann.reportTitle': 'Announcements Report',
     'ann.generatedOn': 'Generated on',
+
+    // Resource Links (Segment)
+    'resources.title': 'Resources',
+    'resources.video': 'Video',
+    'resources.dramaSongs': 'Drama Songs',
+    'resources.danceSongs': 'Dance Songs',
+    'resources.runOfShow': 'Run of Show',
+    'resources.open': 'Open',
+    'resources.play': 'Play',
+    'resources.viewPdf': 'View PDF',
+    'resources.fetchInfo': 'Fetch Info',
+    'resources.fetching': 'Fetching...',
+    'resources.noResources': 'No resources linked',
+    'resources.fetchFailed': 'Could not fetch info',
+    'resources.fetchSuccess': 'Info fetched',
+    'resources.songNumber': 'Song {n}',
+    'resources.owner': 'Owner',
+    'resources.location': 'Location',
   }
 };
 
