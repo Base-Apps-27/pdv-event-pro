@@ -258,7 +258,7 @@ function LayoutContent({ children }) {
                       style={isActive(createPageUrl("RolePermissionManager")) ? gradientStyle : {}}
                     >
                       <Shield className="w-5 h-5" />
-                      {t('nav.roles') || (language === 'es' ? 'Roles y Permisos' : 'Roles & Permissions')}
+                      {language === 'es' ? 'Roles y Permisos' : 'Roles & Permissions'}
                     </Link>
                   </>
                 )}

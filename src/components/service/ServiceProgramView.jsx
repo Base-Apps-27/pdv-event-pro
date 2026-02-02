@@ -188,7 +188,7 @@ export default function ServiceProgramView({
                 key={segment.id || idx}
                 segment={segment}
                 isCurrent={isSegmentCurrent(segment)}
-                isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, actualServiceData.segments)}
+                isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, adjustedServiceData.segments)}
                 viewMode="simple"
                 isExpanded={true}
                 alwaysExpanded={true} // CRITICAL: Services always show all details
