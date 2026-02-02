@@ -20,7 +20,7 @@ import SegmentTimelinePreview from "./SegmentTimelinePreview";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import AnnouncementSeriesManager from "../announcements/AnnouncementSeriesManager";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
-import ResourceUrlInput from "./ResourceUrlInput";
+// ResourceUrlInput removed - metadata now auto-fetched on save
 import { useLanguage } from "@/components/utils/i18n";
 import { toast } from "sonner";
 import { logCreate, logUpdate } from "@/components/utils/editActionLogger";
@@ -881,7 +881,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                       <Label className="text-xs">{language === 'es' ? 'Enlace al Video (URL)' : 'Video Link (URL)'}</Label>
                       <Input
                         value={formData.video_url}
-                        onChange={(e) => setFormData({...formData, video_url: e.target.value})}
+                        onChange={(e) => setFormData({...formData, video_url: e.target.value, video_url_meta: null})}
                         placeholder="https://youtube.com/watch?v=..."
                         className="h-9 text-sm"
                       />
@@ -964,44 +964,44 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                             <div className="space-y-2">
                               <Label className="text-xs">{language === 'es' ? 'Playlist/Canción 1' : 'Playlist/Song 1'}</Label>
                               <Input value={formData.dance_song_title} onChange={(e)=>setFormData({...formData, dance_song_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-8 text-sm" />
-                              <Input value={formData.dance_song_source} onChange={(e)=>setFormData({...formData, dance_song_source: e.target.value})} placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'} className="h-8 text-sm" />
+                              <Input value={formData.dance_song_source} onChange={(e)=>setFormData({...formData, dance_song_source: e.target.value, dance_song_1_url_meta: null})} placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'} className="h-8 text-sm" />
                               <Input value={formData.dance_song_owner} onChange={(e)=>setFormData({...formData, dance_song_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable' : 'Owner'} className="h-8 text-sm" />
                             </div>
                             {/* Playlist/Song 2 - Hidden until added */}
-                            {formData.dance_song_2_title || formData.dance_song_2_url ? (
+                            {formData._show_dance_song_2 || formData.dance_song_2_title?.trim() || formData.dance_song_2_url?.trim() ? (
                               <div className="space-y-2 border-t border-pink-50 pt-2">
                                 <div className="flex items-center justify-between">
                                   <Label className="text-xs">{language === 'es' ? 'Playlist/Canción 2' : 'Playlist/Song 2'}</Label>
-                                  <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-red-500 hover:text-red-700" onClick={() => setFormData({...formData, dance_song_2_title: '', dance_song_2_url: '', dance_song_2_owner: ''})}>
+                                  <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-red-500 hover:text-red-700" onClick={() => setFormData({...formData, dance_song_2_title: '', dance_song_2_url: '', dance_song_2_owner: '', dance_song_2_url_meta: null, _show_dance_song_2: false})}>
                                     <Trash2 className="w-3 h-3" />
                                   </Button>
                                 </div>
                                 <Input value={formData.dance_song_2_title} onChange={(e)=>setFormData({...formData, dance_song_2_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-8 text-sm" />
-                                <Input value={formData.dance_song_2_url} onChange={(e)=>setFormData({...formData, dance_song_2_url: e.target.value})} placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'} className="h-8 text-sm" />
+                                <Input value={formData.dance_song_2_url} onChange={(e)=>setFormData({...formData, dance_song_2_url: e.target.value, dance_song_2_url_meta: null})} placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'} className="h-8 text-sm" />
                                 <Input value={formData.dance_song_2_owner} onChange={(e)=>setFormData({...formData, dance_song_2_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable' : 'Owner'} className="h-8 text-sm" />
                               </div>
                             ) : null}
                             {/* Playlist/Song 3 - Hidden until added */}
-                            {formData.dance_song_3_title || formData.dance_song_3_url ? (
+                            {formData._show_dance_song_3 || formData.dance_song_3_title?.trim() || formData.dance_song_3_url?.trim() ? (
                               <div className="space-y-2 border-t border-pink-50 pt-2">
                                 <div className="flex items-center justify-between">
                                   <Label className="text-xs">{language === 'es' ? 'Playlist/Canción 3' : 'Playlist/Song 3'}</Label>
-                                  <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-red-500 hover:text-red-700" onClick={() => setFormData({...formData, dance_song_3_title: '', dance_song_3_url: '', dance_song_3_owner: ''})}>
+                                  <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-red-500 hover:text-red-700" onClick={() => setFormData({...formData, dance_song_3_title: '', dance_song_3_url: '', dance_song_3_owner: '', dance_song_3_url_meta: null, _show_dance_song_3: false})}>
                                     <Trash2 className="w-3 h-3" />
                                   </Button>
                                 </div>
                                 <Input value={formData.dance_song_3_title} onChange={(e)=>setFormData({...formData, dance_song_3_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-8 text-sm" />
-                                <Input value={formData.dance_song_3_url} onChange={(e)=>setFormData({...formData, dance_song_3_url: e.target.value})} placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'} className="h-8 text-sm" />
+                                <Input value={formData.dance_song_3_url} onChange={(e)=>setFormData({...formData, dance_song_3_url: e.target.value, dance_song_3_url_meta: null})} placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'} className="h-8 text-sm" />
                                 <Input value={formData.dance_song_3_owner} onChange={(e)=>setFormData({...formData, dance_song_3_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable' : 'Owner'} className="h-8 text-sm" />
                               </div>
                             ) : null}
                             {/* Add more button */}
-                            {!(formData.dance_song_2_title || formData.dance_song_2_url) ? (
-                              <Button type="button" variant="ghost" size="sm" className="w-full border border-dashed border-pink-200 text-pink-600 hover:bg-pink-50" onClick={() => setFormData({...formData, dance_song_2_title: ' '})}>
+                            {!(formData.dance_song_2_title?.trim() || formData.dance_song_2_url?.trim()) ? (
+                              <Button type="button" variant="ghost" size="sm" className="w-full border border-dashed border-pink-200 text-pink-600 hover:bg-pink-50" onClick={() => setFormData({...formData, dance_song_2_title: '', dance_song_2_url: '', dance_song_2_owner: '', _show_dance_song_2: true})}>
                                 <Plus className="w-4 h-4 mr-1" /> {language === 'es' ? 'Agregar playlist/canción' : 'Add playlist/song'}
                               </Button>
-                            ) : !(formData.dance_song_3_title || formData.dance_song_3_url) ? (
-                              <Button type="button" variant="ghost" size="sm" className="w-full border border-dashed border-pink-200 text-pink-600 hover:bg-pink-50" onClick={() => setFormData({...formData, dance_song_3_title: ' '})}>
+                            ) : !(formData.dance_song_3_title?.trim() || formData.dance_song_3_url?.trim()) ? (
+                              <Button type="button" variant="ghost" size="sm" className="w-full border border-dashed border-pink-200 text-pink-600 hover:bg-pink-50" onClick={() => setFormData({...formData, dance_song_3_title: '', dance_song_3_url: '', dance_song_3_owner: '', _show_dance_song_3: true})}>
                                 <Plus className="w-4 h-4 mr-1" /> {language === 'es' ? 'Agregar playlist/canción' : 'Add playlist/song'}
                               </Button>
                             ) : null}
@@ -1053,44 +1053,44 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                             <div className="space-y-2">
                               <Label className="text-xs">{language === 'es' ? 'Playlist/Canción 1' : 'Playlist/Song 1'}</Label>
                               <Input value={formData.drama_song_title} onChange={(e)=>setFormData({...formData, drama_song_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-8 text-sm" />
-                              <Input value={formData.drama_song_source} onChange={(e)=>setFormData({...formData, drama_song_source: e.target.value})} placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'} className="h-8 text-sm" />
+                              <Input value={formData.drama_song_source} onChange={(e)=>setFormData({...formData, drama_song_source: e.target.value, drama_song_1_url_meta: null})} placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'} className="h-8 text-sm" />
                               <Input value={formData.drama_song_owner} onChange={(e)=>setFormData({...formData, drama_song_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable' : 'Owner'} className="h-8 text-sm" />
                             </div>
                             {/* Playlist/Song 2 - Hidden until added */}
-                            {formData.drama_song_2_title || formData.drama_song_2_url ? (
+                            {formData._show_drama_song_2 || formData.drama_song_2_title?.trim() || formData.drama_song_2_url?.trim() ? (
                               <div className="space-y-2 border-t border-pink-50 pt-2">
                                 <div className="flex items-center justify-between">
                                   <Label className="text-xs">{language === 'es' ? 'Playlist/Canción 2' : 'Playlist/Song 2'}</Label>
-                                  <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-red-500 hover:text-red-700" onClick={() => setFormData({...formData, drama_song_2_title: '', drama_song_2_url: '', drama_song_2_owner: ''})}>
+                                  <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-red-500 hover:text-red-700" onClick={() => setFormData({...formData, drama_song_2_title: '', drama_song_2_url: '', drama_song_2_owner: '', drama_song_2_url_meta: null, _show_drama_song_2: false})}>
                                     <Trash2 className="w-3 h-3" />
                                   </Button>
                                 </div>
                                 <Input value={formData.drama_song_2_title} onChange={(e)=>setFormData({...formData, drama_song_2_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-8 text-sm" />
-                                <Input value={formData.drama_song_2_url} onChange={(e)=>setFormData({...formData, drama_song_2_url: e.target.value})} placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'} className="h-8 text-sm" />
+                                <Input value={formData.drama_song_2_url} onChange={(e)=>setFormData({...formData, drama_song_2_url: e.target.value, drama_song_2_url_meta: null})} placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'} className="h-8 text-sm" />
                                 <Input value={formData.drama_song_2_owner} onChange={(e)=>setFormData({...formData, drama_song_2_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable' : 'Owner'} className="h-8 text-sm" />
                               </div>
                             ) : null}
                             {/* Playlist/Song 3 - Hidden until added */}
-                            {formData.drama_song_3_title || formData.drama_song_3_url ? (
+                            {formData._show_drama_song_3 || formData.drama_song_3_title?.trim() || formData.drama_song_3_url?.trim() ? (
                               <div className="space-y-2 border-t border-pink-50 pt-2">
                                 <div className="flex items-center justify-between">
                                   <Label className="text-xs">{language === 'es' ? 'Playlist/Canción 3' : 'Playlist/Song 3'}</Label>
-                                  <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-red-500 hover:text-red-700" onClick={() => setFormData({...formData, drama_song_3_title: '', drama_song_3_url: '', drama_song_3_owner: ''})}>
+                                  <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-red-500 hover:text-red-700" onClick={() => setFormData({...formData, drama_song_3_title: '', drama_song_3_url: '', drama_song_3_owner: '', drama_song_3_url_meta: null, _show_drama_song_3: false})}>
                                     <Trash2 className="w-3 h-3" />
                                   </Button>
                                 </div>
                                 <Input value={formData.drama_song_3_title} onChange={(e)=>setFormData({...formData, drama_song_3_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-8 text-sm" />
-                                <Input value={formData.drama_song_3_url} onChange={(e)=>setFormData({...formData, drama_song_3_url: e.target.value})} placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'} className="h-8 text-sm" />
+                                <Input value={formData.drama_song_3_url} onChange={(e)=>setFormData({...formData, drama_song_3_url: e.target.value, drama_song_3_url_meta: null})} placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'} className="h-8 text-sm" />
                                 <Input value={formData.drama_song_3_owner} onChange={(e)=>setFormData({...formData, drama_song_3_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable' : 'Owner'} className="h-8 text-sm" />
                               </div>
                             ) : null}
                             {/* Add more button */}
-                            {!(formData.drama_song_2_title || formData.drama_song_2_url) ? (
-                              <Button type="button" variant="ghost" size="sm" className="w-full border border-dashed border-pink-200 text-pink-600 hover:bg-pink-50" onClick={() => setFormData({...formData, drama_song_2_title: ' '})}>
+                            {!(formData._show_drama_song_2 || formData.drama_song_2_title?.trim() || formData.drama_song_2_url?.trim()) ? (
+                              <Button type="button" variant="ghost" size="sm" className="w-full border border-dashed border-pink-200 text-pink-600 hover:bg-pink-50" onClick={() => setFormData({...formData, drama_song_2_title: '', drama_song_2_url: '', drama_song_2_owner: '', _show_drama_song_2: true})}>
                                 <Plus className="w-4 h-4 mr-1" /> {language === 'es' ? 'Agregar playlist/canción' : 'Add playlist/song'}
                               </Button>
-                            ) : !(formData.drama_song_3_title || formData.drama_song_3_url) ? (
-                              <Button type="button" variant="ghost" size="sm" className="w-full border border-dashed border-pink-200 text-pink-600 hover:bg-pink-50" onClick={() => setFormData({...formData, drama_song_3_title: ' '})}>
+                            ) : !(formData._show_drama_song_3 || formData.drama_song_3_title?.trim() || formData.drama_song_3_url?.trim()) ? (
+                              <Button type="button" variant="ghost" size="sm" className="w-full border border-dashed border-pink-200 text-pink-600 hover:bg-pink-50" onClick={() => setFormData({...formData, drama_song_3_title: '', drama_song_3_url: '', drama_song_3_owner: '', _show_drama_song_3: true})}>
                                 <Plus className="w-4 h-4 mr-1" /> {language === 'es' ? 'Agregar playlist/canción' : 'Add playlist/song'}
                               </Button>
                             ) : null}
@@ -1123,7 +1123,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                       <Label className="text-xs">{language === 'es' ? 'Run of Show (PDF/Documento)' : 'Run of Show (PDF/Document)'}</Label>
                       <Input
                         value={formData.arts_run_of_show_url}
-                        onChange={(e) => setFormData({...formData, arts_run_of_show_url: e.target.value})}
+                        onChange={(e) => setFormData({...formData, arts_run_of_show_url: e.target.value, arts_run_of_show_url_meta: null})}
                         placeholder="https://drive.google.com/..."
                         className="h-9 text-sm"
                       />
