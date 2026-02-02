@@ -20,6 +20,7 @@ import SegmentTimelinePreview from "./SegmentTimelinePreview";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import AnnouncementSeriesManager from "../announcements/AnnouncementSeriesManager";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
+import ResourceUrlInput from "./ResourceUrlInput";
 import { useLanguage } from "@/components/utils/i18n";
 import { toast } from "sonner";
 import { logCreate, logUpdate } from "@/components/utils/editActionLogger";
@@ -164,6 +165,29 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     dance_start_cue: segment?.dance_start_cue || "",
     dance_end_cue: segment?.dance_end_cue || "",
     art_other_description: segment?.art_other_description || "",
+    // Resource URLs and metadata
+    video_url: segment?.video_url || "",
+    video_url_meta: segment?.video_url_meta || null,
+    drama_song_1_url_meta: segment?.drama_song_1_url_meta || null,
+    drama_song_2_title: segment?.drama_song_2_title || "",
+    drama_song_2_url: segment?.drama_song_2_url || "",
+    drama_song_2_owner: segment?.drama_song_2_owner || "",
+    drama_song_2_url_meta: segment?.drama_song_2_url_meta || null,
+    drama_song_3_title: segment?.drama_song_3_title || "",
+    drama_song_3_url: segment?.drama_song_3_url || "",
+    drama_song_3_owner: segment?.drama_song_3_owner || "",
+    drama_song_3_url_meta: segment?.drama_song_3_url_meta || null,
+    dance_song_1_url_meta: segment?.dance_song_1_url_meta || null,
+    dance_song_2_title: segment?.dance_song_2_title || "",
+    dance_song_2_url: segment?.dance_song_2_url || "",
+    dance_song_2_owner: segment?.dance_song_2_owner || "",
+    dance_song_2_url_meta: segment?.dance_song_2_url_meta || null,
+    dance_song_3_title: segment?.dance_song_3_title || "",
+    dance_song_3_url: segment?.dance_song_3_url || "",
+    dance_song_3_owner: segment?.dance_song_3_owner || "",
+    dance_song_3_url_meta: segment?.dance_song_3_url_meta || null,
+    arts_run_of_show_url: segment?.arts_run_of_show_url || "",
+    arts_run_of_show_url_meta: segment?.arts_run_of_show_url_meta || null,
     announcement_title: segment?.announcement_title || "",
     announcement_description: segment?.announcement_description || "",
     announcement_date: segment?.announcement_date || "",
@@ -808,6 +832,15 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                         />
                       </div>
                     </div>
+                    {/* Video URL with metadata fetch */}
+                    <ResourceUrlInput
+                      label={language === 'es' ? 'Enlace al Video (URL)' : 'Video Link (URL)'}
+                      urlValue={formData.video_url}
+                      onUrlChange={(val) => setFormData({...formData, video_url: val})}
+                      metaValue={formData.video_url_meta}
+                      onMetaChange={(meta) => setFormData({...formData, video_url_meta: meta})}
+                      placeholder="https://youtube.com/watch?v=..."
+                    />
                   </div>
                 )}
 
@@ -846,34 +879,30 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     {/* DANCE Block */}
                     {hasDance && (
                       <div className="space-y-3 bg-white p-3 rounded border border-pink-100">
+                        <Label className="text-xs font-semibold text-pink-800">🩰 DANZA</Label>
                         <div className="grid md:grid-cols-2 gap-3">
                           <div className="space-y-2">
-                            <Label className="text-xs">{language === 'es' ? 'Canción' : 'Song'}</Label>
+                            <Label className="text-xs">{language === 'es' ? 'Canción 1' : 'Song 1'}</Label>
                             <Input 
                               value={formData.dance_song_title} 
                               onChange={(e)=>setFormData({...formData, dance_song_title: e.target.value})} 
-                              placeholder={language === 'es' ? 'Título de canción' : 'Song title'} 
+                              placeholder={language === 'es' ? 'Título' : 'Title'} 
                               className="h-9 text-sm" 
                             />
-                            <div>
-                              <Label className="text-[11px] text-gray-700">{language === 'es' ? 'Fuente / ubicación' : 'Source / location'}</Label>
-                              <Textarea 
-                                rows={2}
-                                value={formData.dance_song_source} 
-                                onChange={(e)=>setFormData({...formData, dance_song_source: e.target.value})} 
-                                placeholder={language === 'es' ? 'URL, ruta de ProPresenter u otras instrucciones' : 'URL, ProPresenter path, or other instructions'} 
-                                className="text-sm" 
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-[11px] text-gray-700">{language === 'es' ? 'Responsable del medio' : 'Media owner/responsible'}</Label>
-                              <Input 
-                                value={formData.dance_song_owner} 
-                                onChange={(e)=>setFormData({...formData, dance_song_owner: e.target.value})} 
-                                placeholder={language === 'es' ? 'Quién provee/controla este audio (equipo o persona)' : 'Who provides/controls this audio (team or person)'} 
-                                className="h-9 text-sm" 
-                              />
-                            </div>
+                            <ResourceUrlInput
+                              label={language === 'es' ? 'Enlace Canción 1' : 'Song 1 Link'}
+                              urlValue={formData.dance_song_source}
+                              onUrlChange={(val) => setFormData({...formData, dance_song_source: val})}
+                              metaValue={formData.dance_song_1_url_meta}
+                              onMetaChange={(meta) => setFormData({...formData, dance_song_1_url_meta: meta})}
+                              placeholder="https://..."
+                            />
+                            <Input 
+                              value={formData.dance_song_owner} 
+                              onChange={(e)=>setFormData({...formData, dance_song_owner: e.target.value})} 
+                              placeholder={language === 'es' ? 'Responsable' : 'Owner'} 
+                              className="h-9 text-sm" 
+                            />
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
@@ -886,6 +915,24 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                             </div>
                           </div>
                         </div>
+                        {/* Song 2 */}
+                        <div className="border-t border-pink-100 pt-2 space-y-2">
+                          <Label className="text-xs text-gray-600">{language === 'es' ? 'Canción 2 (opcional)' : 'Song 2 (optional)'}</Label>
+                          <div className="grid md:grid-cols-3 gap-2">
+                            <Input value={formData.dance_song_2_title} onChange={(e)=>setFormData({...formData, dance_song_2_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-8 text-sm" />
+                            <Input value={formData.dance_song_2_url} onChange={(e)=>setFormData({...formData, dance_song_2_url: e.target.value})} placeholder="URL" className="h-8 text-sm" />
+                            <Input value={formData.dance_song_2_owner} onChange={(e)=>setFormData({...formData, dance_song_2_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable' : 'Owner'} className="h-8 text-sm" />
+                          </div>
+                        </div>
+                        {/* Song 3 */}
+                        <div className="border-t border-pink-100 pt-2 space-y-2">
+                          <Label className="text-xs text-gray-600">{language === 'es' ? 'Canción 3 (opcional)' : 'Song 3 (optional)'}</Label>
+                          <div className="grid md:grid-cols-3 gap-2">
+                            <Input value={formData.dance_song_3_title} onChange={(e)=>setFormData({...formData, dance_song_3_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-8 text-sm" />
+                            <Input value={formData.dance_song_3_url} onChange={(e)=>setFormData({...formData, dance_song_3_url: e.target.value})} placeholder="URL" className="h-8 text-sm" />
+                            <Input value={formData.dance_song_3_owner} onChange={(e)=>setFormData({...formData, dance_song_3_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable' : 'Owner'} className="h-8 text-sm" />
+                          </div>
+                        </div>
                         <div className="space-y-1">
                           <Label className="text-xs">{language === 'es' ? 'Cues de inicio y fin' : 'Start and end cues'}</Label>
                           <div className="grid md:grid-cols-2 gap-2">
@@ -893,14 +940,14 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                               rows={2}
                               value={formData.dance_start_cue} 
                               onChange={(e)=>setFormData({...formData, dance_start_cue: e.target.value})} 
-                              placeholder={language === 'es' ? 'Cue inicio (ej. "Bailarines por derecha, FOH preparado")' : 'Start cue (e.g., "Dancers from stage right, FOH ready")'} 
+                              placeholder={language === 'es' ? 'Cue inicio' : 'Start cue'} 
                               className="text-sm" 
                             />
                             <Textarea 
                               rows={2}
                               value={formData.dance_end_cue} 
                               onChange={(e)=>setFormData({...formData, dance_end_cue: e.target.value})} 
-                              placeholder={language === 'es' ? 'Cue fin (ej. "Fade a negro; MC entra por izquierda")' : 'End cue (e.g., "Fade to black; MC enters from left")'} 
+                              placeholder={language === 'es' ? 'Cue fin' : 'End cue'} 
                               className="text-sm" 
                             />
                           </div>
@@ -911,6 +958,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     {/* DRAMA Block */}
                     {hasDrama && (
                       <div className="space-y-3 bg-white p-3 rounded border border-pink-100">
+                        <Label className="text-xs font-semibold text-pink-800">🎭 DRAMA</Label>
                         <div className="grid grid-cols-2 gap-2 md:max-w-md">
                           <div className="space-y-1">
                             <Label className="text-xs">Handheld</Label>
@@ -928,29 +976,55 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                               rows={2}
                               value={formData.drama_start_cue} 
                               onChange={(e)=>setFormData({...formData, drama_start_cue: e.target.value})} 
-                              placeholder={language === 'es' ? 'Cue inicio (ej. "Actores preparados; cortina a media")' : 'Start cue (e.g., "Actors ready; curtain half")'} 
+                              placeholder={language === 'es' ? 'Cue inicio' : 'Start cue'} 
                               className="text-sm" 
                             />
                             <Textarea 
                               rows={2}
                               value={formData.drama_end_cue} 
                               onChange={(e)=>setFormData({...formData, drama_end_cue: e.target.value})} 
-                              placeholder={language === 'es' ? 'Cue fin (ej. "Oscuro total; MC entra por centro")' : 'End cue (e.g., "Full blackout; MC enters center")'} 
+                              placeholder={language === 'es' ? 'Cue fin' : 'End cue'} 
                               className="text-sm" 
                             />
                           </div>
                         </div>
                         <div className="col-span-2 flex items-center gap-2 mt-1">
                           <Checkbox id="drama_has_song" checked={formData.drama_has_song} onCheckedChange={(checked)=>setFormData({...formData, drama_has_song: checked})} />
-                          <label htmlFor="drama_has_song" className="text-xs">{language === 'es' ? 'Incluye canción' : 'Includes song'}</label>
+                          <label htmlFor="drama_has_song" className="text-xs">{language === 'es' ? 'Incluye canción(es)' : 'Includes song(s)'}</label>
                         </div>
                         {formData.drama_has_song && (
-                          <div className="space-y-2">
-                            <Label className="text-xs">{language === 'es' ? 'Canción (opcional)' : 'Song (optional)'}</Label>
-                            <div className="grid md:grid-cols-3 gap-2">
-                              <Input value={formData.drama_song_title} onChange={(e)=>setFormData({...formData, drama_song_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-9 text-sm" />
-                              <Textarea rows={2} value={formData.drama_song_source} onChange={(e)=>setFormData({...formData, drama_song_source: e.target.value})} placeholder={language === 'es' ? 'Fuente / ubicación (URL, ruta, instrucciones)' : 'Source / location (URL, path, instructions)'} className="text-sm" />
-                              <Input value={formData.drama_song_owner} onChange={(e)=>setFormData({...formData, drama_song_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable del medio' : 'Media owner/responsible'} className="h-9 text-sm" />
+                          <div className="space-y-3 border-t border-pink-100 pt-2">
+                            {/* Song 1 */}
+                            <div className="space-y-2">
+                              <Label className="text-xs">{language === 'es' ? 'Canción 1' : 'Song 1'}</Label>
+                              <Input value={formData.drama_song_title} onChange={(e)=>setFormData({...formData, drama_song_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-8 text-sm" />
+                              <ResourceUrlInput
+                                label={language === 'es' ? 'Enlace Canción 1' : 'Song 1 Link'}
+                                urlValue={formData.drama_song_source}
+                                onUrlChange={(val) => setFormData({...formData, drama_song_source: val})}
+                                metaValue={formData.drama_song_1_url_meta}
+                                onMetaChange={(meta) => setFormData({...formData, drama_song_1_url_meta: meta})}
+                                placeholder="https://..."
+                              />
+                              <Input value={formData.drama_song_owner} onChange={(e)=>setFormData({...formData, drama_song_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable' : 'Owner'} className="h-8 text-sm" />
+                            </div>
+                            {/* Song 2 */}
+                            <div className="space-y-2 border-t border-pink-50 pt-2">
+                              <Label className="text-xs text-gray-600">{language === 'es' ? 'Canción 2 (opcional)' : 'Song 2 (optional)'}</Label>
+                              <div className="grid md:grid-cols-3 gap-2">
+                                <Input value={formData.drama_song_2_title} onChange={(e)=>setFormData({...formData, drama_song_2_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-8 text-sm" />
+                                <Input value={formData.drama_song_2_url} onChange={(e)=>setFormData({...formData, drama_song_2_url: e.target.value})} placeholder="URL" className="h-8 text-sm" />
+                                <Input value={formData.drama_song_2_owner} onChange={(e)=>setFormData({...formData, drama_song_2_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable' : 'Owner'} className="h-8 text-sm" />
+                              </div>
+                            </div>
+                            {/* Song 3 */}
+                            <div className="space-y-2 border-t border-pink-50 pt-2">
+                              <Label className="text-xs text-gray-600">{language === 'es' ? 'Canción 3 (opcional)' : 'Song 3 (optional)'}</Label>
+                              <div className="grid md:grid-cols-3 gap-2">
+                                <Input value={formData.drama_song_3_title} onChange={(e)=>setFormData({...formData, drama_song_3_title: e.target.value})} placeholder={language === 'es' ? 'Título' : 'Title'} className="h-8 text-sm" />
+                                <Input value={formData.drama_song_3_url} onChange={(e)=>setFormData({...formData, drama_song_3_url: e.target.value})} placeholder="URL" className="h-8 text-sm" />
+                                <Input value={formData.drama_song_3_owner} onChange={(e)=>setFormData({...formData, drama_song_3_owner: e.target.value})} placeholder={language === 'es' ? 'Responsable' : 'Owner'} className="h-8 text-sm" />
+                              </div>
                             </div>
                           </div>
                         )}
@@ -975,6 +1049,19 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     {hasArtVideo && !isVideoType && (
                       <p className="text-xs text-pink-700">Este segmento incluye VIDEO; añade detalles en la sección "Video" arriba.</p>
                     )}
+
+                    {/* Run of Show PDF */}
+                    <div className="border-t border-pink-200 pt-3 mt-3">
+                      <ResourceUrlInput
+                        label={language === 'es' ? 'Run of Show (PDF/Documento)' : 'Run of Show (PDF/Document)'}
+                        urlValue={formData.arts_run_of_show_url}
+                        onUrlChange={(val) => setFormData({...formData, arts_run_of_show_url: val})}
+                        metaValue={formData.arts_run_of_show_url_meta}
+                        onMetaChange={(meta) => setFormData({...formData, arts_run_of_show_url_meta: meta})}
+                        placeholder="https://drive.google.com/..."
+                        showThumbnail={false}
+                      />
+                    </div>
                   </div>
                 )}
 
