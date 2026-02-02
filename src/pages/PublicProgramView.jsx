@@ -360,6 +360,8 @@ export default function PublicProgramView() {
         previous_offset: previousOffset,
         new_offset: offsetMinutes,
         authorized_by: authorizedBy,
+        performed_by_name: currentUser?.full_name || '',
+        performed_by_email: currentUser?.email || '',
         action: action
       });
       

@@ -104,10 +104,15 @@ export default function TimeAdjustmentHistoryModal({
                         <span className="font-medium">{log.authorized_by || 'Sin registro'}</span>
                       </div>
 
-                      {/* Timestamp */}
+                      {/* Performed By + Timestamp */}
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <Calendar className="w-3 h-3" />
                         <span>{formatTimestampToEST(log.created_date)}</span>
+                        {(log.performed_by_name || log.performed_by_email) && (
+                          <span className="ml-1">
+                            — {log.performed_by_name || ''} {log.performed_by_email ? `(${log.performed_by_email})` : ''}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
