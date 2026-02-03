@@ -40,8 +40,11 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
       await logDelete('Segment', segmentToDelete, sessionId, user);
     },
     onSuccess: () => {
-      // CRITICAL: Invalidate ALL segment queries (parent uses eventId, child uses sessionId)
-      queryClient.invalidateQueries({ queryKey: ['segments'] });
+      // CRITICAL: Invalidate ALL segment-related queries using predicate
+      queryClient.invalidateQueries({ predicate: (query) => {
+        const key = query.queryKey;
+        return Array.isArray(key) && (key[0] === 'segments' || key[0] === 'allSegments');
+      }});
       queryClient.invalidateQueries(['editActionLogs']);
     },
   });
@@ -51,8 +54,11 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
       return base44.entities.Segment.update(segmentId, { order: newOrder });
     },
     onSuccess: () => {
-      // CRITICAL: Invalidate ALL segment queries (parent uses eventId, child uses sessionId)
-      queryClient.invalidateQueries({ queryKey: ['segments'] });
+      // CRITICAL: Invalidate ALL segment-related queries using predicate
+      queryClient.invalidateQueries({ predicate: (query) => {
+        const key = query.queryKey;
+        return Array.isArray(key) && (key[0] === 'segments' || key[0] === 'allSegments');
+      }});
     },
   });
 

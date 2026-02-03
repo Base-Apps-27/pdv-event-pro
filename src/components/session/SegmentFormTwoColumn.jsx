@@ -375,10 +375,13 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       return created;
     },
     onSuccess: () => {
-      // CRITICAL: Invalidate ALL segment queries to ensure parent (EventDetail) refetches
-      // Parent uses ['segments', eventId], child uses ['segments', sessionId]
-      // Prefix match catches both, preventing stale data in segment editor
-      queryClient.invalidateQueries({ queryKey: ['segments'] });
+      // CRITICAL: Invalidate ALL segment-related queries
+      // EventDetail uses multiple query keys: ['segments', eventId, sessionIdsKey], ['allSegments', ...]
+      // Force refetch of all segment queries regardless of key structure
+      queryClient.invalidateQueries({ predicate: (query) => {
+        const key = query.queryKey;
+        return Array.isArray(key) && (key[0] === 'segments' || key[0] === 'allSegments');
+      }});
       queryClient.invalidateQueries(['editActionLogs']);
       onClose();
     },
@@ -399,10 +402,13 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       return updated;
     },
     onSuccess: () => {
-      // CRITICAL: Invalidate ALL segment queries to ensure parent (EventDetail) refetches
-      // Parent uses ['segments', eventId], child uses ['segments', sessionId]
-      // Prefix match catches both, preventing stale data in segment editor
-      queryClient.invalidateQueries({ queryKey: ['segments'] });
+      // CRITICAL: Invalidate ALL segment-related queries
+      // EventDetail uses multiple query keys: ['segments', eventId, sessionIdsKey], ['allSegments', ...]
+      // Force refetch of all segment queries regardless of key structure
+      queryClient.invalidateQueries({ predicate: (query) => {
+        const key = query.queryKey;
+        return Array.isArray(key) && (key[0] === 'segments' || key[0] === 'allSegments');
+      }});
       queryClient.invalidateQueries(['editActionLogs']);
       onClose();
     },
