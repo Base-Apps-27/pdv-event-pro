@@ -9,6 +9,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { getSegmentData } from "@/components/utils/segmentDataUtils";
 import { logDelete, logReorder } from "@/components/utils/editActionLogger";
+import { invalidateSegmentCaches } from "@/components/utils/queryKeys";
+import { getSegmentResponsibleDisplay, getSegmentSecondaryDisplay } from "@/components/utils/segmentTypeDisplay";
 
 export default function SegmentList({ segments, sessionId, onEdit, onEditPreSession, user }) {
   const queryClient = useQueryClient();
@@ -40,12 +42,8 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
       await logDelete('Segment', segmentToDelete, sessionId, user);
     },
     onSuccess: () => {
-      // CRITICAL: Invalidate ALL segment-related queries using predicate
-      queryClient.invalidateQueries({ predicate: (query) => {
-        const key = query.queryKey;
-        return Array.isArray(key) && (key[0] === 'segments' || key[0] === 'allSegments');
-      }});
-      queryClient.invalidateQueries(['editActionLogs']);
+      // CRITICAL: Use centralized invalidation from queryKeys.js
+      invalidateSegmentCaches(queryClient);
     },
   });
 
@@ -54,11 +52,8 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
       return base44.entities.Segment.update(segmentId, { order: newOrder });
     },
     onSuccess: () => {
-      // CRITICAL: Invalidate ALL segment-related queries using predicate
-      queryClient.invalidateQueries({ predicate: (query) => {
-        const key = query.queryKey;
-        return Array.isArray(key) && (key[0] === 'segments' || key[0] === 'allSegments');
-      }});
+      // CRITICAL: Use centralized invalidation from queryKeys.js
+      invalidateSegmentCaches(queryClient, { includeEditLogs: false });
     },
   });
 
@@ -334,19 +329,19 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                         </TooltipProvider>
                       )}
                     </div>
-                    {/* Panel type shows panelists instead of presenter */}
-                    {segment.segment_type === "Panel" ? (
-                      (segment.panel_panelists || segment.panel_moderators) && (
-                        <div className="text-xs text-slate-600 mt-0.5">
-                          {segment.panel_panelists || segment.panel_moderators}
-                        </div>
-                      )
-                    ) : getData('presenter') && (
-                      <div className="text-xs text-slate-600 mt-0.5">
-                        {segment.segment_type === "Alabanza" ? "Líder: " : segment.segment_type === "Plenaria" ? "Predicador: " : ['Break', 'Receso', 'Almuerzo'].includes(segment.segment_type) ? "Encargado: " : ""}
-                        {getData('presenter')}
-                      </div>
-                    )}
+                    {/* CRITICAL: Use centralized display logic from segmentTypeDisplay.js */}
+                    {/* This ensures Panel shows panelists, never presenter */}
+                    {(() => {
+                      const responsible = getSegmentResponsibleDisplay(segment, 'es');
+                      if (responsible) {
+                        return (
+                          <div className="text-xs text-slate-600 mt-0.5">
+                            {responsible.label}{responsible.value}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                     {/* Break type visual badge */}
                     {['Receso', 'Almuerzo'].includes(segment.segment_type) && (
                       <div className={`inline-flex items-center gap-1 text-xs mt-1 px-1.5 py-0.5 rounded ${segment.segment_type === 'Almuerzo' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-700'}`}>
@@ -354,9 +349,18 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                         <span className="font-semibold">{segment.duration_min}m</span>
                       </div>
                     )}
-                    {segment.segment_type === "Plenaria" && getData('message_title') && (
-                      <div className="text-xs text-blue-600 mt-0.5 italic">{getData('message_title')}</div>
-                    )}
+                    {/* Secondary display (e.g., message_title for Plenaria) */}
+                    {(() => {
+                      const secondary = getSegmentSecondaryDisplay(segment, 'es');
+                      if (secondary) {
+                        return (
+                          <div className={`text-xs mt-0.5 ${secondary.style || 'text-blue-600 italic'}`}>
+                            {secondary.value}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -530,19 +534,23 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                               )}
                             </div>
                             <h4 className="font-semibold text-sm text-slate-900 line-clamp-1">{segment.title}</h4>
-                            {/* Panel type shows panelists instead of presenter */}
-                            {segment.segment_type === "Panel" ? (
-                              (segment.panel_panelists || segment.panel_moderators) && (
-                                <p className="text-xs text-slate-600 mt-0.5 line-clamp-1">
-                                  {segment.panel_panelists || segment.panel_moderators}
-                                </p>
-                              )
-                            ) : getData('presenter') && (
-                              <p className="text-xs text-slate-600 mt-0.5 line-clamp-1">
-                                {segment.segment_type === "Alabanza" ? "L: " : segment.segment_type === "Plenaria" ? "P: " : ['Break', 'Receso', 'Almuerzo'].includes(segment.segment_type) ? "Enc: " : ""}
-                                {getData('presenter')}
-                              </p>
-                            )}
+                            {/* CRITICAL: Use centralized display logic from segmentTypeDisplay.js */}
+                            {(() => {
+                              const responsible = getSegmentResponsibleDisplay(segment, 'es');
+                              if (responsible) {
+                                // Abbreviate labels for mobile
+                                const shortLabel = responsible.label
+                                  .replace('Líder: ', 'L: ')
+                                  .replace('Predicador: ', 'P: ')
+                                  .replace('Encargado: ', 'Enc: ');
+                                return (
+                                  <p className="text-xs text-slate-600 mt-0.5 line-clamp-1">
+                                    {shortLabel}{responsible.value}
+                                  </p>
+                                );
+                              }
+                              return null;
+                            })()}
                             {/* Break type visual badge - mobile */}
                             {['Receso', 'Almuerzo'].includes(segment.segment_type) && (
                               <div className={`inline-flex items-center gap-1 text-xs mt-1 px-1.5 py-0.5 rounded ${segment.segment_type === 'Almuerzo' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-700'}`}>
@@ -550,9 +558,18 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                                 <span className="font-semibold">{segment.duration_min}m</span>
                               </div>
                             )}
-                            {segment.segment_type === "Plenaria" && getData('message_title') && (
-                              <p className="text-xs text-blue-600 mt-0.5 italic line-clamp-1">{getData('message_title')}</p>
-                            )}
+                            {/* Secondary display for Plenaria */}
+                            {(() => {
+                              const secondary = getSegmentSecondaryDisplay(segment, 'es');
+                              if (secondary) {
+                                return (
+                                  <p className={`text-xs mt-0.5 line-clamp-1 ${secondary.style || 'text-blue-600 italic'}`}>
+                                    {secondary.value}
+                                  </p>
+                                );
+                              }
+                              return null;
+                            })()}
                             
                             {/* Content Badges */}
                             <div className="flex flex-wrap gap-1 mt-2">
