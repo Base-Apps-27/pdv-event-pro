@@ -553,27 +553,21 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
       {/* CRITICAL: Use fresh segment from query, not stale editingSegment state
           editingSegment holds the snapshot from when user clicked edit
           segments array is refetched after save, so lookup by ID gets fresh data
-          This prevents stale display after save-and-reopen without closing dialog
-          REMOVED: || editingSegment fallback - this was recycling stale data when find() failed */}
+          This prevents stale display after save-and-reopen without closing dialog */}
       <Dialog open={showSegmentForm} onOpenChange={setShowSegmentForm}>
         <DialogContent className="max-w-6xl max-h-[95vh] p-0 flex flex-col overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-3 shrink-0 border-b border-gray-100">
             <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingSegment ? 'Editar Segmento' : 'Nuevo Segmento'}</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto">
-            {/* Only render form when segment is found in fresh data, or when creating new */}
-            {editingSegment && !segments.find(s => s.id === editingSegment.id) ? (
-              <div className="p-8 text-center text-gray-500">Cargando...</div>
-            ) : (
-              <SegmentFormTwoColumn 
-                session={sessions.find(s => s.id === expandedSessionId)}
-                segment={editingSegment ? segments.find(s => s.id === editingSegment.id) : null}
-                templates={templates}
-                onClose={handleCloseSegmentForm}
-                sessionId={expandedSessionId}
-                user={user}
-              />
-            )}
+            <SegmentFormTwoColumn 
+              session={sessions.find(s => s.id === expandedSessionId)}
+              segment={editingSegment ? segments.find(s => s.id === editingSegment.id) || editingSegment : null}
+              templates={templates}
+              onClose={handleCloseSegmentForm}
+              sessionId={expandedSessionId}
+              user={user}
+            />
           </div>
         </DialogContent>
       </Dialog>

@@ -398,21 +398,12 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       await logUpdate('Segment', id, previousState, { ...previousState, ...data }, sessionId, user);
       return updated;
     },
-    onSuccess: async (_, variables) => {
-      const { id } = variables;
-      // CRITICAL: Force refetch ALL segment queries to ensure parent (EventDetail) gets fresh data
+    onSuccess: () => {
+      // CRITICAL: Invalidate ALL segment queries to ensure parent (EventDetail) refetches
       // Parent uses ['segments', eventId], child uses ['segments', sessionId]
-      // refetchQueries guarantees network request, unlike invalidateQueries which just marks stale
-      await queryClient.refetchQueries({ queryKey: ['segments'], type: 'active' });
+      // Prefix match catches both, preventing stale data in segment editor
+      queryClient.invalidateQueries({ queryKey: ['segments'] });
       queryClient.invalidateQueries(['editActionLogs']);
-      
-      // DEBUG: Log cache state after refetch to verify fresh data landed
-      const all = queryClient.getQueriesData({ queryKey: ['segments'] });
-      console.log('[CACHE segments queries after save]', all.map(([key, data]) => ({
-        key,
-        sample: Array.isArray(data) ? data.find(s => s.id === id) : null
-      })));
-      
       onClose();
     },
     onError: () => {
