@@ -24,6 +24,8 @@ import VerseParserDialog from "@/components/service/VerseParserDialog";
 import { useLanguage } from "@/components/utils/i18n";
 import { toast } from "sonner";
 import { logCreate, logUpdate } from "@/components/utils/editActionLogger";
+import { invalidateSegmentCaches, segmentKeys } from "@/components/utils/queryKeys";
+import { isPresenterEditable, isPresenterOptional } from "@/components/utils/segmentTypeDisplay";
 
 // Break type hidden from UI but kept in schema for backwards compatibility
 // Receso = short breaks (coffee, transition); Almuerzo = meal breaks
@@ -375,14 +377,9 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       return created;
     },
     onSuccess: () => {
-      // CRITICAL: Invalidate ALL segment-related queries
-      // EventDetail uses multiple query keys: ['segments', eventId, sessionIdsKey], ['allSegments', ...]
-      // Force refetch of all segment queries regardless of key structure
-      queryClient.invalidateQueries({ predicate: (query) => {
-        const key = query.queryKey;
-        return Array.isArray(key) && (key[0] === 'segments' || key[0] === 'allSegments');
-      }});
-      queryClient.invalidateQueries(['editActionLogs']);
+      // CRITICAL: Use centralized invalidation from queryKeys.js
+      // This ensures ALL segment caches are invalidated: ['segments', ...], ['allSegments', ...]
+      invalidateSegmentCaches(queryClient);
       onClose();
     },
     onError: () => {
@@ -402,14 +399,9 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       return updated;
     },
     onSuccess: () => {
-      // CRITICAL: Invalidate ALL segment-related queries
-      // EventDetail uses multiple query keys: ['segments', eventId, sessionIdsKey], ['allSegments', ...]
-      // Force refetch of all segment queries regardless of key structure
-      queryClient.invalidateQueries({ predicate: (query) => {
-        const key = query.queryKey;
-        return Array.isArray(key) && (key[0] === 'segments' || key[0] === 'allSegments');
-      }});
-      queryClient.invalidateQueries(['editActionLogs']);
+      // CRITICAL: Use centralized invalidation from queryKeys.js
+      // This ensures ALL segment caches are invalidated: ['segments', ...], ['allSegments', ...]
+      invalidateSegmentCaches(queryClient);
       onClose();
     },
     onError: () => {
