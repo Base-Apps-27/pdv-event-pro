@@ -328,7 +328,14 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                         </TooltipProvider>
                       )}
                     </div>
-                    {getData('presenter') && (
+                    {/* Panel type shows panelists instead of presenter */}
+                    {segment.segment_type === "Panel" ? (
+                      (segment.panel_panelists || segment.panel_moderators) && (
+                        <div className="text-xs text-slate-600 mt-0.5">
+                          {segment.panel_panelists || segment.panel_moderators}
+                        </div>
+                      )
+                    ) : getData('presenter') && (
                       <div className="text-xs text-slate-600 mt-0.5">
                         {segment.segment_type === "Alabanza" ? "Líder: " : segment.segment_type === "Plenaria" ? "Predicador: " : ['Break', 'Receso', 'Almuerzo'].includes(segment.segment_type) ? "Encargado: " : ""}
                         {getData('presenter')}
@@ -517,7 +524,14 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                               )}
                             </div>
                             <h4 className="font-semibold text-sm text-slate-900 line-clamp-1">{segment.title}</h4>
-                            {getData('presenter') && (
+                            {/* Panel type shows panelists instead of presenter */}
+                            {segment.segment_type === "Panel" ? (
+                              (segment.panel_panelists || segment.panel_moderators) && (
+                                <p className="text-xs text-slate-600 mt-0.5 line-clamp-1">
+                                  {segment.panel_panelists || segment.panel_moderators}
+                                </p>
+                              )
+                            ) : getData('presenter') && (
                               <p className="text-xs text-slate-600 mt-0.5 line-clamp-1">
                                 {segment.segment_type === "Alabanza" ? "L: " : segment.segment_type === "Plenaria" ? "P: " : ['Break', 'Receso', 'Almuerzo'].includes(segment.segment_type) ? "Enc: " : ""}
                                 {getData('presenter')}
