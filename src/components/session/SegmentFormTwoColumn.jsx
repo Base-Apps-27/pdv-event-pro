@@ -1506,26 +1506,25 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 )}
 
                 {isPanelType && (
-                  <div className="space-y-3 bg-amber-50 p-4 rounded border border-amber-200">
-                    <div className="grid md:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label>{language === 'es' ? 'Anfitrión(es) / Moderador(es)' : 'Host(s) / Moderator(s)'}</Label>
-                        <Input 
-                          value={formData.panel_moderators}
-                          onChange={(e) => setFormData({...formData, panel_moderators: e.target.value})}
-                          placeholder={language === 'es' ? 'Nombres de los moderadores' : 'Moderator names'}
-                          className="text-sm"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label>{language === 'es' ? 'Panelista(s)' : 'Panelist(s)'}</Label>
-                        <Input 
-                          value={formData.panel_panelists}
-                          onChange={(e) => setFormData({...formData, panel_panelists: e.target.value})}
-                          placeholder={language === 'es' ? 'Nombres de los panelistas' : 'Panelist names'}
-                          className="text-sm"
-                        />
-                      </div>
+                  <div className="space-y-4 bg-amber-50 p-4 rounded border border-amber-200">
+                    <div className="space-y-2">
+                      <Label>{language === 'es' ? 'Anfitrión(es) / Moderador(es)' : 'Host(s) / Moderator(s)'}</Label>
+                      <Input 
+                        value={formData.panel_moderators}
+                        onChange={(e) => setFormData({...formData, panel_moderators: e.target.value})}
+                        placeholder={language === 'es' ? 'Nombres de los moderadores' : 'Moderator names'}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{language === 'es' ? 'Panelista(s)' : 'Panelist(s)'}</Label>
+                      <Textarea 
+                        value={formData.panel_panelists}
+                        onChange={(e) => setFormData({...formData, panel_panelists: e.target.value})}
+                        placeholder={language === 'es' ? 'Nombres de los panelistas (uno por línea o separados por coma)' : 'Panelist names (one per line or comma-separated)'}
+                        className="text-sm"
+                        rows={3}
+                      />
                     </div>
                   </div>
                 )}
