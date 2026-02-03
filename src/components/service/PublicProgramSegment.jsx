@@ -64,7 +64,6 @@ export default function PublicProgramSegment({
   const isPanel = ['Panel', 'panel'].includes(segmentType);
   // Break types: Receso (coffee/transition), Almuerzo (meal), Break (legacy - now merged into Receso)
   const isBreakSegment = ['Break', 'Receso', 'Almuerzo'].includes(segmentType);
-  // Hide scriptures in PDFs/Reports; live view still shows via this component when provided
   
   // Display mapping for type chip (keeps behavior checks above on raw value)
   const typeDisplayMap = {
@@ -84,22 +83,21 @@ export default function PublicProgramSegment({
   const songs = isWorship ? getNormalizedSongs(segment).filter(s => s.title) : [];
   
   // Get and filter actions
-  // Prefer new schema actions; fall back to legacy for safety
   const rawActions = segment.segment_actions || segment.actions || getData('actions') || [];
-    const actionsBase = isSpecial 
-      ? rawActions.filter(a => {
-          const label = (a.label || '').toLowerCase();
-          // Filter out generic worship actions from special segments (data migration artifacts)
-          return !label.includes('pianista sube') && !label.includes('equipo de a&a sube');
-        })
-      : rawActions;
-    // Hide Hospitality actions per product decision
-    const actions = actionsBase.filter(a => (a?.department || '') !== 'Hospitality');
+  const actionsBase = isSpecial 
+    ? rawActions.filter(a => {
+        const label = (a.label || '').toLowerCase();
+        // Filter out generic worship actions from special segments (data migration artifacts)
+        return !label.includes('pianista sube') && !label.includes('equipo de a&a sube');
+      })
+    : rawActions;
+  // Hide Hospitality actions per product decision
+  const actions = actionsBase.filter(a => (a?.department || '') !== 'Hospitality');
 
-    const prepActions = actions.filter(a => a.timing === 'before_start');
-    const duringActions = actions.filter(a => a.timing !== 'before_start');
+  const prepActions = actions.filter(a => a.timing === 'before_start');
+  const duringActions = actions.filter(a => a.timing !== 'before_start');
 
-  // Helper to calculate action time based on segment timing and offset
+  // Helper to calculate action time
   const calculateActionTime = (action) => {
     const segmentStart = getData('start_time');
     const segmentEnd = getData('end_time');
@@ -139,22 +137,29 @@ export default function PublicProgramSegment({
     return formatTimeToEST(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
   };
 
-  // CRITICAL: Determine if details should be shown
-  // - Services (alwaysExpanded=true): Always show all details
-  // - Events in "full" mode: Always show all details
-  // - Events in "simple" mode: Only show if user expanded
+  // Determine visibility of details
   const showDetails = alwaysExpanded || viewMode === "full" || isExpanded;
+
+  // VISUAL HIERARCHY LOGIC
+  const getContainerStyles = () => {
+    // 1. Critical Override: Active/Upcoming status always wins
+    if (isCurrent) return 'bg-yellow-50 border-l-4 border-yellow-500 shadow-sm z-10 scale-[1.01]';
+    if (isUpcoming) return 'bg-blue-50/50 border-l-4 border-blue-400';
+
+    // 2. Type-Based Styles
+    if (isMessage) return 'bg-blue-50/30 border-l-4 border-blue-600 my-2 shadow-sm';
+    if (isPanel) return 'bg-white border-l-4 border-amber-500 shadow-sm rounded-r-lg my-3 border-y border-r border-gray-200';
+    if (isWorship) return 'bg-white border-l-4 border-purple-500 border-b border-gray-100 hover:bg-gray-50';
+    if (isBreakSegment) return 'bg-gray-100/50 border-2 border-dashed border-gray-300 rounded-lg my-4 mx-2';
+    
+    // 3. Default List Style
+    return 'bg-white border-l-4 border-gray-200 border-b border-gray-100 hover:bg-gray-50';
+  };
 
   return (
     <div 
       id={domId}
-      className={`p-4 transition-colors border-b last:border-b-0 scroll-mt-24 duration-500 ${
-        isCurrent 
-          ? 'bg-yellow-100 border-l-4 border-l-yellow-500' 
-          : isUpcoming 
-            ? 'bg-blue-50 border-l-4 border-l-blue-500' 
-            : 'hover:bg-gray-50'
-      }`}
+      className={`p-4 transition-all duration-300 scroll-mt-24 ${getContainerStyles()}`}
     >
       {/* Current/Upcoming Status Badges */}
       {isCurrent && (

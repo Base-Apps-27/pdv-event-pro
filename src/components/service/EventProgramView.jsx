@@ -361,7 +361,7 @@ export default function EventProgramView({
             </div>
 
             {/* Segments */}
-            <div className="divide-y divide-gray-200">
+            <div className="space-y-0"> {/* Removed divide-y to allow segment-level styling */}
               {segments.map((segment) => {
                 // Handle Breakout segments separately
                 if (segment.segment_type === "Breakout" && segment.breakout_rooms) {

@@ -182,7 +182,7 @@ export default function ServiceProgramView({
               </div>
             )}
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="space-y-0">
             {adjustedServiceData.segments.filter(seg => seg.type !== 'break').map((segment, idx) => (
               <PublicProgramSegment
                 key={segment.id || idx}
@@ -288,7 +288,7 @@ export default function ServiceProgramView({
               </div>
             )}
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="space-y-0">
             {adjustedServiceData["9:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
               <PublicProgramSegment
                 key={segment.id || idx}
@@ -375,7 +375,7 @@ export default function ServiceProgramView({
               </div>
             )}
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="space-y-0">
             {adjustedServiceData["11:30am"].filter(seg => seg.type !== 'break').map((segment, idx) => (
               <PublicProgramSegment
                 key={segment.id || idx}
