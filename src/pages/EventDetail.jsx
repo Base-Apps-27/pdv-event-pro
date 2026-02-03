@@ -101,15 +101,14 @@ export default function EventDetail() {
     [sessions]
   );
 
-  // DEBUG: Log when segments query runs (remove after verification)
   const { data: segments = [] } = useQuery({
     queryKey: ['segments', eventId, sessionIdsKey],
     queryFn: async () => {
-      console.log('[EventDetail] segments queryFn RUNNING', { eventId, sessionIdsKey, timestamp: new Date().toISOString() });
+      // DEV-ONLY: Uncomment to verify refetch after mutations
+      // console.log('[EventDetail] segments queryFn RUNNING', { eventId, sessionIdsKey, timestamp: new Date().toISOString() });
       if (sessions.length === 0) return [];
       const sessionIds = sessions.map(s => s.id);
       const response = await base44.functions.invoke('getSegmentsBySessionIds', { sessionIds });
-      console.log('[EventDetail] segments queryFn COMPLETE', { count: response.data.segments?.length });
       return response.data.segments || [];
     },
     enabled: !!eventId && sessions.length > 0,
@@ -125,15 +124,14 @@ export default function EventDetail() {
     placeholderData: (previousData) => previousData,
   });
 
-  // DEBUG: Log when allSegments query runs (remove after verification)
   const { data: allSegments = [] } = useQuery({
     queryKey: ['allSegments', eventId, sessionIdsKey],
     queryFn: async () => {
-      console.log('[EventDetail] allSegments queryFn RUNNING', { eventId, sessionIdsKey, timestamp: new Date().toISOString() });
+      // DEV-ONLY: Uncomment to verify refetch after mutations
+      // console.log('[EventDetail] allSegments queryFn RUNNING', { eventId, sessionIdsKey, timestamp: new Date().toISOString() });
       if (sessions.length === 0) return [];
       const sessionIds = sessions.map(s => s.id);
       const response = await base44.functions.invoke('getSegmentsBySessionIds', { sessionIds });
-      console.log('[EventDetail] allSegments queryFn COMPLETE', { count: response.data.segments?.length });
       return response.data.segments || [];
     },
     enabled: !!eventId && sessions.length > 0,
