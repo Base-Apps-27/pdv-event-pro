@@ -78,9 +78,19 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     queryFn: () => base44.entities.AnnouncementSeries.list(),
   });
 
-  // Fetch segments to calculate suggested start time and validate overlaps
+  // ============================================================
+  // VALIDATION-ONLY QUERY - DO NOT USE FOR DISPLAY
+  // ============================================================
+  // Purpose: Calculate suggested start times and detect time overlaps
+  // Scope: Form validation ONLY - this data is NOT rendered in any UI
+  // Why session-level: Form needs fresh data for the specific session being edited
+  // 
+  // IMPORTANT: UI display derives from event-level cache (EventDetail segments prop)
+  // This query exists solely for overlap detection during save validation
+  // See: components/utils/queryKeys.js for canonical cache architecture
+  // ============================================================
   const { data: allSegments = [] } = useQuery({
-    queryKey: ['segments', sessionId],
+    queryKey: ['segments', sessionId], // Invalidated by segmentKeys.invalidateAll()
     queryFn: () => base44.entities.Segment.filter({ session_id: sessionId }, 'order'),
     enabled: !!sessionId,
   });
