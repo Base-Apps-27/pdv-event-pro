@@ -67,16 +67,16 @@ export default function LiveOperationsChat({
   // Check if user can access chat
   // CRITICAL: Must check permission BEFORE any hooks that depend on contextId
   // to prevent unauthorized users from seeing/using the chat
+  // hasPermission returns false for null/undefined user, so this is safe
   const canViewChat = hasPermission(currentUser, 'view_live_chat');
   const canPin = hasPermission(currentUser, 'manage_live_timing'); // Admins/managers can pin
 
-  // Don't render anything if user doesn't have permission or no context
+  // Don't render anything if:
+  // 1. User is not loaded yet (currentUser is null/undefined)
+  // 2. User doesn't have view_live_chat permission
+  // 3. No context ID provided
   // This check happens before any data fetching to prevent unauthorized access
-  if (!canViewChat) {
-    return null;
-  }
-  
-  if (!contextId) {
+  if (!currentUser || !canViewChat || !contextId) {
     return null;
   }
 
