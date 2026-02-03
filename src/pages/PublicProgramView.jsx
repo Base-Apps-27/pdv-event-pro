@@ -1669,7 +1669,8 @@ export default function PublicProgramView() {
       />
 
       {/* Live Operations Chat - Floating FAB */}
-      {currentUser && (viewType === "event" ? selectedEvent : selectedService) && (
+      {/* CRITICAL: Only render chat for users with explicit view_live_chat permission */}
+      {currentUser && hasPermission(currentUser, 'view_live_chat') && (viewType === "event" ? selectedEvent : selectedService) && (
         <LiveOperationsChat
           currentUser={currentUser}
           contextType={viewType}
