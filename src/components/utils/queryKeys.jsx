@@ -7,14 +7,48 @@
  * 
  * IMPORTANT: When adding new segment queries, add the key pattern here.
  * 
- * INVALIDATION STRATEGY:
+ * ============================================================
+ * CANONICAL CACHE ARCHITECTURE (DECISION: 2025-02-03)
+ * ============================================================
+ * 
+ * SOURCE OF TRUTH: Event-level segments cache
+ *   - Key: ['segments', eventId, sessionIdsKey]
+ *   - Fetches ALL segments for an event via getSegmentsBySessionIds
+ *   - This is the CANONICAL source that mutations invalidate
+ * 
+ * DERIVED CACHES:
+ *   - Session-level lists MUST derive from event cache OR refetch
+ *   - SegmentList receives segments as props from parent (SessionManager)
+ *   - SessionManager receives segments as props from parent (EventDetail)
+ *   
+ * WHY EVENT-LEVEL IS CANONICAL:
+ *   1. Single network call for all event segments (efficient)
+ *   2. Consistent data across all session views
+ *   3. Simple invalidation: invalidate event cache, children re-render
+ *   4. Avoids N+1 queries for N sessions
+ * 
+ * SESSION-LEVEL DIRECT FETCH:
+ *   - Used ONLY in SegmentFormTwoColumn for overlap validation
+ *   - Key: ['segments', sessionId]
+ *   - This is a READ-ONLY cache for form validation
+ *   - Mutations still invalidate via predicate (catches both patterns)
+ * 
+ * sessionIdsKey STABILIZATION:
+ *   - MUST be sorted: sessions.map(s => s.id).sort().join(',')
+ *   - Without sorting, key changes when sessions reorder
+ *   - This causes unnecessary refetches and cache misses
+ * 
+ * ============================================================
+ * INVALIDATION STRATEGY
+ * ============================================================
+ * 
  * - Use `segmentKeys.invalidateAll(queryClient)` after ANY segment mutation
  * - This ensures all segment caches are refreshed regardless of key structure
  * 
  * WHY PREDICATE-BASED INVALIDATION:
  * - EventDetail uses composite keys: ['segments', eventId, sessionIdsKey]
- * - SessionManager uses simple keys: ['segments', sessionId]
- * - Predicate matching on key[0] ensures both are invalidated
+ * - SegmentFormTwoColumn uses simple keys: ['segments', sessionId]
+ * - Predicate matching on key[0] ensures BOTH are invalidated
  * 
  * DECISION LOG REFERENCE: Segment Query Key Consolidation (2025)
  */
