@@ -151,21 +151,25 @@ export default function StickyOpsDeck({
 
   const activeAction = upcomingActions[0] || pastActions[0];
 
+  // Calculate concurrent actions (same time window) to indicate stacks
+  // We check the source list (upcoming or past) for items within the same minute
+  // Hook MUST be called unconditionally
+  const isPastRef = activeAction ? activeAction.time.getTime() <= currentTime.getTime() : false;
+  
+  const concurrentCount = useMemo(() => {
+    if (!activeAction) return 0;
+    const list = isPastRef ? pastActions : upcomingActions;
+    return list.filter(a => 
+      Math.abs(a.time.getTime() - activeAction.time.getTime()) < 60000 // Within 1 minute
+    ).length;
+  }, [activeAction, isPastRef, pastActions, upcomingActions]);
+
   if (!activeAction) return null;
 
   const isPast = activeAction.time.getTime() <= currentTime.getTime();
   const diffMs = Math.abs(activeAction.time.getTime() - currentTime.getTime());
   const diffMin = Math.floor(diffMs / 60000);
   const isUrgent = !isPast && diffMin < 5;
-
-  // Calculate concurrent actions (same time window) to indicate stacks
-  // We check the source list (upcoming or past) for items within the same minute
-  const concurrentCount = useMemo(() => {
-    const list = isPast ? pastActions : upcomingActions;
-    return list.filter(a => 
-      Math.abs(a.time.getTime() - activeAction.time.getTime()) < 60000 // Within 1 minute
-    ).length;
-  }, [activeAction, isPast, pastActions, upcomingActions]);
 
   const moreCount = Math.max(0, concurrentCount - 1);
   
