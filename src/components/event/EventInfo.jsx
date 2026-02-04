@@ -42,7 +42,7 @@ export default function EventInfo({ event }) {
              className="text-xs gap-2"
              onClick={async () => {
                 try {
-                  const url = `${window.location.origin}/SpeakerSubmission?event_id=${event.id}`;
+                  const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${event.id}`;
                   await navigator.clipboard.writeText(url);
                   toast.success("Link de oradores copiado al portapapeles");
                 } catch (err) {
