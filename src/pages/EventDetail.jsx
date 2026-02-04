@@ -3,11 +3,17 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText, History, Link as LinkIcon } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText, History, Link as LinkIcon, MoreHorizontal } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SessionManager from "../components/event/SessionManager";
@@ -161,13 +167,14 @@ export default function EventDetail() {
   return (
     <div className="p-6 md:p-8 space-y-8">
       {/* Header Section with subtle gradient background */}
-      <div className="relative z-10 bg-gradient-to-r from-gray-50 to-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <div className="flex items-start gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(createPageUrl("Events"))} className="hover:bg-gray-100 rounded-full">
-            <ArrowLeft className="w-6 h-6 text-gray-500" />
-          </Button>
-          <div>
-            <div className="flex items-center gap-3 mb-1">
+      <div className="relative z-10 bg-gradient-to-r from-gray-50 to-white p-4 md:p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-start gap-4">
+          <div className="flex items-start gap-3 w-full md:w-auto">
+             <Button variant="ghost" size="icon" onClick={() => navigate(createPageUrl("Events"))} className="hover:bg-gray-100 rounded-full shrink-0">
+               <ArrowLeft className="w-6 h-6 text-gray-500" />
+             </Button>
+             <div className="flex-1 md:flex-none">
+               <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-1">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 uppercase font-['Bebas_Neue'] tracking-tight">{e.name}</h1>
               <Badge variant="outline" className="text-xs uppercase tracking-wider border-gray-300 text-gray-500">{e.year}</Badge>
               {e.origin === 'template' && (
@@ -203,46 +210,56 @@ export default function EventDetail() {
             </div>
             {e.theme && <p className="text-xl font-medium italic" style={{ color: '#1F8A70' }}>"{e.theme}"</p>}
           </div>
-          <div className="ml-auto flex gap-2">
-            <Button 
-              onClick={() => {
-                const url = `${window.location.origin}/SpeakerSubmission?event_id=${eventId}`;
-                navigator.clipboard.writeText(url);
-                toast.success("Link de oradores copiado al portapapeles");
-              }}
-              variant="outline"
-              className="border-gray-300 hover:border-gray-400 text-gray-700"
-            >
-              <LinkIcon className="w-4 h-4 mr-2" />
-              Link Oradores
-            </Button>
-            <Button 
-              onClick={() => navigate(createPageUrl("Reports") + `?eventId=${eventId}`)}
-              variant="outline"
-              className="border-gray-300 hover:border-gray-400 text-gray-700"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Reportes
-            </Button>
-            <Button 
-              onClick={() => setShowEditHistory(true)}
-              variant="outline"
-              className="border-gray-300 hover:border-gray-400 text-gray-700"
-            >
-              <History className="w-4 h-4 mr-2" />
-              Historial
-            </Button>
-            <Button 
-              onClick={() => setShowEditEvent(true)}
-              variant="outline"
-              className="border-gray-300 hover:border-gray-400 text-gray-700"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Editar
-            </Button>
+          <div className="ml-auto flex items-center gap-2">
+            {/* Desktop Actions */}
+            <div className="hidden lg:flex items-center gap-2">
+              <Button 
+                onClick={async () => {
+                   try {
+                     const url = `${window.location.origin}/SpeakerSubmission?event_id=${eventId}`;
+                     await navigator.clipboard.writeText(url);
+                     toast.success("Link de oradores copiado al portapapeles");
+                   } catch (err) {
+                     toast.error("Error al copiar. Verifica permisos del navegador.");
+                   }
+                }}
+                variant="outline"
+                className="border-gray-300 hover:border-gray-400 text-gray-700"
+              >
+                <LinkIcon className="w-4 h-4 mr-2" />
+                Link Oradores
+              </Button>
+              <Button 
+                onClick={() => navigate(createPageUrl("Reports") + `?eventId=${eventId}`)}
+                variant="outline"
+                className="border-gray-300 hover:border-gray-400 text-gray-700"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Reportes
+              </Button>
+              <Button 
+                onClick={() => setShowEditHistory(true)}
+                variant="outline"
+                className="border-gray-300 hover:border-gray-400 text-gray-700"
+              >
+                <History className="w-4 h-4 mr-2" />
+                Historial
+              </Button>
+              <Button 
+                onClick={() => setShowEditEvent(true)}
+                variant="outline"
+                className="border-gray-300 hover:border-gray-400 text-gray-700"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Editar
+              </Button>
+            </div>
+
+            {/* AI Assistant (Always Visible, but icon-only on mobile) */}
             <Button 
               onClick={() => setShowAIHelper(true)}
               variant="outline"
+              className="hidden sm:flex"
               style={{ 
                 background: 'linear-gradient(to right, rgba(31, 138, 112, 0.1), rgba(141, 198, 63, 0.1))',
                 borderColor: 'rgba(31, 138, 112, 0.3)',
@@ -252,6 +269,56 @@ export default function EventDetail() {
               <Sparkles className="w-4 h-4 mr-2" />
               Asistente IA
             </Button>
+             <Button 
+              onClick={() => setShowAIHelper(true)}
+              variant="outline"
+              size="icon"
+              className="sm:hidden"
+              style={{ 
+                background: 'linear-gradient(to right, rgba(31, 138, 112, 0.1), rgba(141, 198, 63, 0.1))',
+                borderColor: 'rgba(31, 138, 112, 0.3)',
+                color: '#1F8A70'
+              }}
+            >
+              <Sparkles className="w-4 h-4" />
+            </Button>
+
+            {/* Mobile Actions Dropdown */}
+            <div className="lg:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="border-gray-300">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={async () => {
+                     try {
+                       const url = `${window.location.origin}/SpeakerSubmission?event_id=${eventId}`;
+                       await navigator.clipboard.writeText(url);
+                       toast.success("Link copiado");
+                     } catch (err) {
+                       toast.error("Error al copiar link");
+                     }
+                  }}>
+                    <LinkIcon className="w-4 h-4 mr-2" />
+                    Link Oradores
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate(createPageUrl("Reports") + `?eventId=${eventId}`)}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Reportes
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowEditHistory(true)}>
+                    <History className="w-4 h-4 mr-2" />
+                    Historial
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowEditEvent(true)}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Editar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>
