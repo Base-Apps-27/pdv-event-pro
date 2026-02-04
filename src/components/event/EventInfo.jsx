@@ -36,23 +36,37 @@ export default function EventInfo({ event }) {
       <CardContent className="space-y-6 pt-6">
         {/* Actions Toolbar */}
         <div className="flex justify-end mb-4">
-           <Button 
-             variant="outline" 
-             size="sm" 
-             className="text-xs gap-2"
-             onClick={async () => {
-                try {
+           <div className="flex gap-2">
+             <Button 
+               variant="outline" 
+               size="sm" 
+               className="text-xs gap-2"
+               onClick={() => {
                   const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${event.id}`;
-                  await navigator.clipboard.writeText(url);
-                  toast.success("Link de oradores copiado al portapapeles");
-                } catch (err) {
-                  toast.error("Error al copiar link");
-                }
-             }}
-           >
-             <LinkIcon className="w-3 h-3" />
-             Link para Oradores
-           </Button>
+                  window.open(url, '_blank');
+               }}
+             >
+               <LinkIcon className="w-3 h-3" />
+               Abrir Formulario
+             </Button>
+             <Button 
+               variant="outline" 
+               size="sm" 
+               className="text-xs gap-2"
+               onClick={async () => {
+                  try {
+                    const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${event.id}`;
+                    await navigator.clipboard.writeText(url);
+                    toast.success("Link copiado");
+                  } catch (err) {
+                    toast.error("Error al copiar link");
+                  }
+               }}
+             >
+               <LinkIcon className="w-3 h-3" />
+               Copiar Link
+             </Button>
+           </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
