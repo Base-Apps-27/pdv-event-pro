@@ -60,6 +60,36 @@ export default function StickyOpsDeck({
 
       addPreAction(preSessionData.registration_desk_open_time, "Mesa de Registro Abre", "admin");
       addPreAction(preSessionData.library_open_time, "Librería Abre", "admin");
+
+      // Facility Notes (prep item)
+      if (preSessionData.facility_notes) {
+        // Determine time: Earliest pre-session time OR 60 min before first segment
+        let timeStr = [preSessionData.registration_desk_open_time, preSessionData.library_open_time]
+          .filter(Boolean)
+          .sort()[0];
+
+        if (!timeStr && segments.length > 0 && segments[0].start_time) {
+          // Fallback: 60 mins before first segment
+          const [h, m] = segments[0].start_time.split(':').map(Number);
+          const d = new Date();
+          d.setHours(h, m - 60, 0, 0);
+          timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        }
+
+        if (timeStr) {
+          const noteAction = {
+            id: `pre-facility-${timeStr}`,
+            time: parseDateTime(activeDateStr, timeStr),
+            label: "Facility Prep", // Generic label
+            segmentTitle: "Pre-Session",
+            type: "facility",
+            isPrep: true,
+            segmentId: null,
+            notes: preSessionData.facility_notes // Full notes content
+          };
+          if (noteAction.time) actions.push(noteAction);
+        }
+      }
     }
 
     // 2. Process Segment Actions
@@ -238,6 +268,11 @@ export default function StickyOpsDeck({
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate text-xs">{action.label}</div>
+                  {action.notes && (
+                    <div className={`text-[11px] leading-tight mb-0.5 whitespace-pre-wrap ${isUrgent ? 'text-amber-100' : 'text-gray-700 font-medium'}`}>
+                      {action.notes}
+                    </div>
+                  )}
                   <div className={`text-[10px] truncate ${isUrgent ? 'text-amber-200/70' : 'text-gray-500/80'}`}>
                     {action.segmentTitle} • {action.type}
                   </div>
