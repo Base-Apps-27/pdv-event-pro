@@ -210,6 +210,7 @@ export default function EventDetail() {
             </div>
             {e.theme && <p className="text-xl font-medium italic" style={{ color: '#1F8A70' }}>"{e.theme}"</p>}
           </div>
+          </div>
           <div className="ml-auto flex items-center gap-2">
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-2">
