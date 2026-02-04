@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Entrega de Mensaje - ${eventName}</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- Version V2 - Fresh Deploy - Light Mode -->
+    <!-- Version V3 - Fresh Deploy - Light Mode -->
     <style>
         :root {
             --brand-teal: #1F8A70;
