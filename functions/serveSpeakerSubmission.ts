@@ -85,7 +85,8 @@ Deno.serve(async (req) => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Entrega de Mensaje - ${eventName}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Updated to Bebas Neue for brand consistency v2026.02.04 -->
     <style>
         :root {
             --brand-teal: #1F8A70;
@@ -129,7 +130,7 @@ Deno.serve(async (req) => {
         }
 
         .form-header h1 {
-            font-family: 'Anton', 'Impact', sans-serif;
+            font-family: 'Bebas Neue', sans-serif;
             text-transform: uppercase;
             font-size: 2rem;
             margin-bottom: 8px;
@@ -151,7 +152,7 @@ Deno.serve(async (req) => {
         }
 
         .form-section h3 {
-            font-family: 'Anton', 'Impact', sans-serif;
+            font-family: 'Bebas Neue', sans-serif;
             text-transform: uppercase;
             font-size: 1.1rem;
             margin-bottom: 16px;
