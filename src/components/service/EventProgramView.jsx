@@ -416,8 +416,8 @@ export default function EventProgramView({
                 // Handle Breakout segments separately
                 if (segment.segment_type === "Breakout" && segment.breakout_rooms) {
                   return (
-                    <div key={segment.id} className="p-4 bg-amber-50">
-                      <div className="flex items-center justify-between mb-3">
+                    <div key={segment.id} className="p-4 bg-amber-50 print:p-2">
+                      <div className="flex items-center justify-between mb-3 print:mb-1">
                         <div className="flex items-center gap-3">
                           <div className="w-5 h-5" /> {/* Spacer for alignment */}
                           <div>
@@ -435,23 +435,23 @@ export default function EventProgramView({
 
                       <h4 className="text-xl font-bold mb-3">{segment.title}</h4>
 
-                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 print:grid-cols-3 print:gap-2">
                         {segment.breakout_rooms.map((room, roomIdx) => (
-                          <Card key={roomIdx} className="bg-white border-2 border-gray-300">
-                            <CardContent className="p-4">
+                          <Card key={roomIdx} className="bg-white border-2 border-gray-300 print:border">
+                            <CardContent className="p-4 print:p-2">
                               {room.room_id && (
-                                <Badge variant="outline" className="mb-2 bg-blue-50 text-blue-800">
+                                <Badge variant="outline" className="mb-2 bg-blue-50 text-blue-800 print:mb-1 print:text-[10px] print:h-5 print:px-1">
                                   {getRoomName(room.room_id)}
                                 </Badge>
                               )}
-                              <h5 className="font-bold mb-2 text-gray-900">{room.topic || `Sala ${roomIdx + 1}`}</h5>
+                              <h5 className="font-bold mb-2 text-gray-900 print:text-sm print:mb-1">{room.topic || `Sala ${roomIdx + 1}`}</h5>
                               {room.hosts && (
-                                <p className="text-sm text-indigo-600 mb-1">
+                                <p className="text-sm text-indigo-600 mb-1 print:text-xs">
                                   <span className="font-semibold">Anfitrión:</span> {room.hosts}
                                 </p>
                               )}
                               {room.speakers && (
-                                <p className="text-sm text-blue-600 mb-2">
+                                <p className="text-sm text-blue-600 mb-2 print:text-xs">
                                   <span className="font-semibold">Presentador:</span> {room.speakers}
                                 </p>
                               )}
