@@ -38,16 +38,15 @@ export default function EventInfo({ event }) {
         <div className="flex justify-end mb-4">
            <div className="flex gap-2">
              <Button 
+               asChild
                variant="outline" 
                size="sm" 
                className="text-xs gap-2"
-               onClick={() => {
-                  const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${event.id}`;
-                  window.open(url, '_blank');
-               }}
              >
-               <LinkIcon className="w-3 h-3" />
-               Abrir Formulario
+               <a href={`${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${event.id}`} target="_blank" rel="noopener noreferrer">
+                 <LinkIcon className="w-3 h-3" />
+                 Abrir Formulario
+               </a>
              </Button>
              <Button 
                variant="outline" 
