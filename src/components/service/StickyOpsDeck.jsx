@@ -68,6 +68,31 @@ export default function StickyOpsDeck({
           .filter(Boolean)
           .sort()[0];
 
+        // Try to extract time from notes if explicit fields are missing
+        if (!timeStr) {
+          // Regex for H:MM or HH:MM optionally followed by am/pm/a.m./p.m.
+          const timeMatch = preSessionData.facility_notes.match(/\b(\d{1,2}):(\d{2})\s*(a\.?m\.?|p\.?m\.?)?\b/i);
+          
+          if (timeMatch) {
+            let [_, h, m, meridiem] = timeMatch;
+            h = parseInt(h);
+            m = parseInt(m);
+            
+            // Convert to 24h if meridiem exists
+            if (meridiem) {
+              const isPM = meridiem.toLowerCase().includes('p');
+              if (isPM && h < 12) h += 12;
+              if (!isPM && h === 12) h = 0;
+            } else {
+              // Heuristic: if no meridiem, and hour is small (1-6) but segments start late (e.g. 19:00), assume PM?
+              // For safety/simplicity, we'll assume the text matches the system format (usually 24h or clear context).
+              // If vague (e.g. "5:00"), we treat as 5:00 AM unless logic suggests otherwise.
+              // Given the constraints, literal interpretation is safest.
+            }
+            timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+          }
+        }
+
         if (!timeStr && segments.length > 0 && segments[0].start_time) {
           // Fallback: 60 mins before first segment
           const [h, m] = segments[0].start_time.split(':').map(Number);
