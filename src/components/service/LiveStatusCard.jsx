@@ -210,11 +210,6 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('live.upNext')}</span>
                 <div className="flex items-center gap-2">
-                  {upNextCountdown && (
-                    <Badge variant="default" className="bg-pdv-teal text-white font-mono font-bold">
-                      T–{upNextCountdown.hms}
-                    </Badge>
-                  )}
                   <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300 font-mono font-bold">
                     {nextSegment.start_time ? formatTimeToEST(nextSegment.start_time) : ''}
                   </Badge>
