@@ -69,6 +69,8 @@ import TestFunctions from './pages/TestFunctions';
 import UserManagement from './pages/UserManagement';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
+import SpeakerSubmission from './pages/SpeakerSubmission';
+import MessageProcessing from './pages/MessageProcessing';
 import __Layout from './Layout.jsx';
 
 
@@ -95,6 +97,8 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
+    "SpeakerSubmission": SpeakerSubmission,
+    "MessageProcessing": MessageProcessing,
 }
 
 export const pagesConfig = {

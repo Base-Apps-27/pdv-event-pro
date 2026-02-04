@@ -21,7 +21,7 @@ function LayoutContent({ children }) {
   const isActive = (path) => location.pathname === path;
 
   // CRITICAL: PublicProgramView AND /print/ routes bypass Layout auth checks
-  const isPublicPage = location.pathname.includes('PublicProgramView') || location.pathname.includes('/print/');
+  const isPublicPage = location.pathname.includes('PublicProgramView') || location.pathname.includes('/print/') || location.pathname.includes('SpeakerSubmission');
 
   if (isPublicPage) {
     return <div className="min-h-screen bg-gray-50">{children}</div>;
@@ -247,6 +247,18 @@ function LayoutContent({ children }) {
                     >
                       <Shield className="w-5 h-5" />
                       {language === 'es' ? 'Roles y Permisos' : 'Roles & Permissions'}
+                    </Link>
+                    <Link
+                      to={createPageUrl("MessageProcessing")}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                        isActive(createPageUrl("MessageProcessing"))
+                          ? "text-white shadow-md"
+                          : "text-gray-400 hover:bg-white/5 hover:text-white"
+                      }`}
+                      style={isActive(createPageUrl("MessageProcessing")) ? gradientStyle : {}}
+                    >
+                      <Sparkles className="w-5 h-5" />
+                      {language === 'es' ? 'Procesar Mensajes' : 'Process Messages'}
                     </Link>
                   </>
                 )}
