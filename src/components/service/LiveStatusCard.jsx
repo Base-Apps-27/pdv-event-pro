@@ -174,22 +174,24 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
         ) : (
           upNextCountdown ? (
             <div 
-              style={{ background: 'linear-gradient(to right, rgba(31,138,112,0.1), rgba(141,198,63,0.1))', border: '2px solid rgba(31,138,112,0.3)' }}
-              className="p-4 rounded-lg w-full"
+              className="p-6 rounded-xl w-full bg-gradient-to-br from-teal-50 to-white border-2 border-pdv-teal/20"
             >
-              <div className="flex items-center justify-between">
-                <div className="font-mono font-extrabold text-pdv-teal text-2xl md:text-3xl leading-none">
-                  T–{upNextCountdown.hms}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-pdv-teal uppercase tracking-widest">Iniciando en:</span>
+                  <Badge variant="outline" className="bg-white text-gray-700 border-gray-300 font-mono font-bold text-xs">
+                    {upNextCountdown.segment?.start_time ? formatTimeToEST(upNextCountdown.segment.start_time) : ''}
+                  </Badge>
                 </div>
-                <Badge variant="outline" className="bg-white text-gray-700 border-gray-300 font-mono font-bold">
-                  {upNextCountdown.segment?.start_time ? formatTimeToEST(upNextCountdown.segment.start_time) : ''}
-                </Badge>
+                <div className="font-mono font-black text-pdv-teal text-5xl md:text-6xl leading-none tracking-tighter tabular-nums my-2">
+                  -{upNextCountdown.hms}
+                </div>
+                {(upNextCountdown.segment?.title || upNextCountdown.segment?.data?.title) && (
+                  <div className="text-base font-semibold text-gray-800 line-clamp-1 border-t border-teal-100 pt-2 mt-1">
+                    {upNextCountdown.segment.title || upNextCountdown.segment.data?.title}
+                  </div>
+                )}
               </div>
-              {(upNextCountdown.segment?.title || upNextCountdown.segment?.data?.title) && (
-                <div className="text-sm text-gray-600 mt-1 line-clamp-1">
-                  {upNextCountdown.segment.title || upNextCountdown.segment.data?.title}
-                </div>
-              )}
             </div>
           ) : (
             <div className="p-4 bg-gray-50 flex items-center justify-center text-gray-400">

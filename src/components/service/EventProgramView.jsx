@@ -159,53 +159,42 @@ export default function EventProgramView({
         liveAdjustmentEnabled={filteredSessions[0]?.live_adjustment_enabled}
       />
 
-      {/* View Mode and Filters Card */}
-      <Card className="bg-white border-2 border-gray-300">
-        <CardHeader className="bg-gray-100 border-b-2 border-gray-300">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5" style={{ color: '#1F8A70' }} />
-              <h3 className="text-lg font-bold uppercase text-gray-900">Vista y Filtros</h3>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setViewMode("simple")}
-                className="px-3 py-1.5 text-sm rounded-lg font-semibold flex items-center gap-2"
-                style={viewMode === "simple" ? { backgroundColor: '#1F8A70', color: '#ffffff' } : { backgroundColor: '#ffffff', border: '2px solid #9ca3af', color: '#111827' }}
-              >
-                <List className="w-4 h-4" />
-                Simple
-              </button>
-              <button
-                onClick={() => setViewMode("full")}
-                className="px-3 py-1.5 text-sm rounded-lg font-semibold flex items-center gap-2"
-                style={viewMode === "full" ? { backgroundColor: '#1F8A70', color: '#ffffff' } : { backgroundColor: '#ffffff', border: '2px solid #9ca3af', color: '#111827' }}
-              >
-                <ListChecks className="w-4 h-4" />
-                Run of Show
-              </button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-900">Filtrar por Sesión</label>
-            <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
-              <SelectTrigger className="bg-white border-2 border-gray-400 text-gray-900">
-                <SelectValue className="text-gray-900" />
-              </SelectTrigger>
-              <SelectContent className="bg-white text-gray-900">
-                <SelectItem value="all" className="text-gray-900">Todas las Sesiones</SelectItem>
-                {eventSessions.map((session) => (
-                  <SelectItem key={session.id} value={session.id} className="text-gray-900">
-                    {session.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Compact Filters Toolbar */}
+      <div className="flex flex-col sm:flex-row gap-3 items-center bg-gray-100 p-2 rounded-xl border border-gray-200">
+        <div className="flex-1 w-full sm:w-auto">
+          <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
+            <SelectTrigger className="bg-white border-gray-300 text-gray-900 h-9 text-sm font-medium">
+              <Filter className="w-3 h-3 mr-2 text-gray-500" />
+              <SelectValue placeholder="Todas las Sesiones" />
+            </SelectTrigger>
+            <SelectContent className="bg-white">
+              <SelectItem value="all">Todas las Sesiones</SelectItem>
+              {eventSessions.map((session) => (
+                <SelectItem key={session.id} value={session.id}>
+                  {session.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex bg-gray-200/50 p-1 rounded-lg shrink-0 w-full sm:w-auto">
+          <button
+            onClick={() => setViewMode("simple")}
+            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "simple" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            <List className="w-3.5 h-3.5" />
+            Simple
+          </button>
+          <button
+            onClick={() => setViewMode("full")}
+            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "full" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            <ListChecks className="w-3.5 h-3.5" />
+            Run of Show
+          </button>
+        </div>
+      </div>
 
       {/* Sessions Display */}
       {filteredSessions.map((session) => {

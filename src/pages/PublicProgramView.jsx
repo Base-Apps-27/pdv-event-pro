@@ -677,54 +677,27 @@ export default function PublicProgramView() {
 
   return (
     <div className="min-h-screen bg-[#F0F1F3]">
-      {/* Hero Header */}
-      <div style={gradientStyle} className="text-white py-12 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <div className="flex items-center gap-4">
-              <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" 
-                alt="Logo" 
-                className="w-16 h-16 md:w-20 md:h-20"
-              />
-              <div>
-                <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight text-white">{t('public.headerTitle')}</h1>
-                <p className="text-sm md:text-base text-white/95 mt-1">¡ATRÉVETE A CAMBIAR!</p>
-              </div>
-            </div>
-            <div className="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur px-3 py-2 rounded-lg">
-              <BellRing className="w-4 h-4 animate-pulse" />
-              <span className="text-xs font-medium">{t('public.notificationsActive')}</span>
-            </div>
+      <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+        {/* Compact Navigation Bar */}
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          {/* View Type Toggle (Segmented Control style) */}
+          <div className="bg-gray-200 p-1 rounded-xl flex shrink-0 shadow-inner">
+            <button
+              onClick={() => setViewType("event")}
+              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "event" ? "bg-white text-pdv-teal shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              {t('public.events')}
+            </button>
+            <button
+              onClick={() => setViewType("service")}
+              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "service" ? "bg-white text-pdv-green shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              {t('public.services')}
+            </button>
           </div>
-          <p className="text-lg text-white/95">{t('public.explore')}</p>
-        </div>
-      </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        {/* Navigation Selector */}
-        <Card className="bg-white border-2 border-gray-300">
-          <CardContent className="p-4">
-            <div className="flex flex-col gap-4">
-              {/* View Type Toggle */}
-              <div className="flex gap-2 w-full">
-                <button
-                  onClick={() => setViewType("event")}
-                  className="flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all shadow-md"
-                  style={viewType === "event" ? { backgroundColor: '#1F8A70', color: '#ffffff' } : { backgroundColor: '#ffffff', border: '2px solid #9ca3af', color: '#111827' }}
-                >
-                  {t('public.events')}
-                </button>
-                <button
-                  onClick={() => setViewType("service")}
-                  className="flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all shadow-md"
-                  style={viewType === "service" ? { backgroundColor: '#8DC63F', color: '#ffffff' } : { backgroundColor: '#ffffff', border: '2px solid #9ca3af', color: '#111827' }}
-                >
-                  {t('public.services')}
-                </button>
-              </div>
-
-              {/* Event Selector (1 past, 1 upcoming within 7 days) */}
+          {/* Context Selector */}
+          <div className="flex-1 w-full">
               {viewType === "event" && (() => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -816,110 +789,33 @@ export default function PublicProgramView() {
                   </div>
                 );
               })()}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {((selectedEventId && selectedEvent) || (selectedServiceId && selectedService)) && (
           <>
-            {/* Event/Service Info Card */}
-            <Card className={`bg-white border-2 border-gray-300 border-l-4 ${viewType === "event" ? "border-l-pdv-teal" : "border-l-pdv-green"}`}>
-              <CardContent className="p-6">
-                <h2 className="text-3xl font-bold uppercase mb-2 text-gray-900">
-                  {viewType === "event" ? selectedEvent?.name : selectedService?.name}
-                </h2>
-                {viewType === "event" && selectedEvent?.theme && (
-                  <p className="text-xl text-pdv-green italic mb-4">"{selectedEvent.theme}"</p>
+            {/* Minimal Event/Service Info Banner */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-gray-500 text-xs uppercase font-bold tracking-wider">
+                <Calendar className="w-3 h-3" />
+                <span>
+                  {viewType === "event" && selectedEvent?.start_date ? formatDateET(selectedEvent.start_date) : 
+                   viewType === "service" && selectedService?.date ? formatDateET(selectedService.date) : ""}
+                </span>
+                {viewType === "event" && selectedEvent?.location && (
+                  <>
+                    <span>•</span>
+                    <span className="truncate">{selectedEvent.location}</span>
+                  </>
                 )}
-                {viewType === "service" && selectedService?.description && (
-                  <p className="text-lg text-gray-600 mb-4">{selectedService.description}</p>
-                )}
-                <div className="flex flex-wrap gap-4 text-sm mb-4 text-gray-700">
-                  {viewType === "event" && selectedEvent?.start_date && (
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-gray-600" />
-                      <span>{formatDateET(selectedEvent.start_date)}</span>
-                      {selectedEvent.end_date && <span> - {formatDateET(selectedEvent.end_date)}</span>}
-                    </div>
-                  )}
-                  {viewType === "service" && selectedService && (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-600" />
-                        <span>{selectedService.day_of_week}</span>
-                      </div>
-                      {selectedService.time && (
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-gray-600" />
-                          <span>{selectedService.time}</span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  {(selectedEvent?.location || selectedService?.location) && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-gray-600" />
-                      <span>{viewType === "event" ? selectedEvent?.location : selectedService?.location}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Toggle Event Details */}
-                {viewType === "event" && (
-                  <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setShowEventDetails(!showEventDetails)}
-                                  className="mb-4 border-2 border-gray-400 bg-white text-gray-900 font-semibold"
-                                >
-                                  {showEventDetails ? <ChevronUp className="w-4 h-4 mr-2" /> : <ChevronDown className="w-4 h-4 mr-2" />}
-                                  {showEventDetails ? t('public.hideDetails') : t('public.viewMoreDetails')}
-                                </Button>
-                )}
-
-                {/* Expanded Details */}
-                {showEventDetails && viewType === "event" && (
-                  <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-                    {viewType === "event" && selectedEvent?.description && (
-                      <div>
-                        <p className="font-semibold text-gray-900 mb-1">{t('public.description')}:</p>
-                        <p className="text-gray-700">{selectedEvent.description}</p>
-                      </div>
-                    )}
-                    {viewType === "event" && selectedEvent?.announcement_blurb && (
-                      <div>
-                        <p className="font-semibold text-gray-900 mb-1">{t('public.announcement')}:</p>
-                        <p className="text-gray-700">{selectedEvent.announcement_blurb}</p>
-                      </div>
-                    )}
-                    {viewType === "event" && selectedEvent?.promotion_targets && selectedEvent.promotion_targets.length > 0 && (
-                      <div>
-                        <p className="font-semibold text-gray-900 mb-1">{t('public.audience')}:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedEvent.promotion_targets.map((target, idx) => (
-                            <Badge key={idx} variant="outline">{target}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <div>
-                        <p className="font-semibold text-gray-900 mb-1">{t('public.totalSessions')}:</p>
-                        <p className={`text-2xl font-bold ${viewType === "event" ? "text-pdv-teal" : "text-pdv-green"}`}>
-                          {eventSessions.length}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 mb-1">{t('public.totalSegments')}:</p>
-                        <p className={`text-2xl font-bold ${viewType === "event" ? "text-pdv-teal" : "text-pdv-green"}`}>
-                          {allSegments.filter(seg => eventSessions.some(s => s.id === seg.session_id)).length}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 leading-tight">
+                {viewType === "event" ? selectedEvent?.name : selectedService?.name}
+              </h2>
+              {viewType === "event" && selectedEvent?.theme && (
+                <p className="text-pdv-teal font-medium italic">"{selectedEvent.theme}"</p>
+              )}
+            </div>
 
             {/* Live Admin Controls moved to EventProgramView - LiveDirectorPanel */}
 
