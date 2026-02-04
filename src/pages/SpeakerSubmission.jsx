@@ -14,6 +14,9 @@ export default function SpeakerSubmissionPage() {
     const [content, setContent] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    // Generate idempotency key once per component load (or could be per submission attempt if we want to allow retries with new keys)
+    // But for "retry same submission", we want same key.
+    const [idempotencyKey] = useState(() => crypto.randomUUID());
 
     // Get active event ID from URL or fetch latest
     // For now, let's just fetch options for the latest event via the backend function
@@ -42,7 +45,8 @@ export default function SpeakerSubmissionPage() {
         try {
             await base44.functions.invoke('submitSpeakerContent', {
                 segment_id: selectedSegmentId,
-                content: content
+                content: content,
+                idempotencyKey
             });
             setIsSuccess(true);
             toast.success("Mensaje enviado correctamente");

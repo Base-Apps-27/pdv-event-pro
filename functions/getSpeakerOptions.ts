@@ -1,6 +1,35 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Rate Limiter (InMemory - resets on deployment/cold start)
+const rateLimiter = new Map();
+
 Deno.serve(async (req) => {
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+    };
+
+    if (req.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: corsHeaders });
+    }
+
+    // Rate Limiting
+    const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
+    const now = Date.now();
+    const windowMs = 60000; // 1 minute
+    const maxAttempts = 20; // Allow enough for browsing options
+
+    if (!rateLimiter.has(clientIp)) {
+        rateLimiter.set(clientIp, []);
+    }
+    const attempts = rateLimiter.get(clientIp).filter(t => now - t < windowMs);
+    if (attempts.length >= maxAttempts) {
+        return Response.json({ error: 'Too many requests' }, { status: 429, headers: corsHeaders });
+    }
+    attempts.push(now);
+    rateLimiter.set(clientIp, attempts);
+
     try {
         const base44 = createClientFromRequest(req);
         
@@ -31,14 +60,14 @@ Deno.serve(async (req) => {
         }
 
         if (!targetEvent) {
-             return Response.json({ options: [], event_name: null, error: "No active event found" });
+             return Response.json({ options: [], event_name: null, error: "No active event found" }, { headers: corsHeaders });
         }
 
         // 2. Fetch Sessions for this Event
         const sessions = await base44.asServiceRole.entities.Session.filter({ event_id: targetEvent.id });
         
         if (!sessions.length) {
-            return Response.json({ options: [], event_name: targetEvent.name });
+            return Response.json({ options: [], event_name: targetEvent.name }, { headers: corsHeaders });
         }
 
         // 3. Fetch Plenaria Segments
@@ -77,9 +106,9 @@ Deno.serve(async (req) => {
             options, 
             event_name: targetEvent.name,
             event_id: targetEvent.id
-        });
+        }, { headers: corsHeaders });
 
     } catch (error) {
-        return Response.json({ error: error.message }, { status: 500 });
+        return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
     }
 });
