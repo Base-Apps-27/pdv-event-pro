@@ -43,7 +43,7 @@ export default function EventInfo({ event }) {
                size="sm" 
                className="text-xs gap-2"
              >
-               <a href={`${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${event.id}`} target="_blank" rel="noopener noreferrer">
+               <a href={`${window.location.origin}/api/functions/serveSpeakerSubmissionV2?event_id=${event.id}`} target="_blank" rel="noopener noreferrer">
                  <LinkIcon className="w-3 h-3" />
                  Abrir Formulario
                </a>
@@ -54,7 +54,7 @@ export default function EventInfo({ event }) {
                className="text-xs gap-2"
                onClick={async () => {
                   try {
-                    const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${event.id}`;
+                    const url = `${window.location.origin}/api/functions/serveSpeakerSubmissionV2?event_id=${event.id}`;
                     await navigator.clipboard.writeText(url);
                     toast.success("Link copiado");
                   } catch (err) {
