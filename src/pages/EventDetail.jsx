@@ -214,22 +214,43 @@ export default function EventDetail() {
           <div className="ml-auto flex items-center gap-2">
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-2">
-              <Button 
-                onClick={async () => {
-                   try {
-                     const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`;
-                     await navigator.clipboard.writeText(url);
-                     toast.success("Link de oradores copiado al portapapeles");
-                   } catch (err) {
-                     toast.error("Error al copiar. Verifica permisos del navegador.");
-                   }
-                }}
-                variant="outline"
-                className="border-gray-300 hover:border-gray-400 text-gray-700"
-              >
-                <LinkIcon className="w-4 h-4 mr-2" />
-                Link Oradores
-              </Button>
+              <div className="flex items-center rounded-md border border-gray-300 shadow-sm bg-white">
+                <Button 
+                  asChild
+                  variant="ghost"
+                  className="rounded-r-none border-r border-gray-200 hover:bg-gray-50 text-gray-700 px-3"
+                >
+                  <a href={`${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`} target="_blank" rel="noopener noreferrer">
+                    <LinkIcon className="w-4 h-4 mr-2" />
+                    Abrir Formulario
+                  </a>
+                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`;
+                            await navigator.clipboard.writeText(url);
+                            toast.success("Link copiado");
+                          } catch (err) {
+                            toast.error("Error al copiar");
+                          }
+                        }}
+                        variant="ghost" 
+                        size="icon"
+                        className="rounded-l-none hover:bg-gray-50 text-gray-500 w-9"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Copiar Link</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Button 
                 onClick={() => navigate(createPageUrl("Reports") + `?eventId=${eventId}`)}
                 variant="outline"
