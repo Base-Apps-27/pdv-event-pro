@@ -262,6 +262,20 @@ export default function PublicProgramView() {
     refetchInterval: 15000,
   });
 
+  // Fetch PreSessionDetails for the active sessions (Events Only)
+  const { data: preSessionDetails = [] } = useQuery({
+    queryKey: ['preSessionDetails', sessions.map(s => s.id).join(',')],
+    queryFn: async () => {
+      if (viewType !== "event" || sessions.length === 0) return [];
+      const sessionIds = sessions.map(s => s.id);
+      return await base44.entities.PreSessionDetails.filter({ 
+        session_id: { '$in': sessionIds } 
+      });
+    },
+    enabled: viewType === "event" && sessions.length > 0,
+    refetchInterval: 60000
+  });
+
   // Fetch segments for selected sessions (fetch all, child components filter)
   const { data: allSegments = [], refetch: refetchSegments } = useQuery({
     queryKey: ['segments', selectedEventId, selectedServiceId, viewType],
@@ -1111,6 +1125,7 @@ export default function PublicProgramView() {
                                selectedEvent={selectedEvent}
                                eventSessions={eventSessions}
                                allSegments={allSegments}
+                               preSessionDetails={preSessionDetails}
                                currentUser={currentUser}
                                currentTime={currentTime}
                                isSegmentCurrent={isSegmentCurrent}

@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils } from "lucide-react";
+import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils, Music, Monitor } from "lucide-react";
 import HospitalityTasksViewModal from "@/components/service/HospitalityTasksViewModal";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
+import StickyOpsDeck from "@/components/service/StickyOpsDeck";
 // LiveDirectorPanel shelved - preserved for future iteration
 // import LiveDirectorPanel from "@/components/service/LiveDirectorPanel";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
@@ -30,6 +31,7 @@ import { hasPermission } from "@/components/utils/permissions";
  * @param {Object} selectedEvent - The currently selected event
  * @param {Array} eventSessions - All sessions for the selected event
  * @param {Array} allSegments - All segments across all sessions
+ * @param {Array} preSessionDetails - PreSession details for sessions (new)
  * @param {Object} currentUser - Current authenticated user (for permission checks)
  * @param {Date} currentTime - Current time for live status calculations
  * @param {Function} isSegmentCurrent - Helper to determine if segment is currently active
@@ -43,6 +45,7 @@ export default function EventProgramView({
   selectedEvent,
   eventSessions,
   allSegments,
+  preSessionDetails = [],
   currentUser,
   currentTime,
   isSegmentCurrent,
@@ -132,6 +135,14 @@ export default function EventProgramView({
          Component preserved at: components/service/LiveDirectorPanel.jsx
       */}
 
+      {/* Sticky Ops Deck - Persistent Bottom Bar */}
+      <StickyOpsDeck 
+        segments={allSegments}
+        preSessionData={preSessionDetails.find(p => p.session_id === filteredSessions[0]?.id)}
+        currentTime={currentTime}
+        onScrollToSegment={scrollToSegment}
+      />
+
       {/* Live Status Card - with date awareness */}
       <LiveStatusCard 
         segments={allSegments.map(seg => {
@@ -203,6 +214,52 @@ export default function EventProgramView({
             <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-4 border-b">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
+                  {/* PreSession Info Card - Segment 0 */}
+                  {(() => {
+                    const preDetails = preSessionDetails.find(p => p.session_id === session.id);
+                    if (!preDetails) return null;
+                    return (
+                      <div className="mb-4 bg-teal-50 border-l-4 border-teal-500 rounded-r-lg p-3 shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="bg-teal-600 text-white text-xs font-bold px-2 py-0.5 rounded">PRE-SESSION</span>
+                          <span className="text-sm font-semibold text-teal-900">Detalles Previos</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-xs">
+                          {preDetails.registration_desk_open_time && (
+                            <div className="flex items-center gap-2 text-teal-800">
+                              <Calendar className="w-3 h-3" />
+                              <span><strong>Registro:</strong> {formatTimeToEST(preDetails.registration_desk_open_time)}</span>
+                            </div>
+                          )}
+                          {preDetails.library_open_time && (
+                            <div className="flex items-center gap-2 text-teal-800">
+                              <Calendar className="w-3 h-3" />
+                              <span><strong>Librería:</strong> {formatTimeToEST(preDetails.library_open_time)}</span>
+                            </div>
+                          )}
+                          {preDetails.music_profile_id && (
+                            <div className="flex items-center gap-2 text-teal-800">
+                              <Music className="w-3 h-3" />
+                              <span><strong>Música:</strong> {preDetails.music_profile_id}</span>
+                            </div>
+                          )}
+                          {preDetails.slide_pack_id && (
+                            <div className="flex items-center gap-2 text-teal-800">
+                              <Monitor className="w-3 h-3" />
+                              <span><strong>Slides:</strong> {preDetails.slide_pack_id}</span>
+                            </div>
+                          )}
+                        </div>
+                        {(preDetails.facility_notes || preDetails.general_notes) && (
+                          <div className="mt-2 pt-2 border-t border-teal-200 text-xs text-teal-900">
+                            {preDetails.facility_notes && <p><strong>Facility:</strong> {preDetails.facility_notes}</p>}
+                            {preDetails.general_notes && <p className="mt-1"><strong>Notas:</strong> {preDetails.general_notes}</p>}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   <div className="flex items-center gap-3 mb-1">
                     {(() => {
                       const sessionAdj = liveAdjustments.find(a => a.session_id === session.id);

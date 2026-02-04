@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
+import StickyOpsDeck from "@/components/service/StickyOpsDeck";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
@@ -116,6 +117,13 @@ export default function ServiceProgramView({
   if (isCustomService) {
     return (
       <div className="space-y-6">
+        {/* Sticky Ops Deck */}
+        <StickyOpsDeck 
+          segments={adjustedServiceData.segments || []}
+          currentTime={currentTime}
+          onScrollToSegment={scrollToSegment}
+        />
+
         {/* Live Status Card for Custom Services */}
         <LiveStatusCard 
           segments={adjustedServiceData.segments || []} 
@@ -206,6 +214,27 @@ export default function ServiceProgramView({
   // Render Weekly Service (9:30am and 11:30am)
   return (
     <div className="space-y-6">
+      {/* Sticky Ops Deck for Weekly Services */}
+      {(() => {
+        const allServiceSegments = [
+          ...(adjustedServiceData?.['9:30am'] || []),
+          ...(adjustedServiceData?.['11:30am'] || [])
+        ].map(s => ({
+          ...s,
+          start_time: s.start_time || s.data?.start_time,
+          end_time: s.end_time || s.data?.end_time,
+          title: s.title || s.data?.title || 'Untitled'
+        }));
+
+        return (
+          <StickyOpsDeck 
+            segments={allServiceSegments}
+            currentTime={currentTime}
+            onScrollToSegment={scrollToSegment}
+          />
+        );
+      })()}
+
       {/* Live Status Card for Weekly Services */}
       {(() => {
         const allServiceSegments = [
