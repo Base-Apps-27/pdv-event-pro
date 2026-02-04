@@ -293,6 +293,13 @@ export default function EventDetail() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => {
+                     const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`;
+                     window.open(url, '_blank');
+                  }}>
+                    <LinkIcon className="w-4 h-4 mr-2" />
+                    Abrir Formulario
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={async () => {
                      try {
                        const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`;
@@ -302,8 +309,8 @@ export default function EventDetail() {
                        toast.error("Error al copiar link");
                      }
                   }}>
-                    <LinkIcon className="w-4 h-4 mr-2" />
-                    Link Oradores
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copiar Link
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate(createPageUrl("Reports") + `?eventId=${eventId}`)}>
                     <FileText className="w-4 h-4 mr-2" />
