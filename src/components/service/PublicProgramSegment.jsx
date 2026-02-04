@@ -145,7 +145,8 @@ export default function PublicProgramSegment({
   const getContainerStyles = () => {
     // 1. Critical Override: Active/Upcoming status always wins
     if (isCurrent) return 'bg-yellow-50 border-2 border-yellow-400 shadow-md z-10 scale-[1.01] rounded-xl my-4 mx-[-8px]';
-    if (isUpcoming) return 'bg-blue-50 border border-blue-300 shadow-sm rounded-lg my-2';
+    // Match Hero Block dimensions (p-5, rounded-xl) to prevent layout shifting when status changes
+    if (isUpcoming) return 'bg-blue-50 border-l-4 border-blue-400 rounded-xl my-4 shadow-sm p-5';
 
     // 2. Type-Based Styles - HERO BLOCKS
     // Distinct containers with solid backgrounds and margins to break the list flow
