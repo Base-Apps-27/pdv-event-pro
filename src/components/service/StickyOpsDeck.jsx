@@ -200,18 +200,34 @@ export default function StickyOpsDeck({
   
   return (
     // Fixed container - lifted slightly off bottom for "float" effect
-    <div className="fixed bottom-2 left-2 right-2 z-40 print:hidden">
-      <div 
-        className={`max-w-5xl mx-auto rounded-2xl border shadow-lg overflow-hidden transition-all duration-300 backdrop-blur-md ${
-          isUrgent 
-            ? 'bg-amber-950/85 border-amber-700/50 text-amber-50' 
-            : isPast
-              ? 'bg-slate-100/85 border-slate-200/50 text-slate-500'
-              : 'bg-white/85 border-gray-200/50 text-gray-900'
-        }`}
-      >
-        
-        {/* Main Bar */}
+    <div className="fixed bottom-2 left-2 right-2 z-40 print:hidden flex flex-col items-center">
+      <div className="w-full max-w-5xl relative">
+        {/* Label Shelf / Tab */}
+        <div 
+          onClick={() => setIsExpanded(!isExpanded)}
+          className={`absolute -top-6 left-4 px-3 py-1 rounded-t-lg border-t border-x border-b-0 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 backdrop-blur-md flex items-center gap-1.5 ${
+            isUrgent 
+              ? 'bg-amber-950/85 border-amber-700/50 text-amber-200' 
+              : isPast
+                ? 'bg-slate-100/85 border-slate-200/50 text-slate-400'
+                : 'bg-white/85 border-gray-200/50 text-gray-500'
+          }`}
+          style={{ height: '26px' }}
+        >
+          <span>Acciones de Coord</span>
+        </div>
+
+        <div 
+          className={`w-full rounded-2xl border shadow-lg overflow-hidden transition-all duration-300 backdrop-blur-md relative z-10 ${
+            isUrgent 
+              ? 'bg-amber-950/85 border-amber-700/50 text-amber-50' 
+              : isPast
+                ? 'bg-slate-100/85 border-slate-200/50 text-slate-500'
+                : 'bg-white/85 border-gray-200/50 text-gray-900'
+          }`}
+        >
+          
+          {/* Main Bar */}
         <div 
           className="flex items-center justify-between cursor-pointer py-2 px-3 pr-16 relative"
           onClick={() => setIsExpanded(!isExpanded)}
