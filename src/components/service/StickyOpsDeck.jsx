@@ -157,6 +157,17 @@ export default function StickyOpsDeck({
   const diffMs = Math.abs(activeAction.time.getTime() - currentTime.getTime());
   const diffMin = Math.floor(diffMs / 60000);
   const isUrgent = !isPast && diffMin < 5;
+
+  // Calculate concurrent actions (same time window) to indicate stacks
+  // We check the source list (upcoming or past) for items within the same minute
+  const concurrentCount = useMemo(() => {
+    const list = isPast ? pastActions : upcomingActions;
+    return list.filter(a => 
+      Math.abs(a.time.getTime() - activeAction.time.getTime()) < 60000 // Within 1 minute
+    ).length;
+  }, [activeAction, isPast, pastActions, upcomingActions]);
+
+  const moreCount = Math.max(0, concurrentCount - 1);
   
   return (
     // Fixed container - lifted slightly off bottom for "float" effect
@@ -220,6 +231,11 @@ export default function StickyOpsDeck({
                 <h4 className={`font-semibold text-sm truncate ${isPast ? 'line-through decoration-slate-400/50' : ''}`}>
                   {activeAction.label}
                 </h4>
+                {moreCount > 0 && (
+                  <Badge className="h-5 px-1.5 text-[10px] bg-pdv-teal text-white hover:bg-pdv-teal/90 animate-pulse border-none shrink-0">
+                    +{moreCount}
+                  </Badge>
+                )}
                 {isExpanded ? <ChevronDown className="w-4 h-4 opacity-50 shrink-0" /> : <ChevronUp className="w-4 h-4 opacity-50 shrink-0" />}
               </div>
             </div>
