@@ -3,8 +3,9 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText, History } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText, History, Link as LinkIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -203,6 +204,18 @@ export default function EventDetail() {
             {e.theme && <p className="text-xl font-medium italic" style={{ color: '#1F8A70' }}>"{e.theme}"</p>}
           </div>
           <div className="ml-auto flex gap-2">
+            <Button 
+              onClick={() => {
+                const url = `${window.location.origin}/SpeakerSubmission?event_id=${eventId}`;
+                navigator.clipboard.writeText(url);
+                toast.success("Link de oradores copiado al portapapeles");
+              }}
+              variant="outline"
+              className="border-gray-300 hover:border-gray-400 text-gray-700"
+            >
+              <LinkIcon className="w-4 h-4 mr-2" />
+              Link Oradores
+            </Button>
             <Button 
               onClick={() => navigate(createPageUrl("Reports") + `?eventId=${eventId}`)}
               variant="outline"
