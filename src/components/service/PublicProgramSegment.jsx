@@ -143,17 +143,21 @@ export default function PublicProgramSegment({
   // VISUAL HIERARCHY LOGIC
   const getContainerStyles = () => {
     // 1. Critical Override: Active/Upcoming status always wins
-    if (isCurrent) return 'bg-yellow-50 border-l-4 border-yellow-500 shadow-sm z-10 scale-[1.01]';
-    if (isUpcoming) return 'bg-blue-50/50 border-l-4 border-blue-400';
+    if (isCurrent) return 'bg-yellow-50 border-2 border-yellow-400 shadow-md z-10 scale-[1.01] rounded-xl my-4 mx-[-8px]';
+    if (isUpcoming) return 'bg-blue-50 border border-blue-300 shadow-sm rounded-lg my-2';
 
-    // 2. Type-Based Styles
-    if (isMessage) return 'bg-blue-50/30 border-l-4 border-blue-600 my-2 shadow-sm';
-    if (isPanel) return 'bg-white border-l-4 border-amber-500 shadow-sm rounded-r-lg my-3 border-y border-r border-gray-200';
-    if (isWorship) return 'bg-white border-l-4 border-purple-500 border-b border-gray-100 hover:bg-gray-50';
-    if (isBreakSegment) return 'bg-gray-100/50 border-2 border-dashed border-gray-300 rounded-lg my-4 mx-2';
+    // 2. Type-Based Styles - HERO BLOCKS
+    // Distinct containers with solid backgrounds and margins to break the list flow
+    if (isMessage) return 'bg-blue-50 border border-blue-200 rounded-xl my-4 shadow-sm p-5';
+    if (isPanel) return 'bg-amber-50 border border-amber-200 rounded-xl my-4 shadow-sm p-5';
+    if (isWorship) return 'bg-purple-50 border border-purple-200 rounded-xl my-4 shadow-sm p-5';
     
-    // 3. Default List Style
-    return 'bg-white border-l-4 border-gray-200 border-b border-gray-100 hover:bg-gray-50';
+    // 3. Dividers
+    if (isBreakSegment) return 'bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg my-6 mx-4 opacity-80';
+    
+    // 4. Standard List Items (Connective Tissue)
+    // Minimalist style for transitions, MC, etc. to let the Hero Blocks pop
+    return 'bg-white border-b border-gray-100 hover:bg-gray-50 py-3';
   };
 
   return (
