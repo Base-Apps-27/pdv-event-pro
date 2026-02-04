@@ -137,8 +137,12 @@ export default function EventProgramView({
 
       {/* Sticky Ops Deck - Persistent Bottom Bar */}
       <StickyOpsDeck 
-        segments={allSegments}
+        segments={allSegments.map(seg => {
+          const session = eventSessions.find(s => s.id === seg.session_id);
+          return { ...seg, date: session?.date };
+        })}
         preSessionData={preSessionDetails.find(p => p.session_id === filteredSessions[0]?.id)}
+        sessionDate={filteredSessions[0]?.date}
         currentTime={currentTime}
         onScrollToSegment={scrollToSegment}
       />
