@@ -217,7 +217,7 @@ export default function EventDetail() {
               <Button 
                 onClick={async () => {
                    try {
-                     const url = `${window.location.origin}/SpeakerSubmission?event_id=${eventId}`;
+                     const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`;
                      await navigator.clipboard.writeText(url);
                      toast.success("Link de oradores copiado al portapapeles");
                    } catch (err) {
@@ -295,7 +295,7 @@ export default function EventDetail() {
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={async () => {
                      try {
-                       const url = `${window.location.origin}/SpeakerSubmission?event_id=${eventId}`;
+                       const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`;
                        await navigator.clipboard.writeText(url);
                        toast.success("Link copiado");
                      } catch (err) {
