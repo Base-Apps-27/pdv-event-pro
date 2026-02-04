@@ -23,6 +23,7 @@ import ServiceProgramView from "@/components/service/ServiceProgramView";
 import EventProgramView from "@/components/service/EventProgramView";
 import LiveOperationsChat from "@/components/live/LiveOperationsChat";
 import { useLanguage } from "@/components/utils/i18n";
+import LiveViewSkeleton from "@/components/service/LiveViewSkeleton";
 
 export default function PublicProgramView() {
   const queryClient = useQueryClient();
@@ -246,7 +247,7 @@ export default function PublicProgramView() {
   });
 
   // Fetch sessions for selected event OR service
-  const { data: sessions = [], refetch: refetchSessions } = useQuery({
+  const { data: sessions = [], refetch: refetchSessions, isLoading: isLoadingSessions } = useQuery({
     queryKey: ['sessions', selectedEventId, selectedServiceId, viewType],
     queryFn: async () => {
       if (viewType === "event" && selectedEventId) {
@@ -277,7 +278,7 @@ export default function PublicProgramView() {
   });
 
   // Fetch segments for selected sessions (fetch all, child components filter)
-  const { data: allSegments = [], refetch: refetchSegments } = useQuery({
+  const { data: allSegments = [], refetch: refetchSegments, isLoading: isLoadingSegments } = useQuery({
     queryKey: ['segments', selectedEventId, selectedServiceId, viewType],
     queryFn: async () => {
       const sessionIds = sessions.map(s => s.id);
@@ -674,6 +675,13 @@ export default function PublicProgramView() {
         console.warn('Scroll target not found:', id);
     }
   };
+
+  // Show skeleton loading state when primary data is loading
+  const isContentLoading = (selectedEventId || selectedServiceId) && (isLoadingSessions || isLoadingSegments);
+
+  if (isContentLoading) {
+    return <LiveViewSkeleton />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F0F1F3]">
