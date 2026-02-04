@@ -1,18 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useLanguage, LanguageProvider } from "@/components/utils/i18n";
 import { hasPermission } from "@/components/utils/permissions";
-import { Calendar, Settings, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus, Shield } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Calendar, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus, Shield } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-
 
 function LayoutContent({ children }) {
   const { language, setLanguage, t } = useLanguage();
@@ -28,8 +21,6 @@ function LayoutContent({ children }) {
   const isActive = (path) => location.pathname === path;
 
   // CRITICAL: PublicProgramView AND /print/ routes bypass Layout auth checks
-  // Print routes rely on browser session cookies (shared across tabs) for authentication
-  // If user isn't logged in, entity fetch will fail gracefully with 401/403
   const isPublicPage = location.pathname.includes('PublicProgramView') || location.pathname.includes('/print/');
 
   if (isPublicPage) {
@@ -43,7 +34,6 @@ function LayoutContent({ children }) {
         const authenticated = await base44.auth.isAuthenticated();
         
         if (!authenticated) {
-          // Allow public access, no redirect
           setLoading(false);
           return;
         }
@@ -67,11 +57,10 @@ function LayoutContent({ children }) {
     const canViewDashboard = hasPermission(user, 'view_events') || hasPermission(user, 'view_services');
     
     // If a user has no permissions at all, they can only see the live program view.
-    // This is the effective equivalent of the old 'EventDayViewer' role.
     if (!canViewDashboard && !location.pathname.includes('PublicProgramView')) {
       navigate(createPageUrl('PublicProgramView'), { replace: true });
     }
-  }, [user, location.pathname, loading]);
+  }, [user, location.pathname, loading, navigate]);
 
   if (loading) {
     return null;
@@ -83,7 +72,6 @@ function LayoutContent({ children }) {
   }
 
   // If user cannot view dashboard, they only get the minimal shell (similar to anonymous)
-  // This covers the case for roles like EventDayViewer which only have view_live_program
   if (!hasPermission(user, 'view_events') && !hasPermission(user, 'view_services')) {
     return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
   }
@@ -471,15 +459,15 @@ function LayoutContent({ children }) {
         </main>
       </div>
     </div>
-    );
-    }
+  );
+}
 
-    export default function Layout({ children }) {
-                return (
-                  <LanguageProvider>
-                    <TooltipProvider delayDuration={200}>
-                      <LayoutContent>{children}</LayoutContent>
-                    </TooltipProvider>
-                  </LanguageProvider>
-                );
-              }
+export default function Layout({ children }) {
+  return (
+    <LanguageProvider>
+      <TooltipProvider delayDuration={200}>
+        <LayoutContent>{children}</LayoutContent>
+      </TooltipProvider>
+    </LanguageProvider>
+  );
+}
