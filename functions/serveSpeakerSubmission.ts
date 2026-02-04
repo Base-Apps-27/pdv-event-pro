@@ -34,15 +34,16 @@ Deno.serve(async (req) => {
                 const sessions = await base44.asServiceRole.entities.Session.filter({ event_id: targetEvent.id });
                 
                 if (sessions.length > 0) {
-                     // Fetch Plenaria Segments
-                    let allSegments = [];
-                    for (const sess of sessions) {
-                         const segs = await base44.asServiceRole.entities.Segment.filter({ 
-                             session_id: sess.id,
-                             segment_type: 'Plenaria'
-                         });
-                         allSegments = allSegments.concat(segs);
-                    }
+                     // Fetch Plenaria Segments (Parallelized)
+                    const segmentPromises = sessions.map(sess => 
+                        base44.asServiceRole.entities.Segment.filter({ 
+                            session_id: sess.id,
+                            segment_type: 'Plenaria'
+                        })
+                    );
+                    
+                    const segmentsResults = await Promise.all(segmentPromises);
+                    const allSegments = segmentsResults.flat();
 
                     // Format Options
                     options = allSegments.map(seg => {
@@ -260,13 +261,17 @@ Deno.serve(async (req) => {
         `;
 
         return new Response(html, {
-            headers: { 'Content-Type': 'text/html' }
+            headers: { 
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'no-cache',
+                'Access-Control-Allow-Origin': '*'
+            }
         });
 
     } catch (error) {
         return new Response("<h1>Error Interno</h1><p>" + error.message + "</p>", { 
             status: 500,
-            headers: { 'Content-Type': 'text/html' }
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
         });
     }
 });
