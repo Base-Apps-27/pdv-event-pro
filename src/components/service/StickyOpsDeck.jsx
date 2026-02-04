@@ -14,11 +14,7 @@ import { normalizeName } from "@/components/utils/textNormalization";
  * 1. Segment Actions (Prep/Durante)
  * 2. PreSession Details (Doors Open, etc.)
  * 
- * @param {Array} segments - All program segments
- * @param {Object} preSessionData - Optional PreSessionDetails object
- * @param {string} sessionDate - Date string (YYYY-MM-DD) of the current session
- * @param {Date} currentTime - Current system time
- * @param {Object} serviceData - Optional service data for context
+ * REFINED VERSION: Compact, Translucent/Blur, Chat-Aware
  */
 export default function StickyOpsDeck({ 
   segments = [], 
@@ -34,23 +30,18 @@ export default function StickyOpsDeck({
     const actions = [];
     const now = currentTime.getTime();
     
-    // Helper: Parse "YYYY-MM-DD" + "HH:MM" into a Date object
     const parseDateTime = (dateStr, timeStr) => {
       if (!dateStr || !timeStr) return null;
       const [y, m, d] = dateStr.split('-').map(Number);
       const [h, min] = timeStr.split(':').map(Number);
-      // Construct date using local browser time components to match `currentTime` (new Date())
-      // Note: Month is 0-indexed in JS Date
       const date = new Date(y, m - 1, d, h, min, 0, 0);
       return date;
     };
 
-    // Default to current date string if sessionDate missing (fallback)
     const activeDateStr = sessionDate || new Date().toISOString().split('T')[0];
 
-    // 1. Process PreSession Actions (if any)
+    // 1. Process PreSession Actions
     if (preSessionData) {
-      // PreSession usually belongs to the session's date
       const addPreAction = (timeStr, label, type = 'facility') => {
         if (!timeStr) return;
         const date = parseDateTime(activeDateStr, timeStr);
@@ -74,11 +65,8 @@ export default function StickyOpsDeck({
     // 2. Process Segment Actions
     segments.forEach(seg => {
       if (!seg.start_time) return;
-      
-      // Use segment's specific date if available (augmented in parent), else session date
       const segDateStr = seg.date || activeDateStr;
       const segStart = parseDateTime(segDateStr, seg.start_time);
-      
       if (!segStart) return;
 
       const duration = seg.duration_min || 0;
@@ -91,7 +79,6 @@ export default function StickyOpsDeck({
         let actionTime = new Date(segStart);
         const offset = action.offset_min || 0;
 
-        // Calculate absolute time of action
         switch (action.timing) {
           case 'before_start':
             actionTime.setMinutes(segStart.getMinutes() - offset);
@@ -125,102 +112,97 @@ export default function StickyOpsDeck({
       });
     });
 
-    // 3. Sort and Split
     const sorted = actions.sort((a, b) => a.time.getTime() - b.time.getTime());
     const upcoming = sorted.filter(a => a.time.getTime() > now);
-    const past = sorted.filter(a => a.time.getTime() <= now).reverse(); // Most recent past first
+    const past = sorted.filter(a => a.time.getTime() <= now).reverse();
 
     return { upcomingActions: upcoming, pastActions: past };
   }, [segments, preSessionData, sessionDate, currentTime]);
 
-  // Display Logic: 
-  // Priority 1: Next upcoming action
-  // Priority 2: If none upcoming, show the most recent past action (translucent/completed state)
   const activeAction = upcomingActions[0] || pastActions[0];
 
   if (!activeAction) return null;
 
   const isPast = activeAction.time.getTime() <= currentTime.getTime();
-
-  // Calculate countdown / time since
   const diffMs = Math.abs(activeAction.time.getTime() - currentTime.getTime());
   const diffMin = Math.floor(diffMs / 60000);
-  
-  // Urgency styling
-  // Urgent if upcoming and < 5 mins
   const isUrgent = !isPast && diffMin < 5;
   
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-2 print:hidden">
-      <div className={`max-w-6xl mx-auto shadow-2xl rounded-xl border-t border-x overflow-hidden transition-all duration-300 ${
-        isUrgent 
-          ? 'bg-amber-900 border-amber-700 text-white' 
-          : isPast
-            ? 'bg-slate-100 border-slate-300 text-slate-500 opacity-90'
-            : 'bg-white border-gray-200 text-gray-900'
-      }`}>
+    // Fixed container - lifted slightly off bottom for "float" effect
+    <div className="fixed bottom-2 left-2 right-2 z-40 print:hidden">
+      <div 
+        className={`max-w-5xl mx-auto rounded-2xl border shadow-lg overflow-hidden transition-all duration-300 backdrop-blur-md ${
+          isUrgent 
+            ? 'bg-amber-950/85 border-amber-700/50 text-amber-50' 
+            : isPast
+              ? 'bg-slate-100/85 border-slate-200/50 text-slate-500'
+              : 'bg-white/85 border-gray-200/50 text-gray-900'
+        }`}
+      >
         
         {/* Main Bar */}
         <div 
-          className="p-3 flex items-center justify-between cursor-pointer"
+          className="flex items-center justify-between cursor-pointer py-2 px-3 pr-16 relative"
           onClick={() => setIsExpanded(!isExpanded)}
         >
+          {/* Chat overlap protection: padding-right-16 ensures text doesn't go under chat button */}
+          
           <div className="flex items-center gap-3 overflow-hidden">
-            {/* Countdown Badge */}
-            <div className={`flex flex-col items-center justify-center min-w-[60px] px-2 py-1 rounded-lg ${
-              isUrgent ? 'bg-amber-500 text-black' : 
-              isPast ? 'bg-slate-200 text-slate-500' : 'bg-gray-100 text-gray-900'
+            {/* Compact Countdown Badge */}
+            <div className={`flex flex-col items-center justify-center w-11 h-10 rounded-lg shrink-0 ${
+              isUrgent ? 'bg-amber-500 text-black shadow-amber-500/20 shadow-lg' : 
+              isPast ? 'bg-slate-200/80 text-slate-500' : 'bg-gray-100/80 text-gray-900'
             }`}>
               {isPast ? (
-                <CheckCircle2 className="w-5 h-5 mb-0.5" />
+                <CheckCircle2 className="w-5 h-5" />
               ) : (
-                <span className="text-lg font-bold leading-none">{diffMin}</span>
+                <span className="text-base font-bold leading-none">{diffMin}</span>
               )}
-              <span className="text-[10px] uppercase font-bold opacity-80">
-                {isPast ? 'DONE' : 'MIN'}
+              <span className="text-[9px] uppercase font-bold opacity-70 leading-none mt-0.5">
+                {isPast ? '' : 'min'}
               </span>
             </div>
 
             {/* Action Info */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-0.5">
-                <Badge variant="outline" className={`h-5 text-[10px] px-1.5 ${
-                  isUrgent ? 'border-amber-400 text-amber-200' : 
-                  isPast ? 'border-slate-300 text-slate-400' : 'border-gray-300 text-gray-500'
+                <Badge variant="outline" className={`h-4 text-[9px] px-1 rounded-sm border ${
+                  isUrgent ? 'border-amber-400/50 text-amber-200' : 
+                  isPast ? 'border-slate-300/50 text-slate-400' : 'border-gray-300/50 text-gray-500'
                 }`}>
                   {activeAction.isPrep ? 'PREP' : 'CUE'}
                 </Badge>
-                <span className={`text-xs font-semibold uppercase tracking-wider ${
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${
                   isUrgent ? 'text-amber-300' : 
                   isPast ? 'text-slate-400' : 'text-gray-500'
                 }`}>
                   {activeAction.type}
                 </span>
-                <span className={`text-xs ${
+                <span className={`text-[10px] tabular-nums ${
                   isUrgent ? 'text-amber-400' : 
                   isPast ? 'text-slate-400' : 'text-gray-400'
                 }`}>
-                  @ {formatTimeToEST(activeAction.time.toTimeString().substring(0, 5))}
+                  {formatTimeToEST(activeAction.time.toTimeString().substring(0, 5))}
                 </span>
               </div>
-              <h4 className={`font-bold text-base truncate pr-2 ${isPast ? 'line-through decoration-slate-400' : ''}`}>
-                {activeAction.label}
-              </h4>
-              <p className={`text-xs truncate ${
-                isUrgent ? 'text-amber-200' : 
-                isPast ? 'text-slate-400' : 'text-gray-500'
-              }`}>
-                {isPast ? 'Completed in: ' : 'in: '} {activeAction.segmentTitle}
-              </p>
+              <div className="flex items-center gap-2">
+                <h4 className={`font-semibold text-sm truncate ${isPast ? 'line-through decoration-slate-400/50' : ''}`}>
+                  {activeAction.label}
+                </h4>
+                {isExpanded ? <ChevronDown className="w-4 h-4 opacity-50 shrink-0" /> : <ChevronUp className="w-4 h-4 opacity-50 shrink-0" />}
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 pl-2 border-l border-white/10">
-            {activeAction.segmentId && (
+          {/* Action Button - Jump to Segment */}
+          {activeAction.segmentId && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+               {/* This is positioned absolutely to the right, but "left" of where the chat bubble usually is */}
               <Button
                 size="icon"
                 variant="ghost"
-                className={`h-8 w-8 ${
+                className={`h-8 w-8 rounded-full ${
                   isUrgent ? 'hover:bg-white/10 text-white' : 
                   isPast ? 'hover:bg-slate-200 text-slate-500' : 'hover:bg-gray-100 text-gray-600'
                 }`}
@@ -229,38 +211,34 @@ export default function StickyOpsDeck({
                   onScrollToSegment && onScrollToSegment({ id: activeAction.segmentId });
                 }}
               >
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4" />
               </Button>
-            )}
-            {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Expanded List */}
         {isExpanded && (
-          <div className={`border-t px-4 py-3 space-y-3 ${
+          <div className={`border-t px-4 py-3 space-y-2 max-h-[40vh] overflow-y-auto ${
             isUrgent ? 'border-white/10 bg-black/20' : 
-            isPast ? 'border-slate-200 bg-slate-50' : 'border-gray-100 bg-gray-50'
+            isPast ? 'border-slate-200/50 bg-slate-50/50' : 'border-gray-100/50 bg-gray-50/50'
           }`}>
-            <div className="flex justify-between items-center mb-2">
-               <p className={`text-[10px] uppercase font-bold tracking-widest ${
-                isUrgent ? 'text-amber-400' : 'text-gray-400'
-              }`}>
-                {isPast ? 'Historial Reciente' : 'Próximas Acciones'}
-              </p>
-            </div>
+            <p className={`text-[9px] uppercase font-bold tracking-widest mb-1 ${
+              isUrgent ? 'text-amber-400' : 'text-gray-400'
+            }`}>
+              {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
+            </p>
            
-            {/* If looking at past, show previous history. If upcoming, show next. */}
             {(isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4)).map((action, idx) => (
-              <div key={idx} className={`flex items-start gap-3 text-sm ${isPast ? 'opacity-60' : ''}`}>
-                <span className={`font-mono font-medium ${
+              <div key={idx} className={`flex items-center gap-3 text-sm py-1 border-b border-black/5 last:border-0 ${isPast ? 'opacity-60' : ''}`}>
+                <span className={`font-mono font-medium text-xs ${
                   isUrgent ? 'text-amber-300' : 'text-gray-500'
                 }`}>
                   {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
                 </span>
-                <div className="flex-1">
-                  <div className="font-semibold">{action.label}</div>
-                  <div className={`text-xs ${isUrgent ? 'text-amber-200/70' : 'text-gray-500'}`}>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate text-xs">{action.label}</div>
+                  <div className={`text-[10px] truncate ${isUrgent ? 'text-amber-200/70' : 'text-gray-500/80'}`}>
                     {action.segmentTitle} • {action.type}
                   </div>
                 </div>
@@ -268,7 +246,7 @@ export default function StickyOpsDeck({
             ))}
             
             {((isPast && pastActions.length === 0) || (!isPast && upcomingActions.length <= 1)) && (
-              <p className="text-xs opacity-50 italic">No hay más acciones.</p>
+              <p className="text-[10px] opacity-50 italic py-1">No hay más acciones.</p>
             )}
           </div>
         )}
