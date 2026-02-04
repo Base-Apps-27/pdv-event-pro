@@ -184,6 +184,42 @@ export function useSegmentNotifications(segments = [], session = null) {
           });
           setNotifiedSegments(prev => new Set(prev).add(keyStart));
         }
+
+        // --- NEW: Notify for Critical Ops Actions (Urgent Tasks) ---
+        const actions = segment.segment_actions || segment.actions || [];
+        actions.forEach(action => {
+          if (!action.label) return;
+
+          let actionTime = new Date(segmentStart);
+          const offset = action.offset_min || 0;
+
+          // Calculate Action Time
+          if (action.timing === 'before_start') {
+            actionTime.setMinutes(segmentStart.getMinutes() - offset);
+          } else if (action.timing === 'after_start') {
+            actionTime.setMinutes(segmentStart.getMinutes() + offset);
+          } else if (action.timing === 'absolute' && action.absolute_time) {
+             const [ah, am] = action.absolute_time.split(':').map(Number);
+             actionTime.setHours(ah, am, 0, 0);
+          } else {
+            return; // Skip complex cases like 'before_end' for now to avoid calc errors without duration
+          }
+
+          const actionDiffMs = actionTime - now;
+          const actionDiffMins = Math.floor(actionDiffMs / 60000);
+
+          // Notify if "Urgent" (5 min warning)
+          const actionKey = `${segmentId}-action-${action.label}-${timeStr}`;
+          
+          if (actionDiffMins === 5 && !notifiedSegments.has(actionKey)) {
+             toast.warning(`⚠️ Acción Requerida en 5 min: ${action.label}`, {
+               description: `${segment.title} • ${action.department || 'General'}`,
+               duration: 8000,
+               icon: <AlertTriangle className="w-5 h-5 text-amber-500" />
+             });
+             setNotifiedSegments(prev => new Set(prev).add(actionKey));
+          }
+        });
       });
     };
 
