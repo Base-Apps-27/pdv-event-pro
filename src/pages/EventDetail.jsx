@@ -293,12 +293,11 @@ export default function EventDetail() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => {
-                     const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`;
-                     window.open(url, '_blank');
-                  }}>
-                    <LinkIcon className="w-4 h-4 mr-2" />
-                    Abrir Formulario
+                  <DropdownMenuItem asChild>
+                    <a href={`${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
+                      <LinkIcon className="w-4 h-4 mr-2" />
+                      Abrir Formulario
+                    </a>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={async () => {
                      try {
