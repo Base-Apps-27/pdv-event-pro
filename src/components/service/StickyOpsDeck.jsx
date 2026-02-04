@@ -160,7 +160,7 @@ export default function StickyOpsDeck({
     if (!activeAction) return 0;
     const list = isPastRef ? pastActions : upcomingActions;
     return list.filter(a => 
-      Math.abs(a.time.getTime() - activeAction.time.getTime()) < 60000 // Within 1 minute
+      Math.abs(a.time.getTime() - activeAction.time.getTime()) < 300000 // Within 5 minutes
     ).length;
   }, [activeAction, isPastRef, pastActions, upcomingActions]);
 
