@@ -62,6 +62,7 @@ export default function PublicProgramSegment({
   const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
   const isOffering = ['Ofrenda', 'offering'].includes(segmentType);
   const isPanel = ['Panel', 'panel'].includes(segmentType);
+  const isArtes = ['Artes', 'Arts'].includes(segmentType);
   // Break types: Receso (coffee/transition), Almuerzo (meal), Break (legacy - now merged into Receso)
   const isBreakSegment = ['Break', 'Receso', 'Almuerzo'].includes(segmentType);
   
@@ -151,6 +152,7 @@ export default function PublicProgramSegment({
     if (isMessage) return 'bg-blue-50 border border-blue-200 rounded-xl my-4 shadow-sm p-5';
     if (isPanel) return 'bg-amber-50 border border-amber-200 rounded-xl my-4 shadow-sm p-5';
     if (isWorship) return 'bg-purple-50 border border-purple-200 rounded-xl my-4 shadow-sm p-5';
+    if (isArtes) return 'bg-rose-50 border border-rose-300 rounded-xl my-4 shadow-sm p-5';
     
     // 3. Dividers
     if (isBreakSegment) return 'bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg my-6 mx-4 opacity-80';
