@@ -277,7 +277,7 @@ export default function StickyOpsDeck({
                   {activeAction.label}
                 </h4>
                 {moreCount > 0 && (
-                  <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-[#1F8A70] text-white hover:bg-[#186A50] border-none shrink-0 flex items-center justify-center">
+                  <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-[#4DC15F] text-white hover:bg-[#3DA84F] border-none shrink-0 flex items-center justify-center">
                     +{moreCount}
                   </Badge>
                 )}
