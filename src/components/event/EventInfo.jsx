@@ -1,7 +1,10 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, FileText, Megaphone } from "lucide-react";
+import { Calendar, MapPin, FileText, Megaphone, Link as LinkIcon, Check } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -31,6 +34,23 @@ export default function EventInfo({ event }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
+        {/* Actions Toolbar */}
+        <div className="flex justify-end mb-4">
+           <Button 
+             variant="outline" 
+             size="sm" 
+             className="text-xs gap-2"
+             onClick={() => {
+                const url = `${window.location.origin}/SpeakerSubmission?event_id=${event.id}`;
+                navigator.clipboard.writeText(url);
+                toast.success("Link de oradores copiado al portapapeles");
+             }}
+           >
+             <LinkIcon className="w-3 h-3" />
+             Link para Oradores
+           </Button>
+        </div>
+
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <p className="text-sm text-slate-500 mb-1">Estado</p>

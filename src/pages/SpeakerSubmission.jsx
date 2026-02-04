@@ -22,14 +22,17 @@ export default function SpeakerSubmissionPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const eventIdParam = urlParams.get('event_id');
 
-    const { data: options = [], isLoading } = useQuery({
+    const { data, isLoading } = useQuery({
         queryKey: ['speakerOptions', eventIdParam],
         queryFn: async () => {
             // Using backend function to bypass auth requirements for public page
             const res = await base44.functions.invoke('getSpeakerOptions', { event_id: eventIdParam });
-            return res.data.options || [];
+            return res.data || { options: [], event_name: null };
         }
     });
+
+    const options = data?.options || [];
+    const eventName = data?.event_name;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -89,7 +92,9 @@ export default function SpeakerSubmissionPage() {
                         </div>
                         <div>
                             <CardTitle className="text-xl text-teal-900">Entrega de Mensaje</CardTitle>
-                            <CardDescription>Palabras de Vida • Equipo de Producción</CardDescription>
+                            <CardDescription>
+                                {eventName ? <span className="font-bold text-teal-700">{eventName}</span> : "Palabras de Vida"} • Equipo de Producción
+                            </CardDescription>
                         </div>
                     </div>
                 </CardHeader>

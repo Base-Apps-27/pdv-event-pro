@@ -4,39 +4,46 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
-        // Use service role to bypass RLS, but validate data
-        // This is a PUBLIC endpoint, so no user auth check (or maybe check query token if needed)
-        // Since it's read-only for options, it's low risk if we filter data properly.
-        
         const { event_id } = await req.json();
+        let targetEvent = null;
 
-        // If no event_id, maybe fetch active event? For now assume it's passed or fetch recent.
-        
-        // 1. Fetch Event Sessions
-        const sessionsQuery = event_id ? { event_id } : {};
-        // Use service role for consistent access to event structure
-        const sessions = await base44.asServiceRole.entities.Session.filter(sessionsQuery);
-        
-        if (!sessions.length) {
-            return Response.json({ options: [] });
+        // 1. Determine Target Event
+        if (event_id) {
+            targetEvent = await base44.asServiceRole.entities.Event.get(event_id);
+        } else {
+            // Find next upcoming event (status confirmed or planning, start_date >= today)
+            // Limitations on filtering might exist, so let's fetch 'confirmed' and 'planning' events and sort in memory if needed
+            // Or just fetch all active events.
+            // Let's try to filter by status 'confirmed' as a primary target
+            const events = await base44.asServiceRole.entities.Event.filter({ status: 'confirmed' });
+            // Sort by start_date
+            const today = new Date().toISOString().split('T')[0];
+            const upcoming = events.filter(e => e.start_date >= today).sort((a, b) => a.start_date.localeCompare(b.start_date));
+            
+            if (upcoming.length > 0) {
+                targetEvent = upcoming[0];
+            } else {
+                // Fallback to any active event if no upcoming confirmed
+                // maybe check 'planning' or 'in_progress'
+                const progress = await base44.asServiceRole.entities.Event.filter({ status: 'in_progress' });
+                if (progress.length > 0) targetEvent = progress[0];
+            }
         }
 
-        const sessionIds = sessions.map(s => s.id);
+        if (!targetEvent) {
+             return Response.json({ options: [], event_name: null, error: "No active event found" });
+        }
+
+        // 2. Fetch Sessions for this Event
+        const sessions = await base44.asServiceRole.entities.Session.filter({ event_id: targetEvent.id });
         
-        // 2. Fetch Plenaria Segments
-        // Filter by segment_type='Plenaria' (and maybe 'Especial' if requested)
-        // We do this in code if filter() limitations exist, but here we can query.
-        
-        // NOTE: .filter() logic depends on DB capabilities. 
-        // We'll fetch all segments for these sessions and filter in memory to be safe and precise.
-        // Or if we can, filter by session_id IN ... and segment_type='Plenaria'.
-        
-        // Let's fetch all segments for these sessions.
-        // Since we can't do "IN" query easily in all implementations, 
-        // we might loop or if there are few sessions, it's fine.
-        // Assuming reasonably small dataset for an event.
-        
+        if (!sessions.length) {
+            return Response.json({ options: [], event_name: targetEvent.name });
+        }
+
+        // 3. Fetch Plenaria Segments
         let allSegments = [];
+        // Parallelize fetching if possible, but sequential is safer for now
         for (const sess of sessions) {
              const segs = await base44.asServiceRole.entities.Segment.filter({ 
                  session_id: sess.id,
@@ -45,7 +52,7 @@ Deno.serve(async (req) => {
              allSegments = allSegments.concat(segs);
         }
 
-        // 3. Format Options
+        // 4. Format Options
         const options = allSegments.map(seg => {
             const session = sessions.find(s => s.id === seg.session_id);
             return {
@@ -66,7 +73,11 @@ Deno.serve(async (req) => {
             return da - db;
         });
 
-        return Response.json({ options });
+        return Response.json({ 
+            options, 
+            event_name: targetEvent.name,
+            event_id: targetEvent.id
+        });
 
     } catch (error) {
         return Response.json({ error: error.message }, { status: 500 });
