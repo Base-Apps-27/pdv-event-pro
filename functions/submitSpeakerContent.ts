@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Redeploy timestamp: 2026-02-05T12:00:00Z
 // Rate Limiter (InMemory)
 const rateLimiter = new Map();
 
@@ -35,6 +34,11 @@ Deno.serve(async (req) => {
         const base44 = createClientFromRequest(req);
         
         const { segment_id, content, idempotencyKey } = await req.json();
+
+        // Validate Input First
+        if (!segment_id || !content) {
+            return Response.json({ error: "Missing segment_id or content" }, { status: 400, headers: corsHeaders });
+        }
 
         // --- BIBLE PARSING LOGIC START ---
         const BIBLE_BOOKS = {
@@ -166,10 +170,6 @@ Deno.serve(async (req) => {
         }
         // --- BIBLE PARSING LOGIC END ---
 
-        if (!segment_id || !content) {
-            return Response.json({ error: "Missing segment_id or content" }, { status: 400, headers: corsHeaders });
-        }
-
         // Idempotency Check
         if (idempotencyKey) {
             const existing = await base44.asServiceRole.entities.PublicFormIdempotency
@@ -206,7 +206,21 @@ Deno.serve(async (req) => {
              return Response.json({ error: "Segment not found" }, { status: 404, headers: corsHeaders });
         }
 
-        // Update segment
+        // 1. Save Version History
+        try {
+            await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
+                segment_id: segment_id,
+                content: content,
+                parsed_data_snapshot: parsedData,
+                submitted_at: new Date().toISOString(),
+                source: 'public_form'
+            });
+        } catch (verErr) {
+            console.error("Failed to save submission version:", verErr);
+            // Non-blocking, proceed to update segment
+        }
+
+        // 2. Update segment
         // Set submission_status to 'processed' (Auto-Processed)
         await base44.asServiceRole.entities.Segment.update(segment_id, {
             submitted_content: content,
