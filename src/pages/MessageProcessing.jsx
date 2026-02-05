@@ -79,25 +79,93 @@ export default function MessageProcessingPage() {
     // Custom content for restoration flow
     const [restoreContent, setRestoreContent] = useState(null);
 
-    // Fetch segments with pending OR processed submissions
+    // Fetch segments AND services with pending OR processed submissions
     const { data: segments = [], isLoading } = useQuery({
         queryKey: ['messagesToProcess'],
         queryFn: async () => {
-            // Fetch parallel
-            const [pending, processed] = await Promise.all([
+            // Fetch Segments (Events)
+            const [pendingSeg, processedSeg] = await Promise.all([
                 base44.entities.Segment.filter({ submission_status: 'pending' }),
                 base44.entities.Segment.filter({ submission_status: 'processed' })
             ]);
+            const eventSegments = [...pendingSeg, ...processedSeg];
+
+            // Fetch Services (Weekly)
+            // Strategy: Get recent active services (last 30 days + future)
+            const today = new Date();
+            const lastMonth = new Date(today);
+            lastMonth.setDate(today.getDate() - 30);
+            const dateStr = lastMonth.toISOString().split('T')[0];
+            
+            const recentServices = await base44.entities.Service.filter({ 
+                date: { $gte: dateStr },
+                status: 'active'
+            });
+
+            // Extract segments from services
+            const serviceSegments = [];
+            recentServices.forEach(service => {
+                ['9:30am', '11:30am'].forEach(slot => {
+                    if (service[slot]) {
+                        service[slot].forEach((seg, idx) => {
+                            if (seg.submission_status === 'pending' || seg.submission_status === 'processed') {
+                                // Normalize to look like a Segment entity for the UI
+                                serviceSegments.push({
+                                    id: `weekly_service|${service.id}|${slot}|${idx}|message`,
+                                    title: `${service.name || service.date} - ${slot} - ${seg.title}`,
+                                    presenter: seg.data?.presenter || seg.data?.preacher || seg.data?.leader,
+                                    submitted_content: seg.submitted_content,
+                                    submission_status: seg.submission_status,
+                                    updated_date: service.updated_date, // Use service update time
+                                    // Internal flags for mutation
+                                    isServiceSegment: true,
+                                    serviceId: service.id,
+                                    timeSlot: slot,
+                                    segmentIndex: idx
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+
             // Combine and dedup
-            const all = [...pending, ...processed];
-            return all.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date));
+            const all = [...eventSegments, ...serviceSegments];
+            return all.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0));
         },
         refetchInterval: 3000
     });
 
     const updateSegmentMutation = useMutation({
-        mutationFn: async ({ id, data }) => {
-            await base44.entities.Segment.update(id, data);
+        mutationFn: async ({ segment, data }) => {
+            if (segment.isServiceSegment) {
+                // Handle Weekly Service Update (Read-Modify-Write)
+                const service = await base44.entities.Service.get(segment.serviceId);
+                if (!service) throw new Error("Service not found");
+                
+                const currentArray = [...service[segment.timeSlot]];
+                const currentSegment = currentArray[segment.segmentIndex];
+                
+                // Merge updates
+                // Map 'scripture_references' to 'data.verse' for services
+                const updatedData = { ...currentSegment.data };
+                if (data.scripture_references) {
+                    updatedData.verse = data.scripture_references;
+                }
+
+                currentArray[segment.segmentIndex] = {
+                    ...currentSegment,
+                    ...data,
+                    data: updatedData
+                };
+
+                await base44.entities.Service.update(segment.serviceId, {
+                    [segment.timeSlot]: currentArray
+                });
+            } else {
+                // Handle Standard Segment Update
+                await base44.entities.Segment.update(segment.id, data);
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['messagesToProcess']);
@@ -124,7 +192,7 @@ export default function MessageProcessingPage() {
         if (!selectedSegment) return;
         
         updateSegmentMutation.mutate({
-            id: selectedSegment.id,
+            segment: selectedSegment,
             data: {
                 submitted_content: restoreContent || selectedSegment.submitted_content, // Update content if restoring
                 scripture_references: data.verse,
@@ -137,7 +205,7 @@ export default function MessageProcessingPage() {
     const handleIgnore = (segment) => {
         if (confirm("¿Estás seguro de ignorar esta sumisión?")) {
             updateSegmentMutation.mutate({
-                id: segment.id,
+                segment: segment,
                 data: { submission_status: 'ignored' }
             });
         }

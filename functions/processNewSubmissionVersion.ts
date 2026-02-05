@@ -149,24 +149,76 @@ Deno.serve(async (req) => {
             scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
         }
 
-        // 2. Concurrency Check & Update Segment
-        // We fetch the current segment to ensure we don't overwrite a newer submission or admin edit.
-        const currentSegment = await base44.asServiceRole.entities.Segment.get(submission.segment_id);
-        
-        // Only update if the segment's content still matches what was submitted in this version.
-        // If it doesn't match, it means someone else (admin or newer submission) updated it.
-        if (currentSegment && currentSegment.submitted_content === submission.content) {
-            await base44.asServiceRole.entities.Segment.update(submission.segment_id, {
-                submission_status: 'processed', 
-                parsed_verse_data: parsedData,
-                scripture_references: scriptureReferences
-            });
+        const segmentId = submission.segment_id;
+
+        // CHECK IF COMPOSITE ID (Weekly Service)
+        if (segmentId.startsWith('weekly_service|')) {
+            const parts = segmentId.split('|');
+            // Expected: weekly_service|{serviceId}|{timeSlot}|{segmentIdx}|message (optional type suffix)
+            const serviceId = parts[1];
+            const timeSlot = parts[2];
+            const segmentIdx = parseInt(parts[3]);
+
+            const service = await base44.asServiceRole.entities.Service.get(serviceId);
+            
+            if (!service || !service[timeSlot] || !service[timeSlot][segmentIdx]) {
+                await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+                    processing_status: 'failed',
+                    processing_error: 'Service or segment not found'
+                });
+                return Response.json({ error: "Service/Segment not found" });
+            }
+
+            // Update embedded segment
+            const currentArray = [...service[timeSlot]];
+            const currentSegment = currentArray[segmentIdx];
+
+            // Verify type is still message (safety)
+            const type = (currentSegment.type || "").toLowerCase();
+            if (!['message', 'plenaria', 'predica', 'mensaje'].includes(type)) {
+                 await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+                    processing_status: 'failed',
+                    processing_error: 'Target segment is no longer a message type'
+                });
+                return Response.json({ error: "Invalid segment type" });
+            }
+
+            // Concurrency check
+            if (currentSegment.submitted_content === submission.content) {
+                currentArray[segmentIdx] = {
+                    ...currentSegment,
+                    parsed_verse_data: parsedData,
+                    // Use 'verse' field for legacy compatibility if it exists in fields, or just data.verse
+                    data: {
+                        ...currentSegment.data,
+                        verse: scriptureReferences
+                    },
+                    submission_status: 'processed'
+                };
+
+                await base44.asServiceRole.entities.Service.update(serviceId, {
+                    [timeSlot]: currentArray
+                });
+            } else {
+                console.log(`Skipping live update for version ${submission.id}: Content mismatch (stale version).`);
+            }
+
         } else {
-            console.log(`Skipping live update for version ${submission.id}: Content mismatch (stale version).`);
+            // STANDARD SEGMENT ID (Events)
+            const currentSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
+            
+            if (currentSegment && currentSegment.submitted_content === submission.content) {
+                await base44.asServiceRole.entities.Segment.update(segmentId, {
+                    submission_status: 'processed', 
+                    parsed_verse_data: parsedData,
+                    scripture_references: scriptureReferences
+                });
+            } else {
+                console.log(`Skipping live update for version ${submission.id}: Content mismatch (stale version).`);
+            }
         }
 
         // 3. Update Submission Version (Record result)
-        // We save the parsed snapshot and mark the version as processed
         await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
             parsed_data_snapshot: parsedData,
             processing_status: 'processed'
