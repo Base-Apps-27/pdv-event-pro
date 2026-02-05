@@ -26,7 +26,7 @@ export default function StickyOpsDeck({
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Flatten and sort all actions
-  const { upcomingActions, pastActions } = useMemo(() => {
+  const { upcomingActions, pastActions, isServiceDay } = useMemo(() => {
     const actions = [];
     const now = currentTime.getTime();
     
@@ -39,6 +39,13 @@ export default function StickyOpsDeck({
     };
 
     const activeDateStr = sessionDate || new Date().toISOString().split('T')[0];
+    
+    // DATE GUARD: Only show actions if today matches the service date
+    // This prevents the deck from firing on non-service days
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (sessionDate && sessionDate !== todayStr) {
+      return { upcomingActions: [], pastActions: [], isServiceDay: false };
+    }
 
     // 1. Process PreSession Actions
     if (preSessionData) {
