@@ -127,6 +127,9 @@ export default function ServiceProgramView({
           sessionDate={adjustedServiceData.date}
           currentTime={currentTime}
           onScrollToSegment={scrollToSegment}
+          onToggleChat={onToggleChat}
+          chatUnreadCount={chatUnreadCount}
+          chatOpen={chatOpen}
         />
 
         {/* Live Status Card for Custom Services */}
