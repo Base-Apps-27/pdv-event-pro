@@ -120,6 +120,7 @@ export default function ServiceProgramView({
         {/* Sticky Ops Deck */}
         <StickyOpsDeck 
           segments={adjustedServiceData.segments || []}
+          sessionDate={adjustedServiceData.date}
           currentTime={currentTime}
           onScrollToSegment={scrollToSegment}
         />
