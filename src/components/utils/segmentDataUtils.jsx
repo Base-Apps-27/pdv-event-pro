@@ -95,25 +95,43 @@ export const normalizeServiceTeams = (rawService) => {
 };
 
 /**
- * Accessor helper to safely get a value from a segment, checking data first then root
- * Useful for read-only views during transition
+ * Accessor helper to safely get a value from a segment
  * 
  * IMPORTANT: Services and Events store data differently:
- * - Services: Many fields like translation_mode, requires_translation are at segment root
- * - Events (Segment entity): Fields may be at root or in data object
- * This function handles both patterns.
+ * - Weekly Services: Structural fields (title, type, duration) are at ROOT
+ *   Content fields (preacher, leader, message_title) are in data object
+ * - Events (Segment entity): Most fields at root, some in data
+ * 
+ * PRIORITY LOGIC:
+ * - Structural fields (title, type, duration): Check ROOT first, then data
+ * - Content fields: Check DATA first, then root
+ * This prevents data.title (message title) from overwriting segment.title (block name)
  */
 export const getSegmentData = (segment, field) => {
   if (!segment) return "";
   
-  // Check data object first (Canonical for custom service segments)
+  // Structural fields - these define the segment's identity, stored at root in weekly services
+  const structuralFields = ['title', 'type', 'duration', 'start_time', 'end_time', 'order'];
+  
+  if (structuralFields.includes(field)) {
+    // Check root first for structural fields
+    if (segment[field] !== undefined && segment[field] !== null) {
+      return segment[field];
+    }
+    // Fallback to data (for custom services that might store differently)
+    if (segment.data && segment.data[field] !== undefined && segment.data[field] !== null) {
+      return segment.data[field];
+    }
+    return "";
+  }
+  
+  // Content fields - user-entered data, stored in data object for weekly services
+  // Check data object first
   if (segment.data && segment.data[field] !== undefined && segment.data[field] !== null) {
     return segment.data[field];
   }
   
-  // Fallback to root (Entity segments and weekly service blueprint fields)
-  // This handles fields like translation_mode, requires_translation, translator_name
-  // that are stored at segment root in weekly services
+  // Fallback to root (Entity segments and some weekly service fields like translator_name)
   if (segment[field] !== undefined && segment[field] !== null) {
     return segment[field];
   }
