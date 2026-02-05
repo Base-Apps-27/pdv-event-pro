@@ -79,6 +79,10 @@ export default function MessageProcessingPage() {
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     // Custom content for restoration flow
     const [restoreContent, setRestoreContent] = useState(null);
+    
+    // Diagnostic State
+    const [diagnosticSegmentId, setDiagnosticSegmentId] = useState(null);
+    const [isDiagnosticOpen, setIsDiagnosticOpen] = useState(false);
 
     // Fetch segments AND services with pending OR processed submissions
     const { data: segments = [], isLoading } = useQuery({
