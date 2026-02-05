@@ -132,18 +132,30 @@ function parseScriptureReferences(rawText) {
 
 Deno.serve(async (req) => {
     try {
+        console.log("[AUTOMATION START] Automation triggered for submission processing");
+        
         const base44 = createClientFromRequest(req);
-        const { event, data } = await req.json();
+        const requestBody = await req.json();
+        console.log("[PAYLOAD RECEIVED]", JSON.stringify(requestBody, null, 2));
+        
+        const { event, data } = requestBody;
 
         // Ensure we are processing a "create" event for SpeakerSubmissionVersion
+        console.log(`[EVENT CHECK] entity_name=${event?.entity_name}, type=${event?.type}`);
         if (event.entity_name !== 'SpeakerSubmissionVersion' || event.type !== 'create') {
+            console.log("[EVENT SKIPPED] Not a SpeakerSubmissionVersion create event");
             return Response.json({ message: 'Ignored event' });
         }
 
         const submission = data;
+        console.log(`[SUBMISSION DATA] segment_id=${submission?.segment_id}, content_length=${submission?.content?.length || 0}, title=${submission?.title}`);
+        
         if (!submission.segment_id || !submission.content) {
+            console.log("[VALIDATION FAILED] Missing segment_id or content");
             return Response.json({ message: 'Invalid submission data' });
         }
+        
+        console.log("[VALIDATION PASSED] Submission has required fields");
 
         // 1. Parse verses
         const parsedData = parseScriptureReferences(submission.content);
