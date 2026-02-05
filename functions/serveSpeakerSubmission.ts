@@ -137,55 +137,74 @@ Deno.serve(async (req) => {
       max-width: 600px;
       background: var(--bg-white);
       border-radius: 12px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
       border: 1px solid var(--border-light);
-      padding: 32px;
+      padding: 0; /* padding moved to inner elements or handled by margins */
+      overflow: hidden; /* for gradient bar */
+      position: relative;
+    }
+    
+    .container-content {
+        padding: 40px 32px 32px 32px;
     }
 
     /* === HEADER === */
     .form-header {
       text-align: center;
-      margin-bottom: 32px;
-      padding: 48px 32px;
-      background: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-green) 100%);
-      margin: -32px -32px 32px -32px;
-      border-radius: 12px 12px 0 0;
-      color: white;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-light);
+      position: relative;
     }
 
     .form-header h1 {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 3.5rem;
-      color: white;
-      letter-spacing: 0.05em;
+      font-size: 3rem;
+      color: var(--brand-charcoal);
+      letter-spacing: 0.02em;
       margin-bottom: 8px;
       line-height: 1;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    .form-header p.event-name {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.95);
+    .form-header p.org-name {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--brand-teal);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.1em;
       margin-bottom: 4px;
     }
 
+    .form-header p.event-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
     .form-header .event-meta {
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.85rem;
+      color: var(--text-tertiary);
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
       gap: 16px;
-      margin-top: 12px;
+      margin-top: 16px;
       font-weight: 500;
     }
     
     .meta-item { display: flex; align-items: center; gap: 6px; }
-    .meta-icon { width: 16px; height: 16px; opacity: 0.8; }
+    .meta-icon { width: 14px; height: 14px; color: var(--brand-green); }
+    
+    .gradient-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(90deg, var(--brand-teal) 0%, var(--brand-green) 100%);
+    }
     
     .instruction-text {
         font-size: 0.9rem;
@@ -332,37 +351,40 @@ Deno.serve(async (req) => {
 <body>
 
   <div class="form-container" id="mainContainer">
-    ${eventError ? `
-        <div class="status-message status-error status-visible">
-            ${eventError}
+    <div class="gradient-bar"></div>
+    <div class="container-content">
+        ${eventError ? `
+            <div class="status-message status-error status-visible">
+                ${eventError}
+            </div>
+        ` : ''}
+
+        <div class="form-header">
+          <p class="org-name">PALABRAS DE VIDA</p>
+          <h1>COMPARTA SU MENSAJE</h1>
+          <p class="event-name">${eventName}</p>
+          <div class="event-meta">
+            ${eventDate ? `
+            <div class="meta-item">
+                <svg xmlns="http://www.w3.org/2000/svg" class="meta-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>${eventDate}</span>
+            </div>` : ''}
+            ${eventLocation ? `
+            <div class="meta-item">
+                <svg xmlns="http://www.w3.org/2000/svg" class="meta-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>${eventLocation}</span>
+            </div>` : ''}
+          </div>
         </div>
-    ` : ''}
 
-    <div class="form-header">
-      <h1>Compartir su Mensaje</h1>
-      <p class="event-name">${eventName}</p>
-      <div class="event-meta">
-        ${eventDate ? `
-        <div class="meta-item">
-            <svg xmlns="http://www.w3.org/2000/svg" class="meta-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>${eventDate}</span>
-        </div>` : ''}
-        ${eventLocation ? `
-        <div class="meta-item">
-            <svg xmlns="http://www.w3.org/2000/svg" class="meta-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span>${eventLocation}</span>
-        </div>` : ''}
-      </div>
-    </div>
+        <div id="statusMessage" class="status-message"></div>
 
-    <div id="statusMessage" class="status-message"></div>
-
-    <form id="submissionForm" class="${eventError ? 'hidden' : ''}">
+        <form id="submissionForm" class="${eventError ? 'hidden' : ''}">
       <!-- Section 1 -->
       <div class="form-section">
         <h3>Información de la Sesión</h3>
@@ -397,6 +419,7 @@ Deno.serve(async (req) => {
 
   <!-- Success View (Hidden initially) -->
   <div class="form-container" id="successContainer" style="display: none;">
+    <div class="gradient-bar"></div>
     <div class="success-card">
         <div class="success-icon">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
