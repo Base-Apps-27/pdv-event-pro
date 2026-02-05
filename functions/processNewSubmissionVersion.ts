@@ -217,6 +217,7 @@ Deno.serve(async (req) => {
             // Remove strict concurrency check - Trust this submission is the latest source of truth
             // We update the segment with the submission content regardless, ensuring it doesn't get stuck in 'pending'
             
+            console.log("[SEGMENT_BUILD] Creating updatedSegment object...");
             const updatedSegment = {
                 ...currentSegment,
                 submitted_content: submission.content, // Ensure content matches this version
@@ -226,15 +227,19 @@ Deno.serve(async (req) => {
 
             // Update title if present in submission
             if (submission.title && submission.title.trim() !== "") {
+                console.log(`[TITLE_UPDATE] Setting message_title="${submission.title.trim()}"`);
                 updatedSegment.message_title = submission.title.trim();
                 updatedSegment.data = {
                     ...updatedSegment.data,
                     message_title: submission.title.trim()
                     // Explicitly NOT updating data.title to preserve block name
                 };
+            } else {
+                console.log("[TITLE_SKIPPED] No title in submission");
             }
 
             // Ensure verses are mapped to all potential fields
+            console.log("[VERSE_MAPPING] Updating scripture references...");
             updatedSegment.scripture_references = scriptureReferences;
             updatedSegment.data = {
                 ...updatedSegment.data,
@@ -244,11 +249,14 @@ Deno.serve(async (req) => {
 
             currentArray[segmentIdx] = updatedSegment;
 
-            console.log(`Updating Service ${serviceId} segment ${segmentIdx}: Title="${submission.title}", Verses="${scriptureReferences.substring(0, 20)}..."`);
+            console.log(`[WRITE_READY] Prepared to update Service ${serviceId}, timeSlot="${timeSlot}", index=${segmentIdx}`);
+            console.log(`[WRITE_PAYLOAD] title="${submission.title}", verses_preview="${scriptureReferences.substring(0, 30)}..."`);
 
+            console.log("[DB_UPDATE] Calling Service.update()...");
             await base44.asServiceRole.entities.Service.update(serviceId, {
                 [timeSlot]: currentArray
             });
+            console.log("[DB_UPDATE_SUCCESS] Service updated successfully");
 
         } else {
             // STANDARD SEGMENT ID (Events)
