@@ -181,7 +181,18 @@ export default function StickyOpsDeck({
     return { upcomingActions: upcoming, pastActions: past, isServiceDay: true };
   }, [segments, preSessionData, sessionDate, currentTime]);
 
+  // If not the service day, hide entirely
+  if (!isServiceDay) return null;
+
   const activeAction = upcomingActions[0] || pastActions[0];
+  
+  // SERVICE OVER GUARD: If no upcoming actions and the most recent past action
+  // is more than 30 minutes ago, hide the deck entirely — the service is over.
+  if (upcomingActions.length === 0 && pastActions.length > 0) {
+    const lastActionTime = pastActions[0].time.getTime();
+    const minutesSinceLast = (currentTime.getTime() - lastActionTime) / 60000;
+    if (minutesSinceLast > 30) return null;
+  }
 
   // Calculate concurrent actions (same time window) to indicate stacks
   // We check the source list (upcoming or past) for items within the same minute
