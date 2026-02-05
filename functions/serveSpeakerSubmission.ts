@@ -83,10 +83,40 @@ Deno.serve(async (req) => {
             ? new Date(targetEvent.start_date + "T12:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) 
             : "";
         
-        // Generate Options HTML
-        const optionsHtml = options.map(opt => 
-            `<option value="${opt.id}">${opt.session_name} • ${opt.speaker} ${opt.message_title ? '• ' + opt.message_title + ' ' : ''}(${opt.title})</option>`
-        ).join('');
+        // Generate Options HTML with Groups
+        let optionsHtml = '';
+        let currentGroup = null;
+
+        options.forEach(opt => {
+            const groupName = opt.session_name || "Otras Sesiones";
+            
+            // Start new group if needed
+            if (groupName !== currentGroup) {
+                if (currentGroup !== null) optionsHtml += '</optgroup>';
+                currentGroup = groupName;
+                optionsHtml += `<optgroup label="${currentGroup}">`;
+            }
+
+            // Simplified Label: Speaker • "Title" (or Segment Name)
+            // Removes the session name redundancy since it's in the group label
+            let label = opt.speaker;
+            
+            if (opt.message_title) {
+                // If we have a specific message title, show it nicely
+                // Check if title is already quoted, if not add quotes for clarity
+                const title = opt.message_title.trim();
+                const isQuoted = title.startsWith('"') || title.startsWith("'");
+                label += ` • ${isQuoted ? title : '"' + title + '"'}`;
+            } else {
+                // Fallback to just the segment title (e.g. Plenaria #1)
+                label += ` • ${opt.title}`;
+            }
+
+            optionsHtml += `<option value="${opt.id}">${label}</option>`;
+        });
+        
+        // Close last group
+        if (currentGroup !== null) optionsHtml += '</optgroup>';
 
         const html = `<!DOCTYPE html>
 <html lang="es">
@@ -349,7 +379,7 @@ Deno.serve(async (req) => {
   </style>
 </head>
 <body>
-   <!-- Version: ${new Date().toISOString()} - Copy Update -->
+   <!-- Version: ${new Date().toISOString()} - List Grouping Update -->
    <div class="form-container" id="mainContainer">
     <div class="gradient-bar"></div>
     <div class="container-content">
