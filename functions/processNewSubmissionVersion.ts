@@ -150,8 +150,16 @@ Deno.serve(async (req) => {
 
         // CRITICAL: Fetch the actual submission from DB using the entity_id from the event
         // The 'data' in the payload may be truncated or stale - always fetch fresh
-        const submissionId = event.entity_id || data?.id;
+        // Entity automations use "event.entity_id" for the record ID
+        const submissionId = event?.entity_id || data?.id;
         console.log(`[FETCH_SUBMISSION] Fetching SpeakerSubmissionVersion ${submissionId}...`);
+        console.log(`[DEBUG_EVENT] Full event object: ${JSON.stringify(event)}`);
+        
+        if (!submissionId) {
+            console.log("[VALIDATION FAILED] No submission ID found in event or data");
+            return Response.json({ error: 'No submission ID' }, { status: 400 });
+        }
+        
         const submission = await base44.asServiceRole.entities.SpeakerSubmissionVersion.get(submissionId);
         console.log(`[SUBMISSION_FETCHED] segment_id=${submission?.segment_id}, content_length=${submission?.content?.length || 0}`);
         console.log(`[SUBMISSION DATA] segment_id=${submission?.segment_id}, content_length=${submission?.content?.length || 0}, title=${submission?.title}`);
