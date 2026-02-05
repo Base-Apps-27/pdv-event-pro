@@ -123,7 +123,10 @@ Deno.serve(async (req) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Entrega de Mensaje | ${eventName}</title>
+  <title>Versículos de su Mensaje | ${eventName}</title>
+  <meta property="og:title" content="Versículos de su Mensaje | ${eventName}" />
+  <meta property="og:description" content="Comparta sus notas o bosquejo para la proyección de versículos." />
+  <meta property="og:type" content="website" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
