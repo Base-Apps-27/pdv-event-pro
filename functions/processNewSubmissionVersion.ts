@@ -149,14 +149,21 @@ Deno.serve(async (req) => {
             scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
         }
 
-        // 2. Update Segment (Live content)
-        // We set submission_status to 'processed' because the system has processed it automatically.
-        await base44.asServiceRole.entities.Segment.update(submission.segment_id, {
-            submitted_content: submission.content,
-            submission_status: 'processed', 
-            parsed_verse_data: parsedData,
-            scripture_references: scriptureReferences
-        });
+        // 2. Concurrency Check & Update Segment
+        // We fetch the current segment to ensure we don't overwrite a newer submission or admin edit.
+        const currentSegment = await base44.asServiceRole.entities.Segment.get(submission.segment_id);
+        
+        // Only update if the segment's content still matches what was submitted in this version.
+        // If it doesn't match, it means someone else (admin or newer submission) updated it.
+        if (currentSegment && currentSegment.submitted_content === submission.content) {
+            await base44.asServiceRole.entities.Segment.update(submission.segment_id, {
+                submission_status: 'processed', 
+                parsed_verse_data: parsedData,
+                scripture_references: scriptureReferences
+            });
+        } else {
+            console.log(`Skipping live update for version ${submission.id}: Content mismatch (stale version).`);
+        }
 
         // 3. Update Submission Version (Record result)
         // We save the parsed snapshot and mark the version as processed

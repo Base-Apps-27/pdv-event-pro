@@ -92,7 +92,7 @@ export default function MessageProcessingPage() {
             const all = [...pending, ...processed];
             return all.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date));
         },
-        refetchInterval: 10000
+        refetchInterval: 3000
     });
 
     const updateSegmentMutation = useMutation({
