@@ -196,12 +196,17 @@ Deno.serve(async (req) => {
             }
 
             // Update embedded segment
+            console.log("[UPDATE_START] Cloning segment array...");
             const currentArray = [...service[timeSlot]];
             const currentSegment = currentArray[segmentIdx];
+            console.log(`[SEGMENT_TYPE] currentSegment.type="${currentSegment.type}"`);
 
             // Verify type is still message (safety)
             const type = (currentSegment.type || "").toLowerCase();
+            console.log(`[TYPE_CHECK] type="${type}", isMessageType=${['message', 'plenaria', 'predica', 'mensaje'].includes(type)}`);
+            
             if (!['message', 'plenaria', 'predica', 'mensaje'].includes(type)) {
+                console.log("[TYPE_ERROR] Segment is not a message type");
                  await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
                     processing_status: 'failed',
                     processing_error: 'Target segment is no longer a message type'
