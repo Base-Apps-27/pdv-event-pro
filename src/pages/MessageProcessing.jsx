@@ -83,21 +83,78 @@ export default function MessageProcessingPage() {
     const { data: segments = [], isLoading } = useQuery({
         queryKey: ['messagesToProcess'],
         queryFn: async () => {
-            // Fetch parallel
-            const [pending, processed] = await Promise.all([
+            // 1. Fetch Event Segments (Standard)
+            const [pendingSegs, processedSegs] = await Promise.all([
                 base44.entities.Segment.filter({ submission_status: 'pending' }),
                 base44.entities.Segment.filter({ submission_status: 'processed' })
             ]);
-            // Combine and dedup
-            const all = [...pending, ...processed];
-            return all.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date));
+            
+            // 2. Fetch Weekly Services (Virtual Segments)
+            // We fetch active services from last 7 days + next 30 days
+            const today = new Date();
+            const pastDate = new Date(today); pastDate.setDate(today.getDate() - 7);
+            const futureDate = new Date(today); futureDate.setDate(today.getDate() + 30);
+            
+            const services = await base44.entities.Service.filter({ status: 'active' });
+            const relevantServices = services.filter(s => s.date >= pastDate.toISOString().split('T')[0]);
+
+            const virtualSegments = [];
+            relevantServices.forEach(service => {
+                ['9:30am', '11:30am'].forEach(slot => {
+                    const slotSegments = service[slot] || [];
+                    slotSegments.forEach((seg, idx) => {
+                        const status = seg.data?.submission_status;
+                        if (status === 'pending' || status === 'processed') {
+                            virtualSegments.push({
+                                id: `service|${service.id}|${slot}|${idx}`,
+                                isVirtual: true,
+                                serviceId: service.id,
+                                timeSlot: slot,
+                                index: idx,
+                                title: seg.title || seg.data?.title || 'Mensaje',
+                                presenter: seg.data?.preacher || seg.data?.presenter || 'TBA',
+                                submitted_content: seg.data?.submitted_content,
+                                submission_status: status,
+                                updated_date: service.updated_date, // Use service update time
+                                // Map fields to match standard segment for UI
+                                data: seg.data
+                            });
+                        }
+                    });
+                });
+            });
+
+            // Combine and sort
+            const all = [...pendingSegs, ...processedSegs, ...virtualSegments];
+            return all.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0));
         },
         refetchInterval: 3000
     });
 
     const updateSegmentMutation = useMutation({
-        mutationFn: async ({ id, data }) => {
-            await base44.entities.Segment.update(id, data);
+        mutationFn: async ({ id, data, isVirtual, serviceId, timeSlot, index }) => {
+            if (isVirtual) {
+                // Update Service Entity
+                const service = await base44.entities.Service.get(serviceId);
+                if (service && service[timeSlot]) {
+                    const segments = [...service[timeSlot]];
+                    if (segments[index]) {
+                        segments[index] = {
+                            ...segments[index],
+                            data: {
+                                ...segments[index].data,
+                                ...data,
+                                // Map generic 'scripture_references' back to 'verse' for weekly service schema
+                                verse: data.scripture_references || segments[index].data.verse
+                            }
+                        };
+                        await base44.entities.Service.update(serviceId, { [timeSlot]: segments });
+                    }
+                }
+            } else {
+                // Update Segment Entity
+                await base44.entities.Segment.update(id, data);
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['messagesToProcess']);
@@ -125,8 +182,12 @@ export default function MessageProcessingPage() {
         
         updateSegmentMutation.mutate({
             id: selectedSegment.id,
+            isVirtual: selectedSegment.isVirtual,
+            serviceId: selectedSegment.serviceId,
+            timeSlot: selectedSegment.timeSlot,
+            index: selectedSegment.index,
             data: {
-                submitted_content: restoreContent || selectedSegment.submitted_content, // Update content if restoring
+                submitted_content: restoreContent || selectedSegment.submitted_content, 
                 scripture_references: data.verse,
                 parsed_verse_data: data.parsed_data,
                 submission_status: 'processed'
@@ -138,6 +199,10 @@ export default function MessageProcessingPage() {
         if (confirm("¿Estás seguro de ignorar esta sumisión?")) {
             updateSegmentMutation.mutate({
                 id: segment.id,
+                isVirtual: segment.isVirtual,
+                serviceId: segment.serviceId,
+                timeSlot: segment.timeSlot,
+                index: segment.index,
                 data: { submission_status: 'ignored' }
             });
         }

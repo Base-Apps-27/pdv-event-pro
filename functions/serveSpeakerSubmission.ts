@@ -12,63 +12,125 @@ Deno.serve(async (req) => {
         let options = [];
 
         try {
+            // STRATEGY: 
+            // 1. Look for Weekly Services first (usually more frequent)
+            // 2. Look for Special Events if no Weekly Service or if specifically requested?
+            // Actually, usually we want to show everything relevant for "This Week".
+            // Let's fetch BOTH upcoming Weekly Services AND Confirmed Events.
+
+            const today = new Date();
+            // Go back 1 day to include today's services if still active
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            const yesterdayIso = yesterday.toISOString().split('T')[0];
+
+            // 1. Fetch Weekly Services
+            // We want active services for the next 7 days
+            const services = await base44.asServiceRole.entities.Service.filter({ status: 'active' });
+            const upcomingServices = services
+                .filter(s => s.date >= yesterdayIso)
+                .sort((a, b) => a.date.localeCompare(b.date))
+                .slice(0, 2); // Next 2 services
+
+            // 2. Fetch Events (if eventIdParam is NOT present, otherwise just fetch that one)
+            let upcomingEvents = [];
             if (eventIdParam) {
-                targetEvent = await base44.asServiceRole.entities.Event.get(eventIdParam);
+                const specificEvent = await base44.asServiceRole.entities.Event.get(eventIdParam);
+                if (specificEvent) upcomingEvents = [specificEvent];
             } else {
-                // Find next upcoming confirmed event
                 const events = await base44.asServiceRole.entities.Event.filter({ status: 'confirmed' });
-                const today = new Date().toISOString().split('T')[0];
-                const upcoming = events.filter(e => e.start_date >= today).sort((a, b) => a.start_date.localeCompare(b.start_date));
+                upcomingEvents = events
+                    .filter(e => e.start_date >= yesterdayIso)
+                    .sort((a, b) => a.start_date.localeCompare(b.start_date))
+                    .slice(0, 1); // Next 1 event
+            }
+
+            // --- PROCESS WEEKLY SERVICES ---
+            upcomingServices.forEach(service => {
+                const slots = ['9:30am', '11:30am'];
+                slots.forEach(slot => {
+                    const segments = service[slot] || [];
+                    segments.forEach((seg, index) => {
+                        // Filter for Message/Preach type segments
+                        const type = (seg.type || '').toLowerCase();
+                        if (type === 'message' || type === 'mensaje' || type === 'plenaria' || type === 'predica') {
+                            // Extract speaker name safely
+                            const speaker = seg.data?.preacher || seg.data?.presenter || seg.data?.leader || 'TBA';
+                            const title = seg.data?.title || seg.title || 'Mensaje';
+                            
+                            // Create Composite ID: service|{id}|{slot}|{index}
+                            const compositeId = `service|${service.id}|${slot}|${index}`;
+                            
+                            options.push({
+                                id: compositeId,
+                                title: title,
+                                speaker: speaker,
+                                message_title: seg.data?.title,
+                                time: slot,
+                                date: service.date,
+                                session_name: service.name || `Servicio ${slot}`,
+                                type: 'weekly',
+                                sort_date: service.date + 'T' + (slot === '9:30am' ? '09:30' : '11:30')
+                            });
+                        }
+                    });
+                });
+            });
+
+            // --- PROCESS EVENTS ---
+            if (upcomingEvents.length > 0) {
+                targetEvent = upcomingEvents[0]; // Primary context for headers if mixed?
                 
-                if (upcoming.length > 0) {
-                    targetEvent = upcoming[0];
-                } else {
-                    // Fallback to in_progress
-                    const progress = await base44.asServiceRole.entities.Event.filter({ status: 'in_progress' });
-                    if (progress.length > 0) targetEvent = progress[0];
+                // If we have both, maybe prioritize the one closer in time for the header info?
+                // For now, let's keep targetEvent as the "Event" context if available.
+
+                for (const evt of upcomingEvents) {
+                    const sessions = await base44.asServiceRole.entities.Session.filter({ event_id: evt.id });
+                    
+                    if (sessions.length > 0) {
+                        const segmentPromises = sessions.map(sess => 
+                            base44.asServiceRole.entities.Segment.filter({ 
+                                session_id: sess.id,
+                                segment_type: 'Plenaria'
+                            })
+                        );
+                        
+                        const segmentsResults = await Promise.all(segmentPromises);
+                        const allSegments = segmentsResults.flat();
+
+                        allSegments.forEach(seg => {
+                            const session = sessions.find(s => s.id === seg.session_id);
+                            options.push({
+                                id: seg.id, // Standard UUID
+                                title: seg.title,
+                                speaker: seg.presenter || 'TBA',
+                                message_title: seg.message_title,
+                                time: seg.start_time,
+                                date: session?.date,
+                                session_name: session?.name || evt.name,
+                                type: 'event',
+                                sort_date: (session?.date || '1970-01-01') + 'T' + (seg.start_time || '00:00')
+                            });
+                        });
+                    }
                 }
             }
 
-            if (targetEvent) {
-                // Fetch Sessions
-                const sessions = await base44.asServiceRole.entities.Session.filter({ event_id: targetEvent.id });
-                
-                if (sessions.length > 0) {
-                     // Fetch Plenaria Segments (Parallelized)
-                    const segmentPromises = sessions.map(sess => 
-                        base44.asServiceRole.entities.Segment.filter({ 
-                            session_id: sess.id,
-                            segment_type: 'Plenaria'
-                        })
-                    );
-                    
-                    const segmentsResults = await Promise.all(segmentPromises);
-                    const allSegments = segmentsResults.flat();
+            // Sort all options by date/time
+            options.sort((a, b) => a.sort_date.localeCompare(b.sort_date));
 
-                    // Format Options
-                    options = allSegments.map(seg => {
-                        const session = sessions.find(s => s.id === seg.session_id);
-                        return {
-                            id: seg.id,
-                            title: seg.title,
-                            speaker: seg.presenter || 'TBA',
-                            message_title: seg.message_title, // Added as requested
-                            time: seg.start_time,
-                            date: session?.date,
-                            session_name: session?.name,
-                            label: `${session?.name || ''} - ${seg.title} (${seg.start_time || 'TBA'})`
-                        };
-                    });
+            // Set display variables based on the first available option if targetEvent wasn't set explicitly
+            if (!targetEvent && options.length > 0) {
+                // Synthesize a "target event" for the UI header from the first option
+                targetEvent = {
+                    name: options[0].session_name,
+                    location: "Auditorio Principal", // Default
+                    start_date: options[0].date
+                };
+            }
 
-                    // Sort
-                    options.sort((a, b) => {
-                        const da = new Date((a.date || '1970-01-01') + 'T' + (a.time || '00:00'));
-                        const db = new Date((b.date || '1970-01-01') + 'T' + (b.time || '00:00'));
-                        return da - db;
-                    });
-                }
-            } else {
-                eventError = "No se encontró un evento activo.";
+            if (options.length === 0) {
+                eventError = "No se encontraron sesiones activas para recibir mensajes.";
             }
 
         } catch (err) {
