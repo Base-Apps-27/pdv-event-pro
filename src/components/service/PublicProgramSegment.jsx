@@ -569,9 +569,10 @@ export default function PublicProgramSegment({
             )}
 
             {/* Message Title (for message segments) */}
-            {getData('message_title') && (
+            {/* Weekly services store message title in data.title, Events use message_title */}
+            {(getData('message_title') || (isMessage && segment.data?.title)) && (
               <div className="bg-blue-50 p-2 rounded border border-blue-200 text-xs">
-                <p className="font-semibold text-blue-800">{t('live.message')}: {getData('message_title')}</p>
+                <p className="font-semibold text-blue-800">{t('live.message')}: {getData('message_title') || segment.data?.title}</p>
                 {(getData('scripture_references') || getData('verse')) && (
                   <p className="mt-1">{t('live.scriptures')}: {getData('scripture_references') || getData('verse')}</p>
                 )}
