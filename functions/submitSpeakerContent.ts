@@ -117,6 +117,17 @@ Deno.serve(async (req) => {
         return Response.json(responsePayload, { headers: corsHeaders });
 
     } catch (error) {
+        // Hardening: Ensure we don't leave idempotency keys stuck in 'processing' on failure
+        if (idempotencyKey) {
+            try {
+                const existing = await base44.asServiceRole.entities.PublicFormIdempotency.filter({ idempotency_key: idempotencyKey });
+                if (existing.length) {
+                    await base44.asServiceRole.entities.PublicFormIdempotency.update(existing[0].id, { status: 'failed' });
+                }
+            } catch (cleanupErr) {
+                console.error("Failed to cleanup idempotency:", cleanupErr);
+            }
+        }
         return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
     }
 });
