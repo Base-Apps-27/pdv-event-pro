@@ -27,9 +27,26 @@ export default function LiveOperationsChat({
   contextType,
   contextId,
   contextDate,
-  contextName
+  contextName,
+  // Controlled props
+  isOpen: controlledIsOpen,
+  onToggle: onControlledToggle,
+  hideTrigger = false,
+  onUnreadCountChange
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  
+  // Use controlled state if provided, otherwise internal
+  const isControlled = typeof controlledIsOpen !== 'undefined';
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
+  const toggleOpen = () => {
+    if (isControlled && onControlledToggle) {
+      onControlledToggle(!isOpen);
+    } else {
+      setInternalIsOpen(!isOpen);
+    }
+  };
+
   const [messageText, setMessageText] = useState("");
   const [lastSeenMessageId, setLastSeenMessageId] = useState(null); // Persisted last seen message ID
   const [isUploading, setIsUploading] = useState(false);
