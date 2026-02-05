@@ -89,9 +89,9 @@ Deno.serve(async (req) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Envío de Mensaje Dominical | Palabras de Vida</title>
-  <meta property="og:title" content="Envío de Mensaje Dominical" />
-  <meta property="og:description" content="Envíe sus notas para el servicio del próximo domingo." />
+  <title>Envío de Versículos Dominical | Palabras de Vida</title>
+  <meta property="og:title" content="Envío de Versículos Dominical" />
+  <meta property="og:description" content="Envíe sus versículos para el servicio del próximo domingo." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
         ${serviceError ? `<div class="status-message status-error">${serviceError}</div>` : ''}
 
         <div class="form-header">
-          <h1>Mensaje Dominical</h1>
+          <h1>Versículos - Mensaje Dominical</h1>
           <p class="subtitle">Próximo Domingo: ${formattedDate}</p>
         </div>
 
@@ -171,11 +171,11 @@ Deno.serve(async (req) => {
           </div>
 
           <div class="form-section">
-            <label for="content">Pegue sus notas / bosquejo aquí <span style="color:red">*</span></label>
-            <textarea id="content" placeholder="Pegue el contenido completo de su mensaje aquí. El sistema detectará y extraerá los versículos automáticamente." required></textarea>
+            <label for="content">Pegue sus versículos / referencias aquí <span style="color:red">*</span></label>
+            <textarea id="content" placeholder="Pegue los versículos y referencias bíblicas que utilizará en su mensaje. El sistema los detectará y formateará automáticamente." required></textarea>
           </div>
 
-          <button type="submit" id="submitBtn">Enviar Mensaje</button>
+          <button type="submit" id="submitBtn">Enviar Versículos</button>
         </form>
     </div>
   </div>
@@ -185,8 +185,8 @@ Deno.serve(async (req) => {
     <div class="gradient-bar"></div>
     <div class="container-content" style="text-align: center; padding-top: 60px; padding-bottom: 60px;">
         <div style="font-size: 40px; margin-bottom: 20px;">✅</div>
-        <h2 style="font-family: 'Bebas Neue'; font-size: 2rem; color: #1F8A70;">¡Mensaje Recibido!</h2>
-        <p style="color: #6B7280; margin-bottom: 30px;">Sus notas han sido enviadas para procesamiento.</p>
+        <h2 style="font-family: 'Bebas Neue'; font-size: 2rem; color: #1F8A70;">¡Versículos Recibidos!</h2>
+        <p style="color: #6B7280; margin-bottom: 30px;">Su contenido ha sido enviado para procesamiento.</p>
         <button onclick="window.location.reload()" style="background: white; color: #111827; border: 1px solid #E5E7EB;">Enviar otro</button>
     </div>
   </div>
