@@ -179,10 +179,15 @@ Deno.serve(async (req) => {
             const serviceId = parts[1];
             const timeSlot = parts[2];
             const segmentIdx = parseInt(parts[3]);
+            
+            console.log(`[PARSED_ID] serviceId="${serviceId}", timeSlot="${timeSlot}", segmentIdx=${segmentIdx}`);
+            console.log(`[SERVICE_FETCH] Fetching Service ${serviceId}...`);
 
             const service = await base44.asServiceRole.entities.Service.get(serviceId);
+            console.log(`[SERVICE_RESULT] service found=${!!service}, has timeSlot=${!!service?.[timeSlot]}, segment exists=${!!service?.[timeSlot]?.[segmentIdx]}`);
             
             if (!service || !service[timeSlot] || !service[timeSlot][segmentIdx]) {
+                console.log("[SERVICE_ERROR] Service/segment lookup failed");
                 await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
                     processing_status: 'failed',
                     processing_error: 'Service or segment not found'
