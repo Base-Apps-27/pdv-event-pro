@@ -223,47 +223,45 @@ export default function StickyOpsDeck({
 
   const moreCount = Math.max(0, concurrentCount - 1);
   
+  // Pro Deck Design: Always Dark Charcoal/Gray-900 to ensure high contrast
+  const bgClass = 'bg-[#1a1a1a]';
+  const textClass = 'text-gray-100';
+  const borderTopClass = 'border-t-2 border-pdv-teal/40';
+
   return (
-    // Fixed container - lifted slightly off bottom for "float" effect
-    <div className="fixed bottom-2 left-2 right-2 z-40 print:hidden flex flex-col items-center">
-      <div className="w-full max-w-5xl relative">
-        {/* Label Shelf / Tab */}
+    // Full width container fixed at bottom
+    <div className="fixed bottom-0 left-0 right-0 z-40 print:hidden flex flex-col items-center">
+      <div className="w-full relative">
+        {/* Label Shelf - integrated better with dark theme */}
         <div 
           onClick={() => setIsExpanded(!isExpanded)}
-          className={`absolute -top-6 left-4 px-3 py-1 rounded-t-lg border-t border-x border-b-0 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 backdrop-blur-md flex items-center gap-1.5 ${
+          className={`absolute -top-6 left-4 px-3 py-1 rounded-t-md text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 ${
             isUrgent 
-              ? 'bg-amber-950/85 border-amber-700/50 text-amber-200' 
-              : isPast
-                ? 'bg-slate-100/85 border-slate-200/50 text-slate-400'
-                : 'bg-white/85 border-gray-200/50 text-gray-500'
+              ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/50' 
+              : 'bg-[#1a1a1a] text-gray-400 border-t border-x border-gray-800'
           }`}
-          style={{ height: '26px' }}
+          style={{ height: '24px' }}
         >
           <span>Acciones de Coord</span>
         </div>
 
         <div 
-          className={`w-full rounded-2xl border shadow-lg overflow-hidden transition-all duration-300 backdrop-blur-md relative z-10 ${
-            isUrgent 
-              ? 'bg-amber-950/85 border-amber-700/50 text-amber-50' 
-              : isPast
-                ? 'bg-slate-100/85 border-slate-200/50 text-slate-500'
-                : 'bg-white/85 border-gray-200/50 text-gray-900'
-          }`}
+          className={`w-full shadow-[0_-4px_20px_rgba(0,0,0,0.3)] transition-all duration-300 relative z-10 ${bgClass} ${textClass} ${borderTopClass}`}
         >
           
           {/* Main Bar */}
         <div 
-          className="flex items-center justify-between cursor-pointer py-2 px-3 pr-16 relative"
-          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center justify-between py-2 px-3 sm:px-4 relative"
         >
-          {/* Chat overlap protection: padding-right-16 ensures text doesn't go under chat button */}
-          
-          <div className="flex items-center gap-3 overflow-hidden">
+          {/* Left Side: Countdown + Info */}
+          <div 
+            className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
             {/* Compact Countdown Badge */}
             <div className={`flex flex-col items-center justify-center w-11 h-10 rounded-lg shrink-0 ${
-              isUrgent ? 'bg-amber-500 text-black shadow-amber-500/20 shadow-lg' : 
-              isPast ? 'bg-slate-200/80 text-slate-500' : 'bg-gray-100/80 text-gray-900'
+              isUrgent ? 'bg-amber-500 text-black shadow-amber-500/20 shadow-lg animate-pulse' : 
+              isPast ? 'bg-gray-800 text-gray-500' : 'bg-gray-800 text-pdv-teal'
             }`}>
               {!isServiceDay ? (
                 <Clock className="w-5 h-5 opacity-60" />
@@ -280,31 +278,30 @@ export default function StickyOpsDeck({
             {/* Action Info */}
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-0.5">
-                <Badge variant="outline" className={`h-4 text-[9px] px-1 rounded-sm border ${
-                  isUrgent ? 'border-amber-400/50 text-amber-200' : 
-                  isPast ? 'border-slate-300/50 text-slate-400' : 'border-gray-300/50 text-gray-500'
+                <Badge variant="outline" className={`h-4 text-[9px] px-1.5 rounded-sm border-0 ${
+                  isUrgent ? 'bg-amber-500/20 text-amber-300' : 
+                  isPast ? 'bg-gray-800 text-gray-500' : 'bg-gray-800 text-gray-400'
                 }`}>
                   {activeAction.isPrep ? 'PREP' : 'CUE'}
                 </Badge>
                 <span className={`text-[10px] font-bold uppercase tracking-wider ${
                   isUrgent ? 'text-amber-300' : 
-                  isPast ? 'text-slate-400' : 'text-gray-500'
+                  isPast ? 'text-gray-500' : 'text-pdv-teal'
                 }`}>
                   {activeAction.type}
                 </span>
                 <span className={`text-[10px] tabular-nums ${
-                  isUrgent ? 'text-amber-400' : 
-                  isPast ? 'text-slate-400' : 'text-gray-400'
+                  isUrgent ? 'text-amber-200' : 'text-gray-500'
                 }`}>
                   {formatTimeToEST(activeAction.time.toTimeString().substring(0, 5))}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <h4 className={`font-semibold text-sm truncate ${isPast ? 'line-through decoration-slate-400/50' : ''}`}>
+                <h4 className={`font-semibold text-sm truncate ${isPast ? 'line-through text-gray-600' : 'text-white'}`}>
                   {activeAction.label}
                 </h4>
                 {moreCount > 0 && (
-                  <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-[#4DC15F] text-white hover:bg-[#3DA84F] border-none shrink-0 flex items-center justify-center">
+                  <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-gray-700 text-gray-300 border-none shrink-0 flex items-center justify-center">
                     +{moreCount}
                   </Badge>
                 )}
@@ -313,17 +310,14 @@ export default function StickyOpsDeck({
             </div>
           </div>
 
-          {/* Action Button - Jump to Segment */}
-          {activeAction.segmentId && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
-               {/* This is positioned absolutely to the right, but "left" of where the chat bubble usually is */}
+          {/* Right Side: Actions (Scroll + Chat) */}
+          <div className="flex items-center gap-1 pl-2">
+            {/* Jump to Segment */}
+            {activeAction.segmentId && (
               <Button
                 size="icon"
                 variant="ghost"
-                className={`h-8 w-8 rounded-full ${
-                  isUrgent ? 'hover:bg-white/10 text-white' : 
-                  isPast ? 'hover:bg-slate-200 text-slate-500' : 'hover:bg-gray-100 text-gray-600'
-                }`}
+                className={`h-9 w-9 rounded-full hover:bg-white/10 text-gray-400 hover:text-white`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onScrollToSegment && onScrollToSegment({ id: activeAction.segmentId });
@@ -331,37 +325,58 @@ export default function StickyOpsDeck({
               >
                 <ArrowRight className="w-4 h-4" />
               </Button>
-            </div>
-          )}
+            )}
+
+            {/* Chat Trigger (Integrated) */}
+            {onToggleChat && (
+              <div className="relative ml-1 border-l border-gray-700 pl-2">
+                <Button
+                  size="icon"
+                  className={`h-9 w-9 rounded-full transition-all ${
+                    chatOpen 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-pdv-teal text-white hover:bg-pdv-teal/90 shadow-lg shadow-pdv-teal/20'
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleChat();
+                  }}
+                >
+                  {chatOpen ? <ChevronDown className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+                </Button>
+                {/* Unread Badge */}
+                {!chatOpen && chatUnreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-[#1a1a1a]">
+                    {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Expanded List */}
         {isExpanded && (
           <div className={`border-t px-4 py-3 space-y-2 max-h-[40vh] overflow-y-auto ${
-            isUrgent ? 'border-white/10 bg-black/20' : 
-            isPast ? 'border-slate-200/50 bg-slate-50/50' : 'border-gray-100/50 bg-gray-50/50'
+            isUrgent ? 'border-gray-800 bg-[#151515]' : 'border-gray-800 bg-[#151515]'
           }`}>
-            <p className={`text-[9px] uppercase font-bold tracking-widest mb-1 ${
-              isUrgent ? 'text-amber-400' : 'text-gray-400'
-            }`}>
+            <p className="text-[9px] uppercase font-bold tracking-widest mb-2 text-gray-500">
               {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
             </p>
            
             {(isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4)).map((action, idx) => (
-              <div key={idx} className={`flex items-center gap-3 text-sm py-1 border-b border-black/5 last:border-0 ${isPast ? 'opacity-60' : ''}`}>
-                <span className={`font-mono font-medium text-xs ${
-                  isUrgent ? 'text-amber-300' : 'text-gray-500'
-                }`}>
+              <div key={idx} className={`flex items-center gap-3 text-sm py-2 border-b border-gray-800 last:border-0 ${isPast ? 'opacity-50' : ''}`}>
+                <span className="font-mono font-medium text-xs text-gray-500">
                   {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate text-xs">{action.label}</div>
+                  <div className="font-medium truncate text-xs text-gray-300">{action.label}</div>
                   {action.notes && (
-                    <div className={`text-[11px] leading-tight mb-0.5 whitespace-pre-wrap ${isUrgent ? 'text-amber-100' : 'text-gray-700 font-medium'}`}>
+                    <div className={`text-[11px] leading-tight mt-0.5 whitespace-pre-wrap ${isUrgent ? 'text-amber-200/70' : 'text-gray-500'}`}>
                       {action.notes}
                     </div>
                   )}
-                  <div className={`text-[10px] truncate ${isUrgent ? 'text-amber-200/70' : 'text-gray-500/80'}`}>
+                  <div className="text-[10px] truncate text-gray-600 mt-0.5">
                     {action.segmentTitle} • {action.type}
                   </div>
                 </div>
@@ -369,12 +384,11 @@ export default function StickyOpsDeck({
             ))}
             
             {((isPast && pastActions.length === 0) || (!isPast && upcomingActions.length <= 1)) && (
-              <p className="text-[10px] opacity-50 italic py-1">No hay más acciones.</p>
+              <p className="text-[10px] opacity-30 italic py-1 text-gray-400">No hay más acciones.</p>
             )}
           </div>
         )}
       </div>
-    </div>
     </div>
   );
 }
