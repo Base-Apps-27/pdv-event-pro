@@ -415,21 +415,21 @@ export default function LiveOperationsChat({
               </div>
               <div className="flex items-center gap-2">
                 <span 
-                  style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}
-                  className="text-white text-xs font-semibold px-2 py-0.5 rounded-md"
+                style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}
+                className="text-white text-xs font-semibold px-2 py-0.5 rounded-md"
                 >
-                  {messages.length}
+                {messages.length}
                 </span>
                 <button
-                  onClick={() => setIsOpen(false)}
-                  style={{ backgroundColor: 'transparent' }}
-                  className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
+                onClick={() => toggleOpen()}
+                style={{ backgroundColor: 'transparent' }}
+                className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                <X className="w-5 h-5" />
                 </button>
-              </div>
-            </div>
-          </div>
+                </div>
+                </div>
+                </div>
 
           {/* Pinned Messages Section */}
           <LiveChatPinnedSection
