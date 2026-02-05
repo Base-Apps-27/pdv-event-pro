@@ -54,7 +54,11 @@ export default function EventProgramView({
   scrollToSegment,
   refetchData,
   getRoomName,
-  onOpenVerseParser
+  onOpenVerseParser,
+  // Chat integration props
+  onToggleChat,
+  chatUnreadCount = 0,
+  chatOpen = false
 }) {
   // Event-specific state
   const [selectedSessionId, setSelectedSessionId] = useState("all");
