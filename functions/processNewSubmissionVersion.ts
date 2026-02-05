@@ -188,20 +188,32 @@ Deno.serve(async (req) => {
                 const updatedSegment = {
                     ...currentSegment,
                     parsed_verse_data: parsedData,
-                    // Use 'verse' field for legacy compatibility if it exists in fields, or just data.verse
-                    data: {
-                        ...currentSegment.data,
-                        verse: scriptureReferences
-                    },
                     submission_status: 'processed'
                 };
 
                 // Update title if present in submission
                 if (submission.title && submission.title.trim() !== "") {
-                    updatedSegment.title = submission.title.trim();
+                    // Do NOT overwrite segment.title (that is the schedule name).
+                    // Update message_title and data.title which are used for the sermon content.
+                    updatedSegment.message_title = submission.title.trim();
+                    updatedSegment.data = {
+                        ...updatedSegment.data,
+                        message_title: submission.title.trim(),
+                        title: submission.title.trim() // Common fallback in some UIs
+                    };
                 }
 
+                // Ensure verses are mapped to all potential fields
+                updatedSegment.scripture_references = scriptureReferences;
+                updatedSegment.data = {
+                    ...updatedSegment.data,
+                    verse: scriptureReferences,
+                    scripture_references: scriptureReferences
+                };
+
                 currentArray[segmentIdx] = updatedSegment;
+
+                console.log(`Updating Service ${serviceId} segment ${segmentIdx}: Title="${submission.title}", Verses="${scriptureReferences.substring(0, 20)}..."`);
 
                 await base44.asServiceRole.entities.Service.update(serviceId, {
                     [timeSlot]: currentArray
