@@ -158,16 +158,22 @@ Deno.serve(async (req) => {
         console.log("[VALIDATION PASSED] Submission has required fields");
 
         // 1. Parse verses
+        console.log("[PARSING] Starting scripture parsing...");
         const parsedData = parseScriptureReferences(submission.content);
+        console.log(`[PARSED] type=${parsedData.type}, sections=${parsedData.sections.length}`);
+        
         let scriptureReferences = '';
         if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
             scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
         }
+        console.log(`[SCRIPTURE] scriptureReferences length=${scriptureReferences.length}`);
 
         const segmentId = submission.segment_id;
+        console.log(`[SEGMENT_ID] segmentId="${segmentId}"`);
 
         // CHECK IF COMPOSITE ID (Weekly Service)
         if (segmentId.startsWith('weekly_service|')) {
+            console.log("[ROUTE] Taking WEEKLY SERVICE path");
             const parts = segmentId.split('|');
             // Expected: weekly_service|{serviceId}|{timeSlot}|{segmentIdx}|message (optional type suffix)
             const serviceId = parts[1];
