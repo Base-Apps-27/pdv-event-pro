@@ -349,7 +349,7 @@ Deno.serve(async (req) => {
   </style>
 </head>
 <body>
-   <!-- Version: ${new Date().toISOString()} -->
+   <!-- Version: ${new Date().toISOString()} - Copy Update -->
    <div class="form-container" id="mainContainer">
     <div class="gradient-bar"></div>
     <div class="container-content">
@@ -361,7 +361,7 @@ Deno.serve(async (req) => {
 
         <div class="form-header">
           <p class="org-name">PALABRAS DE VIDA</p>
-          <h1>COMPARTA SU MENSAJE</h1>
+          <h1>VERSÍCULOS DE SU MENSAJE</h1>
           <p class="event-name">${eventName}</p>
           <div class="event-meta">
             ${eventDate ? `
@@ -399,15 +399,15 @@ Deno.serve(async (req) => {
 
       <!-- Section 2 -->
       <div class="form-section">
-        <h3>Contenido Bíblico</h3>
+        <h3>Versículos Para Proyección</h3>
         <p class="instruction-text">
-            Por favor, comparta aquí el contenido que prefiera utilizar (sus notas, bosquejo o mensaje completo). Nuestra inteligencia artificial extraerá automáticamente todos los versículos bíblicos necesarios para la proyección.
+            Para proyectar sus textos bíblicos en pantalla, necesitamos identificarlos. Por favor, <strong>pegue aquí sus notas o bosquejo completo</strong>. Nuestro sistema identificará y extraerá automáticamente todos los versículos por usted.
         </p>
         <div class="form-group">
-          <label for="content">Sus Notas, Bosquejo o Mensaje Completo <span class="required">*</span></label>
+          <label for="content">Pegue sus notas aquí (El sistema detectará los versículos) <span class="required">*</span></label>
           <textarea 
             id="content" 
-            placeholder="Puede pegar todo su documento aquí. Ejemplo: 'Hoy vamos a leer Juan 3:16 y luego Romanos 8:28...'" 
+            placeholder="No es necesario separar los versículos. Puede pegar todo su documento aquí y nosotros haremos el resto." 
             required
           ></textarea>
         </div>
