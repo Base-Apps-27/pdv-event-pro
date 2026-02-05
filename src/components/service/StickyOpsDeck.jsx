@@ -178,7 +178,7 @@ export default function StickyOpsDeck({
     const upcoming = sorted.filter(a => a.time.getTime() > now);
     const past = sorted.filter(a => a.time.getTime() <= now).reverse();
 
-    return { upcomingActions: upcoming, pastActions: past };
+    return { upcomingActions: upcoming, pastActions: past, isServiceDay: true };
   }, [segments, preSessionData, sessionDate, currentTime]);
 
   const activeAction = upcomingActions[0] || pastActions[0];
