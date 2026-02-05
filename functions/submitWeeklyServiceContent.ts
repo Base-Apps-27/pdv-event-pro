@@ -77,6 +77,7 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
             segment_id: segment_id, // Store composite ID
             content: content,
+            title: title || "", // Store title
             submitted_at: new Date().toISOString(),
             source: 'weekly_service_form',
             processing_status: 'pending'

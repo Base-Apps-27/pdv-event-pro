@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
 
             // Concurrency check
             if (currentSegment.submitted_content === submission.content) {
-                currentArray[segmentIdx] = {
+                const updatedSegment = {
                     ...currentSegment,
                     parsed_verse_data: parsedData,
                     // Use 'verse' field for legacy compatibility if it exists in fields, or just data.verse
@@ -195,6 +195,13 @@ Deno.serve(async (req) => {
                     },
                     submission_status: 'processed'
                 };
+
+                // Update title if present in submission
+                if (submission.title && submission.title.trim() !== "") {
+                    updatedSegment.title = submission.title.trim();
+                }
+
+                currentArray[segmentIdx] = updatedSegment;
 
                 await base44.asServiceRole.entities.Service.update(serviceId, {
                     [timeSlot]: currentArray
