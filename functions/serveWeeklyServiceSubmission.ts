@@ -57,7 +57,8 @@ Deno.serve(async (req) => {
                             options.push({
                                 id: compositeId,
                                 label: `${slot} - ${presenter}`,
-                                group: formattedDate
+                                group: formattedDate,
+                                title: seg.title || ""
                             });
                         }
                     });
@@ -79,7 +80,8 @@ Deno.serve(async (req) => {
         if (options.length > 0) {
             optionsHtml += `<optgroup label="${formattedDate}">`;
             options.forEach(opt => {
-                optionsHtml += `<option value="${opt.id}">${opt.label}</option>`;
+                const safeTitle = (opt.title || "").replace(/"/g, '&quot;');
+                optionsHtml += `<option value="${opt.id}" data-title="${safeTitle}">${opt.label}</option>`;
             });
             optionsHtml += `</optgroup>`;
         }
@@ -171,6 +173,11 @@ Deno.serve(async (req) => {
           </div>
 
           <div class="form-section">
+            <label for="title">Título del Mensaje</label>
+            <input type="text" id="title" placeholder="Título de la predicación (Opcional)" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white);">
+          </div>
+
+          <div class="form-section">
             <label for="content">Pegue su mensaje completo (para extracción de versículos) <span style="color:red">*</span></label>
             <textarea id="content" placeholder="No necesita separar los versículos manualmente. Simplemente pegue su bosquejo o notas completas aquí, y el sistema detectará y extraerá las referencias bíblicas automáticamente." required></textarea>
           </div>
@@ -197,14 +204,27 @@ Deno.serve(async (req) => {
     const statusMsg = document.getElementById('statusMessage');
     const mainContainer = document.getElementById('mainContainer');
     const successContainer = document.getElementById('successContainer');
+    const segmentSelect = document.getElementById('segmentId');
+    const titleInput = document.getElementById('title');
     
+    // Auto-populate title on selection change
+    segmentSelect.addEventListener('change', (e) => {
+        const selectedOption = e.target.options[e.target.selectedIndex];
+        if (selectedOption && selectedOption.dataset.title) {
+            // Only update if input is empty or matches previous selection (basic heuristic)
+            // Simpler: Just update it. User can edit it.
+            titleInput.value = selectedOption.dataset.title;
+        }
+    });
+
     const IDEMPOTENCY_KEY = crypto.randomUUID();
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const segmentId = document.getElementById('segmentId').value;
+        const segmentId = segmentSelect.value;
         const content = document.getElementById('content').value;
+        const title = titleInput.value;
 
         if (!segmentId || !content.trim()) return;
 
@@ -219,6 +239,7 @@ Deno.serve(async (req) => {
                 body: JSON.stringify({
                     segment_id: segmentId,
                     content: content,
+                    title: title,
                     idempotencyKey: IDEMPOTENCY_KEY
                 })
             });

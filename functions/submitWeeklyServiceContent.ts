@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
 
     try {
         const base44 = createClientFromRequest(req);
-        const { segment_id, content, idempotencyKey } = await req.json();
+        const { segment_id, content, title, idempotencyKey } = await req.json();
 
         if (!segment_id || !content) {
             return Response.json({ error: "Missing required fields" }, { status: 400, headers: corsHeaders });
@@ -83,16 +83,20 @@ Deno.serve(async (req) => {
         });
 
         // Update Service Entity (Read-Modify-Write)
-        // Re-read service to be safe? We just read it.
-        // We assume low contention on specific Sunday services usually.
-        // Direct array update.
         const currentArray = [...(service[timeSlot] || [])];
         if (currentArray[segmentIdx]) {
-            currentArray[segmentIdx] = {
+            const updatedSegment = {
                 ...currentArray[segmentIdx],
                 submitted_content: content,
                 submission_status: 'pending'
             };
+
+            // Update title if provided and not empty
+            if (title && title.trim().length > 0) {
+                updatedSegment.title = title.trim();
+            }
+            
+            currentArray[segmentIdx] = updatedSegment;
             
             await base44.asServiceRole.entities.Service.update(serviceId, {
                 [timeSlot]: currentArray
