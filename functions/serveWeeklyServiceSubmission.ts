@@ -89,9 +89,9 @@ Deno.serve(async (req) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Envío de Mensaje Dominical | Palabras de Vida</title>
-  <meta property="og:title" content="Envío de Mensaje Dominical" />
-  <meta property="og:description" content="Envíe sus notas para el servicio del próximo domingo. Nosotros extraeremos los versículos." />
+  <title>Envío de Versículos Dominical | Palabras de Vida</title>
+  <meta property="og:title" content="Envío de Versículos Dominical" />
+  <meta property="og:description" content="Envíe sus notas para extracción automática de versículos." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
         ${serviceError ? `<div class="status-message status-error">${serviceError}</div>` : ''}
 
         <div class="form-header">
-          <h1>Mensaje Dominical</h1>
+          <h1>Versículos - Mensaje Dominical</h1>
           <p class="subtitle">Próximo Domingo: ${formattedDate}</p>
         </div>
 
@@ -171,11 +171,11 @@ Deno.serve(async (req) => {
           </div>
 
           <div class="form-section">
-            <label for="content">Pegue sus notas o bosquejo aquí <span style="color:red">*</span></label>
-            <textarea id="content" placeholder="¡Hagámoslo fácil! No necesita separar los versículos. Pegue su mensaje o bosquejo completo aquí y nuestro sistema detectará y extraerá las referencias automáticamente." required></textarea>
+            <label for="content">Pegue su mensaje completo (para extracción de versículos) <span style="color:red">*</span></label>
+            <textarea id="content" placeholder="No necesita separar los versículos manualmente. Simplemente pegue su bosquejo o notas completas aquí, y el sistema detectará y extraerá las referencias bíblicas automáticamente." required></textarea>
           </div>
 
-          <button type="submit" id="submitBtn">Enviar Notas</button>
+          <button type="submit" id="submitBtn">Enviar y Procesar</button>
         </form>
     </div>
   </div>
@@ -185,8 +185,8 @@ Deno.serve(async (req) => {
     <div class="gradient-bar"></div>
     <div class="container-content" style="text-align: center; padding-top: 60px; padding-bottom: 60px;">
         <div style="font-size: 40px; margin-bottom: 20px;">✅</div>
-        <h2 style="font-family: 'Bebas Neue'; font-size: 2rem; color: #1F8A70;">¡Mensaje Recibido!</h2>
-        <p style="color: #6B7280; margin-bottom: 30px;">Sus notas han sido recibidas. El sistema procesará los versículos automáticamente.</p>
+        <h2 style="font-family: 'Bebas Neue'; font-size: 2rem; color: #1F8A70;">¡Contenido Recibido!</h2>
+        <p style="color: #6B7280; margin-bottom: 30px;">Sus notas han sido recibidas y los versículos están siendo procesados.</p>
         <button onclick="window.location.reload()" style="background: white; color: #111827; border: 1px solid #E5E7EB;">Enviar otro</button>
     </div>
   </div>
