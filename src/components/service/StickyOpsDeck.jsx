@@ -330,13 +330,13 @@ export default function StickyOpsDeck({
 
             {/* Chat Trigger (Integrated) */}
             {onToggleChat && (
-              <div className="relative ml-1 border-l border-gray-700 pl-2">
+              <div className="relative ml-1 border-l border-gray-200 pl-2">
                 <Button
                   size="icon"
                   className={`h-9 w-9 rounded-full transition-all ${
                     chatOpen 
-                      ? 'bg-gray-700 text-white' 
-                      : 'bg-pdv-teal text-white hover:bg-pdv-teal/90 shadow-lg shadow-pdv-teal/20'
+                      ? 'bg-gray-200 text-gray-600 hover:bg-gray-300' 
+                      : 'bg-white text-pdv-teal border-2 border-pdv-teal hover:bg-pdv-teal hover:text-white shadow-sm'
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -347,7 +347,7 @@ export default function StickyOpsDeck({
                 </Button>
                 {/* Unread Badge */}
                 {!chatOpen && chatUnreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-[#1a1a1a]">
+                  <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-sm">
                     {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
                   </span>
                 )}
@@ -359,25 +359,25 @@ export default function StickyOpsDeck({
         {/* Expanded List */}
         {isExpanded && (
           <div className={`border-t px-4 py-3 space-y-2 max-h-[40vh] overflow-y-auto ${
-            isUrgent ? 'border-gray-800 bg-[#151515]' : 'border-gray-800 bg-[#151515]'
+            'border-gray-200 bg-white/95 backdrop-blur-md'
           }`}>
-            <p className="text-[9px] uppercase font-bold tracking-widest mb-2 text-gray-500">
+            <p className="text-[9px] uppercase font-bold tracking-widest mb-2 text-gray-400">
               {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
             </p>
            
             {(isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4)).map((action, idx) => (
-              <div key={idx} className={`flex items-center gap-3 text-sm py-2 border-b border-gray-800 last:border-0 ${isPast ? 'opacity-50' : ''}`}>
-                <span className="font-mono font-medium text-xs text-gray-500">
+              <div key={idx} className={`flex items-center gap-3 text-sm py-2 border-b border-gray-100 last:border-0 ${isPast ? 'opacity-50' : ''}`}>
+                <span className="font-mono font-medium text-xs text-gray-400">
                   {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate text-xs text-gray-300">{action.label}</div>
+                  <div className="font-medium truncate text-xs text-gray-700">{action.label}</div>
                   {action.notes && (
-                    <div className={`text-[11px] leading-tight mt-0.5 whitespace-pre-wrap ${isUrgent ? 'text-amber-200/70' : 'text-gray-500'}`}>
+                    <div className={`text-[11px] leading-tight mt-0.5 whitespace-pre-wrap ${isUrgent ? 'text-amber-600' : 'text-gray-500'}`}>
                       {action.notes}
                     </div>
                   )}
-                  <div className="text-[10px] truncate text-gray-600 mt-0.5">
+                  <div className="text-[10px] truncate text-gray-400 mt-0.5">
                     {action.segmentTitle} • {action.type}
                   </div>
                 </div>
