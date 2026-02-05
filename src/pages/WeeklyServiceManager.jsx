@@ -2725,6 +2725,16 @@ Return ONLY valid JSON:
           </Button>
 
           <Button 
+            onClick={() => window.open('/api/functions/serveWeeklyServiceSubmission', '_blank')}
+            variant="outline"
+            className="border-2 border-purple-400 text-purple-600 hover:bg-purple-50 font-semibold px-2"
+            title="Link para Oradores (Mensaje)"
+          >
+            <ExternalLink className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Link Mensaje</span>
+          </Button>
+
+          <Button 
             onClick={() => setShowPrintSettings(true)}
             variant="outline"
             className="border-2 border-gray-400 bg-white text-gray-900 hover:bg-gray-100 font-semibold px-2"
