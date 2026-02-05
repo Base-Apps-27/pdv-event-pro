@@ -161,6 +161,14 @@ Deno.serve(async (req) => {
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
+    
+    .instruction-text {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-top: -12px;
+        margin-bottom: 24px;
+        line-height: 1.4;
+    }
 
     /* === STATUS MESSAGES === */
     .status-message {
@@ -306,7 +314,7 @@ Deno.serve(async (req) => {
     ` : ''}
 
     <div class="form-header">
-      <h1>Entrega de Mensaje</h1>
+      <h1>Entrega de Versículos</h1>
       <p>${eventName}</p>
     </div>
 
@@ -327,12 +335,15 @@ Deno.serve(async (req) => {
 
       <!-- Section 2 -->
       <div class="form-section">
-        <h3>Contenido del Mensaje</h3>
+        <h3>Contenido Bíblico</h3>
+        <p class="instruction-text">
+            Pega aquí tus notas o mensaje completo. Nuestra inteligencia artificial extraerá automáticamente todos los versículos bíblicos para la proyección.
+        </p>
         <div class="form-group">
-          <label for="content">Notas o Bosquejo <span class="required">*</span></label>
+          <label for="content">Notas, Bosquejo o Mensaje Completo <span class="required">*</span></label>
           <textarea 
             id="content" 
-            placeholder="Pega aquí tus notas. El sistema extraerá automáticamente los versículos bíblicos." 
+            placeholder="Ejemplo: 'Hoy vamos a leer Juan 3:16 y luego Romanos 8:28...' (Puedes pegar todo tu documento aquí)" 
             required
           ></textarea>
         </div>
