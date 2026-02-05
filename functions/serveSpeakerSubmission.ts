@@ -325,9 +325,9 @@ Deno.serve(async (req) => {
       <div class="form-section">
         <h3>Información de la Sesión</h3>
         <div class="form-group">
-          <label for="segmentId">Selecciona tu Plenaria <span class="required">*</span></label>
+          <label for="segmentId">Seleccione su Plenaria <span class="required">*</span></label>
           <select id="segmentId" required>
-            <option value="" disabled selected>Selecciona una opción...</option>
+            <option value="" disabled selected>Seleccione una opción...</option>
             ${optionsHtml}
           </select>
         </div>
@@ -337,13 +337,13 @@ Deno.serve(async (req) => {
       <div class="form-section">
         <h3>Contenido Bíblico</h3>
         <p class="instruction-text">
-            Pega aquí tus notas o mensaje completo. Nuestra inteligencia artificial extraerá automáticamente todos los versículos bíblicos para la proyección.
+            Por favor, comparta aquí el contenido que prefiera utilizar (sus notas, bosquejo o mensaje completo). Nuestra inteligencia artificial extraerá automáticamente todos los versículos bíblicos necesarios para la proyección.
         </p>
         <div class="form-group">
-          <label for="content">Notas, Bosquejo o Mensaje Completo <span class="required">*</span></label>
+          <label for="content">Sus Notas, Bosquejo o Mensaje Completo <span class="required">*</span></label>
           <textarea 
             id="content" 
-            placeholder="Ejemplo: 'Hoy vamos a leer Juan 3:16 y luego Romanos 8:28...' (Puedes pegar todo tu documento aquí)" 
+            placeholder="Puede pegar todo su documento aquí. Ejemplo: 'Hoy vamos a leer Juan 3:16 y luego Romanos 8:28...'" 
             required
           ></textarea>
         </div>
@@ -364,7 +364,7 @@ Deno.serve(async (req) => {
         <div class="form-header" style="border: none; padding: 0;">
             <h1>¡Mensaje Recibido!</h1>
             <p style="text-transform: none; color: var(--text-secondary);">
-                Gracias por enviar tu contenido. El equipo procesará las referencias automáticamente.
+                Gracias por enviar su contenido. El equipo procesará las referencias automáticamente.
             </p>
         </div>
         <button onclick="window.location.reload()" style="background: white; color: var(--text-primary); border: 1px solid var(--border-light);">
