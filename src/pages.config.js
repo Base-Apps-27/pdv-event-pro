@@ -64,13 +64,13 @@ import Rooms from './pages/Rooms';
 import ScheduleImporter from './pages/ScheduleImporter';
 import SchemaGuide from './pages/SchemaGuide';
 import SessionDetail from './pages/SessionDetail';
-import SpeakerSubmission from './pages/SpeakerSubmission';
 import Templates from './pages/Templates';
 import TestDashboard from './pages/TestDashboard';
 import TestFunctions from './pages/TestFunctions';
 import UserManagement from './pages/UserManagement';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
+import PublicSpeakerSubmission from './pages/PublicSpeakerSubmission';
 import __Layout from './Layout.jsx';
 
 
@@ -92,13 +92,13 @@ export const PAGES = {
     "ScheduleImporter": ScheduleImporter,
     "SchemaGuide": SchemaGuide,
     "SessionDetail": SessionDetail,
-    "SpeakerSubmission": SpeakerSubmission,
     "Templates": Templates,
     "TestDashboard": TestDashboard,
     "TestFunctions": TestFunctions,
     "UserManagement": UserManagement,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
+    "PublicSpeakerSubmission": PublicSpeakerSubmission,
 }
 
 export const pagesConfig = {

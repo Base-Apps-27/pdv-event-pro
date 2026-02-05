@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Send, CheckCircle2, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
-export default function SpeakerSubmissionPage() {
+export default function PublicSpeakerSubmissionPage() {
     const [selectedSegmentId, setSelectedSegmentId] = useState("");
     const [content, setContent] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
