@@ -211,10 +211,11 @@ export default function StickyOpsDeck({
 
   if (!activeAction) return null;
 
-  const isPast = activeAction.time.getTime() <= currentTime.getTime();
-  const diffMs = Math.abs(activeAction.time.getTime() - currentTime.getTime());
-  const diffMin = Math.floor(diffMs / 60000);
-  const isUrgent = !isPast && diffMin < 5;
+  // On non-service days, force "preview" mode — no live countdown, no urgent styling
+  const isPast = isServiceDay ? activeAction.time.getTime() <= currentTime.getTime() : false;
+  const diffMs = isServiceDay ? Math.abs(activeAction.time.getTime() - currentTime.getTime()) : 0;
+  const diffMin = isServiceDay ? Math.floor(diffMs / 60000) : 0;
+  const isUrgent = isServiceDay && !isPast && diffMin < 5;
 
   const moreCount = Math.max(0, concurrentCount - 1);
   
