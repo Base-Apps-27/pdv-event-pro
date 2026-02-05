@@ -231,6 +231,13 @@ export default function LiveOperationsChat({
     return unreadFromOthers.length;
   }, [messages, lastSeenMessageId, isOpen, currentUser?.email]);
 
+  // Report unread count changes to parent
+  useEffect(() => {
+    if (onUnreadCountChange) {
+      onUnreadCountChange(unreadCount);
+    }
+  }, [unreadCount, onUnreadCountChange]);
+
   // Separate pinned and regular messages
   const pinnedMessages = messages.filter(m => m.is_pinned);
   const regularMessages = messages.filter(m => !m.is_pinned);
