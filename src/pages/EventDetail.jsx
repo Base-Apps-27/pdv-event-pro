@@ -220,7 +220,7 @@ export default function EventDetail() {
                   variant="ghost"
                   className="rounded-r-none border-r border-gray-200 hover:bg-gray-50 text-gray-700 px-3"
                 >
-                  <a href={`${window.location.origin}/PublicSpeakerSubmission?event_id=${eventId}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`${window.location.origin}/api/functions/serveSpeakerForm?event_id=${eventId}`} target="_blank" rel="noopener noreferrer">
                     <LinkIcon className="w-4 h-4 mr-2" />
                     Abrir Formulario
                   </a>
@@ -231,7 +231,7 @@ export default function EventDetail() {
                       <Button
                         onClick={async () => {
                           try {
-                            const url = `${window.location.origin}/PublicSpeakerSubmission?event_id=${eventId}`;
+                            const url = `${window.location.origin}/api/functions/serveSpeakerForm?event_id=${eventId}`;
                             await navigator.clipboard.writeText(url);
                             toast.success("Link copiado");
                           } catch (err) {
@@ -315,14 +315,14 @@ export default function EventDetail() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <a href={`${window.location.origin}/PublicSpeakerSubmission?event_id=${eventId}`} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
+                    <a href={`${window.location.origin}/api/functions/serveSpeakerForm?event_id=${eventId}`} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
                       <LinkIcon className="w-4 h-4 mr-2" />
                       Abrir Formulario
                     </a>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={async () => {
                      try {
-                       const url = `${window.location.origin}/PublicSpeakerSubmission?event_id=${eventId}`;
+                       const url = `${window.location.origin}/api/functions/serveSpeakerForm?event_id=${eventId}`;
                        await navigator.clipboard.writeText(url);
                        toast.success("Link copiado");
                      } catch (err) {
