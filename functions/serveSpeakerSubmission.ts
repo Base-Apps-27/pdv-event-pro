@@ -349,8 +349,8 @@ Deno.serve(async (req) => {
   </style>
 </head>
 <body>
-
-  <div class="form-container" id="mainContainer">
+   <!-- Version: ${new Date().toISOString()} -->
+   <div class="form-container" id="mainContainer">
     <div class="gradient-bar"></div>
     <div class="container-content">
         ${eventError ? `
@@ -498,7 +498,9 @@ Deno.serve(async (req) => {
         return new Response(html, {
             headers: { 
                 'Content-Type': 'text/html; charset=utf-8',
-                'Cache-Control': 'no-cache'
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
             }
         });
 
