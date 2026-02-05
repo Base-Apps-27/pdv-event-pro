@@ -324,6 +324,13 @@ export default function MessageProcessingPage() {
                 onRestore={handleRestore}
             />
 
+            {/* Diagnostic Modal */}
+            <SubmissionDiagnosticModal
+                open={isDiagnosticOpen}
+                onOpenChange={setIsDiagnosticOpen}
+                segmentId={diagnosticSegmentId}
+            />
+
             {/* Reuse the VerseParserDialog */}
             {selectedSegment && (
                 <VerseParserDialog
