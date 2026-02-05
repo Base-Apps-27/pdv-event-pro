@@ -1057,6 +1057,10 @@ export default function PublicProgramView() {
                                  setVerseParserInitial(initialText || "");
                                  setVerseParserOpen(true);
                                }}
+                               // Chat control props
+                               onToggleChat={() => setChatOpen(!chatOpen)}
+                               chatUnreadCount={chatUnreadCount}
+                               chatOpen={chatOpen}
                                />
             )}
 
