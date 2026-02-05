@@ -284,6 +284,15 @@ export default function MessageProcessingPage() {
                                         <Button 
                                             variant="ghost" 
                                             size="icon"
+                                            onClick={() => { setDiagnosticSegmentId(segment.id); setIsDiagnosticOpen(true); }}
+                                            className="text-gray-400 hover:text-purple-600"
+                                            title="Diagnóstico de Envío"
+                                        >
+                                            <Bug className="w-4 h-4" />
+                                        </Button>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon"
                                             onClick={() => { setHistorySegment(segment); setIsHistoryOpen(true); }}
                                             className="text-gray-400 hover:text-blue-600"
                                             title="Historial de Versiones"
