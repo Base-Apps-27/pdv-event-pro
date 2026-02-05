@@ -72,6 +72,10 @@ export default function PublicProgramView() {
   const [adjustmentModalTimeSlot, setAdjustmentModalTimeSlot] = useState(null);
   const [currentAdjustment, setCurrentAdjustment] = useState(null);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  
+  // Chat state lifted for integration with StickyOpsDeck
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
   // Helper to parse date strings as local timezone dates at midnight
   const getLocalDateAtMidnight = (dateString) => {
