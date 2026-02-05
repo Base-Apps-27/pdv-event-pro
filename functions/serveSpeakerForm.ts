@@ -54,7 +54,8 @@ Deno.serve(async (req) => {
                         return {
                             id: seg.id,
                             title: seg.title,
-                            speaker: seg.presenter || seg.message_title || 'TBA',
+                            speaker: seg.presenter || 'TBA',
+                            message_title: seg.message_title,
                             time: seg.start_time,
                             date: session?.date,
                             session_name: session?.name,
@@ -83,7 +84,7 @@ Deno.serve(async (req) => {
         // Using provided color variables and structure
 
         const optionsHtml = options.map(opt => 
-            `<option value="${opt.id}">${opt.session_name} • ${opt.speaker} (${opt.title})</option>`
+            `<option value="${opt.id}">${opt.session_name} • ${opt.speaker} ${opt.message_title ? '• ' + opt.message_title + ' ' : ''}(${opt.title})</option>`
         ).join('');
 
         const html = `<!DOCTYPE html>
