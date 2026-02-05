@@ -1024,6 +1024,10 @@ export default function PublicProgramView() {
                   setVersesModalOpen(true);
                 }}
                 scrollToSegment={scrollToSegment}
+                // Pass chat control props
+                onToggleChat={() => setChatOpen(!chatOpen)}
+                chatUnreadCount={chatUnreadCount}
+                chatOpen={chatOpen}
               />
             )}
 
