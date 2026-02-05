@@ -92,10 +92,9 @@ Deno.serve(async (req) => {
                 submission_status: 'pending'
             };
 
-            // Update title if provided and not empty
-            if (title && title.trim().length > 0) {
-                updatedSegment.title = title.trim();
-            }
+            // NOTE: Title is handled by automation (processNewSubmissionVersion.js)
+            // Do NOT update segment.title — that's the block label, not the message title
+            // The automation correctly updates data.message_title
             
             currentArray[segmentIdx] = updatedSegment;
             
