@@ -33,7 +33,11 @@ export default function ServiceProgramView({
   isSegmentUpcoming,
   toggleSegmentExpanded,
   onOpenVerses,
-  scrollToSegment
+  scrollToSegment,
+  // Chat props passed down from PublicProgramView
+  onToggleChat,
+  chatUnreadCount,
+  chatOpen
 }) {
   const adjustedServiceData = React.useMemo(() => {
     if (!actualServiceData) return null;
