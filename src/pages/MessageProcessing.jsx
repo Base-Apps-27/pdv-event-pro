@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, CheckCircle2, Clock, AlertCircle, FileText, Sparkles, X, History, RotateCcw } from "lucide-react";
+import { Loader2, CheckCircle2, Clock, AlertCircle, FileText, Sparkles, X, History, RotateCcw, Bug } from "lucide-react";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
+import SubmissionDiagnosticModal from "@/components/service/SubmissionDiagnosticModal";
 import { formatDateTimeET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 
