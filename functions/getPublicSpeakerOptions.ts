@@ -59,7 +59,8 @@ Deno.serve(async (req) => {
                         return {
                             id: seg.id,
                             title: seg.title,
-                            speaker: seg.presenter || seg.message_title || 'TBA',
+                            speaker: seg.presenter || 'TBA',
+                            message_title: seg.message_title,
                             time: seg.start_time,
                             date: session?.date,
                             session_name: session?.name,
