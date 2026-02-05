@@ -5,25 +5,92 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CheckCircle2, Clock, AlertCircle, FileText, Sparkles, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader2, CheckCircle2, Clock, AlertCircle, FileText, Sparkles, X, History, RotateCcw } from "lucide-react";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import { formatDateTimeET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
+
+// History Dialog Component
+function SubmissionHistoryDialog({ open, onOpenChange, segment, onRestore }) {
+    const { data: versions = [], isLoading } = useQuery({
+        queryKey: ['submissionHistory', segment?.id],
+        queryFn: async () => {
+            if (!segment) return [];
+            const res = await base44.entities.SpeakerSubmissionVersion.filter({ 
+                segment_id: segment.id 
+            });
+            // Sort by submitted_at desc
+            return res.sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0));
+        },
+        enabled: !!segment && open
+    });
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <History className="w-5 h-5 text-pdv-teal" />
+                        Historial de Envíos
+                    </DialogTitle>
+                </DialogHeader>
+                
+                <div className="flex-1 overflow-y-auto pr-2 space-y-4 py-2">
+                    {isLoading ? (
+                        <div className="flex justify-center py-8"><Loader2 className="animate-spin text-gray-400" /></div>
+                    ) : versions.length === 0 ? (
+                        <p className="text-center text-gray-500 py-8">No hay historial disponible.</p>
+                    ) : (
+                        versions.map((version) => (
+                            <div key={version.id} className="border rounded-lg p-4 bg-gray-50 hover:bg-white hover:shadow-sm transition-all">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="outline" className="text-xs font-mono">
+                                            {formatDateTimeET(version.submitted_at)}
+                                        </Badge>
+                                        <span className="text-xs text-gray-500 uppercase">{version.source || 'public_form'}</span>
+                                    </div>
+                                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => onRestore(version)}>
+                                        <RotateCcw className="w-3 h-3" />
+                                        Restaurar
+                                    </Button>
+                                </div>
+                                <div className="text-xs font-mono text-gray-600 bg-white p-2 rounded border h-20 overflow-y-auto whitespace-pre-wrap">
+                                    {version.content}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 export default function MessageProcessingPage() {
     const queryClient = useQueryClient();
     const [selectedSegment, setSelectedSegment] = useState(null);
     const [isParserOpen, setIsParserOpen] = useState(false);
+    
+    // History State
+    const [historySegment, setHistorySegment] = useState(null);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    // Custom content for restoration flow
+    const [restoreContent, setRestoreContent] = useState(null);
 
-    // Fetch segments with pending submissions
-    const { data: pendingSegments = [], isLoading } = useQuery({
-        queryKey: ['pendingMessages'],
+    // Fetch segments with pending OR processed submissions
+    const { data: segments = [], isLoading } = useQuery({
+        queryKey: ['messagesToProcess'],
         queryFn: async () => {
-            // Need to filter manually as API might not support complex text search or specific enum filtering perfectly yet depending on backend
-            // But 'submission_status' is an enum/string field so it should work.
-            return await base44.entities.Segment.filter({
-                submission_status: 'pending'
-            });
+            // Fetch parallel
+            const [pending, processed] = await Promise.all([
+                base44.entities.Segment.filter({ submission_status: 'pending' }),
+                base44.entities.Segment.filter({ submission_status: 'processed' })
+            ]);
+            // Combine and dedup
+            const all = [...pending, ...processed];
+            return all.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date));
         },
         refetchInterval: 10000
     });
@@ -33,15 +100,24 @@ export default function MessageProcessingPage() {
             await base44.entities.Segment.update(id, data);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries(['pendingMessages']);
+            queryClient.invalidateQueries(['messagesToProcess']);
             setIsParserOpen(false);
             setSelectedSegment(null);
+            setRestoreContent(null);
         }
     });
 
-    const handleProcess = (segment) => {
+    const handleProcess = (segment, contentOverride = null) => {
         setSelectedSegment(segment);
+        setRestoreContent(contentOverride); // If restoring, use this content
         setIsParserOpen(true);
+    };
+
+    const handleRestore = (version) => {
+        setIsHistoryOpen(false);
+        // Open parser with version content
+        handleProcess(historySegment, version.content);
+        setHistorySegment(null);
     };
 
     const handleSaveParsed = (data) => {
@@ -50,7 +126,8 @@ export default function MessageProcessingPage() {
         updateSegmentMutation.mutate({
             id: selectedSegment.id,
             data: {
-                scripture_references: data.verse, // The formatted string
+                submitted_content: restoreContent || selectedSegment.submitted_content, // Update content if restoring
+                scripture_references: data.verse,
                 parsed_verse_data: data.parsed_data,
                 submission_status: 'processed'
             }
@@ -71,78 +148,106 @@ export default function MessageProcessingPage() {
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Procesamiento de Mensajes</h1>
-                    <p className="text-gray-500">Revisar y extraer versículos de mensajes enviados</p>
+                    <p className="text-gray-500">Revisar y gestionar envíos de oradores</p>
                 </div>
-                <Badge variant="outline" className="px-3 py-1 text-base">
-                    {pendingSegments.length} Pendientes
-                </Badge>
+                <div className="flex gap-2">
+                    <Badge variant="outline" className="px-3 py-1 text-base bg-amber-50 text-amber-700 border-amber-200">
+                        {segments.filter(s => s.submission_status === 'pending').length} Pendientes
+                    </Badge>
+                    <Badge variant="outline" className="px-3 py-1 text-base bg-green-50 text-green-700 border-green-200">
+                        {segments.filter(s => s.submission_status === 'processed').length} Procesados
+                    </Badge>
+                </div>
             </div>
 
             {isLoading ? (
                 <div className="flex justify-center py-12">
                     <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                 </div>
-            ) : pendingSegments.length === 0 ? (
+            ) : segments.length === 0 ? (
                 <Card className="bg-gray-50 border-dashed border-2">
                     <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                         <CheckCircle2 className="w-12 h-12 text-green-500 mb-4" />
                         <h3 className="text-xl font-semibold text-gray-900">¡Todo al día!</h3>
                         <p className="text-gray-500 max-w-sm mt-2">
-                            No hay mensajes pendientes de procesamiento.
+                            No hay mensajes recientes.
                         </p>
                     </CardContent>
                 </Card>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {pendingSegments.map((segment) => (
-                        <Card key={segment.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                            <CardHeader className="bg-white border-b pb-3">
-                                <div className="flex justify-between items-start mb-2">
-                                    <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Pendiente</Badge>
-                                    <span className="text-xs text-gray-400 font-mono">
-                                        {segment.updated_date ? formatDateTimeET(segment.updated_date) : ''}
-                                    </span>
-                                </div>
-                                <CardTitle className="text-lg leading-tight mb-1">{segment.title}</CardTitle>
-                                <CardDescription className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-700">{normalizeName(segment.presenter || 'TBA')}</span>
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="pt-4 space-y-4">
-                                <div className="bg-gray-50 rounded-md p-3 text-xs text-gray-600 font-mono h-32 overflow-hidden relative">
-                                    {segment.submitted_content}
-                                    <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-gray-50 to-transparent" />
-                                </div>
-                                <div className="flex gap-2">
-                                    <Button 
-                                        onClick={() => handleProcess(segment)} 
-                                        className="flex-1 bg-teal-600 hover:bg-teal-700"
-                                    >
-                                        <Sparkles className="w-4 h-4 mr-2" />
-                                        Procesar
-                                    </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon"
-                                        onClick={() => handleIgnore(segment)}
-                                        className="text-gray-400 hover:text-red-500"
-                                        title="Ignorar"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                    {segments.map((segment) => {
+                        const isProcessed = segment.submission_status === 'processed';
+                        return (
+                            <Card key={segment.id} className={`overflow-hidden hover:shadow-md transition-shadow ${isProcessed ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-amber-500'}`}>
+                                <CardHeader className="bg-white border-b pb-3">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <Badge className={isProcessed ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-amber-100 text-amber-800 hover:bg-amber-200"}>
+                                            {isProcessed ? 'Procesado' : 'Pendiente'}
+                                        </Badge>
+                                        <span className="text-xs text-gray-400 font-mono">
+                                            {segment.updated_date ? formatDateTimeET(segment.updated_date) : ''}
+                                        </span>
+                                    </div>
+                                    <CardTitle className="text-lg leading-tight mb-1">{segment.title}</CardTitle>
+                                    <CardDescription className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-700">{normalizeName(segment.presenter || 'TBA')}</span>
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="pt-4 space-y-4">
+                                    <div className="bg-gray-50 rounded-md p-3 text-xs text-gray-600 font-mono h-32 overflow-hidden relative">
+                                        {segment.submitted_content}
+                                        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-gray-50 to-transparent" />
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button 
+                                            onClick={() => handleProcess(segment)} 
+                                            className={isProcessed ? "flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50" : "flex-1 bg-teal-600 hover:bg-teal-700"}
+                                            variant={isProcessed ? "outline" : "default"}
+                                        >
+                                            <Sparkles className="w-4 h-4 mr-2" />
+                                            {isProcessed ? 'Revisar' : 'Procesar'}
+                                        </Button>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon"
+                                            onClick={() => { setHistorySegment(segment); setIsHistoryOpen(true); }}
+                                            className="text-gray-400 hover:text-blue-600"
+                                            title="Historial de Versiones"
+                                        >
+                                            <History className="w-4 h-4" />
+                                        </Button>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon"
+                                            onClick={() => handleIgnore(segment)}
+                                            className="text-gray-400 hover:text-red-500"
+                                            title="Ignorar"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
                 </div>
             )}
+
+            {/* History Dialog */}
+            <SubmissionHistoryDialog 
+                open={isHistoryOpen}
+                onOpenChange={setIsHistoryOpen}
+                segment={historySegment}
+                onRestore={handleRestore}
+            />
 
             {/* Reuse the VerseParserDialog */}
             {selectedSegment && (
                 <VerseParserDialog
                     open={isParserOpen}
                     onOpenChange={setIsParserOpen}
-                    initialText={selectedSegment.submitted_content || ""}
+                    initialText={restoreContent || selectedSegment.submitted_content || ""}
                     onSave={handleSaveParsed}
                     language="es"
                 />
