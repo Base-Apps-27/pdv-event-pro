@@ -179,14 +179,18 @@ export default function StickyOpsDeck({
     return { upcomingActions: upcoming, pastActions: past, isServiceDay: isServiceDayLocal };
   }, [segments, preSessionData, sessionDate, currentTime]);
 
-  // If not the service day, hide entirely
-  if (!isServiceDay) return null;
+  // On non-service days: show the FIRST action as a static preview (no countdown)
+  // On service day: live countdown with service-over guard
+  const allActionsSorted = useMemo(() => {
+    return [...upcomingActions, ...pastActions.slice().reverse()].sort((a, b) => a.time.getTime() - b.time.getTime());
+  }, [upcomingActions, pastActions]);
 
-  const activeAction = upcomingActions[0] || pastActions[0];
+  const activeAction = isServiceDay
+    ? (upcomingActions[0] || pastActions[0])
+    : allActionsSorted[0]; // Preview: show first chronological action
   
-  // SERVICE OVER GUARD: If no upcoming actions and the most recent past action
-  // is more than 30 minutes ago, hide the deck entirely — the service is over.
-  if (upcomingActions.length === 0 && pastActions.length > 0) {
+  // SERVICE OVER GUARD: Only applies on service day
+  if (isServiceDay && upcomingActions.length === 0 && pastActions.length > 0) {
     const lastActionTime = pastActions[0].time.getTime();
     const minutesSinceLast = (currentTime.getTime() - lastActionTime) / 60000;
     if (minutesSinceLast > 30) return null;
