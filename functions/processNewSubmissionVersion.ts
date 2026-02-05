@@ -201,8 +201,8 @@ Deno.serve(async (req) => {
                 updatedSegment.message_title = submission.title.trim();
                 updatedSegment.data = {
                     ...updatedSegment.data,
-                    message_title: submission.title.trim(),
-                    title: submission.title.trim()
+                    message_title: submission.title.trim()
+                    // Explicitly NOT updating data.title to preserve block name
                 };
             }
 
