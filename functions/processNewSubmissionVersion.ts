@@ -147,7 +147,12 @@ Deno.serve(async (req) => {
             return Response.json({ message: 'Ignored event' });
         }
 
-        const submission = data;
+        // CRITICAL: Fetch the actual submission from DB using the entity_id from the event
+        // The 'data' in the payload may be truncated or stale - always fetch fresh
+        const submissionId = event.entity_id || data?.id;
+        console.log(`[FETCH_SUBMISSION] Fetching SpeakerSubmissionVersion ${submissionId}...`);
+        const submission = await base44.asServiceRole.entities.SpeakerSubmissionVersion.get(submissionId);
+        console.log(`[SUBMISSION_FETCHED] segment_id=${submission?.segment_id}, content_length=${submission?.content?.length || 0}`);
         console.log(`[SUBMISSION DATA] segment_id=${submission?.segment_id}, content_length=${submission?.content?.length || 0}, title=${submission?.title}`);
         
         if (!submission.segment_id || !submission.content) {
