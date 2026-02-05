@@ -66,7 +66,6 @@ import SchemaGuide from './pages/SchemaGuide';
 import SessionDetail from './pages/SessionDetail';
 import Templates from './pages/Templates';
 import TestDashboard from './pages/TestDashboard';
-import TestFunctions from './pages/TestFunctions';
 import UserManagement from './pages/UserManagement';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
@@ -93,7 +92,6 @@ export const PAGES = {
     "SessionDetail": SessionDetail,
     "Templates": Templates,
     "TestDashboard": TestDashboard,
-    "TestFunctions": TestFunctions,
     "UserManagement": UserManagement,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,

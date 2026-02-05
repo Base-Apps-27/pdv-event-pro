@@ -1,10 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// This function is triggered by an automation when a new SpeakerSubmissionVersion is created.
-// It handles the heavy lifting of parsing verses and updating the live Segment.
-// v2.2 - Force redeploy to clear isolate cache
+// ROLE: Processes Event submissions ONLY via entity automation.
+// Weekly Service submissions are now processed inline by submitWeeklyServiceContent (v3.0).
+// If a weekly_service submission arrives here (e.g. automation fires on the audit record),
+// it will already be processing_status='processed' and will be skipped.
+// Safety net: processPendingSubmissions (scheduled) catches anything stuck in 'pending'.
 
-// --- BIBLE PARSING LOGIC START ---
+// --- BIBLE PARSING LOGIC ---
 const BIBLE_BOOKS = {
   "gn": { en: "Genesis", es: "Génesis" }, "gen": { en: "Genesis", es: "Génesis" }, "genesis": { en: "Genesis", es: "Génesis" }, "génesis": { en: "Genesis", es: "Génesis" }, "gén": { en: "Genesis", es: "Génesis" },
   "ex": { en: "Exodus", es: "Éxodo" }, "exo": { en: "Exodus", es: "Éxodo" }, "exod": { en: "Exodus", es: "Éxodo" }, "exodus": { en: "Exodus", es: "Éxodo" }, "éxodo": { en: "Exodus", es: "Éxodo" }, "éx": { en: "Exodus", es: "Éxodo" },
@@ -76,10 +78,7 @@ const BIBLE_BOOKS = {
 
 function parseScriptureReferences(rawText) {
   if (!rawText || rawText.trim() === '') return { type: 'empty', sections: [] };
-  
-  // Improved regex to allow spaces around colon (e.g. "Mat 25 : 1")
   const versePattern = /\b(([1-3]\s)?(?:S\.\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3})\s*:\s*(\d{1,3})([–—-](\d{1,3}))?(:(\d{1,3}))?/gi;
-  
   const verses = [];
   const seenRefs = new Set();
   const matches = [...rawText.matchAll(versePattern)];
@@ -87,121 +86,81 @@ function parseScriptureReferences(rawText) {
   matches.forEach(match => {
     const fullMatch = match[0].trim();
     const bookRaw = match[1].trim().replace(/\.$/, '');
-    
-    // Normalize spaces around colon before matching the number pattern
     const numbersPart = fullMatch.substring(match[1].length).trim().replace(/\s*:\s*/g, ':');
     const chapterVerseMatch = numbersPart.match(/^(\d{1,3}:\d{1,3}(?:[–—-]\d{1,3})?(?::\d{1,3})?)/);
     if (!chapterVerseMatch) return;
-    
     const restOfRef = chapterVerseMatch[1].replace(/[–—]/g, '-'); 
     const bookLower = bookRaw.toLowerCase().replace(/\./g, '');
     const blacklist = ['y', 'es', 'en', 'el', 'la', 'de', 'a', 'por', 'con', 'sin', 'mi', 'tu', 'su', 'nos', 'os'];
     if (blacklist.includes(bookLower)) return;
-
     let formattedContent = fullMatch.replace(/[–—]/g, '-');
-    
     if (BIBLE_BOOKS[bookLower]) {
       const { en, es } = BIBLE_BOOKS[bookLower];
       formattedContent = `${en} ${restOfRef} | ${es} ${restOfRef}`;
-    } else {
-      if (bookLower.length >= 3) {
-        const matchedKey = Object.keys(BIBLE_BOOKS).find(key => key.startsWith(bookLower) || bookLower.startsWith(key));
-        if (matchedKey) {
-          const { en, es } = BIBLE_BOOKS[matchedKey];
-          formattedContent = `${en} ${restOfRef} | ${es} ${restOfRef}`;
-        }
+    } else if (bookLower.length >= 3) {
+      const matchedKey = Object.keys(BIBLE_BOOKS).find(key => key.startsWith(bookLower) || bookLower.startsWith(key));
+      if (matchedKey) {
+        const { en, es } = BIBLE_BOOKS[matchedKey];
+        formattedContent = `${en} ${restOfRef} | ${es} ${restOfRef}`;
       }
     }
-    
     const cleanRef = `${bookRaw} ${restOfRef}`;
     if (!seenRefs.has(cleanRef)) {
       seenRefs.add(cleanRef);
-      verses.push({
-        type: 'verse',
-        content: formattedContent,
-        original: cleanRef
-      });
+      verses.push({ type: 'verse', content: formattedContent, original: cleanRef });
     }
   });
-  
-  return {
-    type: verses.length > 0 ? 'verse_list' : 'empty',
-    sections: verses
-  };
+  return { type: verses.length > 0 ? 'verse_list' : 'empty', sections: verses };
 }
-// --- BIBLE PARSING LOGIC END ---
+// --- END BIBLE PARSING ---
 
 Deno.serve(async (req) => {
     try {
-        console.log("[AUTOMATION START] Automation triggered for submission processing");
-        
         const base44 = createClientFromRequest(req);
         const requestBody = await req.json();
-        console.log("[PAYLOAD RECEIVED]", JSON.stringify(requestBody, null, 2));
-        
         const { event, data } = requestBody;
 
-        // Ensure we are processing a "create" event for SpeakerSubmissionVersion
-        console.log(`[EVENT CHECK] entity_name=${event?.entity_name}, type=${event?.type}`);
         if (event.entity_name !== 'SpeakerSubmissionVersion' || event.type !== 'create') {
-            console.log("[EVENT SKIPPED] Not a SpeakerSubmissionVersion create event");
             return Response.json({ message: 'Ignored event' });
         }
 
-        // CRITICAL: Fetch the actual submission from DB using the entity_id from the event
-        // The 'data' in the payload may be truncated or stale - always fetch fresh
-        // Entity automations use "event.entity_id" for the record ID
         const submissionId = event?.entity_id || data?.id;
-        console.log(`[FETCH_SUBMISSION] Fetching SpeakerSubmissionVersion ${submissionId}...`);
-        console.log(`[DEBUG_EVENT] Full event object: ${JSON.stringify(event)}`);
-        
         if (!submissionId) {
-            console.log("[VALIDATION FAILED] No submission ID found in event or data");
             return Response.json({ error: 'No submission ID' }, { status: 400 });
         }
         
         const submission = await base44.asServiceRole.entities.SpeakerSubmissionVersion.get(submissionId);
-        console.log(`[SUBMISSION_FETCHED] segment_id=${submission?.segment_id}, content_length=${submission?.content?.length || 0}`);
-        console.log(`[SUBMISSION DATA] segment_id=${submission?.segment_id}, content_length=${submission?.content?.length || 0}, title=${submission?.title}`);
         
+        // SKIP if already processed (inline processing by submitWeeklyServiceContent v3.0)
+        if (submission.processing_status === 'processed') {
+            console.log(`[SKIP] Submission ${submissionId} already processed (inline). No action needed.`);
+            return Response.json({ message: 'Already processed', skipped: true });
+        }
+
         if (!submission.segment_id || !submission.content) {
-            console.log("[VALIDATION FAILED] Missing segment_id or content");
             return Response.json({ message: 'Invalid submission data' });
         }
-        
-        console.log("[VALIDATION PASSED] Submission has required fields");
 
-        // 1. Parse verses
-        console.log("[PARSING] Starting scripture parsing...");
+        // Parse verses
         const parsedData = parseScriptureReferences(submission.content);
-        console.log(`[PARSED] type=${parsedData.type}, sections=${parsedData.sections.length}`);
-        
         let scriptureReferences = '';
         if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
             scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
         }
-        console.log(`[SCRIPTURE] scriptureReferences length=${scriptureReferences.length}`);
 
         const segmentId = submission.segment_id;
-        console.log(`[SEGMENT_ID] segmentId="${segmentId}"`);
 
-        // CHECK IF COMPOSITE ID (Weekly Service)
+        // Weekly Service path — should not normally reach here anymore (inline handles it),
+        // but kept as defense-in-depth
         if (segmentId.startsWith('weekly_service|')) {
-            console.log("[ROUTE] Taking WEEKLY SERVICE path");
+            console.log(`[WEEKLY_FALLBACK] Processing weekly submission ${submissionId} via automation fallback`);
             const parts = segmentId.split('|');
-            // Expected: weekly_service|{serviceId}|{timeSlot}|{segmentIdx}|message (optional type suffix)
             const serviceId = parts[1];
             const timeSlot = parts[2];
             const segmentIdx = parseInt(parts[3]);
-            
-            console.log(`[PARSED_ID] serviceId="${serviceId}", timeSlot="${timeSlot}", segmentIdx=${segmentIdx}`);
-            console.log(`[SERVICE_FETCH] Fetching Service ${serviceId}...`);
 
             const service = await base44.asServiceRole.entities.Service.get(serviceId);
-            console.log(`[SERVICE_RESULT] service found=${!!service}, has timeSlot=${!!service?.[timeSlot]}, segment exists=${!!service?.[timeSlot]?.[segmentIdx]}`);
-            
             if (!service || !service[timeSlot] || !service[timeSlot][segmentIdx]) {
-                console.log("[SERVICE_ERROR] Service/segment lookup failed");
                 await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
                     processing_status: 'failed',
                     processing_error: 'Service or segment not found'
@@ -209,103 +168,61 @@ Deno.serve(async (req) => {
                 return Response.json({ error: "Service/Segment not found" });
             }
 
-            // Update embedded segment
-            console.log("[UPDATE_START] Cloning segment array...");
             const currentArray = [...service[timeSlot]];
             const currentSegment = currentArray[segmentIdx];
-            console.log(`[SEGMENT_TYPE] currentSegment.type="${currentSegment.type}"`);
-
-            // Verify type is still message (safety)
             const type = (currentSegment.type || "").toLowerCase();
-            console.log(`[TYPE_CHECK] type="${type}", isMessageType=${['message', 'plenaria', 'predica', 'mensaje'].includes(type)}`);
             
             if (!['message', 'plenaria', 'predica', 'mensaje'].includes(type)) {
-                console.log("[TYPE_ERROR] Segment is not a message type");
-                 await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+                await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
                     processing_status: 'failed',
-                    processing_error: 'Target segment is no longer a message type'
+                    processing_error: 'Target segment is not a message type'
                 });
                 return Response.json({ error: "Invalid segment type" });
             }
 
-            // Remove strict concurrency check - Trust this submission is the latest source of truth
-            // We update the segment with the submission content regardless, ensuring it doesn't get stuck in 'pending'
-            
-            console.log("[SEGMENT_BUILD] Creating updatedSegment object...");
             const updatedSegment = {
                 ...currentSegment,
-                submitted_content: submission.content, // Ensure content matches this version
+                submitted_content: submission.content,
                 parsed_verse_data: parsedData,
-                submission_status: 'processed'
-            };
-
-            // Update title if present in submission
-            if (submission.title && submission.title.trim() !== "") {
-                console.log(`[TITLE_UPDATE] Setting message_title="${submission.title.trim()}"`);
-                updatedSegment.message_title = submission.title.trim();
-                updatedSegment.data = {
-                    ...updatedSegment.data,
-                    message_title: submission.title.trim()
-                    // Explicitly NOT updating data.title to preserve block name
-                };
-            } else {
-                console.log("[TITLE_SKIPPED] No title in submission");
-            }
-
-            // Ensure verses are mapped to all potential fields
-            console.log("[VERSE_MAPPING] Updating scripture references...");
-            updatedSegment.scripture_references = scriptureReferences;
-            updatedSegment.data = {
-                ...updatedSegment.data,
-                verse: scriptureReferences,
+                submission_status: 'processed',
                 scripture_references: scriptureReferences
             };
 
+            if (submission.title && submission.title.trim() !== "") {
+                updatedSegment.message_title = submission.title.trim();
+                updatedSegment.data = { ...updatedSegment.data, message_title: submission.title.trim() };
+            }
+            updatedSegment.data = { ...updatedSegment.data, verse: scriptureReferences, scripture_references: scriptureReferences };
             currentArray[segmentIdx] = updatedSegment;
 
-            console.log(`[WRITE_READY] Prepared to update Service ${serviceId}, timeSlot="${timeSlot}", index=${segmentIdx}`);
-            console.log(`[WRITE_PAYLOAD] title="${submission.title}", verses_preview="${scriptureReferences.substring(0, 30)}..."`);
-
-            console.log("[DB_UPDATE] Calling Service.update()...");
-            await base44.asServiceRole.entities.Service.update(serviceId, {
-                [timeSlot]: currentArray
-            });
-            console.log("[DB_UPDATE_SUCCESS] Service updated successfully");
+            await base44.asServiceRole.entities.Service.update(serviceId, { [timeSlot]: currentArray });
 
         } else {
-            console.log("[ROUTE] Taking STANDARD SEGMENT (Events) path");
-            // STANDARD SEGMENT ID (Events)
-            console.log(`[SEGMENT_FETCH] Fetching Segment ${segmentId}...`);
+            // Event Segment path — primary use case for this automation
+            console.log(`[EVENT] Processing event submission ${submissionId} for segment ${segmentId}`);
             const currentSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
-            console.log(`[SEGMENT_RESULT] segment found=${!!currentSegment}, content_match=${currentSegment?.submitted_content === submission.content}`);
             
             if (currentSegment && currentSegment.submitted_content === submission.content) {
-                console.log("[SEGMENT_UPDATE] Content matches, updating Segment...");
                 await base44.asServiceRole.entities.Segment.update(segmentId, {
                     submission_status: 'processed', 
                     parsed_verse_data: parsedData,
                     scripture_references: scriptureReferences
                 });
-                console.log("[SEGMENT_UPDATE_SUCCESS] Segment updated");
             } else {
-                console.log(`[SEGMENT_SKIPPED] Skipping live update for version ${submission.id}: Content mismatch (stale version).`);
+                console.log(`[EVENT_SKIP] Content mismatch for ${submissionId}, skipping live update.`);
             }
         }
 
-        // 3. Update Submission Version (Record result)
-        console.log("[SUBMISSION_RECORD_UPDATE] Updating SpeakerSubmissionVersion record...");
+        // Update submission version record
         await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
             parsed_data_snapshot: parsedData,
             processing_status: 'processed'
         });
-        console.log("[AUTOMATION_COMPLETE] Success!");
 
         return Response.json({ success: true, processed: true });
 
     } catch (error) {
-        console.error("[AUTOMATION_ERROR] Caught exception:", error);
-        console.error("[AUTOMATION_ERROR] Stack:", error.stack);
-        console.error("[AUTOMATION_ERROR] Full error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+        console.error("[ERROR]", error.message);
         return Response.json({ error: error.message }, { status: 500 });
     }
 });
