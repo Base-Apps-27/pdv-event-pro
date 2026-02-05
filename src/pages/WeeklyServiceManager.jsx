@@ -2654,6 +2654,12 @@ Return ONLY valid JSON:
             Servicios Dominicales
           </h1>
           <p className="text-gray-500 mt-1">{t('dashboard.services.subtitle')}</p>
+          {/* Service ID for debugging */}
+          {existingData?.id && (
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-gray-400 font-mono">ID: {existingData.id}</span>
+            </div>
+          )}
           {/* Data Integrity Indicators */}
           <div className="flex items-center gap-3 mt-2">
             {existingData?.updated_date && (
