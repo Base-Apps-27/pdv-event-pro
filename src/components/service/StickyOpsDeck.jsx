@@ -224,19 +224,22 @@ export default function StickyOpsDeck({
   const moreCount = Math.max(0, concurrentCount - 1);
   
   // Glass Control Deck: Neutral/Light theme per user request
-  // Reduced contrast, frosted glass effect for blending
-  const bgClass = 'bg-white/90 backdrop-blur-md';
+  // Floating with shadow and rim
+  const bgClass = 'bg-white/90 backdrop-blur-xl';
   const textClass = 'text-gray-900';
-  const borderTopClass = 'border-t border-gray-200';
 
   return (
-    // Full width container fixed at bottom
-    <div className="fixed bottom-0 left-0 right-0 z-40 print:hidden flex flex-col items-center">
-      <div className="w-full relative">
-        {/* Label Shelf - Subtle and Neutral */}
+    // Floating container (bottom-6 instead of bottom-0)
+    // Pointer-events-none on outer to allow clicks through margins
+    <div className="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[600px] z-40 print:hidden flex flex-col justify-end items-center pointer-events-none transition-all duration-300">
+      
+      {/* Wrapper for the deck (Auto height based on content) */}
+      <div className="w-full relative pointer-events-auto">
+        
+        {/* Label Shelf - Attached to top */}
         <div 
           onClick={() => setIsExpanded(!isExpanded)}
-          className={`absolute -top-6 left-4 px-3 py-1 rounded-t-md text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 ${
+          className={`absolute -top-6 left-4 px-3 py-1 rounded-t-md text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 z-0 ${
             isUrgent 
               ? 'bg-amber-500 text-black shadow-lg' 
               : 'bg-white/90 backdrop-blur-md text-gray-500 border-t border-x border-gray-200 shadow-sm'
@@ -246,149 +249,153 @@ export default function StickyOpsDeck({
           <span>Acciones de Coord</span>
         </div>
 
+        {/* Main Content Box - Floating, Rounded, Shadowed */}
         <div 
-          className={`w-full shadow-[0_-4px_20px_rgba(0,0,0,0.05)] transition-all duration-300 relative z-10 ${bgClass} ${textClass} ${borderTopClass}`}
+          className={`w-full shadow-2xl rounded-2xl border border-white/40 ring-1 ring-black/5 overflow-hidden transition-all duration-300 relative z-10 flex flex-col ${bgClass} ${textClass}`}
         >
           
-          {/* Main Bar */}
-        <div 
-          className="flex items-center justify-between py-2 px-3 sm:px-4 relative"
-        >
-          {/* Left Side: Countdown + Info */}
-          <div 
-            className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            {/* Compact Countdown Badge */}
-            <div className={`flex flex-col items-center justify-center w-11 h-10 rounded-lg shrink-0 ${
-              isUrgent ? 'bg-amber-500 text-black shadow-lg animate-pulse' : 
-              isPast ? 'bg-gray-100 text-gray-400' : 'bg-gray-100 text-pdv-teal'
-            }`}>
-              {!isServiceDay ? (
-                <Clock className="w-5 h-5 opacity-60" />
-              ) : isPast ? (
-                <CheckCircle2 className="w-5 h-5" />
-              ) : (
-                <span className="text-base font-bold leading-none">{diffMin}</span>
-              )}
-              <span className="text-[9px] uppercase font-bold opacity-70 leading-none mt-0.5">
-                {!isServiceDay ? '' : isPast ? '' : 'min'}
-              </span>
-            </div>
-
-            {/* Action Info */}
-            <div className="flex-1 min-w-0 flex flex-col justify-center">
-              <div className="flex items-center gap-2 mb-0.5">
-                <Badge variant="outline" className={`h-4 text-[9px] px-1.5 rounded-sm border-0 ${
-                  isUrgent ? 'bg-amber-100 text-amber-700' : 
-                  isPast ? 'bg-gray-100 text-gray-400' : 'bg-gray-100 text-gray-500'
-                }`}>
-                  {activeAction.isPrep ? 'PREP' : 'CUE'}
-                </Badge>
-                <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                  isUrgent ? 'text-amber-600' : 
-                  isPast ? 'text-gray-400' : 'text-pdv-teal'
-                }`}>
-                  {activeAction.type}
-                </span>
-                <span className={`text-[10px] tabular-nums ${
-                  isUrgent ? 'text-amber-600' : 'text-gray-400'
-                }`}>
-                  {formatTimeToEST(activeAction.time.toTimeString().substring(0, 5))}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <h4 className={`font-semibold text-sm truncate ${isPast ? 'line-through text-gray-400' : 'text-gray-900'}`}>
-                  {activeAction.label}
-                </h4>
-                {moreCount > 0 && (
-                  <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-gray-200 text-gray-600 border-none shrink-0 flex items-center justify-center">
-                    +{moreCount}
-                  </Badge>
-                )}
-                {isExpanded ? <ChevronDown className="w-4 h-4 opacity-50 shrink-0 text-gray-600" /> : <ChevronUp className="w-4 h-4 opacity-50 shrink-0 text-gray-600" />}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Side: Actions (Scroll + Chat) */}
-          <div className="flex items-center gap-1 pl-2">
-            {/* Jump to Segment */}
-            {activeAction.segmentId && (
-              <Button
-                size="icon"
-                variant="ghost"
-                className={`h-9 w-9 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onScrollToSegment && onScrollToSegment({ id: activeAction.segmentId });
-                }}
-              >
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            )}
-
-            {/* Chat Trigger (Integrated) */}
-            {onToggleChat && (
-              <div className="relative ml-1 border-l border-gray-200 pl-2">
-                <Button
-                  size="icon"
-                  className={`h-9 w-9 rounded-full transition-all ${
-                    chatOpen 
-                      ? 'bg-gray-200 text-gray-600 hover:bg-gray-300' 
-                      : 'bg-white text-pdv-teal border-2 border-pdv-teal hover:bg-pdv-teal hover:text-white shadow-sm'
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleChat();
-                  }}
-                >
-                  {chatOpen ? <ChevronDown className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
-                </Button>
-                {/* Unread Badge */}
-                {!chatOpen && chatUnreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-sm">
-                    {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+          {/* Expanded List - Rendered FIRST so it pushes the bar up if we were using flex-col-reverse,
+              BUT since we are top-down flow inside a bottom-anchored container, 
+              we want the LIST on TOP of the BAR visually.
+          */}
+          
+          {isExpanded && (
+            <div className={`border-b border-gray-100 px-4 py-3 space-y-2 max-h-[40vh] overflow-y-auto bg-white/50`}>
+              <p className="text-[9px] uppercase font-bold tracking-widest mb-2 text-gray-400">
+                {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
+              </p>
+            
+              {(isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4)).map((action, idx) => (
+                <div key={idx} className={`flex items-center gap-3 text-sm py-2 border-b border-gray-100/50 last:border-0 ${isPast ? 'opacity-50' : ''}`}>
+                  <span className="font-mono font-medium text-xs text-gray-400">
+                    {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
                   </span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Expanded List */}
-        {isExpanded && (
-          <div className={`border-t px-4 py-3 space-y-2 max-h-[40vh] overflow-y-auto ${
-            'border-gray-200 bg-white/95 backdrop-blur-md'
-          }`}>
-            <p className="text-[9px] uppercase font-bold tracking-widest mb-2 text-gray-400">
-              {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
-            </p>
-           
-            {(isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4)).map((action, idx) => (
-              <div key={idx} className={`flex items-center gap-3 text-sm py-2 border-b border-gray-100 last:border-0 ${isPast ? 'opacity-50' : ''}`}>
-                <span className="font-mono font-medium text-xs text-gray-400">
-                  {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate text-xs text-gray-700">{action.label}</div>
-                  {action.notes && (
-                    <div className={`text-[11px] leading-tight mt-0.5 whitespace-pre-wrap ${isUrgent ? 'text-amber-600' : 'text-gray-500'}`}>
-                      {action.notes}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate text-xs text-gray-700">{action.label}</div>
+                    {action.notes && (
+                      <div className={`text-[11px] leading-tight mt-0.5 whitespace-pre-wrap ${isUrgent ? 'text-amber-600' : 'text-gray-500'}`}>
+                        {action.notes}
+                      </div>
+                    )}
+                    <div className="text-[10px] truncate text-gray-400 mt-0.5">
+                      {action.segmentTitle} • {action.type}
                     </div>
-                  )}
-                  <div className="text-[10px] truncate text-gray-400 mt-0.5">
-                    {action.segmentTitle} • {action.type}
                   </div>
                 </div>
+              ))}
+              
+              {((isPast && pastActions.length === 0) || (!isPast && upcomingActions.length <= 1)) && (
+                <p className="text-[10px] opacity-30 italic py-1 text-gray-400">No hay más acciones.</p>
+              )}
+            </div>
+          )}
+
+          {/* Main Bar - Always at the bottom of the stack */}
+          <div 
+            className="flex items-center justify-between py-2 px-3 sm:px-4 relative"
+          >
+            {/* Left Side: Countdown + Info */}
+            <div 
+              className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {/* Compact Countdown Badge */}
+              <div className={`flex flex-col items-center justify-center w-11 h-10 rounded-lg shrink-0 ${
+                isUrgent ? 'bg-amber-500 text-black shadow-lg animate-pulse' : 
+                isPast ? 'bg-gray-100 text-gray-400' : 'bg-gray-100 text-pdv-teal'
+              }`}>
+                {!isServiceDay ? (
+                  <Clock className="w-5 h-5 opacity-60" />
+                ) : isPast ? (
+                  <CheckCircle2 className="w-5 h-5" />
+                ) : (
+                  <span className="text-base font-bold leading-none">{diffMin}</span>
+                )}
+                <span className="text-[9px] uppercase font-bold opacity-70 leading-none mt-0.5">
+                  {!isServiceDay ? '' : isPast ? '' : 'min'}
+                </span>
               </div>
-            ))}
-            
-            {((isPast && pastActions.length === 0) || (!isPast && upcomingActions.length <= 1)) && (
-              <p className="text-[10px] opacity-30 italic py-1 text-gray-400">No hay más acciones.</p>
-            )}
+
+              {/* Action Info */}
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <Badge variant="outline" className={`h-4 text-[9px] px-1.5 rounded-sm border-0 ${
+                    isUrgent ? 'bg-amber-100 text-amber-700' : 
+                    isPast ? 'bg-gray-100 text-gray-400' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {activeAction.isPrep ? 'PREP' : 'CUE'}
+                  </Badge>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                    isUrgent ? 'text-amber-600' : 
+                    isPast ? 'text-gray-400' : 'text-pdv-teal'
+                  }`}>
+                    {activeAction.type}
+                  </span>
+                  <span className={`text-[10px] tabular-nums ${
+                    isUrgent ? 'text-amber-600' : 'text-gray-400'
+                  }`}>
+                    {formatTimeToEST(activeAction.time.toTimeString().substring(0, 5))}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <h4 className={`font-semibold text-sm truncate ${isPast ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+                    {activeAction.label}
+                  </h4>
+                  {moreCount > 0 && (
+                    <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-gray-200 text-gray-600 border-none shrink-0 flex items-center justify-center">
+                      +{moreCount}
+                    </Badge>
+                  )}
+                  {isExpanded ? <ChevronDown className="w-4 h-4 opacity-50 shrink-0 text-gray-600" /> : <ChevronUp className="w-4 h-4 opacity-50 shrink-0 text-gray-600" />}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side: Actions (Scroll + Chat) */}
+            <div className="flex items-center gap-1 pl-2">
+              {/* Jump to Segment */}
+              {activeAction.segmentId && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className={`h-9 w-9 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onScrollToSegment && onScrollToSegment({ id: activeAction.segmentId });
+                  }}
+                >
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              )}
+
+              {/* Chat Trigger (Integrated) */}
+              {onToggleChat && (
+                <div className="relative ml-1 border-l border-gray-200 pl-2">
+                  <Button
+                    size="icon"
+                    className={`h-9 w-9 rounded-full transition-all ${
+                      chatOpen 
+                        ? 'bg-gray-200 text-gray-600 hover:bg-gray-300' 
+                        : 'bg-white text-pdv-teal border-2 border-pdv-teal hover:bg-pdv-teal hover:text-white shadow-sm'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleChat();
+                    }}
+                  >
+                    {chatOpen ? <ChevronDown className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+                  </Button>
+                  {/* Unread Badge */}
+                  {!chatOpen && chatUnreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-sm">
+                      {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
     </div>
