@@ -176,7 +176,7 @@ export default function StickyOpsDeck({
     const upcoming = sorted.filter(a => a.time.getTime() > now);
     const past = sorted.filter(a => a.time.getTime() <= now).reverse();
 
-    return { upcomingActions: upcoming, pastActions: past, isServiceDay: true };
+    return { upcomingActions: upcoming, pastActions: past, isServiceDay: isServiceDayLocal };
   }, [segments, preSessionData, sessionDate, currentTime]);
 
   // If not the service day, hide entirely
