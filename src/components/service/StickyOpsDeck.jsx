@@ -318,7 +318,7 @@ export default function StickyOpsDeck({
               <Button
                 size="icon"
                 variant="ghost"
-                className={`h-9 w-9 rounded-full hover:bg-white/10 text-gray-400 hover:text-white`}
+                className={`h-9 w-9 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onScrollToSegment && onScrollToSegment({ id: activeAction.segmentId });
