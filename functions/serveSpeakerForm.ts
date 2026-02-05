@@ -4,6 +4,7 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
+        // Redeploy timestamp: 2026-02-05T12:00:00Z
         // --- 1. PARSE QUERY PARAMS ---
         const url = new URL(req.url);
         const eventId = url.searchParams.get('event_id');
