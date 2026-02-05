@@ -1,6 +1,16 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+    };
+
+    if (req.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: corsHeaders });
+    }
+
     try {
         const base44 = createClientFromRequest(req);
         
@@ -89,9 +99,9 @@ Deno.serve(async (req) => {
             event_name: targetEvent?.name,
             event_id: targetEvent?.id,
             error: eventError
-        });
+        }, { headers: corsHeaders });
 
     } catch (error) {
-        return Response.json({ error: error.message }, { status: 500 });
+        return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
     }
 });
