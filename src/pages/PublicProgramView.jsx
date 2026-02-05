@@ -1612,9 +1612,8 @@ export default function PublicProgramView() {
           isOpen={chatOpen}
           onToggle={setChatOpen}
           onUnreadCountChange={setChatUnreadCount}
-          // Hide trigger button when in Service view (it's in StickyOpsDeck)
-          // For Event view, keep it floating for now unless we add an Ops Deck there too
-          hideTrigger={viewType === "service"}
+          // Hide trigger button always, as StickyOpsDeck is present in both Service and Event views
+          hideTrigger={true}
         />
       )}
 
