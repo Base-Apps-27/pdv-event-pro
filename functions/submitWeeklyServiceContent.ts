@@ -73,17 +73,13 @@ Deno.serve(async (req) => {
             return Response.json({ error: "Invalid segment type. Only messages accept submissions." }, { status: 400, headers: corsHeaders });
         }
 
-        // Create Version Record
-        await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
-            segment_id: segment_id, // Store composite ID
-            content: content,
-            title: title || "", // Store title
-            submitted_at: new Date().toISOString(),
-            source: 'weekly_service_form',
-            processing_status: 'pending'
-        });
-
-        // Update Service Entity (Read-Modify-Write)
+        // CRITICAL: Update Service Entity FIRST, before creating the SpeakerSubmissionVersion.
+        // The .create() below triggers an entity automation (processNewSubmissionVersion) that
+        // reads and writes this same Service record. If we do Service.update() AFTER .create(),
+        // the automation races with this function on the same Service document, causing write
+        // contention that silently kills the automation. Events don't have this problem because
+        // the Event path writes to a separate Segment entity (no contention).
+        // Fix: Complete the Service write first so the automation hits a stable record.
         const currentArray = [...(service[timeSlot] || [])];
         if (currentArray[segmentIdx]) {
             const updatedSegment = {
@@ -102,6 +98,17 @@ Deno.serve(async (req) => {
                 [timeSlot]: currentArray
             });
         }
+
+        // NOW create the Version Record — this triggers the entity automation.
+        // Service entity is already in a stable state, so the automation can safely read/write it.
+        await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
+            segment_id: segment_id, // Store composite ID
+            content: content,
+            title: title || "", // Store title
+            submitted_at: new Date().toISOString(),
+            source: 'weekly_service_form',
+            processing_status: 'pending'
+        });
 
         // Success
         const responsePayload = { success: true };
