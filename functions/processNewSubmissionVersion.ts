@@ -150,98 +150,19 @@ Deno.serve(async (req) => {
         }
 
         // 2. Concurrency Check & Update Segment
-        const segmentId = submission.segment_id;
+        // We fetch the current segment to ensure we don't overwrite a newer submission or admin edit.
+        const currentSegment = await base44.asServiceRole.entities.Segment.get(submission.segment_id);
         
-        if (segmentId.startsWith('service|')) {
-            // --- WEEKLY SERVICE LOGIC (Smart Relinking) ---
-            const parts = segmentId.split('|');
-            const serviceId = parts[1];
-            const timeSlot = parts[2];
-            const originalIndex = parseInt(parts[3]);
-            
-            // Expected Metadata from the snapshot we saved
-            const expectedTitle = submission.parsed_data_snapshot?._meta?.target_title;
-            const expectedPresenter = submission.parsed_data_snapshot?._meta?.target_presenter;
-
-            const service = await base44.asServiceRole.entities.Service.get(serviceId);
-            if (!service) throw new Error("Service not found");
-
-            const segments = [...(service[timeSlot] || [])];
-            let targetIndex = originalIndex;
-            let found = false;
-
-            // Strategy 1: Check if Original Index matches expectations
-            if (segments[targetIndex]) {
-                const currentTitle = segments[targetIndex].title || segments[targetIndex].data?.title;
-                const currentPresenter = segments[targetIndex].data?.preacher || segments[targetIndex].data?.presenter;
-                
-                // Loose match
-                if ((!expectedTitle || currentTitle === expectedTitle) && 
-                    (!expectedPresenter || currentPresenter === expectedPresenter)) {
-                    found = true;
-                }
-            }
-
-            // Strategy 2: Scan array if mismatch (Reordering Handling)
-            if (!found && expectedTitle) {
-                console.log(`Smart Relinking: Index ${originalIndex} mismatch. Scanning for "${expectedTitle}"...`);
-                const newIndex = segments.findIndex(s => {
-                    const t = s.title || s.data?.title;
-                    const p = s.data?.preacher || s.data?.presenter;
-                    return t === expectedTitle && (!expectedPresenter || p === expectedPresenter);
-                });
-                if (newIndex !== -1) {
-                    targetIndex = newIndex;
-                    found = true;
-                    console.log(`Smart Relinking: Found at index ${newIndex}`);
-                }
-            }
-
-            if (found) {
-                // Apply Update
-                const targetSegment = segments[targetIndex];
-                
-                // Concurrency Check: Only update if content matches (or if it's still 'pending' from our previous step)
-                const currentContent = targetSegment.data?.submitted_content;
-                const matchesContent = currentContent === submission.content;
-                
-                if (matchesContent || targetSegment.data?.submission_status === 'pending') {
-                    segments[targetIndex] = {
-                        ...targetSegment,
-                        data: {
-                            ...targetSegment.data,
-                            submission_status: 'processed',
-                            parsed_verse_data: parsedData,
-                            verse: scriptureReferences, // 'verse' is the field name in Service schema
-                            submitted_content: submission.content // Ensure it's set
-                        }
-                    };
-                    
-                    await base44.asServiceRole.entities.Service.update(serviceId, {
-                        [timeSlot]: segments
-                    });
-                } else {
-                    console.log(`Skipping Service update: Content mismatch in slot ${timeSlot} index ${targetIndex}`);
-                }
-            } else {
-                console.error(`Failed to relink segment: ${expectedTitle} not found in service ${serviceId}`);
-                // We don't fail the version, just log it. The admin will see it in history.
-            }
-
+        // Only update if the segment's content still matches what was submitted in this version.
+        // If it doesn't match, it means someone else (admin or newer submission) updated it.
+        if (currentSegment && currentSegment.submitted_content === submission.content) {
+            await base44.asServiceRole.entities.Segment.update(submission.segment_id, {
+                submission_status: 'processed', 
+                parsed_verse_data: parsedData,
+                scripture_references: scriptureReferences
+            });
         } else {
-            // --- STANDARD EVENT LOGIC ---
-            const currentSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
-            
-            // Only update if the segment's content still matches what was submitted in this version.
-            if (currentSegment && currentSegment.submitted_content === submission.content) {
-                await base44.asServiceRole.entities.Segment.update(segmentId, {
-                    submission_status: 'processed', 
-                    parsed_verse_data: parsedData,
-                    scripture_references: scriptureReferences
-                });
-            } else {
-                console.log(`Skipping live update for version ${submission.id}: Content mismatch (stale version).`);
-            }
+            console.log(`Skipping live update for version ${submission.id}: Content mismatch (stale version).`);
         }
 
         // 3. Update Submission Version (Record result)

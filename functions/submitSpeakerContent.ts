@@ -64,66 +64,27 @@ Deno.serve(async (req) => {
             });
         }
 
-        // Verify segment exists (Handle both UUID and Composite ID)
-        let isWeeklyService = false;
-        let serviceId, timeSlot, segmentIndex;
-        let segmentTitleSnapshot = "";
-        let segmentPresenterSnapshot = "";
-
-        if (segment_id.startsWith('service|')) {
-            // Composite ID: service|{service_id}|{slot}|{index}
-            isWeeklyService = true;
-            const parts = segment_id.split('|');
-            if (parts.length < 4) {
-                return Response.json({ error: "Invalid service ID format" }, { status: 400, headers: corsHeaders });
-            }
-            serviceId = parts[1];
-            timeSlot = parts[2];
-            segmentIndex = parseInt(parts[3]);
-
-            const service = await base44.asServiceRole.entities.Service.get(serviceId);
-            if (!service) {
-                return Response.json({ error: "Service not found" }, { status: 404, headers: corsHeaders });
-            }
-            
-            const segment = service[timeSlot]?.[segmentIndex];
-            if (!segment) {
-                return Response.json({ error: "Segment not found in service" }, { status: 404, headers: corsHeaders });
-            }
-
-            // Snapshot metadata for Smart Relinking
-            segmentTitleSnapshot = segment.title || segment.data?.title || "";
-            segmentPresenterSnapshot = segment.data?.preacher || segment.data?.presenter || "";
-
-        } else {
-            // Standard Event Segment
-            const segment = await base44.asServiceRole.entities.Segment.get(segment_id);
-            if (!segment) {
-                 if (idempotencyKey) {
-                    const existing = await base44.asServiceRole.entities.PublicFormIdempotency.filter({ idempotency_key: idempotencyKey });
-                    if (existing.length) await base44.asServiceRole.entities.PublicFormIdempotency.update(existing[0].id, { status: 'failed' });
-                 }
-                 return Response.json({ error: "Segment not found" }, { status: 404, headers: corsHeaders });
-            }
-            segmentTitleSnapshot = segment.title || "";
-            segmentPresenterSnapshot = segment.presenter || "";
+        // Verify segment exists
+        const segment = await base44.asServiceRole.entities.Segment.get(segment_id);
+        if (!segment) {
+             if (idempotencyKey) {
+                const existing = await base44.asServiceRole.entities.PublicFormIdempotency.filter({ idempotency_key: idempotencyKey });
+                if (existing.length) await base44.asServiceRole.entities.PublicFormIdempotency.update(existing[0].id, { status: 'failed' });
+             }
+             return Response.json({ error: "Segment not found" }, { status: 404, headers: corsHeaders });
         }
 
         // 1. Create Version Record (Source of Truth)
+        // This is the ONLY data write in this function to ensure speed and reliability.
+        // The 'create' event on this entity will trigger the 'processNewSubmissionVersion' automation
+        // which handles parsing and updating the actual Segment.
         try {
             await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
                 segment_id: segment_id,
                 content: content,
                 submitted_at: new Date().toISOString(),
                 source: 'public_form',
-                processing_status: 'pending',
-                // Store metadata for hardening against reordering
-                parsed_data_snapshot: { 
-                    _meta: {
-                        target_title: segmentTitleSnapshot,
-                        target_presenter: segmentPresenterSnapshot
-                    }
-                }
+                processing_status: 'pending' 
             });
         } catch (verErr) {
             console.error("Failed to save submission version:", verErr);
@@ -131,38 +92,14 @@ Deno.serve(async (req) => {
         }
 
         // 2. Set Segment Status to Pending (Immediate Feedback for Admin)
-        if (isWeeklyService) {
-            // For Weekly Services, we must READ-MODIFY-WRITE the whole service document.
-            // This is the quick update to show "Pending".
-            const service = await base44.asServiceRole.entities.Service.get(serviceId);
-            if (service && service[timeSlot] && service[timeSlot][segmentIndex]) {
-                const segments = [...service[timeSlot]];
-                
-                // Safety check: Ensure we are updating the right segment by title/presenter snapshot
-                // If the index was shifted in the last 100ms, we might hit the wrong one.
-                // But for this initial "Pending" flag, strict locking isn't as critical as the final data write.
-                // We will rely on the index here for speed, and let the Automation do the heavy "Smart Relink" check.
-                
-                segments[segmentIndex] = {
-                    ...segments[segmentIndex],
-                    data: {
-                        ...segments[segmentIndex].data,
-                        submission_status: 'pending',
-                        submitted_content: content
-                    }
-                };
-                
-                await base44.asServiceRole.entities.Service.update(serviceId, {
-                    [timeSlot]: segments
-                });
-            }
-        } else {
-            // Standard Event Segment Update
-            await base44.asServiceRole.entities.Segment.update(segment_id, {
-                submission_status: 'pending',
-                submitted_content: content 
-            });
-        }
+        // We do this lightweight update so the admin sees "Pending" immediately, 
+        // even if the automation takes a few seconds to process and mark it "Processed".
+        // We DO NOT parse content here.
+        await base44.asServiceRole.entities.Segment.update(segment_id, {
+            submission_status: 'pending',
+            // We temporarily update content here too so admins can see raw text if they open it before processing finishes
+            submitted_content: content 
+        });
 
         const responsePayload = { success: true };
 
