@@ -259,30 +259,39 @@ Deno.serve(async (req) => {
             console.log("[DB_UPDATE_SUCCESS] Service updated successfully");
 
         } else {
+            console.log("[ROUTE] Taking STANDARD SEGMENT (Events) path");
             // STANDARD SEGMENT ID (Events)
+            console.log(`[SEGMENT_FETCH] Fetching Segment ${segmentId}...`);
             const currentSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
+            console.log(`[SEGMENT_RESULT] segment found=${!!currentSegment}, content_match=${currentSegment?.submitted_content === submission.content}`);
             
             if (currentSegment && currentSegment.submitted_content === submission.content) {
+                console.log("[SEGMENT_UPDATE] Content matches, updating Segment...");
                 await base44.asServiceRole.entities.Segment.update(segmentId, {
                     submission_status: 'processed', 
                     parsed_verse_data: parsedData,
                     scripture_references: scriptureReferences
                 });
+                console.log("[SEGMENT_UPDATE_SUCCESS] Segment updated");
             } else {
-                console.log(`Skipping live update for version ${submission.id}: Content mismatch (stale version).`);
+                console.log(`[SEGMENT_SKIPPED] Skipping live update for version ${submission.id}: Content mismatch (stale version).`);
             }
         }
 
         // 3. Update Submission Version (Record result)
+        console.log("[SUBMISSION_RECORD_UPDATE] Updating SpeakerSubmissionVersion record...");
         await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
             parsed_data_snapshot: parsedData,
             processing_status: 'processed'
         });
+        console.log("[AUTOMATION_COMPLETE] Success!");
 
         return Response.json({ success: true, processed: true });
 
     } catch (error) {
-        console.error("Error processing submission:", error);
+        console.error("[AUTOMATION_ERROR] Caught exception:", error);
+        console.error("[AUTOMATION_ERROR] Stack:", error.stack);
+        console.error("[AUTOMATION_ERROR] Full error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
         return Response.json({ error: error.message }, { status: 500 });
     }
 });
