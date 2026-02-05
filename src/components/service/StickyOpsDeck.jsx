@@ -21,7 +21,11 @@ export default function StickyOpsDeck({
   preSessionData = null, 
   sessionDate = null,
   currentTime,
-  onScrollToSegment
+  onScrollToSegment,
+  // Chat integration props
+  onToggleChat,
+  chatUnreadCount = 0,
+  chatOpen = false
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
