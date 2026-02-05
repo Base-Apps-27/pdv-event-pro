@@ -357,35 +357,39 @@ export default function LiveOperationsChat({
 
   return (
     <>
-      {/* Floating Action Button - hardcoded colors to prevent transparency */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        style={{ background: isOpen ? '#374151' : 'linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D7DF23 100%)' }}
-        className="fixed bottom-20 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105"
-        title={isOpen ? 'Cerrar chat' : 'Abrir chat de operaciones'}
-      >
-        {isOpen ? (
-          <X className="w-6 h-6 text-white" />
-        ) : (
-          <>
-            <MessageCircle className="w-6 h-6 text-white" />
-            {unreadCount > 0 && (
-              <span 
-                style={{ backgroundColor: '#EF4444' }}
-                className="absolute -top-1 -right-1 h-5 min-w-5 px-1.5 rounded-full text-white text-xs font-bold flex items-center justify-center"
-              >
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
-          </>
-        )}
-      </button>
+      {/* Floating Action Button - Only rendered if hideTrigger is false */}
+      {!hideTrigger && (
+        <button
+          onClick={toggleOpen}
+          style={{ background: isOpen ? '#374151' : 'linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D7DF23 100%)' }}
+          className="fixed bottom-20 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105"
+          title={isOpen ? 'Cerrar chat' : 'Abrir chat de operaciones'}
+        >
+          {isOpen ? (
+            <X className="w-6 h-6 text-white" />
+          ) : (
+            <>
+              <MessageCircle className="w-6 h-6 text-white" />
+              {unreadCount > 0 && (
+                <span 
+                  style={{ backgroundColor: '#EF4444' }}
+                  className="absolute -top-1 -right-1 h-5 min-w-5 px-1.5 rounded-full text-white text-xs font-bold flex items-center justify-center"
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </>
+          )}
+        </button>
+      )}
 
-      {/* Chat Panel Overlay - hardcoded colors to prevent transparency */}
+      {/* Chat Panel Overlay - Adjusted positioning if trigger is hidden (docked to bottom bar) */}
       {isOpen && (
         <div 
           style={{ backgroundColor: '#FFFFFF' }}
-          className="fixed bottom-36 right-6 z-50 w-[380px] max-w-[calc(100vw-32px)] h-[520px] max-h-[calc(100vh-160px)] rounded-2xl shadow-2xl border border-gray-300 flex flex-col overflow-hidden"
+          className={`fixed right-2 sm:right-6 z-50 w-[380px] max-w-[calc(100vw-16px)] h-[520px] max-h-[calc(100vh-140px)] rounded-2xl shadow-2xl border border-gray-300 flex flex-col overflow-hidden transition-all duration-300 ${
+            hideTrigger ? 'bottom-[70px]' : 'bottom-36'
+          }`}
         >
           {/* Header - hardcoded gradient */}
           <div 
