@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // This function is triggered by an automation when a new SpeakerSubmissionVersion is created.
 // It handles the heavy lifting of parsing verses and updating the live Segment.
-// v2.1 - Fixed entity_id extraction from event payload
+// v2.2 - Force redeploy to clear isolate cache
 
 // --- BIBLE PARSING LOGIC START ---
 const BIBLE_BOOKS = {
