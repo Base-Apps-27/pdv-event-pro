@@ -1595,7 +1595,7 @@ export default function PublicProgramView() {
         selectedDate={rawServiceData?.date ? formatDateET(rawServiceData.date) : ''}
       />
 
-      {/* Live Operations Chat - Floating FAB */}
+      {/* Live Operations Chat - Floating FAB or Integrated */}
       {/* CRITICAL: Only render chat for users with explicit view_live_chat permission */}
       {currentUser && hasPermission(currentUser, 'view_live_chat') && (viewType === "event" ? selectedEvent : selectedService) && (
         <LiveOperationsChat
@@ -1604,6 +1604,13 @@ export default function PublicProgramView() {
           contextId={viewType === "event" ? selectedEventId : selectedServiceId}
           contextDate={viewType === "event" ? selectedEvent?.end_date : rawServiceData?.date}
           contextName={viewType === "event" ? selectedEvent?.name : selectedService?.name}
+          // Controlled props
+          isOpen={chatOpen}
+          onToggle={setChatOpen}
+          onUnreadCountChange={setChatUnreadCount}
+          // Hide trigger button when in Service view (it's in StickyOpsDeck)
+          // For Event view, keep it floating for now unless we add an Ops Deck there too
+          hideTrigger={viewType === "service"}
         />
       )}
 
