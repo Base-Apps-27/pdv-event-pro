@@ -40,12 +40,10 @@ export default function StickyOpsDeck({
 
     const activeDateStr = sessionDate || new Date().toISOString().split('T')[0];
     
-    // DATE GUARD: Only show actions if today matches the service date
-    // This prevents the deck from firing on non-service days
+    // DATE AWARENESS: Determine if today is the service day.
+    // The deck still renders on non-service days (preview mode) but countdowns are frozen.
     const todayStr = new Date().toISOString().split('T')[0];
-    if (sessionDate && sessionDate !== todayStr) {
-      return { upcomingActions: [], pastActions: [], isServiceDay: false };
-    }
+    const isServiceDayLocal = !sessionDate || sessionDate === todayStr;
 
     // 1. Process PreSession Actions
     if (preSessionData) {
