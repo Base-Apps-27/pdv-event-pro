@@ -223,22 +223,23 @@ export default function StickyOpsDeck({
 
   const moreCount = Math.max(0, concurrentCount - 1);
   
-  // Pro Deck Design: Always Dark Charcoal/Gray-900 to ensure high contrast
-  const bgClass = 'bg-[#1a1a1a]';
-  const textClass = 'text-gray-100';
-  const borderTopClass = 'border-t-2 border-pdv-teal/40';
+  // Glass Control Deck: Neutral/Light theme per user request
+  // Reduced contrast, frosted glass effect for blending
+  const bgClass = 'bg-white/90 backdrop-blur-md';
+  const textClass = 'text-gray-900';
+  const borderTopClass = 'border-t border-gray-200';
 
   return (
     // Full width container fixed at bottom
     <div className="fixed bottom-0 left-0 right-0 z-40 print:hidden flex flex-col items-center">
       <div className="w-full relative">
-        {/* Label Shelf - integrated better with dark theme */}
+        {/* Label Shelf - Subtle and Neutral */}
         <div 
           onClick={() => setIsExpanded(!isExpanded)}
           className={`absolute -top-6 left-4 px-3 py-1 rounded-t-md text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 ${
             isUrgent 
-              ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/50' 
-              : 'bg-[#1a1a1a] text-gray-400 border-t border-x border-gray-800'
+              ? 'bg-amber-500 text-black shadow-lg' 
+              : 'bg-white/90 backdrop-blur-md text-gray-500 border-t border-x border-gray-200 shadow-sm'
           }`}
           style={{ height: '24px' }}
         >
@@ -246,7 +247,7 @@ export default function StickyOpsDeck({
         </div>
 
         <div 
-          className={`w-full shadow-[0_-4px_20px_rgba(0,0,0,0.3)] transition-all duration-300 relative z-10 ${bgClass} ${textClass} ${borderTopClass}`}
+          className={`w-full shadow-[0_-4px_20px_rgba(0,0,0,0.05)] transition-all duration-300 relative z-10 ${bgClass} ${textClass} ${borderTopClass}`}
         >
           
           {/* Main Bar */}
