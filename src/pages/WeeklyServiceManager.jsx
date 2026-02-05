@@ -3103,7 +3103,7 @@ Return ONLY valid JSON:
                                   placeholder="Título del Mensaje"
                                 />
                               )}
-                              {segment.fields.includes("verse") && (
+                              {segment.fields.includes("verse") && segment.type === 'message' && (
                                 <div className="space-y-1">
                                   <div className="flex gap-2">
                                     <SegmentTextInput
@@ -3579,7 +3579,7 @@ Return ONLY valid JSON:
                                   placeholder="Título del Mensaje"
                                 />
                               )}
-                              {segment.fields.includes("verse") && (
+                              {segment.fields.includes("verse") && segment.type === 'message' && (
                                 <div className="space-y-1">
                                   <div className="flex gap-2">
                                     <SegmentTextInput
