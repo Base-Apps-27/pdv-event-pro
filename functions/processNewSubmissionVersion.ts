@@ -76,7 +76,8 @@ const BIBLE_BOOKS = {
 function parseScriptureReferences(rawText) {
   if (!rawText || rawText.trim() === '') return { type: 'empty', sections: [] };
   
-  const versePattern = /\b(([1-3]\s)?(?:S\.\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3}):(\d{1,3})([–—-](\d{1,3}))?(:(\d{1,3}))?/gi;
+  // Improved regex to allow spaces around colon (e.g. "Mat 25 : 1")
+  const versePattern = /\b(([1-3]\s)?(?:S\.\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3})\s*:\s*(\d{1,3})([–—-](\d{1,3}))?(:(\d{1,3}))?/gi;
   
   const verses = [];
   const seenRefs = new Set();
@@ -86,7 +87,9 @@ function parseScriptureReferences(rawText) {
     const fullMatch = match[0].trim();
     const bookRaw = match[1].trim().replace(/\.$/, '');
     
-    const chapterVerseMatch = fullMatch.substring(match[1].length).trim().match(/^(\d{1,3}:\d{1,3}(?:[–—-]\d{1,3})?(?::\d{1,3})?)/);
+    // Normalize spaces around colon before matching the number pattern
+    const numbersPart = fullMatch.substring(match[1].length).trim().replace(/\s*:\s*/g, ':');
+    const chapterVerseMatch = numbersPart.match(/^(\d{1,3}:\d{1,3}(?:[–—-]\d{1,3})?(?::\d{1,3})?)/);
     if (!chapterVerseMatch) return;
     
     const restOfRef = chapterVerseMatch[1].replace(/[–—]/g, '-'); 
@@ -183,44 +186,41 @@ Deno.serve(async (req) => {
                 return Response.json({ error: "Invalid segment type" });
             }
 
-            // Concurrency check
-            if (currentSegment.submitted_content === submission.content) {
-                const updatedSegment = {
-                    ...currentSegment,
-                    parsed_verse_data: parsedData,
-                    submission_status: 'processed'
-                };
+            // Remove strict concurrency check - Trust this submission is the latest source of truth
+            // We update the segment with the submission content regardless, ensuring it doesn't get stuck in 'pending'
+            
+            const updatedSegment = {
+                ...currentSegment,
+                submitted_content: submission.content, // Ensure content matches this version
+                parsed_verse_data: parsedData,
+                submission_status: 'processed'
+            };
 
-                // Update title if present in submission
-                if (submission.title && submission.title.trim() !== "") {
-                    // Do NOT overwrite segment.title (that is the schedule name).
-                    // Update message_title and data.title which are used for the sermon content.
-                    updatedSegment.message_title = submission.title.trim();
-                    updatedSegment.data = {
-                        ...updatedSegment.data,
-                        message_title: submission.title.trim(),
-                        title: submission.title.trim() // Common fallback in some UIs
-                    };
-                }
-
-                // Ensure verses are mapped to all potential fields
-                updatedSegment.scripture_references = scriptureReferences;
+            // Update title if present in submission
+            if (submission.title && submission.title.trim() !== "") {
+                updatedSegment.message_title = submission.title.trim();
                 updatedSegment.data = {
                     ...updatedSegment.data,
-                    verse: scriptureReferences,
-                    scripture_references: scriptureReferences
+                    message_title: submission.title.trim(),
+                    title: submission.title.trim()
                 };
-
-                currentArray[segmentIdx] = updatedSegment;
-
-                console.log(`Updating Service ${serviceId} segment ${segmentIdx}: Title="${submission.title}", Verses="${scriptureReferences.substring(0, 20)}..."`);
-
-                await base44.asServiceRole.entities.Service.update(serviceId, {
-                    [timeSlot]: currentArray
-                });
-            } else {
-                console.log(`Skipping live update for version ${submission.id}: Content mismatch (stale version).`);
             }
+
+            // Ensure verses are mapped to all potential fields
+            updatedSegment.scripture_references = scriptureReferences;
+            updatedSegment.data = {
+                ...updatedSegment.data,
+                verse: scriptureReferences,
+                scripture_references: scriptureReferences
+            };
+
+            currentArray[segmentIdx] = updatedSegment;
+
+            console.log(`Updating Service ${serviceId} segment ${segmentIdx}: Title="${submission.title}", Verses="${scriptureReferences.substring(0, 20)}..."`);
+
+            await base44.asServiceRole.entities.Service.update(serviceId, {
+                [timeSlot]: currentArray
+            });
 
         } else {
             // STANDARD SEGMENT ID (Events)

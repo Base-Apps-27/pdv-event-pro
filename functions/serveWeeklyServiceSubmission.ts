@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
                                 id: compositeId,
                                 label: `${slot} - ${presenter}`,
                                 group: formattedDate,
-                                title: seg.title || ""
+                                title: seg.message_title || seg.data?.message_title || seg.data?.title || ""
                             });
                         }
                     });
