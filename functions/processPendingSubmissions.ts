@@ -4,7 +4,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 // This is a safety net for when the entity automation fails to trigger properly.
 // v1.0 - Initial implementation
 
-// --- BIBLE PARSING LOGIC (copied from processNewSubmissionVersion) ---
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  VERSE PARSING LOGIC — BACKEND COPY (processPendingSubmissions)      ║
+// ║                                                                      ║
+// ║  ALL COPIES MUST BE KEPT IN SYNC. If you change one, change all:    ║
+// ║    1. components/service/VerseParserDialog  (frontend)               ║
+// ║    2. functions/submitWeeklyServiceContent  (backend — inline)       ║
+// ║    3. functions/processNewSubmissionVersion (backend — automation)   ║
+// ║    4. functions/processPendingSubmissions   (this file — safety net) ║
+// ║                                                                      ║
+// ║  Decision: "Verse Parsing Logic Anti-Drift Protocol" (2026-02-05)   ║
+// ╚══════════════════════════════════════════════════════════════════════╝
 const BIBLE_BOOKS = {
   "gn": { en: "Genesis", es: "Génesis" }, "gen": { en: "Genesis", es: "Génesis" }, "genesis": { en: "Genesis", es: "Génesis" }, "génesis": { en: "Genesis", es: "Génesis" }, "gén": { en: "Genesis", es: "Génesis" },
   "ex": { en: "Exodus", es: "Éxodo" }, "exo": { en: "Exodus", es: "Éxodo" }, "exod": { en: "Exodus", es: "Éxodo" }, "exodus": { en: "Exodus", es: "Éxodo" }, "éxodo": { en: "Exodus", es: "Éxodo" }, "éx": { en: "Exodus", es: "Éxodo" },

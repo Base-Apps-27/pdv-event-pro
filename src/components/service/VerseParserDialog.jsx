@@ -6,7 +6,21 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, BookOpen } from "lucide-react";
 
-// Robust Bible Book Mapping
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  VERSE PARSING LOGIC — CANONICAL CLIENT-SIDE COPY                   ║
+// ║                                                                      ║
+// ║  This logic (BIBLE_BOOKS + parseScriptureReferences) is duplicated   ║
+// ║  in 4 locations due to platform constraints (no shared imports       ║
+// ║  between frontend and backend, no imports between backend functions). ║
+// ║                                                                      ║
+// ║  ALL COPIES MUST BE KEPT IN SYNC. If you change one, change all:    ║
+// ║    1. components/service/VerseParserDialog  (this file — frontend)   ║
+// ║    2. functions/submitWeeklyServiceContent  (backend — inline)       ║
+// ║    3. functions/processNewSubmissionVersion (backend — automation)   ║
+// ║    4. functions/processPendingSubmissions   (backend — safety net)   ║
+// ║                                                                      ║
+// ║  Decision: "Verse Parsing Logic Anti-Drift Protocol" (2026-02-05)   ║
+// ╚══════════════════════════════════════════════════════════════════════╝
 const BIBLE_BOOKS = {
   // Old Testament
   "gn": { en: "Genesis", es: "Génesis" }, "gen": { en: "Genesis", es: "Génesis" }, "genesis": { en: "Genesis", es: "Génesis" }, "génesis": { en: "Genesis", es: "Génesis" }, "gén": { en: "Genesis", es: "Génesis" },

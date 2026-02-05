@@ -8,7 +8,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 // Rate Limiter
 const rateLimiter = new Map();
 
-// --- BIBLE PARSING LOGIC (copied from processNewSubmissionVersion) ---
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  VERSE PARSING LOGIC — BACKEND COPY (submitWeeklyServiceContent)     ║
+// ║                                                                      ║
+// ║  ALL COPIES MUST BE KEPT IN SYNC. If you change one, change all:    ║
+// ║    1. components/service/VerseParserDialog  (frontend)               ║
+// ║    2. functions/submitWeeklyServiceContent  (this file — inline)     ║
+// ║    3. functions/processNewSubmissionVersion (backend — automation)   ║
+// ║    4. functions/processPendingSubmissions   (backend — safety net)   ║
+// ║                                                                      ║
+// ║  Decision: "Verse Parsing Logic Anti-Drift Protocol" (2026-02-05)   ║
+// ╚══════════════════════════════════════════════════════════════════════╝
 const BIBLE_BOOKS = {
   "gn": { en: "Genesis", es: "Génesis" }, "gen": { en: "Genesis", es: "Génesis" }, "genesis": { en: "Genesis", es: "Génesis" }, "génesis": { en: "Genesis", es: "Génesis" }, "gén": { en: "Genesis", es: "Génesis" },
   "ex": { en: "Exodus", es: "Éxodo" }, "exo": { en: "Exodus", es: "Éxodo" }, "exod": { en: "Exodus", es: "Éxodo" }, "exodus": { en: "Exodus", es: "Éxodo" }, "éxodo": { en: "Exodus", es: "Éxodo" }, "éx": { en: "Exodus", es: "Éxodo" },
