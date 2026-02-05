@@ -235,16 +235,19 @@ export default function ServiceProgramView({
         }));
 
         return (
-          <StickyOpsDeck 
-            segments={allServiceSegments}
-            sessionDate={adjustedServiceData.date}
-            currentTime={currentTime}
-            onScrollToSegment={scrollToSegment}
-          />
+        <StickyOpsDeck 
+          segments={allServiceSegments}
+          sessionDate={adjustedServiceData.date}
+          currentTime={currentTime}
+          onScrollToSegment={scrollToSegment}
+          onToggleChat={onToggleChat}
+          chatUnreadCount={chatUnreadCount}
+          chatOpen={chatOpen}
+        />
         );
-      })()}
+        })()}
 
-      {/* Live Status Card for Weekly Services */}
+        {/* Live Status Card for Weekly Services */}
       {(() => {
         const allServiceSegments = [
           ...(adjustedServiceData?.['9:30am'] || []),
