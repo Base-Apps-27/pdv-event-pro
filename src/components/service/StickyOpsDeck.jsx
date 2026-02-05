@@ -261,13 +261,15 @@ export default function StickyOpsDeck({
               isUrgent ? 'bg-amber-500 text-black shadow-amber-500/20 shadow-lg' : 
               isPast ? 'bg-slate-200/80 text-slate-500' : 'bg-gray-100/80 text-gray-900'
             }`}>
-              {isPast ? (
+              {!isServiceDay ? (
+                <Clock className="w-5 h-5 opacity-60" />
+              ) : isPast ? (
                 <CheckCircle2 className="w-5 h-5" />
               ) : (
                 <span className="text-base font-bold leading-none">{diffMin}</span>
               )}
               <span className="text-[9px] uppercase font-bold opacity-70 leading-none mt-0.5">
-                {isPast ? '' : 'min'}
+                {!isServiceDay ? '' : isPast ? '' : 'min'}
               </span>
             </div>
 
