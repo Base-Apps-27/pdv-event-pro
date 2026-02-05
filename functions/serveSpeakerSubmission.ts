@@ -78,6 +78,10 @@ Deno.serve(async (req) => {
 
         // --- 2. HTML GENERATION ---
         const eventName = targetEvent ? targetEvent.name : "Evento";
+        const eventLocation = targetEvent?.location || "";
+        const eventDate = targetEvent?.start_date 
+            ? new Date(targetEvent.start_date + "T12:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) 
+            : "";
         
         // Generate Options HTML
         const optionsHtml = options.map(opt => 
@@ -142,25 +146,46 @@ Deno.serve(async (req) => {
     .form-header {
       text-align: center;
       margin-bottom: 32px;
-      border-bottom: 2px solid var(--brand-teal);
-      padding-bottom: 24px;
+      padding: 48px 32px;
+      background: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-green) 100%);
+      margin: -32px -32px 32px -32px;
+      border-radius: 12px 12px 0 0;
+      color: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
     .form-header h1 {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 2.5rem;
-      color: var(--text-primary);
+      font-size: 3.5rem;
+      color: white;
       letter-spacing: 0.05em;
       margin-bottom: 8px;
+      line-height: 1;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    .form-header p {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-secondary);
+    .form-header p.event-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.95);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      margin-bottom: 4px;
     }
+
+    .form-header .event-meta {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 12px;
+      font-weight: 500;
+    }
+    
+    .meta-item { display: flex; align-items: center; gap: 6px; }
+    .meta-icon { width: 16px; height: 16px; opacity: 0.8; }
     
     .instruction-text {
         font-size: 0.9rem;
@@ -314,8 +339,25 @@ Deno.serve(async (req) => {
     ` : ''}
 
     <div class="form-header">
-      <h1>Entrega de Versículos</h1>
-      <p>${eventName}</p>
+      <h1>Compartir su Mensaje</h1>
+      <p class="event-name">${eventName}</p>
+      <div class="event-meta">
+        ${eventDate ? `
+        <div class="meta-item">
+            <svg xmlns="http://www.w3.org/2000/svg" class="meta-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>${eventDate}</span>
+        </div>` : ''}
+        ${eventLocation ? `
+        <div class="meta-item">
+            <svg xmlns="http://www.w3.org/2000/svg" class="meta-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>${eventLocation}</span>
+        </div>` : ''}
+      </div>
     </div>
 
     <div id="statusMessage" class="status-message"></div>
