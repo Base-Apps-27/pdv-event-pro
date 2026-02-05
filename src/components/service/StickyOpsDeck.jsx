@@ -261,8 +261,8 @@ export default function StickyOpsDeck({
           >
             {/* Compact Countdown Badge */}
             <div className={`flex flex-col items-center justify-center w-11 h-10 rounded-lg shrink-0 ${
-              isUrgent ? 'bg-amber-500 text-black shadow-amber-500/20 shadow-lg animate-pulse' : 
-              isPast ? 'bg-gray-800 text-gray-500' : 'bg-gray-800 text-pdv-teal'
+              isUrgent ? 'bg-amber-500 text-black shadow-lg animate-pulse' : 
+              isPast ? 'bg-gray-100 text-gray-400' : 'bg-gray-100 text-pdv-teal'
             }`}>
               {!isServiceDay ? (
                 <Clock className="w-5 h-5 opacity-60" />
@@ -280,33 +280,33 @@ export default function StickyOpsDeck({
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-0.5">
                 <Badge variant="outline" className={`h-4 text-[9px] px-1.5 rounded-sm border-0 ${
-                  isUrgent ? 'bg-amber-500/20 text-amber-300' : 
-                  isPast ? 'bg-gray-800 text-gray-500' : 'bg-gray-800 text-gray-400'
+                  isUrgent ? 'bg-amber-100 text-amber-700' : 
+                  isPast ? 'bg-gray-100 text-gray-400' : 'bg-gray-100 text-gray-500'
                 }`}>
                   {activeAction.isPrep ? 'PREP' : 'CUE'}
                 </Badge>
                 <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                  isUrgent ? 'text-amber-300' : 
-                  isPast ? 'text-gray-500' : 'text-pdv-teal'
+                  isUrgent ? 'text-amber-600' : 
+                  isPast ? 'text-gray-400' : 'text-pdv-teal'
                 }`}>
                   {activeAction.type}
                 </span>
                 <span className={`text-[10px] tabular-nums ${
-                  isUrgent ? 'text-amber-200' : 'text-gray-500'
+                  isUrgent ? 'text-amber-600' : 'text-gray-400'
                 }`}>
                   {formatTimeToEST(activeAction.time.toTimeString().substring(0, 5))}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <h4 className={`font-semibold text-sm truncate ${isPast ? 'line-through text-gray-600' : 'text-white'}`}>
+                <h4 className={`font-semibold text-sm truncate ${isPast ? 'line-through text-gray-400' : 'text-gray-900'}`}>
                   {activeAction.label}
                 </h4>
                 {moreCount > 0 && (
-                  <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-gray-700 text-gray-300 border-none shrink-0 flex items-center justify-center">
+                  <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-gray-200 text-gray-600 border-none shrink-0 flex items-center justify-center">
                     +{moreCount}
                   </Badge>
                 )}
-                {isExpanded ? <ChevronDown className="w-4 h-4 opacity-50 shrink-0" /> : <ChevronUp className="w-4 h-4 opacity-50 shrink-0" />}
+                {isExpanded ? <ChevronDown className="w-4 h-4 opacity-50 shrink-0 text-gray-600" /> : <ChevronUp className="w-4 h-4 opacity-50 shrink-0 text-gray-600" />}
               </div>
             </div>
           </div>
