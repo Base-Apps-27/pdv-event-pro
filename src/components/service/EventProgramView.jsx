@@ -170,11 +170,11 @@ export default function EventProgramView({
       />
 
       {/* Compact Filters Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center bg-gray-100 p-2 rounded-xl border border-gray-200">
+      <div className="flex flex-col sm:flex-row gap-3 items-center ppv-bg-muted p-2 rounded-xl border ppv-border">
         <div className="flex-1 w-full sm:w-auto">
           <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
-            <SelectTrigger className="bg-white border-gray-300 text-gray-900 h-9 text-sm font-medium">
-              <Filter className="w-3 h-3 mr-2 text-gray-500" />
+            <SelectTrigger className="h-9 text-sm font-medium ppv-text" style={{ backgroundColor: 'var(--ppv-select-bg)', borderColor: 'var(--ppv-select-border)' }}>
+              <Filter className="w-3 h-3 mr-2 ppv-text-secondary" />
               <SelectValue placeholder="Todas las Sesiones" />
             </SelectTrigger>
             <SelectContent className="bg-white">

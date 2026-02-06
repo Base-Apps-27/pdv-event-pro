@@ -176,25 +176,25 @@ export default function ServiceProgramView({
                 )}
                 {adjustedServiceData.ujieres && Object.values(adjustedServiceData.ujieres).find(v => v) && (
                   <>
-                    <span className="text-gray-400">|</span>
+                    <span className="ppv-text-muted">|</span>
                     <span><strong>🚪 Ujieres:</strong> {normalizeName(adjustedServiceData.ujieres["9:30am"] || adjustedServiceData.ujieres["11:30am"] || Object.values(adjustedServiceData.ujieres).find(v => v))}</span>
                   </>
                 )}
                 {adjustedServiceData.sound && Object.values(adjustedServiceData.sound).find(v => v) && (
                   <>
-                    <span className="text-gray-400">|</span>
+                    <span className="ppv-text-muted">|</span>
                     <span><strong>🔊 Sonido:</strong> {normalizeName(adjustedServiceData.sound["9:30am"] || adjustedServiceData.sound["11:30am"] || Object.values(adjustedServiceData.sound).find(v => v))}</span>
                   </>
                 )}
                 {adjustedServiceData.luces && Object.values(adjustedServiceData.luces).find(v => v) && (
                   <>
-                    <span className="text-gray-400">|</span>
+                    <span className="ppv-text-muted">|</span>
                     <span><strong>💡 Luces:</strong> {normalizeName(adjustedServiceData.luces["9:30am"] || adjustedServiceData.luces["11:30am"] || Object.values(adjustedServiceData.luces).find(v => v))}</span>
                   </>
                 )}
                 {adjustedServiceData.fotografia && Object.values(adjustedServiceData.fotografia).find(v => v) && (
                   <>
-                    <span className="text-gray-400">|</span>
+                    <span className="ppv-text-muted">|</span>
                     <span><strong>📸 Foto:</strong> {normalizeName(adjustedServiceData.fotografia["9:30am"] || adjustedServiceData.fotografia["11:30am"] || Object.values(adjustedServiceData.fotografia).find(v => v))}</span>
                   </>
                 )}
@@ -307,25 +307,25 @@ export default function ServiceProgramView({
                 )}
                 {adjustedServiceData.ujieres?.["9:30am"] && (
                   <>
-                    <span className="text-gray-400">|</span>
+                    <span className="ppv-text-muted">|</span>
                     <span><strong>🚪 Ujieres:</strong> {normalizeName(adjustedServiceData.ujieres["9:30am"])}</span>
                   </>
                 )}
                 {adjustedServiceData.sound?.["9:30am"] && (
                   <>
-                    <span className="text-gray-400">|</span>
+                    <span className="ppv-text-muted">|</span>
                     <span><strong>🔊 Sonido:</strong> {normalizeName(adjustedServiceData.sound["9:30am"])}</span>
                   </>
                 )}
                 {adjustedServiceData.luces?.["9:30am"] && (
                   <>
-                    <span className="text-gray-400">|</span>
+                    <span className="ppv-text-muted">|</span>
                     <span><strong>💡 Luces:</strong> {normalizeName(adjustedServiceData.luces["9:30am"])}</span>
                   </>
                 )}
                 {adjustedServiceData.fotografia?.["9:30am"] && (
                   <>
-                    <span className="text-gray-400">|</span>
+                    <span className="ppv-text-muted">|</span>
                     <span><strong>📸 Foto:</strong> {normalizeName(adjustedServiceData.fotografia["9:30am"])}</span>
                   </>
                 )}
@@ -394,25 +394,25 @@ export default function ServiceProgramView({
                 )}
                 {adjustedServiceData.ujieres?.["11:30am"] && (
                   <>
-                    <span className="text-gray-400">|</span>
+                    <span className="ppv-text-muted">|</span>
                     <span><strong>🚪 Ujieres:</strong> {normalizeName(adjustedServiceData.ujieres["11:30am"])}</span>
                   </>
                 )}
                 {adjustedServiceData.sound?.["11:30am"] && (
                   <>
-                    <span className="text-gray-400">|</span>
+                    <span className="ppv-text-muted">|</span>
                     <span><strong>🔊 Sonido:</strong> {normalizeName(adjustedServiceData.sound["11:30am"])}</span>
                   </>
                 )}
                 {adjustedServiceData.luces?.["11:30am"] && (
                   <>
-                    <span className="text-gray-400">|</span>
+                    <span className="ppv-text-muted">|</span>
                     <span><strong>💡 Luces:</strong> {normalizeName(adjustedServiceData.luces["11:30am"])}</span>
                   </>
                 )}
                 {adjustedServiceData.fotografia?.["11:30am"] && (
                   <>
-                    <span className="text-gray-400">|</span>
+                    <span className="ppv-text-muted">|</span>
                     <span><strong>📸 Foto:</strong> {normalizeName(adjustedServiceData.fotografia["11:30am"])}</span>
                   </>
                 )}
