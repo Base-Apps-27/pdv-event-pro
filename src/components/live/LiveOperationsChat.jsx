@@ -321,45 +321,61 @@ export default function LiveOperationsChat({
     }
   }, [isOpen]);
 
-  // Persist last seen message ID when opening panel (marks all as read)
-  // Also updates whenever new messages arrive while panel is open.
-  // PRIMARY: localStorage (instant, synchronous, survives refresh).
-  // SECONDARY: user profile via updateMe (debounced backup for cross-device sync).
+  // ─── PERSIST READ MARKER ────────────────────────────────────────────
+  // Triggers:
+  //   1. Chat panel becomes visible (marks all as read)
+  //   2. New messages arrive while panel is open (scroll-to-bottom auto-marks)
+  //   3. First-time viewer opens chat (auto-marks latest as read → clean slate)
+  //
+  // Writes to:
+  //   1. React state (immediate)
+  //   2. localStorage (synchronous, primary same-device persistence)
+  //   3. User entity via updateMe (debounced, cross-device durability)
   const persistTimeoutRef = useRef(null);
+  
+  const persistReadMarker = useCallback((messageId) => {
+    if (!messageId || messageId === lastSeenMessageId) return;
+    
+    // 1. React state — immediate
+    setLastSeenMessageId(messageId);
+    
+    // 2. localStorage — synchronous, survives refresh
+    const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
+    localStorage.setItem(lsKey, messageId);
+    
+    // 3. User entity — debounced for cross-device sync
+    if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
+    persistTimeoutRef.current = setTimeout(() => {
+      const updatedChatLastSeen = {
+        ...(currentUser?.chat_last_seen || {}),
+        [chatContextKey]: messageId
+      };
+      base44.auth.updateMe({ chat_last_seen: updatedChatLastSeen }).catch(err => {
+        console.error('Failed to persist chat_last_seen to profile:', err);
+      });
+    }, 2000);
+  }, [lastSeenMessageId, chatContextKey, currentUser?.chat_last_seen]);
+
   useEffect(() => {
-    if (isOpen && messages.length > 0) {
-      // Filter out optimistic messages AND typing beacons — only persist real message IDs
-      const confirmedMessages = messages.filter(m => !m._isOptimistic && m.message !== '__typing__');
-      if (confirmedMessages.length === 0) return;
-      
-      const latestMessageId = confirmedMessages[confirmedMessages.length - 1]?.id;
-      if (latestMessageId && latestMessageId !== lastSeenMessageId) {
-        // 1. Update React state immediately
-        setLastSeenMessageId(latestMessageId);
-        
-        // 2. Write to localStorage SYNCHRONOUSLY — this is the primary persistence
-        //    that survives page refresh and is read on next mount.
-        const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
-        localStorage.setItem(lsKey, latestMessageId);
-        
-        // 3. Debounce user profile write as backup (for cross-device sync)
-        if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
-        persistTimeoutRef.current = setTimeout(() => {
-          const updatedChatLastSeen = {
-            ...(currentUser?.chat_last_seen || {}),
-            [chatContextKey]: latestMessageId
-          };
-          base44.auth.updateMe({ chat_last_seen: updatedChatLastSeen }).catch(err => {
-            console.error('Failed to persist chat_last_seen to profile:', err);
-          });
-        }, 2000); // Longer debounce — localStorage handles immediate persistence
-      }
+    if (!isOpen) return;
+    
+    // Get latest confirmed (non-optimistic, non-typing) message ID
+    const confirmedMessages = messages.filter(m => !m._isOptimistic && m.message !== '__typing__');
+    if (confirmedMessages.length === 0) return;
+    const latestMessageId = confirmedMessages[confirmedMessages.length - 1]?.id;
+    if (!latestMessageId) return;
+    
+    // FIRST-TIME VIEWER: lastSeenMessageId === null means hydration completed
+    // with no stored marker. On first open, set marker to latest → clean slate.
+    // NORMAL: update marker if new messages arrived while panel is open.
+    if (lastSeenMessageId === null || latestMessageId !== lastSeenMessageId) {
+      persistReadMarker(latestMessageId);
     }
     
     return () => {
       if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
     };
-  }, [isOpen, messages, lastSeenMessageId, chatContextKey, currentUser?.chat_last_seen]);
+  }, [isOpen, messages, lastSeenMessageId, persistReadMarker]);
 
   // Focus input when panel opens
   useEffect(() => {
