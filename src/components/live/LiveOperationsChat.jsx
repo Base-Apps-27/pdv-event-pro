@@ -334,6 +334,7 @@ export default function LiveOperationsChat({
     if (!lastSeenMessageId) {
       // No last seen = genuinely first time viewing this chat.
       // All messages from others are unread. This is correct for new users.
+      console.log('[ChatUnread] No lastSeenMessageId, otherUsersMessages:', otherUsersMessages.length);
       return otherUsersMessages.length;
     }
     
@@ -341,14 +342,15 @@ export default function LiveOperationsChat({
     const lastSeenIndex = countableMessages.findIndex(m => m.id === lastSeenMessageId);
     if (lastSeenIndex === -1) {
       // Last seen message not found (possibly deleted/archived).
-      // Treat as 0 to avoid showing incorrect counts. User will see correct
-      // count after opening and closing the panel once (which re-persists the marker).
+      // Treat as 0 to avoid showing incorrect counts.
+      console.log('[ChatUnread] lastSeenMessageId not found in messages:', lastSeenMessageId, 'total messages:', countableMessages.length, 'message IDs:', countableMessages.map(m => m.id));
       return 0;
     }
     
     // Count messages from OTHER users that came AFTER the last seen message
     const messagesAfterLastSeen = countableMessages.slice(lastSeenIndex + 1);
     const unreadFromOthers = messagesAfterLastSeen.filter(m => m.created_by !== currentUser?.email);
+    console.log('[ChatUnread] lastSeenId:', lastSeenMessageId, 'index:', lastSeenIndex, 'total:', countableMessages.length, 'unread:', unreadFromOthers.length);
     return unreadFromOthers.length;
   }, [messages, lastSeenMessageId, isOpen, currentUser?.email]);
 
