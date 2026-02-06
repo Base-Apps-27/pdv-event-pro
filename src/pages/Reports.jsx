@@ -387,7 +387,7 @@ export default function Reports() {
               <div className="flex justify-between items-center gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold uppercase tracking-tight mb-1" style={{ color: '#1F8A70', fontWeight: '900' }}>
+                  <h2 className="text-xl uppercase tracking-tight mb-1" style={{ color: '#1F8A70' }}>
                     <span className="hidden print:inline mr-2">{selectedEvent.name} —</span>
                     {session.name}
                   </h2>
@@ -756,7 +756,7 @@ export default function Reports() {
         return (
           <div key={session.id} className="print-session">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg mb-4 border border-blue-200">
-              <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
+              <h3 className="text-xl text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
 
@@ -828,7 +828,7 @@ export default function Reports() {
           <div key={session.id} className="print-session">
             {/* Projection report header - slate color scheme (distinct from purple/translation) */}
             <div className="bg-gradient-to-r from-slate-100 to-gray-100 p-4 rounded-lg mb-4 border border-slate-300">
-              <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
+              <h3 className="text-xl text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
 
@@ -951,7 +951,7 @@ export default function Reports() {
         return (
           <div key={session.id} className="print-session">
             <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-lg mb-4 border border-red-200">
-              <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
+              <h3 className="text-xl text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
 
@@ -1079,7 +1079,7 @@ export default function Reports() {
         return (
           <div key={session.id} className="print-session">
             <div className="bg-gradient-to-r from-pink-50 to-rose-50 p-4 rounded-lg mb-4 border border-pink-200">
-              <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
+              <h3 className="text-xl text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
 
@@ -1152,7 +1152,7 @@ export default function Reports() {
         return (
           <div key={session.id} className="print-session">
             <div className="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-lg mb-4 border border-green-200">
-              <h3 className="text-xl font-bold text-gray-900">{session.name}</h3>
+              <h3 className="text-xl text-gray-900">{session.name}</h3>
               <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
             </div>
 
@@ -1575,27 +1575,27 @@ export default function Reports() {
             {printAllMode && (
               <div className="print-all-reports hidden print:block">
                 <div className="print-section">
-                  <h2 className="text-lg font-bold mb-2 border-b pb-1">INFORME DETALLADO</h2>
+                  <h2 className="text-lg mb-2 border-b pb-1">INFORME DETALLADO</h2>
                   {renderDetailedProgram()}
                 </div>
                 <div className="print-section" style={{ breakBefore: 'page' }}>
-                  <h2 className="text-lg font-bold mb-2 border-b pb-1">PROGRAMA GENERAL</h2>
+                  <h2 className="text-lg mb-2 border-b pb-1">PROGRAMA GENERAL</h2>
                   {renderGeneralProgram()}
                 </div>
                 <div className="print-section" style={{ breakBefore: 'page' }}>
-                  <h2 className="text-lg font-bold mb-2 border-b pb-1">NOTAS DE PROYECCIÓN</h2>
+                  <h2 className="text-lg mb-2 border-b pb-1">NOTAS DE PROYECCIÓN</h2>
                   {renderProjectionView()}
                 </div>
                 <div className="print-section" style={{ breakBefore: 'page' }}>
-                  <h2 className="text-lg font-bold mb-2 border-b pb-1">NOTAS DE SONIDO</h2>
+                  <h2 className="text-lg mb-2 border-b pb-1">NOTAS DE SONIDO</h2>
                   {renderSoundView()}
                 </div>
                 <div className="print-section" style={{ breakBefore: 'page' }}>
-                  <h2 className="text-lg font-bold mb-2 border-b pb-1">NOTAS DE UJIERES</h2>
+                  <h2 className="text-lg mb-2 border-b pb-1">NOTAS DE UJIERES</h2>
                   {renderUshersView()}
                 </div>
                 <div className="print-section" style={{ breakBefore: 'page' }}>
-                  <h2 className="text-lg font-bold mb-2 border-b pb-1">HOSPITALIDAD</h2>
+                  <h2 className="text-lg mb-2 border-b pb-1">HOSPITALIDAD</h2>
                   {renderHospitalityView()}
                 </div>
               </div>

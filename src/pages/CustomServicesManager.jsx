@@ -103,7 +103,7 @@ export default function CustomServicesManager() {
       {/* Header */}
       <div style={gradientStyle} className="px-6 py-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-bold uppercase text-white mb-2">
+          <h1 className="text-4xl uppercase text-white mb-2">
             {language === 'es' ? 'Servicios Personalizados' : 'Custom Services'}
           </h1>
           <p className="text-white/90">
@@ -118,7 +118,7 @@ export default function CustomServicesManager() {
         {/* Create New Button */}
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl text-gray-900">
               {language === 'es' ? 'Próximos Servicios' : 'Upcoming Services'}
             </h2>
             <p className="text-gray-600 text-sm">

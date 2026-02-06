@@ -2829,7 +2829,7 @@ Return ONLY valid JSON:
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-bold text-red-600">9:30 a.m.</h2>
+              <h2 className="text-3xl text-red-600">9:30 a.m.</h2>
               {hasPermission(user, 'edit_services') && (
                 <Button
                   size="sm"
@@ -3313,7 +3313,7 @@ Return ONLY valid JSON:
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-bold text-blue-600">11:30 a.m.</h2>
+              <h2 className="text-3xl text-blue-600">11:30 a.m.</h2>
               {hasPermission(user, 'edit_services') && (
                 <div className="flex gap-2">
                   <Button

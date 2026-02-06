@@ -1268,7 +1268,7 @@ export default function CustomServiceBuilder() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">
+            <h1 className="text-5xl text-gray-900 uppercase tracking-tight">
               {serviceId ? 'Editar Servicio' : 'Nuevo Servicio Personalizado'}
             </h1>
             <p className="text-gray-500 mt-1">Crea servicios especiales con horarios y elementos personalizados</p>
@@ -1426,7 +1426,7 @@ export default function CustomServiceBuilder() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 uppercase">Programa del Servicio</h2>
+            <h2 className="text-2xl text-gray-900 uppercase">Programa del Servicio</h2>
             <div className="flex items-center gap-3 mt-2">
               <Badge variant="outline" className="bg-blue-50">
                 {timeCalc.total} min total

@@ -906,7 +906,7 @@ export default function PublicProgramView() {
                   </>
                 )}
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 leading-tight">
+              <h2 className="text-2xl text-gray-900 leading-tight">
                 {viewType === "event" ? selectedEvent?.name : selectedService?.name}
               </h2>
               {viewType === "event" && selectedEvent?.theme && (
@@ -1167,7 +1167,7 @@ export default function PublicProgramView() {
                 {/* Custom Service Segments */}
                 <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
                  <div className="bg-gradient-to-r from-pdv-teal/10 to-white p-4 border-b">
-                   <h3 className="text-2xl font-bold uppercase text-pdv-teal">{actualServiceData.name}</h3>
+                   <h3 className="text-2xl uppercase text-pdv-teal">{actualServiceData.name}</h3>
                    {actualServiceData.description && (
                      <p className="text-sm text-gray-600 mt-2">{actualServiceData.description}</p>
                    )}
@@ -1258,7 +1258,7 @@ export default function PublicProgramView() {
                 {actualServiceData["9:30am"] && (
                   <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500">
                     <div className="bg-gradient-to-r from-red-50 to-white p-4 border-b">
-                      <h3 className="text-2xl font-bold uppercase mb-1 text-red-600">9:30 A.M.</h3>
+                      <h3 className="text-2xl uppercase mb-1 text-red-600">9:30 A.M.</h3>
                       {actualServiceData.pre_service_notes?.["9:30am"] && (
                         <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
                           <p className="text-sm text-green-900 font-medium italic whitespace-pre-wrap line-clamp-3">{actualServiceData.pre_service_notes["9:30am"]}</p>
@@ -1334,7 +1334,7 @@ export default function PublicProgramView() {
                 {actualServiceData["11:30am"] && (
                   <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-blue-500">
                     <div className="bg-gradient-to-r from-blue-50 to-white p-4 border-b">
-                      <h3 className="text-2xl font-bold uppercase mb-1 text-blue-600">11:30 A.M.</h3>
+                      <h3 className="text-2xl uppercase mb-1 text-blue-600">11:30 A.M.</h3>
                       {actualServiceData.pre_service_notes?.["11:30am"] && (
                         <div className="bg-green-50 border-l-4 border-green-500 p-2 mt-2 rounded-r">
                           <p className="text-sm text-gray-600 font-medium italic whitespace-pre-wrap line-clamp-3">{actualServiceData.pre_service_notes["11:30am"]}</p>
