@@ -115,19 +115,19 @@ export default function CountdownBlock({
   const config = modeConfig[displayMode] || modeConfig['upcoming'];
 
   return (
-    <div className={`relative bg-white rounded-3xl border-4 ${config.borderColor} p-8 md:p-10 shadow-lg`}>
+    <div className={`relative bg-white rounded-3xl border-4 ${config.borderColor} p-8 md:p-10 shadow-xl ${config.containerClass || ''} transition-all duration-500`}>
       
       {/* Label */}
-      <div className={`absolute -top-4 left-8 px-4 py-2 rounded-full text-xs md:text-sm font-bold uppercase tracking-wider ${config.labelBg} shadow-lg`}>
+      <div className={`absolute -top-5 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full text-sm md:text-base font-black uppercase tracking-widest ${config.labelBg} shadow-lg`}>
         {config.label}
       </div>
 
       {/* Main Content */}
-      <div className="space-y-6">
+      <div className="space-y-6 mt-2">
         
         {/* Countdown Timer — HERO ELEMENT */}
         <div className="text-center">
-          <div className={`text-7xl md:text-8xl font-black font-mono tracking-tighter leading-none mb-2 ${config.countdownColor}`}>
+          <div className={`text-[5rem] md:text-[7rem] font-black font-mono tracking-tighter leading-none mb-2 ${config.countdownColor} tabular-nums`}>
             {countdownText}
           </div>
           {isLiveAdjusted && (
