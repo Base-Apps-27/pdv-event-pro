@@ -16,7 +16,7 @@ export default function NewMessagesPill({ count = 0, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
+      className="sticky bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
       style={{ 
         backgroundColor: '#1F8A70', 
         color: 'white',
