@@ -603,7 +603,7 @@ export default function PublicProgramSegment({
               return (
                 <div className="bg-pink-50 p-2 rounded border border-pink-200 text-xs">
                   <p className="font-semibold text-pink-800 mb-1">
-                    Artes: {arts.map(t => t === 'DANCE' ? 'Danza' : t === 'DRAMA' ? 'Drama' : t === 'VIDEO' ? 'Video' : 'Otro').join(', ')}
+                    Artes: {arts.map(a => a === 'DANCE' ? 'Danza' : a === 'DRAMA' ? 'Drama' : a === 'VIDEO' ? 'Video' : 'Otro').join(', ')}
                   </p>
                   {hasDrama && (
                     <div className="pl-2 border-l-2 border-pink-300 space-y-0.5">
@@ -612,17 +612,31 @@ export default function PublicProgramSegment({
                       {getData('drama_start_cue') && <div>{t('arts.cues.start')}: {getData('drama_start_cue')}</div>}
                       {getData('drama_end_cue') && <div>{t('arts.cues.end')}: {getData('drama_end_cue')}</div>}
                       {getData('drama_has_song') && getData('drama_song_title') && (
-                        <div>{t('arts.song')}: {getData('drama_song_title')}</div>
+                        <div>{t('arts.song')}: {getData('drama_song_title')}{getData('drama_song_owner') ? ` (${getData('drama_song_owner')})` : ''}</div>
+                      )}
+                      {getData('drama_song_2_title') && (
+                        <div>{t('arts.song')} 2: {getData('drama_song_2_title')}{getData('drama_song_2_owner') ? ` (${getData('drama_song_2_owner')})` : ''}</div>
+                      )}
+                      {getData('drama_song_3_title') && (
+                        <div>{t('arts.song')} 3: {getData('drama_song_3_title')}{getData('drama_song_3_owner') ? ` (${getData('drama_song_3_owner')})` : ''}</div>
                       )}
                     </div>
                   )}
                   {hasDance && (
                     <div className="pl-2 border-l-2 border-pink-300 space-y-0.5 mt-1">
-                      {getData('dance_has_song') && getData('dance_song_title') && (
-                        <div>{t('arts.music')}: {getData('dance_song_title')}</div>
-                      )}
                       {getData('dance_handheld_mics') > 0 && <div>{t('arts.mics.handheld')}: {getData('dance_handheld_mics')}</div>}
                       {getData('dance_headset_mics') > 0 && <div>{t('arts.mics.headset')}: {getData('dance_headset_mics')}</div>}
+                      {getData('dance_start_cue') && <div>{t('arts.cues.start')}: {getData('dance_start_cue')}</div>}
+                      {getData('dance_end_cue') && <div>{t('arts.cues.end')}: {getData('dance_end_cue')}</div>}
+                      {getData('dance_has_song') && getData('dance_song_title') && (
+                        <div>{t('arts.music')}: {getData('dance_song_title')}{getData('dance_song_owner') ? ` (${getData('dance_song_owner')})` : ''}</div>
+                      )}
+                      {getData('dance_song_2_title') && (
+                        <div>{t('arts.music')} 2: {getData('dance_song_2_title')}{getData('dance_song_2_owner') ? ` (${getData('dance_song_2_owner')})` : ''}</div>
+                      )}
+                      {getData('dance_song_3_title') && (
+                        <div>{t('arts.music')} 3: {getData('dance_song_3_title')}{getData('dance_song_3_owner') ? ` (${getData('dance_song_3_owner')})` : ''}</div>
+                      )}
                     </div>
                   )}
                   {hasOther && getData('art_other_description') && (
@@ -631,6 +645,24 @@ export default function PublicProgramSegment({
                 </div>
               );
             })()}
+
+            {/* Announcement Details (for Anuncio segments) */}
+            {segmentType === 'Anuncio' && (getData('announcement_title') || getData('announcement_description')) && (
+              <div className="bg-indigo-50 p-2 rounded border border-indigo-200 text-xs space-y-1">
+                {getData('announcement_title') && (
+                  <p className="font-semibold text-indigo-800">📢 {getData('announcement_title')}</p>
+                )}
+                {getData('announcement_description') && (
+                  <p className="text-indigo-700 whitespace-pre-wrap">{getData('announcement_description')}</p>
+                )}
+                {getData('announcement_date') && (
+                  <p className="text-indigo-600">{language === 'es' ? 'Fecha' : 'Date'}: {getData('announcement_date')}</p>
+                )}
+                {getData('announcement_tone') && (
+                  <p className="text-indigo-600 italic">{language === 'es' ? 'Tono' : 'Tone'}: {getData('announcement_tone')}</p>
+                )}
+              </div>
+            )}
 
             {/* General Description/Details */}
             {(getData('description_details') || getData('description')) && (
