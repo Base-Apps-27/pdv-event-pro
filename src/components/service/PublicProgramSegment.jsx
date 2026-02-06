@@ -162,10 +162,22 @@ export default function PublicProgramSegment({
     return 'py-2 sm:py-3 border-b';
   };
 
+  // Inline style for PPV token-based segment backgrounds
+  const getSegmentStyle = () => {
+    if (isCurrent || isUpcoming) return {};
+    if (isMessage) return { backgroundColor: 'var(--ppv-seg-message-bg)', borderColor: 'var(--ppv-seg-message-border)' };
+    if (isPanel) return { backgroundColor: 'var(--ppv-seg-panel-bg)', borderColor: 'var(--ppv-seg-panel-border)' };
+    if (isWorship) return { backgroundColor: 'var(--ppv-seg-worship-bg)', borderColor: 'var(--ppv-seg-worship-border)' };
+    if (isArtes) return { backgroundColor: 'var(--ppv-seg-arts-bg)', borderColor: 'var(--ppv-seg-arts-border)' };
+    if (isBreakSegment) return { backgroundColor: 'var(--ppv-seg-break-bg)', borderColor: 'var(--ppv-seg-break-border)' };
+    return { backgroundColor: 'var(--ppv-seg-default-bg)', borderColor: 'var(--ppv-seg-default-border)' };
+  };
+
   return (
     <div 
       id={domId}
       className={`p-3 sm:p-4 transition-all duration-300 scroll-mt-24 ${getContainerStyles()}`}
+      style={getSegmentStyle()}
     >
       {/* Current/Upcoming Status Badges */}
       {isCurrent && (
