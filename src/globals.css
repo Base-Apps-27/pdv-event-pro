@@ -136,6 +136,15 @@ css
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
+
+  /*
+   * color-scheme tells the browser to render native controls (scrollbars,
+   * form inputs, system dialogs) in dark when .dark is active.
+   * This is critical for PWA / bookmarked contexts on iOS and Android.
+   */
+  html.dark {
+    color-scheme: dark;
+  }
   
   h1, h2, h3, h4, h5, h6 {
     /* Bebas Neue only has weight 400.
