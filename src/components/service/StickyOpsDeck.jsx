@@ -223,10 +223,10 @@ export default function StickyOpsDeck({
 
   const moreCount = Math.max(0, concurrentCount - 1);
   
-  // Glass Control Deck: Dark/Tranquil theme
+  // Glass Control Deck: Medium/Tranquil theme (Lighter than charcoal)
   // Floating with deeper shadow and rim
-  const bgClass = 'bg-slate-800/95 backdrop-blur-xl';
-  const textClass = 'text-gray-100';
+  const bgClass = 'bg-slate-500/95 backdrop-blur-xl';
+  const textClass = 'text-white';
 
   return (
     // Floating container (raised to bottom-10)
@@ -242,7 +242,7 @@ export default function StickyOpsDeck({
           className={`absolute -top-6 left-4 px-3 py-1 rounded-t-md text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 z-0 ${
             isUrgent 
               ? 'bg-amber-500 text-black shadow-lg' 
-              : 'bg-slate-800/90 backdrop-blur-md text-gray-400 border-t border-x border-slate-700/50 shadow-sm'
+              : 'bg-slate-500/90 backdrop-blur-md text-slate-200 border-t border-x border-slate-400/50 shadow-sm'
           }`}
           style={{ height: '24px' }}
         >
@@ -296,10 +296,10 @@ export default function StickyOpsDeck({
               className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              {/* Compact Countdown Badge - Dark Mode Adapted */}
+              {/* Compact Countdown Badge - Medium Theme Adapted */}
               <div className={`flex flex-col items-center justify-center w-11 h-10 rounded-lg shrink-0 ${
                 isUrgent ? 'bg-amber-500 text-black shadow-lg animate-pulse' : 
-                isPast ? 'bg-slate-700/50 text-slate-500' : 'bg-slate-700 text-pdv-teal'
+                isPast ? 'bg-slate-600/50 text-slate-400' : 'bg-slate-600 text-teal-200'
               }`}>
                 {!isServiceDay ? (
                   <Clock className="w-5 h-5 opacity-60" />
@@ -313,49 +313,49 @@ export default function StickyOpsDeck({
                 </span>
               </div>
 
-              {/* Action Info - Dark Mode Adapted */}
+              {/* Action Info - Medium Theme Adapted */}
               <div className="flex-1 min-w-0 flex flex-col justify-center">
                 <div className="flex items-center gap-2 mb-0.5">
                   <Badge variant="outline" className={`h-4 text-[9px] px-1.5 rounded-sm border-0 ${
-                    isUrgent ? 'bg-amber-900/50 text-amber-400' : 
-                    isPast ? 'bg-slate-700/50 text-slate-500' : 'bg-slate-700 text-slate-300'
+                    isUrgent ? 'bg-amber-900/50 text-amber-200' : 
+                    isPast ? 'bg-slate-600/50 text-slate-400' : 'bg-slate-600 text-slate-200'
                   }`}>
                     {activeAction.isPrep ? 'PREP' : 'CUE'}
                   </Badge>
                   <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                    isUrgent ? 'text-amber-400' : 
-                    isPast ? 'text-slate-500' : 'text-pdv-teal'
+                    isUrgent ? 'text-amber-200' : 
+                    isPast ? 'text-slate-400' : 'text-teal-200'
                   }`}>
                     {activeAction.type}
                   </span>
                   <span className={`text-[10px] tabular-nums ${
-                    isUrgent ? 'text-amber-400' : 'text-slate-400'
+                    isUrgent ? 'text-amber-200' : 'text-slate-300'
                   }`}>
                     {formatTimeToEST(activeAction.time.toTimeString().substring(0, 5))}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <h4 className={`font-semibold text-sm truncate ${isPast ? 'line-through text-slate-500' : 'text-gray-100'}`}>
+                  <h4 className={`font-semibold text-sm truncate ${isPast ? 'line-through text-slate-400' : 'text-white'}`}>
                     {activeAction.label}
                   </h4>
                   {moreCount > 0 && (
-                    <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-slate-700 text-slate-300 border-none shrink-0 flex items-center justify-center">
+                    <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-slate-600 text-slate-200 border-none shrink-0 flex items-center justify-center">
                       +{moreCount}
                     </Badge>
                   )}
-                  {isExpanded ? <ChevronDown className="w-4 h-4 opacity-50 shrink-0 text-slate-400" /> : <ChevronUp className="w-4 h-4 opacity-50 shrink-0 text-slate-400" />}
+                  {isExpanded ? <ChevronDown className="w-4 h-4 opacity-50 shrink-0 text-slate-200" /> : <ChevronUp className="w-4 h-4 opacity-50 shrink-0 text-slate-200" />}
                 </div>
               </div>
               </div>
 
-              {/* Right Side: Actions (Scroll + Chat) - Dark Mode Adapted */}
+              {/* Right Side: Actions (Scroll + Chat) - Medium Theme Adapted */}
               <div className="flex items-center gap-1 pl-2">
               {/* Jump to Segment */}
               {activeAction.segmentId && (
                 <Button
                   size="icon"
                   variant="ghost"
-                  className={`h-9 w-9 rounded-full hover:bg-slate-700 text-slate-400 hover:text-white`}
+                  className={`h-9 w-9 rounded-full hover:bg-slate-600 text-slate-300 hover:text-white`}
                   onClick={(e) => {
                     e.stopPropagation();
                     onScrollToSegment && onScrollToSegment({ id: activeAction.segmentId });
@@ -367,13 +367,13 @@ export default function StickyOpsDeck({
 
               {/* Chat Trigger (Integrated) */}
               {onToggleChat && (
-                <div className="relative ml-1 border-l border-white/10 pl-2">
+                <div className="relative ml-1 border-l border-white/20 pl-2">
                   <Button
                     size="icon"
                     className={`h-9 w-9 rounded-full transition-all ${
                       chatOpen 
-                        ? 'bg-slate-700 text-white hover:bg-slate-600' 
-                        : 'bg-transparent text-pdv-teal border-2 border-pdv-teal hover:bg-pdv-teal hover:text-white shadow-sm'
+                        ? 'bg-slate-600 text-white hover:bg-slate-500' 
+                        : 'bg-transparent text-teal-200 border-2 border-teal-200 hover:bg-teal-600 hover:text-white shadow-sm'
                     }`}
                     onClick={(e) => {
                       e.stopPropagation();
