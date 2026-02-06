@@ -324,16 +324,15 @@ export default function LiveOperationsChat({
 
   // Calculate unread count based on persisted last seen message ID.
   // CRITICAL: Only counts messages from OTHER users that arrived AFTER the last-seen marker.
-  // Returns 0 while the persisted marker is still loading (LOADING_SENTINEL) to prevent
-  // a flash of "all messages unread" on every page load.
+  // localStorage is the primary source for lastSeenMessageId, so it's available synchronously
+  // on mount — no loading sentinel needed.
   const unreadCount = React.useMemo(() => {
     // Panel open = everything is "read"
     if (isOpen) return 0;
     
-    // Still loading persisted marker — suppress badge to avoid false positive
-    if (lastSeenMessageId === LOADING_SENTINEL) return 0;
-    
-    const otherUsersMessages = messages.filter(m => m.created_by !== currentUser?.email);
+    // Filter out typing beacons and optimistic messages from count
+    const countableMessages = messages.filter(m => m.message !== '__typing__' && !m._isOptimistic);
+    const otherUsersMessages = countableMessages.filter(m => m.created_by !== currentUser?.email);
     
     if (!lastSeenMessageId) {
       // No last seen = genuinely first time viewing this chat.
@@ -341,19 +340,17 @@ export default function LiveOperationsChat({
       return otherUsersMessages.length;
     }
     
-    // Find the index of the last seen message in the full messages array
-    const lastSeenIndex = messages.findIndex(m => m.id === lastSeenMessageId);
+    // Find the index of the last seen message in the countable messages array
+    const lastSeenIndex = countableMessages.findIndex(m => m.id === lastSeenMessageId);
     if (lastSeenIndex === -1) {
       // Last seen message not found (possibly deleted/archived).
-      // Fallback: compare created_date of last-seen vs messages.
-      // Since we can't compare by date without the original record, treat as 0
-      // to avoid showing incorrect counts. User will see correct count after
-      // opening and closing the panel once (which re-persists the marker).
+      // Treat as 0 to avoid showing incorrect counts. User will see correct
+      // count after opening and closing the panel once (which re-persists the marker).
       return 0;
     }
     
     // Count messages from OTHER users that came AFTER the last seen message
-    const messagesAfterLastSeen = messages.slice(lastSeenIndex + 1);
+    const messagesAfterLastSeen = countableMessages.slice(lastSeenIndex + 1);
     const unreadFromOthers = messagesAfterLastSeen.filter(m => m.created_by !== currentUser?.email);
     return unreadFromOthers.length;
   }, [messages, lastSeenMessageId, isOpen, currentUser?.email]);
