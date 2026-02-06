@@ -80,9 +80,9 @@ export default function PublicCountdownDisplay() {
     queryFn: async () => {
       if (!service) return [];
       
-      // If _isEvent flag, it's an event object — fetch its sessions
+      // If _isEvent flag, it's an event object — fetch its sessions for the selected date
       if (service._isEvent) {
-        const sessions = await base44.entities.Session.filter({ event_id: service.id });
+        const sessions = await base44.entities.Session.filter({ event_id: service.id, date: serviceDate });
         const allSegments = [];
         for (const session of sessions) {
           const segs = await base44.entities.Segment.filter({ session_id: session.id });
