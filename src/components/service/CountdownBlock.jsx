@@ -23,35 +23,46 @@ export default function CountdownBlock({
 }) {
   const { t } = useLanguage();
 
-  const { countdownText, timeRemaining, hasStarted, isLiveAdjusted } = useMemo(() => {
+  const { countdownText, timeRemaining, isInProgress, isLiveAdjusted } = useMemo(() => {
     if (!segment || !segment.start_time) {
-      return { countdownText: '--:--:--', timeRemaining: 0, hasStarted: false, isLiveAdjusted: false };
+      return { countdownText: '--:--:--', timeRemaining: 0, isInProgress: false, isLiveAdjusted: false };
     }
 
-    const startTime = new Date(`${serviceDate}T${segment.start_time}`).getTime();
+    // Parse segment times using serviceDate
+    const [hours, mins] = segment.start_time.split(':').map(Number);
+    const startDate = new Date(currentTime);
+    if (serviceDate) {
+      const [y, m, d] = serviceDate.split('-').map(Number);
+      startDate.setFullYear(y);
+      startDate.setMonth(m - 1);
+      startDate.setDate(d);
+    }
+    startDate.setHours(hours, mins, 0, 0);
+    const startTime = startDate.getTime();
+    
     const endTime = startTime + (segment.duration_min || 0) * 60000;
     const now = currentTime.getTime();
 
     let targetTime = startTime;
-    let hasStartedLocal = false;
+    let isInProgressLocal = false;
 
     if (now >= startTime && now < endTime) {
       // Currently in progress: count down to end
       targetTime = endTime;
-      hasStartedLocal = true;
+      isInProgressLocal = true;
     } else if (now >= endTime) {
       // Already completed
-      return { countdownText: '✓ DONE', timeRemaining: 0, hasStarted: true, isLiveAdjusted: segment.is_live_adjusted || false };
+      return { countdownText: '✓ DONE', timeRemaining: 0, isInProgress: false, isLiveAdjusted: segment.is_live_adjusted || false };
     }
 
     const diffMs = targetTime - now;
     const totalSeconds = Math.floor(diffMs / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
+    const hours_val = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
     const sign = diffMs < 0 ? '-' : '';
-    const absHours = Math.abs(hours);
+    const absHours = Math.abs(hours_val);
     const absMinutes = Math.abs(minutes);
     const absSeconds = Math.abs(seconds);
 
@@ -60,14 +71,14 @@ export default function CountdownBlock({
     return {
       countdownText: countdownStr,
       timeRemaining: Math.max(0, totalSeconds),
-      hasStarted: hasStartedLocal,
+      isInProgress: isInProgressLocal,
       isLiveAdjusted: segment.is_live_adjusted || false
     };
   }, [segment, currentTime, serviceDate]);
 
-  // Color scheme based on state
-  const borderColor = isCurrent && hasStarted ? 'border-pdv-green' : 'border-pdv-yellow';
-  const labelBg = isCurrent && hasStarted ? 'bg-pdv-green text-white' : 'bg-pdv-yellow text-black';
+  // Color scheme based on state: only green if actively in progress
+  const borderColor = isInProgress ? 'border-pdv-green' : 'border-pdv-yellow';
+  const labelBg = isInProgress ? 'bg-pdv-green text-white' : 'bg-pdv-yellow text-black';
 
   return (
     <div className={`relative bg-white rounded-3xl border-4 ${borderColor} p-8 md:p-10 shadow-lg`}>
