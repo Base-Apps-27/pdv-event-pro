@@ -298,9 +298,10 @@ export default function StickyOpsDeck({
                     {activeAction.type}
                   </span>
 
-                  {/* Time Emphasis - Larger and bolder */}
-                  <span className={`text-sm font-bold tabular-nums ml-1 ${
-                    isUrgent ? 'text-amber-800' : 'text-slate-700'
+                  {/* TIME HERO — Primary visual anchor */}
+                  <span className={`text-sm font-black tabular-nums ml-auto px-2.5 py-0.5 rounded-lg border-2 ${
+                    isUrgent ? 'bg-amber-100 text-amber-900 border-amber-400' : 
+                    isPast ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-pdv-teal/10 text-pdv-teal border-pdv-teal/40'
                   }`}>
                     {formatTimeToEST(activeAction.time.toTimeString().substring(0, 5))}
                   </span>
