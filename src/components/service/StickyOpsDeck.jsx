@@ -223,26 +223,25 @@ export default function StickyOpsDeck({
 
   const moreCount = Math.max(0, concurrentCount - 1);
   
-  // Glass Control Deck: Medium/Tranquil theme (Lighter than charcoal)
+  // Glass Control Deck: Light/Tranquil theme
   // Floating with deeper shadow and rim
-  const bgClass = 'bg-slate-500/95 backdrop-blur-xl';
-  const textClass = 'text-white';
+  const bgClass = 'bg-slate-100/95 backdrop-blur-xl';
+  const textClass = 'text-slate-800';
 
   return (
-    // Floating container (raised to bottom-10)
-    // Pointer-events-none on outer to allow clicks through margins
-    <div className="fixed bottom-10 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[600px] z-40 print:hidden flex flex-col justify-end items-center pointer-events-none transition-all duration-300">
+    // Floating container (raised to bottom-20 to allow drop-down list)
+    <div className="fixed bottom-20 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[600px] z-40 print:hidden flex flex-col justify-end items-center pointer-events-none transition-all duration-300">
       
-      {/* Wrapper for the deck (Auto height based on content) */}
+      {/* Wrapper for the deck */}
       <div className="w-full relative pointer-events-auto">
         
         {/* Label Shelf - Attached to top */}
         <div 
           onClick={() => setIsExpanded(!isExpanded)}
-          className={`absolute -top-6 left-4 px-3 py-1 rounded-t-md text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 z-0 ${
+          className={`absolute -top-6 left-4 px-3 py-1 rounded-t-md text-xs font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 z-0 ${
             isUrgent 
               ? 'bg-amber-500 text-black shadow-lg' 
-              : 'bg-slate-500/90 backdrop-blur-md text-slate-200 border-t border-x border-slate-400/50 shadow-sm'
+              : 'bg-slate-200/90 backdrop-blur-md text-slate-600 border-t border-x border-slate-300 shadow-sm'
           }`}
           style={{ height: '24px' }}
         >
@@ -251,129 +250,96 @@ export default function StickyOpsDeck({
 
         {/* Main Content Box - Floating, Rounded, Shadowed */}
         <div 
-          className={`w-full shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] rounded-2xl border border-white/10 ring-1 ring-black/20 overflow-hidden transition-all duration-300 relative z-10 flex flex-col ${bgClass} ${textClass}`}
+          className={`w-full shadow-[0_20px_50px_-12px_rgba(0,0,0,0.2)] rounded-2xl border border-white/40 ring-1 ring-black/5 overflow-hidden transition-all duration-300 relative z-10 flex flex-col ${bgClass} ${textClass}`}
         >
           
-          {/* Expanded List */}
-          
-          {isExpanded && (
-            <div className={`border-b border-white/10 px-4 py-3 space-y-2 max-h-[40vh] overflow-y-auto bg-black/20`}>
-              <p className="text-[9px] uppercase font-bold tracking-widest mb-2 text-gray-500">
-                {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
-              </p>
-            
-              {(isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4)).map((action, idx) => (
-                <div key={idx} className={`flex items-center gap-3 text-sm py-2 border-b border-white/5 last:border-0 ${isPast ? 'opacity-50' : ''}`}>
-                  <span className="font-mono font-medium text-xs text-slate-400">
-                    {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate text-xs text-gray-200">{action.label}</div>
-                    {action.notes && (
-                      <div className={`text-[11px] leading-tight mt-0.5 whitespace-pre-wrap ${isUrgent ? 'text-amber-400' : 'text-slate-400'}`}>
-                        {action.notes}
-                      </div>
-                    )}
-                    <div className="text-[10px] truncate text-slate-500 mt-0.5">
-                      {action.segmentTitle} • {action.type}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              {((isPast && pastActions.length === 0) || (!isPast && upcomingActions.length <= 1)) && (
-                <p className="text-[10px] opacity-30 italic py-1 text-gray-400">No hay más acciones.</p>
-              )}
-            </div>
-          )}
-
-          {/* Main Bar - Always at the bottom of the stack */}
+          {/* Main Bar - Rendered FIRST so children (List) appear BELOW it */}
           <div 
-            className="flex items-center justify-between py-2 px-3 sm:px-4 relative"
+            className="flex items-center justify-between py-3 px-3 sm:px-4 relative z-20"
           >
             {/* Left Side: Countdown + Info */}
             <div 
               className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              {/* Compact Countdown Badge - Medium Theme Adapted */}
-              <div className={`flex flex-col items-center justify-center w-11 h-10 rounded-lg shrink-0 ${
+              {/* Compact Countdown Badge */}
+              <div className={`flex flex-col items-center justify-center w-12 h-11 rounded-xl shrink-0 ${
                 isUrgent ? 'bg-amber-500 text-black shadow-lg animate-pulse' : 
-                isPast ? 'bg-slate-600/50 text-slate-400' : 'bg-slate-600 text-teal-200'
+                isPast ? 'bg-slate-200 text-slate-400' : 'bg-white text-pdv-teal border border-slate-200'
               }`}>
                 {!isServiceDay ? (
-                  <Clock className="w-5 h-5 opacity-60" />
+                  <Clock className="w-6 h-6 opacity-60" />
                 ) : isPast ? (
-                  <CheckCircle2 className="w-5 h-5" />
+                  <CheckCircle2 className="w-6 h-6" />
                 ) : (
-                  <span className="text-base font-bold leading-none">{diffMin}</span>
+                  <span className="text-lg font-bold leading-none">{diffMin}</span>
                 )}
-                <span className="text-[9px] uppercase font-bold opacity-70 leading-none mt-0.5">
+                <span className="text-[10px] uppercase font-bold opacity-70 leading-none mt-0.5">
                   {!isServiceDay ? '' : isPast ? '' : 'min'}
                 </span>
               </div>
 
-              {/* Action Info - Medium Theme Adapted */}
+              {/* Action Info */}
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <Badge variant="outline" className={`h-4 text-[9px] px-1.5 rounded-sm border-0 ${
-                    isUrgent ? 'bg-amber-900/50 text-amber-200' : 
-                    isPast ? 'bg-slate-600/50 text-slate-400' : 'bg-slate-600 text-slate-200'
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant="outline" className={`h-5 text-[10px] px-1.5 rounded-md border ${
+                    isUrgent ? 'bg-amber-100 text-amber-800 border-amber-200' : 
+                    isPast ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-white text-slate-500 border-slate-200'
                   }`}>
                     {activeAction.isPrep ? 'PREP' : 'CUE'}
                   </Badge>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                    isUrgent ? 'text-amber-200' : 
-                    isPast ? 'text-slate-400' : 'text-teal-200'
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${
+                    isUrgent ? 'text-amber-600' : 
+                    isPast ? 'text-slate-400' : 'text-pdv-teal'
                   }`}>
                     {activeAction.type}
                   </span>
-                  <span className={`text-[10px] tabular-nums ${
-                    isUrgent ? 'text-amber-200' : 'text-slate-300'
+                  <span className={`text-[11px] tabular-nums ${
+                    isUrgent ? 'text-amber-700' : 'text-slate-500'
                   }`}>
                     {formatTimeToEST(activeAction.time.toTimeString().substring(0, 5))}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <h4 className={`font-semibold text-sm truncate ${isPast ? 'line-through text-slate-400' : 'text-white'}`}>
+                  <h4 className={`font-semibold text-base truncate ${isPast ? 'line-through text-slate-400' : 'text-slate-900'}`}>
                     {activeAction.label}
                   </h4>
                   {moreCount > 0 && (
-                    <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-slate-600 text-slate-200 border-none shrink-0 flex items-center justify-center">
+                    <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-slate-200 text-slate-600 border-none shrink-0 flex items-center justify-center">
                       +{moreCount}
                     </Badge>
                   )}
-                  {isExpanded ? <ChevronDown className="w-4 h-4 opacity-50 shrink-0 text-slate-200" /> : <ChevronUp className="w-4 h-4 opacity-50 shrink-0 text-slate-200" />}
+                  {isExpanded ? <ChevronUp className="w-5 h-5 opacity-50 shrink-0 text-slate-500" /> : <ChevronDown className="w-5 h-5 opacity-50 shrink-0 text-slate-500" />}
                 </div>
               </div>
-              </div>
+            </div>
 
-              {/* Right Side: Actions (Scroll + Chat) - Medium Theme Adapted */}
-              <div className="flex items-center gap-1 pl-2">
+            {/* Right Side: Actions (Scroll + Chat) */}
+            <div className="flex items-center gap-2 pl-2">
               {/* Jump to Segment */}
               {activeAction.segmentId && (
                 <Button
                   size="icon"
                   variant="ghost"
-                  className={`h-9 w-9 rounded-full hover:bg-slate-600 text-slate-300 hover:text-white`}
+                  className={`h-10 w-10 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700`}
                   onClick={(e) => {
                     e.stopPropagation();
                     onScrollToSegment && onScrollToSegment({ id: activeAction.segmentId });
                   }}
                 >
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-5 h-5" />
                 </Button>
               )}
 
-              {/* Chat Trigger (Integrated) */}
+              {/* Chat Trigger */}
               {onToggleChat && (
-                <div className="relative ml-1 border-l border-white/20 pl-2">
+                <div className="relative ml-1 border-l border-slate-200 pl-3">
                   <Button
                     size="icon"
-                    className={`h-9 w-9 rounded-full transition-all ${
+                    className={`h-10 w-10 rounded-full transition-all ${
                       chatOpen 
-                        ? 'bg-slate-600 text-white hover:bg-slate-500' 
-                        : 'bg-transparent text-teal-200 border-2 border-teal-200 hover:bg-teal-600 hover:text-white shadow-sm'
+                        ? 'bg-slate-200 text-slate-600 hover:bg-slate-300' 
+                        : 'bg-white text-pdv-teal border-2 border-pdv-teal hover:bg-pdv-teal hover:text-white shadow-sm'
                     }`}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -384,7 +350,7 @@ export default function StickyOpsDeck({
                   </Button>
                   {/* Unread Badge */}
                   {!chatOpen && chatUnreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-sm">
+                    <span className="absolute -top-1 -right-1 h-5 min-w-[1.25rem] px-1 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center border-2 border-white shadow-sm">
                       {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
                     </span>
                   )}
@@ -392,6 +358,39 @@ export default function StickyOpsDeck({
               )}
             </div>
           </div>
+          
+          {/* Expanded List - Rendered SECOND so it appears BELOW the bar */}
+          {isExpanded && (
+            <div className={`border-t border-slate-200 px-4 py-3 space-y-3 max-h-[40vh] overflow-y-auto bg-slate-50/80`}>
+              <p className="text-[10px] uppercase font-bold tracking-widest mb-2 text-slate-400">
+                {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
+              </p>
+            
+              {(isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4)).map((action, idx) => (
+                <div key={idx} className={`flex items-center gap-3 text-sm py-2 border-b border-slate-200 last:border-0 ${isPast ? 'opacity-50' : ''}`}>
+                  <span className="font-mono font-medium text-xs text-slate-400">
+                    {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate text-sm text-slate-700">{action.label}</div>
+                    {action.notes && (
+                      <div className={`text-xs leading-snug mt-1 whitespace-pre-wrap ${isUrgent ? 'text-amber-600' : 'text-slate-500'}`}>
+                        {action.notes}
+                      </div>
+                    )}
+                    <div className="text-[11px] truncate text-slate-400 mt-0.5">
+                      {action.segmentTitle} • {action.type}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {((isPast && pastActions.length === 0) || (!isPast && upcomingActions.length <= 1)) && (
+                <p className="text-xs opacity-40 italic py-2 text-slate-400">No hay más acciones.</p>
+              )}
+            </div>
+          )}
+
         </div>
       </div>
     </div>
