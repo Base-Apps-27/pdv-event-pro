@@ -123,7 +123,8 @@ export default function ServiceProgramView({
   if (isCustomService) {
     return (
       <div className="space-y-6">
-        {/* Sticky Ops Deck */}
+        {/* Sticky Ops Deck - PERMISSION-GATED: hidden for users without view_live_chat */}
+        {!hideOpsDeck && (
         <StickyOpsDeck 
           segments={adjustedServiceData.segments || []}
           sessionDate={adjustedServiceData.date}
@@ -133,6 +134,7 @@ export default function ServiceProgramView({
           chatUnreadCount={chatUnreadCount}
           chatOpen={chatOpen}
         />
+        )}
 
         {/* Live Status Card for Custom Services */}
         <LiveStatusCard 
