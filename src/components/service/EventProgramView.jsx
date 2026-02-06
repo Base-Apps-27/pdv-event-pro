@@ -385,6 +385,12 @@ export default function EventProgramView({
                           <span><strong>ALABANZA:</strong> {normalizeName(session.worship_leader)}</span>
                         </>
                       )}
+                      {session.hospitality_team && (
+                        <>
+                          <span className="text-gray-400">|</span>
+                          <span><strong>🍽️ HOSP:</strong> {normalizeName(session.hospitality_team)}</span>
+                        </>
+                      )}
                     </div>
                   )}
 

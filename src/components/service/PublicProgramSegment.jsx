@@ -540,8 +540,14 @@ export default function PublicProgramSegment({
             )}
             {getData('prep_instructions') && (
               <div className="bg-amber-50 border-l-4 border-amber-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-amber-800 block mb-1">Prep:</span>
-                <p className="text-amber-900 leading-snug">{getData('prep_instructions')}</p>
+                <span className="font-bold text-amber-800 block mb-1">{t('live.prep') || 'Prep'}:</span>
+                <p className="text-amber-900 leading-snug whitespace-pre-wrap">{getData('prep_instructions')}</p>
+              </div>
+            )}
+            {getData('microphone_assignments') && (
+              <div className="bg-red-50 border-l-4 border-red-500 pl-3 py-2 text-xs rounded-r">
+                <span className="font-bold text-red-800 block mb-1">Mics:</span>
+                <p className="text-red-900 leading-snug">{getData('microphone_assignments')}</p>
               </div>
             )}
           </div>
