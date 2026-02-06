@@ -161,7 +161,7 @@ export default function Events() {
     <div className="p-6 md:p-8 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-gray-200 pb-6">
         <div>
-          <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">{t('events.title')}</h1>
+          <h1 className="text-5xl text-gray-900 uppercase tracking-tight">{t('events.title')}</h1>
           <p className="text-gray-500 mt-1 font-medium">{t('events.subtitle')}</p>
         </div>
         {hasPermission(user, 'create_events') && (

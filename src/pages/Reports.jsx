@@ -1347,7 +1347,7 @@ export default function Reports() {
       <div className="p-6 md:p-8 space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 uppercase">{t('reports.title')}</h1>
+            <h1 className="text-3xl text-gray-900 uppercase">{t('reports.title')}</h1>
             <p className="text-gray-600 mt-1">{t('reports.subtitle')}</p>
           </div>
           <div className="flex gap-3">
@@ -1510,7 +1510,7 @@ export default function Reports() {
 
             {/* Standard header for screen view */}
             <div className="text-center mb-3 border-b border-gray-300 pb-2 print:hidden">
-              <h1 className="text-xl font-bold text-gray-900 inline">{selectedEvent.name}</h1>
+              <h1 className="text-xl text-gray-900 inline">{selectedEvent.name}</h1>
               {selectedEvent.theme && (
                 <p className="text-sm italic inline ml-2" style={{ color: '#8DC63F' }}>"{selectedEvent.theme}"</p>
               )}

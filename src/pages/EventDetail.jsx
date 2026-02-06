@@ -175,7 +175,7 @@ export default function EventDetail() {
              </Button>
              <div className="flex-1 md:flex-none">
                <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-1">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 uppercase font-['Bebas_Neue'] tracking-tight">{e.name}</h1>
+              <h1 className="text-4xl md:text-5xl text-gray-900 uppercase tracking-tight">{e.name}</h1>
               <Badge variant="outline" className="text-xs uppercase tracking-wider border-gray-300 text-gray-500">{e.year}</Badge>
               {e.origin === 'template' && (
                 <TooltipProvider>
