@@ -10,7 +10,11 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
  * PublicCountdownDisplay
  * 
  * Public-facing TV display for live service status.
- * Shows countdown (current + next segment) + upcoming coordinator actions.
+ * Segment determination logic mirrors LiveStatusCard exactly:
+ *   1. Pre-launch: nothing in progress → negative countdown to first segment start
+ *   2. In-progress: segment is live → countdown to segment end
+ *   3. Up-next: next segment after now → countdown to its start
+ * 
  * Real-time WebSocket subscription — zero delay.
  * No authentication, no interaction, TV-optimized layout.
  */
@@ -20,11 +24,11 @@ export default function PublicCountdownDisplay() {
   const [serviceId, setServiceId] = useState(null);
   const [serviceDate, setServiceDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Tick every 100ms for smooth countdown display
+  // Tick every second for countdown display (100ms is wasteful for seconds-precision text)
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 100);
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -35,16 +39,15 @@ export default function PublicCountdownDisplay() {
     const evtId = params.get('event_id');
     const dt = params.get('date');
     if (svcId) setServiceId(svcId);
-    if (evtId) setServiceId(evtId); // event_id also sets serviceId (fetched differently)
+    if (evtId) setServiceId(evtId);
     if (dt) setServiceDate(dt);
   }, []);
 
   // Fetch current service (or specified service/event)
   const { data: service } = useQuery({
-    queryKey: ['service', serviceId, serviceDate],
+    queryKey: ['tv-service', serviceId, serviceDate],
     queryFn: async () => {
       if (!serviceId) {
-        // Auto-detect current service (today's date, closest to now)
         const todayStr = serviceDate;
         const results = await base44.entities.Service.filter({ date: todayStr, status: 'active' });
         if (results?.length > 0) {
@@ -57,30 +60,24 @@ export default function PublicCountdownDisplay() {
         return null;
       }
       
-      // Try to fetch as Service first
       const svcResults = await base44.entities.Service.filter({ id: serviceId });
       if (svcResults?.[0]) return svcResults[0];
       
-      // If not found, try as Event and return it (segments will be fetched from event)
       const evtResults = await base44.entities.Event.filter({ id: serviceId });
       if (evtResults?.[0]) {
-        // Return event as a pseudo-service object
-        const evt = evtResults[0];
-        return { ...evt, _isEvent: true, name: evt.name };
+        return { ...evtResults[0], _isEvent: true };
       }
-      
       return null;
     },
     enabled: !!(serviceId || serviceDate)
   });
 
-  // Fetch segments for this service (via sessions if service is event-based or event itself)
+  // Fetch segments
   const { data: segments = [] } = useQuery({
-    queryKey: ['segments', service?.id, serviceDate],
+    queryKey: ['tv-segments', service?.id, serviceDate],
     queryFn: async () => {
       if (!service) return [];
       
-      // If _isEvent flag, it's an event object — fetch its sessions for the selected date
       if (service._isEvent) {
         const sessions = await base44.entities.Session.filter({ event_id: service.id, date: serviceDate });
         const allSegments = [];
@@ -88,14 +85,9 @@ export default function PublicCountdownDisplay() {
           const segs = await base44.entities.Segment.filter({ session_id: session.id });
           allSegments.push(...segs);
         }
-        return allSegments.sort((a, b) => {
-          const timeA = a.start_time ? new Date(`${serviceDate}T${a.start_time}`).getTime() : 0;
-          const timeB = b.start_time ? new Date(`${serviceDate}T${b.start_time}`).getTime() : 0;
-          return timeA - timeB;
-        });
+        return allSegments;
       }
       
-      // If service has event_id, fetch sessions + segments
       if (service.event_id) {
         const sessions = await base44.entities.Session.filter({ event_id: service.event_id });
         const allSegments = [];
@@ -103,18 +95,12 @@ export default function PublicCountdownDisplay() {
           const segs = await base44.entities.Segment.filter({ session_id: session.id });
           allSegments.push(...segs);
         }
-        return allSegments.sort((a, b) => {
-          const timeA = a.start_time ? new Date(`${serviceDate}T${a.start_time}`).getTime() : 0;
-          const timeB = b.start_time ? new Date(`${serviceDate}T${b.start_time}`).getTime() : 0;
-          return timeA - timeB;
-        });
+        return allSegments;
       }
       
-      // If service has segments directly, fetch them
       if (service.segments && Array.isArray(service.segments)) {
         return service.segments;
       }
-      
       return [];
     },
     enabled: !!service
@@ -123,33 +109,88 @@ export default function PublicCountdownDisplay() {
   // Subscribe to segment updates (real-time)
   useEffect(() => {
     if (!service) return;
-    
-    const unsub = base44.entities.Segment.subscribe((event) => {
-      // Invalidate segments query on any segment change
-      // (This will trigger a refetch automatically via React Query)
+    const unsub = base44.entities.Segment.subscribe(() => {
+      // React Query will refetch on invalidation
     });
-    
     return unsub;
   }, [service]);
 
-  // Determine current and next segment
-  const { currentSegment, nextSegment } = useMemo(() => {
-    if (!segments || segments.length === 0) return { currentSegment: null, nextSegment: null };
-    
-    const now = currentTime.getTime();
-    const segmentsWithTimes = segments.map(seg => {
-      const startTime = new Date(`${serviceDate}T${seg.start_time || '00:00'}`).getTime();
-      const endTime = startTime + (seg.duration_min || 0) * 60000;
-      return { ...seg, startTime, endTime };
-    });
-    
-    const current = segmentsWithTimes.find(s => s.startTime <= now && now < s.endTime);
-    const upcoming = segmentsWithTimes.filter(s => s.startTime > now).sort((a, b) => a.startTime - b.startTime);
-    
-    return {
-      currentSegment: current || segmentsWithTimes[0],
-      nextSegment: current ? upcoming[0] : (upcoming[0] ? upcoming[1] : null)
-    };
+  // ─── CANONICAL TIME PARSER (mirrors LiveStatusCard.getTimeDate) ───
+  const getTimeDate = (timeStr) => {
+    if (!timeStr) return null;
+    const [hours, mins] = timeStr.split(':').map(Number);
+    const date = new Date(currentTime);
+    if (serviceDate) {
+      const [y, m, d] = serviceDate.split('-').map(Number);
+      date.setFullYear(y);
+      date.setMonth(m - 1);
+      date.setDate(d);
+    }
+    date.setHours(hours, mins, 0, 0);
+    return date;
+  };
+
+  // ─── SEGMENT DETERMINATION (mirrors LiveStatusCard exactly) ───
+  const { currentSegment, nextSegment, preLaunchSegment } = useMemo(() => {
+    if (!segments || segments.length === 0) {
+      return { currentSegment: null, nextSegment: null, preLaunchSegment: null };
+    }
+
+    // Filter out breaks, require start_time
+    const validSegments = segments
+      .filter(s => s.start_time && s.segment_type !== 'Break' && s.segment_type !== 'break')
+      .sort((a, b) => {
+        const tA = getTimeDate(a.start_time);
+        const tB = getTimeDate(b.start_time);
+        if (!tA && !tB) return 0;
+        if (!tA) return 1;
+        if (!tB) return -1;
+        return tA - tB;
+      });
+
+    if (validSegments.length === 0) {
+      return { currentSegment: null, nextSegment: null, preLaunchSegment: null };
+    }
+
+    // Check isToday (same logic as LiveStatusCard)
+    const isToday = (() => {
+      if (!serviceDate) return true;
+      const [y, m, d] = serviceDate.split('-').map(Number);
+      const targetDate = new Date(y, m - 1, d);
+      targetDate.setHours(0, 0, 0, 0);
+      const today = new Date(currentTime);
+      today.setHours(0, 0, 0, 0);
+      return targetDate.getTime() === today.getTime();
+    })();
+
+    if (!isToday) {
+      return { currentSegment: null, nextSegment: null, preLaunchSegment: null };
+    }
+
+    // Find current: segment where start <= now <= end (using end_time field like LiveStatusCard)
+    const current = validSegments.find(s => {
+      const start = getTimeDate(s.start_time);
+      const end = s.end_time ? getTimeDate(s.end_time) : (start ? new Date(start.getTime() + (s.duration_min || 0) * 60000) : null);
+      return start && end && currentTime >= start && currentTime <= end;
+    }) || null;
+
+    // Find next: first segment starting after now
+    const next = validSegments.find(s => {
+      const start = getTimeDate(s.start_time);
+      return start && start > currentTime;
+    }) || null;
+
+    // Pre-launch: if nothing is current, countdown to FIRST segment (like LiveStatusCard.upNextCountdown)
+    let preLaunch = null;
+    if (!current) {
+      const first = validSegments[0];
+      const firstStart = getTimeDate(first.start_time);
+      if (firstStart && currentTime < firstStart) {
+        preLaunch = first;
+      }
+    }
+
+    return { currentSegment: current, nextSegment: next, preLaunchSegment: preLaunch };
   }, [segments, currentTime, serviceDate]);
 
   // Fallback: if no service/segments, show loading or placeholder
@@ -164,9 +205,11 @@ export default function PublicCountdownDisplay() {
     );
   }
 
+  // All done for today
+  const allDone = !currentSegment && !nextSegment && !preLaunchSegment;
+
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 p-4 md:p-6 flex flex-col items-center justify-center overflow-hidden">
-      {/* TV-Optimized Container: Full-screen, centered, responsive */}
       <div className="w-full max-w-6xl flex flex-col gap-8 items-center">
         
         {/* Header: Service Name & Current Time */}
@@ -179,39 +222,64 @@ export default function PublicCountdownDisplay() {
           </div>
         </div>
 
-        {/* Countdown Blocks: Current + Next */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-          {/* Current Segment */}
-          {currentSegment && (
-            <CountdownBlock
-              segment={currentSegment}
-              label={t('live.inProgress')}
-              isCurrent={true}
-              currentTime={currentTime}
-              serviceDate={serviceDate}
-            />
-          )}
+        {allDone ? (
+          <div className="text-center text-slate-400 text-xl italic py-16">
+            {t('live.endOfProgram')}
+          </div>
+        ) : (
+          <>
+            {/* Countdown Blocks */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
 
-          {/* Next Segment */}
-          {nextSegment && (
-            <CountdownBlock
-              segment={nextSegment}
-              label={t('live.upNext')}
-              isCurrent={false}
-              currentTime={currentTime}
-              serviceDate={serviceDate}
-            />
-          )}
-        </div>
+              {/* LEFT PANEL: In-Progress OR Pre-Launch */}
+              {currentSegment ? (
+                <CountdownBlock
+                  segment={currentSegment}
+                  displayMode="in-progress"
+                  currentTime={currentTime}
+                  serviceDate={serviceDate}
+                  getTimeDate={getTimeDate}
+                />
+              ) : preLaunchSegment ? (
+                <CountdownBlock
+                  segment={preLaunchSegment}
+                  displayMode="pre-launch"
+                  currentTime={currentTime}
+                  serviceDate={serviceDate}
+                  getTimeDate={getTimeDate}
+                />
+              ) : (
+                <div className="bg-white rounded-3xl border-4 border-slate-200 p-8 md:p-10 shadow-lg flex items-center justify-center">
+                  <p className="text-slate-400 italic text-lg">{t('live.nothingNow')}</p>
+                </div>
+              )}
 
-        {/* Coordinator Actions */}
-        {(currentSegment || nextSegment) && (
-          <CoordinatorActionsDisplay
-            currentSegment={currentSegment}
-            nextSegment={nextSegment}
-            currentTime={currentTime}
-            serviceDate={serviceDate}
-          />
+              {/* RIGHT PANEL: Next Segment */}
+              {nextSegment ? (
+                <CountdownBlock
+                  segment={nextSegment}
+                  displayMode="upcoming"
+                  currentTime={currentTime}
+                  serviceDate={serviceDate}
+                  getTimeDate={getTimeDate}
+                />
+              ) : (
+                <div className="bg-white rounded-3xl border-4 border-slate-200 p-8 md:p-10 shadow-lg flex items-center justify-center">
+                  <p className="text-slate-400 italic text-lg">{t('live.endOfProgram')}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Coordinator Actions */}
+            {(currentSegment || nextSegment) && (
+              <CoordinatorActionsDisplay
+                currentSegment={currentSegment}
+                nextSegment={nextSegment}
+                currentTime={currentTime}
+                serviceDate={serviceDate}
+              />
+            )}
+          </>
         )}
       </div>
     </div>

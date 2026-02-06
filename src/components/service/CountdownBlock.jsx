@@ -6,86 +6,119 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
  * CountdownBlock
  * 
  * TV-optimized countdown display for a segment.
- * Shows:
- * - Countdown timer (HH:MM:SS or negative if not started)
- * - Segment title
- * - Presenter/info
- * - Live-adjusted indicator if applicable
  * 
- * No interaction, large typography.
+ * displayMode:
+ *  - 'in-progress': segment is live, counts DOWN to end_time. Green border + "EN CURSO".
+ *  - 'pre-launch':  nothing live yet, counts DOWN to first segment start. Teal border + "INICIANDO EN".
+ *  - 'upcoming':    next segment after current, counts DOWN to its start. Yellow border + "A CONTINUACIÓN".
+ * 
+ * Props:
+ *  - segment: the segment object
+ *  - displayMode: 'in-progress' | 'pre-launch' | 'upcoming'
+ *  - currentTime: Date — the live clock
+ *  - serviceDate: 'YYYY-MM-DD'
+ *  - getTimeDate: (timeStr) => Date — canonical time parser from parent
  */
 export default function CountdownBlock({
   segment,
-  label,
-  isCurrent = true,
+  displayMode = 'upcoming',
   currentTime,
-  serviceDate
+  serviceDate,
+  getTimeDate
 }) {
   const { t } = useLanguage();
 
-  const { countdownText, timeRemaining, isInProgress, isLiveAdjusted } = useMemo(() => {
-    if (!segment || !segment.start_time) {
-      return { countdownText: '--:--:--', timeRemaining: 0, isInProgress: false, isLiveAdjusted: false };
-    }
-
-    // Parse segment times using serviceDate
-    const [hours, mins] = segment.start_time.split(':').map(Number);
-    const startDate = new Date(currentTime);
+  // Canonical time parser — either from parent or inline fallback
+  const parseTime = (timeStr) => {
+    if (getTimeDate) return getTimeDate(timeStr);
+    if (!timeStr) return null;
+    const [h, m] = timeStr.split(':').map(Number);
+    const d = new Date(currentTime);
     if (serviceDate) {
-      const [y, m, d] = serviceDate.split('-').map(Number);
-      startDate.setFullYear(y);
-      startDate.setMonth(m - 1);
-      startDate.setDate(d);
+      const [y, mo, da] = serviceDate.split('-').map(Number);
+      d.setFullYear(y); d.setMonth(mo - 1); d.setDate(da);
     }
-    startDate.setHours(hours, mins, 0, 0);
-    const startTime = startDate.getTime();
-    
-    const endTime = startTime + (segment.duration_min || 0) * 60000;
+    d.setHours(h, m, 0, 0);
+    return d;
+  };
+
+  const { countdownText, isLiveAdjusted } = useMemo(() => {
+    if (!segment || !segment.start_time) {
+      return { countdownText: '--:--:--', isLiveAdjusted: false };
+    }
+
+    const startAt = parseTime(segment.start_time);
+    const endAt = segment.end_time
+      ? parseTime(segment.end_time)
+      : (startAt ? new Date(startAt.getTime() + (segment.duration_min || 0) * 60000) : null);
+
     const now = currentTime.getTime();
+    let targetMs;
 
-    let targetTime = startTime;
-    let isInProgressLocal = false;
-
-    if (now >= startTime && now < endTime) {
-      // Currently in progress: count down to end
-      targetTime = endTime;
-      isInProgressLocal = true;
-    } else if (now >= endTime) {
-      // Already completed
-      return { countdownText: '✓ DONE', timeRemaining: 0, isInProgress: false, isLiveAdjusted: segment.is_live_adjusted || false };
+    if (displayMode === 'in-progress') {
+      // Count down to segment END
+      targetMs = endAt ? endAt.getTime() : now;
+    } else {
+      // pre-launch or upcoming: count down to segment START
+      targetMs = startAt ? startAt.getTime() : now;
     }
 
-    const diffMs = targetTime - now;
-    const totalSeconds = Math.floor(diffMs / 1000);
-    const hours_val = Math.floor(totalSeconds / 3600);
+    const diffMs = targetMs - now;
+
+    // If countdown has passed (shouldn't happen with correct mode), show done
+    if (displayMode === 'in-progress' && diffMs <= 0) {
+      return { countdownText: '✓ DONE', isLiveAdjusted: segment.is_live_adjusted || false };
+    }
+
+    const absDiffMs = Math.abs(diffMs);
+    const totalSeconds = Math.floor(absDiffMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    const sign = diffMs < 0 ? '-' : '';
-    const absHours = Math.abs(hours_val);
-    const absMinutes = Math.abs(minutes);
-    const absSeconds = Math.abs(seconds);
+    // Pre-launch shows negative sign (counting down to future start)
+    const prefix = (displayMode === 'pre-launch') ? '-' : '';
 
-    const countdownStr = `${sign}${String(absHours).padStart(2, '0')}:${String(absMinutes).padStart(2, '0')}:${String(absSeconds).padStart(2, '0')}`;
+    const text = `${prefix}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
     return {
-      countdownText: countdownStr,
-      timeRemaining: Math.max(0, totalSeconds),
-      isInProgress: isInProgressLocal,
+      countdownText: text,
       isLiveAdjusted: segment.is_live_adjusted || false
     };
-  }, [segment, currentTime, serviceDate]);
+  }, [segment, currentTime, serviceDate, displayMode]);
 
-  // Color scheme based on state: only green if actively in progress
-  const borderColor = isInProgress ? 'border-pdv-green' : 'border-pdv-yellow';
-  const labelBg = isInProgress ? 'bg-pdv-green text-white' : 'bg-pdv-yellow text-black';
+  // Visual config per mode
+  const modeConfig = {
+    'in-progress': {
+      borderColor: 'border-green-500',
+      labelBg: 'bg-green-600 text-white',
+      label: t('live.inProgress'),
+      countdownColor: 'text-green-700',
+    },
+    'pre-launch': {
+      borderColor: 'border-pdv-teal',
+      labelBg: 'bg-pdv-teal text-white',
+      label: language === 'es' ? 'INICIANDO EN' : 'STARTING IN',
+      countdownColor: 'text-pdv-teal',
+    },
+    'upcoming': {
+      borderColor: 'border-slate-300',
+      labelBg: 'bg-slate-600 text-white',
+      label: t('live.upNext'),
+      countdownColor: 'text-slate-700',
+    }
+  };
+
+  // Access language for label fallback
+  const { language } = useLanguage();
+  const config = modeConfig[displayMode] || modeConfig['upcoming'];
 
   return (
-    <div className={`relative bg-white rounded-3xl border-4 ${borderColor} p-8 md:p-10 shadow-lg`}>
+    <div className={`relative bg-white rounded-3xl border-4 ${config.borderColor} p-8 md:p-10 shadow-lg`}>
       
       {/* Label */}
-      <div className={`absolute -top-4 left-8 px-4 py-2 rounded-full text-xs md:text-sm font-bold uppercase tracking-wider ${labelBg} shadow-lg`}>
-        {label}
+      <div className={`absolute -top-4 left-8 px-4 py-2 rounded-full text-xs md:text-sm font-bold uppercase tracking-wider ${config.labelBg} shadow-lg`}>
+        {config.label}
       </div>
 
       {/* Main Content */}
@@ -93,11 +126,11 @@ export default function CountdownBlock({
         
         {/* Countdown Timer — HERO ELEMENT */}
         <div className="text-center">
-          <div className="text-7xl md:text-8xl font-black text-pdv-teal font-mono tracking-tighter leading-none mb-2">
+          <div className={`text-7xl md:text-8xl font-black font-mono tracking-tighter leading-none mb-2 ${config.countdownColor}`}>
             {countdownText}
           </div>
           {isLiveAdjusted && (
-            <div className="text-sm md:text-base font-bold text-pdv-yellow uppercase tracking-widest">
+            <div className="text-sm md:text-base font-bold text-amber-500 uppercase tracking-widest">
               {t('live.adjusted')}
             </div>
           )}
@@ -129,10 +162,12 @@ export default function CountdownBlock({
         {/* Start Time Display */}
         <div className="text-center pt-4 border-t border-slate-200">
           <div className="text-sm md:text-base text-slate-500 uppercase tracking-widest">
-            {t('live.start')}
+            {displayMode === 'in-progress' ? (language === 'es' ? 'TERMINA' : 'ENDS') : t('live.start')}
           </div>
           <div className="text-2xl md:text-3xl font-black text-pdv-teal font-mono mt-1">
-            {formatTimeToEST(segment.start_time)}
+            {displayMode === 'in-progress' && segment.end_time
+              ? formatTimeToEST(segment.end_time)
+              : formatTimeToEST(segment.start_time)}
           </div>
         </div>
 
