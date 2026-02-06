@@ -354,17 +354,11 @@ export default function LiveOperationsChat({
     }
   }, [isOpen]);
 
-  // Calculate unread count based on persisted last seen message ID.
-  // CRITICAL: Only counts messages from OTHER users that arrived AFTER the last-seen marker.
-  //
-  // HYDRATION GUARD: lastSeenMessageId starts null and is populated async by the hydration
-  // effect (localStorage read or User entity fetch). During that brief window, we return 0
-  // instead of the full message count. This prevents the "flash of full unread count" on
-  // cache clear / new device / refresh. The hydration effect resolves within ~100ms for
-  // localStorage and ~500ms for User entity fetch, after which the correct count appears.
-  // HYDRATION GUARD: Suppresses unread count until lastSeenMessageId has been resolved
-  // from localStorage or User entity. Prevents "flash of full unread count" on cache clear.
-  // Set to true by the hydration useEffect above once the value is resolved (even if null).
+  // HYDRATION GUARD for unread count:
+  // lastSeenMessageId starts null and is populated async by the hydration effect above
+  // (localStorage read ~instant, User entity fetch ~500ms). During that window, we suppress
+  // the unread count to 0 to prevent "flash of full count" on cache clear / new device.
+  // Set to true by the hydration effect once the value is resolved (even if null).
   // Reset when chatContextKey changes (user switches between events/services).
   const [lastSeenHydrated, setLastSeenHydrated] = useState(false);
   const prevChatContextKeyRef = useRef(chatContextKey);
