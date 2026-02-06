@@ -255,13 +255,13 @@ export default function StickyOpsDeck({
           className={`w-full shadow-[0_20px_80px_-8px_rgba(0,0,0,0.45),0_8px_30px_-4px_rgba(0,0,0,0.25)] rounded-2xl border border-white/60 ring-1 ring-black/15 overflow-hidden transition-all duration-300 relative z-10 flex flex-col ${bgClass} ${textClass}`}
         >
           
-          {/* Main Bar - Rendered FIRST so children (List) appear BELOW it */}
+          {/* Main Bar — compact vertical padding on mobile */}
           <div 
-            className="flex items-center justify-between py-4 px-4 sm:px-6 relative z-20"
+            className="flex items-center justify-between py-3 px-3 sm:px-5 relative z-20"
           >
             {/* Left Side: Countdown + Info */}
             <div 
-              className="flex items-center gap-5 flex-1 min-w-0 cursor-pointer"
+              className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 cursor-pointer"
               onClick={() => setIsExpanded(!isExpanded)}
             >
               {/* Countdown Badge — compact on mobile, roomy on desktop */}
@@ -338,20 +338,20 @@ export default function StickyOpsDeck({
               </div>
             </div>
 
-            {/* Right Side: Actions (Scroll + Chat) */}
-            <div className="flex items-center gap-3 pl-3 border-l border-slate-200 ml-2">
+            {/* Right Side: Actions (Scroll + Chat) — tighter on mobile */}
+            <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-slate-200 ml-1 sm:ml-2">
               {/* Jump to Segment */}
               {activeAction.segmentId && (
                 <Button
                   size="icon"
                   variant="ghost"
-                  className={`h-11 w-11 rounded-full hover:bg-slate-200 text-slate-500 hover:text-slate-800`}
+                  className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full hover:bg-slate-200 text-slate-500 hover:text-slate-800`}
                   onClick={(e) => {
                     e.stopPropagation();
                     onScrollToSegment && onScrollToSegment({ id: activeAction.segmentId });
                   }}
                 >
-                  <ArrowRight className="w-6 h-6" />
+                  <ArrowRight className="w-5 h-5" />
                 </Button>
               )}
 
@@ -360,7 +360,7 @@ export default function StickyOpsDeck({
                 <div className="relative">
                   <Button
                     size="icon"
-                    className={`h-11 w-11 rounded-full transition-all ${
+                    className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full transition-all ${
                       chatOpen 
                         ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' 
                         : 'bg-white text-pdv-teal border-2 border-pdv-teal hover:bg-pdv-teal hover:text-white shadow-sm'
@@ -370,7 +370,7 @@ export default function StickyOpsDeck({
                       onToggleChat();
                     }}
                   >
-                    {chatOpen ? <ChevronDown className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+                    {chatOpen ? <ChevronDown className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
                   </Button>
                   {/* Unread Badge */}
                   {!chatOpen && chatUnreadCount > 0 && (
