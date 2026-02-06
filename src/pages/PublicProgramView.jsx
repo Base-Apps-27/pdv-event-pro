@@ -825,10 +825,10 @@ export default function PublicProgramView() {
                 return (
                   <div className="w-full max-w-full">
                     <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-                      <SelectTrigger className="w-full max-w-full overflow-hidden bg-white border-2 border-gray-400 text-gray-900 h-12">
+                      <SelectTrigger className="w-full max-w-full overflow-hidden border-2 h-12 ppv-text" style={{ backgroundColor: 'var(--ppv-select-bg)', borderColor: 'var(--ppv-select-border)' }}>
                         <SelectValue placeholder={t('public.selectEvent')} />
                       </SelectTrigger>
-                      <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
+                      <SelectContent className="max-w-[calc(100vw-2rem)]" style={{ backgroundColor: 'var(--ppv-select-bg)' }}>
                         {availableEvents.map((event) => (
                                                         <SelectItem key={event.id} value={event.id}>
                                                           {event.name.length > 25 ? event.name.substring(0, 25) + '...' : event.name} - {formatDateET(event.start_date)}
