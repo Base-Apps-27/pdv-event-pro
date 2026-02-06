@@ -403,13 +403,13 @@ export default function StickyOpsDeck({
                     {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-sm text-slate-800 leading-snug">{action.label}</div>
+                    <div className="font-bold text-sm ppv-text leading-snug">{action.label}</div>
                     {action.notes && (
-                      <div className={`text-xs leading-relaxed mt-1 whitespace-pre-wrap line-clamp-4 ${isUrgent ? 'text-amber-700' : 'text-slate-600'}`}>
+                      <div className={`text-xs leading-relaxed mt-1 whitespace-pre-wrap line-clamp-4 ${isUrgent ? 'text-amber-700' : 'ppv-text-secondary'}`}>
                         {action.notes}
                       </div>
                     )}
-                    <div className="text-[10px] font-medium truncate text-slate-400 mt-1">
+                    <div className="text-[10px] font-medium truncate ppv-text-muted mt-1">
                       {action.segmentTitle} • <span className="uppercase tracking-wide">{action.type}</span>
                     </div>
                   </div>
@@ -418,7 +418,7 @@ export default function StickyOpsDeck({
               })}
               
               {((isPast && pastActions.length === 0) || (!isPast && upcomingActions.length <= 1)) && (
-                <p className="text-sm opacity-50 italic py-2 text-slate-500">No hay más acciones.</p>
+                <p className="text-sm opacity-50 italic py-2 ppv-text-secondary">No hay más acciones.</p>
               )}
             </div>
           )}
