@@ -227,8 +227,8 @@ export default function StickyOpsDeck({
   
   // Glass Control Deck: Light/Tranquil theme - High Contrast & Large Text
   // Floating with deeper shadow and rim
-  const bgClass = 'bg-slate-100/95 backdrop-blur-xl';
-  const textClass = 'text-slate-900';
+  const bgClass = 'ppv-bg-surface backdrop-blur-xl';
+  const textClass = 'ppv-text';
 
   return (
     // Floating container
@@ -243,7 +243,7 @@ export default function StickyOpsDeck({
           className={`absolute -top-7 left-4 px-4 py-1.5 rounded-t-lg text-xs font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 z-0 ${
             isUrgent 
               ? 'bg-amber-500 text-black shadow-lg' 
-              : 'bg-slate-200/90 backdrop-blur-md text-slate-700 border-t border-x border-slate-300 shadow-sm'
+              : 'ppv-bg-muted backdrop-blur-md ppv-text-secondary border-t border-x ppv-border shadow-sm'
           }`}
           style={{ height: '28px' }}
         >
@@ -296,8 +296,8 @@ export default function StickyOpsDeck({
                   </Badge>
                   
                   <span className={`text-[10px] font-bold uppercase tracking-wider shrink-0 ${
-                    isUrgent ? 'text-amber-700' : 
-                    isPast ? 'text-slate-400' : 'text-slate-500'
+                   isUrgent ? 'text-amber-700' : 
+                   isPast ? 'ppv-text-muted' : 'ppv-text-secondary'
                   }`}>
                     {activeAction.type}
                   </span>
@@ -313,7 +313,7 @@ export default function StickyOpsDeck({
 
                 {/* Row 2: Action label — 2-line clamp instead of single-line truncate */}
                 <div className="flex items-start gap-2">
-                  <h4 className={`font-bold text-base leading-snug line-clamp-2 ${isPast ? 'line-through text-slate-400' : 'text-slate-900'}`}>
+                 <h4 className={`font-bold text-base leading-snug line-clamp-2 ${isPast ? 'line-through ppv-text-muted' : 'ppv-text'}`}>
                     {activeAction.label}
                   </h4>
                   
