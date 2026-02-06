@@ -125,9 +125,9 @@ export default function EventProgramView({
   // If no sessions, show empty state
   if (filteredSessions.length === 0) {
     return (
-      <Card className="p-12 text-center bg-white border-2 border-gray-300">
-        <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-600">No hay sesiones disponibles para este evento</p>
+      <Card className="p-12 text-center ppv-bg-surface border-2 ppv-border">
+        <Calendar className="w-16 h-16 ppv-text-muted mx-auto mb-4" />
+        <p className="ppv-text-secondary">No hay sesiones disponibles para este evento</p>
       </Card>
     );
   }
@@ -370,14 +370,14 @@ export default function EventProgramView({
                             <div className="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                               {secondaryItems.map((item, i) => (
                                 <React.Fragment key={i}>
-                                  {i > 0 && <span className="text-gray-400">|</span>}
+                                  {i > 0 && <span className="ppv-text-muted">|</span>}
                                   {item}
                                 </React.Fragment>
                               ))}
                             </div>
                             {/* Mobile: collapsible toggle */}
                             <details className="sm:hidden mt-1">
-                              <summary className="text-[10px] text-gray-500 font-medium cursor-pointer flex items-center gap-1">
+                              <summary className="text-[10px] ppv-text-secondary font-medium cursor-pointer flex items-center gap-1">
                                 <Users className="w-3 h-3" />
                                 +{secondaryItems.length} equipos más
                               </summary>
