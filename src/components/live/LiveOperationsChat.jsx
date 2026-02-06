@@ -383,53 +383,42 @@ export default function LiveOperationsChat({
         </button>
       )}
 
-      {/* Chat Panel Overlay - Adjusted positioning if trigger is hidden (docked to bottom bar) */}
+      {/* Chat Panel Overlay - Glass Control Deck aesthetic matching StickyOpsDeck */}
       {isOpen && (
         <div 
-          style={{ backgroundColor: '#FFFFFF' }}
-          className={`fixed right-2 sm:right-6 z-50 w-[380px] max-w-[calc(100vw-16px)] h-[520px] max-h-[calc(100vh-140px)] rounded-2xl shadow-2xl border border-gray-300 flex flex-col overflow-hidden transition-all duration-300 ${
+          className={`fixed right-2 sm:right-6 z-50 w-[380px] max-w-[calc(100vw-16px)] h-[520px] max-h-[calc(100vh-140px)] rounded-2xl shadow-[0_20px_80px_-8px_rgba(0,0,0,0.45),0_8px_30px_-4px_rgba(0,0,0,0.25)] border border-white/60 ring-1 ring-black/15 flex flex-col overflow-hidden transition-all duration-300 bg-slate-100/95 backdrop-blur-xl ${
             hideTrigger ? 'bottom-[70px]' : 'bottom-36'
           }`}
         >
-          {/* Header - hardcoded gradient */}
-          <div 
-            style={{ background: 'linear-gradient(to right, #1F8A70, #8DC63F)' }}
-            className="px-4 py-3.5 text-white"
-          >
+          {/* Header - Slate shelf matching OpsDeck label shelf */}
+          <div className="px-4 py-3.5 bg-slate-200/90 backdrop-blur-md border-b border-slate-300">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div 
-                  style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
-                >
+                <div className="w-10 h-10 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center text-pdv-teal shadow-sm">
                   <MessageCircle className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-base tracking-wide truncate">
+                  <h3 className="font-bold text-base tracking-wide truncate text-slate-900">
                     Chat en Vivo
                   </h3>
-                  <p style={{ color: 'rgba(255,255,255,0.9)' }} className="text-xs truncate font-medium">
+                  <p className="text-xs truncate font-medium text-slate-500">
                     {contextName || (contextType === 'event' ? 'Evento' : 'Servicio')}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span 
-                style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}
-                className="text-white text-xs font-semibold px-2 py-0.5 rounded-md"
-                >
-                {messages.length}
+                <span className="text-slate-600 text-xs font-bold px-2.5 py-1 rounded-lg bg-white border border-slate-200 shadow-sm tabular-nums">
+                  {messages.length}
                 </span>
                 <button
-                onClick={() => toggleOpen()}
-                style={{ backgroundColor: 'transparent' }}
-                className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
+                  onClick={() => toggleOpen()}
+                  className="w-8 h-8 rounded-full hover:bg-slate-300 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-800"
                 >
-                <X className="w-5 h-5" />
+                  <X className="w-5 h-5" />
                 </button>
-                </div>
-                </div>
-                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Pinned Messages Section */}
           <LiveChatPinnedSection
