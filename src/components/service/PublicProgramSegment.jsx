@@ -202,10 +202,10 @@ export default function PublicProgramSegment({
                 {getData('start_time') ? formatTimeToEST(getData('start_time')) : "-"}
               </span>
               {getData('end_time') && (
-                <span className="text-gray-600 text-sm">- {formatTimeToEST(getData('end_time'))}</span>
+                <span className="ppv-text-secondary text-sm">- {formatTimeToEST(getData('end_time'))}</span>
               )}
               {segment.duration_min && (
-                <span className="text-xs sm:text-sm text-gray-600">({segment.duration_min} min)</span>
+                <span className="text-xs sm:text-sm ppv-text-secondary">({segment.duration_min} min)</span>
               )}
             </div>
           </div>
