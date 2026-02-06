@@ -103,6 +103,15 @@ export default function LiveOperationsChat({
   // Runs on mount AND whenever chatContextKey changes (user switches context).
   // Sets the three-state value: undefined → string | null.
   //
+  // CONTEXT CHANGE RESET: When chatContextKey changes, we must reset to undefined
+  // (not hydrated) so the badge is suppressed while we fetch the new context's marker.
+  // The effect below will then resolve it to string | null.
+  const prevChatContextKeyRef = useRef(chatContextKey);
+  if (prevChatContextKeyRef.current !== chatContextKey) {
+    prevChatContextKeyRef.current = chatContextKey;
+    setLastSeenMessageId(undefined); // Reset to "not hydrated" for new context
+  }
+
   // Priority: localStorage (instant) > User entity DB read (durable) > auth.me() (stale fallback)
   useEffect(() => {
     const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
