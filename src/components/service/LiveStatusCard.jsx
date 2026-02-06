@@ -152,7 +152,6 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
         {currentSegment ? (
           <div 
             className="p-4 cursor-pointer transition-colors group flex flex-col justify-between h-full"
-            style={{ '--hover-bg': 'var(--ppv-surface-muted)' } as React.CSSProperties}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ppv-surface-muted)'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             onClick={() => onScrollTo && onScrollTo(currentSegment)}
@@ -207,7 +206,6 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
         {nextSegment ? (
           <div 
             className="p-4 cursor-pointer transition-colors group flex flex-col justify-between h-full relative"
-            style={{ '--hover-bg': 'var(--ppv-surface-muted)' } as React.CSSProperties}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ppv-surface-muted)'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             onClick={() => onScrollTo && onScrollTo(nextSegment)}
