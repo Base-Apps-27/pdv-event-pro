@@ -40,10 +40,10 @@ function ResourceCard({ title, subtitle, url, thumbnail, type, owner }) {
 
   const getIcon = () => {
     switch (type) {
-      case 'video': return <Video className="w-5 h-5 text-blue-600" />;
-      case 'song': return <Music className="w-5 h-5 text-pink-600" />;
-      case 'pdf': return <FileText className="w-5 h-5 text-red-600" />;
-      default: return <ExternalLink className="w-5 h-5 text-gray-600" />;
+      case 'video': return <Video className="w-4 h-4 text-blue-600" />;
+      case 'song': return <Music className="w-4 h-4 text-pink-600" />;
+      case 'pdf': return <FileText className="w-4 h-4 text-red-600" />;
+      default: return <ExternalLink className="w-4 h-4 text-gray-600" />;
     }
   };
 
@@ -57,59 +57,48 @@ function ResourceCard({ title, subtitle, url, thumbnail, type, owner }) {
   };
 
   return (
-    <div className="flex gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
-      {/* Thumbnail */}
-      {thumbnail ? (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 active:bg-gray-50 transition-colors"
+    >
+      {/* Vertical stack: thumbnail on top (if present), then content */}
+      {thumbnail && (
         <img 
           src={thumbnail} 
           alt={title}
-          className="w-24 h-16 object-cover rounded flex-shrink-0 bg-gray-100"
+          className="w-full h-28 sm:h-32 object-cover rounded mb-2 bg-gray-100"
           onError={(e) => { 
             e.target.onerror = null;
-            e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="96" height="64" fill="%23e5e7eb"><rect width="96" height="64"/></svg>';
+            e.target.style.display = 'none';
           }}
         />
-      ) : (
-        <div className="w-24 h-16 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-          {getIcon()}
-        </div>
       )}
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              {getIcon()}
-              <h4 className="font-medium text-gray-900 truncate text-sm">
-                {title || url}
-              </h4>
-            </div>
-            {subtitle && (
-              <p className="text-xs text-gray-600 mt-0.5 truncate">{subtitle}</p>
-            )}
-            {owner && (
-              <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                <User className="w-3 h-3" />
-                {owner}
-              </p>
-            )}
-          </div>
-          
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-shrink-0"
-          >
-            <Button size="sm" variant="outline" className="h-8 gap-1">
-              <Play className="w-3 h-3" />
-              {getActionLabel()}
-            </Button>
-          </a>
+      {/* Content row: icon + text + action */}
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+          {getIcon()}
         </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium text-gray-900 text-sm leading-snug line-clamp-2">
+            {title || url}
+          </h4>
+          {(subtitle || owner) && (
+            <p className="text-[11px] text-gray-500 mt-0.5 truncate">
+              {owner && <><User className="w-3 h-3 inline mr-0.5" />{owner}</>}
+              {owner && subtitle && ' • '}
+              {subtitle}
+            </p>
+          )}
+        </div>
+        <Button size="sm" variant="outline" className="h-8 gap-1 shrink-0 text-xs">
+          <Play className="w-3 h-3" />
+          {getActionLabel()}
+        </Button>
       </div>
-    </div>
+    </a>
   );
 }
 
@@ -224,28 +213,26 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ExternalLink className="w-5 h-5 text-pdv-teal" />
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <ExternalLink className="w-4 h-4 text-pdv-teal" />
             {t('resources.title')}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 mt-2">
+        <div className="space-y-4 mt-1">
           {!hasResources ? (
-            <div className="text-center py-8 text-gray-500">
-              <ExternalLink className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p>{t('resources.noResources')}</p>
+            <div className="text-center py-6 text-gray-500">
+              <ExternalLink className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+              <p className="text-sm">{t('resources.noResources')}</p>
             </div>
           ) : (
             resources.map((group, idx) => (
               <div key={idx} className="space-y-2">
-                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
-                    {group.category}
-                  </Badge>
-                </h3>
+                <Badge variant="outline" className="text-xs">
+                  {group.category}
+                </Badge>
                 <div className="space-y-2">
                   {group.items.map((item, itemIdx) => (
                     <ResourceCard key={itemIdx} {...item} />
