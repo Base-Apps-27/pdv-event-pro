@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pin, PinOff, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Pin, PinOff, ThumbsUp, ThumbsDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatTimestampToEST } from "@/components/utils/timeFormat";
 
@@ -7,20 +7,25 @@ import { formatTimestampToEST } from "@/components/utils/timeFormat";
  * LiveChatMessage Component
  * 
  * Renders a single chat message in the Live Operations Chat.
- * Supports pinning/unpinning, reactions (thumbs up/down), and images.
+ * Supports pinning/unpinning, reactions (thumbs up/down), images, and
+ * soft-delete by the message owner (sets is_archived + deleted_by).
  * 
  * @param {Object} message - The message object from LiveOperationsMessage entity
  * @param {string} currentUserEmail - Current user's email for "me" styling
  * @param {boolean} canPin - Whether current user can pin/unpin messages
  * @param {Function} onTogglePin - Handler for pin/unpin action
  * @param {Function} onToggleReaction - Handler for reaction toggle (thumbs_up/thumbs_down)
+ * @param {Function} onDelete - Handler for soft-delete (owner only)
+ * @param {boolean} isOptimistic - True if this message is an optimistic placeholder (not yet persisted)
  */
 export default function LiveChatMessage({
   message,
   currentUserEmail,
   canPin = false,
   onTogglePin,
-  onToggleReaction
+  onToggleReaction,
+  onDelete,
+  isOptimistic = false
 }) {
   const [showReactors, setShowReactors] = useState(null); // 'thumbs_up' or 'thumbs_down' or null
   const isOwnMessage = message.created_by === currentUserEmail;
@@ -90,13 +95,14 @@ export default function LiveChatMessage({
         )}
         
         <div className="relative">
-          {/* Message bubble - hardcoded colors */}
+          {/* Message bubble - hardcoded colors. Optimistic messages show reduced opacity. */}
           <div
             style={{
               backgroundColor: isOwnMessage ? '#1F8A70' : '#FFFFFF',
               color: isOwnMessage ? '#FFFFFF' : '#1F2937',
               border: isOwnMessage ? 'none' : '1px solid #E5E7EB',
-              boxShadow: message.is_pinned ? '0 0 0 2px #FBBF24, 0 0 0 4px white' : '0 1px 2px rgba(0,0,0,0.05)'
+              boxShadow: message.is_pinned ? '0 0 0 2px #FBBF24, 0 0 0 4px white' : '0 1px 2px rgba(0,0,0,0.05)',
+              opacity: isOptimistic ? 0.6 : 1
             }}
             className={`px-3.5 py-2.5 text-sm leading-relaxed ${
               isOwnMessage ? 'rounded-2xl rounded-br-sm' : 'rounded-2xl rounded-bl-sm'
@@ -119,18 +125,36 @@ export default function LiveChatMessage({
             )}
           </div>
           
-          {/* Pin button (appears on hover for users with permission) */}
-          {canPin && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onTogglePin(message)}
-              style={{ color: message.is_pinned ? '#F59E0B' : '#9CA3AF' }}
-              className={`absolute ${isOwnMessage ? '-left-7' : '-right-7'} top-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:text-amber-500`}
-              title={message.is_pinned ? 'Desfijar mensaje' : 'Fijar mensaje'}
-            >
-              {message.is_pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
-            </Button>
+          {/* Action buttons (appear on hover) */}
+          {!isOptimistic && (
+            <div className={`absolute ${isOwnMessage ? '-left-7' : '-right-7'} top-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity`}>
+              {/* Pin button - admin/manager only */}
+              {canPin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onTogglePin(message)}
+                  style={{ color: message.is_pinned ? '#F59E0B' : '#9CA3AF' }}
+                  className="h-6 w-6 p-0 hover:text-amber-500"
+                  title={message.is_pinned ? 'Desfijar mensaje' : 'Fijar mensaje'}
+                >
+                  {message.is_pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+                </Button>
+              )}
+              {/* Delete button - own messages only */}
+              {isOwnMessage && onDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(message)}
+                  style={{ color: '#9CA3AF' }}
+                  className="h-6 w-6 p-0 hover:text-red-500"
+                  title="Eliminar mensaje"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
           )}
 
           {/* Reactions row */}
