@@ -57,7 +57,7 @@ function LayoutContentInner({ children }) {
   const isPublicPage = location.pathname.includes('PublicProgramView') || location.pathname.includes('/print/');
 
   if (isPublicPage) {
-    return <div className="min-h-screen bg-gray-50">{children}</div>;
+    return <div className="min-h-screen bg-white dark:bg-slate-950">{children}</div>;
   }
 
   // Check authentication and get user role
@@ -101,18 +101,18 @@ function LayoutContentInner({ children }) {
 
   // Not authenticated - show minimal layout
   if (!user) {
-    return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
+    return <div className="min-h-screen bg-white dark:bg-slate-950">{children}</div>;
   }
 
   // If user cannot view dashboard, they only get the minimal shell (similar to anonymous)
   if (!hasPermission(user, 'view_events') && !hasPermission(user, 'view_services')) {
-    return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
+    return <div className="min-h-screen bg-white dark:bg-slate-950">{children}</div>;
   }
 
   return (
-    <div className="min-h-screen flex bg-[#F0F1F3]">
+    <div className="min-h-screen flex bg-white dark:bg-slate-950">
       {/* Dark Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-black text-white fixed h-full font-sans print:hidden">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-black dark:bg-black text-white fixed h-full font-sans print:hidden">
         <div className="p-6 mb-2">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg" style={gradientStyle}>
@@ -372,9 +372,9 @@ function LayoutContentInner({ children }) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:ml-64 print:ml-0">
+      <div className="flex-1 lg:ml-64 print:ml-0 bg-white dark:bg-slate-950">
         {/* Mobile Header */}
-        <header className="lg:hidden bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50 print:hidden">
+        <header className="lg:hidden bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-gray-700 shadow-sm sticky top-0 z-50 print:hidden">
           <div className="px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
