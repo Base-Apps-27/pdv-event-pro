@@ -449,6 +449,40 @@ export default function EventProgramView({
 
                       <h4 className="text-xl font-bold mb-3">{segment.title}</h4>
 
+                      {/* Breakout-level description_details */}
+                      {segment.description_details && (
+                        <div className="bg-gray-100 border-l-4 border-gray-500 p-2 mb-3 rounded-r">
+                          <p className="text-xs text-gray-900 font-medium">
+                            <strong>📝 Descripción:</strong> {segment.description_details}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Breakout-level segment_actions (prep + during cues) */}
+                      {segment.segment_actions && segment.segment_actions.length > 0 && (
+                        <div className="space-y-1 mb-3">
+                          {segment.segment_actions.map((action, idx) => {
+                            const isPrepAction = action.timing === 'before_start';
+                            return (
+                              <div key={idx} className={`${isPrepAction ? 'bg-amber-100 border border-amber-300' : 'bg-blue-100 border border-blue-300'} rounded px-3 py-2 text-sm`}>
+                                <div className="flex items-start gap-2">
+                                  <span className={`${isPrepAction ? 'bg-amber-500' : 'bg-blue-600'} text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0`}>
+                                    {isPrepAction ? '⚠ PREP' : '▶ DURANTE'}
+                                  </span>
+                                  <div className="flex-1 flex items-center gap-2 flex-wrap">
+                                    <span className={`font-semibold ${isPrepAction ? 'text-amber-900' : 'text-blue-900'}`}>
+                                      {action.department && `[${action.department}] `}
+                                      {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
+                                    </span>
+                                    {action.notes && <span className={isPrepAction ? 'text-amber-800' : 'text-blue-800'}>— {action.notes}</span>}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 print:grid-cols-3 print:gap-2">
                         {segment.breakout_rooms.map((room, roomIdx) => (
                           <Card key={roomIdx} className="bg-white border-2 border-gray-300 print:border">
