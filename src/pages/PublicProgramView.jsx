@@ -1116,10 +1116,11 @@ export default function PublicProgramView() {
                 }}
                 scrollToSegment={scrollToSegment}
                 // PERMISSION-GATED: Only pass chat props if user has view_live_chat permission
-                // Users without this permission will not see the chat button in StickyOpsDeck
                 onToggleChat={hasPermission(currentUser, 'view_live_chat') ? () => setChatOpen(!chatOpen) : undefined}
                 chatUnreadCount={hasPermission(currentUser, 'view_live_chat') ? chatUnreadCount : 0}
                 chatOpen={hasPermission(currentUser, 'view_live_chat') ? chatOpen : false}
+                // PERMISSION-GATED: Hide StickyOpsDeck for users without view_live_chat
+                hideOpsDeck={!hasPermission(currentUser, 'view_live_chat')}
               />
             )}
 
