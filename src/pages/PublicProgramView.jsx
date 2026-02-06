@@ -612,37 +612,45 @@ export default function PublicProgramView() {
     return allSegments.filter(seg => seg.session_id === sessionId);
   };
 
+  // Helper: check if a segment's date matches today
+  // For events, each segment belongs to a session with its own date.
+  // For services, uses the single service date.
+  const isSegmentDateToday = (segment) => {
+    const now = currentTime;
+    const today = new Date(now);
+    today.setHours(0,0,0,0);
+
+    if (viewType === 'service' && actualServiceData?.date) {
+      const serviceDate = getLocalDateAtMidnight(actualServiceData.date);
+      return serviceDate && serviceDate.getTime() === today.getTime();
+    }
+
+    if (viewType === 'event') {
+      // Find the session this segment belongs to and check ITS date
+      // Segments from events carry session_id; also check segment.date (augmented by EventProgramView)
+      const segDate = segment.date || (() => {
+        const session = sessions.find(s => s.id === segment.session_id);
+        return session?.date;
+      })();
+      if (segDate) {
+        const sessionDate = getLocalDateAtMidnight(segDate);
+        return sessionDate && sessionDate.getTime() === today.getTime();
+      }
+      // No date info — conservative: don't mark as live
+      return false;
+    }
+
+    return true; // fallback
+  };
+
   const isSegmentCurrent = (segment) => {
     if (!segment?.start_time || !segment?.end_time) return false;
     if (typeof segment.start_time !== 'string' || typeof segment.end_time !== 'string') return false;
     
-    const now = currentTime;
-    
-    // Check if the service date is today
-    if (viewType === 'service' && actualServiceData?.date) {
-      const serviceDate = getLocalDateAtMidnight(actualServiceData.date);
-      const today = new Date(now);
-      today.setHours(0,0,0,0);
-      
-      if (serviceDate.getTime() !== today.getTime()) {
-        return false;
-      }
-    }
-    
-    // Check if the event session date is today
-    if (viewType === 'event' && sessions.length > 0) {
-      const firstSession = sessions[0];
-      if (firstSession?.date) {
-        const sessionDate = getLocalDateAtMidnight(firstSession.date);
-        const today = new Date(now);
-        today.setHours(0,0,0,0);
-        
-        if (sessionDate.getTime() !== today.getTime()) {
-          return false;
-        }
-      }
-    }
+    // Per-session date gate: only segments whose session date is TODAY can be "current"
+    if (!isSegmentDateToday(segment)) return false;
 
+    const now = currentTime;
     const [startHours, startMinutes] = segment.start_time.split(':').map(Number);
     const [endHours, endMinutes] = segment.end_time.split(':').map(Number);
     
@@ -677,27 +685,13 @@ export default function PublicProgramView() {
     })[0];
   };
 
-  const isSegmentUpcoming = (segment, allSegments) => {
-    // Date check for service
-    if (viewType === 'service' && actualServiceData?.date) {
-      const serviceDate = getLocalDateAtMidnight(actualServiceData.date);
-      const today = new Date(currentTime);
-      today.setHours(0,0,0,0);
-      if (serviceDate.getTime() !== today.getTime()) return false;
-    }
-    
-    // Date check for event
-    if (viewType === 'event' && sessions.length > 0) {
-      const firstSession = sessions[0];
-      if (firstSession?.date) {
-        const sessionDate = getLocalDateAtMidnight(firstSession.date);
-        const today = new Date(currentTime);
-        today.setHours(0,0,0,0);
-        if (sessionDate.getTime() !== today.getTime()) return false;
-      }
-    }
+  const isSegmentUpcoming = (segment, allSegs) => {
+    // Per-session date gate
+    if (!isSegmentDateToday(segment)) return false;
 
-    const nextSegment = getNextSegment(allSegments);
+    // Only consider segments that are also today when computing "next"
+    const todaySegments = (allSegs || []).filter(s => isSegmentDateToday(s));
+    const nextSegment = getNextSegment(todaySegments);
     if (!nextSegment || nextSegment.id !== segment.id) return false;
     if (!segment?.start_time || typeof segment.start_time !== 'string') return false;
     
