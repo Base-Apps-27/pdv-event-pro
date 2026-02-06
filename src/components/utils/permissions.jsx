@@ -85,6 +85,18 @@ export function getUserPermissions(user) {
 }
 
 /**
+ * Split a permission key into [action, resource].
+ * Handles multi-word resources: 'view_live_chat' → ['view', 'live_chat']
+ * The action is always the first segment; everything after is the resource.
+ */
+function splitPermissionKey(key) {
+  if (!key) return [null, null];
+  const idx = key.indexOf('_');
+  if (idx === -1) return [key, null];
+  return [key.substring(0, idx), key.substring(idx + 1)];
+}
+
+/**
  * Check if user has a specific permission (with hierarchy support)
  */
 export function hasPermission(user, permissionKey) {
@@ -97,16 +109,16 @@ export function hasPermission(user, permissionKey) {
 
   // Check hierarchical permissions
   // e.g., if user has 'create_events' and checking for 'view_events', grant access
-  const [action, resource] = permissionKey.split('_');
+  const [action, resource] = splitPermissionKey(permissionKey);
   const requiredLevel = PERMISSION_HIERARCHY[action];
 
-  if (requiredLevel === undefined) return false;
+  if (requiredLevel === undefined || !resource) return false;
 
   // Check if user has a higher-level permission on the same resource
   for (const userPerm of userPermissions) {
-    const [userAction, userResource] = userPerm.split('_');
+    const [userAction, userResource] = splitPermissionKey(userPerm);
     
-    // Must be same resource
+    // Must be same resource (full match, e.g. 'live_chat' === 'live_chat')
     if (userResource !== resource) continue;
 
     const userLevel = PERMISSION_HIERARCHY[userAction];
