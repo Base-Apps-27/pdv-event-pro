@@ -41,7 +41,7 @@ function LayoutContent({ children }) {
   const isPublicPage = location.pathname.includes('PublicProgramView') || location.pathname.includes('/print/');
 
   if (isPublicPage) {
-    return <div className="min-h-screen bg-gray-50">{children}</div>;
+    return <div className="min-h-screen bg-background text-foreground">{children}</div>;
   }
 
   // Check authentication and get user role
@@ -85,16 +85,16 @@ function LayoutContent({ children }) {
 
   // Not authenticated - show minimal layout
   if (!user) {
-    return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
+    return <div className="min-h-screen bg-background text-foreground">{children}</div>;
   }
 
   // If user cannot view dashboard, they only get the minimal shell (similar to anonymous)
   if (!hasPermission(user, 'view_events') && !hasPermission(user, 'view_services')) {
-    return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
+    return <div className="min-h-screen bg-background text-foreground">{children}</div>;
   }
 
   return (
-    <div className="min-h-screen flex bg-[#F0F1F3]">
+    <div className="min-h-screen flex bg-background text-foreground">
       {/* Dark Sidebar */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-black text-white fixed h-full font-sans print:hidden">
         <div className="p-6 mb-2">
@@ -358,7 +358,7 @@ function LayoutContent({ children }) {
       {/* Main Content Area */}
       <div className="flex-1 lg:ml-64 print:ml-0">
         {/* Mobile Header */}
-        <header className="lg:hidden bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50 print:hidden">
+        <header className="lg:hidden bg-card border-b border-border shadow-sm sticky top-0 z-50 print:hidden">
           <div className="px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
@@ -367,7 +367,7 @@ function LayoutContent({ children }) {
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-gray-900 text-xl uppercase leading-none font-['Bebas_Neue'] tracking-wide">PALABRAS DE VIDA</h2>
+                  <h2 className="text-foreground text-xl uppercase leading-none font-['Bebas_Neue'] tracking-wide">PALABRAS DE VIDA</h2>
                   <p className="text-[10px] text-pdv-teal font-bold tracking-wider mt-0.5">¡ATRÉVETE A CAMBIAR!</p>
                 </div>
               </div>
@@ -375,7 +375,7 @@ function LayoutContent({ children }) {
               {/* Mobile menu button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded hover:bg-gray-100 text-gray-700"
+                className="p-2 rounded hover:bg-muted text-foreground"
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -383,14 +383,14 @@ function LayoutContent({ children }) {
 
             {/* Mobile Navigation */}
             {mobileMenuOpen && (
-              <div className="py-4 border-t border-gray-200">
+              <div className="py-4 border-t border-border">
                 <div className="space-y-1">
                   <Link
                     to={createPageUrl("Dashboard")}
                     className={`block px-4 py-2 rounded font-semibold uppercase text-sm ${
                       isActive(createPageUrl("Dashboard"))
                         ? "text-white"
-                        : "text-gray-700 hover:bg-gray-100"
+                        : "text-foreground hover:bg-muted"
                     }`}
                     style={isActive(createPageUrl("Dashboard")) ? gradientStyle : {}}
                     onClick={() => setMobileMenuOpen(false)}
@@ -398,57 +398,57 @@ function LayoutContent({ children }) {
                     {t('nav.dashboard')}
                   </Link>
 
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">{t('section.live')}</div>
+                  <div className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase mt-4">{t('section.live')}</div>
                   <Link
                     to={createPageUrl("PublicProgramView")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    className="block px-6 py-2 text-sm text-foreground hover:bg-muted rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t('nav.liveProgram')}
                   </Link>
 
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">{t('section.events')}</div>
+                  <div className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase mt-2">{t('section.events')}</div>
                   <Link
                     to={createPageUrl("Events")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    className="block px-6 py-2 text-sm text-foreground hover:bg-muted rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t('nav.events')}
                   </Link>
                   <Link
                     to={createPageUrl("Reports")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    className="block px-6 py-2 text-sm text-foreground hover:bg-muted rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t('nav.reports')}
                   </Link>
 
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">{t('section.services')}</div>
+                  <div className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase mt-4">{t('section.services')}</div>
                   <Link
                     to={createPageUrl("WeeklyServiceManager")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    className="block px-6 py-2 text-sm text-foreground hover:bg-muted rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t('nav.services')}
                   </Link>
                   <Link
                     to={createPageUrl("CustomServicesManager")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    className="block px-6 py-2 text-sm text-foreground hover:bg-muted rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Servicios Personalizados
                   </Link>
 
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">{t('section.resources')}</div>
+                  <div className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase mt-4">{t('section.resources')}</div>
                   <Link
                     to={createPageUrl("People")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    className="block px-6 py-2 text-sm text-foreground hover:bg-muted rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t('nav.people')}
                   </Link>
 
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">{t('section.settings')}</div>
+                  <div className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase mt-2">{t('section.settings')}</div>
                   <Link
                     to={createPageUrl("Rooms")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
