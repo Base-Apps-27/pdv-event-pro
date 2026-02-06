@@ -48,7 +48,13 @@ export default function LiveOperationsChat({
   };
 
   const [messageText, setMessageText] = useState("");
-  const [lastSeenMessageId, setLastSeenMessageId] = useState(null); // Persisted last seen message ID
+  // CRITICAL: Initialize lastSeenMessageId synchronously from currentUser prop
+  // to prevent race condition where unreadCount computes before the effect hydrates this value.
+  // Without this, all messages show as unread on every page load until the effect fires.
+  const [lastSeenMessageId, setLastSeenMessageId] = useState(() => {
+    const key = `${contextType}:${contextId}`;
+    return currentUser?.chat_last_seen?.[key] || null;
+  });
   const [isUploading, setIsUploading] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState('default');
   const messagesEndRef = useRef(null);
