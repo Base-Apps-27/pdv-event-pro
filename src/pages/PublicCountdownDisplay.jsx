@@ -22,8 +22,8 @@ export default function PublicCountdownDisplay() {
   const { t, language } = useLanguage();
   const [currentTime, setCurrentTime] = useState(new Date());
   
-  // Brand gradient style
-  const gradientText = "bg-clip-text text-transparent bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-yellow";
+  // Brand gradient style (Hardcoded for reliability)
+  const gradientText = "bg-clip-text text-transparent bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]";
   const [serviceId, setServiceId] = useState(null);
   const [serviceDate, setServiceDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -214,7 +214,7 @@ export default function PublicCountdownDisplay() {
   return (
     <div className="w-full min-h-screen bg-slate-50 p-4 md:p-6 flex flex-col items-center justify-center overflow-hidden relative">
       {/* Top Gradient Bar */}
-      <div className="absolute top-0 left-0 w-full h-3 brand-gradient" />
+      <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
       
       <div className="w-full max-w-6xl flex flex-col gap-8 items-center z-10">
         

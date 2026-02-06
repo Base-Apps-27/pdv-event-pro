@@ -90,17 +90,17 @@ export default function CountdownBlock({
   // Visual config per mode
   const modeConfig = {
     'in-progress': {
-      borderColor: 'border-pdv-green',
-      labelBg: 'bg-pdv-green text-slate-900', // High contrast for active state
+      borderColor: 'border-[#8DC63F]',
+      labelBg: 'bg-[#8DC63F] text-slate-900', 
       label: t('live.inProgress'),
-      countdownColor: 'text-pdv-green',
+      countdownColor: 'text-[#8DC63F]',
       containerClass: 'shadow-green-900/10'
     },
     'pre-launch': {
-      borderColor: 'border-pdv-teal',
-      labelBg: 'brand-gradient text-white',
+      borderColor: 'border-[#1F8A70]',
+      labelBg: 'bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23] text-white',
       label: language === 'es' ? 'INICIANDO EN' : 'STARTING IN',
-      countdownColor: 'brand-gradient-text',
+      countdownColor: 'bg-clip-text text-transparent bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]',
       containerClass: 'shadow-teal-900/10'
     },
     'upcoming': {
