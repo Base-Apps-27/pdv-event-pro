@@ -27,45 +27,72 @@ export default function PublicCountdownDisplay() {
     return () => clearInterval(interval);
   }, []);
 
-  // URL params: ?service_id=xxx&date=YYYY-MM-DD (optional)
+  // URL params: ?service_id=xxx&date=YYYY-MM-DD OR ?event_id=xxx (optional)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const svcId = params.get('service_id');
+    const evtId = params.get('event_id');
     const dt = params.get('date');
     if (svcId) setServiceId(svcId);
+    if (evtId) setServiceId(evtId); // event_id also sets serviceId (fetched differently)
     if (dt) setServiceDate(dt);
   }, []);
 
-  // Fetch current service (or specified service)
+  // Fetch current service (or specified service/event)
   const { data: service } = useQuery({
     queryKey: ['service', serviceId, serviceDate],
     queryFn: async () => {
-      if (serviceId) {
-        // Fetch specific service
-        const results = await base44.entities.Service.filter({ id: serviceId });
-        return results?.[0];
+      if (!serviceId) {
+        // Auto-detect current service (today's date, closest to now)
+        const todayStr = serviceDate;
+        const results = await base44.entities.Service.filter({ date: todayStr, status: 'active' });
+        if (results?.length > 0) {
+          return results.sort((a, b) => {
+            const timeA = a.time ? new Date(`${todayStr}T${a.time}`).getTime() : 0;
+            const timeB = b.time ? new Date(`${todayStr}T${b.time}`).getTime() : 0;
+            return Math.abs(timeA - currentTime.getTime()) - Math.abs(timeB - currentTime.getTime());
+          })[0];
+        }
+        return null;
       }
-      // Auto-detect current service (today's date, closest to now)
-      const todayStr = serviceDate;
-      const results = await base44.entities.Service.filter({ date: todayStr, status: 'active' });
-      if (results?.length > 0) {
-        // Sort by time, return closest to now
-        return results.sort((a, b) => {
-          const timeA = a.time ? new Date(`${todayStr}T${a.time}`).getTime() : 0;
-          const timeB = b.time ? new Date(`${todayStr}T${b.time}`).getTime() : 0;
-          return Math.abs(timeA - currentTime.getTime()) - Math.abs(timeB - currentTime.getTime());
-        })[0];
+      
+      // Try to fetch as Service first
+      const svcResults = await base44.entities.Service.filter({ id: serviceId });
+      if (svcResults?.[0]) return svcResults[0];
+      
+      // If not found, try as Event and return it (segments will be fetched from event)
+      const evtResults = await base44.entities.Event.filter({ id: serviceId });
+      if (evtResults?.[0]) {
+        // Return event as a pseudo-service object
+        const evt = evtResults[0];
+        return { ...evt, _isEvent: true, name: evt.name };
       }
+      
       return null;
     },
     enabled: !!(serviceId || serviceDate)
   });
 
-  // Fetch segments for this service (via sessions if service is event-based)
+  // Fetch segments for this service (via sessions if service is event-based or event itself)
   const { data: segments = [] } = useQuery({
     queryKey: ['segments', service?.id, serviceDate],
     queryFn: async () => {
       if (!service) return [];
+      
+      // If _isEvent flag, it's an event object — fetch its sessions
+      if (service._isEvent) {
+        const sessions = await base44.entities.Session.filter({ event_id: service.id });
+        const allSegments = [];
+        for (const session of sessions) {
+          const segs = await base44.entities.Segment.filter({ session_id: session.id });
+          allSegments.push(...segs);
+        }
+        return allSegments.sort((a, b) => {
+          const timeA = a.start_time ? new Date(`${serviceDate}T${a.start_time}`).getTime() : 0;
+          const timeB = b.start_time ? new Date(`${serviceDate}T${b.start_time}`).getTime() : 0;
+          return timeA - timeB;
+        });
+      }
       
       // If service has event_id, fetch sessions + segments
       if (service.event_id) {

@@ -57,6 +57,7 @@ import Events from './pages/Events';
 import Home from './pages/Home';
 import MessageProcessing from './pages/MessageProcessing';
 import People from './pages/People';
+import PublicCountdownDisplay from './pages/PublicCountdownDisplay';
 import PublicProgramView from './pages/PublicProgramView';
 import Reports from './pages/Reports';
 import RolePermissionManager from './pages/RolePermissionManager';
@@ -69,7 +70,6 @@ import TestDashboard from './pages/TestDashboard';
 import UserManagement from './pages/UserManagement';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import PublicCountdownDisplay from './pages/PublicCountdownDisplay';
 import __Layout from './Layout.jsx';
 
 
@@ -84,6 +84,7 @@ export const PAGES = {
     "Home": Home,
     "MessageProcessing": MessageProcessing,
     "People": People,
+    "PublicCountdownDisplay": PublicCountdownDisplay,
     "PublicProgramView": PublicProgramView,
     "Reports": Reports,
     "RolePermissionManager": RolePermissionManager,
@@ -96,7 +97,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "PublicCountdownDisplay": PublicCountdownDisplay,
 }
 
 export const pagesConfig = {
