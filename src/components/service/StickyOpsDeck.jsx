@@ -401,7 +401,7 @@ export default function StickyOpsDeck({
                     </div>
                   </div>
                 </div>
-              );
+                );
               })}
               
               {((isPast && pastActions.length === 0) || (!isPast && upcomingActions.length <= 1)) && (
