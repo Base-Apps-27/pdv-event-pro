@@ -212,7 +212,7 @@ export default function PublicProgramSegment({
 
           {/* Segment Title and Type */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <h4 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-1.5 leading-snug">
+            <h4 className="text-lg sm:text-xl font-bold ppv-text flex items-center gap-1.5 leading-snug">
               {isSpecial && (
                 <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-100 shrink-0" />
               )}
