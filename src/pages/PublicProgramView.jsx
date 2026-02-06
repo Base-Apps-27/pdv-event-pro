@@ -1633,9 +1633,9 @@ export default function PublicProgramView() {
         )}
 
         {!selectedEventId && !selectedServiceId && (
-          <Card className="p-12 text-center bg-white border-dashed border-2 border-gray-400">
-            <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">{viewType === 'event' ? t('public.selectPromptEvent') : t('public.selectPromptService')}</p>
+          <Card className="p-12 text-center ppv-bg-surface border-dashed border-2 ppv-border">
+            <Calendar className="w-16 h-16 ppv-text-muted mx-auto mb-4" />
+            <p className="ppv-text-secondary">{viewType === 'event' ? t('public.selectPromptEvent') : t('public.selectPromptService')}</p>
           </Card>
         )}
       </div>
