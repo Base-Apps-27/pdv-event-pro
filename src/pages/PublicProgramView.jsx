@@ -1624,9 +1624,9 @@ export default function PublicProgramView() {
             )}
 
             {viewType === "event" && filteredSessions.length === 0 && (
-                  <Card className="p-12 text-center bg-white border-2 border-gray-300">
-                <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">{t('public.noSessions')}</p>
+                  <Card className="p-12 text-center ppv-bg-surface border-2 ppv-border">
+                <Calendar className="w-16 h-16 ppv-text-muted mx-auto mb-4" />
+                <p className="ppv-text-secondary">{t('public.noSessions')}</p>
               </Card>
             )}
           </>
