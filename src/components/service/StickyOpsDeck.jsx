@@ -281,12 +281,12 @@ export default function StickyOpsDeck({
                 </span>
               </div>
 
-              {/* Action Info */}
-              <div className="flex-1 min-w-0 flex flex-col justify-center">
+              {/* Action Info — Adaptive layout: badges + time row, then label row */}
+              <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
                 
-                {/* Header Metadata Row */}
-                <div className="flex items-center gap-2.5 mb-1.5">
-                  <Badge variant="outline" className={`h-6 text-xs px-2 rounded-md border font-bold ${
+                {/* Row 1: Metadata badges + time — wraps on small screens */}
+                <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+                  <Badge variant="outline" className={`h-5 text-[10px] px-1.5 rounded-md border font-bold shrink-0 ${
                     isUrgent ? 'bg-amber-100 text-amber-900 border-amber-300' : 
                     isPast ? 'bg-slate-100 text-slate-400 border-slate-200' : 
                     activeAction.isPreSession ? 'bg-slate-200 text-slate-700 border-slate-300' :
@@ -295,15 +295,15 @@ export default function StickyOpsDeck({
                     {activeAction.isPreSession ? 'PRE' : activeAction.isPrep ? 'PREP' : 'DURANTE'}
                   </Badge>
                   
-                  <span className={`text-xs font-bold uppercase tracking-wider ${
+                  <span className={`text-[10px] font-bold uppercase tracking-wider shrink-0 ${
                     isUrgent ? 'text-amber-700' : 
                     isPast ? 'text-slate-400' : 'text-slate-500'
                   }`}>
                     {activeAction.type}
                   </span>
 
-                  {/* TIME HERO — Primary visual anchor */}
-                  <span className={`text-sm font-black tabular-nums ml-auto px-2.5 py-0.5 rounded-lg border-2 ${
+                  {/* TIME HERO — Primary visual anchor, pushed right on wide screens */}
+                  <span className={`text-xs font-black tabular-nums sm:ml-auto px-2 py-0.5 rounded-lg border-2 shrink-0 ${
                     isUrgent ? 'bg-amber-100 text-amber-900 border-amber-400' : 
                     isPast ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-indigo-50 text-indigo-700 border-indigo-300'
                   }`}>
@@ -311,21 +311,30 @@ export default function StickyOpsDeck({
                   </span>
                 </div>
 
-                {/* Primary Action Label & Indicators */}
-                <div className="flex items-center gap-3">
-                  <h4 className={`font-bold text-lg leading-tight truncate ${isPast ? 'line-through text-slate-400' : 'text-slate-900'}`}>
+                {/* Row 2: Action label — 2-line clamp instead of single-line truncate */}
+                <div className="flex items-start gap-2">
+                  <h4 className={`font-bold text-base leading-snug line-clamp-2 ${isPast ? 'line-through text-slate-400' : 'text-slate-900'}`}>
                     {activeAction.label}
                   </h4>
                   
-                  {/* Enhanced Concurrent Badge */}
-                  {moreCount > 0 && (
-                    <Badge className="h-6 min-w-[1.75rem] px-2 text-xs font-bold bg-indigo-500 text-white border-none shrink-0 flex items-center justify-center shadow-sm">
-                      +{moreCount}
-                    </Badge>
-                  )}
-                  
-                  {isExpanded ? <ChevronUp className="w-5 h-5 opacity-60 shrink-0 text-slate-600 ml-auto sm:ml-0" /> : <ChevronDown className="w-5 h-5 opacity-60 shrink-0 text-slate-600 ml-auto sm:ml-0" />}
+                  <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                    {/* Concurrent Badge */}
+                    {moreCount > 0 && (
+                      <Badge className="h-5 min-w-[1.5rem] px-1.5 text-[10px] font-bold bg-indigo-500 text-white border-none flex items-center justify-center shadow-sm">
+                        +{moreCount}
+                      </Badge>
+                    )}
+                    
+                    {isExpanded ? <ChevronUp className="w-4 h-4 opacity-60 text-slate-600" /> : <ChevronDown className="w-4 h-4 opacity-60 text-slate-600" />}
+                  </div>
                 </div>
+
+                {/* Row 3: Notes preview — only if notes exist and deck is collapsed */}
+                {!isExpanded && activeAction.notes && (
+                  <p className={`text-[11px] leading-snug line-clamp-1 ${isPast ? 'text-slate-400' : 'text-slate-500'}`}>
+                    {activeAction.notes}
+                  </p>
+                )}
               </div>
             </div>
 
