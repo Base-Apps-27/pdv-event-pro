@@ -7,6 +7,7 @@ import { hasPermission } from "@/components/utils/permissions";
 import LiveChatMessage from "./LiveChatMessage";
 import LiveChatPinnedSection from "./LiveChatPinnedSection";
 import NewMessagesPill from "./NewMessagesPill";
+import TypingIndicator from "./TypingIndicator";
 
 /**
  * LiveOperationsChat Component
@@ -345,9 +346,138 @@ export default function LiveOperationsChat({
     }
   }, [unreadCount, onUnreadCountChange]);
 
-  // Separate pinned and regular messages
-  const pinnedMessages = messages.filter(m => m.is_pinned);
-  const regularMessages = messages.filter(m => !m.is_pinned);
+  // Separate pinned, regular, and filter out typing beacons from display
+  const pinnedMessages = messages.filter(m => m.is_pinned && m.message !== '__typing__');
+  const regularMessages = messages.filter(m => !m.is_pinned && m.message !== '__typing__');
+
+  // ─── TYPING INDICATOR ─────────────────────────────────────────────
+  // Uses a dedicated "typing beacon" record per chat context.
+  // Updated via polling every 3s while user is actively typing.
+  // Stale entries (>8s) are filtered out on the display side.
+  const typingBeaconIdRef = useRef(null); // cache the beacon record ID
+  const typingIntervalRef = useRef(null);
+  const lastTypingBroadcastRef = useRef(0);
+  const [remoteTypingUsers, setRemoteTypingUsers] = useState([]);
+
+  // Fetch/create typing beacon record for this context.
+  // We use a special LiveOperationsMessage record with message="__typing__" as sentinel.
+  const { data: typingBeacon } = useQuery({
+    queryKey: ['liveChat', 'typingBeacon', contextType, contextId],
+    queryFn: async () => {
+      const results = await base44.entities.LiveOperationsMessage.filter({
+        context_type: contextType,
+        context_id: contextId,
+        message: '__typing__',
+        is_archived: false
+      });
+      if (results && results.length > 0) {
+        typingBeaconIdRef.current = results[0].id;
+        return results[0];
+      }
+      // Create beacon record (one per context)
+      const beacon = await base44.entities.LiveOperationsMessage.create({
+        context_type: contextType,
+        context_id: contextId,
+        context_date: contextDate,
+        message: '__typing__',
+        is_archived: false,
+        is_pinned: false,
+        typing_users: [],
+        reactions: []
+      });
+      typingBeaconIdRef.current = beacon.id;
+      return beacon;
+    },
+    enabled: !!contextId && isOpen,
+    staleTime: 60000, // beacon is long-lived, only need to fetch once
+  });
+
+  // Subscribe to typing beacon updates for real-time typing indicators
+  useEffect(() => {
+    if (!contextId || !isOpen) return;
+    
+    const unsubTyping = base44.entities.LiveOperationsMessage.subscribe((event) => {
+      if (event.data?.message === '__typing__' &&
+          event.data?.context_type === contextType &&
+          event.data?.context_id === contextId) {
+        setRemoteTypingUsers(event.data.typing_users || []);
+      }
+    });
+
+    return () => {
+      unsubTyping();
+      // Clear own typing when panel closes
+      if (typingBeaconIdRef.current) {
+        clearTypingSelf();
+      }
+    };
+  }, [contextId, isOpen, contextType]);
+
+  // Broadcast typing status: add/refresh own entry in the beacon's typing_users array
+  const broadcastTyping = useCallback(async () => {
+    const now = Date.now();
+    // Throttle: don't broadcast more than once per 2.5s
+    if (now - lastTypingBroadcastRef.current < 2500) return;
+    lastTypingBroadcastRef.current = now;
+
+    if (!typingBeaconIdRef.current) return;
+    const currentTyping = remoteTypingUsers.filter(u => u.email !== currentUser?.email);
+    const updated = [
+      ...currentTyping.filter(u => now - new Date(u.timestamp).getTime() < 8000), // prune stale
+      { email: currentUser?.email, name: currentUser?.display_name || currentUser?.full_name || '', timestamp: new Date().toISOString() }
+    ];
+    base44.entities.LiveOperationsMessage.update(typingBeaconIdRef.current, {
+      typing_users: updated
+    }).catch(() => {}); // fire and forget
+  }, [remoteTypingUsers, currentUser]);
+
+  // Remove self from typing beacon
+  const clearTypingSelf = useCallback(async () => {
+    if (!typingBeaconIdRef.current) return;
+    const cleaned = remoteTypingUsers.filter(u => u.email !== currentUser?.email);
+    base44.entities.LiveOperationsMessage.update(typingBeaconIdRef.current, {
+      typing_users: cleaned
+    }).catch(() => {});
+  }, [remoteTypingUsers, currentUser]);
+
+  // Auto-clear typing indicator 4s after last keystroke
+  const typingClearTimeoutRef = useRef(null);
+  const handleTypingInput = useCallback((e) => {
+    setMessageText(e.target.value);
+    broadcastTyping();
+    // Reset the "stop typing" timer
+    if (typingClearTimeoutRef.current) clearTimeout(typingClearTimeoutRef.current);
+    typingClearTimeoutRef.current = setTimeout(() => {
+      clearTypingSelf();
+    }, 4000);
+  }, [broadcastTyping, clearTypingSelf]);
+
+  // Cleanup typing timers on unmount
+  useEffect(() => {
+    return () => {
+      if (typingClearTimeoutRef.current) clearTimeout(typingClearTimeoutRef.current);
+    };
+  }, []);
+
+  // ─── EDIT MUTATION ─────────────────────────────────────────────────
+  // Preserves original_message on first edit for audit trail.
+  // Sets edited_at timestamp and "(editado)" indicator in UI.
+  const editMessageMutation = useMutation({
+    mutationFn: async ({ msg, newText }) => {
+      const updatePayload = {
+        message: newText,
+        edited_at: new Date().toISOString()
+      };
+      // Only preserve original on FIRST edit
+      if (!msg.original_message) {
+        updatePayload.original_message = msg.message;
+      }
+      return await base44.entities.LiveOperationsMessage.update(msg.id, updatePayload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['liveChat', contextType, contextId]);
+    }
+  });
 
   // SOFT-DELETE mutation: Sets is_archived=true + deleted_by/deleted_at for audit trail.
   // Reuses is_archived so the existing filter (is_archived: false) automatically hides it.
@@ -493,6 +623,10 @@ export default function LiveOperationsChat({
     setOptimisticMessages(prev => [...prev, optimisticMsg]);
     setMessageText(""); // Clear input immediately for responsiveness
     
+    // Clear typing indicator since we just sent
+    clearTypingSelf();
+    if (typingClearTimeoutRef.current) clearTimeout(typingClearTimeoutRef.current);
+    
     // Scroll to bottom since user just sent a message
     setIsUserScrolledUp(false);
     setNewMessagesBelowCount(0);
@@ -616,6 +750,9 @@ export default function LiveOperationsChat({
                       reactionType,
                       currentReactions: msg.reactions
                     })}
+                    onEdit={(m, newText) => {
+                      editMessageMutation.mutate({ msg: m, newText });
+                    }}
                     onDelete={(m) => {
                       if (window.confirm('¿Eliminar este mensaje?')) {
                         deleteMessageMutation.mutate(m);
@@ -629,6 +766,9 @@ export default function LiveOperationsChat({
             {/* "New messages" pill — shown when user scrolled up and new messages arrive below */}
             <NewMessagesPill count={newMessagesBelowCount} onClick={scrollToBottom} />
           </div>
+
+          {/* Typing Indicator - above input */}
+          <TypingIndicator typingUsers={remoteTypingUsers} currentUserEmail={currentUser?.email} />
 
           {/* Input Area - Matching OpsDeck bar aesthetic */}
           <div className="border-t border-slate-200 px-4 py-3 bg-slate-100/95 backdrop-blur-xl">
@@ -657,7 +797,7 @@ export default function LiveOperationsChat({
               <Input
                 ref={inputRef}
                 value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
+                onChange={handleTypingInput}
                 onKeyPress={handleKeyPress}
                 placeholder="Escribe un mensaje..."
                 className="flex-1 text-sm h-10 rounded-full border-2 border-slate-200 bg-white px-4 focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300"
