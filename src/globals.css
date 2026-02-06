@@ -9,6 +9,26 @@ css
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
+/* 
+ * CRITICAL FIX: Bebas Neue only ships weight 400. When Tailwind's `font-bold` (700)
+ * is applied to headings, the browser can't find a 700-weight Bebas file and falls
+ * back to system fonts (Inter, Arial, etc.) instead of showing Bebas.
+ *
+ * This override @font-face tells the browser: "For ANY weight request (100–900),
+ * use the same Bebas Neue 400 file." This prevents fallback font substitution
+ * when `font-bold`, `font-semibold`, etc. are accidentally applied to headings.
+ *
+ * Trade-off: Bebas will never look bolder/lighter — it only has one weight.
+ * But it will ALWAYS show Bebas instead of falling back to Arial/Inter.
+ */
+@font-face {
+  font-family: 'Bebas Neue';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: local('Bebas Neue'), local('BebasNeue-Regular');
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
