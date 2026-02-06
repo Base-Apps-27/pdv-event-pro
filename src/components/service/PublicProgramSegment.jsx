@@ -218,7 +218,7 @@ export default function PublicProgramSegment({
               )}
               {getData('title')}
             </h4>
-            <Badge variant="outline" className="text-[10px] sm:text-xs text-gray-700 shrink-0">{displaySegmentType}</Badge>
+            <Badge variant="outline" className="text-[10px] sm:text-xs ppv-text-secondary shrink-0">{displaySegmentType}</Badge>
              {segment.major_break && (<Badge className="bg-orange-600 text-white text-[10px] sm:text-xs shrink-0">{t('live.majorBreak')}</Badge>)}
             {segment.requires_translation && (
               <div className="flex items-center gap-0.5 shrink-0">
