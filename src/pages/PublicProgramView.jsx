@@ -773,23 +773,21 @@ export default function PublicProgramView() {
   }
 
   return (
-    <div className="ppv-root min-h-screen ppv-bg-page">
+    <div className="min-h-screen bg-[#F0F1F3]">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Compact Navigation Bar */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           {/* View Type Toggle (Segmented Control style) */}
-          <div className="p-1 rounded-xl flex shrink-0 shadow-inner" style={{ backgroundColor: 'var(--ppv-toggle-bg)' }}>
+          <div className="bg-gray-200 p-1 rounded-xl flex shrink-0 shadow-inner">
             <button
               onClick={() => setViewType("event")}
-              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "event" ? "text-pdv-teal shadow-sm" : "ppv-text-muted hover:ppv-text-secondary"}`}
-              style={viewType === "event" ? { backgroundColor: 'var(--ppv-toggle-active)' } : {}}
+              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "event" ? "bg-white text-pdv-teal shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
             >
               {t('public.events')}
             </button>
             <button
               onClick={() => setViewType("service")}
-              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "service" ? "text-pdv-green shadow-sm" : "ppv-text-muted hover:ppv-text-secondary"}`}
-              style={viewType === "service" ? { backgroundColor: 'var(--ppv-toggle-active)' } : {}}
+              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "service" ? "bg-white text-pdv-green shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
             >
               {t('public.services')}
             </button>
@@ -825,10 +823,10 @@ export default function PublicProgramView() {
                 return (
                   <div className="w-full max-w-full">
                     <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-                      <SelectTrigger className="w-full max-w-full overflow-hidden border-2 h-12 ppv-text" style={{ backgroundColor: 'var(--ppv-select-bg)', borderColor: 'var(--ppv-select-border)' }}>
+                      <SelectTrigger className="w-full max-w-full overflow-hidden bg-white border-2 border-gray-400 text-gray-900 h-12">
                         <SelectValue placeholder={t('public.selectEvent')} />
                       </SelectTrigger>
-                      <SelectContent className="max-w-[calc(100vw-2rem)]" style={{ backgroundColor: 'var(--ppv-select-bg)' }}>
+                      <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {availableEvents.map((event) => (
                                                         <SelectItem key={event.id} value={event.id}>
                                                           {event.name.length > 25 ? event.name.substring(0, 25) + '...' : event.name} - {formatDateET(event.start_date)}
@@ -874,10 +872,10 @@ export default function PublicProgramView() {
                 return (
                   <div className="w-full max-w-full">
                     <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
-                      <SelectTrigger className="w-full max-w-full overflow-hidden border-2 h-12 ppv-text" style={{ backgroundColor: 'var(--ppv-select-bg)', borderColor: 'var(--ppv-select-border)' }}>
+                      <SelectTrigger className="w-full max-w-full overflow-hidden bg-white border-2 border-gray-400 text-gray-900 h-12">
                         <SelectValue placeholder={t('public.selectService')} />
                       </SelectTrigger>
-                      <SelectContent className="max-w-[calc(100vw-2rem)]" style={{ backgroundColor: 'var(--ppv-select-bg)' }}>
+                      <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {upcomingServices.map((service) => (
                                                     <SelectItem key={service.id} value={service.id}>
                                                       {service.name.length > 25 ? service.name.substring(0, 25) + '...' : service.name} - {formatDateET(service.date)} ({service.daysUntil === 0 ? t('public.today') : service.daysUntil === 1 ? t('public.tomorrow') : `${t('public.in')} ${service.daysUntil} ${service.daysUntil === 1 ? t('public.day') : t('public.days')}`})
@@ -895,7 +893,7 @@ export default function PublicProgramView() {
           <>
             {/* Minimal Event/Service Info Banner */}
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 ppv-text-secondary text-xs uppercase font-bold tracking-wider">
+              <div className="flex items-center gap-2 text-gray-500 text-xs uppercase font-bold tracking-wider">
                 <Calendar className="w-3 h-3" />
                 <span>
                   {viewType === "event" && selectedEvent?.start_date ? formatDateET(selectedEvent.start_date) : 
@@ -908,7 +906,7 @@ export default function PublicProgramView() {
                   </>
                 )}
               </div>
-              <h2 className="text-2xl font-bold ppv-text leading-tight">
+              <h2 className="text-2xl font-bold text-gray-900 leading-tight">
                 {viewType === "event" ? selectedEvent?.name : selectedService?.name}
               </h2>
               {viewType === "event" && selectedEvent?.theme && (
@@ -1624,18 +1622,18 @@ export default function PublicProgramView() {
             )}
 
             {viewType === "event" && filteredSessions.length === 0 && (
-                  <Card className="p-12 text-center ppv-bg-surface border-2 ppv-border">
-                <Calendar className="w-16 h-16 ppv-text-muted mx-auto mb-4" />
-                <p className="ppv-text-secondary">{t('public.noSessions')}</p>
+                  <Card className="p-12 text-center bg-white border-2 border-gray-300">
+                <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">{t('public.noSessions')}</p>
               </Card>
             )}
           </>
         )}
 
         {!selectedEventId && !selectedServiceId && (
-          <Card className="p-12 text-center ppv-bg-surface border-dashed border-2 ppv-border">
-            <Calendar className="w-16 h-16 ppv-text-muted mx-auto mb-4" />
-            <p className="ppv-text-secondary">{viewType === 'event' ? t('public.selectPromptEvent') : t('public.selectPromptService')}</p>
+          <Card className="p-12 text-center bg-white border-dashed border-2 border-gray-400">
+            <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">{viewType === 'event' ? t('public.selectPromptEvent') : t('public.selectPromptService')}</p>
           </Card>
         )}
       </div>

@@ -125,9 +125,9 @@ export default function EventProgramView({
   // If no sessions, show empty state
   if (filteredSessions.length === 0) {
     return (
-      <Card className="p-12 text-center ppv-bg-surface border-2 ppv-border">
-        <Calendar className="w-16 h-16 ppv-text-muted mx-auto mb-4" />
-        <p className="ppv-text-secondary">No hay sesiones disponibles para este evento</p>
+      <Card className="p-12 text-center bg-white border-2 border-gray-300">
+        <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-600">No hay sesiones disponibles para este evento</p>
       </Card>
     );
   }
@@ -170,14 +170,14 @@ export default function EventProgramView({
       />
 
       {/* Compact Filters Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center ppv-bg-muted p-2 rounded-xl border ppv-border">
+      <div className="flex flex-col sm:flex-row gap-3 items-center bg-gray-100 p-2 rounded-xl border border-gray-200">
         <div className="flex-1 w-full sm:w-auto">
           <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
-            <SelectTrigger className="h-9 text-sm font-medium ppv-text" style={{ backgroundColor: 'var(--ppv-select-bg)', borderColor: 'var(--ppv-select-border)' }}>
-              <Filter className="w-3 h-3 mr-2 ppv-text-secondary" />
+            <SelectTrigger className="bg-white border-gray-300 text-gray-900 h-9 text-sm font-medium">
+              <Filter className="w-3 h-3 mr-2 text-gray-500" />
               <SelectValue placeholder="Todas las Sesiones" />
             </SelectTrigger>
-            <SelectContent style={{ backgroundColor: 'var(--ppv-select-bg)' }}>
+            <SelectContent className="bg-white">
               <SelectItem value="all">Todas las Sesiones</SelectItem>
               {eventSessions.map((session) => (
                 <SelectItem key={session.id} value={session.id}>
@@ -188,19 +188,17 @@ export default function EventProgramView({
           </Select>
         </div>
         
-        <div className="flex p-1 rounded-lg shrink-0 w-full sm:w-auto" style={{ backgroundColor: 'var(--ppv-toggle-bg)' }}>
+        <div className="flex bg-gray-200/50 p-1 rounded-lg shrink-0 w-full sm:w-auto">
           <button
             onClick={() => setViewMode("simple")}
-            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "simple" ? "shadow ppv-text" : "ppv-text-muted hover:ppv-text-secondary"}`}
-            style={viewMode === "simple" ? { backgroundColor: 'var(--ppv-toggle-active)' } : {}}
+            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "simple" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
           >
             <List className="w-3.5 h-3.5" />
             Simple
           </button>
           <button
             onClick={() => setViewMode("full")}
-            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "full" ? "shadow ppv-text" : "ppv-text-muted hover:ppv-text-secondary"}`}
-            style={viewMode === "full" ? { backgroundColor: 'var(--ppv-toggle-active)' } : {}}
+            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "full" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
           >
             <ListChecks className="w-3.5 h-3.5" />
             Run of Show
@@ -214,9 +212,9 @@ export default function EventProgramView({
         if (segments.length === 0) return null;
 
         return (
-          <div key={session.id} className={`ppv-bg-surface rounded-lg overflow-hidden ${sessionColorClasses[session.session_color] || 'border-2 ppv-border'}`}>
+          <div key={session.id} className={`bg-white rounded-lg overflow-hidden ${sessionColorClasses[session.session_color] || 'border-2 border-gray-300'}`}>
             {/* Session Header */}
-            <div className="bg-gradient-to-r from-gray-100/40 to-transparent p-3 sm:p-4 border-b ppv-border-light">
+            <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-3 sm:p-4 border-b">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   {/* PreSession Info Card - Segment 0 */}
@@ -276,12 +274,12 @@ export default function EventProgramView({
                           return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
                         })();
                         return (
-                          <h3 className="text-xl sm:text-2xl font-bold uppercase ppv-text">
+                          <h3 className="text-xl sm:text-2xl font-bold uppercase text-gray-900">
                             {session.name} <span className="text-amber-600 text-base sm:text-lg">(inicio: {adjustedTime})</span>
                           </h3>
                         );
                       }
-                      return <h3 className="text-xl sm:text-2xl font-bold uppercase ppv-text">{session.name}</h3>;
+                      return <h3 className="text-xl sm:text-2xl font-bold uppercase text-gray-900">{session.name}</h3>;
                     })()}
                     {/* Hospitality Icon - Prominent rounded rectangle button */}
                     <button
@@ -292,7 +290,7 @@ export default function EventProgramView({
                       <Utensils className="w-5 h-5 text-pink-600" />
                     </button>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm ppv-text-secondary">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
                     {session.date && <span>{formatDateET(session.date)}</span>}
                     {session.planned_start_time && (
                       <>
@@ -352,13 +350,13 @@ export default function EventProgramView({
                     if (session.hospitality_team) secondaryItems.push(<span key="hosp"><strong>🍽️ HOSP:</strong> {normalizeName(session.hospitality_team)}</span>);
 
                     return (
-                      <div className="mt-2 text-[10px] sm:text-xs ppv-text-secondary">
+                      <div className="mt-2 text-[10px] sm:text-xs text-gray-700">
                         {/* Primary roles — always visible */}
                         {primaryItems.length > 0 && (
                           <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1">
                             {primaryItems.map((item, i) => (
                               <React.Fragment key={i}>
-                                {i > 0 && <span className="ppv-text-muted hidden sm:inline">|</span>}
+                                {i > 0 && <span className="text-gray-400 hidden sm:inline">|</span>}
                                 {item}
                               </React.Fragment>
                             ))}
@@ -370,14 +368,14 @@ export default function EventProgramView({
                             <div className="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                               {secondaryItems.map((item, i) => (
                                 <React.Fragment key={i}>
-                                  {i > 0 && <span className="ppv-text-muted">|</span>}
+                                  {i > 0 && <span className="text-gray-400">|</span>}
                                   {item}
                                 </React.Fragment>
                               ))}
                             </div>
                             {/* Mobile: collapsible toggle */}
                             <details className="sm:hidden mt-1">
-                              <summary className="text-[10px] ppv-text-secondary font-medium cursor-pointer flex items-center gap-1">
+                              <summary className="text-[10px] text-gray-500 font-medium cursor-pointer flex items-center gap-1">
                                 <Users className="w-3 h-3" />
                                 +{secondaryItems.length} equipos más
                               </summary>
@@ -393,7 +391,7 @@ export default function EventProgramView({
 
                   {/* Expanded Session Details */}
                   {expandedSessions[session.id] && (
-                    <div className="mt-3 pt-3 border-t ppv-border space-y-2 text-sm ppv-text">
+                    <div className="mt-3 pt-3 border-t border-gray-300 space-y-2 text-sm">
                       {session.notes && (
                         <p><strong>Notas:</strong> {session.notes}</p>
                       )}

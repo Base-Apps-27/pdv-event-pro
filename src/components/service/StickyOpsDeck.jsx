@@ -227,8 +227,8 @@ export default function StickyOpsDeck({
   
   // Glass Control Deck: Light/Tranquil theme - High Contrast & Large Text
   // Floating with deeper shadow and rim
-  const bgClass = 'ppv-bg-surface backdrop-blur-xl';
-  const textClass = 'ppv-text';
+  const bgClass = 'bg-slate-100/95 backdrop-blur-xl';
+  const textClass = 'text-slate-900';
 
   return (
     // Floating container
@@ -243,7 +243,7 @@ export default function StickyOpsDeck({
           className={`absolute -top-7 left-4 px-4 py-1.5 rounded-t-lg text-xs font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 z-0 ${
             isUrgent 
               ? 'bg-amber-500 text-black shadow-lg' 
-              : 'ppv-bg-muted backdrop-blur-md ppv-text-secondary border-t border-x ppv-border shadow-sm'
+              : 'bg-slate-200/90 backdrop-blur-md text-slate-700 border-t border-x border-slate-300 shadow-sm'
           }`}
           style={{ height: '28px' }}
         >
@@ -296,8 +296,8 @@ export default function StickyOpsDeck({
                   </Badge>
                   
                   <span className={`text-[10px] font-bold uppercase tracking-wider shrink-0 ${
-                   isUrgent ? 'text-amber-700' : 
-                   isPast ? 'ppv-text-muted' : 'ppv-text-secondary'
+                    isUrgent ? 'text-amber-700' : 
+                    isPast ? 'text-slate-400' : 'text-slate-500'
                   }`}>
                     {activeAction.type}
                   </span>
@@ -313,7 +313,7 @@ export default function StickyOpsDeck({
 
                 {/* Row 2: Action label — 2-line clamp instead of single-line truncate */}
                 <div className="flex items-start gap-2">
-                 <h4 className={`font-bold text-base leading-snug line-clamp-2 ${isPast ? 'line-through ppv-text-muted' : 'ppv-text'}`}>
+                  <h4 className={`font-bold text-base leading-snug line-clamp-2 ${isPast ? 'line-through text-slate-400' : 'text-slate-900'}`}>
                     {activeAction.label}
                   </h4>
                   
@@ -331,7 +331,7 @@ export default function StickyOpsDeck({
 
                 {/* Row 3: Notes preview — only if notes exist and deck is collapsed */}
                 {!isExpanded && activeAction.notes && (
-                  <p className={`text-[11px] leading-snug line-clamp-1 ${isPast ? 'ppv-text-muted' : 'ppv-text-secondary'}`}>
+                  <p className={`text-[11px] leading-snug line-clamp-1 ${isPast ? 'text-slate-400' : 'text-slate-500'}`}>
                     {activeAction.notes}
                   </p>
                 )}
@@ -339,7 +339,7 @@ export default function StickyOpsDeck({
             </div>
 
             {/* Right Side: Actions (Scroll + Chat) — tighter on mobile */}
-            <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l ppv-border ml-1 sm:ml-2">
+            <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-slate-200 ml-1 sm:ml-2">
               {/* Jump to Segment */}
               {activeAction.segmentId && (
                 <Button
@@ -385,8 +385,8 @@ export default function StickyOpsDeck({
           
           {/* Expanded List - Rendered SECOND so it appears BELOW the bar */}
           {isExpanded && (
-            <div className={`border-t ppv-border px-5 py-4 space-y-4 max-h-[45vh] overflow-y-auto ppv-bg-muted`}>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3 ppv-text-secondary">
+            <div className={`border-t border-slate-200 px-5 py-4 space-y-4 max-h-[45vh] overflow-y-auto bg-slate-50/90`}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3 text-slate-500">
                 {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
               </p>
             
@@ -394,7 +394,7 @@ export default function StickyOpsDeck({
                 // Concurrent = within 5 min of the header action's time → highlight time the same way
                 const isConcurrent = activeAction && Math.abs(action.time.getTime() - activeAction.time.getTime()) < 300000;
                 return (
-                <div key={idx} className={`flex items-start gap-4 py-2 border-b ppv-border last:border-0 ${isPast ? 'opacity-60' : ''}`}>
+                <div key={idx} className={`flex items-start gap-4 py-2 border-b border-slate-200 last:border-0 ${isPast ? 'opacity-60' : ''}`}>
                   <span className={`font-mono font-bold text-sm mt-0.5 min-w-[3.5rem] text-center px-2 py-0.5 rounded-lg ${
                     isConcurrent 
                       ? (isUrgent ? 'bg-amber-100 text-amber-900 border-2 border-amber-400' : 'bg-indigo-50 text-indigo-700 border-2 border-indigo-300')
@@ -403,13 +403,13 @@ export default function StickyOpsDeck({
                     {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-sm ppv-text leading-snug">{action.label}</div>
+                    <div className="font-bold text-sm text-slate-800 leading-snug">{action.label}</div>
                     {action.notes && (
-                      <div className={`text-xs leading-relaxed mt-1 whitespace-pre-wrap line-clamp-4 ${isUrgent ? 'text-amber-700' : 'ppv-text-secondary'}`}>
+                      <div className={`text-xs leading-relaxed mt-1 whitespace-pre-wrap line-clamp-4 ${isUrgent ? 'text-amber-700' : 'text-slate-600'}`}>
                         {action.notes}
                       </div>
                     )}
-                    <div className="text-[10px] font-medium truncate ppv-text-muted mt-1">
+                    <div className="text-[10px] font-medium truncate text-slate-400 mt-1">
                       {action.segmentTitle} • <span className="uppercase tracking-wide">{action.type}</span>
                     </div>
                   </div>
@@ -418,7 +418,7 @@ export default function StickyOpsDeck({
               })}
               
               {((isPast && pastActions.length === 0) || (!isPast && upcomingActions.length <= 1)) && (
-                <p className="text-sm opacity-50 italic py-2 ppv-text-secondary">No hay más acciones.</p>
+                <p className="text-sm opacity-50 italic py-2 text-slate-500">No hay más acciones.</p>
               )}
             </div>
           )}

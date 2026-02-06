@@ -96,9 +96,9 @@ export default function ServiceProgramView({
   // If no service data, show empty state
   if (!adjustedServiceData) {
     return (
-      <Card className="p-12 text-center ppv-bg-surface border-2 ppv-border">
-        <Calendar className="w-16 h-16 ppv-text-muted mx-auto mb-4" />
-        <p className="ppv-text-secondary">Este servicio aún no tiene programa disponible</p>
+      <Card className="p-12 text-center bg-white border-2 border-gray-300">
+        <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-600">Este servicio aún no tiene programa disponible</p>
       </Card>
     );
   }
@@ -111,9 +111,9 @@ export default function ServiceProgramView({
   // If neither format, show empty state
   if (!isCustomService && !isWeeklyService) {
     return (
-      <Card className="p-12 text-center ppv-bg-surface border-2 ppv-border">
-        <Calendar className="w-16 h-16 ppv-text-muted mx-auto mb-4" />
-        <p className="ppv-text-secondary">Este servicio aún no tiene programa disponible</p>
+      <Card className="p-12 text-center bg-white border-2 border-gray-300">
+        <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-600">Este servicio aún no tiene programa disponible</p>
       </Card>
     );
   }
@@ -144,8 +144,8 @@ export default function ServiceProgramView({
         />
 
         {/* Custom Service Segments */}
-         <div className="ppv-bg-surface rounded-lg border-2 ppv-border overflow-hidden border-l-4 border-l-pdv-teal">
-           <div className="bg-gradient-to-r from-pdv-teal/10 to-transparent p-3 sm:p-4 border-b ppv-border-light">
+         <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
+           <div className="bg-gradient-to-r from-pdv-teal/10 to-white p-3 sm:p-4 border-b">
              {(() => {
                const globalAdj = liveAdjustments.find(a => a.adjustment_type === 'global');
                if (globalAdj && globalAdj.offset_minutes !== 0) {
@@ -166,35 +166,35 @@ export default function ServiceProgramView({
                return <h3 className="text-xl sm:text-2xl font-bold uppercase text-pdv-teal break-words">{adjustedServiceData.name}</h3>;
              })()}
             {adjustedServiceData.description && (
-              <p className="text-xs sm:text-sm ppv-text-secondary mt-2">{adjustedServiceData.description}</p>
+              <p className="text-xs sm:text-sm text-gray-600 mt-2">{adjustedServiceData.description}</p>
             )}
             {/* Team Info - Compact */}
             {(adjustedServiceData.coordinators || adjustedServiceData.ujieres || adjustedServiceData.sound || adjustedServiceData.luces || adjustedServiceData.fotografia) && (
-              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs ppv-text-secondary">
+              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs text-gray-700">
                 {adjustedServiceData.coordinators && Object.values(adjustedServiceData.coordinators).find(v => v) && (
                   <span><strong>👤 Coord:</strong> {normalizeName(adjustedServiceData.coordinators["9:30am"] || adjustedServiceData.coordinators["11:30am"] || Object.values(adjustedServiceData.coordinators).find(v => v))}</span>
                 )}
                 {adjustedServiceData.ujieres && Object.values(adjustedServiceData.ujieres).find(v => v) && (
                   <>
-                    <span className="ppv-text-muted">|</span>
+                    <span className="text-gray-400">|</span>
                     <span><strong>🚪 Ujieres:</strong> {normalizeName(adjustedServiceData.ujieres["9:30am"] || adjustedServiceData.ujieres["11:30am"] || Object.values(adjustedServiceData.ujieres).find(v => v))}</span>
                   </>
                 )}
                 {adjustedServiceData.sound && Object.values(adjustedServiceData.sound).find(v => v) && (
                   <>
-                    <span className="ppv-text-muted">|</span>
+                    <span className="text-gray-400">|</span>
                     <span><strong>🔊 Sonido:</strong> {normalizeName(adjustedServiceData.sound["9:30am"] || adjustedServiceData.sound["11:30am"] || Object.values(adjustedServiceData.sound).find(v => v))}</span>
                   </>
                 )}
                 {adjustedServiceData.luces && Object.values(adjustedServiceData.luces).find(v => v) && (
                   <>
-                    <span className="ppv-text-muted">|</span>
+                    <span className="text-gray-400">|</span>
                     <span><strong>💡 Luces:</strong> {normalizeName(adjustedServiceData.luces["9:30am"] || adjustedServiceData.luces["11:30am"] || Object.values(adjustedServiceData.luces).find(v => v))}</span>
                   </>
                 )}
                 {adjustedServiceData.fotografia && Object.values(adjustedServiceData.fotografia).find(v => v) && (
                   <>
-                    <span className="ppv-text-muted">|</span>
+                    <span className="text-gray-400">|</span>
                     <span><strong>📸 Foto:</strong> {normalizeName(adjustedServiceData.fotografia["9:30am"] || adjustedServiceData.fotografia["11:30am"] || Object.values(adjustedServiceData.fotografia).find(v => v))}</span>
                   </>
                 )}
@@ -274,8 +274,8 @@ export default function ServiceProgramView({
 
       {/* 9:30am Service */}
       {adjustedServiceData["9:30am"] && (
-        <div className="ppv-bg-surface rounded-lg border-2 ppv-border overflow-hidden border-l-4 border-l-red-500">
-          <div className="bg-gradient-to-r from-red-500/10 to-transparent p-3 sm:p-4 border-b ppv-border-light">
+        <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500">
+          <div className="bg-gradient-to-r from-red-50 to-white p-3 sm:p-4 border-b">
             {(() => {
               const adjustment = liveAdjustments.find(a => a.time_slot === "9:30am");
               if (adjustment && adjustment.offset_minutes !== 0) {
@@ -301,31 +301,31 @@ export default function ServiceProgramView({
             )}
             {/* Team Info - Compact */}
             {(adjustedServiceData.coordinators?.["9:30am"] || adjustedServiceData.ujieres?.["9:30am"] || adjustedServiceData.sound?.["9:30am"] || adjustedServiceData.luces?.["9:30am"] || adjustedServiceData.fotografia?.["9:30am"]) && (
-              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs ppv-text-secondary">
+              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs text-gray-700">
                 {adjustedServiceData.coordinators?.["9:30am"] && (
                   <span><strong>👤 Coord:</strong> {normalizeName(adjustedServiceData.coordinators["9:30am"])}</span>
                 )}
                 {adjustedServiceData.ujieres?.["9:30am"] && (
                   <>
-                    <span className="ppv-text-muted">|</span>
+                    <span className="text-gray-400">|</span>
                     <span><strong>🚪 Ujieres:</strong> {normalizeName(adjustedServiceData.ujieres["9:30am"])}</span>
                   </>
                 )}
                 {adjustedServiceData.sound?.["9:30am"] && (
                   <>
-                    <span className="ppv-text-muted">|</span>
+                    <span className="text-gray-400">|</span>
                     <span><strong>🔊 Sonido:</strong> {normalizeName(adjustedServiceData.sound["9:30am"])}</span>
                   </>
                 )}
                 {adjustedServiceData.luces?.["9:30am"] && (
                   <>
-                    <span className="ppv-text-muted">|</span>
+                    <span className="text-gray-400">|</span>
                     <span><strong>💡 Luces:</strong> {normalizeName(adjustedServiceData.luces["9:30am"])}</span>
                   </>
                 )}
                 {adjustedServiceData.fotografia?.["9:30am"] && (
                   <>
-                    <span className="ppv-text-muted">|</span>
+                    <span className="text-gray-400">|</span>
                     <span><strong>📸 Foto:</strong> {normalizeName(adjustedServiceData.fotografia["9:30am"])}</span>
                   </>
                 )}
@@ -352,17 +352,17 @@ export default function ServiceProgramView({
       )}
 
       {/* Receso */}
-      <div className="ppv-bg-muted rounded-lg p-4 text-center border ppv-border">
-        <p className="font-bold ppv-text-secondary">RECESO (30 min)</p>
+      <div className="bg-gray-100 rounded-lg p-4 text-center border border-gray-300">
+        <p className="font-bold text-gray-600">RECESO (30 min)</p>
         {adjustedServiceData.receso_notes?.["9:30am"] && (
-          <p className="text-sm ppv-text-secondary mt-2">{adjustedServiceData.receso_notes["9:30am"]}</p>
+          <p className="text-sm text-gray-600 mt-2">{adjustedServiceData.receso_notes["9:30am"]}</p>
         )}
       </div>
 
       {/* 11:30am Service */}
       {adjustedServiceData["11:30am"] && (
-        <div className="ppv-bg-surface rounded-lg border-2 ppv-border overflow-hidden border-l-4 border-l-blue-500">
-          <div className="bg-gradient-to-r from-blue-500/10 to-transparent p-3 sm:p-4 border-b ppv-border-light">
+        <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-blue-500">
+          <div className="bg-gradient-to-r from-blue-50 to-white p-3 sm:p-4 border-b">
             {(() => {
               const adjustment = liveAdjustments.find(a => a.time_slot === "11:30am");
               if (adjustment && adjustment.offset_minutes !== 0) {
@@ -388,31 +388,31 @@ export default function ServiceProgramView({
             )}
             {/* Team Info - Compact */}
             {(adjustedServiceData.coordinators?.["11:30am"] || adjustedServiceData.ujieres?.["11:30am"] || adjustedServiceData.sound?.["11:30am"] || adjustedServiceData.luces?.["11:30am"] || adjustedServiceData.fotografia?.["11:30am"]) && (
-              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs ppv-text-secondary">
+              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs text-gray-700">
                 {adjustedServiceData.coordinators?.["11:30am"] && (
                   <span><strong>👤 Coord:</strong> {normalizeName(adjustedServiceData.coordinators["11:30am"])}</span>
                 )}
                 {adjustedServiceData.ujieres?.["11:30am"] && (
                   <>
-                    <span className="ppv-text-muted">|</span>
+                    <span className="text-gray-400">|</span>
                     <span><strong>🚪 Ujieres:</strong> {normalizeName(adjustedServiceData.ujieres["11:30am"])}</span>
                   </>
                 )}
                 {adjustedServiceData.sound?.["11:30am"] && (
                   <>
-                    <span className="ppv-text-muted">|</span>
+                    <span className="text-gray-400">|</span>
                     <span><strong>🔊 Sonido:</strong> {normalizeName(adjustedServiceData.sound["11:30am"])}</span>
                   </>
                 )}
                 {adjustedServiceData.luces?.["11:30am"] && (
                   <>
-                    <span className="ppv-text-muted">|</span>
+                    <span className="text-gray-400">|</span>
                     <span><strong>💡 Luces:</strong> {normalizeName(adjustedServiceData.luces["11:30am"])}</span>
                   </>
                 )}
                 {adjustedServiceData.fotografia?.["11:30am"] && (
                   <>
-                    <span className="ppv-text-muted">|</span>
+                    <span className="text-gray-400">|</span>
                     <span><strong>📸 Foto:</strong> {normalizeName(adjustedServiceData.fotografia["11:30am"])}</span>
                   </>
                 )}

@@ -149,35 +149,22 @@ export default function PublicProgramSegment({
     if (isUpcoming) return 'bg-blue-50 border-l-4 border-blue-400 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
 
     // 2. Type-Based Styles - HERO BLOCKS
-    /* PPV token-based segment backgrounds — auto-switch light/dark via CSS vars */
-    if (isMessage) return 'rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5' + ' border';
-    if (isPanel) return 'rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5' + ' border';
-    if (isWorship) return 'rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5' + ' border';
-    if (isArtes) return 'rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5' + ' border';
+    if (isMessage) return 'bg-blue-50 border border-blue-200 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
+    if (isPanel) return 'bg-amber-50 border border-amber-200 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
+    if (isWorship) return 'bg-purple-50 border border-purple-200 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
+    if (isArtes) return 'bg-rose-50 border border-rose-300 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
     
     // 3. Dividers
-    if (isBreakSegment) return 'border-2 border-dashed rounded-lg my-4 sm:my-6 mx-2 sm:mx-4 opacity-80';
+    if (isBreakSegment) return 'bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg my-4 sm:my-6 mx-2 sm:mx-4 opacity-80';
     
     // 4. Standard List Items (Connective Tissue)
-    return 'py-2 sm:py-3 border-b';
-  };
-
-  // Inline style for PPV token-based segment backgrounds
-  const getSegmentStyle = () => {
-    if (isCurrent || isUpcoming) return {};
-    if (isMessage) return { backgroundColor: 'var(--ppv-seg-message-bg)', borderColor: 'var(--ppv-seg-message-border)' };
-    if (isPanel) return { backgroundColor: 'var(--ppv-seg-panel-bg)', borderColor: 'var(--ppv-seg-panel-border)' };
-    if (isWorship) return { backgroundColor: 'var(--ppv-seg-worship-bg)', borderColor: 'var(--ppv-seg-worship-border)' };
-    if (isArtes) return { backgroundColor: 'var(--ppv-seg-arts-bg)', borderColor: 'var(--ppv-seg-arts-border)' };
-    if (isBreakSegment) return { backgroundColor: 'var(--ppv-seg-break-bg)', borderColor: 'var(--ppv-seg-break-border)' };
-    return { backgroundColor: 'var(--ppv-seg-default-bg)', borderColor: 'var(--ppv-seg-default-border)' };
+    return 'bg-white border-b border-gray-100 hover:bg-gray-50 py-2 sm:py-3';
   };
 
   return (
     <div 
       id={domId}
       className={`p-3 sm:p-4 transition-all duration-300 scroll-mt-24 ${getContainerStyles()}`}
-      style={getSegmentStyle()}
     >
       {/* Current/Upcoming Status Badges */}
       {isCurrent && (
@@ -198,27 +185,27 @@ export default function PublicProgramSegment({
           <div className="flex items-center gap-2 sm:gap-3 mb-1">
             <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-pdv-teal flex-shrink-0" />
             <div className="flex items-baseline flex-wrap gap-x-2">
-              <span className="font-bold text-base sm:text-lg ppv-text">
+              <span className="font-bold text-base sm:text-lg text-gray-900">
                 {getData('start_time') ? formatTimeToEST(getData('start_time')) : "-"}
               </span>
               {getData('end_time') && (
-                <span className="ppv-text-secondary text-sm">- {formatTimeToEST(getData('end_time'))}</span>
+                <span className="text-gray-600 text-sm">- {formatTimeToEST(getData('end_time'))}</span>
               )}
               {segment.duration_min && (
-                <span className="text-xs sm:text-sm ppv-text-secondary">({segment.duration_min} min)</span>
+                <span className="text-xs sm:text-sm text-gray-600">({segment.duration_min} min)</span>
               )}
             </div>
           </div>
 
           {/* Segment Title and Type */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <h4 className="text-lg sm:text-xl font-bold ppv-text flex items-center gap-1.5 leading-snug">
+            <h4 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-1.5 leading-snug">
               {isSpecial && (
                 <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-100 shrink-0" />
               )}
               {getData('title')}
             </h4>
-            <Badge variant="outline" className="text-[10px] sm:text-xs ppv-text-secondary shrink-0">{displaySegmentType}</Badge>
+            <Badge variant="outline" className="text-[10px] sm:text-xs text-gray-700 shrink-0">{displaySegmentType}</Badge>
              {segment.major_break && (<Badge className="bg-orange-600 text-white text-[10px] sm:text-xs shrink-0">{t('live.majorBreak')}</Badge>)}
             {segment.requires_translation && (
               <div className="flex items-center gap-0.5 shrink-0">
@@ -369,10 +356,10 @@ export default function PublicProgramSegment({
         {!alwaysExpanded && (
           <button
             onClick={() => onToggleExpand(segment.id)}
-            className="flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-lg hover:opacity-60 transition-colors shrink-0 -mr-1"
+            className="flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-lg hover:bg-gray-200/60 active:bg-gray-200 transition-colors shrink-0 -mr-1"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
-            {isExpanded ? <ChevronUp className="w-5 h-5 sm:w-4 sm:h-4 ppv-text-secondary" /> : <ChevronDown className="w-5 h-5 sm:w-4 sm:h-4 ppv-text-secondary" />}
+            {isExpanded ? <ChevronUp className="w-5 h-5 sm:w-4 sm:h-4 text-gray-500" /> : <ChevronDown className="w-5 h-5 sm:w-4 sm:h-4 text-gray-500" />}
           </button>
         )}
       </div>
@@ -565,15 +552,15 @@ export default function PublicProgramSegment({
           <div className="space-y-2">
             {/* Songs List (for worship segments) */}
             {songs.length > 0 && (
-              <div className="ppv-bg-muted p-2 rounded border ppv-border text-xs">
-                <p className="font-semibold ppv-text mb-1">{t('live.songs')}:</p>
+              <div className="bg-slate-50 p-2 rounded border border-slate-200 text-xs">
+                <p className="font-semibold text-slate-700 mb-1">{t('live.songs')}:</p>
                 <div className="space-y-1">
                   {songs.map((song, idx) => (
-                    <div key={idx} className="flex items-center gap-1 ppv-text">
+                    <div key={idx} className="flex items-center gap-1">
                       <span>{idx + 1}. {song.title}</span>
-                      {song.lead && <span className="ppv-text-secondary">({song.lead})</span>}
+                      {song.lead && <span className="text-gray-600">({song.lead})</span>}
                       {song.key && (
-                        <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 ppv-text-secondary" style={{ borderColor: 'var(--ppv-border)', backgroundColor: 'var(--ppv-surface-muted)' }}>
+                        <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">
                           {song.key}
                         </Badge>
                       )}
@@ -681,8 +668,8 @@ export default function PublicProgramSegment({
 
             {/* General Description/Details */}
             {(getData('description_details') || getData('description')) && (
-              <div className="ppv-bg-muted border-l-4 ppv-border p-2 mt-2 rounded-r">
-                <p className="text-xs ppv-text font-medium">
+              <div className="bg-gray-100 border-l-4 border-gray-500 p-2 mt-2 rounded-r">
+                <p className="text-xs text-gray-900 font-medium">
                   <strong>📝 {t('live.notes')}:</strong> {getData('description_details') || getData('description')}
                 </p>
               </div>
@@ -721,12 +708,12 @@ export default function PublicProgramSegment({
             {(segment.slide_pack_id || segment.countdown_asset_id) && (
               <div className="flex gap-2 flex-wrap text-[11px]">
                 {segment.slide_pack_id && (
-                  <Badge variant="outline" className="ppv-text" style={{ borderColor: 'var(--ppv-border)', backgroundColor: 'var(--ppv-surface)' }}>
+                  <Badge variant="outline" className="border-gray-300 bg-white text-gray-700">
                     {t('live.slides')}: {(slidePackLookup && slidePackLookup[segment.slide_pack_id]) || segment.slide_pack_id}
                   </Badge>
                 )}
                 {segment.countdown_asset_id && (
-                  <Badge variant="outline" className="ppv-text" style={{ borderColor: 'var(--ppv-border)', backgroundColor: 'var(--ppv-surface)' }}>
+                  <Badge variant="outline" className="border-gray-300 bg-white text-gray-700">
                     {t('live.countdown')}: {(assetLookup && assetLookup[segment.countdown_asset_id]) || segment.countdown_asset_id}
                   </Badge>
                 )}
