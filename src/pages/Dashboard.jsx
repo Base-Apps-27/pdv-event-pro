@@ -84,7 +84,7 @@ export default function Dashboard() {
       {/* Hero Section */}
       <div style={gradientStyle} className="text-white py-8 px-6 md:px-8 shadow-lg">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-3xl md:text-4xl uppercase tracking-wide mb-2">
+          <h1 className="text-3xl md:text-4xl text-white uppercase tracking-wide leading-tight mb-2">
             {t('dashboard.title')}
           </h1>
           <p className="text-white/90 text-base">
