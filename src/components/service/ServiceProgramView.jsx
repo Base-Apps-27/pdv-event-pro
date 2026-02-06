@@ -34,12 +34,11 @@ export default function ServiceProgramView({
   toggleSegmentExpanded,
   onOpenVerses,
   scrollToSegment,
-  // Chat props passed down from PublicProgramView
+  // PERMISSION-GATED: Single boolean controls StickyOpsDeck + chat visibility
+  canAccessLiveOps = false,
   onToggleChat,
   chatUnreadCount,
-  chatOpen,
-  // PERMISSION-GATED: When true, StickyOpsDeck is hidden entirely
-  hideOpsDeck = false
+  chatOpen
 }) {
   const adjustedServiceData = React.useMemo(() => {
     if (!actualServiceData) return null;
@@ -123,8 +122,8 @@ export default function ServiceProgramView({
   if (isCustomService) {
     return (
       <div className="space-y-6">
-        {/* Sticky Ops Deck - PERMISSION-GATED: hidden for users without view_live_chat */}
-        {!hideOpsDeck && (
+        {/* Sticky Ops Deck - PERMISSION-GATED: requires view_live_chat */}
+        {canAccessLiveOps && (
         <StickyOpsDeck 
           segments={adjustedServiceData.segments || []}
           sessionDate={adjustedServiceData.date}
@@ -227,7 +226,7 @@ export default function ServiceProgramView({
   return (
     <div className="space-y-6">
       {/* Sticky Ops Deck for Weekly Services - PERMISSION-GATED */}
-      {!hideOpsDeck && (() => {
+      {canAccessLiveOps && (() => {
         const allServiceSegments = [
           ...(adjustedServiceData?.['9:30am'] || []),
           ...(adjustedServiceData?.['11:30am'] || [])

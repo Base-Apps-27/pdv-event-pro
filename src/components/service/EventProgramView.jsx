@@ -55,12 +55,11 @@ export default function EventProgramView({
   refetchData,
   getRoomName,
   onOpenVerseParser,
-  // Chat integration props
+  // PERMISSION-GATED: Single boolean controls StickyOpsDeck + chat visibility
+  canAccessLiveOps = false,
   onToggleChat,
   chatUnreadCount = 0,
-  chatOpen = false,
-  // PERMISSION-GATED: When true, StickyOpsDeck is hidden entirely
-  hideOpsDeck = false
+  chatOpen = false
 }) {
   // Event-specific state
   const [selectedSessionId, setSelectedSessionId] = useState("all");
@@ -141,8 +140,8 @@ export default function EventProgramView({
          Component preserved at: components/service/LiveDirectorPanel.jsx
       */}
 
-      {/* Sticky Ops Deck - PERMISSION-GATED: hidden for users without view_live_chat */}
-      {!hideOpsDeck && (
+      {/* Sticky Ops Deck - PERMISSION-GATED: requires view_live_chat */}
+      {canAccessLiveOps && (
       <StickyOpsDeck 
         segments={allSegments.map(seg => {
           const session = eventSessions.find(s => s.id === seg.session_id);

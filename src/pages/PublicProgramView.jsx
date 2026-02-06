@@ -1115,12 +1115,11 @@ export default function PublicProgramView() {
                   setVersesModalOpen(true);
                 }}
                 scrollToSegment={scrollToSegment}
-                // PERMISSION-GATED: Only pass chat props if user has view_live_chat permission
-                onToggleChat={hasPermission(currentUser, 'view_live_chat') ? () => setChatOpen(!chatOpen) : undefined}
-                chatUnreadCount={hasPermission(currentUser, 'view_live_chat') ? chatUnreadCount : 0}
-                chatOpen={hasPermission(currentUser, 'view_live_chat') ? chatOpen : false}
-                // PERMISSION-GATED: Hide StickyOpsDeck for users without view_live_chat
-                hideOpsDeck={!hasPermission(currentUser, 'view_live_chat')}
+                // PERMISSION-GATED: Live ops (StickyOpsDeck + chat) require view_live_chat
+                canAccessLiveOps={hasPermission(currentUser, 'view_live_chat')}
+                onToggleChat={() => setChatOpen(!chatOpen)}
+                chatUnreadCount={chatUnreadCount}
+                chatOpen={chatOpen}
               />
             )}
 
@@ -1150,12 +1149,11 @@ export default function PublicProgramView() {
                                  setVerseParserInitial(initialText || "");
                                  setVerseParserOpen(true);
                                }}
-                               // PERMISSION-GATED: Only pass chat props if user has view_live_chat permission
-                               onToggleChat={hasPermission(currentUser, 'view_live_chat') ? () => setChatOpen(!chatOpen) : undefined}
-                               chatUnreadCount={hasPermission(currentUser, 'view_live_chat') ? chatUnreadCount : 0}
-                               chatOpen={hasPermission(currentUser, 'view_live_chat') ? chatOpen : false}
-                               // PERMISSION-GATED: Hide StickyOpsDeck for users without view_live_chat
-                               hideOpsDeck={!hasPermission(currentUser, 'view_live_chat')}
+                               // PERMISSION-GATED: Live ops (StickyOpsDeck + chat) require view_live_chat
+                               canAccessLiveOps={hasPermission(currentUser, 'view_live_chat')}
+                               onToggleChat={() => setChatOpen(!chatOpen)}
+                               chatUnreadCount={chatUnreadCount}
+                               chatOpen={chatOpen}
                                />
             )}
 
