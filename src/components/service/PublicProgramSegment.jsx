@@ -149,16 +149,17 @@ export default function PublicProgramSegment({
     if (isUpcoming) return 'bg-blue-50 border-l-4 border-blue-400 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
 
     // 2. Type-Based Styles - HERO BLOCKS
-    if (isMessage) return 'bg-blue-50 border border-blue-200 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
-    if (isPanel) return 'bg-amber-50 border border-amber-200 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
-    if (isWorship) return 'bg-purple-50 border border-purple-200 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
-    if (isArtes) return 'bg-rose-50 border border-rose-300 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
+    /* PPV token-based segment backgrounds — auto-switch light/dark via CSS vars */
+    if (isMessage) return 'rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5' + ' border';
+    if (isPanel) return 'rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5' + ' border';
+    if (isWorship) return 'rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5' + ' border';
+    if (isArtes) return 'rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5' + ' border';
     
     // 3. Dividers
-    if (isBreakSegment) return 'bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg my-4 sm:my-6 mx-2 sm:mx-4 opacity-80';
+    if (isBreakSegment) return 'border-2 border-dashed rounded-lg my-4 sm:my-6 mx-2 sm:mx-4 opacity-80';
     
     // 4. Standard List Items (Connective Tissue)
-    return 'bg-white border-b border-gray-100 hover:bg-gray-50 py-2 sm:py-3';
+    return 'py-2 sm:py-3 border-b';
   };
 
   return (
