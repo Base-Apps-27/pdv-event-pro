@@ -96,6 +96,12 @@ const translations = {
     'common.sessions': 'sesiones',
     'common.segments': 'segmentos',
 
+    // Theme
+    'theme.label': 'Tema',
+    'theme.light': 'Luz',
+    'theme.dark': 'Oscuro',
+    'theme.system': 'Sistema',
+
     // Public Program (es)
     'public.headerTitle': 'Programa',
     'public.notificationsActive': 'Notificaciones activas',
@@ -406,6 +412,13 @@ const translations = {
     'common.location': 'Location',
     'common.sessions': 'sessions',
     'common.segments': 'segments',
+
+    // Theme
+    'theme.label': 'Theme',
+    'theme.light': 'Light',
+    'theme.dark': 'Dark',
+    'theme.system': 'System',
+
     // Fields
     'field.title': 'Title',
     'field.start_time': 'Start time',
