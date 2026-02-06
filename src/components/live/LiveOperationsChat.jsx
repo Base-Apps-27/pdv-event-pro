@@ -93,15 +93,20 @@ export default function LiveOperationsChat({
     }
   }, []);
 
-  // Sync persisted last seen message ID from user profile when user data arrives or context changes.
-  // This covers the case where currentUser loads asynchronously after mount.
+  // Sync from user profile ONLY if localStorage has no value for this context.
+  // This covers first-ever load on a new device where localStorage is empty
+  // but user profile has a previously-persisted marker.
   useEffect(() => {
     if (currentUser && chatContextKey) {
-      const storedLastSeen = currentUser.chat_last_seen?.[chatContextKey];
-      // Replace sentinel or update with persisted value.
-      // If no persisted value exists (new user, new context), set null — this means
-      // all existing messages will show as unread, which is correct first-time behavior.
-      setLastSeenMessageId(storedLastSeen || null);
+      const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
+      const fromLS = localStorage.getItem(lsKey);
+      if (!fromLS) {
+        const storedLastSeen = currentUser.chat_last_seen?.[chatContextKey];
+        if (storedLastSeen) {
+          setLastSeenMessageId(storedLastSeen);
+          localStorage.setItem(lsKey, storedLastSeen);
+        }
+      }
     }
   }, [currentUser, chatContextKey]);
 
