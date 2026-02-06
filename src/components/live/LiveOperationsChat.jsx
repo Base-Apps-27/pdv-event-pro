@@ -280,8 +280,8 @@ export default function LiveOperationsChat({
   const persistTimeoutRef = useRef(null);
   useEffect(() => {
     if (isOpen && messages.length > 0) {
-      // Filter out optimistic messages — only use server-confirmed IDs for persistence
-      const confirmedMessages = messages.filter(m => !m._isOptimistic);
+      // Filter out optimistic messages AND typing beacons — only persist real message IDs
+      const confirmedMessages = messages.filter(m => !m._isOptimistic && m.message !== '__typing__');
       if (confirmedMessages.length === 0) return;
       
       const latestMessageId = confirmedMessages[confirmedMessages.length - 1]?.id;
