@@ -301,7 +301,7 @@ export default function ServiceProgramView({
             )}
             {/* Team Info - Compact */}
             {(adjustedServiceData.coordinators?.["9:30am"] || adjustedServiceData.ujieres?.["9:30am"] || adjustedServiceData.sound?.["9:30am"] || adjustedServiceData.luces?.["9:30am"] || adjustedServiceData.fotografia?.["9:30am"]) && (
-              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs text-gray-700">
+              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs ppv-text-secondary">
                 {adjustedServiceData.coordinators?.["9:30am"] && (
                   <span><strong>👤 Coord:</strong> {normalizeName(adjustedServiceData.coordinators["9:30am"])}</span>
                 )}
