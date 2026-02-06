@@ -1116,7 +1116,8 @@ export default function PublicProgramView() {
                 }}
                 scrollToSegment={scrollToSegment}
                 // PERMISSION-GATED: Live ops (StickyOpsDeck + chat) require view_live_chat
-                canAccessLiveOps={hasPermission(currentUser, 'view_live_chat')}
+                // Compute once and pass down — requires currentUser to be loaded
+                canAccessLiveOps={!!(currentUser && hasPermission(currentUser, 'view_live_chat'))}
                 onToggleChat={() => setChatOpen(!chatOpen)}
                 chatUnreadCount={chatUnreadCount}
                 chatOpen={chatOpen}
@@ -1150,7 +1151,7 @@ export default function PublicProgramView() {
                                  setVerseParserOpen(true);
                                }}
                                // PERMISSION-GATED: Live ops (StickyOpsDeck + chat) require view_live_chat
-                               canAccessLiveOps={hasPermission(currentUser, 'view_live_chat')}
+                               canAccessLiveOps={!!(currentUser && hasPermission(currentUser, 'view_live_chat'))}
                                onToggleChat={() => setChatOpen(!chatOpen)}
                                chatUnreadCount={chatUnreadCount}
                                chatOpen={chatOpen}
