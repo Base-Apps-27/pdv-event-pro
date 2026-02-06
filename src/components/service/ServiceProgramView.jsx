@@ -170,7 +170,7 @@ export default function ServiceProgramView({
             )}
             {/* Team Info - Compact */}
             {(adjustedServiceData.coordinators || adjustedServiceData.ujieres || adjustedServiceData.sound || adjustedServiceData.luces || adjustedServiceData.fotografia) && (
-              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs text-gray-700">
+              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs ppv-text-secondary">
                 {adjustedServiceData.coordinators && Object.values(adjustedServiceData.coordinators).find(v => v) && (
                   <span><strong>👤 Coord:</strong> {normalizeName(adjustedServiceData.coordinators["9:30am"] || adjustedServiceData.coordinators["11:30am"] || Object.values(adjustedServiceData.coordinators).find(v => v))}</span>
                 )}
