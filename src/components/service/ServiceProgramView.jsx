@@ -274,8 +274,8 @@ export default function ServiceProgramView({
 
       {/* 9:30am Service */}
       {adjustedServiceData["9:30am"] && (
-        <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-red-500">
-          <div className="bg-gradient-to-r from-red-50 to-white p-3 sm:p-4 border-b">
+        <div className="ppv-bg-surface rounded-lg border-2 ppv-border overflow-hidden border-l-4 border-l-red-500">
+          <div className="bg-gradient-to-r from-red-500/10 to-transparent p-3 sm:p-4 border-b ppv-border-light">
             {(() => {
               const adjustment = liveAdjustments.find(a => a.time_slot === "9:30am");
               if (adjustment && adjustment.offset_minutes !== 0) {
