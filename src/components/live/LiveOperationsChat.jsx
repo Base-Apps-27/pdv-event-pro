@@ -462,11 +462,8 @@ export default function LiveOperationsChat({
             )}
           </div>
 
-          {/* Input Area - hardcoded background */}
-          <div 
-            style={{ backgroundColor: '#FFFFFF', borderTopColor: '#E5E7EB' }}
-            className="border-t-2 px-4 py-3"
-          >
+          {/* Input Area - Matching OpsDeck bar aesthetic */}
+          <div className="border-t border-slate-200 px-4 py-3 bg-slate-100/95 backdrop-blur-xl">
             <div className="flex items-center gap-2">
               {/* Hidden file input */}
               <input
@@ -480,8 +477,7 @@ export default function LiveOperationsChat({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading || sendMessageMutation.isLoading}
-                style={{ backgroundColor: '#F3F4F6' }}
-                className="h-10 w-10 p-0 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 disabled:opacity-50 shrink-0"
+                className="h-10 w-10 p-0 rounded-full flex items-center justify-center text-slate-500 bg-white border-2 border-slate-200 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-50 shrink-0 shadow-sm"
                 title="Subir imagen"
               >
                 {isUploading ? (
@@ -496,15 +492,13 @@ export default function LiveOperationsChat({
                 onChange={(e) => setMessageText(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Escribe un mensaje..."
-                style={{ backgroundColor: '#FFFFFF' }}
-                className="flex-1 text-sm h-10 rounded-full border-gray-300 px-4 focus:ring-2 focus:ring-pdv-teal focus:border-transparent"
+                className="flex-1 text-sm h-10 rounded-full border-2 border-slate-200 bg-white px-4 focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300"
                 disabled={sendMessageMutation.isLoading || isUploading}
               />
               <button
                 onClick={handleSend}
                 disabled={!messageText.trim() || sendMessageMutation.isLoading || isUploading}
-                style={{ backgroundColor: '#1F8A70' }}
-                className="h-10 w-10 p-0 rounded-full shadow-md flex items-center justify-center text-white disabled:opacity-50 shrink-0"
+                className="h-10 w-10 p-0 rounded-full shadow-sm flex items-center justify-center text-white bg-pdv-teal border-2 border-pdv-teal hover:brightness-110 disabled:opacity-50 shrink-0"
               >
                 {sendMessageMutation.isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -513,7 +507,7 @@ export default function LiveOperationsChat({
                 )}
               </button>
             </div>
-            <p className="text-[10px] mt-2 text-center" style={{ color: '#9CA3AF' }}>
+            <p className="text-[10px] mt-2 text-center text-slate-400">
               {contextType === 'event' 
                 ? 'Se archiva 24h después del evento' 
                 : 'Se archiva a medianoche'}
