@@ -64,6 +64,7 @@ Deno.serve(async (req) => {
     const toArchive = [];
 
     for (const msg of allMessages) {
+      // Skip typing beacon records — they are ephemeral and should be archived along with their context
       const contextDate = msg.context_date;
       if (!contextDate) continue;
 
@@ -80,13 +81,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Archive messages
+    // Archive messages in batches of 10 for efficiency
     let archivedCount = 0;
-    for (const msgId of toArchive) {
-      await base44.asServiceRole.entities.LiveOperationsMessage.update(msgId, {
-        is_archived: true
-      });
-      archivedCount++;
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < toArchive.length; i += BATCH_SIZE) {
+      const batch = toArchive.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map(msgId =>
+          base44.asServiceRole.entities.LiveOperationsMessage.update(msgId, {
+            is_archived: true
+          })
+        )
+      );
+      archivedCount += batch.length;
     }
 
     console.log(`Archived ${archivedCount} messages. Today ET: ${todayET}, Cutoff: ${cutoffDate}`);
