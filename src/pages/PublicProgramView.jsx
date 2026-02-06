@@ -92,6 +92,103 @@ export default function PublicProgramView() {
     return () => clearInterval(timer);
   }, []);
 
+  // REAL-TIME SUBSCRIPTIONS: Instant updates when admin edits program data
+  // Subscribes to entity changes and invalidates react-query cache for immediate re-render.
+  // Toast notification shown only on active event/service days (date === today).
+  useEffect(() => {
+    const unsubscribers = [];
+
+    // Helper: check if the currently viewed event/service is "today" (active day)
+    const isActiveDay = () => {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+
+      if (viewType === 'service' && rawServiceData?.date) {
+        return rawServiceData.date === todayStr;
+      }
+      if (viewType === 'event' && selectedEvent) {
+        const start = selectedEvent.start_date || '';
+        const end = selectedEvent.end_date || start;
+        return todayStr >= start && todayStr <= end;
+      }
+      return false;
+    };
+
+    const notify = (label) => {
+      if (isActiveDay()) {
+        toast.info(`${language === 'es' ? 'Programa actualizado' : 'Program updated'}: ${label}`, {
+          duration: 4000,
+          icon: '🔄',
+        });
+      }
+    };
+
+    // Subscribe to Segment changes (most frequent edits)
+    unsubscribers.push(
+      base44.entities.Segment.subscribe((event) => {
+        // Invalidate segments query — will re-fetch immediately
+        queryClient.invalidateQueries({ queryKey: ['segments'] });
+        notify(language === 'es' ? 'Segmento' : 'Segment');
+      })
+    );
+
+    // Subscribe to Session changes (time, team, notes edits)
+    unsubscribers.push(
+      base44.entities.Session.subscribe((event) => {
+        queryClient.invalidateQueries({ queryKey: ['sessions'] });
+        notify(language === 'es' ? 'Sesión' : 'Session');
+      })
+    );
+
+    // Subscribe to Service changes (weekly service edits)
+    if (viewType === 'service' && selectedServiceId) {
+      unsubscribers.push(
+        base44.entities.Service.subscribe((event) => {
+          queryClient.invalidateQueries({ queryKey: ['weeklyServiceData'] });
+          queryClient.invalidateQueries({ queryKey: ['services'] });
+          notify(language === 'es' ? 'Servicio' : 'Service');
+        })
+      );
+    }
+
+    // Subscribe to Event changes (event metadata edits)
+    if (viewType === 'event' && selectedEventId) {
+      unsubscribers.push(
+        base44.entities.Event.subscribe((event) => {
+          queryClient.invalidateQueries({ queryKey: ['publicEvents'] });
+          notify(language === 'es' ? 'Evento' : 'Event');
+        })
+      );
+    }
+
+    // Subscribe to PreSessionDetails (facility/pre-session edits)
+    if (viewType === 'event') {
+      unsubscribers.push(
+        base44.entities.PreSessionDetails.subscribe((event) => {
+          queryClient.invalidateQueries({ queryKey: ['preSessionDetails'] });
+          notify(language === 'es' ? 'Pre-sesión' : 'Pre-session');
+        })
+      );
+    }
+
+    // Subscribe to SegmentAction changes (ops deck actions)
+    unsubscribers.push(
+      base44.entities.SegmentAction.subscribe((event) => {
+        queryClient.invalidateQueries({ queryKey: ['segments'] });
+        notify(language === 'es' ? 'Acción operativa' : 'Ops action');
+      })
+    );
+
+    return () => {
+      unsubscribers.forEach(unsub => {
+        if (typeof unsub === 'function') unsub();
+      });
+    };
+  }, [viewType, selectedServiceId, selectedEventId, rawServiceData?.date, selectedEvent?.start_date, selectedEvent?.end_date, language, queryClient]);
+
   useEffect(() => {
     if (preloadedEventId) {
       setSelectedEventId(preloadedEventId);
