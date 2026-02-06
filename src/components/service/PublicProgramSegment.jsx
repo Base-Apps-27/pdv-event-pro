@@ -352,15 +352,15 @@ export default function PublicProgramSegment({
           </div>
         </div>
         
-        {/* Expand/Collapse Button (Only for Events in simple mode) */}
+        {/* Item 6: Larger expand/collapse tap target for mobile (44px min touch) */}
         {!alwaysExpanded && (
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={() => onToggleExpand(segment.id)}
+            className="flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-lg hover:bg-gray-200/60 active:bg-gray-200 transition-colors shrink-0 -mr-1"
+            aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </Button>
+            {isExpanded ? <ChevronUp className="w-5 h-5 sm:w-4 sm:h-4 text-gray-500" /> : <ChevronDown className="w-5 h-5 sm:w-4 sm:h-4 text-gray-500" />}
+          </button>
         )}
       </div>
 
@@ -491,59 +491,58 @@ export default function PublicProgramSegment({
           {/* Team Notes (Operational Instructions) */}
           {/* These are critical for staff execution, always shown when details are visible */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {/* Item 4: Tighter note card padding on mobile (pl-2 py-1.5 → sm:pl-3 sm:py-2) */}
             {getData('coordinator_notes') && (
-              <div className="bg-orange-50 border-l-4 border-orange-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-orange-800 block mb-1">{t('live.coordination')}:</span>
+              <div className="bg-orange-50 border-l-4 border-orange-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
+                <span className="font-bold text-orange-800 block mb-0.5 sm:mb-1">{t('live.coordination')}:</span>
                 <p className="text-orange-900 leading-snug">{getData('coordinator_notes')}</p>
               </div>
             )}
-            {/* Projection notes - slate color (distinct from purple/translation) */}
             {getData('projection_notes') && (
-              <div className="bg-slate-100 border-l-4 border-slate-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-slate-700 block mb-1">{t('live.projection')}:</span>
+              <div className="bg-slate-100 border-l-4 border-slate-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
+                <span className="font-bold text-slate-700 block mb-0.5 sm:mb-1">{t('live.projection')}:</span>
                 <p className="text-slate-800 leading-snug">{getData('projection_notes')}</p>
               </div>
             )}
             {getData('sound_notes') && (
-              <div className="bg-red-50 border-l-4 border-red-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-red-800 block mb-1">{t('live.sound')}:</span>
+              <div className="bg-red-50 border-l-4 border-red-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
+                <span className="font-bold text-red-800 block mb-0.5 sm:mb-1">{t('live.sound')}:</span>
                 <p className="text-red-900 leading-snug">{getData('sound_notes')}</p>
               </div>
             )}
             {getData('ushers_notes') && (
-              <div className="bg-green-50 border-l-4 border-green-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-green-800 block mb-1">{t('live.ushers')}:</span>
+              <div className="bg-green-50 border-l-4 border-green-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
+                <span className="font-bold text-green-800 block mb-0.5 sm:mb-1">{t('live.ushers')}:</span>
                 <p className="text-green-900 leading-snug">{getData('ushers_notes')}</p>
               </div>
             )}
             {getData('translation_notes') && (
-              <div className="bg-purple-50 border-l-4 border-purple-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-purple-800 block mb-1">{t('live.translation')}:</span>
+              <div className="bg-purple-50 border-l-4 border-purple-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
+                <span className="font-bold text-purple-800 block mb-0.5 sm:mb-1">{t('live.translation')}:</span>
                 <p className="text-purple-900 leading-snug">{getData('translation_notes')}</p>
               </div>
             )}
-            {/* Stage & Decor notes - purple color (same as translation) */}
             {getData('stage_decor_notes') && (
-              <div className="bg-purple-50 border-l-4 border-purple-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-purple-800 block mb-1">{t('live.stageDecor')}:</span>
+              <div className="bg-purple-50 border-l-4 border-purple-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
+                <span className="font-bold text-purple-800 block mb-0.5 sm:mb-1">{t('live.stageDecor')}:</span>
                 <p className="text-purple-900 leading-snug">{getData('stage_decor_notes')}</p>
               </div>
             )}
             {getData('other_notes') && (
-              <div className="bg-gray-50 border-l-4 border-gray-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-gray-800 block mb-1">{t('live.other') || 'Otro'}:</span>
+              <div className="bg-gray-50 border-l-4 border-gray-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
+                <span className="font-bold text-gray-800 block mb-0.5 sm:mb-1">{t('live.other') || 'Otro'}:</span>
                 <p className="text-gray-900 leading-snug">{getData('other_notes')}</p>
               </div>
             )}
             {getData('prep_instructions') && (
-              <div className="bg-amber-50 border-l-4 border-amber-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-amber-800 block mb-1">{t('live.prep') || 'Prep'}:</span>
+              <div className="bg-amber-50 border-l-4 border-amber-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
+                <span className="font-bold text-amber-800 block mb-0.5 sm:mb-1">{t('live.prep') || 'Prep'}:</span>
                 <p className="text-amber-900 leading-snug whitespace-pre-wrap">{getData('prep_instructions')}</p>
               </div>
             )}
             {getData('microphone_assignments') && (
-              <div className="bg-red-50 border-l-4 border-red-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-red-800 block mb-1">Mics:</span>
+              <div className="bg-red-50 border-l-4 border-red-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
+                <span className="font-bold text-red-800 block mb-0.5 sm:mb-1">Mics:</span>
                 <p className="text-red-900 leading-snug">{getData('microphone_assignments')}</p>
               </div>
             )}

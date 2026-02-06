@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils, Music, Monitor } from "lucide-react";
+import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils, Music, Monitor, Users } from "lucide-react";
 import HospitalityTasksViewModal from "@/components/service/HospitalityTasksViewModal";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import StickyOpsDeck from "@/components/service/StickyOpsDeck";
@@ -327,74 +327,67 @@ export default function EventProgramView({
                     </div>
                   )}
 
-                  {/* Team Info - Compact */}
-                  {(session.coordinators || session.ushers_team || session.sound_team || session.lights_team || session.video_team || session.tech_team || session.admin_team || session.translation_team || session.photography_team || session.worship_leader) && (
-                    <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs text-gray-700">
-                      {session.coordinators && (
-                        <span><strong>👤 Coord:</strong> {normalizeName(session.coordinators)}</span>
-                      )}
-                      {session.ushers_team && (
-                        <>
-                          <span className="text-gray-400">|</span>
-                          <span><strong>🚪 Ujieres:</strong> {normalizeName(session.ushers_team)}</span>
-                        </>
-                      )}
-                      {session.sound_team && (
-                        <>
-                          <span className="text-gray-400">|</span>
-                          <span><strong>🔊 Sonido:</strong> {normalizeName(session.sound_team)}</span>
-                        </>
-                      )}
-                      {session.lights_team && (
-                        <>
-                          <span className="text-gray-400">|</span>
-                          <span><strong>💡 Luces:</strong> {normalizeName(session.lights_team)}</span>
-                        </>
-                      )}
-                      {session.video_team && (
-                        <>
-                          <span className="text-gray-400">|</span>
-                          <span><strong>🎥 Video:</strong> {normalizeName(session.video_team)}</span>
-                        </>
-                      )}
-                      {session.tech_team && (
-                        <>
-                          <span className="text-gray-400">|</span>
-                          <span><strong>🔧 Tech:</strong> {normalizeName(session.tech_team)}</span>
-                        </>
-                      )}
-                      {session.admin_team && (
-                        <>
-                          <span className="text-gray-400">|</span>
-                          <span><strong>ADMIN:</strong> {normalizeName(session.admin_team)}</span>
-                        </>
-                      )}
-                      {session.translation_team && (
-                        <>
-                          <span className="text-gray-400">|</span>
-                          <span><strong>TRAD:</strong> {normalizeName(session.translation_team)}</span>
-                        </>
-                      )}
-                      {session.photography_team && (
-                        <>
-                          <span className="text-gray-400">|</span>
-                          <span><strong>FOTO:</strong> {normalizeName(session.photography_team)}</span>
-                        </>
-                      )}
-                      {session.worship_leader && (
-                        <>
-                          <span className="text-gray-400">|</span>
-                          <span><strong>ALABANZA:</strong> {normalizeName(session.worship_leader)}</span>
-                        </>
-                      )}
-                      {session.hospitality_team && (
-                        <>
-                          <span className="text-gray-400">|</span>
-                          <span><strong>🍽️ HOSP:</strong> {normalizeName(session.hospitality_team)}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
+                  {/* Item 5: Team info — show primary roles always, hide secondary behind toggle on mobile */}
+                  {(() => {
+                    const hasTeamInfo = session.coordinators || session.ushers_team || session.sound_team || session.lights_team || session.video_team || session.tech_team || session.admin_team || session.translation_team || session.photography_team || session.worship_leader || session.hospitality_team;
+                    if (!hasTeamInfo) return null;
+
+                    // Primary: Coord + Sound + Ushers (always visible)
+                    const primaryItems = [];
+                    if (session.coordinators) primaryItems.push(<span key="coord"><strong>👤 Coord:</strong> {normalizeName(session.coordinators)}</span>);
+                    if (session.sound_team) primaryItems.push(<span key="sound"><strong>🔊 Sonido:</strong> {normalizeName(session.sound_team)}</span>);
+                    if (session.ushers_team) primaryItems.push(<span key="ushers"><strong>🚪 Ujieres:</strong> {normalizeName(session.ushers_team)}</span>);
+
+                    // Secondary: everything else (hidden on mobile by default)
+                    const secondaryItems = [];
+                    if (session.lights_team) secondaryItems.push(<span key="lights"><strong>💡 Luces:</strong> {normalizeName(session.lights_team)}</span>);
+                    if (session.video_team) secondaryItems.push(<span key="video"><strong>🎥 Video:</strong> {normalizeName(session.video_team)}</span>);
+                    if (session.tech_team) secondaryItems.push(<span key="tech"><strong>🔧 Tech:</strong> {normalizeName(session.tech_team)}</span>);
+                    if (session.admin_team) secondaryItems.push(<span key="admin"><strong>ADMIN:</strong> {normalizeName(session.admin_team)}</span>);
+                    if (session.translation_team) secondaryItems.push(<span key="trad"><strong>TRAD:</strong> {normalizeName(session.translation_team)}</span>);
+                    if (session.photography_team) secondaryItems.push(<span key="foto"><strong>FOTO:</strong> {normalizeName(session.photography_team)}</span>);
+                    if (session.worship_leader) secondaryItems.push(<span key="worship"><strong>ALABANZA:</strong> {normalizeName(session.worship_leader)}</span>);
+                    if (session.hospitality_team) secondaryItems.push(<span key="hosp"><strong>🍽️ HOSP:</strong> {normalizeName(session.hospitality_team)}</span>);
+
+                    return (
+                      <div className="mt-2 text-[10px] sm:text-xs text-gray-700">
+                        {/* Primary roles — always visible */}
+                        {primaryItems.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1">
+                            {primaryItems.map((item, i) => (
+                              <React.Fragment key={i}>
+                                {i > 0 && <span className="text-gray-400 hidden sm:inline">|</span>}
+                                {item}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        )}
+                        {/* Secondary roles — hidden on mobile, visible on sm+ */}
+                        {secondaryItems.length > 0 && (
+                          <>
+                            <div className="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                              {secondaryItems.map((item, i) => (
+                                <React.Fragment key={i}>
+                                  {i > 0 && <span className="text-gray-400">|</span>}
+                                  {item}
+                                </React.Fragment>
+                              ))}
+                            </div>
+                            {/* Mobile: collapsible toggle */}
+                            <details className="sm:hidden mt-1">
+                              <summary className="text-[10px] text-gray-500 font-medium cursor-pointer flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                +{secondaryItems.length} equipos más
+                              </summary>
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 pl-1">
+                                {secondaryItems}
+                              </div>
+                            </details>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Expanded Session Details */}
                   {expandedSessions[session.id] && (
