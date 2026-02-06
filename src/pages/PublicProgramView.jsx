@@ -24,6 +24,7 @@ import EventProgramView from "@/components/service/EventProgramView";
 import LiveOperationsChat from "@/components/live/LiveOperationsChat";
 import { useLanguage } from "@/components/utils/i18n";
 import LiveViewSkeleton from "@/components/service/LiveViewSkeleton";
+import { buildChangeSummary, ChangeToastContent } from "@/components/live/LiveChangeToast";
 
 export default function PublicProgramView() {
   const queryClient = useQueryClient();
