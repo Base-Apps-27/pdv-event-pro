@@ -526,12 +526,6 @@ export default function PublicProgramSegment({
                 <p className="text-purple-900 leading-snug">{getData('stage_decor_notes')}</p>
               </div>
             )}
-            {getData('microphone_assignments') && (
-              <div className="bg-red-50 border-l-4 border-red-500 pl-3 py-2 text-xs rounded-r">
-                <span className="font-bold text-red-800 block mb-1">Mics:</span>
-                <p className="text-red-900 leading-snug">{getData('microphone_assignments')}</p>
-              </div>
-            )}
             {getData('other_notes') && (
               <div className="bg-gray-50 border-l-4 border-gray-500 pl-3 py-2 text-xs rounded-r">
                 <span className="font-bold text-gray-800 block mb-1">{t('live.other') || 'Otro'}:</span>
