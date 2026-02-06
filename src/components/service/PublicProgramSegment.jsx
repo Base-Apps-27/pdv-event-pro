@@ -198,7 +198,7 @@ export default function PublicProgramSegment({
           <div className="flex items-center gap-2 sm:gap-3 mb-1">
             <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-pdv-teal flex-shrink-0" />
             <div className="flex items-baseline flex-wrap gap-x-2">
-              <span className="font-bold text-base sm:text-lg text-gray-900">
+              <span className="font-bold text-base sm:text-lg ppv-text">
                 {getData('start_time') ? formatTimeToEST(getData('start_time')) : "-"}
               </span>
               {getData('end_time') && (
