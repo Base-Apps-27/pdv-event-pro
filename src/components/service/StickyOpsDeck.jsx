@@ -264,19 +264,19 @@ export default function StickyOpsDeck({
               className="flex items-center gap-5 flex-1 min-w-0 cursor-pointer"
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              {/* Large Countdown Badge */}
-              <div className={`flex flex-col items-center justify-center w-16 h-16 rounded-2xl shrink-0 shadow-sm ${
+              {/* Countdown Badge — compact on mobile, roomy on desktop */}
+              <div className={`flex flex-col items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl shrink-0 shadow-sm ${
                 isUrgent ? 'bg-amber-500 text-black shadow-md animate-pulse' : 
                 isPast ? 'bg-slate-200 text-slate-400' : 'bg-white text-pdv-teal border-2 border-slate-200'
               }`}>
                 {!isServiceDay ? (
-                  <Clock className="w-8 h-8 opacity-60" />
+                  <Clock className="w-6 h-6 sm:w-7 sm:h-7 opacity-60" />
                 ) : isPast ? (
-                  <CheckCircle2 className="w-8 h-8" />
+                  <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7" />
                 ) : (
-                  <span className="text-2xl font-black leading-none tracking-tight">{diffMin}</span>
+                  <span className="text-xl sm:text-2xl font-black leading-none tracking-tight">{diffMin}</span>
                 )}
-                <span className="text-[10px] uppercase font-bold opacity-70 leading-none mt-1">
+                <span className="text-[9px] uppercase font-bold opacity-70 leading-none mt-0.5">
                   {!isServiceDay ? '' : isPast ? '' : 'min'}
                 </span>
               </div>
