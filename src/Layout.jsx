@@ -86,7 +86,7 @@ function LayoutContent({ children }) {
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="font-bold text-white text-xl uppercase leading-none font-['Bebas_Neue'] tracking-wide">PALABRAS DE VIDA</h2>
+              <h2 className="text-white text-xl uppercase leading-none font-['Bebas_Neue'] tracking-wide">PALABRAS DE VIDA</h2>
               <p className="text-[10px] text-pdv-green font-medium tracking-wider mt-1">¡ATRÉVETE A CAMBIAR!</p>
             </div>
           </div>
