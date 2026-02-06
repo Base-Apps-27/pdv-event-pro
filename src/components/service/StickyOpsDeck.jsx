@@ -331,7 +331,7 @@ export default function StickyOpsDeck({
 
                 {/* Row 3: Notes preview — only if notes exist and deck is collapsed */}
                 {!isExpanded && activeAction.notes && (
-                  <p className={`text-[11px] leading-snug line-clamp-1 ${isPast ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <p className={`text-[11px] leading-snug line-clamp-1 ${isPast ? 'ppv-text-muted' : 'ppv-text-secondary'}`}>
                     {activeAction.notes}
                   </p>
                 )}
@@ -339,7 +339,7 @@ export default function StickyOpsDeck({
             </div>
 
             {/* Right Side: Actions (Scroll + Chat) — tighter on mobile */}
-            <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-slate-200 ml-1 sm:ml-2">
+            <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l ppv-border ml-1 sm:ml-2">
               {/* Jump to Segment */}
               {activeAction.segmentId && (
                 <Button
@@ -385,8 +385,8 @@ export default function StickyOpsDeck({
           
           {/* Expanded List - Rendered SECOND so it appears BELOW the bar */}
           {isExpanded && (
-            <div className={`border-t border-slate-200 px-5 py-4 space-y-4 max-h-[45vh] overflow-y-auto bg-slate-50/90`}>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3 text-slate-500">
+            <div className={`border-t ppv-border px-5 py-4 space-y-4 max-h-[45vh] overflow-y-auto ppv-bg-muted`}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3 ppv-text-secondary">
                 {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
               </p>
             
@@ -394,7 +394,7 @@ export default function StickyOpsDeck({
                 // Concurrent = within 5 min of the header action's time → highlight time the same way
                 const isConcurrent = activeAction && Math.abs(action.time.getTime() - activeAction.time.getTime()) < 300000;
                 return (
-                <div key={idx} className={`flex items-start gap-4 py-2 border-b border-slate-200 last:border-0 ${isPast ? 'opacity-60' : ''}`}>
+                <div key={idx} className={`flex items-start gap-4 py-2 border-b ppv-border last:border-0 ${isPast ? 'opacity-60' : ''}`}>
                   <span className={`font-mono font-bold text-sm mt-0.5 min-w-[3.5rem] text-center px-2 py-0.5 rounded-lg ${
                     isConcurrent 
                       ? (isUrgent ? 'bg-amber-100 text-amber-900 border-2 border-amber-400' : 'bg-indigo-50 text-indigo-700 border-2 border-indigo-300')
