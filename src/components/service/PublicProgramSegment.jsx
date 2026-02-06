@@ -181,38 +181,38 @@ export default function PublicProgramSegment({
       )}
 
       {/* Main Segment Header (Always Visible) */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
+      <div className="flex items-start justify-between gap-2 sm:gap-4">
+        <div className="flex-1 min-w-0">
           {/* Time Display */}
-          <div className="flex items-center gap-3 mb-1">
-            <Clock className="w-5 h-5 text-pdv-teal flex-shrink-0" />
-            <div>
-              <span className="font-bold text-lg text-gray-900">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1">
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-pdv-teal flex-shrink-0" />
+            <div className="flex items-baseline flex-wrap gap-x-2">
+              <span className="font-bold text-base sm:text-lg text-gray-900">
                 {getData('start_time') ? formatTimeToEST(getData('start_time')) : "-"}
               </span>
               {getData('end_time') && (
-                <span className="text-gray-600 ml-2">- {formatTimeToEST(getData('end_time'))}</span>
+                <span className="text-gray-600 text-sm">- {formatTimeToEST(getData('end_time'))}</span>
               )}
               {segment.duration_min && (
-                <span className="text-sm text-gray-600 ml-2">({segment.duration_min} min)</span>
+                <span className="text-xs sm:text-sm text-gray-600">({segment.duration_min} min)</span>
               )}
             </div>
           </div>
 
           {/* Segment Title and Type */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <h4 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-1.5 leading-snug">
               {isSpecial && (
-                <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100" />
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-100 shrink-0" />
               )}
               {getData('title')}
             </h4>
-            <Badge variant="outline" className="text-xs text-gray-700">{displaySegmentType}</Badge>
-             {segment.major_break && (<Badge className="bg-orange-600 text-white text-xs">{t('live.majorBreak')}</Badge>)}
+            <Badge variant="outline" className="text-[10px] sm:text-xs text-gray-700 shrink-0">{displaySegmentType}</Badge>
+             {segment.major_break && (<Badge className="bg-orange-600 text-white text-[10px] sm:text-xs shrink-0">{t('live.majorBreak')}</Badge>)}
             {segment.requires_translation && (
-              <div className="flex items-center gap-1">
-                <Languages className="w-4 h-4 text-purple-600" />
-                {segment.translation_mode === "InPerson" && <Mic className="w-4 h-4 text-purple-600" />}
+              <div className="flex items-center gap-0.5 shrink-0">
+                <Languages className="w-3.5 h-3.5 text-purple-600" />
+                {segment.translation_mode === "InPerson" && <Mic className="w-3.5 h-3.5 text-purple-600" />}
               </div>
             )}
           </div>
@@ -487,7 +487,7 @@ export default function PublicProgramSegment({
 
           {/* Team Notes (Operational Instructions) */}
           {/* These are critical for staff execution, always shown when details are visible */}
-          <div className="grid md:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {getData('coordinator_notes') && (
               <div className="bg-orange-50 border-l-4 border-orange-500 pl-3 py-2 text-xs rounded-r">
                 <span className="font-bold text-orange-800 block mb-1">{t('live.coordination')}:</span>

@@ -145,7 +145,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
   if (!currentSegment && !nextSegment) return null;
 
   return (
-    <Card className="mb-6 bg-white border-2 border-gray-200 shadow-sm overflow-hidden">
+    <Card className="mb-4 sm:mb-6 bg-white border-2 border-gray-200 shadow-sm overflow-hidden">
       <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
         
         {/* Current Segment Section */}
@@ -163,31 +163,31 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                   <span className="text-xs font-mono text-red-600 font-bold">{currentRemaining} {t('live.remaining')}</span>
                 )}
               </div>
-              <h3 className="text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">
                 {currentSegment.title || currentSegment.data?.title}
               </h3>
             </div>
             {getPersonName(currentSegment) && (
-              <p className="text-sm text-gray-500 mt-2 line-clamp-1">{getPersonName(currentSegment)}</p>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1.5 sm:mt-2 line-clamp-1">{getPersonName(currentSegment)}</p>
             )}
           </div>
         ) : (
           upNextCountdown ? (
             <div 
-              className="p-6 rounded-xl w-full bg-gradient-to-br from-teal-50 to-white border-2 border-pdv-teal/20"
+              className="p-4 sm:p-6 rounded-xl w-full bg-gradient-to-br from-teal-50 to-white border-2 border-pdv-teal/20"
             >
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5 sm:gap-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-pdv-teal uppercase tracking-widest">Iniciando en:</span>
-                  <Badge variant="outline" className="bg-white text-gray-700 border-gray-300 font-mono font-bold text-xs">
+                  <span className="text-[10px] sm:text-xs font-bold text-pdv-teal uppercase tracking-widest">Iniciando en:</span>
+                  <Badge variant="outline" className="bg-white text-gray-700 border-gray-300 font-mono font-bold text-[10px] sm:text-xs">
                     {upNextCountdown.segment?.start_time ? formatTimeToEST(upNextCountdown.segment.start_time) : ''}
                   </Badge>
                 </div>
-                <div className="font-mono font-black text-pdv-teal text-5xl md:text-6xl leading-none tracking-tighter tabular-nums my-2">
+                <div className="font-mono font-black text-pdv-teal text-4xl sm:text-5xl md:text-6xl leading-none tracking-tighter tabular-nums my-1 sm:my-2">
                   -{upNextCountdown.hms}
                 </div>
                 {(upNextCountdown.segment?.title || upNextCountdown.segment?.data?.title) && (
-                  <div className="text-base font-semibold text-gray-800 line-clamp-1 border-t border-teal-100 pt-2 mt-1">
+                  <div className="text-sm sm:text-base font-semibold text-gray-800 line-clamp-1 border-t border-teal-100 pt-2 mt-1">
                     {upNextCountdown.segment.title || upNextCountdown.segment.data?.title}
                   </div>
                 )}
@@ -216,7 +216,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                 </div>
               </div>
               <div className="flex items-start justify-between gap-2">
-                <h3 className="text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">
                   {nextSegment.title || nextSegment.data?.title}
                 </h3>
                 {nextSegment.is_live_adjusted && liveAdjustmentEnabled && (
