@@ -163,12 +163,12 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                   <span className="text-xs font-mono text-red-600 font-bold">{currentRemaining} {t('live.remaining')}</span>
                 )}
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">
+              <h3 className="text-lg sm:text-xl font-bold ppv-text group-hover:text-pdv-teal transition-colors line-clamp-2">
                 {currentSegment.title || currentSegment.data?.title}
               </h3>
             </div>
             {getPersonName(currentSegment) && (
-              <p className="text-xs sm:text-sm text-gray-500 mt-1.5 sm:mt-2 line-clamp-1">{getPersonName(currentSegment)}</p>
+              <p className="text-xs sm:text-sm ppv-text-secondary mt-1.5 sm:mt-2 line-clamp-1">{getPersonName(currentSegment)}</p>
             )}
           </div>
         ) : (
