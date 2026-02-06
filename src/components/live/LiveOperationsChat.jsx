@@ -323,34 +323,46 @@ export default function LiveOperationsChat({
   // CRITICAL: Only counts messages from OTHER users that arrived AFTER the last-seen marker.
   // localStorage is the primary source for lastSeenMessageId, so it's available synchronously
   // on mount — no loading sentinel needed.
+  //
+  // CACHE-CLEAR RESILIENCE: When lastSeenMessageId is null (localStorage cleared, new device,
+  // profile stale), we use the user's OWN latest message as an implicit watermark. If the user
+  // has ever sent a message in this chat, they've obviously "seen" everything up to that point.
+  // Only messages from OTHERS that arrived AFTER the user's last own message count as unread.
+  // This prevents the full-count flash on cache clear / cross-device.
   const unreadCount = React.useMemo(() => {
-    // Panel open = everything is "read"
     if (isOpen) return 0;
     
-    // Filter out typing beacons and optimistic messages from count
     const countableMessages = messages.filter(m => m.message !== '__typing__' && !m._isOptimistic);
-    const otherUsersMessages = countableMessages.filter(m => m.created_by !== currentUser?.email);
     
-    if (!lastSeenMessageId) {
-      // No last seen = genuinely first time viewing this chat.
-      // All messages from others are unread. This is correct for new users.
-      console.log('[ChatUnread] No lastSeenMessageId, otherUsersMessages:', otherUsersMessages.length);
+    // Determine the effective watermark index
+    let watermarkIndex = -1;
+    
+    if (lastSeenMessageId) {
+      watermarkIndex = countableMessages.findIndex(m => m.id === lastSeenMessageId);
+      // If persisted ID not found (deleted/archived), fall through to implicit watermark
+    }
+    
+    // IMPLICIT WATERMARK: If no persisted marker (or it was lost), use the user's latest
+    // own message as the watermark. Rationale: if you sent a message, you saw the chat.
+    if (watermarkIndex === -1) {
+      for (let i = countableMessages.length - 1; i >= 0; i--) {
+        if (countableMessages[i].created_by === currentUser?.email) {
+          watermarkIndex = i;
+          break;
+        }
+      }
+    }
+    
+    if (watermarkIndex === -1) {
+      // No watermark at all: user has never interacted with this chat AND has no persisted state.
+      // Show all messages from others as unread (genuine first-time view).
+      const otherUsersMessages = countableMessages.filter(m => m.created_by !== currentUser?.email);
       return otherUsersMessages.length;
     }
     
-    // Find the index of the last seen message in the countable messages array
-    const lastSeenIndex = countableMessages.findIndex(m => m.id === lastSeenMessageId);
-    if (lastSeenIndex === -1) {
-      // Last seen message not found (possibly deleted/archived).
-      // Treat as 0 to avoid showing incorrect counts.
-      console.log('[ChatUnread] lastSeenMessageId not found in messages:', lastSeenMessageId, 'total messages:', countableMessages.length, 'message IDs:', countableMessages.map(m => m.id));
-      return 0;
-    }
-    
-    // Count messages from OTHER users that came AFTER the last seen message
-    const messagesAfterLastSeen = countableMessages.slice(lastSeenIndex + 1);
-    const unreadFromOthers = messagesAfterLastSeen.filter(m => m.created_by !== currentUser?.email);
-    console.log('[ChatUnread] lastSeenId:', lastSeenMessageId, 'index:', lastSeenIndex, 'total:', countableMessages.length, 'unread:', unreadFromOthers.length);
+    // Count messages from OTHER users that came AFTER the watermark
+    const messagesAfterWatermark = countableMessages.slice(watermarkIndex + 1);
+    const unreadFromOthers = messagesAfterWatermark.filter(m => m.created_by !== currentUser?.email);
     return unreadFromOthers.length;
   }, [messages, lastSeenMessageId, isOpen, currentUser?.email]);
 
