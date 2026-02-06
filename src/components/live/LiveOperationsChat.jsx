@@ -222,23 +222,34 @@ export default function LiveOperationsChat({
     }
   }, [isOpen]);
 
-  // Calculate unread count based on persisted last seen message ID
-  // Only counts messages from OTHER users (excludes current user's own messages)
+  // Calculate unread count based on persisted last seen message ID.
+  // CRITICAL: Only counts messages from OTHER users that arrived AFTER the last-seen marker.
+  // Returns 0 while the persisted marker is still loading (LOADING_SENTINEL) to prevent
+  // a flash of "all messages unread" on every page load.
   const unreadCount = React.useMemo(() => {
-    if (isOpen) return 0; // Panel open = everything is "read"
+    // Panel open = everything is "read"
+    if (isOpen) return 0;
+    
+    // Still loading persisted marker — suppress badge to avoid false positive
+    if (lastSeenMessageId === LOADING_SENTINEL) return 0;
     
     const otherUsersMessages = messages.filter(m => m.created_by !== currentUser?.email);
     
     if (!lastSeenMessageId) {
-      // No last seen = all messages from others are unread
+      // No last seen = genuinely first time viewing this chat.
+      // All messages from others are unread. This is correct for new users.
       return otherUsersMessages.length;
     }
     
     // Find the index of the last seen message in the full messages array
     const lastSeenIndex = messages.findIndex(m => m.id === lastSeenMessageId);
     if (lastSeenIndex === -1) {
-      // Last seen message not found (possibly deleted/archived) = treat all from others as unread
-      return otherUsersMessages.length;
+      // Last seen message not found (possibly deleted/archived).
+      // Fallback: compare created_date of last-seen vs messages.
+      // Since we can't compare by date without the original record, treat as 0
+      // to avoid showing incorrect counts. User will see correct count after
+      // opening and closing the panel once (which re-persists the marker).
+      return 0;
     }
     
     // Count messages from OTHER users that came AFTER the last seen message
