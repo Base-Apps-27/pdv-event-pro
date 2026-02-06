@@ -48,12 +48,17 @@ export default function LiveOperationsChat({
   };
 
   const [messageText, setMessageText] = useState("");
-  // CRITICAL: Initialize lastSeenMessageId synchronously from currentUser prop
-  // to prevent race condition where unreadCount computes before the effect hydrates this value.
-  // Without this, all messages show as unread on every page load until the effect fires.
+  // CRITICAL: lastSeenMessageId drives the unread count.
+  // Initialized to a sentinel value "LOADING" so that unreadCount returns 0
+  // until we have actually hydrated the persisted value from the user profile.
+  // This prevents the flash-of-all-unread bug on every page load.
+  const LOADING_SENTINEL = "__LOADING__";
   const [lastSeenMessageId, setLastSeenMessageId] = useState(() => {
     const key = `${contextType}:${contextId}`;
-    return currentUser?.chat_last_seen?.[key] || null;
+    const persisted = currentUser?.chat_last_seen?.[key];
+    // If currentUser is available synchronously, use persisted value (or null = truly no history).
+    // If currentUser is not yet loaded, use sentinel to suppress false unread counts.
+    return currentUser ? (persisted || null) : LOADING_SENTINEL;
   });
   const [isUploading, setIsUploading] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState('default');
