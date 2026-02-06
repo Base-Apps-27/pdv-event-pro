@@ -365,7 +365,13 @@ export default function LiveOperationsChat({
   // HYDRATION GUARD: Suppresses unread count until lastSeenMessageId has been resolved
   // from localStorage or User entity. Prevents "flash of full unread count" on cache clear.
   // Set to true by the hydration useEffect above once the value is resolved (even if null).
+  // Reset when chatContextKey changes (user switches between events/services).
   const [lastSeenHydrated, setLastSeenHydrated] = useState(false);
+  const prevChatContextKeyRef = useRef(chatContextKey);
+  if (prevChatContextKeyRef.current !== chatContextKey) {
+    prevChatContextKeyRef.current = chatContextKey;
+    setLastSeenHydrated(false);
+  }
 
   const unreadCount = React.useMemo(() => {
     if (isOpen) return 0;
