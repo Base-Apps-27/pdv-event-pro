@@ -100,6 +100,7 @@ export default function LiveOperationsChat({
     
     if (fromLS) {
       setLastSeenMessageId(fromLS);
+      setLastSeenHydrated(true);
       return;
     }
     
@@ -107,6 +108,7 @@ export default function LiveOperationsChat({
     // This is the durable fallback that survives cache clears.
     if (!currentUser?.email) {
       setLastSeenMessageId(null);
+      setLastSeenHydrated(true);
       return;
     }
     
@@ -133,6 +135,8 @@ export default function LiveOperationsChat({
         } else {
           setLastSeenMessageId(null);
         }
+      } finally {
+        if (!cancelled) setLastSeenHydrated(true);
       }
     })();
     
