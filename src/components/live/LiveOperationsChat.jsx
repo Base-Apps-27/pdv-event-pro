@@ -93,6 +93,7 @@ export default function LiveOperationsChat({
   useEffect(() => {
     const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
     const fromLS = localStorage.getItem(lsKey);
+    console.log('[ChatHydrate] key:', lsKey, 'localStorage:', fromLS, 'profile:', currentUser?.chat_last_seen?.[chatContextKey]);
     if (fromLS) {
       setLastSeenMessageId(fromLS);
       return;
