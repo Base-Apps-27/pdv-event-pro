@@ -653,6 +653,12 @@ export default function LiveOperationsChat({
     }
   };
 
+  // GUARD: After all hooks have run, check if we should render.
+  // This is placed here (after all hooks) to comply with Rules of Hooks.
+  if (!shouldRender) {
+    return null;
+  }
+
   return (
     <>
       {/* Floating Action Button - Only rendered if hideTrigger is false */}
