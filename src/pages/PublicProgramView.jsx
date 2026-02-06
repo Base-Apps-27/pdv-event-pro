@@ -118,11 +118,15 @@ export default function PublicProgramView() {
       return false;
     };
 
-    const notify = (label) => {
+    // Rich notification: shows what changed with truncated details (segment name, time, presenter, etc.)
+    // Only fires on active event/service days.
+    const notify = (entityType, event) => {
       if (isActiveDay()) {
-        toast.info(`${language === 'es' ? 'Programa actualizado' : 'Program updated'}: ${label}`, {
-          duration: 4000,
-          icon: '🔄',
+        const { title, details, icon } = buildChangeSummary(entityType, event, language);
+        toast(title, {
+          duration: 5000,
+          icon,
+          description: details.length > 0 ? <ChangeToastContent details={details} /> : undefined,
         });
       }
     };
@@ -130,9 +134,8 @@ export default function PublicProgramView() {
     // Subscribe to Segment changes (most frequent edits)
     unsubscribers.push(
       base44.entities.Segment.subscribe((event) => {
-        // Invalidate segments query — will re-fetch immediately
         queryClient.invalidateQueries({ queryKey: ['segments'] });
-        notify(language === 'es' ? 'Segmento' : 'Segment');
+        notify('Segment', event);
       })
     );
 
@@ -140,7 +143,7 @@ export default function PublicProgramView() {
     unsubscribers.push(
       base44.entities.Session.subscribe((event) => {
         queryClient.invalidateQueries({ queryKey: ['sessions'] });
-        notify(language === 'es' ? 'Sesión' : 'Session');
+        notify('Session', event);
       })
     );
 
@@ -150,7 +153,7 @@ export default function PublicProgramView() {
         base44.entities.Service.subscribe((event) => {
           queryClient.invalidateQueries({ queryKey: ['weeklyServiceData'] });
           queryClient.invalidateQueries({ queryKey: ['services'] });
-          notify(language === 'es' ? 'Servicio' : 'Service');
+          notify('Service', event);
         })
       );
     }
@@ -160,7 +163,7 @@ export default function PublicProgramView() {
       unsubscribers.push(
         base44.entities.Event.subscribe((event) => {
           queryClient.invalidateQueries({ queryKey: ['publicEvents'] });
-          notify(language === 'es' ? 'Evento' : 'Event');
+          notify('Event', event);
         })
       );
     }
@@ -170,7 +173,7 @@ export default function PublicProgramView() {
       unsubscribers.push(
         base44.entities.PreSessionDetails.subscribe((event) => {
           queryClient.invalidateQueries({ queryKey: ['preSessionDetails'] });
-          notify(language === 'es' ? 'Pre-sesión' : 'Pre-session');
+          notify('PreSessionDetails', event);
         })
       );
     }
@@ -179,7 +182,7 @@ export default function PublicProgramView() {
     unsubscribers.push(
       base44.entities.SegmentAction.subscribe((event) => {
         queryClient.invalidateQueries({ queryKey: ['segments'] });
-        notify(language === 'es' ? 'Acción operativa' : 'Ops action');
+        notify('SegmentAction', event);
       })
     );
 
