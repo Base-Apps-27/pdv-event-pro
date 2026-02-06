@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { useLanguage } from "@/components/utils/i18n";
+import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { AlertCircle, Clock } from "lucide-react";
 
 /**
@@ -109,12 +110,12 @@ export default function CoordinatorActionsDisplay({
   }
 
   return (
-    <div className="w-full bg-white/10 backdrop-blur-md rounded-2xl border-2 border-pdv-teal/50 p-6 md:p-8">
+    <div className="w-full bg-white rounded-2xl border-2 border-pdv-teal/30 p-6 md:p-8 shadow-lg">
       
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/20">
-        <Clock className="w-6 h-6 md:w-8 md:h-8 text-pdv-yellow flex-shrink-0" />
-        <h3 className="text-2xl md:text-3xl font-bold text-white uppercase tracking-wide">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
+        <Clock className="w-6 h-6 md:w-8 md:h-8 text-pdv-teal flex-shrink-0" />
+        <h3 className="text-2xl md:text-3xl font-bold text-slate-900 uppercase tracking-wide">
           {t('live.coordination')}
         </h3>
       </div>
@@ -132,43 +133,43 @@ export default function CoordinatorActionsDisplay({
               key={action.id}
               className={`flex items-start gap-4 p-4 rounded-xl transition-colors ${
                 isUrgent
-                  ? 'bg-amber-500/20 border border-amber-500/50'
-                  : 'bg-white/5 border border-white/10'
+                  ? 'bg-amber-50 border border-amber-300'
+                  : 'bg-slate-50 border border-slate-200'
               }`}
             >
               {/* Time Indicator */}
               <div className="flex-shrink-0 text-center">
                 <div className={`text-xl md:text-2xl font-black font-mono ${
-                  isUrgent ? 'text-amber-400' : 'text-pdv-yellow'
+                  isUrgent ? 'text-amber-600' : 'text-pdv-teal'
                 }`}>
                   {minutesUntil > 0 ? `${minutesUntil}min` : 'NOW'}
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
-                  {action.time.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                <div className="text-xs text-slate-500 mt-1">
+                  {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
                 </div>
               </div>
 
               {/* Action Details */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start gap-2 mb-2">
-                  {isUrgent && <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />}
+                  {isUrgent && <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />}
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-lg md:text-xl font-bold text-white uppercase tracking-wide">
+                    <h4 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-wide">
                       {action.label}
                     </h4>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className={`text-xs md:text-sm font-bold uppercase tracking-widest px-2 py-0.5 rounded ${
                         action.isPrep
-                          ? 'bg-amber-500/30 text-amber-200 border border-amber-500/50'
-                          : 'bg-blue-500/30 text-blue-200 border border-blue-500/50'
+                          ? 'bg-amber-100 text-amber-700 border border-amber-300'
+                          : 'bg-blue-100 text-blue-700 border border-blue-300'
                       }`}>
                         {action.isPrep ? t('live.preparation') : t('live.during')}
                       </span>
-                      <span className="text-xs md:text-sm text-gray-300">
+                      <span className="text-xs md:text-sm text-slate-600">
                         {action.type}
                       </span>
                       {action.isNext && (
-                        <span className="text-xs md:text-sm text-pdv-lime font-semibold">
+                        <span className="text-xs md:text-sm text-pdv-teal font-semibold">
                           {t('live.upNext')}
                         </span>
                       )}
@@ -177,12 +178,12 @@ export default function CoordinatorActionsDisplay({
                 </div>
                 
                 {action.notes && (
-                  <p className="text-sm md:text-base text-gray-300 ml-7 mt-2 whitespace-pre-wrap">
+                  <p className="text-sm md:text-base text-slate-700 ml-7 mt-2 whitespace-pre-wrap">
                     {action.notes}
                   </p>
                 )}
                 
-                <div className="text-xs text-gray-500 ml-7 mt-2">
+                <div className="text-xs text-slate-500 ml-7 mt-2">
                   {action.segmentTitle}
                 </div>
               </div>
