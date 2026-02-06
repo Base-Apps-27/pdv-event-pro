@@ -135,24 +135,31 @@ export default function LiveOperationsChat({
 
   // MERGE server messages with optimistic messages.
   // Remove optimistic messages once their server counterpart appears (matched by message text + created_by).
+  // CRITICAL: The cleanup of confirmed optimistic messages is done via useEffect (not inside useMemo)
+  // to avoid the setState-during-render anti-pattern which caused re-render storms and perceived lag.
   const messages = React.useMemo(() => {
     if (optimisticMessages.length === 0) return serverMessages;
     
-    // Filter out optimistic messages that are now confirmed on server
     const pendingOptimistic = optimisticMessages.filter(opt => {
-      // If server has a message from the same user with same text created after the optimistic was sent, remove it
       return !serverMessages.some(
         sm => sm.created_by === currentUser?.email && sm.message === opt.message && sm.image_url === opt.image_url
       );
     });
     
-    // Update optimistic state if some were confirmed (avoid infinite loop by checking length)
-    if (pendingOptimistic.length !== optimisticMessages.length) {
-      // Schedule state update for next tick to avoid updating during render
-      setTimeout(() => setOptimisticMessages(pendingOptimistic), 0);
-    }
-    
     return [...serverMessages, ...pendingOptimistic];
+  }, [serverMessages, optimisticMessages, currentUser?.email]);
+
+  // Cleanup confirmed optimistic messages in a separate effect (not during render).
+  useEffect(() => {
+    if (optimisticMessages.length === 0) return;
+    const pendingOptimistic = optimisticMessages.filter(opt => {
+      return !serverMessages.some(
+        sm => sm.created_by === currentUser?.email && sm.message === opt.message && sm.image_url === opt.image_url
+      );
+    });
+    if (pendingOptimistic.length !== optimisticMessages.length) {
+      setOptimisticMessages(pendingOptimistic);
+    }
   }, [serverMessages, optimisticMessages, currentUser?.email]);
 
   // Subscribe to real-time updates + browser notifications.
@@ -504,6 +511,8 @@ export default function LiveOperationsChat({
 
   // Send message mutation with OPTIMISTIC UI.
   // Message appears instantly in the local list, then is confirmed/removed when server responds.
+  // CRITICAL FIX: On success, directly inject the server response into the query cache
+  // instead of invalidating (which triggers a full refetch and causes 8-10s perceived lag).
   const sendMessageMutation = useMutation({
     mutationFn: async ({ text, imageUrl, _optimisticId }) => {
       return await base44.entities.LiveOperationsMessage.create({
@@ -518,14 +527,19 @@ export default function LiveOperationsChat({
         reactions: []
       });
     },
-    onSuccess: (data, variables) => {
-      // Remove the optimistic message — server data will appear via query invalidation
+    onSuccess: (serverMsg, variables) => {
+      // Remove the optimistic message
       setOptimisticMessages(prev => prev.filter(m => m._optimisticId !== variables._optimisticId));
-      queryClient.invalidateQueries(['liveChat', contextType, contextId]);
+      // Directly append the confirmed message to the cache — avoids a full refetch round-trip.
+      queryClient.setQueryData(['liveChat', contextType, contextId], (old) => {
+        if (!old || !Array.isArray(old)) return [serverMsg];
+        // Avoid duplicates if subscription already added it
+        if (old.some(m => m.id === serverMsg.id)) return old;
+        return [...old, serverMsg];
+      });
       setMessageText("");
     },
     onError: (error, variables) => {
-      // Remove failed optimistic message so user sees it disappeared (they can resend)
       console.error('Failed to send message:', error);
       setOptimisticMessages(prev => prev.filter(m => m._optimisticId !== variables._optimisticId));
     }
@@ -820,7 +834,11 @@ export default function LiveOperationsChat({
               <button
                 onClick={handleSend}
                 disabled={!messageText.trim() || sendMessageMutation.isLoading || isUploading}
-                className="h-10 w-10 p-0 rounded-full shadow-sm flex items-center justify-center text-white bg-pdv-teal border-2 border-pdv-teal hover:brightness-110 disabled:opacity-50 shrink-0"
+                className={`h-10 w-10 p-0 rounded-full shadow-sm flex items-center justify-center shrink-0 transition-all duration-150 ${
+                  messageText.trim() 
+                    ? 'text-white bg-pdv-teal border-2 border-pdv-teal hover:brightness-110 scale-105' 
+                    : 'text-slate-400 bg-slate-200 border-2 border-slate-200'
+                } disabled:opacity-50`}
               >
                 {sendMessageMutation.isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
