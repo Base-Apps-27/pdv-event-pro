@@ -166,7 +166,7 @@ export default function ServiceProgramView({
                return <h3 className="text-xl sm:text-2xl font-bold uppercase text-pdv-teal break-words">{adjustedServiceData.name}</h3>;
              })()}
             {adjustedServiceData.description && (
-              <p className="text-xs sm:text-sm text-gray-600 mt-2">{adjustedServiceData.description}</p>
+              <p className="text-xs sm:text-sm ppv-text-secondary mt-2">{adjustedServiceData.description}</p>
             )}
             {/* Team Info - Compact */}
             {(adjustedServiceData.coordinators || adjustedServiceData.ujieres || adjustedServiceData.sound || adjustedServiceData.luces || adjustedServiceData.fotografia) && (
