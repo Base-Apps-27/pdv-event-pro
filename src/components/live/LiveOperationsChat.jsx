@@ -362,20 +362,10 @@ export default function LiveOperationsChat({
   // instead of the full message count. This prevents the "flash of full unread count" on
   // cache clear / new device / refresh. The hydration effect resolves within ~100ms for
   // localStorage and ~500ms for User entity fetch, after which the correct count appears.
+  // HYDRATION GUARD: Suppresses unread count until lastSeenMessageId has been resolved
+  // from localStorage or User entity. Prevents "flash of full unread count" on cache clear.
+  // Set to true by the hydration useEffect above once the value is resolved (even if null).
   const [lastSeenHydrated, setLastSeenHydrated] = useState(false);
-  
-  // Track when hydration completes (set in the hydration useEffect above, consumed here)
-  useEffect(() => {
-    // This fires after the hydration effect sets lastSeenMessageId (or null if truly new user)
-    // We use a microtask delay to ensure the hydration effect has run first
-    const timer = setTimeout(() => setLastSeenHydrated(true), 50);
-    return () => clearTimeout(timer);
-  }, [chatContextKey]);
-  
-  // Reset hydrated flag when context changes
-  useEffect(() => {
-    setLastSeenHydrated(false);
-  }, [chatContextKey]);
 
   const unreadCount = React.useMemo(() => {
     if (isOpen) return 0;
