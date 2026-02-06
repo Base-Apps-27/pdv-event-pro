@@ -352,10 +352,10 @@ export default function ServiceProgramView({
       )}
 
       {/* Receso */}
-      <div className="bg-gray-100 rounded-lg p-4 text-center border border-gray-300">
-        <p className="font-bold text-gray-600">RECESO (30 min)</p>
+      <div className="ppv-bg-muted rounded-lg p-4 text-center border ppv-border">
+        <p className="font-bold ppv-text-secondary">RECESO (30 min)</p>
         {adjustedServiceData.receso_notes?.["9:30am"] && (
-          <p className="text-sm text-gray-600 mt-2">{adjustedServiceData.receso_notes["9:30am"]}</p>
+          <p className="text-sm ppv-text-secondary mt-2">{adjustedServiceData.receso_notes["9:30am"]}</p>
         )}
       </div>
 
