@@ -99,43 +99,37 @@ export default function LiveOperationsChat({
     }
   }, []);
 
-  // HYDRATE lastSeenMessageId on mount AND whenever context changes.
-  // Priority: localStorage (instant) > fresh User entity read (durable, bypasses auth cache).
+  // ─── HYDRATE lastSeenMessageId ─────────────────────────────────────
+  // Runs on mount AND whenever chatContextKey changes (user switches context).
+  // Sets the three-state value: undefined → string | null.
   //
-  // WHY NOT auth.me()? base44.auth.me() can return a stale cached user object that
-  // doesn't reflect recent updateMe() writes. This causes lastSeenMessageId to be null
-  // after cache clear, inflating the unread counter. Reading from User.filter() always
-  // returns the actual persisted value from the database.
+  // Priority: localStorage (instant) > User entity DB read (durable) > auth.me() (stale fallback)
   useEffect(() => {
     const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
     const fromLS = localStorage.getItem(lsKey);
     
     if (fromLS) {
+      // localStorage hit — instant, no async needed
       setLastSeenMessageId(fromLS);
-      setLastSeenHydrated(true);
-      return;
+      return; // hydration complete (value is a string)
     }
     
-    // localStorage empty (cache cleared / new device) — fetch fresh from User entity.
-    // This is the durable fallback that survives cache clears.
+    // localStorage miss (cache cleared / new device) — must fetch from DB.
     if (!currentUser?.email) {
+      // No user = genuinely unknown. Mark as first-time viewer.
       setLastSeenMessageId(null);
-      setLastSeenHydrated(true);
       return;
     }
     
-    // Fetch fresh user data from DB — bypasses stale auth.me() cache.
-    // CRITICAL: base44.entities.User.filter() returns the RAW entity where custom
-    // attributes live inside a `data` object (e.g. data.chat_last_seen), whereas
-    // base44.auth.me() flattens them to top level (chat_last_seen).
-    // We must check BOTH paths for robustness.
+    // Async DB fetch — lastSeenMessageId stays `undefined` (suppresses badge) until resolved.
     let cancelled = false;
     (async () => {
       try {
         const users = await base44.entities.User.filter({ email: currentUser.email });
         if (cancelled) return;
         const freshUser = users?.[0];
-        // Check both raw entity path (data.chat_last_seen) and flattened path (chat_last_seen)
+        // RAW entity path: data.chat_last_seen (how base44 stores custom User attrs)
+        // Flattened path: chat_last_seen (just in case platform behavior changes)
         const profileValue = freshUser?.data?.chat_last_seen?.[chatContextKey] 
                           || freshUser?.chat_last_seen?.[chatContextKey]
                           || null;
@@ -143,10 +137,12 @@ export default function LiveOperationsChat({
           setLastSeenMessageId(profileValue);
           localStorage.setItem(lsKey, profileValue); // re-cache for future
         } else {
+          // DB has no marker either → genuine first-time viewer
           setLastSeenMessageId(null);
         }
       } catch (err) {
-        // If User entity read fails (permissions, etc), fall back to auth.me() data
+        // User.filter() failed (permissions issue on non-admin users).
+        // Fall back to auth.me() flattened data (may be stale but better than nothing).
         if (cancelled) return;
         const fallback = currentUser?.chat_last_seen?.[chatContextKey];
         if (fallback) {
@@ -155,8 +151,6 @@ export default function LiveOperationsChat({
         } else {
           setLastSeenMessageId(null);
         }
-      } finally {
-        if (!cancelled) setLastSeenHydrated(true);
       }
     })();
     
