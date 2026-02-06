@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import CountdownBlock from "@/components/service/CountdownBlock";
 import CoordinatorActionsDisplay from "@/components/service/CoordinatorActionsDisplay";
 import { useLanguage } from "@/components/utils/i18n";
+import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 /**
  * PublicCountdownDisplay
@@ -154,8 +155,8 @@ export default function PublicCountdownDisplay() {
   // Fallback: if no service/segments, show loading or placeholder
   if (!service || segments.length === 0) {
     return (
-      <div className="w-full h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-center text-white">
+      <div className="w-full h-screen bg-white flex items-center justify-center">
+        <div className="text-center text-pdv-teal">
           <h1 className="text-4xl font-bold mb-4">{t('public.headerTitle')}</h1>
           <p className="text-lg opacity-75">{t('public.selectService')}</p>
         </div>
@@ -164,21 +165,17 @@ export default function PublicCountdownDisplay() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-black p-4 md:p-6 flex flex-col items-center justify-center overflow-hidden">
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 p-4 md:p-6 flex flex-col items-center justify-center overflow-hidden">
       {/* TV-Optimized Container: Full-screen, centered, responsive */}
       <div className="w-full max-w-6xl flex flex-col gap-8 items-center">
         
         {/* Header: Service Name & Current Time */}
         <div className="text-center mb-4">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-2 uppercase tracking-tight">
+          <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-2 uppercase tracking-tight">
             {service.name}
           </h1>
-          <div className="text-2xl md:text-3xl text-pdv-yellow font-mono font-bold">
-            {currentTime.toLocaleTimeString(language === 'es' ? 'es-ES' : 'en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit'
-            })}
+          <div className="text-2xl md:text-3xl text-pdv-teal font-mono font-bold">
+            {formatTimeToEST(currentTime.toTimeString().substring(0, 5))}
           </div>
         </div>
 
