@@ -584,7 +584,11 @@ export default function LiveOperationsChat({
           />
 
           {/* Messages Area - Frosted glass background matching OpsDeck expanded list */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-slate-50/90">
+          <div 
+            ref={messagesContainerRef}
+            onScroll={handleMessagesScroll}
+            className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-slate-50/90 relative"
+          >
             {isLoading ? (
               <div className="flex items-center justify-center h-full text-slate-400">
                 <Loader2 className="w-8 h-8 animate-spin" />
@@ -605,17 +609,25 @@ export default function LiveOperationsChat({
                     message={msg}
                     currentUserEmail={currentUser?.email}
                     canPin={canPin}
+                    isOptimistic={!!msg._isOptimistic}
                     onTogglePin={(m) => togglePinMutation.mutate(m)}
                     onToggleReaction={(reactionType) => toggleReactionMutation.mutate({
                       messageId: msg.id,
                       reactionType,
                       currentReactions: msg.reactions
                     })}
+                    onDelete={(m) => {
+                      if (window.confirm('¿Eliminar este mensaje?')) {
+                        deleteMessageMutation.mutate(m);
+                      }
+                    }}
                   />
                 ))}
                 <div ref={messagesEndRef} />
               </>
             )}
+            {/* "New messages" pill — shown when user scrolled up and new messages arrive below */}
+            <NewMessagesPill count={newMessagesBelowCount} onClick={scrollToBottom} />
           </div>
 
           {/* Input Area - Matching OpsDeck bar aesthetic */}
