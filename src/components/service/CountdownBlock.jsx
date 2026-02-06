@@ -115,19 +115,19 @@ export default function CountdownBlock({
   const config = modeConfig[displayMode] || modeConfig['upcoming'];
 
   return (
-    <div className={`relative bg-white rounded-3xl border-4 ${config.borderColor} p-8 md:p-10 shadow-xl ${config.containerClass || ''} transition-all duration-500`}>
+    <div className={`relative bg-white rounded-3xl border-4 ${config.borderColor} p-6 md:p-8 shadow-xl ${config.containerClass || ''} transition-all duration-500 overflow-hidden`}>
       
       {/* Label */}
-      <div className={`absolute -top-5 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full text-sm md:text-base font-black uppercase tracking-widest ${config.labelBg} shadow-lg`}>
+      <div className={`absolute -top-5 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full text-xs md:text-sm font-black uppercase tracking-widest ${config.labelBg} shadow-lg whitespace-nowrap z-10`}>
         {config.label}
       </div>
 
       {/* Main Content */}
-      <div className="space-y-6 mt-2">
+      <div className="space-y-4 md:space-y-6 mt-4">
         
         {/* Countdown Timer — HERO ELEMENT */}
-        <div className="text-center">
-          <div className={`text-[5rem] md:text-[7rem] font-black font-mono tracking-tighter leading-none mb-2 ${config.countdownColor} tabular-nums`}>
+        <div className="text-center w-full overflow-hidden">
+          <div className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl xl:text-8xl font-black font-mono tracking-tighter leading-none mb-2 ${config.countdownColor} tabular-nums break-words`}>
             {countdownText}
           </div>
           {isLiveAdjusted && (
