@@ -369,10 +369,10 @@ export default function PublicProgramSegment({
         {!alwaysExpanded && (
           <button
             onClick={() => onToggleExpand(segment.id)}
-            className="flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-lg hover:bg-gray-200/60 active:bg-gray-200 transition-colors shrink-0 -mr-1"
+            className="flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-lg hover:opacity-60 transition-colors shrink-0 -mr-1"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
-            {isExpanded ? <ChevronUp className="w-5 h-5 sm:w-4 sm:h-4 text-gray-500" /> : <ChevronDown className="w-5 h-5 sm:w-4 sm:h-4 text-gray-500" />}
+            {isExpanded ? <ChevronUp className="w-5 h-5 sm:w-4 sm:h-4 ppv-text-secondary" /> : <ChevronDown className="w-5 h-5 sm:w-4 sm:h-4 ppv-text-secondary" />}
           </button>
         )}
       </div>
@@ -565,13 +565,13 @@ export default function PublicProgramSegment({
           <div className="space-y-2">
             {/* Songs List (for worship segments) */}
             {songs.length > 0 && (
-              <div className="bg-slate-50 p-2 rounded border border-slate-200 text-xs">
-                <p className="font-semibold text-slate-700 mb-1">{t('live.songs')}:</p>
+              <div className="ppv-bg-muted p-2 rounded border ppv-border text-xs">
+                <p className="font-semibold ppv-text mb-1">{t('live.songs')}:</p>
                 <div className="space-y-1">
                   {songs.map((song, idx) => (
-                    <div key={idx} className="flex items-center gap-1">
+                    <div key={idx} className="flex items-center gap-1 ppv-text">
                       <span>{idx + 1}. {song.title}</span>
-                      {song.lead && <span className="text-gray-600">({song.lead})</span>}
+                      {song.lead && <span className="ppv-text-secondary">({song.lead})</span>}
                       {song.key && (
                         <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">
                           {song.key}
@@ -681,8 +681,8 @@ export default function PublicProgramSegment({
 
             {/* General Description/Details */}
             {(getData('description_details') || getData('description')) && (
-              <div className="bg-gray-100 border-l-4 border-gray-500 p-2 mt-2 rounded-r">
-                <p className="text-xs text-gray-900 font-medium">
+              <div className="ppv-bg-muted border-l-4 ppv-border p-2 mt-2 rounded-r">
+                <p className="text-xs ppv-text font-medium">
                   <strong>📝 {t('live.notes')}:</strong> {getData('description_details') || getData('description')}
                 </p>
               </div>
