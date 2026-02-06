@@ -384,6 +384,27 @@ export default function LiveOperationsChat({
     }
   }, [isOpen]);
 
+  // ─── BACKUP PERSIST ON VISIBILITY CHANGE / UNMOUNT ────────────────
+  // If user switches tabs or closes browser while chat is open, flush
+  // the current read marker to localStorage (synchronous, reliable).
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && isOpen && lastSeenMessageId && typeof lastSeenMessageId === 'string') {
+        const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
+        localStorage.setItem(lsKey, lastSeenMessageId);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      // Unmount flush
+      if (isOpen && lastSeenMessageId && typeof lastSeenMessageId === 'string') {
+        const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
+        localStorage.setItem(lsKey, lastSeenMessageId);
+      }
+    };
+  }, [isOpen, lastSeenMessageId, chatContextKey]);
+
   // ─── UNREAD COUNT (three-state aware) ──────────────────────────────
   // Uses the three-state lastSeenMessageId:
   //   undefined → NOT HYDRATED → badge hidden (return 0)
