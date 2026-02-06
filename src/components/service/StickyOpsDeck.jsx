@@ -118,7 +118,8 @@ export default function StickyOpsDeck({
             label: "Facility Prep", // Generic label
             segmentTitle: "Pre-Session",
             type: "facility",
-            isPrep: true,
+            isPrep: false,
+            isPreSession: true,
             segmentId: null,
             notes: preSessionData.facility_notes // Full notes content
           };
