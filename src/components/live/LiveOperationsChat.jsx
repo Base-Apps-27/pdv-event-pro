@@ -165,7 +165,12 @@ export default function LiveOperationsChat({
     
     notification.onclick = () => {
       window.focus();
-      setIsOpen(true);
+      // Use controlled toggle if available, otherwise internal
+      if (isControlled && onControlledToggle) {
+        onControlledToggle(true);
+      } else {
+        setInternalIsOpen(true);
+      }
       notification.close();
     };
   };
