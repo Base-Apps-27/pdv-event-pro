@@ -144,8 +144,8 @@ export default function ServiceProgramView({
         />
 
         {/* Custom Service Segments */}
-         <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
-           <div className="bg-gradient-to-r from-pdv-teal/10 to-white p-3 sm:p-4 border-b">
+         <div className="ppv-bg-surface rounded-lg border-2 ppv-border overflow-hidden border-l-4 border-l-pdv-teal">
+           <div className="bg-gradient-to-r from-pdv-teal/10 to-transparent p-3 sm:p-4 border-b ppv-border-light">
              {(() => {
                const globalAdj = liveAdjustments.find(a => a.adjustment_type === 'global');
                if (globalAdj && globalAdj.offset_minutes !== 0) {
