@@ -194,7 +194,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
               </div>
             </div>
           ) : (
-            <div className="p-4 bg-gray-50 flex items-center justify-center text-gray-400">
+            <div className="p-4 ppv-bg-muted flex items-center justify-center ppv-text-muted">
               <span className="italic text-sm">{t('live.nothingNow')}</span>
             </div>
           )
@@ -203,7 +203,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
         {/* Next Segment Section */}
         {nextSegment ? (
           <div 
-            className="p-4 hover:bg-gray-50 cursor-pointer transition-colors group flex flex-col justify-between h-full relative"
+            className="p-4 hover:opacity-80 cursor-pointer transition-colors group flex flex-col justify-between h-full relative"
             onClick={() => onScrollTo && onScrollTo(nextSegment)}
           >
             <div>
