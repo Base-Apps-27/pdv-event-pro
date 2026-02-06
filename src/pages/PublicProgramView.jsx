@@ -313,6 +313,96 @@ export default function PublicProgramView() {
   const selectedService = services.find(s => s.id === selectedServiceId);
   const rawServiceData = weeklyServiceData?.[0] || null;
 
+  // REAL-TIME SUBSCRIPTIONS: Instant updates when admin edits program data
+  // Placed AFTER rawServiceData / selectedEvent are derived so closures can read them safely.
+  useEffect(() => {
+    const unsubscribers = [];
+
+    const isActiveDay = () => {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+
+      if (viewType === 'service' && rawServiceData?.date) {
+        return rawServiceData.date === todayStr;
+      }
+      if (viewType === 'event' && selectedEvent) {
+        const start = selectedEvent.start_date || '';
+        const end = selectedEvent.end_date || start;
+        return todayStr >= start && todayStr <= end;
+      }
+      return false;
+    };
+
+    const notify = (entityType, event) => {
+      if (isActiveDay()) {
+        const { title, details, icon } = buildChangeSummary(entityType, event, language);
+        toast(title, {
+          duration: 5000,
+          icon,
+          description: details.length > 0 ? <ChangeToastContent details={details} /> : undefined,
+        });
+      }
+    };
+
+    unsubscribers.push(
+      base44.entities.Segment.subscribe((event) => {
+        queryClient.invalidateQueries({ queryKey: ['segments'] });
+        notify('Segment', event);
+      })
+    );
+
+    unsubscribers.push(
+      base44.entities.Session.subscribe((event) => {
+        queryClient.invalidateQueries({ queryKey: ['sessions'] });
+        notify('Session', event);
+      })
+    );
+
+    if (viewType === 'service' && selectedServiceId) {
+      unsubscribers.push(
+        base44.entities.Service.subscribe((event) => {
+          queryClient.invalidateQueries({ queryKey: ['weeklyServiceData'] });
+          queryClient.invalidateQueries({ queryKey: ['services'] });
+          notify('Service', event);
+        })
+      );
+    }
+
+    if (viewType === 'event' && selectedEventId) {
+      unsubscribers.push(
+        base44.entities.Event.subscribe((event) => {
+          queryClient.invalidateQueries({ queryKey: ['publicEvents'] });
+          notify('Event', event);
+        })
+      );
+    }
+
+    if (viewType === 'event') {
+      unsubscribers.push(
+        base44.entities.PreSessionDetails.subscribe((event) => {
+          queryClient.invalidateQueries({ queryKey: ['preSessionDetails'] });
+          notify('PreSessionDetails', event);
+        })
+      );
+    }
+
+    unsubscribers.push(
+      base44.entities.SegmentAction.subscribe((event) => {
+        queryClient.invalidateQueries({ queryKey: ['segments'] });
+        notify('SegmentAction', event);
+      })
+    );
+
+    return () => {
+      unsubscribers.forEach(unsub => {
+        if (typeof unsub === 'function') unsub();
+      });
+    };
+  }, [viewType, selectedServiceId, selectedEventId, rawServiceData?.date, selectedEvent?.start_date, selectedEvent?.end_date, language, queryClient]);
+
   // Fetch live time adjustment for weekly services
   const { data: liveAdjustments = [] } = useQuery({
     queryKey: ['liveAdjustments', selectedServiceId, rawServiceData?.date],
