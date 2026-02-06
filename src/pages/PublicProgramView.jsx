@@ -874,10 +874,10 @@ export default function PublicProgramView() {
                 return (
                   <div className="w-full max-w-full">
                     <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
-                      <SelectTrigger className="w-full max-w-full overflow-hidden bg-white border-2 border-gray-400 text-gray-900 h-12">
+                      <SelectTrigger className="w-full max-w-full overflow-hidden border-2 h-12 ppv-text" style={{ backgroundColor: 'var(--ppv-select-bg)', borderColor: 'var(--ppv-select-border)' }}>
                         <SelectValue placeholder={t('public.selectService')} />
                       </SelectTrigger>
-                      <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
+                      <SelectContent className="max-w-[calc(100vw-2rem)]" style={{ backgroundColor: 'var(--ppv-select-bg)' }}>
                         {upcomingServices.map((service) => (
                                                     <SelectItem key={service.id} value={service.id}>
                                                       {service.name.length > 25 ? service.name.substring(0, 25) + '...' : service.name} - {formatDateET(service.date)} ({service.daysUntil === 0 ? t('public.today') : service.daysUntil === 1 ? t('public.tomorrow') : `${t('public.in')} ${service.daysUntil} ${service.daysUntil === 1 ? t('public.day') : t('public.days')}`})
