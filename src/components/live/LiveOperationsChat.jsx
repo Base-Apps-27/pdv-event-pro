@@ -368,43 +368,37 @@ export default function LiveOperationsChat({
     }
   }, [isOpen]);
 
-  // HYDRATION GUARD for unread count:
-  // lastSeenMessageId starts null and is populated async by the hydration effect above
-  // (localStorage read ~instant, User entity fetch ~500ms). During that window, we suppress
-  // the unread count to 0 to prevent "flash of full count" on cache clear / new device.
-  // Set to true by the hydration effect once the value is resolved (even if null).
-  // Reset when chatContextKey changes (user switches between events/services).
-  const [lastSeenHydrated, setLastSeenHydrated] = useState(false);
-  const prevChatContextKeyRef = useRef(chatContextKey);
-  if (prevChatContextKeyRef.current !== chatContextKey) {
-    prevChatContextKeyRef.current = chatContextKey;
-    setLastSeenHydrated(false);
-  }
+  // ─── UNREAD COUNT (three-state aware) ──────────────────────────────
+  // Uses the three-state lastSeenMessageId:
+  //   undefined → NOT HYDRATED → badge hidden (return 0)
+  //   null      → FIRST-TIME VIEWER → badge hidden (return 0, mark on first open)
+  //   string    → NORMAL → count messages after the marker from other users
+  //
+  // PRODUCT DECISION: First-time viewers see a clean slate (0 unread).
+  // They are NOT shown "everything since the beginning."
+  // On first open, the marker is set to the latest message ID and persisted.
 
   const unreadCount = React.useMemo(() => {
     if (isOpen) return 0;
     
-    // While hydrating lastSeenMessageId, suppress count to avoid flash
-    if (!lastSeenHydrated) return 0;
+    // undefined = still hydrating → suppress badge entirely
+    if (lastSeenMessageId === undefined) return 0;
     
+    // null = first-time viewer (confirmed after hydration) → clean slate
+    if (lastSeenMessageId === null) return 0;
+    
+    // string = normal read marker → count messages after it
     const countableMessages = messages.filter(m => m.message !== '__typing__' && !m._isOptimistic);
-    const otherUsersMessages = countableMessages.filter(m => m.created_by !== currentUser?.email);
-    
-    if (!lastSeenMessageId) {
-      // No last seen = genuinely first time viewing this chat (confirmed after hydration).
-      return otherUsersMessages.length;
-    }
     
     const lastSeenIndex = countableMessages.findIndex(m => m.id === lastSeenMessageId);
     if (lastSeenIndex === -1) {
-      // Last seen message not found (possibly deleted/archived) — show 0 to be safe
+      // Last seen message not found (deleted/archived) → safe default
       return 0;
     }
     
     const messagesAfterLastSeen = countableMessages.slice(lastSeenIndex + 1);
-    const unreadFromOthers = messagesAfterLastSeen.filter(m => m.created_by !== currentUser?.email);
-    return unreadFromOthers.length;
-  }, [messages, lastSeenMessageId, isOpen, currentUser?.email, lastSeenHydrated]);
+    return messagesAfterLastSeen.filter(m => m.created_by !== currentUser?.email).length;
+  }, [messages, lastSeenMessageId, isOpen, currentUser?.email]);
 
   // Report unread count changes to parent
   useEffect(() => {
