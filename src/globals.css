@@ -148,15 +148,12 @@ css
   }
   
   h1, h2, h3, h4, h5, h6 {
-    /* Bebas Neue only has weight 400.
-     * The @font-face override above maps ALL weight requests (100-900) to the same
-     * Bebas Neue 400 file, so even if Tailwind applies font-bold (700) the browser
-     * will still render Bebas Neue instead of falling back to system fonts.
-     *
-     * We keep font-weight: 400 here as the default, but stray font-bold classes
-     * on headings will no longer cause font fallback — they'll just be ignored.
+    /* Anton for H1 display headings; Bebas Neue fallback for H2-H6.
+     * Anton ships weight 400 only but is designed for bold display use.
+     * The @font-face override above maps Bebas Neue 100-900 → 400 file
+     * to prevent font fallback when Tailwind applies font-bold.
      */
-    font-family: 'Bebas Neue', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Anton', 'Bebas Neue', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     font-weight: 400;
     letter-spacing: 0.02em;
     text-transform: uppercase;
