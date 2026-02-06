@@ -58,7 +58,9 @@ export default function EventProgramView({
   // Chat integration props
   onToggleChat,
   chatUnreadCount = 0,
-  chatOpen = false
+  chatOpen = false,
+  // PERMISSION-GATED: When true, StickyOpsDeck is hidden entirely
+  hideOpsDeck = false
 }) {
   // Event-specific state
   const [selectedSessionId, setSelectedSessionId] = useState("all");
