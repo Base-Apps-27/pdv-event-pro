@@ -80,7 +80,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Hero Section */}
       <div style={gradientStyle} className="text-white py-8 px-6 md:px-8 shadow-lg">
         <div className="max-w-7xl mx-auto text-center">
@@ -116,15 +116,15 @@ export default function Dashboard() {
 
         {/* Quick Actions - 3 Shortcuts */}
         <div className="grid md:grid-cols-3 gap-6">
-          <Card className="bg-gradient-to-br from-white to-green-50 border-2 border-green-200 hover:shadow-lg transition-all group">
+          <Card className="bg-gradient-to-br from-card to-green-50 dark:to-green-950/30 border-2 border-green-200 dark:border-green-800 hover:shadow-lg transition-all group">
             <CardContent className="p-6">
               <div className="flex items-center gap-4 mb-4">
-                <div className="bg-green-100 p-3 rounded-lg group-hover:bg-green-200 transition-colors">
-                  <Calendar className="w-8 h-8 text-green-600" />
+                <div className="bg-green-100 dark:bg-green-900/40 p-3 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800/50 transition-colors">
+                  <Calendar className="w-8 h-8 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg text-gray-900 uppercase">{t('dashboard.weeklyServices.title')}</h3>
-                  <p className="text-sm text-gray-600">{t('dashboard.weeklyServices.subtitle')}</p>
+                  <h3 className="text-lg text-foreground uppercase">{t('dashboard.weeklyServices.title')}</h3>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.weeklyServices.subtitle')}</p>
                 </div>
               </div>
               <Button 
@@ -137,15 +137,15 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-white to-purple-50 border-2 border-purple-200 hover:shadow-lg transition-all group">
+          <Card className="bg-gradient-to-br from-card to-purple-50 dark:to-purple-950/30 border-2 border-purple-200 dark:border-purple-800 hover:shadow-lg transition-all group">
             <CardContent className="p-6">
               <div className="flex items-center gap-4 mb-4">
-                <div className="bg-purple-100 p-3 rounded-lg group-hover:bg-purple-200 transition-colors">
-                  <Plus className="w-8 h-8 text-purple-600" />
+                <div className="bg-purple-100 dark:bg-purple-900/40 p-3 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800/50 transition-colors">
+                  <Plus className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg text-gray-900 uppercase">{t('dashboard.otherServices.title')}</h3>
-                  <p className="text-sm text-gray-600">{t('dashboard.otherServices.subtitle')}</p>
+                  <h3 className="text-lg text-foreground uppercase">{t('dashboard.otherServices.title')}</h3>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.otherServices.subtitle')}</p>
                 </div>
               </div>
               <Button 
@@ -158,15 +158,15 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 hover:shadow-lg transition-all group">
+          <Card className="bg-gradient-to-br from-card to-blue-50 dark:to-blue-950/30 border-2 border-blue-200 dark:border-blue-800 hover:shadow-lg transition-all group">
             <CardContent className="p-6">
               <div className="flex items-center gap-4 mb-4">
-                <div className="bg-blue-100 p-3 rounded-lg group-hover:bg-blue-200 transition-colors">
-                  <FileText className="w-8 h-8 text-blue-600" />
+                <div className="bg-blue-100 dark:bg-blue-900/40 p-3 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800/50 transition-colors">
+                  <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg text-gray-900 uppercase">{t('nav.events')}</h3>
-                  <p className="text-sm text-gray-600">{t('dashboard.events.subtitle')}</p>
+                  <h3 className="text-lg text-foreground uppercase">{t('nav.events')}</h3>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.events.subtitle')}</p>
                 </div>
               </div>
               <Button 
@@ -182,23 +182,23 @@ export default function Dashboard() {
 
         {/* Upcoming Events */}
         <div>
-          <h2 className="text-2xl text-gray-900 uppercase mb-4">{t('dashboard.upcoming')}</h2>
+          <h2 className="text-2xl text-foreground uppercase mb-4">{t('dashboard.upcoming')}</h2>
 
           {upcomingEvents.length > 0 ? (
             <div className="grid gap-4">
               {upcomingEvents.map((event) => (
                 <Card 
                   key={event.id} 
-                  className="bg-white shadow-md hover:shadow-lg transition-shadow"
+                  className="bg-card shadow-md hover:shadow-lg transition-shadow"
                 >
                   <CardContent className="p-6">
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
-                        <h3 className="text-2xl text-gray-900 mb-2">{event.name}</h3>
+                        <h3 className="text-2xl text-foreground mb-2">{event.name}</h3>
                         {event.theme && (
-                          <p className="text-base text-blue-600 italic mb-3">"{event.theme}"</p>
+                          <p className="text-base text-blue-600 dark:text-blue-400 italic mb-3">"{event.theme}"</p>
                         )}
-                        <div className="space-y-2 text-gray-700">
+                        <div className="space-y-2 text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
                             <span className="font-semibold">
@@ -220,8 +220,8 @@ export default function Dashboard() {
                           </Badge>
                           {sessions.filter(s => s.event_id === event.id).length > 0 && (
                             <div className="mt-3">
-                              <p className="text-xs text-gray-600">{t('dashboard.events.sessions')}</p>
-                              <p className="text-xl text-gray-900 font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              <p className="text-xs text-muted-foreground">{t('dashboard.events.sessions')}</p>
+                              <p className="text-xl text-foreground font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>
                                 {sessions.filter(s => s.event_id === event.id).length}
                               </p>
                             </div>
@@ -242,11 +242,11 @@ export default function Dashboard() {
               ))}
             </div>
           ) : (
-            <Card className="bg-white shadow">
+            <Card className="bg-card shadow">
               <CardContent className="p-8 text-center">
-                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <h3 className="text-lg text-gray-900 mb-2">{t('dashboard.no_events')}</h3>
-                <p className="text-gray-600 text-sm mb-4">{t('dashboard.create_first')}</p>
+                <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <h3 className="text-lg text-foreground mb-2">{t('dashboard.no_events')}</h3>
+                <p className="text-muted-foreground text-sm mb-4">{t('dashboard.create_first')}</p>
                 <Button 
                   onClick={() => navigate(createPageUrl('Events'))}
                   style={gradientStyle}
@@ -263,18 +263,18 @@ export default function Dashboard() {
         {/* Recently Passed Events */}
         {recentPastEvents.length > 0 && (
           <div>
-            <h2 className="text-2xl text-gray-900 uppercase mb-4">{t('dashboard.recent')}</h2>
+            <h2 className="text-2xl text-foreground uppercase mb-4">{t('dashboard.recent')}</h2>
             <div className="grid md:grid-cols-3 gap-4">
               {recentPastEvents.map((event) => (
                 <Card 
                   key={event.id} 
-                  className={`bg-white shadow-sm hover:shadow-md transition-shadow border-l-4 ${statusBorderColors[event.status] || 'border-l-gray-300'}`}
+                  className={`bg-card shadow-sm hover:shadow-md transition-shadow border-l-4 ${statusBorderColors[event.status] || 'border-l-gray-300'}`}
                 >
                   <CardContent className="p-4">
                     <div className="flex flex-col gap-3">
                       <div>
-                        <h4 className="text-gray-900">{event.name}</h4>
-                        <p className="text-sm text-gray-600">
+                        <h4 className="text-foreground">{event.name}</h4>
+                        <p className="text-sm text-muted-foreground">
                           {format(new Date(event.start_date), 'MMM d, yyyy', { locale })}
                         </p>
                       </div>
