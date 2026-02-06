@@ -130,7 +130,7 @@ export default function LiveOperationsChat({
       return result || [];
     },
     refetchInterval: 15000, // Fallback poll every 15s — subscription handles real-time
-    enabled: !!contextId
+    enabled: shouldRender
   });
 
   // MERGE server messages with optimistic messages.
