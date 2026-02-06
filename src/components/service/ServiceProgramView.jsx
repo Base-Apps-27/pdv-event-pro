@@ -37,7 +37,9 @@ export default function ServiceProgramView({
   // Chat props passed down from PublicProgramView
   onToggleChat,
   chatUnreadCount,
-  chatOpen
+  chatOpen,
+  // PERMISSION-GATED: When true, StickyOpsDeck is hidden entirely
+  hideOpsDeck = false
 }) {
   const adjustedServiceData = React.useMemo(() => {
     if (!actualServiceData) return null;
