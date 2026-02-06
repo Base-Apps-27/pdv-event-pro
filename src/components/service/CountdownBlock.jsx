@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { useLanguage } from "@/components/utils/i18n";
+import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 /**
  * CountdownBlock
@@ -69,7 +70,7 @@ export default function CountdownBlock({
   const labelBg = isCurrent && hasStarted ? 'bg-pdv-green text-white' : 'bg-pdv-yellow text-black';
 
   return (
-    <div className={`relative bg-white/10 backdrop-blur-md rounded-3xl border-4 ${borderColor} p-8 md:p-10 shadow-2xl`}>
+    <div className={`relative bg-white rounded-3xl border-4 ${borderColor} p-8 md:p-10 shadow-lg`}>
       
       {/* Label */}
       <div className={`absolute -top-4 left-8 px-4 py-2 rounded-full text-xs md:text-sm font-bold uppercase tracking-wider ${labelBg} shadow-lg`}>
@@ -81,7 +82,7 @@ export default function CountdownBlock({
         
         {/* Countdown Timer — HERO ELEMENT */}
         <div className="text-center">
-          <div className="text-7xl md:text-8xl font-black text-white font-mono tracking-tighter leading-none mb-2">
+          <div className="text-7xl md:text-8xl font-black text-pdv-teal font-mono tracking-tighter leading-none mb-2">
             {countdownText}
           </div>
           {isLiveAdjusted && (
@@ -93,7 +94,7 @@ export default function CountdownBlock({
 
         {/* Segment Title */}
         <div className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white uppercase tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 uppercase tracking-tight">
             {segment.title}
           </h2>
         </div>
@@ -102,12 +103,12 @@ export default function CountdownBlock({
         {(segment.segment_type || segment.presenter) && (
           <div className="flex flex-col items-center gap-2 text-center">
             {segment.segment_type && (
-              <div className="text-lg md:text-xl font-semibold text-pdv-lime uppercase tracking-wider">
+              <div className="text-lg md:text-xl font-semibold text-pdv-teal uppercase tracking-wider">
                 {segment.segment_type}
               </div>
             )}
             {segment.presenter && (
-              <div className="text-lg md:text-xl text-gray-300 font-medium">
+              <div className="text-lg md:text-xl text-slate-600 font-medium">
                 {segment.presenter}
               </div>
             )}
@@ -115,12 +116,12 @@ export default function CountdownBlock({
         )}
 
         {/* Start Time Display */}
-        <div className="text-center pt-4 border-t border-white/20">
-          <div className="text-sm md:text-base text-gray-400 uppercase tracking-widest">
+        <div className="text-center pt-4 border-t border-slate-200">
+          <div className="text-sm md:text-base text-slate-500 uppercase tracking-widest">
             {t('live.start')}
           </div>
-          <div className="text-2xl md:text-3xl font-black text-white font-mono mt-1">
-            {segment.start_time}
+          <div className="text-2xl md:text-3xl font-black text-pdv-teal font-mono mt-1">
+            {formatTimeToEST(segment.start_time)}
           </div>
         </div>
 
