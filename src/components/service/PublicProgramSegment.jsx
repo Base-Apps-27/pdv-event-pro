@@ -142,31 +142,29 @@ export default function PublicProgramSegment({
   const showDetails = alwaysExpanded || viewMode === "full" || isExpanded;
 
   // VISUAL HIERARCHY LOGIC
+  // Mobile-first: start compact (p-3 my-2), scale up on sm+ (sm:p-5 sm:my-4)
   const getContainerStyles = () => {
     // 1. Critical Override: Active/Upcoming status always wins
-    if (isCurrent) return 'bg-yellow-50 border-2 border-yellow-400 shadow-md z-10 scale-[1.01] rounded-xl my-4 mx-[-8px]';
-    // Match Hero Block dimensions (p-5, rounded-xl) to prevent layout shifting when status changes
-    if (isUpcoming) return 'bg-blue-50 border-l-4 border-blue-400 rounded-xl my-4 shadow-sm p-5';
+    if (isCurrent) return 'bg-yellow-50 border-2 border-yellow-400 shadow-md z-10 scale-[1.01] rounded-xl my-2 sm:my-4 mx-[-4px] sm:mx-[-8px]';
+    if (isUpcoming) return 'bg-blue-50 border-l-4 border-blue-400 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
 
     // 2. Type-Based Styles - HERO BLOCKS
-    // Distinct containers with solid backgrounds and margins to break the list flow
-    if (isMessage) return 'bg-blue-50 border border-blue-200 rounded-xl my-4 shadow-sm p-5';
-    if (isPanel) return 'bg-amber-50 border border-amber-200 rounded-xl my-4 shadow-sm p-5';
-    if (isWorship) return 'bg-purple-50 border border-purple-200 rounded-xl my-4 shadow-sm p-5';
-    if (isArtes) return 'bg-rose-50 border border-rose-300 rounded-xl my-4 shadow-sm p-5';
+    if (isMessage) return 'bg-blue-50 border border-blue-200 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
+    if (isPanel) return 'bg-amber-50 border border-amber-200 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
+    if (isWorship) return 'bg-purple-50 border border-purple-200 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
+    if (isArtes) return 'bg-rose-50 border border-rose-300 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
     
     // 3. Dividers
-    if (isBreakSegment) return 'bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg my-6 mx-4 opacity-80';
+    if (isBreakSegment) return 'bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg my-4 sm:my-6 mx-2 sm:mx-4 opacity-80';
     
     // 4. Standard List Items (Connective Tissue)
-    // Minimalist style for transitions, MC, etc. to let the Hero Blocks pop
-    return 'bg-white border-b border-gray-100 hover:bg-gray-50 py-3';
+    return 'bg-white border-b border-gray-100 hover:bg-gray-50 py-2 sm:py-3';
   };
 
   return (
     <div 
       id={domId}
-      className={`p-4 transition-all duration-300 scroll-mt-24 ${getContainerStyles()}`}
+      className={`p-3 sm:p-4 transition-all duration-300 scroll-mt-24 ${getContainerStyles()}`}
     >
       {/* Current/Upcoming Status Badges */}
       {isCurrent && (
@@ -374,40 +372,43 @@ export default function PublicProgramSegment({
           {/* Prep Actions (Before-Start Tasks) */}
           {/* Services (alwaysExpanded): muted style, no department labels (standard reminders) */}
           {/* Events (!alwaysExpanded): highlighted style with department labels (unique callouts) */}
+          {/* Item 3: Stacked action layout on mobile — label on top, time below */}
           {prepActions.length > 0 && (
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {prepActions.map((action, idx) => {
                 const actionTime = calculateActionTime(action);
                 return alwaysExpanded ? (
-                  // Services: muted style without department prefix or timing
-                  <div key={idx} className="bg-amber-50 border border-amber-200 rounded px-3 py-2 text-sm">
-                    <div className="flex items-start gap-2">
-                      <span className="bg-amber-400 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">⚠ PREP</span>
-                      <div className="flex-1 flex items-center gap-2 flex-wrap">
-                        <span className="text-amber-800">
+                  <div key={idx} className="bg-amber-50 border border-amber-200 rounded px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm">
+                    <div className="flex items-start gap-1.5 sm:gap-2">
+                      <span className="bg-amber-400 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0 leading-tight">⚠ PREP</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-amber-800 block leading-snug">
                           {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
                         </span>
-                        {actionTime && (
-                          <span className="text-xs font-mono font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">@ {actionTime}</span>
-                        )}
-                        {action.notes && <span className="text-amber-700">— {action.notes}</span>}
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          {actionTime && (
+                            <span className="text-[10px] sm:text-xs font-mono font-semibold text-amber-700 bg-amber-100 px-1 sm:px-1.5 py-0.5 rounded">@ {actionTime}</span>
+                          )}
+                          {action.notes && <span className="text-amber-700 text-[10px] sm:text-xs">— {action.notes}</span>}
+                        </div>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  // Events: highlighted style with department prefix
-                  <div key={idx} className="bg-amber-100 border border-amber-300 rounded px-3 py-2 text-sm">
-                    <div className="flex items-start gap-2">
-                      <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">⚠ PREP</span>
-                      <div className="flex-1 flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-amber-900">
+                  <div key={idx} className="bg-amber-100 border border-amber-300 rounded px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm">
+                    <div className="flex items-start gap-1.5 sm:gap-2">
+                      <span className="bg-amber-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0 leading-tight">⚠ PREP</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-semibold text-amber-900 block leading-snug">
                           {action.department && `[${action.department}] `}
                           {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
                         </span>
-                        {actionTime && (
-                          <span className="text-xs font-mono font-semibold text-amber-700 bg-amber-200 px-1.5 py-0.5 rounded">@ {actionTime}</span>
-                        )}
-                        {action.notes && <span className="text-amber-800">— {action.notes}</span>}
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          {actionTime && (
+                            <span className="text-[10px] sm:text-xs font-mono font-semibold text-amber-700 bg-amber-200 px-1 sm:px-1.5 py-0.5 rounded">@ {actionTime}</span>
+                          )}
+                          {action.notes && <span className="text-amber-800 text-[10px] sm:text-xs">— {action.notes}</span>}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -420,39 +421,41 @@ export default function PublicProgramSegment({
           {/* Services: muted style, no department labels */}
           {/* Events: highlighted style with department labels */}
           {duringActions.length > 0 && (
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {duringActions.map((action, idx) => {
                 const actionTime = calculateActionTime(action);
                 return alwaysExpanded ? (
-                  // Services: muted style without department prefix or timing
-                  <div key={idx} className="bg-blue-50 border border-blue-200 rounded px-3 py-2 text-sm">
-                    <div className="flex items-start gap-2">
-                      <span className="bg-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">▶ DURANTE</span>
-                      <div className="flex-1 flex items-center gap-2 flex-wrap">
-                        <span className="text-blue-800">
+                  <div key={idx} className="bg-blue-50 border border-blue-200 rounded px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm">
+                    <div className="flex items-start gap-1.5 sm:gap-2">
+                      <span className="bg-blue-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0 leading-tight">▶ DURANTE</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-blue-800 block leading-snug">
                           {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
                         </span>
-                        {actionTime && (
-                          <span className="text-xs font-mono font-semibold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">@ {actionTime}</span>
-                        )}
-                        {action.notes && <span className="text-blue-700">— {action.notes}</span>}
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          {actionTime && (
+                            <span className="text-[10px] sm:text-xs font-mono font-semibold text-blue-700 bg-blue-100 px-1 sm:px-1.5 py-0.5 rounded">@ {actionTime}</span>
+                          )}
+                          {action.notes && <span className="text-blue-700 text-[10px] sm:text-xs">— {action.notes}</span>}
+                        </div>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  // Events: highlighted style with department prefix
-                  <div key={idx} className="bg-blue-100 border border-blue-300 rounded px-3 py-2 text-sm">
-                    <div className="flex items-start gap-2">
-                      <span className="bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">▶ DURANTE</span>
-                      <div className="flex-1 flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-blue-900">
+                  <div key={idx} className="bg-blue-100 border border-blue-300 rounded px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm">
+                    <div className="flex items-start gap-1.5 sm:gap-2">
+                      <span className="bg-blue-600 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0 leading-tight">▶ DURANTE</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-semibold text-blue-900 block leading-snug">
                           {action.department && `[${action.department}] `}
                           {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
                         </span>
-                        {actionTime && (
-                          <span className="text-xs font-mono font-semibold text-blue-700 bg-blue-200 px-1.5 py-0.5 rounded">@ {actionTime}</span>
-                        )}
-                        {action.notes && <span className="text-blue-800">— {action.notes}</span>}
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          {actionTime && (
+                            <span className="text-[10px] sm:text-xs font-mono font-semibold text-blue-700 bg-blue-200 px-1 sm:px-1.5 py-0.5 rounded">@ {actionTime}</span>
+                          )}
+                          {action.notes && <span className="text-blue-800 text-[10px] sm:text-xs">— {action.notes}</span>}
+                        </div>
                       </div>
                     </div>
                   </div>
