@@ -177,7 +177,7 @@ export default function EventProgramView({
               <Filter className="w-3 h-3 mr-2 ppv-text-secondary" />
               <SelectValue placeholder="Todas las Sesiones" />
             </SelectTrigger>
-            <SelectContent className="bg-white">
+            <SelectContent style={{ backgroundColor: 'var(--ppv-select-bg)' }}>
               <SelectItem value="all">Todas las Sesiones</SelectItem>
               {eventSessions.map((session) => (
                 <SelectItem key={session.id} value={session.id}>
@@ -188,17 +188,19 @@ export default function EventProgramView({
           </Select>
         </div>
         
-        <div className="flex bg-gray-200/50 p-1 rounded-lg shrink-0 w-full sm:w-auto">
+        <div className="flex p-1 rounded-lg shrink-0 w-full sm:w-auto" style={{ backgroundColor: 'var(--ppv-toggle-bg)' }}>
           <button
             onClick={() => setViewMode("simple")}
-            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "simple" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "simple" ? "shadow ppv-text" : "ppv-text-muted hover:ppv-text-secondary"}`}
+            style={viewMode === "simple" ? { backgroundColor: 'var(--ppv-toggle-active)' } : {}}
           >
             <List className="w-3.5 h-3.5" />
             Simple
           </button>
           <button
             onClick={() => setViewMode("full")}
-            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "full" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "full" ? "shadow ppv-text" : "ppv-text-muted hover:ppv-text-secondary"}`}
+            style={viewMode === "full" ? { backgroundColor: 'var(--ppv-toggle-active)' } : {}}
           >
             <ListChecks className="w-3.5 h-3.5" />
             Run of Show
