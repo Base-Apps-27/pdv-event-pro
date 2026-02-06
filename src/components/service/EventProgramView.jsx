@@ -214,9 +214,9 @@ export default function EventProgramView({
         if (segments.length === 0) return null;
 
         return (
-          <div key={session.id} className={`bg-white rounded-lg overflow-hidden ${sessionColorClasses[session.session_color] || 'border-2 border-gray-300'}`}>
+          <div key={session.id} className={`ppv-bg-surface rounded-lg overflow-hidden ${sessionColorClasses[session.session_color] || 'border-2 ppv-border'}`}>
             {/* Session Header */}
-            <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-3 sm:p-4 border-b">
+            <div className="bg-gradient-to-r from-gray-100/40 to-transparent p-3 sm:p-4 border-b ppv-border-light">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   {/* PreSession Info Card - Segment 0 */}
@@ -276,12 +276,12 @@ export default function EventProgramView({
                           return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
                         })();
                         return (
-                          <h3 className="text-xl sm:text-2xl font-bold uppercase text-gray-900">
+                          <h3 className="text-xl sm:text-2xl font-bold uppercase ppv-text">
                             {session.name} <span className="text-amber-600 text-base sm:text-lg">(inicio: {adjustedTime})</span>
                           </h3>
                         );
                       }
-                      return <h3 className="text-xl sm:text-2xl font-bold uppercase text-gray-900">{session.name}</h3>;
+                      return <h3 className="text-xl sm:text-2xl font-bold uppercase ppv-text">{session.name}</h3>;
                     })()}
                     {/* Hospitality Icon - Prominent rounded rectangle button */}
                     <button
