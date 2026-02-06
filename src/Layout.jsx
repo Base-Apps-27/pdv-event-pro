@@ -37,8 +37,8 @@ function LayoutContentInner({ children }) {
 
   const isActive = (path) => location.pathname === path;
 
-  // CRITICAL: PublicProgramView AND /print/ routes bypass Layout auth checks
-  const isPublicPage = location.pathname.includes('PublicProgramView') || location.pathname.includes('/print/');
+  // CRITICAL: PublicProgramView, PublicCountdownDisplay, AND /print/ routes bypass Layout auth checks
+  const isPublicPage = location.pathname.includes('PublicProgramView') || location.pathname.includes('PublicCountdownDisplay') || location.pathname.includes('/print/');
 
   if (isPublicPage) {
     return <div className="min-h-screen bg-gray-50">{children}</div>;
