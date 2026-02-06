@@ -62,7 +62,8 @@ export default function StickyOpsDeck({
           label: label,
           segmentTitle: "Pre-Session",
           type: type,
-          isPrep: true,
+          isPrep: false,
+          isPreSession: true,
           segmentId: null
         });
       };
