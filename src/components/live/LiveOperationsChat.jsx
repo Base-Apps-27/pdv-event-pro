@@ -834,11 +834,12 @@ export default function LiveOperationsChat({
               <button
                 onClick={handleSend}
                 disabled={!messageText.trim() || sendMessageMutation.isLoading || isUploading}
-                className={`h-10 w-10 p-0 rounded-full shadow-sm flex items-center justify-center shrink-0 transition-all duration-150 ${
+                className={`h-10 w-10 p-0 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
                   messageText.trim() 
-                    ? 'text-white bg-pdv-teal border-2 border-pdv-teal hover:brightness-110 scale-105' 
-                    : 'text-slate-400 bg-slate-200 border-2 border-slate-200'
+                    ? 'text-white border-0 scale-110 shadow-lg shadow-teal-500/30' 
+                    : 'text-slate-400 bg-slate-200 border-2 border-slate-200 shadow-sm'
                 } disabled:opacity-50`}
+                style={messageText.trim() ? { background: 'linear-gradient(135deg, #1F8A70 0%, #4DC15F 100%)' } : {}}
               >
                 {sendMessageMutation.isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
