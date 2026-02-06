@@ -292,7 +292,7 @@ export default function EventProgramView({
                       <Utensils className="w-5 h-5 text-pink-600" />
                     </button>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm ppv-text-secondary">
                     {session.date && <span>{formatDateET(session.date)}</span>}
                     {session.planned_start_time && (
                       <>
@@ -352,13 +352,13 @@ export default function EventProgramView({
                     if (session.hospitality_team) secondaryItems.push(<span key="hosp"><strong>🍽️ HOSP:</strong> {normalizeName(session.hospitality_team)}</span>);
 
                     return (
-                      <div className="mt-2 text-[10px] sm:text-xs text-gray-700">
+                      <div className="mt-2 text-[10px] sm:text-xs ppv-text-secondary">
                         {/* Primary roles — always visible */}
                         {primaryItems.length > 0 && (
                           <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1">
                             {primaryItems.map((item, i) => (
                               <React.Fragment key={i}>
-                                {i > 0 && <span className="text-gray-400 hidden sm:inline">|</span>}
+                                {i > 0 && <span className="ppv-text-muted hidden sm:inline">|</span>}
                                 {item}
                               </React.Fragment>
                             ))}
@@ -393,7 +393,7 @@ export default function EventProgramView({
 
                   {/* Expanded Session Details */}
                   {expandedSessions[session.id] && (
-                    <div className="mt-3 pt-3 border-t border-gray-300 space-y-2 text-sm">
+                    <div className="mt-3 pt-3 border-t ppv-border space-y-2 text-sm ppv-text">
                       {session.notes && (
                         <p><strong>Notas:</strong> {session.notes}</p>
                       )}
