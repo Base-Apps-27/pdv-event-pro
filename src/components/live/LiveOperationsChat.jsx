@@ -427,25 +427,19 @@ export default function LiveOperationsChat({
             onUnpin={(msg) => togglePinMutation.mutate(msg)}
           />
 
-          {/* Messages Area - hardcoded gradient background */}
-          <div 
-            style={{ background: 'linear-gradient(to bottom, #F9FAFB, #F3F4F6)' }}
-            className="flex-1 overflow-y-auto px-4 py-4 space-y-4"
-          >
+          {/* Messages Area - Frosted glass background matching OpsDeck expanded list */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-slate-50/90">
             {isLoading ? (
-              <div className="flex items-center justify-center h-full" style={{ color: '#9CA3AF' }}>
+              <div className="flex items-center justify-center h-full text-slate-400">
                 <Loader2 className="w-8 h-8 animate-spin" />
               </div>
             ) : regularMessages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full" style={{ color: '#6B7280' }}>
-                <div 
-                  style={{ backgroundColor: '#E5E7EB' }}
-                  className="w-16 h-16 rounded-full flex items-center justify-center mb-3"
-                >
-                  <MessageCircle className="w-8 h-8" style={{ color: '#9CA3AF' }} />
+              <div className="flex flex-col items-center justify-center h-full text-slate-500">
+                <div className="w-16 h-16 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center mb-3 shadow-sm">
+                  <MessageCircle className="w-8 h-8 text-slate-400" />
                 </div>
-                <p className="font-semibold" style={{ color: '#4B5563' }}>Sin mensajes aún</p>
-                <p className="text-sm mt-1" style={{ color: '#9CA3AF' }}>Inicia la conversación del equipo</p>
+                <p className="font-bold text-slate-600">Sin mensajes aún</p>
+                <p className="text-sm mt-1 text-slate-400">Inicia la conversación del equipo</p>
               </div>
             ) : (
               <>
