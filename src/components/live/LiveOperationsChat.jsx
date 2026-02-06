@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageCircle, X, Send, Loader2, ImagePlus } from "lucide-react";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { hasPermission } from "@/components/utils/permissions";
 import LiveChatMessage from "./LiveChatMessage";
 import LiveChatPinnedSection from "./LiveChatPinnedSection";
+import NewMessagesPill from "./NewMessagesPill";
 
 /**
  * LiveOperationsChat Component
@@ -62,7 +63,15 @@ export default function LiveOperationsChat({
   });
   const [isUploading, setIsUploading] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState('default');
+  // OPTIMISTIC UI: Local array of messages that haven't been confirmed by server yet.
+  // Each has a temporary client-side `_optimisticId` and `_isOptimistic: true`.
+  const [optimisticMessages, setOptimisticMessages] = useState([]);
+  // SMART SCROLL: Track whether user has scrolled up to read history.
+  // If true, we don't auto-scroll on new messages — show pill instead.
+  const [isUserScrolledUp, setIsUserScrolledUp] = useState(false);
+  const [newMessagesBelowCount, setNewMessagesBelowCount] = useState(0);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
@@ -108,8 +117,10 @@ export default function LiveOperationsChat({
     return null;
   }
 
-  // Fetch messages for current context
-  const { data: messages = [], isLoading } = useQuery({
+  // Fetch messages for current context.
+  // Polling at 15s as a FALLBACK — primary updates come from the real-time subscription.
+  // This prevents the double-fetch storm of 3s polling + subscription invalidation.
+  const { data: serverMessages = [], isLoading } = useQuery({
     queryKey: ['liveChat', contextType, contextId],
     queryFn: async () => {
       const result = await base44.entities.LiveOperationsMessage.filter({
@@ -119,16 +130,40 @@ export default function LiveOperationsChat({
       }, 'created_date');
       return result || [];
     },
-    refetchInterval: 3000, // Poll every 3 seconds
+    refetchInterval: 15000, // Fallback poll every 15s — subscription handles real-time
     enabled: !!contextId
   });
 
-  // Subscribe to real-time updates + browser notifications
+  // MERGE server messages with optimistic messages.
+  // Remove optimistic messages once their server counterpart appears (matched by message text + created_by).
+  const messages = React.useMemo(() => {
+    if (optimisticMessages.length === 0) return serverMessages;
+    
+    // Filter out optimistic messages that are now confirmed on server
+    const pendingOptimistic = optimisticMessages.filter(opt => {
+      // If server has a message from the same user with same text created after the optimistic was sent, remove it
+      return !serverMessages.some(
+        sm => sm.created_by === currentUser?.email && sm.message === opt.message && sm.image_url === opt.image_url
+      );
+    });
+    
+    // Update optimistic state if some were confirmed (avoid infinite loop by checking length)
+    if (pendingOptimistic.length !== optimisticMessages.length) {
+      // Schedule state update for next tick to avoid updating during render
+      setTimeout(() => setOptimisticMessages(pendingOptimistic), 0);
+    }
+    
+    return [...serverMessages, ...pendingOptimistic];
+  }, [serverMessages, optimisticMessages, currentUser?.email]);
+
+  // Subscribe to real-time updates + browser notifications.
+  // Subscription is the PRIMARY update mechanism; polling is fallback.
   useEffect(() => {
     if (!contextId) return;
 
     const unsubscribe = base44.entities.LiveOperationsMessage.subscribe((event) => {
-      if (event.data.context_type === contextType && event.data.context_id === contextId) {
+      if (event.data?.context_type === contextType && event.data?.context_id === contextId) {
+        // Only invalidate for events relevant to this chat context
         queryClient.invalidateQueries(['liveChat', contextType, contextId]);
         
         // Show browser notification if panel is closed and message is from someone else
@@ -179,12 +214,57 @@ export default function LiveOperationsChat({
     };
   };
 
-  // Scroll to bottom when messages change (if panel is open)
-  useEffect(() => {
-    if (isOpen && messagesEndRef.current) {
+  // SMART SCROLL: Detect if user has scrolled up in the messages container.
+  // If near bottom (<80px from end), auto-scroll on new messages.
+  // If scrolled up, show "new messages" pill instead of yanking scroll position.
+  const handleMessagesScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 80;
+    setIsUserScrolledUp(!isNearBottom);
+    if (isNearBottom) setNewMessagesBelowCount(0);
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isOpen]);
+    setIsUserScrolledUp(false);
+    setNewMessagesBelowCount(0);
+  }, []);
+
+  // Auto-scroll to bottom when messages change, but ONLY if user is near bottom.
+  // If user scrolled up to read history, increment the "new messages below" counter instead.
+  const prevMessageCountRef = useRef(messages.length);
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const newCount = messages.length;
+    const added = newCount - prevMessageCountRef.current;
+    prevMessageCountRef.current = newCount;
+    
+    if (added > 0 && isUserScrolledUp) {
+      // User is reading history — don't yank scroll, just increment pill counter
+      setNewMessagesBelowCount(prev => prev + added);
+    } else if (!isUserScrolledUp && messagesEndRef.current) {
+      // User is at bottom — auto-scroll as expected
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages.length, isOpen, isUserScrolledUp]);
+
+  // When panel first opens, always scroll to bottom
+  useEffect(() => {
+    if (isOpen) {
+      setIsUserScrolledUp(false);
+      setNewMessagesBelowCount(0);
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+        }
+      }, 50);
+    }
+  }, [isOpen]);
 
   // Persist last seen message ID when opening panel (marks all as read)
   // Also updates whenever new messages arrive while panel is open
@@ -269,10 +349,25 @@ export default function LiveOperationsChat({
   const pinnedMessages = messages.filter(m => m.is_pinned);
   const regularMessages = messages.filter(m => !m.is_pinned);
 
-  // Send message mutation (supports text and/or image)
-  // Stores user's full_name for display (denormalized for performance)
+  // SOFT-DELETE mutation: Sets is_archived=true + deleted_by/deleted_at for audit trail.
+  // Reuses is_archived so the existing filter (is_archived: false) automatically hides it.
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (msg) => {
+      return await base44.entities.LiveOperationsMessage.update(msg.id, {
+        is_archived: true,
+        deleted_by: currentUser.email,
+        deleted_at: new Date().toISOString()
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['liveChat', contextType, contextId]);
+    }
+  });
+
+  // Send message mutation with OPTIMISTIC UI.
+  // Message appears instantly in the local list, then is confirmed/removed when server responds.
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ text, imageUrl }) => {
+    mutationFn: async ({ text, imageUrl, _optimisticId }) => {
       return await base44.entities.LiveOperationsMessage.create({
         context_type: contextType,
         context_id: contextId,
@@ -285,9 +380,16 @@ export default function LiveOperationsChat({
         reactions: []
       });
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Remove the optimistic message — server data will appear via query invalidation
+      setOptimisticMessages(prev => prev.filter(m => m._optimisticId !== variables._optimisticId));
       queryClient.invalidateQueries(['liveChat', contextType, contextId]);
       setMessageText("");
+    },
+    onError: (error, variables) => {
+      // Remove failed optimistic message so user sees it disappeared (they can resend)
+      console.error('Failed to send message:', error);
+      setOptimisticMessages(prev => prev.filter(m => m._optimisticId !== variables._optimisticId));
     }
   });
 
@@ -372,7 +474,34 @@ export default function LiveOperationsChat({
 
   const handleSend = () => {
     if (!messageText.trim()) return;
-    sendMessageMutation.mutate({ text: messageText, imageUrl: null });
+    const text = messageText;
+    const optimisticId = `opt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    
+    // OPTIMISTIC: Insert a local placeholder message immediately
+    const optimisticMsg = {
+      _optimisticId: optimisticId,
+      _isOptimistic: true,
+      id: optimisticId,
+      message: text.trim(),
+      image_url: null,
+      created_by: currentUser?.email,
+      created_by_name: currentUser?.display_name || currentUser?.full_name || null,
+      created_date: new Date().toISOString(),
+      is_pinned: false,
+      reactions: []
+    };
+    setOptimisticMessages(prev => [...prev, optimisticMsg]);
+    setMessageText(""); // Clear input immediately for responsiveness
+    
+    // Scroll to bottom since user just sent a message
+    setIsUserScrolledUp(false);
+    setNewMessagesBelowCount(0);
+    setTimeout(() => {
+      if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+    
+    // Fire server mutation
+    sendMessageMutation.mutate({ text, imageUrl: null, _optimisticId: optimisticId });
   };
 
   const handleKeyPress = (e) => {
