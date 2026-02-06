@@ -226,8 +226,8 @@ export default function ServiceProgramView({
   // Render Weekly Service (9:30am and 11:30am)
   return (
     <div className="space-y-6">
-      {/* Sticky Ops Deck for Weekly Services */}
-      {(() => {
+      {/* Sticky Ops Deck for Weekly Services - PERMISSION-GATED */}
+      {!hideOpsDeck && (() => {
         const allServiceSegments = [
           ...(adjustedServiceData?.['9:30am'] || []),
           ...(adjustedServiceData?.['11:30am'] || [])
