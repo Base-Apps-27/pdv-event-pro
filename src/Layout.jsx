@@ -4,6 +4,24 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useLanguage, LanguageProvider } from "@/components/utils/i18n";
 import { hasPermission } from "@/components/utils/permissions";
+
+// Dark mode detection - works in PWA on iOS
+function initDarkMode() {
+  const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  
+  const updateDarkMode = (e) => {
+    const isDark = e.matches || darkModeQuery.matches;
+    document.documentElement.classList.toggle('dark', isDark);
+  };
+  
+  // Set initial state
+  updateDarkMode(darkModeQuery);
+  
+  // Listen for changes (iOS PWA will detect system toggle)
+  darkModeQuery.addEventListener('change', updateDarkMode);
+  
+  return () => darkModeQuery.removeEventListener('change', updateDarkMode);
+}
 import { Calendar, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus, Shield } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -490,6 +508,10 @@ function LayoutContentInner({ children }) {
 }
 
 export default function Layout({ children }) {
+  useEffect(() => {
+    return initDarkMode();
+  }, []);
+
   return (
     <LanguageProvider>
       <TooltipProvider delayDuration={200}>
@@ -499,6 +521,33 @@ export default function Layout({ children }) {
             h1, h2 {
               font-family: 'Anton', sans-serif !important;
               font-weight: 400;
+            }
+            
+            /* Dark mode support for PWA */
+            :root {
+              color-scheme: light dark;
+            }
+            
+            @media (prefers-color-scheme: dark) {
+              :root {
+                --background: 15 23 42;
+                --foreground: 248 250 252;
+              }
+              body {
+                background: #0f172a;
+                color: #f8fafc;
+              }
+            }
+            
+            @media (prefers-color-scheme: light) {
+              :root {
+                --background: 255 255 255;
+                --foreground: 15 23 42;
+              }
+              body {
+                background: #ffffff;
+                color: #0f172a;
+              }
             }
           `}</style>
           <LayoutContent>{children}</LayoutContent>
