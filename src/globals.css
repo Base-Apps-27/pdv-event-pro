@@ -170,6 +170,81 @@ css
   .gradient-pdv-bright {
     background: linear-gradient(90deg, #1F8A70 0%, #8DC63F 50%, #D7DF23 100%) !important;
   }
+
+  /*
+   * PublicProgramView (PPV) Dark Mode System
+   * 
+   * Strategy: CSS custom properties scoped to .ppv-root.
+   * Light values are the defaults; .dark .ppv-root overrides them.
+   * Components use these tokens via utility classes (ppv-bg-page, ppv-text, etc.)
+   * 
+   * This keeps all PPV dark mode logic in CSS — no Tailwind dark: needed in JSX.
+   * Other pages remain unaffected.
+   */
+  .ppv-root {
+    --ppv-page-bg: #F0F1F3;
+    --ppv-surface: #ffffff;
+    --ppv-surface-muted: #f3f4f6;       /* gray-100 */
+    --ppv-border: #d1d5db;              /* gray-300 */
+    --ppv-border-light: #e5e7eb;        /* gray-200 */
+    --ppv-text: #111827;                /* gray-900 */
+    --ppv-text-secondary: #6b7280;      /* gray-500 */
+    --ppv-text-muted: #9ca3af;          /* gray-400 */
+    --ppv-toggle-bg: #e5e7eb;           /* gray-200 */
+    --ppv-toggle-active: #ffffff;
+    --ppv-select-bg: #ffffff;
+    --ppv-select-border: #9ca3af;       /* gray-400 */
+    /* Segment type backgrounds (keep light and tinted) */
+    --ppv-seg-default-bg: #ffffff;
+    --ppv-seg-default-border: #f3f4f6;
+    --ppv-seg-worship-bg: #faf5ff;      /* purple-50 */
+    --ppv-seg-worship-border: #e9d5ff;  /* purple-200 */
+    --ppv-seg-message-bg: #eff6ff;      /* blue-50 */
+    --ppv-seg-message-border: #bfdbfe;  /* blue-200 */
+    --ppv-seg-panel-bg: #fffbeb;        /* amber-50 */
+    --ppv-seg-panel-border: #fde68a;    /* amber-200 */
+    --ppv-seg-break-bg: #f3f4f6;        /* gray-100 */
+    --ppv-seg-break-border: #d1d5db;    /* gray-300 */
+    --ppv-seg-arts-bg: #fff1f2;         /* rose-50 */
+    --ppv-seg-arts-border: #fda4af;     /* rose-300 */
+  }
+
+  .dark .ppv-root {
+    --ppv-page-bg: #0f172a;             /* slate-900 */
+    --ppv-surface: #1e293b;             /* slate-800 */
+    --ppv-surface-muted: #1e293b;       /* slate-800 */
+    --ppv-border: #334155;              /* slate-700 */
+    --ppv-border-light: #1e293b;        /* slate-800 */
+    --ppv-text: #f1f5f9;               /* slate-100 */
+    --ppv-text-secondary: #94a3b8;      /* slate-400 */
+    --ppv-text-muted: #64748b;          /* slate-500 */
+    --ppv-toggle-bg: #1e293b;           /* slate-800 */
+    --ppv-toggle-active: #334155;       /* slate-700 */
+    --ppv-select-bg: #1e293b;
+    --ppv-select-border: #475569;       /* slate-600 */
+    --ppv-seg-default-bg: #1e293b;
+    --ppv-seg-default-border: #334155;
+    --ppv-seg-worship-bg: #1e1b2e;      /* dark purple tint */
+    --ppv-seg-worship-border: #4c1d95;  /* purple-800 */
+    --ppv-seg-message-bg: #0f1d2e;      /* dark blue tint */
+    --ppv-seg-message-border: #1e3a5f;  /* blue-800ish */
+    --ppv-seg-panel-bg: #1c1a0f;        /* dark amber tint */
+    --ppv-seg-panel-border: #854d0e;    /* amber-700 */
+    --ppv-seg-break-bg: #1e293b;
+    --ppv-seg-break-border: #475569;
+    --ppv-seg-arts-bg: #1f1318;         /* dark rose tint */
+    --ppv-seg-arts-border: #9f1239;     /* rose-800 */
+  }
+
+  /* Utility classes that read PPV tokens */
+  .ppv-bg-page { background-color: var(--ppv-page-bg); }
+  .ppv-bg-surface { background-color: var(--ppv-surface); }
+  .ppv-bg-muted { background-color: var(--ppv-surface-muted); }
+  .ppv-border { border-color: var(--ppv-border); }
+  .ppv-border-light { border-color: var(--ppv-border-light); }
+  .ppv-text { color: var(--ppv-text); }
+  .ppv-text-secondary { color: var(--ppv-text-secondary); }
+  .ppv-text-muted { color: var(--ppv-text-muted); }
 }
 
 .sidebar-active-gradient {
