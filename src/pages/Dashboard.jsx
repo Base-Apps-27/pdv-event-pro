@@ -84,7 +84,7 @@ export default function Dashboard() {
       {/* Hero Section */}
       <div style={gradientStyle} className="text-white py-8 px-6 md:px-8 shadow-lg">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-wide mb-2">
+          <h1 className="text-3xl md:text-4xl uppercase tracking-wide mb-2">
             {t('dashboard.title')}
           </h1>
           <p className="text-white/90 text-base">
@@ -103,7 +103,7 @@ export default function Dashboard() {
                   <Bell className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-base md:text-lg text-white uppercase tracking-wide">{t('dashboard.liveProgram.title')}</h2>
+                  <h2 className="text-base md:text-lg text-white uppercase tracking-wide">{t('dashboard.liveProgram.title')}</h2>
                   <p className="text-white/95 text-[10px] md:text-xs">{t('dashboard.liveProgram.subtitle')}</p>
                 </div>
               </div>
@@ -123,7 +123,7 @@ export default function Dashboard() {
                   <Calendar className="w-8 h-8 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 uppercase">{t('dashboard.weeklyServices.title')}</h3>
+                  <h3 className="text-lg text-gray-900 uppercase">{t('dashboard.weeklyServices.title')}</h3>
                   <p className="text-sm text-gray-600">{t('dashboard.weeklyServices.subtitle')}</p>
                 </div>
               </div>
@@ -144,7 +144,7 @@ export default function Dashboard() {
                   <Plus className="w-8 h-8 text-purple-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 uppercase">{t('dashboard.otherServices.title')}</h3>
+                  <h3 className="text-lg text-gray-900 uppercase">{t('dashboard.otherServices.title')}</h3>
                   <p className="text-sm text-gray-600">{t('dashboard.otherServices.subtitle')}</p>
                 </div>
               </div>
@@ -165,7 +165,7 @@ export default function Dashboard() {
                   <FileText className="w-8 h-8 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 uppercase">{t('nav.events')}</h3>
+                  <h3 className="text-lg text-gray-900 uppercase">{t('nav.events')}</h3>
                   <p className="text-sm text-gray-600">{t('dashboard.events.subtitle')}</p>
                 </div>
               </div>
@@ -182,7 +182,7 @@ export default function Dashboard() {
 
         {/* Upcoming Events */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 uppercase mb-4">{t('dashboard.upcoming')}</h2>
+          <h2 className="text-2xl text-gray-900 uppercase mb-4">{t('dashboard.upcoming')}</h2>
 
           {upcomingEvents.length > 0 ? (
             <div className="grid gap-4">
@@ -194,7 +194,7 @@ export default function Dashboard() {
                   <CardContent className="p-6">
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">{event.name}</h3>
+                        <h3 className="text-2xl text-gray-900 mb-2">{event.name}</h3>
                         {event.theme && (
                           <p className="text-base text-blue-600 italic mb-3">"{event.theme}"</p>
                         )}
@@ -245,7 +245,7 @@ export default function Dashboard() {
             <Card className="bg-white shadow">
               <CardContent className="p-8 text-center">
                 <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{t('dashboard.no_events')}</h3>
+                <h3 className="text-lg text-gray-900 mb-2">{t('dashboard.no_events')}</h3>
                 <p className="text-gray-600 text-sm mb-4">{t('dashboard.create_first')}</p>
                 <Button 
                   onClick={() => navigate(createPageUrl('Events'))}
@@ -263,7 +263,7 @@ export default function Dashboard() {
         {/* Recently Passed Events */}
         {recentPastEvents.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 uppercase mb-4">{t('dashboard.recent')}</h2>
+            <h2 className="text-2xl text-gray-900 uppercase mb-4">{t('dashboard.recent')}</h2>
             <div className="grid md:grid-cols-3 gap-4">
               {recentPastEvents.map((event) => (
                 <Card 
@@ -273,7 +273,7 @@ export default function Dashboard() {
                   <CardContent className="p-4">
                     <div className="flex flex-col gap-3">
                       <div>
-                        <h4 className="font-bold text-gray-900">{event.name}</h4>
+                        <h4 className="text-gray-900">{event.name}</h4>
                         <p className="text-sm text-gray-600">
                           {format(new Date(event.start_date), 'MMM d, yyyy', { locale })}
                         </p>
