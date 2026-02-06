@@ -145,8 +145,8 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
   if (!currentSegment && !nextSegment) return null;
 
   return (
-    <Card className="mb-4 sm:mb-6 bg-white border-2 border-gray-200 shadow-sm overflow-hidden">
-      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+    <Card className="mb-4 sm:mb-6 ppv-bg-surface border-2 ppv-border shadow-sm overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x" style={{ borderColor: 'var(--ppv-border-light)' }}>
         
         {/* Current Segment Section */}
         {currentSegment ? (
