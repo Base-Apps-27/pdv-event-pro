@@ -1115,10 +1115,11 @@ export default function PublicProgramView() {
                   setVersesModalOpen(true);
                 }}
                 scrollToSegment={scrollToSegment}
-                // Pass chat control props
-                onToggleChat={() => setChatOpen(!chatOpen)}
-                chatUnreadCount={chatUnreadCount}
-                chatOpen={chatOpen}
+                // PERMISSION-GATED: Only pass chat props if user has view_live_chat permission
+                // Users without this permission will not see the chat button in StickyOpsDeck
+                onToggleChat={hasPermission(currentUser, 'view_live_chat') ? () => setChatOpen(!chatOpen) : undefined}
+                chatUnreadCount={hasPermission(currentUser, 'view_live_chat') ? chatUnreadCount : 0}
+                chatOpen={hasPermission(currentUser, 'view_live_chat') ? chatOpen : false}
               />
             )}
 
