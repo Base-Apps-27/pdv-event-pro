@@ -401,7 +401,8 @@ export default function StickyOpsDeck({
                     </div>
                   </div>
                 </div>
-              ))}
+              );
+              })}
               
               {((isPast && pastActions.length === 0) || (!isPast && upcomingActions.length <= 1)) && (
                 <p className="text-sm opacity-50 italic py-2 text-slate-500">No hay más acciones.</p>
