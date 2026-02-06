@@ -141,7 +141,8 @@ export default function EventProgramView({
          Component preserved at: components/service/LiveDirectorPanel.jsx
       */}
 
-      {/* Sticky Ops Deck - Persistent Bottom Bar */}
+      {/* Sticky Ops Deck - PERMISSION-GATED: hidden for users without view_live_chat */}
+      {!hideOpsDeck && (
       <StickyOpsDeck 
         segments={allSegments.map(seg => {
           const session = eventSessions.find(s => s.id === seg.session_id);
@@ -151,11 +152,11 @@ export default function EventProgramView({
         sessionDate={filteredSessions[0]?.date}
         currentTime={currentTime}
         onScrollToSegment={scrollToSegment}
-        // Pass chat control props
         onToggleChat={onToggleChat}
         chatUnreadCount={chatUnreadCount}
         chatOpen={chatOpen}
       />
+      )}
 
       {/* Live Status Card - with date awareness */}
       <LiveStatusCard 
