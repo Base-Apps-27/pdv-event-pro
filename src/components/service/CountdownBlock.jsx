@@ -115,7 +115,7 @@ export default function CountdownBlock({
   const config = modeConfig[displayMode] || modeConfig['upcoming'];
 
   return (
-    <div className={`relative bg-white rounded-3xl border-4 ${config.borderColor} p-6 md:p-8 shadow-xl ${config.containerClass || ''} transition-all duration-500 overflow-hidden`}>
+    <div className={`relative bg-white rounded-3xl border-4 ${config.borderColor} p-6 md:p-8 shadow-xl ${config.containerClass || ''} transition-all duration-500`}>
       
       {/* Label */}
       <div className={`absolute -top-5 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full text-xs md:text-sm font-black uppercase tracking-widest ${config.labelBg} shadow-lg whitespace-nowrap z-10`}>
