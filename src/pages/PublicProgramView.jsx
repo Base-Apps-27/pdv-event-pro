@@ -1149,10 +1149,10 @@ export default function PublicProgramView() {
                                  setVerseParserInitial(initialText || "");
                                  setVerseParserOpen(true);
                                }}
-                               // Chat control props
-                               onToggleChat={() => setChatOpen(!chatOpen)}
-                               chatUnreadCount={chatUnreadCount}
-                               chatOpen={chatOpen}
+                               // PERMISSION-GATED: Only pass chat props if user has view_live_chat permission
+                               onToggleChat={hasPermission(currentUser, 'view_live_chat') ? () => setChatOpen(!chatOpen) : undefined}
+                               chatUnreadCount={hasPermission(currentUser, 'view_live_chat') ? chatUnreadCount : 0}
+                               chatOpen={hasPermission(currentUser, 'view_live_chat') ? chatOpen : false}
                                />
             )}
 
