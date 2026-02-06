@@ -56,15 +56,9 @@ export default function LiveOperationsChat({
   // because base44.auth.me() can return a cached user object that doesn't reflect
   // the latest updateMe() calls).
   const LOCAL_STORAGE_PREFIX = "chat_last_seen:";
-  const [lastSeenMessageId, setLastSeenMessageId] = useState(() => {
-    const lsKey = `${LOCAL_STORAGE_PREFIX}${contextType}:${contextId}`;
-    const fromLS = localStorage.getItem(lsKey);
-    if (fromLS) return fromLS;
-    // Fallback to user profile (may be stale but better than nothing)
-    const key = `${contextType}:${contextId}`;
-    const persisted = currentUser?.chat_last_seen?.[key];
-    return persisted || null;
-  });
+  // CRITICAL: useState initializer runs only on FIRST mount. If contextId changes
+  // (e.g. user switches services), we need the useEffect below to re-sync.
+  const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState('default');
   // OPTIMISTIC UI: Local array of messages that haven't been confirmed by server yet.
