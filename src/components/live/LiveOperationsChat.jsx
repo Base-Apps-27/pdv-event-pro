@@ -75,15 +75,16 @@ export default function LiveOperationsChat({
     }
   }, []);
 
-  // Load persisted last seen message ID from user profile on mount/context change
+  // Sync persisted last seen message ID from user profile when user data arrives or context changes.
+  // This covers the case where currentUser loads asynchronously after mount.
   useEffect(() => {
     if (currentUser?.chat_last_seen && chatContextKey) {
       const storedLastSeen = currentUser.chat_last_seen[chatContextKey];
       if (storedLastSeen) {
         setLastSeenMessageId(storedLastSeen);
-      } else {
-        setLastSeenMessageId(null);
       }
+      // Intentionally do NOT reset to null here — if stored value is missing,
+      // keep whatever was set by initializer or a previous context.
     }
   }, [currentUser?.chat_last_seen, chatContextKey]);
 
