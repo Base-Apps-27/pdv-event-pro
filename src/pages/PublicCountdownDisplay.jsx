@@ -21,6 +21,9 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
 export default function PublicCountdownDisplay() {
   const { t, language } = useLanguage();
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Brand gradient style
+  const gradientText = "bg-clip-text text-transparent bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-yellow";
   const [serviceId, setServiceId] = useState(null);
   const [serviceDate, setServiceDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -209,15 +212,18 @@ export default function PublicCountdownDisplay() {
   const allDone = !currentSegment && !nextSegment && !preLaunchSegment;
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 p-4 md:p-6 flex flex-col items-center justify-center overflow-hidden">
-      <div className="w-full max-w-6xl flex flex-col gap-8 items-center">
+    <div className="w-full min-h-screen bg-slate-50 p-4 md:p-6 flex flex-col items-center justify-center overflow-hidden relative">
+      {/* Top Gradient Bar */}
+      <div className="absolute top-0 left-0 w-full h-3 brand-gradient" />
+      
+      <div className="w-full max-w-6xl flex flex-col gap-8 items-center z-10">
         
         {/* Header: Service Name & Current Time */}
         <div className="text-center mb-4">
-          <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-2 uppercase tracking-tight">
+          <h1 className={`text-6xl md:text-7xl font-black mb-2 uppercase tracking-tight ${gradientText} drop-shadow-sm`}>
             {service.name}
           </h1>
-          <div className="text-2xl md:text-3xl text-pdv-teal font-mono font-bold">
+          <div className="text-3xl md:text-4xl text-slate-800 font-mono font-bold tracking-tight">
             {formatTimeToEST(currentTime.toTimeString().substring(0, 5))}
           </div>
         </div>
