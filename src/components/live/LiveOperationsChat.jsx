@@ -698,7 +698,7 @@ export default function LiveOperationsChat({
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-slate-600 text-xs font-bold px-2.5 py-1 rounded-lg bg-white border border-slate-200 shadow-sm tabular-nums">
-                  {messages.length}
+                  {regularMessages.length + pinnedMessages.length}
                 </span>
                 <button
                   onClick={() => toggleOpen()}
