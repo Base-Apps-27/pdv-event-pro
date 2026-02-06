@@ -26,7 +26,7 @@ export default function CountdownBlock({
   serviceDate,
   getTimeDate
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Canonical time parser — either from parent or inline fallback
   const parseTime = (timeStr) => {
@@ -109,8 +109,6 @@ export default function CountdownBlock({
     }
   };
 
-  // Access language for label fallback
-  const { language } = useLanguage();
   const config = modeConfig[displayMode] || modeConfig['upcoming'];
 
   return (
