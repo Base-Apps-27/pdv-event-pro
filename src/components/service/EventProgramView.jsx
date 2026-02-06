@@ -214,7 +214,7 @@ export default function EventProgramView({
         return (
           <div key={session.id} className={`bg-white rounded-lg overflow-hidden ${sessionColorClasses[session.session_color] || 'border-2 border-gray-300'}`}>
             {/* Session Header */}
-            <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-4 border-b">
+            <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-3 sm:p-4 border-b">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   {/* PreSession Info Card - Segment 0 */}
@@ -263,7 +263,7 @@ export default function EventProgramView({
                     );
                   })()}
 
-                  <div className="flex items-center gap-3 mb-1">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-1 flex-wrap">
                     {(() => {
                       const sessionAdj = liveAdjustments.find(a => a.session_id === session.id);
                       if (sessionAdj && sessionAdj.offset_minutes !== 0) {
@@ -274,12 +274,12 @@ export default function EventProgramView({
                           return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
                         })();
                         return (
-                          <h3 className="text-2xl font-bold uppercase text-gray-900">
-                            {session.name} <span className="text-amber-600">(inicio: {adjustedTime})</span>
+                          <h3 className="text-xl sm:text-2xl font-bold uppercase text-gray-900">
+                            {session.name} <span className="text-amber-600 text-base sm:text-lg">(inicio: {adjustedTime})</span>
                           </h3>
                         );
                       }
-                      return <h3 className="text-2xl font-bold uppercase text-gray-900">{session.name}</h3>;
+                      return <h3 className="text-xl sm:text-2xl font-bold uppercase text-gray-900">{session.name}</h3>;
                     })()}
                     {/* Hospitality Icon - Prominent rounded rectangle button */}
                     <button
@@ -290,7 +290,7 @@ export default function EventProgramView({
                       <Utensils className="w-5 h-5 text-pink-600" />
                     </button>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
                     {session.date && <span>{formatDateET(session.date)}</span>}
                     {session.planned_start_time && (
                       <>
@@ -329,7 +329,7 @@ export default function EventProgramView({
 
                   {/* Team Info - Compact */}
                   {(session.coordinators || session.ushers_team || session.sound_team || session.lights_team || session.video_team || session.tech_team || session.admin_team || session.translation_team || session.photography_team || session.worship_leader) && (
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
+                    <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs text-gray-700">
                       {session.coordinators && (
                         <span><strong>👤 Coord:</strong> {normalizeName(session.coordinators)}</span>
                       )}

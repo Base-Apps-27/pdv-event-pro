@@ -780,7 +780,7 @@ export default function PublicProgramView() {
 
   return (
     <div className="min-h-screen bg-[#F0F1F3]">
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Compact Navigation Bar */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           {/* View Type Toggle (Segmented Control style) */}
