@@ -1154,6 +1154,8 @@ export default function PublicProgramView() {
                                onToggleChat={hasPermission(currentUser, 'view_live_chat') ? () => setChatOpen(!chatOpen) : undefined}
                                chatUnreadCount={hasPermission(currentUser, 'view_live_chat') ? chatUnreadCount : 0}
                                chatOpen={hasPermission(currentUser, 'view_live_chat') ? chatOpen : false}
+                               // PERMISSION-GATED: Hide StickyOpsDeck for users without view_live_chat
+                               hideOpsDeck={!hasPermission(currentUser, 'view_live_chat')}
                                />
             )}
 
