@@ -18,6 +18,23 @@ function LayoutContent({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  /*
+   * DARK MODE: Sync OS preference → .dark class on <html>.
+   * - Runs once on mount + listens for OS theme changes (e.g., macOS auto-switch at sunset).
+   * - PWA/bookmark contexts fire the media query immediately; this JS layer ensures
+   *   Tailwind's `dark:` variants and the .dark CSS variable overrides are both active.
+   * - Uses :root:not(.light) CSS fallback for the gap before React hydrates.
+   */
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const apply = (e) => {
+      document.documentElement.classList.toggle('dark', e.matches);
+    };
+    apply(mq); // initial sync
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
   const isActive = (path) => location.pathname === path;
 
   // CRITICAL: PublicProgramView AND /print/ routes bypass Layout auth checks

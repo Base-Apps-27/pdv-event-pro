@@ -65,7 +65,10 @@ css
     --radius: 0.5rem;
   }
 
-  /* Dark mode overrides (if .dark class is applied to html) */
+  /* Dark mode overrides — activated by .dark class on <html> (set by Layout.js
+   * via matchMedia listener) OR by the @media query below as a CSS-only fallback.
+   * Both mechanisms ensure dark mode works in browsers AND PWA/bookmark contexts.
+   */
   .dark {
     --background: 222 47% 11%;        /* Dark background */
     --foreground: 210 40% 98%;        /* Light text */
@@ -76,16 +79,45 @@ css
     --primary: 165 68% 33%;           /* PDV Teal stays same */
     --primary-foreground: 0 0% 100%;  /* White text on primary */
     --secondary: 75 62% 55%;          /* PDV Green stays same */
-    --secondary-foreground: 222 47% 11%; /* Dark text on secondary */
+    --secondary-foreground: 210 40% 98%; /* Light text on secondary in dark */
     --muted: 217 33% 17%;             /* Dark muted */
     --muted-foreground: 215 20% 65%;  /* Light gray muted text */
     --accent: 165 68% 33%;            /* PDV Teal accent */
     --accent-foreground: 0 0% 100%;   /* White text on accent */
     --destructive: 0 63% 31%;         /* Darker red */
     --destructive-foreground: 210 40% 98%; /* Light text on red */
-    --border: 217 33% 17%;            /* Dark borders */
-    --input: 217 33% 17%;             /* Dark input borders */
+    --border: 217 33% 25%;            /* Slightly lighter borders for visibility */
+    --input: 217 33% 25%;             /* Slightly lighter input borders */
     --ring: 165 68% 33%;              /* PDV Teal focus ring */
+  }
+
+  /*
+   * CSS-only fallback: if JS hasn't applied .dark class yet (e.g., PWA cold start,
+   * bookmark before React hydrates), this media query activates dark variables immediately.
+   * Once JS runs, the .dark class takes over. Both produce the same result.
+   */
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light) {
+      --background: 222 47% 11%;
+      --foreground: 210 40% 98%;
+      --card: 222 47% 15%;
+      --card-foreground: 210 40% 98%;
+      --popover: 222 47% 15%;
+      --popover-foreground: 210 40% 98%;
+      --primary: 165 68% 33%;
+      --primary-foreground: 0 0% 100%;
+      --secondary: 75 62% 55%;
+      --secondary-foreground: 210 40% 98%;
+      --muted: 217 33% 17%;
+      --muted-foreground: 215 20% 65%;
+      --accent: 165 68% 33%;
+      --accent-foreground: 0 0% 100%;
+      --destructive: 0 63% 31%;
+      --destructive-foreground: 210 40% 98%;
+      --border: 217 33% 25%;
+      --input: 217 33% 25%;
+      --ring: 165 68% 33%;
+    }
   }
 }
 
