@@ -96,9 +96,9 @@ export default function ServiceProgramView({
   // If no service data, show empty state
   if (!adjustedServiceData) {
     return (
-      <Card className="p-12 text-center bg-white border-2 border-gray-300">
-        <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-600">Este servicio aún no tiene programa disponible</p>
+      <Card className="p-12 text-center ppv-bg-surface border-2 ppv-border">
+        <Calendar className="w-16 h-16 ppv-text-muted mx-auto mb-4" />
+        <p className="ppv-text-secondary">Este servicio aún no tiene programa disponible</p>
       </Card>
     );
   }
@@ -111,9 +111,9 @@ export default function ServiceProgramView({
   // If neither format, show empty state
   if (!isCustomService && !isWeeklyService) {
     return (
-      <Card className="p-12 text-center bg-white border-2 border-gray-300">
-        <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-600">Este servicio aún no tiene programa disponible</p>
+      <Card className="p-12 text-center ppv-bg-surface border-2 ppv-border">
+        <Calendar className="w-16 h-16 ppv-text-muted mx-auto mb-4" />
+        <p className="ppv-text-secondary">Este servicio aún no tiene programa disponible</p>
       </Card>
     );
   }
