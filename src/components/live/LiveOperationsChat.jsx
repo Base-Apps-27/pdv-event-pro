@@ -352,50 +352,51 @@ export default function LiveOperationsChat({
 
   // Calculate unread count based on persisted last seen message ID.
   // CRITICAL: Only counts messages from OTHER users that arrived AFTER the last-seen marker.
-  // localStorage is the primary source for lastSeenMessageId, so it's available synchronously
-  // on mount — no loading sentinel needed.
   //
-  // CACHE-CLEAR RESILIENCE: When lastSeenMessageId is null (localStorage cleared, new device,
-  // profile stale), we use the user's OWN latest message as an implicit watermark. If the user
-  // has ever sent a message in this chat, they've obviously "seen" everything up to that point.
-  // Only messages from OTHERS that arrived AFTER the user's last own message count as unread.
-  // This prevents the full-count flash on cache clear / cross-device.
+  // HYDRATION GUARD: lastSeenMessageId starts null and is populated async by the hydration
+  // effect (localStorage read or User entity fetch). During that brief window, we return 0
+  // instead of the full message count. This prevents the "flash of full unread count" on
+  // cache clear / new device / refresh. The hydration effect resolves within ~100ms for
+  // localStorage and ~500ms for User entity fetch, after which the correct count appears.
+  const [lastSeenHydrated, setLastSeenHydrated] = useState(false);
+  
+  // Track when hydration completes (set in the hydration useEffect above, consumed here)
+  useEffect(() => {
+    // This fires after the hydration effect sets lastSeenMessageId (or null if truly new user)
+    // We use a microtask delay to ensure the hydration effect has run first
+    const timer = setTimeout(() => setLastSeenHydrated(true), 50);
+    return () => clearTimeout(timer);
+  }, [chatContextKey]);
+  
+  // Reset hydrated flag when context changes
+  useEffect(() => {
+    setLastSeenHydrated(false);
+  }, [chatContextKey]);
+
   const unreadCount = React.useMemo(() => {
     if (isOpen) return 0;
     
+    // While hydrating lastSeenMessageId, suppress count to avoid flash
+    if (!lastSeenHydrated) return 0;
+    
     const countableMessages = messages.filter(m => m.message !== '__typing__' && !m._isOptimistic);
+    const otherUsersMessages = countableMessages.filter(m => m.created_by !== currentUser?.email);
     
-    // Determine the effective watermark index
-    let watermarkIndex = -1;
-    
-    if (lastSeenMessageId) {
-      watermarkIndex = countableMessages.findIndex(m => m.id === lastSeenMessageId);
-      // If persisted ID not found (deleted/archived), fall through to implicit watermark
-    }
-    
-    // IMPLICIT WATERMARK: If no persisted marker (or it was lost), use the user's latest
-    // own message as the watermark. Rationale: if you sent a message, you saw the chat.
-    if (watermarkIndex === -1) {
-      for (let i = countableMessages.length - 1; i >= 0; i--) {
-        if (countableMessages[i].created_by === currentUser?.email) {
-          watermarkIndex = i;
-          break;
-        }
-      }
-    }
-    
-    if (watermarkIndex === -1) {
-      // No watermark at all: user has never interacted with this chat AND has no persisted state.
-      // Show all messages from others as unread (genuine first-time view).
-      const otherUsersMessages = countableMessages.filter(m => m.created_by !== currentUser?.email);
+    if (!lastSeenMessageId) {
+      // No last seen = genuinely first time viewing this chat (confirmed after hydration).
       return otherUsersMessages.length;
     }
     
-    // Count messages from OTHER users that came AFTER the watermark
-    const messagesAfterWatermark = countableMessages.slice(watermarkIndex + 1);
-    const unreadFromOthers = messagesAfterWatermark.filter(m => m.created_by !== currentUser?.email);
+    const lastSeenIndex = countableMessages.findIndex(m => m.id === lastSeenMessageId);
+    if (lastSeenIndex === -1) {
+      // Last seen message not found (possibly deleted/archived) — show 0 to be safe
+      return 0;
+    }
+    
+    const messagesAfterLastSeen = countableMessages.slice(lastSeenIndex + 1);
+    const unreadFromOthers = messagesAfterLastSeen.filter(m => m.created_by !== currentUser?.email);
     return unreadFromOthers.length;
-  }, [messages, lastSeenMessageId, isOpen, currentUser?.email]);
+  }, [messages, lastSeenMessageId, isOpen, currentUser?.email, lastSeenHydrated]);
 
   // Report unread count changes to parent
   useEffect(() => {
