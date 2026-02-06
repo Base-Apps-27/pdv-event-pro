@@ -773,21 +773,23 @@ export default function PublicProgramView() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F1F3]">
+    <div className="ppv-root min-h-screen ppv-bg-page">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Compact Navigation Bar */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           {/* View Type Toggle (Segmented Control style) */}
-          <div className="bg-gray-200 p-1 rounded-xl flex shrink-0 shadow-inner">
+          <div className="p-1 rounded-xl flex shrink-0 shadow-inner" style={{ backgroundColor: 'var(--ppv-toggle-bg)' }}>
             <button
               onClick={() => setViewType("event")}
-              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "event" ? "bg-white text-pdv-teal shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "event" ? "text-pdv-teal shadow-sm" : "ppv-text-muted hover:ppv-text-secondary"}`}
+              style={viewType === "event" ? { backgroundColor: 'var(--ppv-toggle-active)' } : {}}
             >
               {t('public.events')}
             </button>
             <button
               onClick={() => setViewType("service")}
-              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "service" ? "bg-white text-pdv-green shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "service" ? "text-pdv-green shadow-sm" : "ppv-text-muted hover:ppv-text-secondary"}`}
+              style={viewType === "service" ? { backgroundColor: 'var(--ppv-toggle-active)' } : {}}
             >
               {t('public.services')}
             </button>
