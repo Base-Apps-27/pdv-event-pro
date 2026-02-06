@@ -286,14 +286,14 @@ export default function StickyOpsDeck({
                 <div className="flex items-center gap-2.5 mb-1.5">
                   <Badge variant="outline" className={`h-6 text-xs px-2 rounded-md border font-bold ${
                     isUrgent ? 'bg-amber-100 text-amber-900 border-amber-300' : 
-                    isPast ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-indigo-50 text-indigo-600 border-indigo-200'
+                    isPast ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-slate-100 text-slate-600 border-slate-300'
                   }`}>
                     {activeAction.isPrep ? 'PREP' : 'CUE'}
                   </Badge>
                   
                   <span className={`text-xs font-bold uppercase tracking-wider ${
                     isUrgent ? 'text-amber-700' : 
-                    isPast ? 'text-slate-400' : 'text-indigo-500'
+                    isPast ? 'text-slate-400' : 'text-slate-500'
                   }`}>
                     {activeAction.type}
                   </span>
