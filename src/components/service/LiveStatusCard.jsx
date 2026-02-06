@@ -151,7 +151,10 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
         {/* Current Segment Section */}
         {currentSegment ? (
           <div 
-            className="p-4 hover:bg-gray-50 cursor-pointer transition-colors group flex flex-col justify-between h-full"
+            className="p-4 cursor-pointer transition-colors group flex flex-col justify-between h-full"
+            style={{ '--hover-bg': 'var(--ppv-surface-muted)' } as React.CSSProperties}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ppv-surface-muted)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             onClick={() => onScrollTo && onScrollTo(currentSegment)}
           >
             <div>
@@ -179,7 +182,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
               <div className="flex flex-col gap-1.5 sm:gap-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] sm:text-xs font-bold text-pdv-teal uppercase tracking-widest">Iniciando en:</span>
-                  <Badge variant="outline" className="bg-white text-gray-700 border-gray-300 font-mono font-bold text-[10px] sm:text-xs">
+                  <Badge variant="outline" className="ppv-text font-mono font-bold text-[10px] sm:text-xs" style={{ backgroundColor: 'var(--ppv-surface)', borderColor: 'var(--ppv-border)' }}>
                     {upNextCountdown.segment?.start_time ? formatTimeToEST(upNextCountdown.segment.start_time) : ''}
                   </Badge>
                 </div>
@@ -203,14 +206,17 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
         {/* Next Segment Section */}
         {nextSegment ? (
           <div 
-            className="p-4 hover:opacity-80 cursor-pointer transition-colors group flex flex-col justify-between h-full relative"
+            className="p-4 cursor-pointer transition-colors group flex flex-col justify-between h-full relative"
+            style={{ '--hover-bg': 'var(--ppv-surface-muted)' } as React.CSSProperties}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ppv-surface-muted)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             onClick={() => onScrollTo && onScrollTo(nextSegment)}
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('live.upNext')}</span>
+                <span className="text-xs font-bold ppv-text-secondary uppercase tracking-wider">{t('live.upNext')}</span>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300 font-mono font-bold">
+                  <Badge variant="outline" className="ppv-text font-mono font-bold" style={{ backgroundColor: 'var(--ppv-surface-muted)', borderColor: 'var(--ppv-border)' }}>
                     {nextSegment.start_time ? formatTimeToEST(nextSegment.start_time) : ''}
                   </Badge>
                 </div>
@@ -227,11 +233,11 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
               </div>
             </div>
             {getPersonName(nextSegment) && (
-              <p className="text-sm text-gray-500 mt-2 line-clamp-1">{getPersonName(nextSegment)}</p>
+              <p className="text-sm ppv-text-secondary mt-2 line-clamp-1">{getPersonName(nextSegment)}</p>
             )}
           </div>
         ) : (
-          <div className="p-4 bg-gray-50 flex items-center justify-center text-gray-400">
+          <div className="p-4 ppv-bg-muted flex items-center justify-center ppv-text-muted">
             <span className="italic text-sm">{t('live.endOfProgram')}</span>
           </div>
         )}
