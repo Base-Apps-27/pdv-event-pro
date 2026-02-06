@@ -34,19 +34,24 @@ export default function Dashboard() {
     queryFn: () => base44.entities.Session.list()
   });
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
+  // Build a timezone-safe "today" string (YYYY-MM-DD) in America/New_York.
+  // Comparing date STRINGS avoids UTC-vs-local midnight bugs that caused
+  // same-day events (like Juntos 2026-02-06) to fall into "recent" prematurely.
+  const todayET = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  // ^ 'en-CA' locale produces YYYY-MM-DD format
+
+  // An event is "upcoming" if its end_date (or start_date if no end_date) is today or later.
+  // This ensures multi-day events stay in "upcoming" through their final day.
   const upcomingEvents = events
     .filter((e) => e.status !== 'template' && e.start_date)
-    .filter((e) => new Date(e.start_date) >= today)
-    .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+    .filter((e) => (e.end_date || e.start_date) >= todayET)
+    .sort((a, b) => a.start_date.localeCompare(b.start_date))
     .slice(0, 5);
 
   const recentPastEvents = events
     .filter((e) => e.status !== 'template' && e.start_date)
-    .filter((e) => new Date(e.start_date) < today)
-    .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
+    .filter((e) => (e.end_date || e.start_date) < todayET)
+    .sort((a, b) => b.start_date.localeCompare(a.start_date))
     .slice(0, 3);
 
   const statusColors = {
