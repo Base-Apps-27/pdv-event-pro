@@ -127,7 +127,8 @@ export default function CountdownBlock({
         
         {/* Countdown Timer — HERO ELEMENT */}
         <div className="text-center w-full overflow-hidden">
-          <div className={`text-5xl sm:text-6xl md:text-6xl lg:text-7xl xl:text-8xl font-black font-mono tracking-tighter leading-none mb-2 ${config.countdownColor} tabular-nums break-words`}>
+          {/* Responsive sizing accounts for 2-column split at md breakpoint */}
+          <div className={`text-5xl sm:text-6xl md:text-4xl lg:text-5xl xl:text-7xl 2xl:text-8xl font-black font-mono tracking-tighter leading-none mb-2 ${config.countdownColor} tabular-nums break-words`}>
             {countdownText}
           </div>
           {isLiveAdjusted && (
