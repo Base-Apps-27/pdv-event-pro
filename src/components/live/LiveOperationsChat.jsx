@@ -50,15 +50,27 @@ export default function LiveOperationsChat({
   };
 
   const [messageText, setMessageText] = useState("");
-  // CRITICAL: lastSeenMessageId drives the unread count.
-  // PRIMARY source: localStorage (instant, survives refresh, always up-to-date).
-  // SECONDARY source: currentUser.chat_last_seen (backup, may be stale after refresh
-  // because base44.auth.me() can return a cached user object that doesn't reflect
-  // the latest updateMe() calls).
+  // ═══════════════════════════════════════════════════════════════════════
+  // READ MARKER SYSTEM — Single durable read marker per chat context.
+  //
+  // Three-state value for lastSeenMessageId:
+  //   undefined = NOT YET HYDRATED (suppress badge entirely)
+  //   null      = HYDRATED, genuinely first-time viewer (no stored marker)
+  //   string    = HYDRATED, normal read marker (message ID)
+  //
+  // Persistence chain (in priority order):
+  //   1. localStorage (instant, synchronous — primary for same-device)
+  //   2. User entity data.chat_last_seen (durable — cross-device fallback)
+  //   3. auth.me() chat_last_seen (stale cache — last resort)
+  //
+  // CRITICAL: base44.entities.User.filter() returns the RAW entity where custom
+  // attributes live inside a `data` wrapper (e.g. data.chat_last_seen).
+  // base44.auth.me() flattens them to top-level (chat_last_seen).
+  // We must check BOTH paths during hydration.
+  // ═══════════════════════════════════════════════════════════════════════
   const LOCAL_STORAGE_PREFIX = "chat_last_seen:";
-  // CRITICAL: useState initializer runs only on FIRST mount. If contextId changes
-  // (e.g. user switches services), we need the useEffect below to re-sync.
-  const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
+  // undefined = not hydrated yet. This is intentional — see three-state doc above.
+  const [lastSeenMessageId, setLastSeenMessageId] = useState(undefined);
   const [isUploading, setIsUploading] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState('default');
   // OPTIMISTIC UI: Local array of messages that haven't been confirmed by server yet.
