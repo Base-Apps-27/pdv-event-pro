@@ -573,7 +573,7 @@ export default function PublicProgramSegment({
                       <span>{idx + 1}. {song.title}</span>
                       {song.lead && <span className="ppv-text-secondary">({song.lead})</span>}
                       {song.key && (
-                        <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 border-gray-300 text-gray-500 bg-gray-50">
+                        <Badge variant="outline" className="text-[9px] h-4 px-1 py-0 ppv-text-secondary" style={{ borderColor: 'var(--ppv-border)', backgroundColor: 'var(--ppv-surface-muted)' }}>
                           {song.key}
                         </Badge>
                       )}
@@ -721,12 +721,12 @@ export default function PublicProgramSegment({
             {(segment.slide_pack_id || segment.countdown_asset_id) && (
               <div className="flex gap-2 flex-wrap text-[11px]">
                 {segment.slide_pack_id && (
-                  <Badge variant="outline" className="border-gray-300 bg-white text-gray-700">
+                  <Badge variant="outline" className="ppv-text" style={{ borderColor: 'var(--ppv-border)', backgroundColor: 'var(--ppv-surface)' }}>
                     {t('live.slides')}: {(slidePackLookup && slidePackLookup[segment.slide_pack_id]) || segment.slide_pack_id}
                   </Badge>
                 )}
                 {segment.countdown_asset_id && (
-                  <Badge variant="outline" className="border-gray-300 bg-white text-gray-700">
+                  <Badge variant="outline" className="ppv-text" style={{ borderColor: 'var(--ppv-border)', backgroundColor: 'var(--ppv-surface)' }}>
                     {t('live.countdown')}: {(assetLookup && assetLookup[segment.countdown_asset_id]) || segment.countdown_asset_id}
                   </Badge>
                 )}
