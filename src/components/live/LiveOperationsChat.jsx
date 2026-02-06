@@ -112,13 +112,21 @@ export default function LiveOperationsChat({
       return;
     }
     
+    // Fetch fresh user data from DB — bypasses stale auth.me() cache.
+    // CRITICAL: base44.entities.User.filter() returns the RAW entity where custom
+    // attributes live inside a `data` object (e.g. data.chat_last_seen), whereas
+    // base44.auth.me() flattens them to top level (chat_last_seen).
+    // We must check BOTH paths for robustness.
     let cancelled = false;
     (async () => {
       try {
         const users = await base44.entities.User.filter({ email: currentUser.email });
         if (cancelled) return;
         const freshUser = users?.[0];
-        const profileValue = freshUser?.chat_last_seen?.[chatContextKey];
+        // Check both raw entity path (data.chat_last_seen) and flattened path (chat_last_seen)
+        const profileValue = freshUser?.data?.chat_last_seen?.[chatContextKey] 
+                          || freshUser?.chat_last_seen?.[chatContextKey]
+                          || null;
         if (profileValue) {
           setLastSeenMessageId(profileValue);
           localStorage.setItem(lsKey, profileValue); // re-cache for future
