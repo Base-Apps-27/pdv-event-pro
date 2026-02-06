@@ -221,7 +221,7 @@ export default function Dashboard() {
                           {sessions.filter(s => s.event_id === event.id).length > 0 && (
                             <div className="mt-3">
                               <p className="text-xs text-gray-600">{t('dashboard.events.sessions')}</p>
-                              <p className="text-xl font-bold text-gray-900">
+                              <p className="text-xl text-gray-900 font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>
                                 {sessions.filter(s => s.event_id === event.id).length}
                               </p>
                             </div>
