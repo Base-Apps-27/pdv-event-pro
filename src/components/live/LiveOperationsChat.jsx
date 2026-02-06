@@ -276,16 +276,27 @@ export default function LiveOperationsChat({
   }, [isOpen]);
 
   // Persist last seen message ID when opening panel (marks all as read)
-  // Also updates whenever new messages arrive while panel is open
+  // Also updates whenever new messages arrive while panel is open.
+  // PRIMARY: localStorage (instant, synchronous, survives refresh).
+  // SECONDARY: user profile via updateMe (debounced backup for cross-device sync).
   const persistTimeoutRef = useRef(null);
   useEffect(() => {
     if (isOpen && messages.length > 0) {
-      const latestMessageId = messages[messages.length - 1]?.id;
+      // Filter out optimistic messages — only use server-confirmed IDs for persistence
+      const confirmedMessages = messages.filter(m => !m._isOptimistic);
+      if (confirmedMessages.length === 0) return;
+      
+      const latestMessageId = confirmedMessages[confirmedMessages.length - 1]?.id;
       if (latestMessageId && latestMessageId !== lastSeenMessageId) {
-        // Update local state immediately for responsive UI
+        // 1. Update React state immediately
         setLastSeenMessageId(latestMessageId);
         
-        // Debounce persistence to avoid rapid updates when messages stream in
+        // 2. Write to localStorage SYNCHRONOUSLY — this is the primary persistence
+        //    that survives page refresh and is read on next mount.
+        const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
+        localStorage.setItem(lsKey, latestMessageId);
+        
+        // 3. Debounce user profile write as backup (for cross-device sync)
         if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
         persistTimeoutRef.current = setTimeout(() => {
           const updatedChatLastSeen = {
@@ -293,9 +304,9 @@ export default function LiveOperationsChat({
             [chatContextKey]: latestMessageId
           };
           base44.auth.updateMe({ chat_last_seen: updatedChatLastSeen }).catch(err => {
-            console.error('Failed to persist chat_last_seen:', err);
+            console.error('Failed to persist chat_last_seen to profile:', err);
           });
-        }, 500);
+        }, 2000); // Longer debounce — localStorage handles immediate persistence
       }
     }
     
