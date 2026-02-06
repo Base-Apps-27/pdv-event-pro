@@ -223,14 +223,14 @@ export default function StickyOpsDeck({
 
   const moreCount = Math.max(0, concurrentCount - 1);
   
-  // Glass Control Deck: Light/Tranquil theme
+  // Glass Control Deck: Light/Tranquil theme - High Contrast & Large Text
   // Floating with deeper shadow and rim
   const bgClass = 'bg-slate-100/95 backdrop-blur-xl';
-  const textClass = 'text-slate-800';
+  const textClass = 'text-slate-900';
 
   return (
-    // Floating container (raised to bottom-20 to allow drop-down list)
-    <div className="fixed bottom-20 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[600px] z-40 print:hidden flex flex-col justify-end items-center pointer-events-none transition-all duration-300">
+    // Floating container
+    <div className="fixed bottom-20 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[650px] z-40 print:hidden flex flex-col justify-end items-center pointer-events-none transition-all duration-300">
       
       {/* Wrapper for the deck */}
       <div className="w-full relative pointer-events-auto">
@@ -238,107 +238,117 @@ export default function StickyOpsDeck({
         {/* Label Shelf - Attached to top */}
         <div 
           onClick={() => setIsExpanded(!isExpanded)}
-          className={`absolute -top-6 left-4 px-3 py-1 rounded-t-md text-xs font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 z-0 ${
+          className={`absolute -top-7 left-4 px-4 py-1.5 rounded-t-lg text-xs font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 z-0 ${
             isUrgent 
               ? 'bg-amber-500 text-black shadow-lg' 
-              : 'bg-slate-200/90 backdrop-blur-md text-slate-600 border-t border-x border-slate-300 shadow-sm'
+              : 'bg-slate-200/90 backdrop-blur-md text-slate-700 border-t border-x border-slate-300 shadow-sm'
           }`}
-          style={{ height: '24px' }}
+          style={{ height: '28px' }}
         >
           <span>Acciones de Coord</span>
         </div>
 
         {/* Main Content Box - Floating, Rounded, Shadowed */}
         <div 
-          className={`w-full shadow-[0_20px_50px_-12px_rgba(0,0,0,0.2)] rounded-2xl border border-white/40 ring-1 ring-black/5 overflow-hidden transition-all duration-300 relative z-10 flex flex-col ${bgClass} ${textClass}`}
+          className={`w-full shadow-[0_25px_60px_-12px_rgba(0,0,0,0.3)] rounded-2xl border border-white/60 ring-1 ring-black/10 overflow-hidden transition-all duration-300 relative z-10 flex flex-col ${bgClass} ${textClass}`}
         >
           
           {/* Main Bar - Rendered FIRST so children (List) appear BELOW it */}
           <div 
-            className="flex items-center justify-between py-3 px-3 sm:px-4 relative z-20"
+            className="flex items-center justify-between py-4 px-4 sm:px-6 relative z-20"
           >
             {/* Left Side: Countdown + Info */}
             <div 
-              className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+              className="flex items-center gap-5 flex-1 min-w-0 cursor-pointer"
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              {/* Compact Countdown Badge */}
-              <div className={`flex flex-col items-center justify-center w-12 h-11 rounded-xl shrink-0 ${
-                isUrgent ? 'bg-amber-500 text-black shadow-lg animate-pulse' : 
-                isPast ? 'bg-slate-200 text-slate-400' : 'bg-white text-pdv-teal border border-slate-200'
+              {/* Large Countdown Badge */}
+              <div className={`flex flex-col items-center justify-center w-16 h-16 rounded-2xl shrink-0 shadow-sm ${
+                isUrgent ? 'bg-amber-500 text-black shadow-md animate-pulse' : 
+                isPast ? 'bg-slate-200 text-slate-400' : 'bg-white text-pdv-teal border-2 border-slate-200'
               }`}>
                 {!isServiceDay ? (
-                  <Clock className="w-6 h-6 opacity-60" />
+                  <Clock className="w-8 h-8 opacity-60" />
                 ) : isPast ? (
-                  <CheckCircle2 className="w-6 h-6" />
+                  <CheckCircle2 className="w-8 h-8" />
                 ) : (
-                  <span className="text-lg font-bold leading-none">{diffMin}</span>
+                  <span className="text-2xl font-black leading-none tracking-tight">{diffMin}</span>
                 )}
-                <span className="text-[10px] uppercase font-bold opacity-70 leading-none mt-0.5">
+                <span className="text-[10px] uppercase font-bold opacity-70 leading-none mt-1">
                   {!isServiceDay ? '' : isPast ? '' : 'min'}
                 </span>
               </div>
 
               {/* Action Info */}
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="outline" className={`h-5 text-[10px] px-1.5 rounded-md border ${
-                    isUrgent ? 'bg-amber-100 text-amber-800 border-amber-200' : 
-                    isPast ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-white text-slate-500 border-slate-200'
+                
+                {/* Header Metadata Row */}
+                <div className="flex items-center gap-2.5 mb-1.5">
+                  <Badge variant="outline" className={`h-6 text-xs px-2 rounded-md border font-bold ${
+                    isUrgent ? 'bg-amber-100 text-amber-900 border-amber-300' : 
+                    isPast ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-white text-slate-600 border-slate-300'
                   }`}>
                     {activeAction.isPrep ? 'PREP' : 'CUE'}
                   </Badge>
-                  <span className={`text-[11px] font-bold uppercase tracking-wider ${
-                    isUrgent ? 'text-amber-600' : 
+                  
+                  <span className={`text-xs font-bold uppercase tracking-wider ${
+                    isUrgent ? 'text-amber-700' : 
                     isPast ? 'text-slate-400' : 'text-pdv-teal'
                   }`}>
                     {activeAction.type}
                   </span>
-                  <span className={`text-[11px] tabular-nums ${
-                    isUrgent ? 'text-amber-700' : 'text-slate-500'
+
+                  {/* Time Emphasis - Larger and bolder */}
+                  <span className={`text-sm font-bold tabular-nums ml-1 ${
+                    isUrgent ? 'text-amber-800' : 'text-slate-700'
                   }`}>
                     {formatTimeToEST(activeAction.time.toTimeString().substring(0, 5))}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <h4 className={`font-semibold text-base truncate ${isPast ? 'line-through text-slate-400' : 'text-slate-900'}`}>
+
+                {/* Primary Action Label & Indicators */}
+                <div className="flex items-center gap-3">
+                  <h4 className={`font-bold text-lg leading-tight truncate ${isPast ? 'line-through text-slate-400' : 'text-slate-900'}`}>
                     {activeAction.label}
                   </h4>
+                  
+                  {/* Enhanced Concurrent Badge */}
                   {moreCount > 0 && (
-                    <Badge className="h-5 px-1.5 min-w-[1.25rem] text-[10px] bg-slate-200 text-slate-600 border-none shrink-0 flex items-center justify-center">
+                    <Badge className="h-6 min-w-[1.75rem] px-2 text-xs font-bold bg-slate-800 text-white border-none shrink-0 flex items-center justify-center shadow-sm">
                       +{moreCount}
                     </Badge>
                   )}
-                  {isExpanded ? <ChevronUp className="w-5 h-5 opacity-50 shrink-0 text-slate-500" /> : <ChevronDown className="w-5 h-5 opacity-50 shrink-0 text-slate-500" />}
+                  
+                  {isExpanded ? <ChevronUp className="w-5 h-5 opacity-60 shrink-0 text-slate-600 ml-auto sm:ml-0" /> : <ChevronDown className="w-5 h-5 opacity-60 shrink-0 text-slate-600 ml-auto sm:ml-0" />}
                 </div>
               </div>
             </div>
 
             {/* Right Side: Actions (Scroll + Chat) */}
-            <div className="flex items-center gap-2 pl-2">
+            <div className="flex items-center gap-3 pl-3 border-l border-slate-200 ml-2">
               {/* Jump to Segment */}
               {activeAction.segmentId && (
                 <Button
                   size="icon"
                   variant="ghost"
-                  className={`h-10 w-10 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700`}
+                  className={`h-11 w-11 rounded-full hover:bg-slate-200 text-slate-500 hover:text-slate-800`}
                   onClick={(e) => {
                     e.stopPropagation();
                     onScrollToSegment && onScrollToSegment({ id: activeAction.segmentId });
                   }}
                 >
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-6 h-6" />
                 </Button>
               )}
 
               {/* Chat Trigger */}
               {onToggleChat && (
-                <div className="relative ml-1 border-l border-slate-200 pl-3">
+                <div className="relative">
                   <Button
                     size="icon"
-                    className={`h-10 w-10 rounded-full transition-all ${
+                    className={`h-11 w-11 rounded-full transition-all ${
                       chatOpen 
-                        ? 'bg-slate-200 text-slate-600 hover:bg-slate-300' 
+                        ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' 
                         : 'bg-white text-pdv-teal border-2 border-pdv-teal hover:bg-pdv-teal hover:text-white shadow-sm'
                     }`}
                     onClick={(e) => {
@@ -346,11 +356,11 @@ export default function StickyOpsDeck({
                       onToggleChat();
                     }}
                   >
-                    {chatOpen ? <ChevronDown className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+                    {chatOpen ? <ChevronDown className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
                   </Button>
                   {/* Unread Badge */}
                   {!chatOpen && chatUnreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 min-w-[1.25rem] px-1 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center border-2 border-white shadow-sm">
+                    <span className="absolute -top-1.5 -right-1.5 h-5 min-w-[1.25rem] px-1.5 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center border-2 border-white shadow-sm z-10">
                       {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
                     </span>
                   )}
@@ -361,32 +371,32 @@ export default function StickyOpsDeck({
           
           {/* Expanded List - Rendered SECOND so it appears BELOW the bar */}
           {isExpanded && (
-            <div className={`border-t border-slate-200 px-4 py-3 space-y-3 max-h-[40vh] overflow-y-auto bg-slate-50/80`}>
-              <p className="text-[10px] uppercase font-bold tracking-widest mb-2 text-slate-400">
+            <div className={`border-t border-slate-200 px-5 py-4 space-y-4 max-h-[45vh] overflow-y-auto bg-slate-50/90`}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3 text-slate-500">
                 {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
               </p>
             
               {(isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4)).map((action, idx) => (
-                <div key={idx} className={`flex items-center gap-3 text-sm py-2 border-b border-slate-200 last:border-0 ${isPast ? 'opacity-50' : ''}`}>
-                  <span className="font-mono font-medium text-xs text-slate-400">
+                <div key={idx} className={`flex items-start gap-4 py-2 border-b border-slate-200 last:border-0 ${isPast ? 'opacity-60' : ''}`}>
+                  <span className="font-mono font-bold text-sm text-slate-500 mt-0.5 min-w-[3.5rem]">
                     {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate text-sm text-slate-700">{action.label}</div>
+                    <div className="font-bold text-base text-slate-800 leading-tight">{action.label}</div>
                     {action.notes && (
-                      <div className={`text-xs leading-snug mt-1 whitespace-pre-wrap ${isUrgent ? 'text-amber-600' : 'text-slate-500'}`}>
+                      <div className={`text-sm leading-relaxed mt-1 whitespace-pre-wrap ${isUrgent ? 'text-amber-700' : 'text-slate-600'}`}>
                         {action.notes}
                       </div>
                     )}
-                    <div className="text-[11px] truncate text-slate-400 mt-0.5">
-                      {action.segmentTitle} • {action.type}
+                    <div className="text-xs font-medium truncate text-slate-400 mt-1">
+                      {action.segmentTitle} • <span className="uppercase tracking-wide">{action.type}</span>
                     </div>
                   </div>
                 </div>
               ))}
               
               {((isPast && pastActions.length === 0) || (!isPast && upcomingActions.length <= 1)) && (
-                <p className="text-xs opacity-40 italic py-2 text-slate-400">No hay más acciones.</p>
+                <p className="text-sm opacity-50 italic py-2 text-slate-500">No hay más acciones.</p>
               )}
             </div>
           )}
