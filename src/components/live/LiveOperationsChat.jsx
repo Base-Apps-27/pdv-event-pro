@@ -88,25 +88,56 @@ export default function LiveOperationsChat({
   }, []);
 
   // HYDRATE lastSeenMessageId on mount AND whenever context changes.
-  // Priority: localStorage (primary) > user profile (fallback for cross-device).
-  // Runs on every chatContextKey change to handle context switches correctly.
+  // Priority: localStorage (instant) > fresh User entity read (durable, bypasses auth cache).
+  //
+  // WHY NOT auth.me()? base44.auth.me() can return a stale cached user object that
+  // doesn't reflect recent updateMe() writes. This causes lastSeenMessageId to be null
+  // after cache clear, inflating the unread counter. Reading from User.filter() always
+  // returns the actual persisted value from the database.
   useEffect(() => {
     const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
     const fromLS = localStorage.getItem(lsKey);
-    console.log('[ChatHydrate] key:', lsKey, 'localStorage:', fromLS, 'profile:', currentUser?.chat_last_seen?.[chatContextKey]);
+    
     if (fromLS) {
       setLastSeenMessageId(fromLS);
       return;
     }
-    // Fallback: user profile (may be stale but better than null for cross-device)
-    if (currentUser?.chat_last_seen?.[chatContextKey]) {
-      const profileValue = currentUser.chat_last_seen[chatContextKey];
-      setLastSeenMessageId(profileValue);
-      localStorage.setItem(lsKey, profileValue); // cache for future
-    } else {
+    
+    // localStorage empty (cache cleared / new device) — fetch fresh from User entity.
+    // This is the durable fallback that survives cache clears.
+    if (!currentUser?.email) {
       setLastSeenMessageId(null);
+      return;
     }
-  }, [chatContextKey, currentUser]);
+    
+    let cancelled = false;
+    (async () => {
+      try {
+        const users = await base44.entities.User.filter({ email: currentUser.email });
+        if (cancelled) return;
+        const freshUser = users?.[0];
+        const profileValue = freshUser?.chat_last_seen?.[chatContextKey];
+        if (profileValue) {
+          setLastSeenMessageId(profileValue);
+          localStorage.setItem(lsKey, profileValue); // re-cache for future
+        } else {
+          setLastSeenMessageId(null);
+        }
+      } catch (err) {
+        // If User entity read fails (permissions, etc), fall back to auth.me() data
+        if (cancelled) return;
+        const fallback = currentUser?.chat_last_seen?.[chatContextKey];
+        if (fallback) {
+          setLastSeenMessageId(fallback);
+          localStorage.setItem(lsKey, fallback);
+        } else {
+          setLastSeenMessageId(null);
+        }
+      }
+    })();
+    
+    return () => { cancelled = true; };
+  }, [chatContextKey, currentUser?.email]);
 
   // Check if user can access chat
   // NOTE: These permission checks are used to guard rendering at the END (JSX return).
