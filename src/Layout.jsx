@@ -4,7 +4,8 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useLanguage, LanguageProvider } from "@/components/utils/i18n";
 import { hasPermission } from "@/components/utils/permissions";
-import { Calendar, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus, Shield } from "lucide-react";
+import { useTheme } from "@/components/utils/useTheme";
+import { Calendar, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus, Shield, Moon, Sun } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 function LayoutContent({ children }) {
@@ -24,6 +25,7 @@ function LayoutContent({ children }) {
 
 function LayoutContentInner({ children }) {
   const { language, setLanguage, t } = useLanguage();
+  const { theme, setTheme } = useTheme();
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
@@ -340,8 +342,41 @@ function LayoutContentInner({ children }) {
                 </>
                 )}
 
-            {/* Language Toggle */}
-            <div className="pt-4 mt-4 border-t border-gray-700">
+            {/* Theme & Language Toggle */}
+            <div className="pt-4 mt-4 border-t border-gray-700 space-y-2">
+              {/* Theme Toggle */}
+              <div className="relative group">
+                <button
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all w-full"
+                >
+                  {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                  <span className="flex-1 text-left">{t('theme.label')}</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                {/* Theme Dropdown */}
+                <div className="absolute left-0 right-0 bottom-full mb-1 bg-gray-900 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                  <button
+                    onClick={() => setTheme('light')}
+                    className={`w-full text-left px-4 py-2 text-sm ${theme === 'light' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'} transition-colors`}
+                  >
+                    {t('theme.light')}
+                  </button>
+                  <button
+                    onClick={() => setTheme('dark')}
+                    className={`w-full text-left px-4 py-2 text-sm ${theme === 'dark' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'} transition-colors`}
+                  >
+                    {t('theme.dark')}
+                  </button>
+                  <button
+                    onClick={() => setTheme('system')}
+                    className={`w-full text-left px-4 py-2 text-sm ${theme === 'system' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'} transition-colors`}
+                  >
+                    {t('theme.system')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Language Toggle */}
               <button
                 onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all w-full"
