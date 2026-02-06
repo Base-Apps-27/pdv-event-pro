@@ -377,9 +377,16 @@ export default function StickyOpsDeck({
                 {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
               </p>
             
-              {(isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4)).map((action, idx) => (
+              {(isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4)).map((action, idx) => {
+                // Concurrent = within 5 min of the header action's time → highlight time the same way
+                const isConcurrent = activeAction && Math.abs(action.time.getTime() - activeAction.time.getTime()) < 300000;
+                return (
                 <div key={idx} className={`flex items-start gap-4 py-2 border-b border-slate-200 last:border-0 ${isPast ? 'opacity-60' : ''}`}>
-                  <span className="font-mono font-bold text-sm text-slate-500 mt-0.5 min-w-[3.5rem]">
+                  <span className={`font-mono font-bold text-sm mt-0.5 min-w-[3.5rem] text-center px-2 py-0.5 rounded-lg ${
+                    isConcurrent 
+                      ? (isUrgent ? 'bg-amber-100 text-amber-900 border-2 border-amber-400' : 'bg-pdv-teal/10 text-pdv-teal border-2 border-pdv-teal/40')
+                      : 'text-slate-500'
+                  }`}>
                     {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
                   </span>
                   <div className="flex-1 min-w-0">
