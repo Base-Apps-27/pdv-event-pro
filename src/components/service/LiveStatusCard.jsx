@@ -216,7 +216,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                 </div>
               </div>
               <div className="flex items-start justify-between gap-2">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">
+                <h3 className="text-lg sm:text-xl font-bold ppv-text group-hover:text-pdv-teal transition-colors line-clamp-2">
                   {nextSegment.title || nextSegment.data?.title}
                 </h3>
                 {nextSegment.is_live_adjusted && liveAdjustmentEnabled && (
