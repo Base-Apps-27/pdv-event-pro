@@ -895,7 +895,7 @@ export default function PublicProgramView() {
           <>
             {/* Minimal Event/Service Info Banner */}
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-gray-500 text-xs uppercase font-bold tracking-wider">
+              <div className="flex items-center gap-2 ppv-text-secondary text-xs uppercase font-bold tracking-wider">
                 <Calendar className="w-3 h-3" />
                 <span>
                   {viewType === "event" && selectedEvent?.start_date ? formatDateET(selectedEvent.start_date) : 
@@ -908,7 +908,7 @@ export default function PublicProgramView() {
                   </>
                 )}
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 leading-tight">
+              <h2 className="text-2xl font-bold ppv-text leading-tight">
                 {viewType === "event" ? selectedEvent?.name : selectedService?.name}
               </h2>
               {viewType === "event" && selectedEvent?.theme && (
