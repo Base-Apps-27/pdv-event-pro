@@ -287,7 +287,7 @@ export default function StickyOpsDeck({
                   <Badge variant="outline" className={`h-6 text-xs px-2 rounded-md border font-bold ${
                     isUrgent ? 'bg-amber-100 text-amber-900 border-amber-300' : 
                     isPast ? 'bg-slate-100 text-slate-400 border-slate-200' : 
-                    activeAction.isPrep ? 'bg-sky-50 text-sky-700 border-sky-300' : 'bg-orange-50 text-orange-700 border-orange-300'
+                    activeAction.isPrep ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300'
                   }`}>
                     {activeAction.isPrep ? 'PREP' : 'DURANTE'}
                   </Badge>
