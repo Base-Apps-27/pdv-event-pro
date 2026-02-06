@@ -8,6 +8,21 @@ import { Calendar, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 function LayoutContent({ children }) {
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+        h1, h2 {
+          font-family: 'Anton', sans-serif !important;
+          font-weight: 400;
+        }
+      `}</style>
+      <LayoutContentInner>{children}</LayoutContentInner>
+    </>
+  );
+}
+
+function LayoutContentInner({ children }) {
   const { language, setLanguage, t } = useLanguage();
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
@@ -478,7 +493,16 @@ export default function Layout({ children }) {
   return (
     <LanguageProvider>
       <TooltipProvider delayDuration={200}>
-        <LayoutContent>{children}</LayoutContent>
+        <>
+          <style>{`
+            @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+            h1, h2 {
+              font-family: 'Anton', sans-serif !important;
+              font-weight: 400;
+            }
+          `}</style>
+          <LayoutContent>{children}</LayoutContent>
+        </>
       </TooltipProvider>
     </LanguageProvider>
   );

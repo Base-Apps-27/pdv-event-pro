@@ -51,11 +51,13 @@ import AnnouncementsReport from './pages/AnnouncementsReport';
 import BuildMemory from './pages/BuildMemory';
 import CustomServiceBuilder from './pages/CustomServiceBuilder';
 import CustomServicesManager from './pages/CustomServicesManager';
+import Dashboard from './pages/Dashboard';
 import EventDetail from './pages/EventDetail';
 import Events from './pages/Events';
 import Home from './pages/Home';
 import MessageProcessing from './pages/MessageProcessing';
 import People from './pages/People';
+import PublicProgramView from './pages/PublicProgramView';
 import Reports from './pages/Reports';
 import RolePermissionManager from './pages/RolePermissionManager';
 import Rooms from './pages/Rooms';
@@ -67,8 +69,6 @@ import TestDashboard from './pages/TestDashboard';
 import UserManagement from './pages/UserManagement';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import PublicProgramView from './pages/PublicProgramView';
-import Dashboard from './pages/Dashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -77,11 +77,13 @@ export const PAGES = {
     "BuildMemory": BuildMemory,
     "CustomServiceBuilder": CustomServiceBuilder,
     "CustomServicesManager": CustomServicesManager,
+    "Dashboard": Dashboard,
     "EventDetail": EventDetail,
     "Events": Events,
     "Home": Home,
     "MessageProcessing": MessageProcessing,
     "People": People,
+    "PublicProgramView": PublicProgramView,
     "Reports": Reports,
     "RolePermissionManager": RolePermissionManager,
     "Rooms": Rooms,
@@ -93,8 +95,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "PublicProgramView": PublicProgramView,
-    "Dashboard": Dashboard,
 }
 
 export const pagesConfig = {
