@@ -451,28 +451,28 @@ function LayoutContent({ children }) {
                   <div className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase mt-2">{t('section.settings')}</div>
                   <Link
                     to={createPageUrl("Rooms")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    className="block px-6 py-2 text-sm text-foreground hover:bg-muted rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t('nav.rooms')}
                   </Link>
                   <Link
                     to={createPageUrl("Templates")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    className="block px-6 py-2 text-sm text-foreground hover:bg-muted rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t('nav.templates')}
                   </Link>
                   <Link
                     to={createPageUrl("ScheduleImporter")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    className="block px-6 py-2 text-sm text-foreground hover:bg-muted rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t('nav.importer')}
                   </Link>
                   <Link
                     to={createPageUrl("SchemaGuide")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    className="block px-6 py-2 text-sm text-foreground hover:bg-muted rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t('nav.schema')}
