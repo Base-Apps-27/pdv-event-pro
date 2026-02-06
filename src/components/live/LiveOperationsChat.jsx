@@ -87,22 +87,25 @@ export default function LiveOperationsChat({
     }
   }, []);
 
-  // Sync from user profile ONLY if localStorage has no value for this context.
-  // This covers first-ever load on a new device where localStorage is empty
-  // but user profile has a previously-persisted marker.
+  // HYDRATE lastSeenMessageId on mount AND whenever context changes.
+  // Priority: localStorage (primary) > user profile (fallback for cross-device).
+  // Runs on every chatContextKey change to handle context switches correctly.
   useEffect(() => {
-    if (currentUser && chatContextKey) {
-      const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
-      const fromLS = localStorage.getItem(lsKey);
-      if (!fromLS) {
-        const storedLastSeen = currentUser.chat_last_seen?.[chatContextKey];
-        if (storedLastSeen) {
-          setLastSeenMessageId(storedLastSeen);
-          localStorage.setItem(lsKey, storedLastSeen);
-        }
-      }
+    const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
+    const fromLS = localStorage.getItem(lsKey);
+    if (fromLS) {
+      setLastSeenMessageId(fromLS);
+      return;
     }
-  }, [currentUser, chatContextKey]);
+    // Fallback: user profile (may be stale but better than null for cross-device)
+    if (currentUser?.chat_last_seen?.[chatContextKey]) {
+      const profileValue = currentUser.chat_last_seen[chatContextKey];
+      setLastSeenMessageId(profileValue);
+      localStorage.setItem(lsKey, profileValue); // cache for future
+    } else {
+      setLastSeenMessageId(null);
+    }
+  }, [chatContextKey, currentUser]);
 
   // Check if user can access chat
   // CRITICAL: Must check permission BEFORE any hooks that depend on contextId
