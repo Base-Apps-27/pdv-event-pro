@@ -143,6 +143,43 @@ Deno.serve(async (req) => {
                     });
             }
 
+            // Fetch Linked Segment Actions (ensure we get all defined actions, not just embedded ones)
+            if (segments.length > 0) {
+                const segmentIds = segments.map(s => s.id);
+                // Batch fetch actions
+                const BATCH_SIZE = 10;
+                const actionBatches = [];
+                for (let i = 0; i < segmentIds.length; i += BATCH_SIZE) {
+                    actionBatches.push(segmentIds.slice(i, i + BATCH_SIZE));
+                }
+
+                const allActions = [];
+                for (const batch of actionBatches) {
+                    const batchResults = await Promise.all(
+                        batch.map(segId => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId }))
+                    );
+                    allActions.push(...batchResults.flat());
+                }
+
+                // Map actions to segments
+                const actionsBySegment = {};
+                for (const action of allActions) {
+                    if (!actionsBySegment[action.segment_id]) actionsBySegment[action.segment_id] = [];
+                    actionsBySegment[action.segment_id].push(action);
+                }
+
+                // Attach to segments (merging with embedded if any, prioritizing linked entities)
+                segments = segments.map(s => {
+                    const linked = actionsBySegment[s.id] || [];
+                    const embedded = s.segment_actions || [];
+                    // We attach as 'actions' which the frontend checks
+                    return {
+                        ...s,
+                        actions: [...embedded, ...linked].sort((a, b) => (a.order || 0) - (b.order || 0))
+                    };
+                });
+            }
+
             // Fetch Extras
             rooms = await base44.asServiceRole.entities.Room.list();
             eventDays = await base44.asServiceRole.entities.EventDay.filter({ event_id: targetProgram.id });
@@ -189,6 +226,41 @@ Deno.serve(async (req) => {
             // Fallback: Embedded Segments
             else if (targetProgram.segments && Array.isArray(targetProgram.segments)) {
                 segments = targetProgram.segments;
+            }
+
+            // Fetch Linked Segment Actions for Services too
+            if (segments.length > 0 && segments[0].id) { // Only if segments have IDs (real entities)
+                const segmentIds = segments.map(s => s.id).filter(Boolean);
+                if (segmentIds.length > 0) {
+                    const BATCH_SIZE = 10;
+                    const actionBatches = [];
+                    for (let i = 0; i < segmentIds.length; i += BATCH_SIZE) {
+                        actionBatches.push(segmentIds.slice(i, i + BATCH_SIZE));
+                    }
+
+                    const allActions = [];
+                    for (const batch of actionBatches) {
+                        const batchResults = await Promise.all(
+                            batch.map(segId => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId }))
+                        );
+                        allActions.push(...batchResults.flat());
+                    }
+
+                    const actionsBySegment = {};
+                    for (const action of allActions) {
+                        if (!actionsBySegment[action.segment_id]) actionsBySegment[action.segment_id] = [];
+                        actionsBySegment[action.segment_id].push(action);
+                    }
+
+                    segments = segments.map(s => {
+                        const linked = actionsBySegment[s.id] || [];
+                        const embedded = s.segment_actions || [];
+                        return {
+                            ...s,
+                            actions: [...embedded, ...linked].sort((a, b) => (a.order || 0) - (b.order || 0))
+                        };
+                    });
+                }
             }
 
             return Response.json({
