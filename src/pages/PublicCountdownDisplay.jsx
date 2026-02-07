@@ -258,14 +258,72 @@ export default function PublicCountdownDisplay() {
     };
   }, [segments, currentTime, serviceDate]);
 
-  // Fallback: if no service/segments, show loading or placeholder
-  if (!service || segments.length === 0) {
+  // Helper to switch context
+  const handleSelectionChange = (val) => {
+    if (!val) return;
+    const [type, id] = val.split(':');
+    setServiceId(id);
+    // Optionally update URL without reload
+    const newUrl = new URL(window.location);
+    if (type === 'event') {
+      newUrl.searchParams.set('event_id', id);
+      newUrl.searchParams.delete('service_id');
+    } else {
+      newUrl.searchParams.set('service_id', id);
+      newUrl.searchParams.delete('event_id');
+    }
+    window.history.pushState({}, '', newUrl);
+  };
+
+  // If no service selected or loading, show selector screen
+  if (!service && !isLoadingService) {
     return (
-      <div className="w-full h-screen bg-white flex items-center justify-center">
-        <div className="text-center text-pdv-teal">
-          <h1 className="text-4xl font-bold mb-4">{t('public.headerTitle')}</h1>
-          <p className="text-lg opacity-75">{t('public.selectService')}</p>
-        </div>
+      <div className="w-full h-screen bg-slate-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md p-8 border-4 border-slate-200 rounded-3xl shadow-xl">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-[#1F8A70] to-[#8DC63F] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg text-white">
+              <Tv className="w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight mb-2">TV Display Mode</h1>
+            <p className="text-slate-500">Select an active event or service to display</p>
+          </div>
+
+          <div className="space-y-4">
+            <Select onValueChange={handleSelectionChange}>
+              <SelectTrigger className="h-14 text-lg bg-white border-2 border-slate-300">
+                <SelectValue placeholder="Select program..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableOptions.events.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Events</div>
+                    {availableOptions.events.map(e => (
+                      <SelectItem key={e.id} value={`event:${e.id}`} className="py-3">
+                        <span className="font-bold">{e.name}</span>
+                        <span className="ml-2 text-slate-400 text-xs">({formatDateET(e.start_date)})</span>
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+                {availableOptions.services.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider mt-2">Services</div>
+                    {availableOptions.services.map(s => (
+                      <SelectItem key={s.id} value={`service:${s.id}`} className="py-3">
+                        <span className="font-bold">{s.name}</span>
+                        <span className="ml-2 text-slate-400 text-xs">({formatDateET(s.date)})</span>
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+            
+            <div className="text-center text-xs text-slate-400 mt-8">
+              Waiting for selection...
+            </div>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -274,9 +332,41 @@ export default function PublicCountdownDisplay() {
   const allDone = !currentSegment && !nextSegment && !preLaunchSegment;
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 p-4 md:p-6 flex flex-col items-center justify-center overflow-hidden relative">
+    <div className="w-full min-h-screen bg-slate-50 p-4 md:p-6 flex flex-col items-center justify-center overflow-hidden relative group/ui">
       {/* Top Gradient Bar */}
       <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
+
+      {/* Controls (Hidden by default, show on hover/interaction) */}
+      <div className="absolute top-6 left-6 z-30 opacity-0 group-hover/ui:opacity-100 transition-opacity duration-300">
+        <Select onValueChange={handleSelectionChange}>
+          <SelectTrigger className="w-auto h-10 bg-white/80 backdrop-blur border-none shadow-sm text-slate-600 font-medium px-4 gap-2 hover:bg-white transition-all rounded-full">
+            <Settings className="w-4 h-4" />
+            <span>Switch Program</span>
+          </SelectTrigger>
+          <SelectContent align="start">
+            {availableOptions.events.length > 0 && (
+              <>
+                <div className="px-2 py-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Events</div>
+                {availableOptions.events.map(e => (
+                  <SelectItem key={e.id} value={`event:${e.id}`}>
+                    {e.name} <span className="text-slate-400 text-xs">({formatDateET(e.start_date)})</span>
+                  </SelectItem>
+                ))}
+              </>
+            )}
+            {availableOptions.services.length > 0 && (
+              <>
+                <div className="px-2 py-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider mt-2">Services</div>
+                {availableOptions.services.map(s => (
+                  <SelectItem key={s.id} value={`service:${s.id}`}>
+                    {s.name} <span className="text-slate-400 text-xs">({formatDateET(s.date)})</span>
+                  </SelectItem>
+                ))}
+              </>
+            )}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Top Right Clock */}
       <div className="absolute top-6 right-6 z-20">
