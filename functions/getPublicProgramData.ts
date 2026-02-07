@@ -327,9 +327,51 @@ Deno.serve(async (req) => {
                  const allResults = await Promise.all(sessionIds.map(sid => base44.asServiceRole.entities.Segment.filter({ session_id: sid })));
                  segments = allResults.flat().filter(s => s.show_in_general).sort((a, b) => (a.order || 0) - (b.order || 0));
             } 
-            // Fallback: Embedded Segments
+            // Fallback: Embedded Segments (Custom Services)
             else if (targetProgram.segments && Array.isArray(targetProgram.segments)) {
                 segments = targetProgram.segments;
+            }
+            // Fallback: Standard Weekly Service Time Slots (9:30am / 11:30am)
+            // Normalize these into a flat 'segments' array with calculated start times for the TV display
+            else if (targetProgram["9:30am"] || targetProgram["11:30am"]) {
+                const processSlot = (slotSegments, startHour, startMin) => {
+                    if (!Array.isArray(slotSegments)) return [];
+                    
+                    let currentMinutes = startHour * 60 + startMin;
+                    
+                    return slotSegments.map((seg, idx) => {
+                        // Calculate start time HH:MM
+                        const h = Math.floor(currentMinutes / 60);
+                        const m = currentMinutes % 60;
+                        const startTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                        
+                        // Add duration to advance cursor
+                        const dur = seg.duration || 0;
+                        currentMinutes += dur;
+                        
+                        // Calculate end time
+                        const endH = Math.floor(currentMinutes / 60);
+                        const endM = currentMinutes % 60;
+                        const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
+                        return {
+                            ...seg,
+                            id: seg.id || `generated-${startHour}-${idx}`, // Ensure ID exists
+                            start_time: startTime, // Computed
+                            end_time: endTime,
+                            duration_min: dur,
+                            title: seg.title || seg.data?.title || 'Untitled',
+                            presenter: seg.presenter || seg.data?.presenter || '',
+                            segment_type: seg.type || 'Generic',
+                            session_id: `slot-${startHour}-${startMin}` // Artificial session grouping
+                        };
+                    });
+                };
+
+                const segs930 = processSlot(targetProgram["9:30am"], 9, 30);
+                const segs1130 = processSlot(targetProgram["11:30am"], 11, 30);
+                
+                segments = [...segs930, ...segs1130];
             }
 
             // Fetch Linked Segment Actions for Services too
