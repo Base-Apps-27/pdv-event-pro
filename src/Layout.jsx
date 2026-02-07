@@ -246,7 +246,7 @@ function LayoutContentInner({ children }) {
             {/* SHARED RESOURCES - Permission-based */}
             {hasPermission(user, 'view_people') && (
               <>
-                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3">{t('section.resources')}</div>
+                {!isSidebarCollapsed && <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3">{t('section.resources')}</div>}
                 <Link
                   to={createPageUrl("People")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -255,9 +255,10 @@ function LayoutContentInner({ children }) {
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
                   style={isActive(createPageUrl("People")) ? gradientStyle : {}}
+                  title={isSidebarCollapsed ? t('nav.people') : ''}
                 >
-                  <Users className="w-5 h-5" />
-                  {t('nav.people')}
+                  <Users className="w-5 h-5 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t('nav.people')}</span>}
                 </Link>
               </>
             )}
