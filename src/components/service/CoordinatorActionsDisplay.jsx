@@ -172,6 +172,13 @@ export default function CoordinatorActionsDisplay({
                 </span>
               </div>
 
+              {/* Instructions/Notes (Always Visible) */}
+              {action.notes && (
+                <div className="mb-3 p-2 bg-black/5 rounded-lg text-[11px] md:text-xs text-slate-800 font-medium leading-snug whitespace-pre-wrap break-words border border-black/5">
+                  {action.notes}
+                </div>
+              )}
+
               {/* Footer: Segment Context */}
               <div className="mt-auto pt-3 border-t border-black/5 text-xs text-slate-400 font-medium truncate">
                  {action.segmentTitle}
