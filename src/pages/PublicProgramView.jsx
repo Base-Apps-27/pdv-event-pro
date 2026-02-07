@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks, BookOpen, BellRing, Sparkles, History } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks, BookOpen, BellRing, Sparkles, History, Tv } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -887,6 +889,21 @@ export default function PublicProgramView() {
                 );
               })()}
           </div>
+
+          {/* TV View Link */}
+          {((viewType === 'event' && selectedEventId) || (viewType === 'service' && selectedServiceId)) && (
+            <Link 
+              to={viewType === 'event' 
+                ? createPageUrl(`PublicCountdownDisplay?eventId=${selectedEventId}`) 
+                : createPageUrl(`PublicCountdownDisplay?serviceId=${selectedServiceId}`)
+              }
+              target="_blank"
+              className="flex items-center justify-center w-12 h-12 rounded-lg bg-white border-2 border-gray-300 text-gray-500 hover:text-pdv-teal hover:border-pdv-teal transition-all shrink-0 shadow-sm"
+              title="TV View / Countdown"
+            >
+              <Tv className="w-5 h-5" />
+            </Link>
+          )}
         </div>
 
         {((selectedEventId && selectedEvent) || (selectedServiceId && selectedService)) && (
