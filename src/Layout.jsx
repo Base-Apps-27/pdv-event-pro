@@ -321,9 +321,10 @@ function LayoutContentInner({ children }) {
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
                   style={isActive(createPageUrl("Rooms")) ? gradientStyle : {}}
+                  title={isSidebarCollapsed ? t('nav.rooms') : ''}
                 >
-                  <MapPin className="w-5 h-5" />
-                  {t('nav.rooms')}
+                  <MapPin className="w-5 h-5 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t('nav.rooms')}</span>}
                 </Link>
                 )}
 
