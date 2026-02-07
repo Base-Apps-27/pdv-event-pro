@@ -266,7 +266,7 @@ function LayoutContentInner({ children }) {
             {/* SETTINGS - Permission-based */}
             {(hasPermission(user, 'manage_users') || hasPermission(user, 'view_rooms') || hasPermission(user, 'view_templates') || hasPermission(user, 'access_importer')) && (
               <>
-                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-6 mb-3 pl-3">{t('section.settings')}</div>
+                {!isSidebarCollapsed && <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-6 mb-3 pl-3">{t('section.settings')}</div>}
 
                 {hasPermission(user, 'manage_users') && (
                   <>
@@ -278,9 +278,10 @@ function LayoutContentInner({ children }) {
                           : "text-gray-400 hover:bg-white/5 hover:text-white"
                       }`}
                       style={isActive(createPageUrl("UserManagement")) ? gradientStyle : {}}
+                      title={isSidebarCollapsed ? 'User Management' : ''}
                     >
-                      <Users className="w-5 h-5" />
-                      User Management
+                      <Users className="w-5 h-5 shrink-0" />
+                      {!isSidebarCollapsed && <span>User Management</span>}
                     </Link>
                     <Link
                       to={createPageUrl("RolePermissionManager")}
@@ -290,9 +291,10 @@ function LayoutContentInner({ children }) {
                           : "text-gray-400 hover:bg-white/5 hover:text-white"
                       }`}
                       style={isActive(createPageUrl("RolePermissionManager")) ? gradientStyle : {}}
+                      title={isSidebarCollapsed ? (language === 'es' ? 'Roles y Permisos' : 'Roles & Permissions') : ''}
                     >
-                      <Shield className="w-5 h-5" />
-                      {language === 'es' ? 'Roles y Permisos' : 'Roles & Permissions'}
+                      <Shield className="w-5 h-5 shrink-0" />
+                      {!isSidebarCollapsed && <span>{language === 'es' ? 'Roles y Permisos' : 'Roles & Permissions'}</span>}
                     </Link>
                     <Link
                       to={createPageUrl("MessageProcessing")}
@@ -302,9 +304,10 @@ function LayoutContentInner({ children }) {
                           : "text-gray-400 hover:bg-white/5 hover:text-white"
                       }`}
                       style={isActive(createPageUrl("MessageProcessing")) ? gradientStyle : {}}
+                      title={isSidebarCollapsed ? (language === 'es' ? 'Procesar Mensajes' : 'Process Messages') : ''}
                     >
-                      <Sparkles className="w-5 h-5" />
-                      {language === 'es' ? 'Procesar Mensajes' : 'Process Messages'}
+                      <Sparkles className="w-5 h-5 shrink-0" />
+                      {!isSidebarCollapsed && <span>{language === 'es' ? 'Procesar Mensajes' : 'Process Messages'}</span>}
                     </Link>
                   </>
                 )}
