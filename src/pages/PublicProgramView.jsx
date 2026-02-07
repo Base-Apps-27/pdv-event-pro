@@ -36,8 +36,11 @@ export default function PublicProgramView() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const user = await base44.auth.me();
-        setCurrentUser(user);
+        const authenticated = await base44.auth.isAuthenticated();
+        if (authenticated) {
+          const user = await base44.auth.me();
+          setCurrentUser(user);
+        }
       } catch (e) {
         // Not logged in
       }

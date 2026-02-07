@@ -51,8 +51,29 @@ function LayoutContentInner({ children }) {
 
   const isActive = (path) => location.pathname === path;
 
-  // CRITICAL: PublicProgramView, PublicCountdownDisplay, AND /print/ routes bypass Layout auth checks
-  const isPublicPage = location.pathname.includes('PublicProgramView') || location.pathname.includes('PublicCountdownDisplay') || location.pathname.includes('/print/');
+  // Define strictly public routes (exact match or prefix for specific areas)
+  // All other routes will require authentication.
+  const isPublicPage = React.useMemo(() => {
+    const path = location.pathname;
+    
+    // 1. Exact matches for public apps
+    const publicExactRoutes = [
+      createPageUrl('PublicCountdownDisplay'),
+      createPageUrl('PublicProgramView'),
+      '/PublicCountdownDisplay', // Fallback
+      '/PublicProgramView',      // Fallback
+    ];
+    if (publicExactRoutes.includes(path)) return true;
+
+    // 2. Prefixes for nested public routes (e.g. print views, if any)
+    const publicPrefixes = [
+      '/print/',
+      '/public/', // Future proofing
+    ];
+    if (publicPrefixes.some(prefix => path.startsWith(prefix))) return true;
+
+    return false;
+  }, [location.pathname]);
 
   // Check authentication and get user role
   useEffect(() => {
@@ -79,23 +100,26 @@ function LayoutContentInner({ children }) {
   }, []);
 
   // Enforce authentication on private pages
+  // This is the primary gatekeeper for the application when platform is set to "Public"
   useEffect(() => {
     if (!loading && !user && !isPublicPage) {
+      // Redirect to login, preserving current URL as return destination
       base44.auth.redirectToLogin(window.location.href);
     }
   }, [loading, user, isPublicPage]);
 
-  // Permission-based redirects
+  // Permission-based redirects for authenticated users
   useEffect(() => {
     if (!user || loading) return;
 
     const canViewDashboard = hasPermission(user, 'view_events') || hasPermission(user, 'view_services');
     
-    // If a user has no permissions at all, they can only see the live program view.
-    if (!canViewDashboard && !location.pathname.includes('PublicProgramView')) {
+    // If a user has no dashboard permissions, redirect them to the Public Program View
+    // This handles "Limited User" roles who can only see the schedule but are logged in
+    if (!canViewDashboard && !isPublicPage) {
       navigate(createPageUrl('PublicProgramView'), { replace: true });
     }
-  }, [user, location.pathname, loading, navigate]);
+  }, [user, location.pathname, loading, navigate, isPublicPage]);
 
   if (loading) {
     return null;
