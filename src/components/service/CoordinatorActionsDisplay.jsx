@@ -120,9 +120,9 @@ export default function CoordinatorActionsDisplay({
         </h3>
       </div>
 
-      {/* Actions List */}
-      <div className="space-y-3 md:space-y-4">
-        {upcomingActions.map((action, idx) => {
+      {/* Actions Grid (Horizontal) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {upcomingActions.slice(0, 4).map((action) => {
           const now = currentTime.getTime();
           const timeUntil = action.time.getTime() - now;
           const minutesUntil = Math.ceil(timeUntil / 60000);
@@ -131,65 +131,59 @@ export default function CoordinatorActionsDisplay({
           return (
             <div
               key={action.id}
-              className={`flex items-start gap-4 p-4 rounded-xl transition-colors ${
+              className={`flex flex-col p-4 rounded-xl transition-colors h-full ${
                 isUrgent
-                  ? 'bg-amber-50 border border-amber-300'
+                  ? 'bg-amber-50 border-2 border-amber-300'
                   : 'bg-slate-50 border border-slate-200'
               }`}
             >
-              {/* Time Indicator */}
-              <div className="flex-shrink-0 text-center">
-                <div className={`text-xl md:text-2xl font-black font-mono ${
+              {/* Header: Time & Type */}
+              <div className="flex justify-between items-start mb-3">
+                <div className={`text-2xl font-black font-mono leading-none ${
                   isUrgent ? 'text-amber-600' : 'text-pdv-teal'
                 }`}>
-                  {minutesUntil > 0 ? `${minutesUntil}min` : 'NOW'}
+                  {minutesUntil > 0 ? `${minutesUntil}m` : 'NOW'}
                 </div>
-                <div className="text-xs text-slate-500 mt-1">
-                  {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
-                </div>
+                {isUrgent && <AlertCircle className="w-5 h-5 text-amber-600 animate-pulse" />}
               </div>
 
-              {/* Action Details */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start gap-2 mb-2">
-                  {isUrgent && <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-wide">
-                      {action.label}
-                    </h4>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className={`text-xs md:text-sm font-bold uppercase tracking-widest px-2 py-0.5 rounded ${
-                        action.isPrep
-                          ? 'bg-amber-100 text-amber-700 border border-amber-300'
-                          : 'bg-blue-100 text-blue-700 border border-blue-300'
-                      }`}>
-                        {action.isPrep ? t('live.preparation') : t('live.during')}
-                      </span>
-                      <span className="text-xs md:text-sm text-slate-600">
-                        {action.type}
-                      </span>
-                      {action.isNext && (
-                        <span className="text-xs md:text-sm text-pdv-teal font-semibold">
-                          {t('live.upNext')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                {action.notes && (
-                  <p className="text-sm md:text-base text-slate-700 ml-7 mt-2 whitespace-pre-wrap">
-                    {action.notes}
-                  </p>
-                )}
-                
-                <div className="text-xs text-slate-500 ml-7 mt-2">
-                  {action.segmentTitle}
-                </div>
+              {/* Main Label */}
+              <h4 className="text-lg font-bold text-slate-900 uppercase tracking-tight leading-tight mb-3 flex-1">
+                {action.label}
+              </h4>
+
+              {/* Tags/Badges */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                  action.isPrep
+                    ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                    : 'bg-blue-100 text-blue-700 border border-blue-200'
+                }`}>
+                  {action.isPrep ? 'PREP' : 'LIVE'}
+                </span>
+                <span className="text-xs font-medium text-slate-600 bg-white border border-slate-100 px-2 py-0.5 rounded-full">
+                  {action.type}
+                </span>
+              </div>
+
+              {/* Footer: Segment Context */}
+              <div className="mt-auto pt-3 border-t border-black/5 text-xs text-slate-400 font-medium truncate">
+                 {action.segmentTitle}
               </div>
             </div>
           );
         })}
+
+        {/* Overflow Card */}
+        {upcomingActions.length > 4 && (
+          <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-slate-800 text-white border border-slate-700 h-full text-center">
+            <div className="text-4xl font-black mb-1">+{upcomingActions.length - 4}</div>
+            <div className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">More Actions</div>
+            <div className="text-xs bg-slate-700 px-3 py-1.5 rounded-lg text-slate-300">
+              Check Coordinator App
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
