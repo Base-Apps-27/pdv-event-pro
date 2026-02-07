@@ -275,8 +275,17 @@ export default function PublicCountdownDisplay() {
     window.history.pushState({}, '', newUrl);
   };
 
-  // If no service selected or loading, show selector screen
-  if (!service && !isLoadingService) {
+  // Loading state
+  if (isLoadingService) {
+    return (
+      <div className="w-full h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-pdv-teal animate-spin" />
+      </div>
+    );
+  }
+
+  // If no service selected (and not loading), show selector screen
+  if (!service) {
     return (
       <div className="w-full h-screen bg-slate-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md p-8 border-4 border-slate-200 rounded-3xl shadow-xl">
