@@ -260,46 +260,50 @@ export default function PublicCountdownDisplay() {
           </div>
         ) : (
           <>
-            {/* Countdown Blocks */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 w-full h-[55vh] lg:h-[60vh]">
 
-              {/* LEFT PANEL: In-Progress OR Pre-Launch */}
-              {currentSegment ? (
-                <CountdownBlock
-                  segment={currentSegment}
-                  displayMode="in-progress"
-                  currentTime={currentTime}
-                  serviceDate={serviceDate}
-                  getTimeDate={getTimeDate}
-                />
-              ) : preLaunchSegment ? (
-                <CountdownBlock
-                  segment={preLaunchSegment}
-                  displayMode="pre-launch"
-                  currentTime={currentTime}
-                  serviceDate={serviceDate}
-                  getTimeDate={getTimeDate}
-                />
-              ) : (
-                <div className="bg-white rounded-3xl border-4 border-slate-200 p-8 md:p-10 shadow-lg flex items-center justify-center">
-                  <p className="text-slate-400 italic text-lg">{t('live.nothingNow')}</p>
-                </div>
-              )}
+              {/* LEFT PANEL (Main): In-Progress OR Pre-Launch (60% width) */}
+              <div className="lg:col-span-3 h-full">
+                {currentSegment ? (
+                  <CountdownBlock
+                    segment={currentSegment}
+                    displayMode="in-progress"
+                    currentTime={currentTime}
+                    serviceDate={serviceDate}
+                    getTimeDate={getTimeDate}
+                    className="h-full"
+                  />
+                ) : preLaunchSegment ? (
+                  <CountdownBlock
+                    segment={preLaunchSegment}
+                    displayMode="pre-launch"
+                    currentTime={currentTime}
+                    serviceDate={serviceDate}
+                    getTimeDate={getTimeDate}
+                    className="h-full"
+                  />
+                ) : (
+                  <div className="h-full bg-white rounded-3xl border-4 border-slate-200 p-8 md:p-10 shadow-lg flex items-center justify-center">
+                    <p className="text-slate-400 italic text-lg">{t('live.nothingNow')}</p>
+                  </div>
+                )}
+              </div>
 
-              {/* RIGHT PANEL: Next Segment */}
-              {nextSegment ? (
-                <CountdownBlock
-                  segment={nextSegment}
-                  displayMode="upcoming"
-                  currentTime={currentTime}
-                  serviceDate={serviceDate}
-                  getTimeDate={getTimeDate}
-                />
-              ) : (
-                <div className="bg-white rounded-3xl border-4 border-slate-200 p-8 md:p-10 shadow-lg flex items-center justify-center">
-                  <p className="text-slate-400 italic text-lg">{t('live.endOfProgram')}</p>
-                </div>
-              )}
+              {/* RIGHT PANEL: Upcoming Agenda (40% width) */}
+              <div className="lg:col-span-2 h-full">
+                {upcomingSegments.length > 0 ? (
+                  <SegmentTimeline
+                    segments={upcomingSegments}
+                    getTimeDate={getTimeDate}
+                    className="h-full"
+                  />
+                ) : (
+                  <div className="h-full bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200 p-8 flex items-center justify-center">
+                    <p className="text-slate-400 italic font-medium">{t('live.endOfProgram')}</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Coordinator Actions */}
