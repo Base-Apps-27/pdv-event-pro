@@ -17,7 +17,7 @@ export default function CoordinatorActionsDisplay({
   currentTime,
   serviceDate
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const upcomingActions = useMemo(() => {
     const actions = [];
