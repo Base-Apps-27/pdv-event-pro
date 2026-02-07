@@ -337,9 +337,10 @@ function LayoutContentInner({ children }) {
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
                   style={isActive(createPageUrl("Templates")) ? gradientStyle : {}}
+                  title={isSidebarCollapsed ? t('nav.templates') : ''}
                 >
-                  <Copy className="w-5 h-5" />
-                  {t('nav.templates')}
+                  <Copy className="w-5 h-5 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t('nav.templates')}</span>}
                 </Link>
                 )}
 
