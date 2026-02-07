@@ -54,10 +54,6 @@ function LayoutContentInner({ children }) {
   // CRITICAL: PublicProgramView, PublicCountdownDisplay, AND /print/ routes bypass Layout auth checks
   const isPublicPage = location.pathname.includes('PublicProgramView') || location.pathname.includes('PublicCountdownDisplay') || location.pathname.includes('/print/');
 
-  if (isPublicPage) {
-    return <div className="min-h-screen bg-gray-50">{children}</div>;
-  }
-
   // Check authentication and get user role
   useEffect(() => {
     const checkAuth = async () => {
@@ -65,6 +61,7 @@ function LayoutContentInner({ children }) {
         const authenticated = await base44.auth.isAuthenticated();
         
         if (!authenticated) {
+          setUser(null);
           setLoading(false);
           return;
         }
@@ -80,6 +77,13 @@ function LayoutContentInner({ children }) {
     };
     checkAuth();
   }, []);
+
+  // Enforce authentication on private pages
+  useEffect(() => {
+    if (!loading && !user && !isPublicPage) {
+      base44.auth.redirectToLogin(window.location.href);
+    }
+  }, [loading, user, isPublicPage]);
 
   // Permission-based redirects
   useEffect(() => {
@@ -97,9 +101,14 @@ function LayoutContentInner({ children }) {
     return null;
   }
 
-  // Not authenticated - show minimal layout
+  // Public pages render without auth
+  if (isPublicPage) {
+    return <div className="min-h-screen bg-gray-50">{children}</div>;
+  }
+
+  // Private pages block access if not authenticated
   if (!user) {
-    return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
+    return null; // Effect above handles redirect
   }
 
   // If user cannot view dashboard, they only get the minimal shell (similar to anonymous)
