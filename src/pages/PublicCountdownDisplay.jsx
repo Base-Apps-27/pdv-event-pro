@@ -57,107 +57,60 @@ export default function PublicCountdownDisplay() {
     if (dt) setServiceDate(dt);
   }, []);
 
-  // Fetch current service (or specified service/event)
-  const { data: service, isLoading: isLoadingService } = useQuery({
-    queryKey: ['tv-service', serviceId, serviceDate],
+  // Fetch current program data (Service or Event) via secure backend function
+  // This bypasses frontend entity permissions to allow public display
+  const { data: programData, isLoading: isLoadingService } = useQuery({
+    queryKey: ['tv-public-data', serviceId, serviceDate],
     queryFn: async () => {
-      if (!serviceId) {
-        // Try to auto-detect if no specific ID
-        const todayStr = serviceDate;
-        // Check for events first
-        const events = await base44.entities.Event.filter({ status: 'confirmed' }); // Simplified status check
-        const activeEvent = events.find(e => e.start_date <= todayStr && e.end_date >= todayStr);
-        if (activeEvent) return { ...activeEvent, _isEvent: true };
+      // If serviceId is provided, we check if it's an event ID or service ID
+      // If not, we pass date for auto-detection
+      const payload = {
+        date: serviceDate
+      };
+      
+      if (serviceId) {
+        // Simple heuristic: if we don't know type, pass both, but backend logic prioritizes
+        // We can check if it looks like an event ID or just pass generic ID
+        // The backend `getPublicProgramData` checks eventId then serviceId
+        // Let's try passing as eventId first if context suggests, but for now pass as both? 
+        // No, better to try and guess or just let backend handle generic lookup?
+        // The updated backend function looks for `eventId` then `serviceId`.
+        // Let's just pass `eventId` if we suspect it, or `serviceId`.
+        // But `serviceId` state variable holds EITHER. 
+        // Let's pass it as `eventId` first, if fail, try `serviceId`? 
+        // Actually, let's just pass it as `eventId` to the function if we think it's an event?
+        // OR update the backend to accept a generic `id`?
+        // Let's stick to the backend's `eventId` and `serviceId` params.
+        // We will pass BOTH as the same value, logic will resolve one.
+        payload.eventId = serviceId;
+        payload.serviceId = serviceId;
+      }
 
-        // Then check services
-        const results = await base44.entities.Service.filter({ date: todayStr, status: 'active' });
-        if (results?.length > 0) {
-          return results.sort((a, b) => {
-            const timeA = a.time ? new Date(`${todayStr}T${a.time}`).getTime() : 0;
-            const timeB = b.time ? new Date(`${todayStr}T${b.time}`).getTime() : 0;
-            return Math.abs(timeA - currentTime.getTime()) - Math.abs(timeB - currentTime.getTime());
-          })[0];
-        }
+      const response = await base44.functions.invoke('getPublicProgramData', payload);
+      
+      // If error (404/403), throw or return null
+      if (response.status >= 400) {
+        console.warn("Public data fetch failed:", response.data);
         return null;
       }
       
-      const svcResults = await base44.entities.Service.filter({ id: serviceId });
-      if (svcResults?.[0]) return svcResults[0];
-      
-      const evtResults = await base44.entities.Event.filter({ id: serviceId });
-      if (evtResults?.[0]) {
-        return { ...evtResults[0], _isEvent: true };
-      }
-      return null;
+      return response.data; // { program, segments, sessions, ... }
     },
-    enabled: true // Always try to fetch something or determine emptiness
+    refetchInterval: 30000 // Poll every 30s to keep sync since we might not have socket access
   });
 
-  // Fetch available options for the selector
+  const service = programData?.program;
+  const segments = programData?.segments || [];
+
+  // Fetch available options for the selector (via same backend function)
   const { data: availableOptions = { events: [], services: [] } } = useQuery({
-    queryKey: ['tv-selector-options'],
+    queryKey: ['tv-selector-options-public'],
     queryFn: async () => {
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      const todayStr = serviceDate; // Use current state date
-      
-      // Fetch Events (Active/Confirmed)
-      const events = await base44.entities.Event.filter({ status: 'confirmed' }, '-start_date');
-      const relevantEvents = events.filter(e => {
-        if (!e.start_date) return false;
-        // Show recent past (7 days) and future (90 days)
-        const start = new Date(e.start_date);
-        const diffDays = (start - today) / (1000 * 60 * 60 * 24);
-        return diffDays > -7 && diffDays < 90;
-      });
-
-      // Fetch Services (Active, date-specific)
-      const services = await base44.entities.Service.filter({ status: 'active' }, '-date');
-      const relevantServices = services.filter(s => {
-         if (!s.date || s.origin === 'blueprint') return false;
-         // Show recent past (2 days) and future (7 days)
-         const sDate = new Date(s.date);
-         const diffDays = (sDate - today) / (1000 * 60 * 60 * 24);
-         return diffDays > -2 && diffDays < 14;
-      });
-
-      return { events: relevantEvents, services: relevantServices };
+      const response = await base44.functions.invoke('getPublicProgramData', { listOptions: true });
+      if (response.status >= 400) return { events: [], services: [] };
+      return response.data;
     },
     refetchInterval: 60000
-  });
-
-  // Fetch segments
-  const { data: segments = [] } = useQuery({
-    queryKey: ['tv-segments', service?.id, serviceDate],
-    queryFn: async () => {
-      if (!service) return [];
-      
-      if (service._isEvent) {
-        const sessions = await base44.entities.Session.filter({ event_id: service.id, date: serviceDate });
-        const allSegments = [];
-        for (const session of sessions) {
-          const segs = await base44.entities.Segment.filter({ session_id: session.id });
-          allSegments.push(...segs);
-        }
-        return allSegments;
-      }
-      
-      if (service.event_id) {
-        const sessions = await base44.entities.Session.filter({ event_id: service.event_id });
-        const allSegments = [];
-        for (const session of sessions) {
-          const segs = await base44.entities.Segment.filter({ session_id: session.id });
-          allSegments.push(...segs);
-        }
-        return allSegments;
-      }
-      
-      if (service.segments && Array.isArray(service.segments)) {
-        return service.segments;
-      }
-      return [];
-    },
-    enabled: !!service
   });
 
   // Subscribe to segment updates (real-time)
