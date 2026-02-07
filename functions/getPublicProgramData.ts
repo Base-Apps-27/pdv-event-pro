@@ -274,6 +274,17 @@ Deno.serve(async (req) => {
             // Fetch Extras
             rooms = await base44.asServiceRole.entities.Room.list();
             eventDays = await base44.asServiceRole.entities.EventDay.filter({ event_id: targetProgram.id });
+            
+            // Return raw PreSessionDetails for frontend (EventProgramView needs them)
+            // Note: preSessionDetails were fetched above in the injection block
+            const preSessionDetails = await Promise.all(
+                sessions.map(s => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: s.id }))
+            ).then(results => results.flat());
+
+            // Fetch Live Adjustments (if any)
+            // Events don't typically use LiveTimeAdjustment entity heavily yet (uses Session.live_adjustment_enabled), 
+            // but we fetch them just in case schema expands or for consistency
+            const liveAdjustments = []; 
 
             return Response.json({
                 event: targetProgram, // Kept for compat
@@ -281,7 +292,9 @@ Deno.serve(async (req) => {
                 sessions,
                 segments,
                 rooms,
-                eventDays
+                eventDays,
+                preSessionDetails,
+                liveAdjustments
             });
 
         } else {
@@ -355,10 +368,11 @@ Deno.serve(async (req) => {
             }
 
             // INJECT: Pre-Session Details Logic (for Services too)
+            let preSessionDetails = [];
             if (sessions.length > 0) {
                 const sessionIds = sessions.map(s => s.id);
                 // Fetch PreSessionDetails
-                const preSessionDetails = await Promise.all(
+                preSessionDetails = await Promise.all(
                     sessionIds.map(sid => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: sid }))
                 ).then(results => results.flat());
 
@@ -445,13 +459,24 @@ Deno.serve(async (req) => {
                 });
             }
 
+            // Fetch Rooms (Services need room names too)
+            const rooms = await base44.asServiceRole.entities.Room.list();
+
+            // Fetch Live Adjustments for this service
+            const liveAdjustments = await base44.asServiceRole.entities.LiveTimeAdjustment.filter({ 
+                service_id: targetProgram.id,
+                date: targetProgram.date 
+            });
+
             return Response.json({
                 event: null,
                 program: { ...targetProgram, _isEvent: false },
                 sessions,
                 segments,
-                rooms: [],
-                eventDays: []
+                rooms,
+                eventDays: [],
+                preSessionDetails,
+                liveAdjustments
             });
         }
 
