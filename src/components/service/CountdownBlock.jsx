@@ -124,20 +124,20 @@ export default function CountdownBlock({
   const config = modeConfig[displayMode] || modeConfig['upcoming'];
 
   return (
-    <div className={`relative bg-white rounded-2xl border-4 ${config.borderColor} p-3 md:p-4 shadow-lg ${config.containerClass || ''} transition-all duration-500`}>
+    <div className={`relative bg-white rounded-3xl border-4 ${config.borderColor} p-4 md:p-5 shadow-xl ${config.containerClass || ''} transition-all duration-500`}>
       
       {/* Label */}
-      <div className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest ${config.labelBg} shadow-md whitespace-nowrap z-10`}>
+      <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest ${config.labelBg} shadow-lg whitespace-nowrap z-10`}>
         {config.label}
       </div>
 
       {/* Main Content */}
-      <div className="space-y-1.5 md:space-y-2 mt-1">
+      <div className="space-y-2 md:space-y-3 mt-2">
         
         {/* Countdown Timer — HERO ELEMENT */}
         <div className="text-center w-full overflow-hidden">
           {/* Responsive sizing accounts for 2-column split at md breakpoint */}
-          <div className={`text-3xl sm:text-4xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-black font-mono tracking-tighter leading-none mb-0.5 ${config.countdownColor} tabular-nums break-words`}>
+          <div className={`text-4xl sm:text-5xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-black font-mono tracking-tighter leading-none mb-1 ${config.countdownColor} tabular-nums break-words`}>
             {countdownText}
           </div>
           {isLiveAdjusted && (
@@ -149,21 +149,21 @@ export default function CountdownBlock({
 
         {/* Segment Title */}
         <div className="text-center">
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 uppercase tracking-tight leading-none">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 uppercase tracking-tight">
             {segment.title}
           </h2>
         </div>
 
         {/* Segment Type & Presenter */}
         {(segment.segment_type || segment.presenter) && (
-          <div className="flex flex-col items-center gap-0.5 text-center">
+          <div className="flex flex-col items-center gap-1 text-center">
             {segment.segment_type && (
-              <div className="text-sm md:text-base font-semibold text-pdv-teal uppercase tracking-wider">
+              <div className="text-base md:text-lg font-semibold text-pdv-teal uppercase tracking-wider">
                 {segment.segment_type}
               </div>
             )}
             {segment.presenter && (
-              <div className="text-sm md:text-base text-slate-600 font-medium">
+              <div className="text-base md:text-lg text-slate-600 font-medium">
                 {segment.presenter}
               </div>
             )}
@@ -181,11 +181,11 @@ export default function CountdownBlock({
         )}
 
         {/* Start Time Display */}
-        <div className="text-center pt-2 border-t border-slate-200">
-          <div className="text-xs md:text-sm text-slate-500 uppercase tracking-widest">
+        <div className="text-center pt-4 border-t border-slate-200">
+          <div className="text-sm md:text-base text-slate-500 uppercase tracking-widest">
             {displayMode === 'in-progress' ? (language === 'es' ? 'TERMINA' : 'ENDS') : t('live.start')}
           </div>
-          <div className="text-xl md:text-2xl font-black text-pdv-teal font-mono mt-0.5">
+          <div className="text-2xl md:text-3xl font-black text-pdv-teal font-mono mt-1">
             {displayMode === 'in-progress' && segment.end_time
               ? formatTimeToEST(segment.end_time)
               : formatTimeToEST(segment.start_time)}

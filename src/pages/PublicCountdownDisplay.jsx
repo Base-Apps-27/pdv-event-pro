@@ -294,7 +294,7 @@ export default function PublicCountdownDisplay() {
   const allDone = !currentSegment && !nextSegment && !preLaunchSegment;
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 p-1 md:p-2 flex flex-col items-center justify-center overflow-hidden relative group/ui">
+    <div className="w-full min-h-screen bg-slate-50 p-2 md:p-3 flex flex-col items-center justify-center overflow-hidden relative group/ui">
       {/* Top Gradient Bar */}
       <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
 
@@ -331,17 +331,17 @@ export default function PublicCountdownDisplay() {
       </div>
 
       {/* Top Right Clock */}
-      <div className="absolute top-2 right-2 z-20">
-        <div className="text-2xl md:text-4xl text-slate-800 font-mono font-bold tracking-tight bg-white/60 backdrop-blur-md px-4 py-1.5 rounded-xl border border-white/50 shadow-sm">
+      <div className="absolute top-3 right-3 z-20">
+        <div className="text-3xl md:text-5xl text-slate-800 font-mono font-bold tracking-tight bg-white/60 backdrop-blur-md px-5 py-2 rounded-2xl border border-white/50 shadow-sm">
           {formatTimeToEST(currentTime.toTimeString().substring(0, 5))}
         </div>
       </div>
 
-      <div className="w-full max-w-6xl flex flex-col gap-2 items-center z-10">
+      <div className="w-full max-w-6xl flex flex-col gap-4 items-center z-10">
 
         {/* Header: Service Name */}
-        <div className="text-center mb-0.5">
-          <h1 className={`text-4xl md:text-5xl font-black mb-0.5 uppercase tracking-tight ${gradientText} drop-shadow-sm`}>
+        <div className="text-center mb-1">
+          <h1 className={`text-5xl md:text-6xl font-black mb-1 uppercase tracking-tight ${gradientText} drop-shadow-sm`}>
             {service.name}
           </h1>
         </div>
@@ -357,7 +357,7 @@ export default function PublicCountdownDisplay() {
         ) : (
           <>
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-2 w-full items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 w-full items-stretch">
 
               {/* LEFT PANEL (Main): In-Progress OR Pre-Launch (60% width) */}
               {/* Natural height determines the row height */}
