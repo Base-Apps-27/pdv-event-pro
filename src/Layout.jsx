@@ -166,11 +166,13 @@ function LayoutContentInner({ children }) {
             {/* EVENTS PILLAR - Permission-based */}
             {hasPermission(user, 'view_events') && (
               <>
-                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3 flex items-center gap-2">
-                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-                  <span>{t('section.events')}</span>
-                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-                </div>
+                {!isSidebarCollapsed && (
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3 flex items-center gap-2">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+                    <span>{t('section.events')}</span>
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+                  </div>
+                )}
                 <Link
                   to={createPageUrl("Events")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -180,9 +182,10 @@ function LayoutContentInner({ children }) {
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
                   style={isActive(createPageUrl("Events")) || isActive(createPageUrl("EventDetail")) ? gradientStyle : {}}
+                  title={isSidebarCollapsed ? t('nav.events') : ''}
                 >
-                  <Calendar className="w-5 h-5" />
-                  {t('nav.events')}
+                  <Calendar className="w-5 h-5 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t('nav.events')}</span>}
                 </Link>
                 <Link
                   to={createPageUrl("Reports")}
@@ -192,9 +195,10 @@ function LayoutContentInner({ children }) {
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
                   style={isActive(createPageUrl("Reports")) ? gradientStyle : {}}
+                  title={isSidebarCollapsed ? t('nav.reports') : ''}
                 >
-                  <FileText className="w-5 h-5" />
-                  {t('nav.reports')}
+                  <FileText className="w-5 h-5 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t('nav.reports')}</span>}
                 </Link>
               </>
             )}
