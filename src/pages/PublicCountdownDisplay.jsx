@@ -404,10 +404,11 @@ export default function PublicCountdownDisplay() {
         ) : (
           <>
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 w-full h-[55vh] lg:h-[60vh]">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 w-full items-stretch">
 
               {/* LEFT PANEL (Main): In-Progress OR Pre-Launch (60% width) */}
-              <div className="lg:col-span-3 h-full">
+              {/* Natural height determines the row height */}
+              <div className="lg:col-span-3">
                 {currentSegment ? (
                   <CountdownBlock
                     segment={currentSegment}
@@ -427,25 +428,28 @@ export default function PublicCountdownDisplay() {
                     className="h-full"
                   />
                 ) : (
-                  <div className="h-full bg-white rounded-3xl border-4 border-slate-200 p-8 md:p-10 shadow-lg flex items-center justify-center">
+                  <div className="h-full min-h-[400px] bg-white rounded-3xl border-4 border-slate-200 p-8 md:p-10 shadow-lg flex items-center justify-center">
                     <p className="text-slate-400 italic text-lg">{t('live.nothingNow')}</p>
                   </div>
                 )}
               </div>
 
               {/* RIGHT PANEL: Upcoming Agenda (40% width) */}
-              <div className="lg:col-span-2 h-full">
-                {upcomingSegments.length > 0 ? (
-                  <SegmentTimeline
-                    segments={upcomingSegments}
-                    getTimeDate={getTimeDate}
-                    className="h-full"
-                  />
-                ) : (
-                  <div className="h-full bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200 p-8 flex items-center justify-center">
-                    <p className="text-slate-400 italic font-medium">{t('live.endOfProgram')}</p>
-                  </div>
-                )}
+              {/* Constrained to match the height of the left panel on desktop */}
+              <div className="lg:col-span-2 relative min-h-[300px] lg:min-h-0">
+                <div className="lg:absolute lg:inset-0 h-full">
+                  {upcomingSegments.length > 0 ? (
+                    <SegmentTimeline
+                      segments={upcomingSegments}
+                      getTimeDate={getTimeDate}
+                      className="h-full"
+                    />
+                  ) : (
+                    <div className="h-full bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200 p-8 flex items-center justify-center">
+                      <p className="text-slate-400 italic font-medium">{t('live.endOfProgram')}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
