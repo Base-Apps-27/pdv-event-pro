@@ -58,11 +58,18 @@ export default function PublicCountdownDisplay() {
   }, []);
 
   // Fetch current service (or specified service/event)
-  const { data: service } = useQuery({
+  const { data: service, isLoading: isLoadingService } = useQuery({
     queryKey: ['tv-service', serviceId, serviceDate],
     queryFn: async () => {
       if (!serviceId) {
+        // Try to auto-detect if no specific ID
         const todayStr = serviceDate;
+        // Check for events first
+        const events = await base44.entities.Event.filter({ status: 'confirmed' }); // Simplified status check
+        const activeEvent = events.find(e => e.start_date <= todayStr && e.end_date >= todayStr);
+        if (activeEvent) return { ...activeEvent, _isEvent: true };
+
+        // Then check services
         const results = await base44.entities.Service.filter({ date: todayStr, status: 'active' });
         if (results?.length > 0) {
           return results.sort((a, b) => {
@@ -83,7 +90,40 @@ export default function PublicCountdownDisplay() {
       }
       return null;
     },
-    enabled: !!(serviceId || serviceDate)
+    enabled: true // Always try to fetch something or determine emptiness
+  });
+
+  // Fetch available options for the selector
+  const { data: availableOptions = { events: [], services: [] } } = useQuery({
+    queryKey: ['tv-selector-options'],
+    queryFn: async () => {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const todayStr = serviceDate; // Use current state date
+      
+      // Fetch Events (Active/Confirmed)
+      const events = await base44.entities.Event.filter({ status: 'confirmed' }, '-start_date');
+      const relevantEvents = events.filter(e => {
+        if (!e.start_date) return false;
+        // Show recent past (7 days) and future (90 days)
+        const start = new Date(e.start_date);
+        const diffDays = (start - today) / (1000 * 60 * 60 * 24);
+        return diffDays > -7 && diffDays < 90;
+      });
+
+      // Fetch Services (Active, date-specific)
+      const services = await base44.entities.Service.filter({ status: 'active' }, '-date');
+      const relevantServices = services.filter(s => {
+         if (!s.date || s.origin === 'blueprint') return false;
+         // Show recent past (2 days) and future (7 days)
+         const sDate = new Date(s.date);
+         const diffDays = (sDate - today) / (1000 * 60 * 60 * 24);
+         return diffDays > -2 && diffDays < 14;
+      });
+
+      return { events: relevantEvents, services: relevantServices };
+    },
+    refetchInterval: 60000
   });
 
   // Fetch segments
