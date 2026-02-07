@@ -42,9 +42,9 @@ export default function CountdownBlock({
     return d;
   };
 
-  const { countdownText, isLiveAdjusted } = useMemo(() => {
+  const { countdownText, isLiveAdjusted, progressPercent } = useMemo(() => {
     if (!segment || !segment.start_time) {
-      return { countdownText: '--:--:--', isLiveAdjusted: false };
+      return { countdownText: '--:--:--', isLiveAdjusted: false, progressPercent: 0 };
     }
 
     const startAt = parseTime(segment.start_time);
