@@ -110,18 +110,18 @@ export default function CoordinatorActionsDisplay({
   }
 
   return (
-    <div className="w-full bg-white rounded-2xl border-2 border-pdv-teal/30 p-6 md:p-8 shadow-lg">
+    <div className="w-full bg-white rounded-2xl border-2 border-pdv-teal/30 p-4 shadow-lg">
       
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
-        <Clock className="w-6 h-6 md:w-8 md:h-8 text-pdv-teal flex-shrink-0" />
-        <h3 className="text-2xl md:text-3xl font-bold text-slate-900 uppercase tracking-wide">
+      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200">
+        <Clock className="w-5 h-5 md:w-6 md:h-6 text-pdv-teal flex-shrink-0" />
+        <h3 className="text-xl md:text-2xl font-bold text-slate-900 uppercase tracking-wide">
           {t('live.coordination')}
         </h3>
       </div>
 
       {/* Actions Grid (Horizontal) */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 ${
         upcomingActions.length === 1 ? 'lg:grid-cols-1' :
         upcomingActions.length === 2 ? 'lg:grid-cols-2' :
         upcomingActions.length === 3 ? 'lg:grid-cols-3' :
@@ -135,33 +135,33 @@ export default function CoordinatorActionsDisplay({
           const isUrgent = timeUntil > 0 && timeUntil < 5 * 60000; // < 5 min
 
           return (
-            <div
-              key={action.id}
-              className={`flex flex-col p-4 rounded-xl transition-colors h-full ${
-                isUrgent
-                  ? 'bg-amber-50 border-2 border-amber-300'
-                  : 'bg-slate-50 border border-slate-200'
-              }`}
-            >
-              <div className="flex items-start gap-4 mb-3">
-                {/* Time Block (Left) */}
-                <div className="flex flex-col items-center min-w-[60px] flex-shrink-0">
-                  <div className={`text-3xl font-black font-mono leading-none tracking-tight ${
-                    isUrgent ? 'text-amber-600' : 'text-pdv-teal'
-                  }`}>
-                    {minutesUntil > 0 ? `${minutesUntil}m` : 'NOW'}
-                  </div>
-                  <div className="text-[10px] font-bold text-slate-400 mt-1">
-                    {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
-                  </div>
+          <div
+            key={action.id}
+            className={`flex flex-col p-3 rounded-xl transition-colors h-full ${
+              isUrgent
+                ? 'bg-amber-50 border-2 border-amber-300'
+                : 'bg-slate-50 border border-slate-200'
+            }`}
+          >
+            <div className="flex items-start gap-3 mb-2">
+              {/* Time Block (Left) */}
+              <div className="flex flex-col items-center min-w-[50px] flex-shrink-0">
+                <div className={`text-2xl font-black font-mono leading-none tracking-tight ${
+                  isUrgent ? 'text-amber-600' : 'text-pdv-teal'
+                }`}>
+                  {minutesUntil > 0 ? `${minutesUntil}m` : 'NOW'}
                 </div>
+                <div className="text-[10px] font-bold text-slate-400 mt-1">
+                  {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
+                </div>
+              </div>
 
-                {/* Main Content (Right) */}
-                <div className="flex-1 min-w-0">
-                   <div className="flex justify-between items-start gap-2">
-                      <h4 className="text-lg font-bold text-slate-900 uppercase tracking-tight leading-none mb-2">
-                        {action.label}
-                      </h4>
+              {/* Main Content (Right) */}
+              <div className="flex-1 min-w-0">
+                 <div className="flex justify-between items-start gap-2">
+                    <h4 className="text-base font-bold text-slate-900 uppercase tracking-tight leading-none mb-1">
+                      {action.label}
+                    </h4>
                       {isUrgent && <AlertCircle className="w-5 h-5 text-amber-600 animate-pulse flex-shrink-0" />}
                    </div>
 
@@ -190,8 +190,8 @@ export default function CoordinatorActionsDisplay({
 
               {/* Instructions/Notes */}
               {action.notes && (
-                <div className="mb-3">
-                   <div className="p-2.5 bg-white rounded-lg text-sm text-slate-800 font-medium leading-snug whitespace-pre-wrap break-words border border-slate-200 shadow-sm">
+                <div className="mb-2">
+                   <div className="p-2 bg-white rounded-lg text-xs text-slate-800 font-medium leading-snug whitespace-pre-wrap break-words border border-slate-200 shadow-sm">
                       {action.notes}
                    </div>
                 </div>
