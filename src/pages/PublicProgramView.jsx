@@ -282,14 +282,14 @@ export default function PublicProgramView() {
 
     unsubscribers.push(
       base44.entities.Segment.subscribe((event) => {
-        queryClient.invalidateQueries({ queryKey: ['segments'] });
+        queryClient.invalidateQueries({ queryKey: ['publicProgramData'] });
         notify('Segment', event);
       })
     );
 
     unsubscribers.push(
       base44.entities.Session.subscribe((event) => {
-        queryClient.invalidateQueries({ queryKey: ['sessions'] });
+        queryClient.invalidateQueries({ queryKey: ['publicProgramData'] });
         notify('Session', event);
       })
     );
@@ -297,8 +297,8 @@ export default function PublicProgramView() {
     if (viewType === 'service' && selectedServiceId) {
       unsubscribers.push(
         base44.entities.Service.subscribe((event) => {
-          queryClient.invalidateQueries({ queryKey: ['weeklyServiceData'] });
-          queryClient.invalidateQueries({ queryKey: ['services'] });
+          queryClient.invalidateQueries({ queryKey: ['publicProgramData'] });
+          queryClient.invalidateQueries({ queryKey: ['selectorOptions'] });
           notify('Service', event);
         })
       );
@@ -307,7 +307,8 @@ export default function PublicProgramView() {
     if (viewType === 'event' && selectedEventId) {
       unsubscribers.push(
         base44.entities.Event.subscribe((event) => {
-          queryClient.invalidateQueries({ queryKey: ['publicEvents'] });
+          queryClient.invalidateQueries({ queryKey: ['selectorOptions'] });
+          queryClient.invalidateQueries({ queryKey: ['publicProgramData'] }); // In case event details changed
           notify('Event', event);
         })
       );
@@ -316,7 +317,7 @@ export default function PublicProgramView() {
     if (viewType === 'event') {
       unsubscribers.push(
         base44.entities.PreSessionDetails.subscribe((event) => {
-          queryClient.invalidateQueries({ queryKey: ['preSessionDetails'] });
+          queryClient.invalidateQueries({ queryKey: ['publicProgramData'] });
           notify('PreSessionDetails', event);
         })
       );
@@ -324,7 +325,7 @@ export default function PublicProgramView() {
 
     unsubscribers.push(
       base44.entities.SegmentAction.subscribe((event) => {
-        queryClient.invalidateQueries({ queryKey: ['segments'] });
+        queryClient.invalidateQueries({ queryKey: ['publicProgramData'] });
         notify('SegmentAction', event);
       })
     );
