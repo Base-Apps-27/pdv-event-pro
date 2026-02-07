@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { useLanguage, LanguageProvider } from "@/components/utils/i18n";
 import { hasPermission } from "@/components/utils/permissions";
 import { useTheme } from "@/components/utils/useTheme";
-import { Calendar, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus, Shield, Moon, Sun } from "lucide-react";
+import { Calendar, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus, Shield, Moon, Sun, ChevronLeft, ChevronRight } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 function LayoutContent({ children }) {
@@ -34,6 +34,20 @@ function LayoutContentInner({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+        return localStorage.getItem('sidebarCollapsed') === 'true';
+    }
+    return false;
+  });
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(prev => {
+        const next = !prev;
+        localStorage.setItem('sidebarCollapsed', String(next));
+        return next;
+    });
+  };
 
   const isActive = (path) => location.pathname === path;
 
@@ -96,21 +110,23 @@ function LayoutContentInner({ children }) {
   return (
     <div className="min-h-screen flex bg-[#F0F1F3]">
       {/* Dark Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-black text-white fixed h-full font-sans print:hidden">
-        <div className="p-6 mb-2">
+      <aside className={`hidden lg:flex lg:flex-col ${isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'} bg-black text-white fixed h-full font-sans print:hidden transition-all duration-300 z-50`}>
+        <div className={`p-6 mb-2 ${isSidebarCollapsed ? 'px-4' : ''}`}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg" style={gradientStyle}>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg shrink-0" style={gradientStyle}>
               <Calendar className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <h2 className="text-white text-xl uppercase leading-none tracking-wide">PALABRAS DE VIDA</h2>
-              <p className="text-[10px] text-pdv-green font-medium tracking-wider mt-1">¡ATRÉVETE A CAMBIAR!</p>
-            </div>
+            {!isSidebarCollapsed && (
+              <div className="overflow-hidden whitespace-nowrap">
+                <h2 className="text-white text-xl uppercase leading-none tracking-wide">PALABRAS DE VIDA</h2>
+                <p className="text-[10px] text-pdv-green font-medium tracking-wider mt-1">¡ATRÉVETE A CAMBIAR!</p>
+              </div>
+            )}
           </div>
         </div>
 
-        <nav className="flex-1 px-4 space-y-1">
-            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 mt-2 pl-3">{t('section.main')}</div>
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-800">
+            {!isSidebarCollapsed && <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 mt-2 pl-3">{t('section.main')}</div>}
             <Link
               to={createPageUrl("Dashboard")}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -119,9 +135,10 @@ function LayoutContentInner({ children }) {
                   : "text-gray-400 hover:bg-white/5 hover:text-white"
               }`}
               style={isActive(createPageUrl("Dashboard")) ? gradientStyle : {}}
+              title={isSidebarCollapsed ? t('nav.dashboard') : ''}
             >
-              <LayoutDashboard className="w-5 h-5" />
-              {t('nav.dashboard')}
+              <LayoutDashboard className="w-5 h-5 shrink-0" />
+              {!isSidebarCollapsed && <span>{t('nav.dashboard')}</span>}
             </Link>
 
             {/* LIVE VIEW - All Roles */}
@@ -389,7 +406,7 @@ function LayoutContentInner({ children }) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:ml-64 print:ml-0">
+      <div className={`flex-1 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'} print:ml-0 transition-all duration-300`}>
         {/* Mobile Header */}
         <header className="lg:hidden bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50 print:hidden">
           <div className="px-4 sm:px-6">
