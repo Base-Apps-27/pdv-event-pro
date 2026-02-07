@@ -101,51 +101,19 @@ export default function PublicProgramView() {
     }
   }, [preloadedEventId]);
 
-  // Fetch list of public events
-  const { data: publicEvents = [] } = useQuery({
-    queryKey: ['publicEvents'],
+  // Fetch available options for the selector (publicly accessible via backend function)
+  const { data: selectorOptions = { events: [], services: [] } } = useQuery({
+    queryKey: ['selectorOptions'],
     queryFn: async () => {
-      const [confirmed, inProgress] = await Promise.all([
-        base44.entities.Event.filter({ status: 'confirmed' }, '-start_date'),
-        base44.entities.Event.filter({ status: 'in_progress' }, '-start_date'),
-      ]);
-      const map = new Map();
-      [...confirmed, ...inProgress].forEach(e => map.set(e.id, e));
-      return Array.from(map.values()).sort((a, b) => {
-        const dateA = a.start_date || '';
-        const dateB = b.start_date || '';
-        return dateB.localeCompare(dateA);
-      });
+      const response = await base44.functions.invoke('getPublicProgramData', { listOptions: true });
+      if (response.status >= 400) return { events: [], services: [] };
+      return response.data;
     },
-    refetchInterval: 15000,
+    refetchInterval: 60000
   });
 
-  // Fetch services (only WeeklyServiceManager date-specific instances)
-  const { data: services = [] } = useQuery({
-    queryKey: ['services'],
-    queryFn: async () => {
-      const allServices = await base44.entities.Service.filter({ status: 'active' }, '-date');
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      // Construct local YYYY-MM-DD string for comparison
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const todayString = `${yyyy}-${mm}-${dd}`;
-
-      // Filter to only date-specific weekly services (created by WeeklyServiceManager)
-      return allServices
-        .filter(s => 
-          s.status === 'active' && 
-          s.date && // Must have a specific date
-          s.origin !== 'blueprint' && // Exclude old blueprint/template records
-          s.date >= todayString // String comparison ensures timezone safety
-        )
-        .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date ascending
-    },
-    refetchInterval: 5000,
-  });
+  const publicEvents = selectorOptions.events || [];
+  const services = selectorOptions.services || [];
 
   // Handle preloaded date parameter
   useEffect(() => {
@@ -241,79 +209,42 @@ export default function PublicProgramView() {
     }
   }, [publicEvents, services, preloadedEventId, preloadedServiceId]);
 
-  // Fetch actual Service data for selected service
-  const { data: weeklyServiceData } = useQuery({
-    queryKey: ['weeklyServiceData', selectedServiceId],
+  // Fetch full program data (publicly accessible via backend function)
+  const { data: programData, isLoading: isLoadingProgram, refetch: refetchProgram } = useQuery({
+    queryKey: ['publicProgramData', selectedEventId, selectedServiceId, viewType, preloadedDate],
     queryFn: async () => {
-      const data = await base44.entities.Service.filter({ id: selectedServiceId });
-      // Ensure we only work with active date-specific services
-      return data.filter(s => s.status === 'active' && s.date);
-    },
-    enabled: !!(viewType === "service" && selectedServiceId),
-    refetchInterval: 15000,
-  });
+      // Logic to determine what to fetch
+      const payload = {};
+      if (viewType === 'event' && selectedEventId) payload.eventId = selectedEventId;
+      else if (viewType === 'service' && selectedServiceId) payload.serviceId = selectedServiceId;
+      else if (preloadedDate) payload.date = preloadedDate;
+      else return null;
 
-  // Fetch sessions for selected event OR service
-  const { data: sessions = [], refetch: refetchSessions, isLoading: isLoadingSessions } = useQuery({
-    queryKey: ['sessions', selectedEventId, selectedServiceId, viewType],
-    queryFn: async () => {
-      if (viewType === "event" && selectedEventId) {
-        const { data } = await base44.functions.invoke('getSortedSessions', { eventId: selectedEventId });
-        return data.sessions || [];
-      } else if (viewType === "service" && selectedServiceId) {
-        const { data } = await base44.functions.invoke('getSortedSessions', { serviceId: selectedServiceId });
-        return data.sessions || [];
+      const response = await base44.functions.invoke('getPublicProgramData', payload);
+      if (response.status >= 400) {
+        console.warn("Fetch failed:", response);
+        throw new Error("Failed to fetch program data");
       }
-      return [];
+      return response.data;
     },
-    enabled: !!(selectedEventId || selectedServiceId),
-    refetchInterval: 15000,
+    enabled: !!(selectedEventId || selectedServiceId || preloadedDate),
+    refetchInterval: 15000
   });
 
-  // Fetch PreSessionDetails for the active sessions (Events Only)
-  const { data: preSessionDetails = [] } = useQuery({
-    queryKey: ['preSessionDetails', sessions.map(s => s.id).join(',')],
-    queryFn: async () => {
-      if (viewType !== "event" || sessions.length === 0) return [];
-      const sessionIds = sessions.map(s => s.id);
-      return await base44.entities.PreSessionDetails.filter({ 
-        session_id: { '$in': sessionIds } 
-      });
-    },
-    enabled: viewType === "event" && sessions.length > 0,
-    refetchInterval: 60000
-  });
-
-  // Fetch segments for selected sessions (fetch all, child components filter)
-  const { data: allSegments = [], refetch: refetchSegments, isLoading: isLoadingSegments } = useQuery({
-    queryKey: ['segments', selectedEventId, selectedServiceId, viewType],
-    queryFn: async () => {
-      const sessionIds = sessions.map(s => s.id);
-      
-      if (sessionIds.length === 0) return [];
-      
-      const response = await base44.functions.invoke('getSegmentsBySessionIds', { sessionIds });
-      return response.data?.segments?.filter(seg => seg.show_in_general !== false) || [];
-    },
-    enabled: !!(selectedEventId || selectedServiceId) && sessions.length > 0,
-    refetchInterval: 15000,
-  });
+  // Derived state from programData
+  const sessions = programData?.sessions || [];
+  const allSegments = programData?.segments || [];
+  const rooms = programData?.rooms || [];
+  const preSessionDetails = programData?.preSessionDetails || [];
+  // For 'weeklyServiceData' compat (rawServiceData was the service object)
+  const rawServiceData = viewType === 'service' ? programData?.program : null;
 
   const refetchData = () => {
-    refetchSessions();
-    refetchSegments();
+    refetchProgram();
   };
-
-  // Fetch rooms
-  const { data: rooms = [] } = useQuery({
-    queryKey: ['rooms'],
-    queryFn: () => base44.entities.Room.list(),
-    refetchInterval: 60000,
-  });
 
   const selectedEvent = publicEvents.find(e => e.id === selectedEventId);
   const selectedService = services.find(s => s.id === selectedServiceId);
-  const rawServiceData = weeklyServiceData?.[0] || null;
 
   // REAL-TIME SUBSCRIPTIONS: Instant updates when admin edits program data
   // Placed AFTER rawServiceData / selectedEvent are derived so closures can read them safely.
@@ -405,19 +336,8 @@ export default function PublicProgramView() {
     };
   }, [viewType, selectedServiceId, selectedEventId, rawServiceData?.date, selectedEvent?.start_date, selectedEvent?.end_date, language, queryClient]);
 
-  // Fetch live time adjustment for weekly services
-  const { data: liveAdjustments = [] } = useQuery({
-    queryKey: ['liveAdjustments', selectedServiceId, rawServiceData?.date],
-    queryFn: async () => {
-      if (!selectedServiceId || !rawServiceData?.date) return [];
-      return await base44.entities.LiveTimeAdjustment.filter({ 
-        date: rawServiceData.date, 
-        service_id: selectedServiceId 
-      });
-    },
-    enabled: viewType === "service" && !!selectedServiceId && !!rawServiceData?.date,
-    refetchInterval: 3000,
-  });
+  // Derived live adjustments from program data
+  const liveAdjustments = programData?.liveAdjustments || [];
 
   // Fetch immutable adjustment history logs
   const { data: adjustmentLogs = [] } = useQuery({
@@ -439,13 +359,13 @@ export default function PublicProgramView() {
 
     const unsubscribe = base44.entities.LiveTimeAdjustment.subscribe((event) => {
       if (event.data.date === rawServiceData.date && event.data.service_id === selectedServiceId) {
-        // Refetch to get updated data
-        queryClient.invalidateQueries(['liveAdjustments', selectedServiceId, rawServiceData.date]);
+        // Refetch program data to get updated adjustments
+        queryClient.invalidateQueries(['publicProgramData']);
       }
     });
 
     return unsubscribe;
-  }, [viewType, selectedServiceId, rawServiceData?.date]);
+  }, [viewType, selectedServiceId, rawServiceData?.date, queryClient]);
 
   // Save time adjustment
   const handleSaveTimeAdjustment = async (offsetMinutes, authorizedBy) => {
@@ -768,7 +688,7 @@ export default function PublicProgramView() {
   };
 
   // Show skeleton loading state when primary data is loading
-  const isContentLoading = (selectedEventId || selectedServiceId) && (isLoadingSessions || isLoadingSegments);
+  const isContentLoading = (selectedEventId || selectedServiceId) && isLoadingProgram;
 
   if (isContentLoading) {
     return <LiveViewSkeleton />;
