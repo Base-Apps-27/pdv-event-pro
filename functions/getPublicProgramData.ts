@@ -210,15 +210,35 @@ Deno.serve(async (req) => {
 
                     if (firstSeg && details) {
                         const newActions = [];
+
+                        // Helper to calculate offset
+                        const getOffset = (segStart, targetTime) => {
+                            if (!segStart || !targetTime) return 0;
+                            const [h1, m1] = segStart.split(':').map(Number);
+                            const [h2, m2] = targetTime.split(':').map(Number);
+                            return (h1 * 60 + m1) - (h2 * 60 + m2);
+                        };
                         
                         if (details.registration_desk_open_time) {
+                            const offset = getOffset(firstSeg.start_time, details.registration_desk_open_time);
                             newActions.push({
                                 id: `pre-reg-${details.id}`,
                                 label: 'REGISTRATION OPEN',
                                 department: 'Hospitality',
-                                timing: 'absolute',
-                                absolute_time: details.registration_desk_open_time,
+                                timing: 'before_start',
+                                offset_min: offset,
                                 order: -100
+                            });
+                        }
+                        if (details.library_open_time) {
+                             const offset = getOffset(firstSeg.start_time, details.library_open_time);
+                             newActions.push({
+                                id: `pre-lib-${details.id}`,
+                                label: 'LIBRARY OPEN',
+                                department: 'Hospitality',
+                                timing: 'before_start',
+                                offset_min: offset,
+                                order: -99
                             });
                         }
                         if (details.facility_notes) {
@@ -227,9 +247,9 @@ Deno.serve(async (req) => {
                                 label: 'FACILITY INSTRUCTIONS',
                                 department: 'Admin',
                                 timing: 'before_start',
-                                offset_min: 60, // 1 hour before
+                                offset_min: 60,
                                 notes: details.facility_notes,
-                                order: -99
+                                order: -98
                             });
                         }
                         if (details.general_notes) {
@@ -238,9 +258,9 @@ Deno.serve(async (req) => {
                                 label: 'GENERAL NOTES',
                                 department: 'Coordinador',
                                 timing: 'before_start',
-                                offset_min: 30, // 30 min before
+                                offset_min: 30,
                                 notes: details.general_notes,
-                                order: -98
+                                order: -97
                             });
                         }
 
@@ -364,15 +384,35 @@ Deno.serve(async (req) => {
 
                     if (firstSeg && details) {
                         const newActions = [];
+
+                        // Helper to calculate offset
+                        const getOffset = (segStart, targetTime) => {
+                            if (!segStart || !targetTime) return 0;
+                            const [h1, m1] = segStart.split(':').map(Number);
+                            const [h2, m2] = targetTime.split(':').map(Number);
+                            return (h1 * 60 + m1) - (h2 * 60 + m2);
+                        };
                         
                         if (details.registration_desk_open_time) {
+                            const offset = getOffset(firstSeg.start_time, details.registration_desk_open_time);
                             newActions.push({
                                 id: `pre-reg-${details.id}`,
                                 label: 'REGISTRATION OPEN',
                                 department: 'Hospitality',
-                                timing: 'absolute',
-                                absolute_time: details.registration_desk_open_time,
+                                timing: 'before_start',
+                                offset_min: offset,
                                 order: -100
+                            });
+                        }
+                        if (details.library_open_time) {
+                             const offset = getOffset(firstSeg.start_time, details.library_open_time);
+                             newActions.push({
+                                id: `pre-lib-${details.id}`,
+                                label: 'LIBRARY OPEN',
+                                department: 'Hospitality',
+                                timing: 'before_start',
+                                offset_min: offset,
+                                order: -99
                             });
                         }
                         if (details.facility_notes) {
@@ -381,9 +421,9 @@ Deno.serve(async (req) => {
                                 label: 'FACILITY INSTRUCTIONS',
                                 department: 'Admin',
                                 timing: 'before_start',
-                                offset_min: 60, // 1 hour before
+                                offset_min: 60,
                                 notes: details.facility_notes,
-                                order: -99
+                                order: -98
                             });
                         }
                         if (details.general_notes) {
@@ -392,9 +432,9 @@ Deno.serve(async (req) => {
                                 label: 'GENERAL NOTES',
                                 department: 'Coordinador',
                                 timing: 'before_start',
-                                offset_min: 30, // 30 min before
+                                offset_min: 30,
                                 notes: details.general_notes,
-                                order: -98
+                                order: -97
                             });
                         }
 
