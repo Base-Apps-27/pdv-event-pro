@@ -81,9 +81,18 @@ export default function CountdownBlock({
 
     const text = `${prefix}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
+    // Calculate progress percentage for in-progress items
+    let progressPercent = 0;
+    if (displayMode === 'in-progress' && startAt && endAt) {
+      const totalDuration = endAt.getTime() - startAt.getTime();
+      const elapsed = now - startAt.getTime();
+      progressPercent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+    }
+
     return {
       countdownText: text,
-      isLiveAdjusted: segment.is_live_adjusted || false
+      isLiveAdjusted: segment.is_live_adjusted || false,
+      progressPercent
     };
   }, [segment, currentTime, serviceDate, displayMode]);
 
@@ -94,7 +103,7 @@ export default function CountdownBlock({
       labelBg: 'bg-[#8DC63F] text-slate-900', 
       label: t('live.inProgress'),
       countdownColor: 'text-[#8DC63F]',
-      containerClass: 'shadow-green-900/10'
+      containerClass: 'shadow-green-900/10 ring-4 ring-[#8DC63F]/20'
     },
     'pre-launch': {
       borderColor: 'border-[#1F8A70]',
@@ -158,6 +167,16 @@ export default function CountdownBlock({
                 {segment.presenter}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Progress Bar (Only for In-Progress) */}
+        {displayMode === 'in-progress' && (
+          <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden mt-2">
+            <div 
+              className="h-full bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23] transition-all duration-1000 ease-linear"
+              style={{ width: `${isLiveAdjusted ? 100 : (progressPercent || 0)}%` }} // If live adjusted, we don't really know true progress easily without recalculating, but usually we just show regular progress or full if indeterminate
+            />
           </div>
         )}
 
