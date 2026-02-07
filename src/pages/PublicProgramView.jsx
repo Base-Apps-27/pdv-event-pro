@@ -894,8 +894,8 @@ export default function PublicProgramView() {
           {((viewType === 'event' && selectedEventId) || (viewType === 'service' && selectedServiceId)) && (
             <Link 
               to={viewType === 'event' 
-                ? createPageUrl(`PublicCountdownDisplay?eventId=${selectedEventId}`) 
-                : createPageUrl(`PublicCountdownDisplay?serviceId=${selectedServiceId}`)
+                ? `${createPageUrl('PublicCountdownDisplay')}?event_id=${selectedEventId}`
+                : `${createPageUrl('PublicCountdownDisplay')}?service_id=${selectedServiceId}`
               }
               target="_blank"
               className="flex items-center justify-center w-12 h-12 rounded-lg bg-white border-2 border-gray-300 text-gray-500 hover:text-pdv-teal hover:border-pdv-teal transition-all shrink-0 shadow-sm"
