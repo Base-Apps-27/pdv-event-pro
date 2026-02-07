@@ -5,7 +5,11 @@ import CountdownBlock from "@/components/service/CountdownBlock";
 import CoordinatorActionsDisplay from "@/components/service/CoordinatorActionsDisplay";
 import SegmentTimeline from "@/components/service/SegmentTimeline";
 import { useLanguage } from "@/components/utils/i18n";
-import { formatTimeToEST } from "@/components/utils/timeFormat";
+import { formatTimeToEST, formatDateET } from "@/components/utils/timeFormat";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Tv, Settings, LogOut, Loader2 } from "lucide-react";
 
 /**
  * PublicCountdownDisplay
