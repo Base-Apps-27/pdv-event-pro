@@ -25,7 +25,13 @@ export default function PublicCountdownDisplay() {
   // Brand gradient style (Hardcoded for reliability)
   const gradientText = "bg-clip-text text-transparent bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]";
   const [serviceId, setServiceId] = useState(null);
-  const [serviceDate, setServiceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [serviceDate, setServiceDate] = useState(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
 
   // Tick every second for countdown display (100ms is wasteful for seconds-precision text)
   useEffect(() => {
@@ -229,8 +235,12 @@ export default function PublicCountdownDisplay() {
         </div>
 
         {allDone ? (
-          <div className="text-center text-slate-400 text-xl italic py-16">
-            {t('live.endOfProgram')}
+          <div className="w-full max-w-2xl mx-auto bg-white rounded-3xl border-4 border-slate-100 p-12 shadow-xl text-center opacity-0 animate-in fade-in duration-1000 slide-in-from-bottom-8 fill-mode-forwards" style={{ animationDelay: '0.2s' }}>
+             <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <span className="text-4xl">👋</span>
+             </div>
+             <h2 className="text-4xl font-black text-slate-800 uppercase mb-3 tracking-tight">{t('live.endOfProgram')}</h2>
+             <p className="text-slate-400 text-xl font-medium">Have a blessed week!</p>
           </div>
         ) : (
           <>
