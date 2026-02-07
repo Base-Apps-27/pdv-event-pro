@@ -113,14 +113,8 @@ export default function PublicCountdownDisplay() {
     refetchInterval: 60000
   });
 
-  // Subscribe to segment updates (real-time)
-  useEffect(() => {
-    if (!service) return;
-    const unsub = base44.entities.Segment.subscribe(() => {
-      // React Query will refetch on invalidation
-    });
-    return unsub;
-  }, [service]);
+  // No real-time subscriptions for public/kiosk view to avoid auth prompts.
+  // We rely on the 30s polling in useQuery above.
 
   // ─── CANONICAL TIME PARSER (mirrors LiveStatusCard.getTimeDate) ───
   const getTimeDate = (timeStr) => {

@@ -247,8 +247,10 @@ export default function PublicProgramView() {
   const selectedService = services.find(s => s.id === selectedServiceId);
 
   // REAL-TIME SUBSCRIPTIONS: Instant updates when admin edits program data
-  // Placed AFTER rawServiceData / selectedEvent are derived so closures can read them safely.
+  // Only subscribe if user is authenticated to avoid auth redirects on public view
   useEffect(() => {
+    if (!currentUser) return;
+
     const unsubscribers = [];
 
     const isActiveDay = () => {
@@ -335,7 +337,7 @@ export default function PublicProgramView() {
         if (typeof unsub === 'function') unsub();
       });
     };
-  }, [viewType, selectedServiceId, selectedEventId, rawServiceData?.date, selectedEvent?.start_date, selectedEvent?.end_date, language, queryClient]);
+  }, [viewType, selectedServiceId, selectedEventId, rawServiceData?.date, selectedEvent?.start_date, selectedEvent?.end_date, language, queryClient, currentUser]);
 
   // Derived live adjustments from program data
   const liveAdjustments = programData?.liveAdjustments || [];
@@ -354,9 +356,9 @@ export default function PublicProgramView() {
     refetchInterval: 5000,
   });
 
-  // Subscribe to live adjustments for real-time updates
+  // Subscribe to live adjustments for real-time updates (Authenticated only)
   useEffect(() => {
-    if (viewType !== "service" || !selectedServiceId || !rawServiceData?.date) return;
+    if (!currentUser || viewType !== "service" || !selectedServiceId || !rawServiceData?.date) return;
 
     const unsubscribe = base44.entities.LiveTimeAdjustment.subscribe((event) => {
       if (event.data.date === rawServiceData.date && event.data.service_id === selectedServiceId) {
@@ -366,7 +368,7 @@ export default function PublicProgramView() {
     });
 
     return unsubscribe;
-  }, [viewType, selectedServiceId, rawServiceData?.date, queryClient]);
+  }, [viewType, selectedServiceId, rawServiceData?.date, queryClient, currentUser]);
 
   // Save time adjustment
   const handleSaveTimeAdjustment = async (offsetMinutes, authorizedBy) => {
