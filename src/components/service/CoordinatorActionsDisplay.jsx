@@ -143,44 +143,62 @@ export default function CoordinatorActionsDisplay({
                   : 'bg-slate-50 border border-slate-200'
               }`}
             >
-              {/* Header: Time & Type */}
-              <div className="flex justify-between items-start mb-3">
-                <div className={`text-2xl font-black font-mono leading-none ${
-                  isUrgent ? 'text-amber-600' : 'text-pdv-teal'
-                }`}>
-                  {minutesUntil > 0 ? `${minutesUntil}m` : 'NOW'}
+              <div className="flex items-start gap-4 mb-3">
+                {/* Time Block (Left) */}
+                <div className="flex flex-col items-center min-w-[60px] flex-shrink-0">
+                  <div className={`text-3xl font-black font-mono leading-none tracking-tight ${
+                    isUrgent ? 'text-amber-600' : 'text-pdv-teal'
+                  }`}>
+                    {minutesUntil > 0 ? `${minutesUntil}m` : 'NOW'}
+                  </div>
+                  <div className="text-[10px] font-bold text-slate-400 mt-1">
+                    {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
+                  </div>
                 </div>
-                {isUrgent && <AlertCircle className="w-5 h-5 text-amber-600 animate-pulse" />}
+
+                {/* Main Content (Right) */}
+                <div className="flex-1 min-w-0">
+                   <div className="flex justify-between items-start gap-2">
+                      <h4 className="text-lg font-bold text-slate-900 uppercase tracking-tight leading-none mb-2">
+                        {action.label}
+                      </h4>
+                      {isUrgent && <AlertCircle className="w-5 h-5 text-amber-600 animate-pulse flex-shrink-0" />}
+                   </div>
+
+                   {/* Meta Row: Badge + Dept + UpNext */}
+                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs mb-2">
+                      <span className={`font-bold uppercase tracking-wider px-2 py-0.5 rounded-md text-[10px] ${
+                        action.isPrep
+                          ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                          : 'bg-blue-100 text-blue-700 border border-blue-200'
+                      }`}>
+                        {action.isPrep ? t('live.preparation') : t('live.during')}
+                      </span>
+                      
+                      <span className="text-slate-600 font-medium">
+                        {action.type}
+                      </span>
+
+                      {action.isNext && (
+                         <span className="font-bold text-slate-900">
+                           {t('live.upNext')}
+                         </span>
+                      )}
+                   </div>
+                </div>
               </div>
 
-              {/* Main Label */}
-              <h4 className="text-lg font-bold text-slate-900 uppercase tracking-tight leading-tight mb-3 flex-1">
-                {action.label}
-              </h4>
-
-              {/* Tags/Badges */}
-              <div className="flex flex-wrap gap-2 mb-3">
-                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                  action.isPrep
-                    ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                    : 'bg-blue-100 text-blue-700 border border-blue-200'
-                }`}>
-                  {action.isPrep ? 'PREP' : 'LIVE'}
-                </span>
-                <span className="text-xs font-medium text-slate-600 bg-white border border-slate-100 px-2 py-0.5 rounded-full">
-                  {action.type}
-                </span>
-              </div>
-
-              {/* Instructions/Notes (Always Visible) */}
+              {/* Instructions/Notes */}
               {action.notes && (
-                <div className="mb-3 p-2 bg-black/5 rounded-lg text-[11px] md:text-xs text-slate-800 font-medium leading-snug whitespace-pre-wrap break-words border border-black/5">
-                  {action.notes}
+                <div className="mb-3">
+                   <div className="p-2.5 bg-white rounded-lg text-sm text-slate-800 font-medium leading-snug whitespace-pre-wrap break-words border border-slate-200 shadow-sm">
+                      {action.notes}
+                   </div>
                 </div>
               )}
 
               {/* Footer: Segment Context */}
-              <div className="mt-auto pt-3 border-t border-black/5 text-xs text-slate-400 font-medium truncate">
+              <div className="mt-auto pt-2 border-t border-black/5 text-xs text-slate-400 font-medium uppercase tracking-wide truncate">
                  {action.segmentTitle}
               </div>
             </div>
