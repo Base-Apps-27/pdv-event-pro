@@ -369,9 +369,10 @@ function LayoutContentInner({ children }) {
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
                   style={isActive(createPageUrl("SchemaGuide")) ? gradientStyle : {}}
+                  title={isSidebarCollapsed ? t('nav.schema') : ''}
                 >
-                  <FileCode className="w-5 h-5" />
-                  {t('nav.schema')}
+                  <FileCode className="w-5 h-5 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t('nav.schema')}</span>}
                 </Link>
                 )}
                 </>
