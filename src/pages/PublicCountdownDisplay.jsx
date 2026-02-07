@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import CountdownBlock from "@/components/service/CountdownBlock";
 import CoordinatorActionsDisplay from "@/components/service/CoordinatorActionsDisplay";
+import SegmentTimeline from "@/components/service/SegmentTimeline";
 import { useLanguage } from "@/components/utils/i18n";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
