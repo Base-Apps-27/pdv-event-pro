@@ -353,9 +353,10 @@ function LayoutContentInner({ children }) {
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
                   style={isActive(createPageUrl("ScheduleImporter")) ? gradientStyle : {}}
+                  title={isSidebarCollapsed ? t('nav.importer') : ''}
                 >
-                  <Sparkles className="w-5 h-5" />
-                  {t('nav.importer')}
+                  <Sparkles className="w-5 h-5 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t('nav.importer')}</span>}
                 </Link>
                 )}
 
