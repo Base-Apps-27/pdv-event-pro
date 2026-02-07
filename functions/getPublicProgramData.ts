@@ -180,6 +180,77 @@ Deno.serve(async (req) => {
                 });
             }
 
+            // INJECT: Pre-Session Details Logic
+            if (sessions.length > 0) {
+                const sessionIds = sessions.map(s => s.id);
+                // Fetch PreSessionDetails
+                const preSessionDetails = await Promise.all(
+                    sessionIds.map(sid => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: sid }))
+                ).then(results => results.flat());
+
+                const detailsBySession = {};
+                preSessionDetails.forEach(d => detailsBySession[d.session_id] = d);
+
+                // Group segments by session (using the updated 'segments' array)
+                const segmentsBySession = {};
+                segments.forEach(seg => {
+                    if (seg.session_id) {
+                        if (!segmentsBySession[seg.session_id]) segmentsBySession[seg.session_id] = [];
+                        segmentsBySession[seg.session_id].push(seg);
+                    }
+                });
+
+                // Inject actions into first segment of each session
+                Object.keys(segmentsBySession).forEach(sid => {
+                    const sessSegs = segmentsBySession[sid];
+                    // Sort by order to find the first one
+                    sessSegs.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    const firstSeg = sessSegs[0];
+                    const details = detailsBySession[sid];
+
+                    if (firstSeg && details) {
+                        const newActions = [];
+                        
+                        if (details.registration_desk_open_time) {
+                            newActions.push({
+                                id: `pre-reg-${details.id}`,
+                                label: 'REGISTRATION OPEN',
+                                department: 'Hospitality',
+                                timing: 'absolute',
+                                absolute_time: details.registration_desk_open_time,
+                                order: -100
+                            });
+                        }
+                        if (details.facility_notes) {
+                            newActions.push({
+                                id: `pre-fac-${details.id}`,
+                                label: 'FACILITY INSTRUCTIONS',
+                                department: 'Admin',
+                                timing: 'before_start',
+                                offset_min: 60, // 1 hour before
+                                notes: details.facility_notes,
+                                order: -99
+                            });
+                        }
+                        if (details.general_notes) {
+                            newActions.push({
+                                id: `pre-gen-${details.id}`,
+                                label: 'GENERAL NOTES',
+                                department: 'Coordinador',
+                                timing: 'before_start',
+                                offset_min: 30, // 30 min before
+                                notes: details.general_notes,
+                                order: -98
+                            });
+                        }
+
+                        if (newActions.length > 0) {
+                            firstSeg.actions = [...(firstSeg.actions || []), ...newActions];
+                        }
+                    }
+                });
+            }
+
             // Fetch Extras
             rooms = await base44.asServiceRole.entities.Room.list();
             eventDays = await base44.asServiceRole.entities.EventDay.filter({ event_id: targetProgram.id });
@@ -261,6 +332,77 @@ Deno.serve(async (req) => {
                         };
                     });
                 }
+            }
+
+            // INJECT: Pre-Session Details Logic (for Services too)
+            if (sessions.length > 0) {
+                const sessionIds = sessions.map(s => s.id);
+                // Fetch PreSessionDetails
+                const preSessionDetails = await Promise.all(
+                    sessionIds.map(sid => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: sid }))
+                ).then(results => results.flat());
+
+                const detailsBySession = {};
+                preSessionDetails.forEach(d => detailsBySession[d.session_id] = d);
+
+                // Group segments by session (using the updated 'segments' array)
+                const segmentsBySession = {};
+                segments.forEach(seg => {
+                    if (seg.session_id) {
+                        if (!segmentsBySession[seg.session_id]) segmentsBySession[seg.session_id] = [];
+                        segmentsBySession[seg.session_id].push(seg);
+                    }
+                });
+
+                // Inject actions into first segment of each session
+                Object.keys(segmentsBySession).forEach(sid => {
+                    const sessSegs = segmentsBySession[sid];
+                    // Sort by order to find the first one
+                    sessSegs.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    const firstSeg = sessSegs[0];
+                    const details = detailsBySession[sid];
+
+                    if (firstSeg && details) {
+                        const newActions = [];
+                        
+                        if (details.registration_desk_open_time) {
+                            newActions.push({
+                                id: `pre-reg-${details.id}`,
+                                label: 'REGISTRATION OPEN',
+                                department: 'Hospitality',
+                                timing: 'absolute',
+                                absolute_time: details.registration_desk_open_time,
+                                order: -100
+                            });
+                        }
+                        if (details.facility_notes) {
+                            newActions.push({
+                                id: `pre-fac-${details.id}`,
+                                label: 'FACILITY INSTRUCTIONS',
+                                department: 'Admin',
+                                timing: 'before_start',
+                                offset_min: 60, // 1 hour before
+                                notes: details.facility_notes,
+                                order: -99
+                            });
+                        }
+                        if (details.general_notes) {
+                            newActions.push({
+                                id: `pre-gen-${details.id}`,
+                                label: 'GENERAL NOTES',
+                                department: 'Coordinador',
+                                timing: 'before_start',
+                                offset_min: 30, // 30 min before
+                                notes: details.general_notes,
+                                order: -98
+                            });
+                        }
+
+                        if (newActions.length > 0) {
+                            firstSeg.actions = [...(firstSeg.actions || []), ...newActions];
+                        }
+                    }
+                });
             }
 
             return Response.json({
