@@ -140,10 +140,10 @@ export default function PublicCountdownDisplay() {
     return date;
   };
 
-  // ─── SEGMENT DETERMINATION (mirrors LiveStatusCard exactly) ───
-  const { currentSegment, nextSegment, preLaunchSegment } = useMemo(() => {
+  // ─── SEGMENT DETERMINATION ───
+  const { currentSegment, nextSegment, preLaunchSegment, upcomingSegments } = useMemo(() => {
     if (!segments || segments.length === 0) {
-      return { currentSegment: null, nextSegment: null, preLaunchSegment: null };
+      return { currentSegment: null, nextSegment: null, preLaunchSegment: null, upcomingSegments: [] };
     }
 
     // Filter out breaks, require start_time
@@ -159,10 +159,10 @@ export default function PublicCountdownDisplay() {
       });
 
     if (validSegments.length === 0) {
-      return { currentSegment: null, nextSegment: null, preLaunchSegment: null };
+      return { currentSegment: null, nextSegment: null, preLaunchSegment: null, upcomingSegments: [] };
     }
 
-    // Check isToday (same logic as LiveStatusCard)
+    // Check isToday
     const isToday = (() => {
       if (!serviceDate) return true;
       const [y, m, d] = serviceDate.split('-').map(Number);
@@ -174,23 +174,29 @@ export default function PublicCountdownDisplay() {
     })();
 
     if (!isToday) {
-      return { currentSegment: null, nextSegment: null, preLaunchSegment: null };
+      return { currentSegment: null, nextSegment: null, preLaunchSegment: null, upcomingSegments: [] };
     }
 
-    // Find current: segment where start <= now <= end (using end_time field like LiveStatusCard)
+    // Find current: segment where start <= now <= end
     const current = validSegments.find(s => {
       const start = getTimeDate(s.start_time);
       const end = s.end_time ? getTimeDate(s.end_time) : (start ? new Date(start.getTime() + (s.duration_min || 0) * 60000) : null);
       return start && end && currentTime >= start && currentTime <= end;
     }) || null;
 
-    // Find next: first segment starting after now
+    // Find next (single immediate next)
     const next = validSegments.find(s => {
       const start = getTimeDate(s.start_time);
       return start && start > currentTime;
     }) || null;
 
-    // Pre-launch: if nothing is current, countdown to FIRST segment (like LiveStatusCard.upNextCountdown)
+    // Find all upcoming (for list) - limit to next 5
+    const upcoming = validSegments.filter(s => {
+      const start = getTimeDate(s.start_time);
+      return start && start > currentTime;
+    }).slice(0, 5) || [];
+
+    // Pre-launch: if nothing is current, countdown to FIRST segment
     let preLaunch = null;
     if (!current) {
       const first = validSegments[0];
@@ -200,7 +206,12 @@ export default function PublicCountdownDisplay() {
       }
     }
 
-    return { currentSegment: current, nextSegment: next, preLaunchSegment: preLaunch };
+    return { 
+      currentSegment: current, 
+      nextSegment: next, 
+      preLaunchSegment: preLaunch,
+      upcomingSegments: upcoming
+    };
   }, [segments, currentTime, serviceDate]);
 
   // Fallback: if no service/segments, show loading or placeholder
