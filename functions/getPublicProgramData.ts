@@ -435,42 +435,8 @@ Deno.serve(async (req) => {
                                 actions: breakActions
                             };
 
-                            // Also inject Pre-Service actions into firstNextSeg (11:30 Start)
-                            // This ensures that during the break, the "Up Next" actions (Doors, Prayer, etc.) appear
-                            if (!firstNextSeg.actions) firstNextSeg.actions = [];
-                            
-                            // Check if actions already exist to avoid dupes (though usually generated segments are fresh)
-                            const hasDoors = firstNextSeg.actions.some(a => a.label.includes('DOORS'));
-                            if (!hasDoors) {
-                                firstNextSeg.actions.push(
-                                    {
-                                        id: 'pre-doors-1130',
-                                        label: 'DOORS OPEN',
-                                        department: 'Ushers',
-                                        timing: 'before_start',
-                                        offset_min: 15,
-                                        order: -10
-                                    },
-                                    {
-                                        id: 'pre-pray-1130',
-                                        label: 'TEAM PRAYER',
-                                        department: 'Coordinador',
-                                        timing: 'before_start',
-                                        offset_min: 10,
-                                        order: -9
-                                    },
-                                    {
-                                        id: 'pre-count-1130',
-                                        label: 'COUNTDOWN START',
-                                        department: 'Projection',
-                                        timing: 'before_start',
-                                        offset_min: 5,
-                                        order: -5
-                                    }
-                                );
-                                // Re-sort
-                                firstNextSeg.actions.sort((a,b) => (a.order||0) - (b.order||0));
-                            }
+                            // Removed automatic injection of Pre-Service actions (Doors/Prayer/Countdown) per user request
+
                         }
                     }
                 }
