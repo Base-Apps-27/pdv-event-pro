@@ -241,6 +241,13 @@ export default function ServiceProgramView({
         <StickyOpsDeck 
           segments={allServiceSegments}
           sessionDate={adjustedServiceData.date}
+          // Synthetic preSessionData for Weekly Services from pre_service_notes
+          preSessionData={adjustedServiceData.pre_service_notes?.["9:30am"] || adjustedServiceData.pre_service_notes?.["11:30am"] ? {
+            facility_notes: [
+              adjustedServiceData.pre_service_notes?.["9:30am"],
+              adjustedServiceData.pre_service_notes?.["11:30am"]
+            ].filter(Boolean).join('\n\n')
+          } : null}
           currentTime={currentTime}
           onScrollToSegment={scrollToSegment}
           onToggleChat={onToggleChat}
