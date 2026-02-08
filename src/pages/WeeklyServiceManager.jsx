@@ -3156,6 +3156,36 @@ Return ONLY valid JSON:
                                       ✓ Analizado ({segment.data.parsed_verse_data.sections?.length || 0} elementos)
                                     </Badge>
                                   )}
+
+                                  {/* Speaker Materials Section */}
+                                  <div className="bg-slate-50 border border-slate-200 rounded p-3 mt-2 space-y-2">
+                                    <Label className="text-xs font-semibold text-slate-700">Material del Orador</Label>
+                                    <SegmentTextInput
+                                      service="9:30am"
+                                      segmentIndex={idx}
+                                      field="presentation_url"
+                                      placeholder="Enlace a Presentación (Slides)"
+                                      className="text-xs bg-white"
+                                    />
+                                    <div className="flex items-center space-x-2">
+                                      <Checkbox 
+                                          checked={segment.content_is_slides_only || false}
+                                          onCheckedChange={(checked) => updateSegmentField("9:30am", idx, "content_is_slides_only", checked)}
+                                          id={`slides-only-930-${idx}`}
+                                          className="bg-white"
+                                      />
+                                      <label htmlFor={`slides-only-930-${idx}`} className="text-xs cursor-pointer text-gray-600">
+                                          Solo Slides (Sin versículos)
+                                      </label>
+                                    </div>
+                                    <SegmentTextInput
+                                      service="9:30am"
+                                      segmentIndex={idx}
+                                      field="notes_url"
+                                      placeholder="Link de Bosquejo / Notas (PDF o Doc)"
+                                      className="text-xs bg-white"
+                                    />
+                                  </div>
                                 </div>
                               )}
                               {segment.songs && (
@@ -3632,6 +3662,36 @@ Return ONLY valid JSON:
                                       ✓ Analizado ({segment.data.parsed_verse_data.sections?.length || 0} elementos)
                                     </Badge>
                                   )}
+
+                                  {/* Speaker Materials Section */}
+                                  <div className="bg-slate-50 border border-slate-200 rounded p-3 mt-2 space-y-2">
+                                    <Label className="text-xs font-semibold text-slate-700">Material del Orador</Label>
+                                    <SegmentTextInput
+                                      service="11:30am"
+                                      segmentIndex={idx}
+                                      field="presentation_url"
+                                      placeholder="Enlace a Presentación (Slides)"
+                                      className="text-xs bg-white"
+                                    />
+                                    <div className="flex items-center space-x-2">
+                                      <Checkbox 
+                                          checked={segment.content_is_slides_only || false}
+                                          onCheckedChange={(checked) => updateSegmentField("11:30am", idx, "content_is_slides_only", checked)}
+                                          id={`slides-only-1130-${idx}`}
+                                          className="bg-white"
+                                      />
+                                      <label htmlFor={`slides-only-1130-${idx}`} className="text-xs cursor-pointer text-gray-600">
+                                          Solo Slides (Sin versículos)
+                                      </label>
+                                    </div>
+                                    <SegmentTextInput
+                                      service="11:30am"
+                                      segmentIndex={idx}
+                                      field="notes_url"
+                                      placeholder="Link de Bosquejo / Notas (PDF o Doc)"
+                                      className="text-xs bg-white"
+                                    />
+                                  </div>
                                 </div>
                               )}
                               {segment.songs && (
