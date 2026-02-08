@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import StickyOpsDeck from "@/components/service/StickyOpsDeck";
+import StickyOpsDeckService from "@/components/service/StickyOpsDeckService";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
@@ -255,7 +256,7 @@ export default function ServiceProgramView({
     <div className="space-y-6">
       {/* Sticky Ops Deck for Weekly Services - PERMISSION-GATED */}
       {canAccessLiveOps && (
-        <StickyOpsDeck 
+        <StickyOpsDeckService 
           segments={adjustedAllSegments} // Use adjusted flat list (includes Break)
           sessionDate={adjustedServiceData.date}
           currentTime={currentTime}
