@@ -402,6 +402,26 @@ Deno.serve(async (req) => {
                                          targetProgram.receso_notes?.["11:00"] || 
                                          targetProgram.receso_notes?.["11:00 AM"] || "";
 
+                            // Define standard actions for the break itself
+                            const breakActions = [
+                                {
+                                    id: 'break-reset',
+                                    label: 'STAGE RESET',
+                                    department: 'Stage & Decor',
+                                    timing: 'after_start',
+                                    offset_min: 0,
+                                    order: 1
+                                },
+                                {
+                                    id: 'break-sound',
+                                    label: 'AUDIO CHECK',
+                                    department: 'Sound',
+                                    timing: 'after_start',
+                                    offset_min: 10, // 10 min into break
+                                    order: 2
+                                }
+                            ];
+
                             breakSegment = {
                                 id: `generated-break-inter-service`,
                                 start_time: lastSeg.end_time,
@@ -411,8 +431,46 @@ Deno.serve(async (req) => {
                                 segment_type: 'Receso', // Matches UI check for isBreakSegment
                                 session_id: 'slot-break',
                                 description: notes,
-                                presenter: notes ? 'Coordinador' : '' // Hint at who manages it if notes exist
+                                presenter: notes ? 'Coordinador' : '', // Hint at who manages it if notes exist
+                                actions: breakActions
                             };
+
+                            // Also inject Pre-Service actions into firstNextSeg (11:30 Start)
+                            // This ensures that during the break, the "Up Next" actions (Doors, Prayer, etc.) appear
+                            if (!firstNextSeg.actions) firstNextSeg.actions = [];
+                            
+                            // Check if actions already exist to avoid dupes (though usually generated segments are fresh)
+                            const hasDoors = firstNextSeg.actions.some(a => a.label.includes('DOORS'));
+                            if (!hasDoors) {
+                                firstNextSeg.actions.push(
+                                    {
+                                        id: 'pre-doors-1130',
+                                        label: 'DOORS OPEN',
+                                        department: 'Ushers',
+                                        timing: 'before_start',
+                                        offset_min: 15,
+                                        order: -10
+                                    },
+                                    {
+                                        id: 'pre-pray-1130',
+                                        label: 'TEAM PRAYER',
+                                        department: 'Coordinador',
+                                        timing: 'before_start',
+                                        offset_min: 10,
+                                        order: -9
+                                    },
+                                    {
+                                        id: 'pre-count-1130',
+                                        label: 'COUNTDOWN START',
+                                        department: 'Projection',
+                                        timing: 'before_start',
+                                        offset_min: 5,
+                                        order: -5
+                                    }
+                                );
+                                // Re-sort
+                                firstNextSeg.actions.sort((a,b) => (a.order||0) - (b.order||0));
+                            }
                         }
                     }
                 }
