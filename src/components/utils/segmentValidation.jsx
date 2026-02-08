@@ -4,7 +4,7 @@
 const VALID_SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video", "Anuncio",
   "Dinámica", "Break", "TechOnly", "Oración", "Especial", "Cierre",
-  "MC", "Ministración", "Receso", "Almuerzo", "Artes", "Breakout"
+  "MC", "Ministración", "Receso", "Almuerzo", "Artes", "Breakout", "Panel"
 ];
 
 const VALID_TRANSLATION_MODES = ["InPerson", "RemoteBooth"];
