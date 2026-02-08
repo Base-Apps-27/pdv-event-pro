@@ -371,6 +371,44 @@ CRITICAL: When user mentions song titles, map to these fields:
 → target_ids: "all" sessions
 → changes: { sound_team: "Rick" }
 
+**"Add a panel segment with moderator Ana and panelists Pedro, Maria, Jose"** (SESSION EXISTS)
+→ type: "create_segments"
+→ create_data: [{ session_id: "...", title: "Panel", segment_type: "Panel", panel_moderators: "Ana", panel_panelists: "Pedro, Maria, Jose" }]
+
+**"Hide all Break segments from the projection view"** (SEGMENTS EXIST)
+→ type: "update_segments"
+→ Filter segments where segment_type="Break"
+→ changes: { show_in_projection: false }
+
+**"Mark all Almuerzo segments as major break"**
+→ type: "update_segments"
+→ Filter segments where segment_type="Almuerzo"
+→ changes: { major_break: true }
+
+**"Set session color to green for all Saturday sessions"**
+→ type: "update_sessions"
+→ Filter sessions by date matching Saturday
+→ changes: { session_color: "green" }
+
+**"Add presentation slides link for the Plenaria in Session 3"**
+→ type: "update_segments"
+→ Find Plenaria in Session 3
+→ changes: { presentation_url: "https://..." }
+
+**"Set stage call offset to 20 minutes for all Alabanza segments"**
+→ type: "update_segments"
+→ Filter segments where segment_type="Alabanza"
+→ changes: { stage_call_offset_min: 20 }
+
+**"Add a drama segment with 3 handheld mics, start cue is 'lights dim', end cue is 'applause'"**
+→ type: "create_segments"
+→ create_data: [{ session_id: "...", title: "Drama", segment_type: "Artes", art_types: ["DRAMA"], drama_handheld_mics: 3, drama_start_cue: "lights dim", drama_end_cue: "applause" }]
+
+**"Set photography team to Maria for sessions 1 and 2"**
+→ type: "update_sessions"
+→ target_ids: [session1_id, session2_id]
+→ changes: { photography_team: "Maria" }
+
 ## IMPORTANT: HANDLING CROSS-EVENT REFERENCES
 If user mentions a past event and you're uncertain which one they mean (< 80% confidence):
 - Respond with: {"type": "ask_event_clarification", "message": "Event X or Y?", "options": [{id, name, year}, ...]}
