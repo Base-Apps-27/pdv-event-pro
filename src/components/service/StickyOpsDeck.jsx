@@ -245,7 +245,7 @@ export default function StickyOpsDeck({
         <div className="relative group">
           <div
             onClick={() => setViewState('bar')}
-            className={`flex flex-col items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95 ${
+            className={`flex flex-col items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0 shadow-[0_12px_35px_rgba(0,0,0,0.25)] border-2 cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95 ${
               isUrgent ? 'bg-amber-500 text-black border-amber-600 shadow-lg animate-pulse' : 
               isPast ? 'bg-slate-200 text-slate-400 border-slate-300' : 'bg-white text-pdv-teal border-slate-200'
             }`}

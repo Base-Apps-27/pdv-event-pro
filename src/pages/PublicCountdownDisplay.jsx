@@ -40,12 +40,35 @@ export default function PublicCountdownDisplay() {
   });
 
   // Tick every second for countdown display (100ms is wasteful for seconds-precision text)
+  // Also handles date rollover for auto-mode displays left running overnight
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTime(new Date());
+      const now = new Date();
+      setCurrentTime(now);
+
+      // Auto-rollover: If in Auto Mode (no serviceId selected), ensure date matches today
+      // This fixes the "Standby Mode" issue when a display is left on overnight into a service day
+      if (!serviceId) {
+        // Check params directly to avoid closure staleness issues if we used state vars without deps
+        const params = new URLSearchParams(window.location.search);
+        if (!params.get('service_id') && !params.get('event_id') && !params.get('date')) {
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const day = String(now.getDate()).padStart(2, '0');
+          const todayStr = `${year}-${month}-${day}`;
+          
+          setServiceDate(prev => {
+            if (prev !== todayStr) {
+              console.log("Date rollover detected, updating serviceDate to:", todayStr);
+              return todayStr;
+            }
+            return prev;
+          });
+        }
+      }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [serviceId]);
 
   // URL params: ?service_id=xxx&date=YYYY-MM-DD OR ?event_id=xxx (optional)
   useEffect(() => {
