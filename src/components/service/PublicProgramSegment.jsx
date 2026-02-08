@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Sparkles, Languages, Mic, Users, MapPin, BookOpen, ExternalLink } from "lucide-react";
+import { Clock, Sparkles, Languages, Mic, Users, MapPin, BookOpen, ExternalLink, Monitor, AlertTriangle } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { getSegmentData, getNormalizedSongs } from "@/components/utils/segmentDataUtils";
@@ -54,6 +54,9 @@ export default function PublicProgramSegment({
     segment.arts_run_of_show_url;
   // Helper to safely get segment data (checks data object first, then root)
   const getData = (field) => getSegmentData(segment, field);
+  
+  const presentationUrl = getData('presentation_url');
+  const isSlidesOnly = getData('content_is_slides_only');
   
   // Determine segment type and characteristics
   const segmentType = segment.segment_type || segment.type || getData('type') || 'Especial';
@@ -318,6 +321,22 @@ export default function PublicProgramSegment({
 
           {/* Action Buttons Row (Scriptures, Resources) */}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
+            {/* Presentation / Slides Button */}
+            {presentationUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className={`h-7 px-2 border-2 text-xs gap-1 ${isSlidesOnly ? 'border-amber-500 text-amber-700 hover:bg-amber-50' : 'border-blue-500 text-blue-700 hover:bg-blue-50'}`}
+                title="Abrir Presentación"
+              >
+                <a href={presentationUrl} target="_blank" rel="noopener noreferrer">
+                  {isSlidesOnly ? <AlertTriangle className="w-3 h-3" /> : <Monitor className="w-4 h-4" />}
+                  <span>{isSlidesOnly ? 'Solo Slides' : 'Abrir Slides'}</span>
+                </a>
+              </Button>
+            )}
+
             {/* Scripture References (for Message or Offering segments) */}
             {/* Live view is READ-ONLY: Only show BookOpen when parsed_verse_data already exists */}
             {(isMessage || isOffering) && getData('parsed_verse_data') && onOpenVerses && (
