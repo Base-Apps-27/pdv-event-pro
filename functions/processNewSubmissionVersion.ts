@@ -216,7 +216,9 @@ Deno.serve(async (req) => {
                 await base44.asServiceRole.entities.Segment.update(segmentId, {
                     submission_status: 'processed', 
                     parsed_verse_data: parsedData,
-                    scripture_references: scriptureReferences
+                    scripture_references: scriptureReferences,
+                    presentation_url: submission.presentation_url || "",
+                    content_is_slides_only: !!submission.content_is_slides_only
                 });
             } else {
                 console.log(`[EVENT_SKIP] Content mismatch for ${submissionId}, skipping live update.`);

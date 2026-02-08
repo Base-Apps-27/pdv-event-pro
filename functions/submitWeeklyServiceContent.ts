@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
 
     try {
         const base44 = createClientFromRequest(req);
-        const { segment_id, content, title, idempotencyKey } = await req.json();
+        const { segment_id, content, title, presentation_url, content_is_slides_only, idempotencyKey } = await req.json();
 
         if (!segment_id || !content) {
             return Response.json({ error: "Missing required fields" }, { status: 400, headers: corsHeaders });
@@ -231,7 +231,9 @@ Deno.serve(async (req) => {
             submitted_content: content,
             parsed_verse_data: parsedData,
             submission_status: 'processed',  // Immediately processed, no 'pending' limbo
-            scripture_references: scriptureReferences
+            scripture_references: scriptureReferences,
+            presentation_url: presentation_url || "",
+            content_is_slides_only: !!content_is_slides_only
         };
 
         // Update title if provided (message_title, not block title)
@@ -248,7 +250,9 @@ Deno.serve(async (req) => {
         updatedSegment.data = {
             ...updatedSegment.data,
             verse: scriptureReferences,
-            scripture_references: scriptureReferences
+            scripture_references: scriptureReferences,
+            presentation_url: presentation_url || "",
+            content_is_slides_only: !!content_is_slides_only
         };
 
         currentArray[segmentIdx] = updatedSegment;
@@ -268,6 +272,8 @@ Deno.serve(async (req) => {
             segment_id: segment_id,
             content: content,
             title: title || "",
+            presentation_url: presentation_url || "",
+            content_is_slides_only: !!content_is_slides_only,
             parsed_data_snapshot: parsedData,
             submitted_at: new Date().toISOString(),
             source: 'weekly_service_form',

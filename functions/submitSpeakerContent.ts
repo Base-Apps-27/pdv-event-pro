@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
-        const { segment_id, content, idempotencyKey } = await req.json();
+        const { segment_id, content, presentation_url, content_is_slides_only, idempotencyKey } = await req.json();
 
         // Validate Input First
         if (!segment_id || !content) {
@@ -82,6 +82,8 @@ Deno.serve(async (req) => {
             await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
                 segment_id: segment_id,
                 content: content,
+                presentation_url: presentation_url || "",
+                content_is_slides_only: !!content_is_slides_only,
                 submitted_at: new Date().toISOString(),
                 source: 'public_form',
                 processing_status: 'pending' 
@@ -98,7 +100,9 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Segment.update(segment_id, {
             submission_status: 'pending',
             // We temporarily update content here too so admins can see raw text if they open it before processing finishes
-            submitted_content: content 
+            submitted_content: content,
+            presentation_url: presentation_url || "",
+            content_is_slides_only: !!content_is_slides_only
         });
 
         const responsePayload = { success: true };
