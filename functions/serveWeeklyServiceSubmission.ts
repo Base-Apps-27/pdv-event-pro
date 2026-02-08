@@ -181,16 +181,16 @@ Deno.serve(async (req) => {
             <label for="presentationUrl">Enlace a Presentación / Imágenes (Opcional)</label>
             <input type="url" id="presentationUrl" placeholder="https://dropbox.com/..." style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white); margin-bottom: 8px;">
             
-            <div id="notesFieldContainer" style="display: none;">
-                <label for="notesUrl" style="margin-top: 12px;">Link de Bosquejo / Notas (PDF o Doc)</label>
-                <input type="url" id="notesUrl" placeholder="Enlace a notas para el equipo de medios (Opcional)" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white); margin-bottom: 8px;">
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                 <input type="checkbox" id="slidesOnly" style="width: 18px; height: 18px;">
                 <label for="slidesOnly" style="margin: 0; font-size: 0.9rem; font-weight: 500; color: var(--text-primary); text-transform: none;">
                     Este material contiene todo el contenido (No se requieren versículos aparte)
                 </label>
+            </div>
+
+            <div id="notesFieldContainer" style="display: none;">
+                <label for="notesUrl">Link de Bosquejo / Notas (PDF o Doc)</label>
+                <input type="url" id="notesUrl" placeholder="Enlace a notas para el equipo de medios (Opcional)" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white); margin-bottom: 8px;">
             </div>
           </div>
 
