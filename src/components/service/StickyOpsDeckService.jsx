@@ -53,8 +53,8 @@ export default function StickyOpsDeckService({
       const segEnd = new Date(segStart);
       segEnd.setMinutes(segStart.getMinutes() + duration);
 
-      // Permissive: Accept segment_actions OR actions
-      const segActions = seg.segment_actions || seg.actions || [];
+      // Accept normalized 'actions' (from normalizeProgram), or legacy segment_actions/actions
+      const segActions = seg.actions || seg.segment_actions || [];
       
       segActions.forEach(action => {
         let actionTime = new Date(segStart);

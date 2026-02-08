@@ -140,17 +140,21 @@ export default function StickyOpsDeck({
       const segEnd = new Date(segStart);
       segEnd.setMinutes(segStart.getMinutes() + duration);
 
-      const segActions = seg.segment_actions || seg.actions || [];
+      // Accept normalized 'actions' (from normalizeProgram), or legacy segment_actions/actions
+      const segActions = seg.actions || seg.segment_actions || [];
       
       segActions.forEach(action => {
         let actionTime = new Date(segStart);
         const offset = action.offset_min || 0;
+        // Permissive: default to 'after_start' if timing missing
+        const timing = action.timing || 'after_start';
 
-        switch (action.timing) {
+        switch (timing) {
           case 'before_start':
             actionTime.setMinutes(segStart.getMinutes() - offset);
             break;
           case 'after_start':
+          case 'during':
             actionTime.setMinutes(segStart.getMinutes() + offset);
             break;
           case 'before_end':
@@ -163,7 +167,8 @@ export default function StickyOpsDeck({
             }
             break;
           default:
-            return;
+            actionTime.setMinutes(segStart.getMinutes() + offset);
+            break;
         }
 
         actions.push({
