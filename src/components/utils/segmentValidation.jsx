@@ -29,7 +29,8 @@ const FIELD_LABELS = {
   video_location: "Ubicación del Video / Video Location",
   announcement_title: "Título del Anuncio / Announcement Title",
   art_types: "Tipos de Artes / Art Types",
-  breakout_rooms: "Salas de Sesión Paralela / Breakout Rooms"
+  breakout_rooms: "Salas de Sesión Paralela / Breakout Rooms",
+  panel_moderators: "Moderador(es) del Panel / Panel Moderator(s)"
 };
 
 /**
