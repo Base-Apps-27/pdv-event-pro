@@ -512,6 +512,51 @@ Deno.serve(async (req) => {
                 });
             }
 
+            // FALLBACK: Inject pre_service_notes for Weekly Services (if no sessions / PreSessionDetails)
+            // This ensures "General Notes" or manual pre-service instructions show up on the TV Display
+            if (targetProgram.pre_service_notes) {
+                const injectServiceNotes = (slotKey, slotSessionId) => {
+                    const notes = targetProgram.pre_service_notes[slotKey];
+                    if (!notes) return;
+                    
+                    // Find first segment of this slot (using the artificial session_id assigned earlier)
+                    const slotSegments = segments.filter(s => s.session_id === slotSessionId);
+                    if (slotSegments.length === 0) return;
+                    
+                    // Sort by start time to find the absolute first
+                    slotSegments.sort((a, b) => {
+                       const [ah, am] = (a.start_time || "00:00").split(':').map(Number);
+                       const [bh, bm] = (b.start_time || "00:00").split(':').map(Number);
+                       return (ah * 60 + am) - (bh * 60 + bm);
+                    });
+                    
+                    const firstSeg = slotSegments[0];
+                    
+                    // Create an artificial action
+                    const action = {
+                        id: `pre-note-${slotKey}-${targetProgram.id}`,
+                        label: 'GENERAL NOTES', // Standard label for pre-service notes
+                        department: 'Coordinador',
+                        timing: 'before_start',
+                        offset_min: 30, // Default to 30 min before
+                        notes: notes,
+                        order: -99
+                    };
+                    
+                    // Avoid duplicates if already injected
+                    if (!firstSeg.actions) firstSeg.actions = [];
+                    if (!firstSeg.actions.find(a => a.id === action.id)) {
+                        firstSeg.actions.push(action);
+                        // Re-sort actions by order/timing
+                        firstSeg.actions.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    }
+                };
+
+                // Try to inject for standard slots
+                injectServiceNotes("9:30am", "slot-9-30");
+                injectServiceNotes("11:30am", "slot-11-30");
+            }
+
             // Fetch Rooms (Services need room names too)
             const rooms = await base44.asServiceRole.entities.Room.list();
 
