@@ -221,7 +221,12 @@ function TeamInput({ field, service, placeholder }) {
 // Segment Field Component with local state (for simple text inputs)
 function SegmentTextInput({ service, segmentIndex, field, placeholder, className = "text-sm" }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
-  const currentGlobalValue = segment?.data?.[field] || "";
+  
+  // Check if field is a root field
+  const rootFields = ['presentation_url', 'notes_url'];
+  const isRoot = rootFields.includes(field);
+  
+  const currentGlobalValue = isRoot ? (segment?.[field] || "") : (segment?.data?.[field] || "");
   const updateSegmentField = useContext(UpdatersContext)?.updateSegmentField;
   const [localValue, setLocalValue] = useState("");
   
@@ -938,8 +943,12 @@ export default function WeeklyServiceManager() {
   const updateSegmentField = (service, segmentIndex, field, value) => {
     setServiceData(prev => {
       const updated = { ...prev };
-      if (field === 'songs') {
-        updated[service][segmentIndex].songs = value;
+      
+      // Define fields that sit at the root of the segment object
+      const rootFields = ['songs', 'presentation_url', 'notes_url', 'content_is_slides_only'];
+      
+      if (rootFields.includes(field)) {
+        updated[service][segmentIndex][field] = value;
       } else {
         updated[service][segmentIndex].data = {
           ...updated[service][segmentIndex].data,
