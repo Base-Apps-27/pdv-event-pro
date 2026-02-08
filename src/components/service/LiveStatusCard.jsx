@@ -1,9 +1,11 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PlayCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PlayCircle, Monitor, BookOpen, AlertTriangle } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { useLanguage } from "@/components/utils/i18n";
+import { getSegmentData } from "@/components/utils/segmentDataUtils";
 
 export default function LiveStatusCard({ segments, currentTime, onScrollTo, liveAdjustmentEnabled, serviceDate }) {
   const { t } = useLanguage();
@@ -170,6 +172,38 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
             {getPersonName(currentSegment) && (
               <p className="text-xs sm:text-sm text-gray-500 mt-1.5 sm:mt-2 line-clamp-1">{getPersonName(currentSegment)}</p>
             )}
+            
+            {/* Operator Resource Links */}
+            <div className="flex flex-wrap gap-2 mt-3 pt-2 border-t border-gray-100">
+              {getSegmentData(currentSegment, 'presentation_url') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  className={`h-7 px-2 border text-xs gap-1.5 ${getSegmentData(currentSegment, 'content_is_slides_only') ? 'border-amber-200 text-amber-700 hover:bg-amber-50' : 'border-blue-200 text-blue-700 hover:bg-blue-50'}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <a href={getSegmentData(currentSegment, 'presentation_url')} target="_blank" rel="noopener noreferrer">
+                    {getSegmentData(currentSegment, 'content_is_slides_only') ? <AlertTriangle className="w-3 h-3" /> : <Monitor className="w-3 h-3" />}
+                    <span>Slides</span>
+                  </a>
+                </Button>
+              )}
+              {getSegmentData(currentSegment, 'notes_url') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  className="h-7 px-2 border border-purple-200 text-purple-700 hover:bg-purple-50 text-xs gap-1.5"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <a href={getSegmentData(currentSegment, 'notes_url')} target="_blank" rel="noopener noreferrer">
+                    <BookOpen className="w-3 h-3" />
+                    <span>Notas</span>
+                  </a>
+                </Button>
+              )}
+            </div>
           </div>
         ) : (
           upNextCountdown ? (
@@ -229,6 +263,38 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
             {getPersonName(nextSegment) && (
               <p className="text-sm text-gray-500 mt-2 line-clamp-1">{getPersonName(nextSegment)}</p>
             )}
+
+            {/* Operator Resource Links (Next) */}
+            <div className="flex flex-wrap gap-2 mt-3 pt-2 border-t border-gray-100">
+              {getSegmentData(nextSegment, 'presentation_url') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="h-6 px-2 text-xs gap-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <a href={getSegmentData(nextSegment, 'presentation_url')} target="_blank" rel="noopener noreferrer">
+                    <Monitor className="w-3 h-3" />
+                    <span>Slides</span>
+                  </a>
+                </Button>
+              )}
+              {getSegmentData(nextSegment, 'notes_url') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="h-6 px-2 text-xs gap-1.5 text-gray-500 hover:text-purple-600 hover:bg-purple-50"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <a href={getSegmentData(nextSegment, 'notes_url')} target="_blank" rel="noopener noreferrer">
+                    <BookOpen className="w-3 h-3" />
+                    <span>Notas</span>
+                  </a>
+                </Button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="p-4 bg-gray-50 flex items-center justify-center text-gray-400">
