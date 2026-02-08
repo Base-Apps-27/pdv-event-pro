@@ -151,9 +151,9 @@ export default function ServiceProgramView({
   if (isCustomService) {
     return (
       <div className="space-y-6">
-        {/* Sticky Ops Deck - PERMISSION-GATED: requires view_live_chat */}
+        {/* Sticky Ops Deck for Custom Services - PERMISSION-GATED */}
         {canAccessLiveOps && (
-        <StickyOpsDeck 
+        <StickyOpsDeckService 
           segments={adjustedServiceData.segments || []}
           sessionDate={adjustedServiceData.date}
           currentTime={currentTime}

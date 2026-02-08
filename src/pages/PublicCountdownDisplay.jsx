@@ -124,7 +124,48 @@ export default function PublicCountdownDisplay() {
   });
 
   const service = programData?.program;
-  const segments = programData?.segments || [];
+  const rawSegments = programData?.segments || [];
+  const liveAdjustments = programData?.liveAdjustments || [];
+
+  // Apply LiveTimeAdjustments to service segments (TV must show adjusted times)
+  const segments = React.useMemo(() => {
+    if (!service || service._isEvent || liveAdjustments.length === 0) return rawSegments;
+
+    const addMinutesToTime = (timeStr, minutes) => {
+      if (!timeStr || !minutes) return timeStr;
+      const [h, m] = timeStr.split(':').map(Number);
+      const d = new Date(2000, 0, 1, h, m + minutes, 0, 0);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    };
+
+    return rawSegments.map(seg => {
+      let offsetMinutes = 0;
+
+      // Map artificial session IDs to time slots for weekly services
+      if (seg.session_id === 'slot-9-30') {
+        const adj = liveAdjustments.find(a => a.time_slot === '9:30am');
+        if (adj) offsetMinutes = adj.offset_minutes || 0;
+      } else if (seg.session_id === 'slot-11-30') {
+        const adj = liveAdjustments.find(a => a.time_slot === '11:30am');
+        if (adj) offsetMinutes = adj.offset_minutes || 0;
+      } else if (seg.session_id === 'slot-break') {
+        const adj = liveAdjustments.find(a => a.time_slot === '9:30am');
+        if (adj) offsetMinutes = adj.offset_minutes || 0;
+      } else {
+        // Custom service or linked session: check for global adjustment
+        const globalAdj = liveAdjustments.find(a => a.adjustment_type === 'global');
+        if (globalAdj) offsetMinutes = globalAdj.offset_minutes || 0;
+      }
+
+      if (offsetMinutes === 0) return seg;
+
+      return {
+        ...seg,
+        start_time: addMinutesToTime(seg.start_time, offsetMinutes),
+        end_time: addMinutesToTime(seg.end_time, offsetMinutes)
+      };
+    });
+  }, [rawSegments, liveAdjustments, service]);
 
   // ─── CRITICAL FIX: Sync serviceDate with the actual program date ───
   // If we fetched "Tomorrow's Service", we MUST update our local calendar context

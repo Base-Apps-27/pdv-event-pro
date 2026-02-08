@@ -46,12 +46,15 @@ export default function CoordinatorActionsDisplay({
       segActions.forEach(action => {
         let actionTime = new Date(segStart);
         const offset = action.offset_min || 0;
+        // Permissive: default to 'after_start' if timing is missing (weekly service compat)
+        const timing = action.timing || 'after_start';
 
-        switch (action.timing) {
+        switch (timing) {
           case 'before_start':
             actionTime.setMinutes(segStart.getMinutes() - offset);
             break;
           case 'after_start':
+          case 'during':
             actionTime.setMinutes(segStart.getMinutes() + offset);
             break;
           case 'before_end':
@@ -64,10 +67,12 @@ export default function CoordinatorActionsDisplay({
             }
             break;
           default:
-            return;
+            // Fallback: treat as start + offset instead of dropping
+            actionTime.setMinutes(segStart.getMinutes() + offset);
+            break;
         }
 
-        const isPrep = action.timing === 'before_start';
+        const isPrep = timing === 'before_start';
         
         // FILTERING LOGIC:
         // - For CURRENT segment: only show DURANTE actions (not prep)
