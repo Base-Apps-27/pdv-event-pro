@@ -337,7 +337,9 @@ Deno.serve(async (req) => {
                  segments = allResults.flat().filter(s => s.show_in_general).sort((a, b) => (a.order || 0) - (b.order || 0));
             } 
             // Fallback: Embedded Segments (Custom Services)
-            else if (targetProgram.segments && Array.isArray(targetProgram.segments)) {
+            // CRITICAL FIX: Only use 'segments' if it actually has content. 
+            // Weekly services might have an empty 'segments' array default, which would mask the 9:30am data if we didn't check length.
+            else if (targetProgram.segments && Array.isArray(targetProgram.segments) && targetProgram.segments.length > 0) {
                 segments = targetProgram.segments;
             }
             // Fallback: Standard Weekly Service Time Slots (9:30am / 11:30am)
