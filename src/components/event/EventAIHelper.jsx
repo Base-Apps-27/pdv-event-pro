@@ -179,6 +179,9 @@ Return information in a structured, readable format. Be comprehensive and pull r
 - location: (string) Physical venue
 - status: (enum) "planning", "confirmed", "in_progress", "completed", "archived"
 - print_color: (enum) "green", "blue", "pink", "orange", "yellow", "purple", "red", "teal", "charcoal"
+- start_date: (string) "YYYY-MM-DD"
+- end_date: (string) "YYYY-MM-DD"
+- description: (string) General event description
 
 ### Session Fields
 - name: (string) Session name (e.g., "Sección 1")
@@ -186,57 +189,140 @@ Return information in a structured, readable format. Be comprehensive and pull r
 - planned_start_time, planned_end_time: (string) "HH:MM"
 - location: (string) Specific location for session
 - presenter: (string) Main presenter/speaker
+- session_color: (enum) "green", "blue", "pink", "orange", "yellow", "purple", "red"
 - is_translated_session: (boolean) Session requires translation
-- translation_team, sound_team, tech_team, coordinators, admin_team, ushers_team, hospitality_team, worship_leader: (string) Team member names
+- translation_team: (string) Translation team members
+- sound_team: (string) Sound team members
+- tech_team: (string) Technical/video/lights team members
+- coordinators: (string) Session coordinators
+- admin_team: (string) Administration team members
+- ushers_team: (string) Ushers/hospitality team
+- hospitality_team: (string) Hospitality team members
+- photography_team: (string) Photography/media team members
+- worship_leader: (string) Worship leader name
+- lights_team: (string) Lights team members
+- video_team: (string) Video/broadcast team members
+- notes: (string) General session notes
 
 ### Segment Fields (CRITICAL - varies by segment_type)
 - title: (string) Main title
-- segment_type: (enum) "Alabanza", "Plenaria", "Bienvenida", "Ofrenda", "Video", "Anuncio", "Dinámica", "Break", "Artes", "Cierre", "MC", etc.
+- segment_type: (enum) "Alabanza", "Plenaria", "Bienvenida", "Ofrenda", "Video", "Anuncio", "Dinámica", "Break", "Artes", "Cierre", "MC", "Ministración", "Receso", "Almuerzo", "Oración", "Especial", "TechOnly", "Breakout", "Panel"
 - start_time: (string) "HH:MM"
 - duration_min: (number) Duration in minutes
 - presenter: (string) Speaker/leader name
+- description_details: (string) Detailed description or panel details
+- prep_instructions: (string) Preparation instructions (setup, checks, etc.)
 - requires_translation: (boolean) Segment needs translation
 - translation_mode: (enum) "InPerson" or "RemoteBooth"
 - translator_name: (string) Translator name
-- projection_notes, sound_notes, ushers_notes, stage_decor_notes, other_notes: (string) Team-specific instructions
+- translation_notes: (string) Translation booth instructions
+- projection_notes: (string) Instructions for projection team
+- sound_notes: (string) Instructions for sound team
+- ushers_notes: (string) Instructions for ushers/hospitality
+- stage_decor_notes: (string) Instructions for stage & decor team
+- other_notes: (string) Additional notes
+- microphone_assignments: (string) Microphone assignments
+- room_id: (string) Reference to Room entity for this segment
+- stage_call_offset_min: (number) Minutes before start for team arrival
+- major_break: (boolean) True for major breaks (lunch, dinner)
+- show_in_general: (boolean, default true) Show in general program
+- show_in_projection: (boolean, default true) Show in projection view
+- show_in_sound: (boolean, default true) Show in sound view
+- show_in_ushers: (boolean, default true) Show in ushers view
+- color_code: (enum) "worship", "preach", "break", "tech", "special", "default"
 
 #### Type-Specific Fields:
 
 **segment_type="Plenaria" (Sermons/Messages):**
 - message_title: (string) Sermon title
 - scripture_references: (string) Bible references
-- description_details: (string) Panel details
+- description_details: (string) Panel details or summary
+- presentation_url: (string) Link to presentation slides
+- notes_url: (string) Link to speaker notes (PDF/Doc) for media team
+- content_is_slides_only: (boolean) If true, slides replace verses
+
+**segment_type="Panel":**
+- panel_moderators: (string) Names of panel moderator(s)
+- panel_panelists: (string) Names of panelist(s)
+- description_details: (string) Panel topic description
 
 **segment_type="Alabanza" (Worship/Songs):**
 CRITICAL: When user mentions song titles, map to these fields:
 - number_of_songs: (number, 1-6) Count of songs
 - song_1_title, song_2_title, song_3_title, song_4_title, song_5_title, song_6_title: (string) Individual song titles
 - song_1_lead, song_2_lead, song_3_lead, song_4_lead, song_5_lead, song_6_lead: (string) Lead vocalist per song
+- song_1_key, song_2_key, song_3_key, song_4_key, song_5_key, song_6_key: (string) Musical key per song
 
 **segment_type="Artes" (Arts/Drama/Dance):**
 - art_types: (array) ["DANCE", "DRAMA", "VIDEO", "OTHER"]
 - drama_handheld_mics, drama_headset_mics: (number) Mic counts
 - drama_start_cue, drama_end_cue: (string) Cues
-- dance_song_title, dance_song_source: (string) Song details
+- drama_has_song: (boolean) Does the drama include a song
+- drama_song_title: (string) Title of song 1 in drama
+- drama_song_source: (string) URL/link to song 1 in drama
+- drama_song_owner: (string) Owner of song 1 in drama
+- drama_song_2_title, drama_song_2_url, drama_song_2_owner: (string) Song 2 details
+- drama_song_3_title, drama_song_3_url, drama_song_3_owner: (string) Song 3 details
+- dance_has_song: (boolean) Does the dance include a song
+- dance_song_title: (string) Title of song 1 for dance
+- dance_song_source: (string) URL/link to song 1 for dance
+- dance_song_owner: (string) Owner of song 1 for dance
+- dance_song_2_title, dance_song_2_url, dance_song_2_owner: (string) Dance song 2 details
+- dance_song_3_title, dance_song_3_url, dance_song_3_owner: (string) Dance song 3 details
+- dance_handheld_mics, dance_headset_mics: (number) Mic counts for dance
+- dance_start_cue, dance_end_cue: (string) Dance cues
+- art_other_description: (string) Description for other art type
+- arts_run_of_show_url: (string) Link to arts run of show PDF
 
 **segment_type="Video":**
 - has_video: (boolean) Always true
-- video_name, video_location, video_owner: (string) Video details
+- video_name: (string) Name of the video
+- video_location: (string) Location/path of the video file (flash drive, folder)
+- video_owner: (string) Owner or source of the video
 - video_length_sec: (number) Duration in seconds
+- video_url: (string) Direct link to video file or streaming URL
 
 **segment_type="Anuncio" (Announcements):**
 - announcement_series_id: (string) AnnouncementSeries ID
-- announcement_title, announcement_description: (string) Override content
+- announcement_title: (string) Announcement title
+- announcement_description: (string) Full description/script for announcement
+- announcement_date: (string) Relevant date "YYYY-MM-DD"
+- announcement_tone: (string) Tone guideline (e.g., Energetic, Serious, Informative)
 
 **segment_type="Breakout":**
-- breakout_rooms: (array of objects) Room configs with room_id, hosts, speakers, topic
+- breakout_rooms: (array of objects) Room configs with:
+  - room_id: (string) Reference to Room
+  - hosts: (string) Moderator/facilitator names
+  - speakers: (string) Speaker/panelist names
+  - topic: (string) Topic or title for this breakout
+  - general_notes: (string) General production notes
+  - other_notes: (string) Other specific instructions
+  - requires_translation: (boolean) Does this room require translation
+  - translation_mode: (enum) "InPerson" or "RemoteBooth"
+  - translator_name: (string) Translator name for this room
+
+**segment_type="Break" / "Receso" / "Almuerzo":**
+- major_break: (boolean) True for major breaks (lunch, dinner)
+- description_details: (string) Break instructions
+
+**ANY segment with a video (even non-Video type):**
+- has_video: (boolean) Set true if segment includes a video
+- video_name, video_location, video_owner, video_url: (string) Video details
+
+**ANY segment with presentation content:**
+- presentation_url: (string) Link to slides/presentation
+- notes_url: (string) Link to speaker notes PDF/Doc
+- content_is_slides_only: (boolean) If true, presentation replaces verses
 
 ### Segment Actions (within segment.segment_actions array)
-- label: (string) Short description
-- department: (enum) "Admin", "MC", "Sound", "Projection", "Hospitality", "Ujieres", "Alabanza", "Stage & Decor", "Translation", "Other"
+- label: (string) Short description (e.g., "A&A sube", "MC entra")
+- department: (enum) "Admin", "MC", "Sound", "Projection", "Hospitality", "Ujieres", "Kids", "Coordinador", "Stage & Decor", "Alabanza", "Translation", "Other"
 - timing: (enum) "before_start", "after_start", "before_end", "absolute"
-- offset_min: (number) Minutes offset
-- notes: (string) Additional details
+- offset_min: (number) Minutes offset from timing reference point
+- absolute_time: (string) "HH:MM" — only used when timing is "absolute"
+- is_prep: (boolean) True if preparation task (before segment), false if in-segment cue
+- is_required: (boolean) True if mandatory action
+- notes: (string) Additional details or instructions
 
 ## PARSING EXAMPLES
 
