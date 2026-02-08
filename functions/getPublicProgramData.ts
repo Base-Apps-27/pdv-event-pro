@@ -382,7 +382,42 @@ Deno.serve(async (req) => {
                 const segs930 = processSlot(targetProgram["9:30am"], 9, 30);
                 const segs1130 = processSlot(targetProgram["11:30am"], 11, 30);
                 
-                segments = [...segs930, ...segs1130];
+                // Check for implicit break between services (e.g. 11:00 AM to 11:30 AM)
+                let breakSegment = null;
+                if (segs930.length > 0 && segs1130.length > 0) {
+                    const lastSeg = segs930[segs930.length - 1];
+                    const firstNextSeg = segs1130[0];
+                    
+                    // Only insert if there is a time gap
+                    if (lastSeg.end_time < firstNextSeg.start_time) {
+                        // Calculate duration
+                        const [endH, endM] = lastSeg.end_time.split(':').map(Number);
+                        const [startH, startM] = firstNextSeg.start_time.split(':').map(Number);
+                        const diffMin = (startH * 60 + startM) - (endH * 60 + endM);
+                        
+                        if (diffMin > 0) {
+                            // Try to find matching notes from receso_notes (keyed by time, e.g. "11:00am" or "11:00")
+                            // We normalize keys to match HH:MM or HH:MMam/pm if possible, but for now simple lookup
+                            const notes = targetProgram.receso_notes?.["11:00am"] || 
+                                         targetProgram.receso_notes?.["11:00"] || 
+                                         targetProgram.receso_notes?.["11:00 AM"] || "";
+
+                            breakSegment = {
+                                id: `generated-break-inter-service`,
+                                start_time: lastSeg.end_time,
+                                end_time: firstNextSeg.start_time,
+                                duration_min: diffMin,
+                                title: 'Receso', // Standard title
+                                segment_type: 'Receso', // Matches UI check for isBreakSegment
+                                session_id: 'slot-break',
+                                description: notes,
+                                presenter: notes ? 'Coordinador' : '' // Hint at who manages it if notes exist
+                            };
+                        }
+                    }
+                }
+
+                segments = [...segs930, ...(breakSegment ? [breakSegment] : []), ...segs1130];
             }
 
             // Fetch Linked Segment Actions for Services too
