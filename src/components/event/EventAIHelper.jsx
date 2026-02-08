@@ -106,12 +106,20 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
           planned_end_time: s.planned_end_time,
           location: s.location,
           presenter: s.presenter,
+          session_color: s.session_color,
           is_translated_session: s.is_translated_session,
           translation_team: s.translation_team,
           sound_team: s.sound_team,
           tech_team: s.tech_team,
           coordinators: s.coordinators,
-          worship_leader: s.worship_leader
+          admin_team: s.admin_team,
+          ushers_team: s.ushers_team,
+          hospitality_team: s.hospitality_team,
+          photography_team: s.photography_team,
+          worship_leader: s.worship_leader,
+          lights_team: s.lights_team,
+          video_team: s.video_team,
+          notes: s.notes
         })),
         segments: eventSegments.map(seg => ({
           id: seg.id,
