@@ -27,6 +27,7 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
  */
 export default function ServiceProgramView({
   actualServiceData,
+  allSegments = [], // Backend-provided flat list (includes generated breaks)
   liveAdjustments = [],
   currentTime,
   isSegmentCurrent,
@@ -40,38 +41,34 @@ export default function ServiceProgramView({
   chatUnreadCount,
   chatOpen
 }) {
+  // Helper to add minutes to HH:MM string
+  const addMinutesToTime = (timeStr, minutes) => {
+    if (!timeStr) return timeStr;
+    const [h, m] = timeStr.split(':').map(Number);
+    const date = new Date();
+    date.setHours(h, m + minutes, 0, 0);
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  };
+
+  // Adjust structured data (for Lists)
   const adjustedServiceData = React.useMemo(() => {
     if (!actualServiceData) return null;
     
-    // Helper to apply time offset
     const applyTimeOffset = (segments, timeSlot, globalOffset = null) => {
       let offsetMinutes = 0;
-      
       if (globalOffset !== null) {
-        // Global adjustment for custom services
         offsetMinutes = globalOffset;
       } else {
-        // Time slot adjustment for weekly services
         const adjustment = liveAdjustments.find(a => a.time_slot === timeSlot);
         if (!adjustment || adjustment.offset_minutes === 0) return segments;
         offsetMinutes = adjustment.offset_minutes;
       }
 
-      return segments.map(seg => {
-        const addMinutes = (timeStr, minutes) => {
-          if (!timeStr) return timeStr;
-          const [h, m] = timeStr.split(':').map(Number);
-          const date = new Date();
-          date.setHours(h, m + minutes, 0, 0);
-          return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-        };
-
-        return {
-          ...seg,
-          start_time: addMinutes(seg.start_time, offsetMinutes),
-          end_time: addMinutes(seg.end_time, offsetMinutes)
-        };
-      });
+      return segments.map(seg => ({
+        ...seg,
+        start_time: addMinutesToTime(seg.start_time, offsetMinutes),
+        end_time: addMinutesToTime(seg.end_time, offsetMinutes)
+      }));
     };
     
     const adjusted = { ...actualServiceData };
@@ -83,7 +80,6 @@ export default function ServiceProgramView({
       adjusted["11:30am"] = applyTimeOffset(adjusted["11:30am"], "11:30am");
     }
     if (adjusted.segments) {
-      // Apply global adjustment for custom services
       const globalAdj = liveAdjustments.find(a => a.adjustment_type === 'global');
       if (globalAdj && globalAdj.offset_minutes !== 0) {
         adjusted.segments = applyTimeOffset(adjusted.segments, null, globalAdj.offset_minutes);
@@ -92,6 +88,38 @@ export default function ServiceProgramView({
     
     return adjusted;
   }, [actualServiceData, liveAdjustments]);
+
+  // Adjust flat list (for StickyOpsDeck/LiveCard)
+  // This uses 'allSegments' from backend which includes the Break
+  const adjustedAllSegments = React.useMemo(() => {
+    // If custom service, use the adjusted segments from above (simpler)
+    if (actualServiceData?.segments && actualServiceData.segments.length > 0) {
+      return adjustedServiceData.segments;
+    }
+
+    // For Weekly Services, process 'allSegments' prop to apply adjustments by slot
+    // We map session_id to time_slot
+    return allSegments.map(seg => {
+      let offsetMinutes = 0;
+      let slot = null;
+
+      // Map generated session IDs to slots
+      if (seg.session_id === 'slot-9-30') slot = '9:30am';
+      else if (seg.session_id === 'slot-11-30') slot = '11:30am';
+      else if (seg.session_id === 'slot-break') slot = '9:30am'; // Break shifts with morning service
+
+      if (slot) {
+        const adjustment = liveAdjustments.find(a => a.time_slot === slot);
+        if (adjustment) offsetMinutes = adjustment.offset_minutes;
+      }
+
+      return {
+        ...seg,
+        start_time: addMinutesToTime(seg.start_time, offsetMinutes),
+        end_time: addMinutesToTime(seg.end_time, offsetMinutes)
+      };
+    });
+  }, [allSegments, adjustedServiceData, liveAdjustments, actualServiceData]);
 
   // If no service data, show empty state
   if (!adjustedServiceData) {

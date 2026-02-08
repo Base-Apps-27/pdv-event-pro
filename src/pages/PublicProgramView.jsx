@@ -1039,6 +1039,7 @@ export default function PublicProgramView() {
             {viewType === "service" && actualServiceData && (
               <ServiceProgramView
                 actualServiceData={actualServiceData}
+                allSegments={allSegments} // Pass backend-generated flat list (includes Break)
                 liveAdjustments={liveAdjustments}
                 currentTime={currentTime}
                 isSegmentCurrent={isSegmentCurrent}
