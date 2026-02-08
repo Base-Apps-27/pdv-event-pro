@@ -14,10 +14,11 @@ const VALID_SESSION_STATUSES = ["planning", "confirmed", "in_progress", "complet
 const SEGMENT_TYPE_REQUIRED_FIELDS = {
   Plenaria: ["message_title"],
   Alabanza: ["number_of_songs"],
-  Video: ["video_name", "video_location"],
+  Video: ["video_name"],
   Anuncio: ["announcement_title"],
   Artes: ["art_types"],
-  Breakout: ["breakout_rooms"]
+  Breakout: ["breakout_rooms"],
+  Panel: ["panel_moderators"]
 };
 
 // Map segment types to their missing fields for inline form display
