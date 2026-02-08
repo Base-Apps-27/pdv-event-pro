@@ -11,6 +11,14 @@ const VALID_TRANSLATION_MODES = ["InPerson", "RemoteBooth"];
 
 const VALID_SESSION_STATUSES = ["planning", "confirmed", "in_progress", "completed", "archived"];
 
+const VALID_EVENT_STATUSES = ["planning", "confirmed", "in_progress", "completed", "archived", "template"];
+
+const VALID_SESSION_COLORS = ["green", "blue", "pink", "orange", "yellow", "purple", "red"];
+
+const VALID_COLOR_CODES = ["worship", "preach", "break", "tech", "special", "default"];
+
+const VALID_PRINT_COLORS = ["green", "blue", "pink", "orange", "yellow", "purple", "red", "teal", "charcoal"];
+
 const SEGMENT_TYPE_REQUIRED_FIELDS = {
   Plenaria: ["message_title"],
   Alabanza: ["number_of_songs"],
