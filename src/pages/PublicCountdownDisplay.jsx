@@ -102,6 +102,21 @@ export default function PublicCountdownDisplay() {
   const service = programData?.program;
   const segments = programData?.segments || [];
 
+  // ─── CRITICAL FIX: Sync serviceDate with the actual program date ───
+  // If we fetched "Tomorrow's Service", we MUST update our local calendar context
+  // or else "09:30" will be parsed as "Today 09:30" (Past).
+  useEffect(() => {
+    if (service) {
+      // Services use 'date', Events use 'start_date'
+      // We also check for UTC strings vs local date strings
+      const rawDate = service.date || service.start_date;
+      if (rawDate && rawDate !== serviceDate) {
+        console.log(`[PublicCountdown] Syncing date context: ${serviceDate} -> ${rawDate}`);
+        setServiceDate(rawDate);
+      }
+    }
+  }, [service, serviceDate]);
+
   // Fetch available options for the selector (via same backend function)
   const { data: availableOptions = { events: [], services: [] } } = useQuery({
     queryKey: ['tv-selector-options-public'],
