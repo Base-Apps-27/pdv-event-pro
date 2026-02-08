@@ -210,10 +210,9 @@ Deno.serve(async (req) => {
     // Auto-populate title on selection change
     segmentSelect.addEventListener('change', (e) => {
         const selectedOption = e.target.options[e.target.selectedIndex];
-        if (selectedOption && selectedOption.dataset.title) {
-            // Only update if input is empty or matches previous selection (basic heuristic)
-            // Simpler: Just update it. User can edit it.
-            titleInput.value = selectedOption.dataset.title;
+        if (selectedOption) {
+            // Always update the title field (populating it or clearing it) based on the selection
+            titleInput.value = selectedOption.dataset.title || "";
         }
     });
 
