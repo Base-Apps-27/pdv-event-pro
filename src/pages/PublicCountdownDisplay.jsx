@@ -322,7 +322,7 @@ export default function PublicCountdownDisplay() {
   const allDone = !currentSegment && !nextSegment && !preLaunchSegment;
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 p-3 md:p-4 flex flex-col items-center justify-center overflow-hidden relative group/ui">
+    <div className="w-full min-h-screen bg-slate-50 p-3 md:p-4 flex flex-col items-center justify-center overflow-hidden relative group/ui light">
       {/* Top Gradient Bar */}
       <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
 
@@ -330,7 +330,7 @@ export default function PublicCountdownDisplay() {
       <div className="w-full flex items-center justify-between px-6 py-4 z-20 relative mb-4">
         
         {/* Left: Controls */}
-        <div className="flex-shrink-0 w-[350px] flex justify-start">
+        <div className="flex-shrink-0 w-[300px] flex justify-start">
           <div className="opacity-0 group-hover/ui:opacity-100 transition-opacity duration-300">
             <Select onValueChange={handleSelectionChange}>
               <SelectTrigger className="w-auto h-10 bg-white/80 backdrop-blur border-none shadow-sm text-slate-600 font-medium px-4 gap-2 hover:bg-white transition-all rounded-full">
@@ -365,14 +365,14 @@ export default function PublicCountdownDisplay() {
 
         {/* Center: Service Name */}
         <div className="flex-1 text-center px-4 min-w-0">
-          <h1 className={`text-5xl md:text-7xl font-black uppercase tracking-tight ${gradientText} drop-shadow-sm truncate`}>
+          <h1 className={`text-4xl md:text-6xl font-black uppercase tracking-tight ${gradientText} drop-shadow-sm leading-none`}>
             {service.name}
           </h1>
         </div>
 
         {/* Right: Clock */}
-        <div className="flex-shrink-0 w-[350px] flex justify-end">
-          <div className="text-4xl md:text-6xl text-slate-800 font-mono font-bold tracking-tight bg-white/60 backdrop-blur-md px-6 py-2 rounded-2xl border border-white/50 shadow-sm">
+        <div className="flex-shrink-0 w-[300px] flex justify-end">
+          <div className="text-3xl md:text-5xl text-slate-900 font-mono font-bold tracking-tight bg-white/80 backdrop-blur-md px-6 py-2 rounded-2xl border border-white/50 shadow-sm">
             {formatTimeToEST(currentTime.toTimeString().substring(0, 5))}
           </div>
         </div>

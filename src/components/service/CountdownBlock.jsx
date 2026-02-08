@@ -124,7 +124,7 @@ export default function CountdownBlock({
   const config = modeConfig[displayMode] || modeConfig['upcoming'];
 
   return (
-    <div className={`relative bg-white rounded-[2rem] border-4 ${config.borderColor} p-6 md:p-8 shadow-2xl ${config.containerClass || ''} transition-all duration-500`}>
+    <div className={`relative bg-white rounded-[2rem] border-4 ${config.borderColor} p-6 md:p-8 shadow-2xl ${config.containerClass || ''} transition-all duration-500 light text-slate-900`}>
       
       {/* Label */}
       <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-xs md:text-sm font-black uppercase tracking-widest ${config.labelBg} shadow-xl whitespace-nowrap z-10`}>
