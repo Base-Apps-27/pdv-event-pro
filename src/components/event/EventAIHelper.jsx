@@ -123,7 +123,21 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
           presenter: seg.presenter,
           requires_translation: seg.requires_translation,
           translation_mode: seg.translation_mode,
-          translator_name: seg.translator_name
+          translator_name: seg.translator_name,
+          room_id: seg.room_id,
+          major_break: seg.major_break,
+          color_code: seg.color_code,
+          show_in_general: seg.show_in_general,
+          show_in_projection: seg.show_in_projection,
+          show_in_sound: seg.show_in_sound,
+          show_in_ushers: seg.show_in_ushers,
+          message_title: seg.message_title,
+          panel_moderators: seg.panel_moderators,
+          panel_panelists: seg.panel_panelists,
+          presentation_url: seg.presentation_url,
+          notes_url: seg.notes_url,
+          has_video: seg.has_video,
+          stage_call_offset_min: seg.stage_call_offset_min
         }))
       };
 
