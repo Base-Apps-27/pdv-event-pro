@@ -127,6 +127,10 @@ export function validateAIActions(actions, context = {}, allowDraft = false) {
         if (action.changes.translation_mode && !VALID_TRANSLATION_MODES.includes(action.changes.translation_mode)) {
           errors.push(`Action ${actionIndex}: Invalid translation_mode "${action.changes.translation_mode}"`);
         }
+
+        if (action.changes.color_code && !VALID_COLOR_CODES.includes(action.changes.color_code)) {
+          errors.push(`Action ${actionIndex}: Invalid color_code "${action.changes.color_code}"`);
+        }
       }
     }
 
@@ -135,6 +139,23 @@ export function validateAIActions(actions, context = {}, allowDraft = false) {
       if (action.changes) {
         if (action.changes.status && !VALID_SESSION_STATUSES.includes(action.changes.status)) {
           errors.push(`Action ${actionIndex}: Invalid session status "${action.changes.status}"`);
+        }
+
+        if (action.changes.session_color && !VALID_SESSION_COLORS.includes(action.changes.session_color)) {
+          errors.push(`Action ${actionIndex}: Invalid session_color "${action.changes.session_color}"`);
+        }
+      }
+    }
+
+    // Validate update_event
+    if (action.type === 'update_event') {
+      if (action.changes) {
+        if (action.changes.status && !VALID_EVENT_STATUSES.includes(action.changes.status)) {
+          errors.push(`Action ${actionIndex}: Invalid event status "${action.changes.status}"`);
+        }
+
+        if (action.changes.print_color && !VALID_PRINT_COLORS.includes(action.changes.print_color)) {
+          errors.push(`Action ${actionIndex}: Invalid print_color "${action.changes.print_color}"`);
         }
       }
     }
