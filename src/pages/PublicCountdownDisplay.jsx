@@ -350,12 +350,12 @@ export default function PublicCountdownDisplay() {
           </div>
         ) : (
           <>
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 w-full items-stretch">
+            {/* Main Content Grid - Force Horizontal Layout (TV Kiosk Mode) */}
+            {/* min-w-[1000px] ensures browsers zoom out rather than reflow if they report small widths */}
+            <div className="grid grid-cols-5 gap-6 w-full items-stretch min-w-[1000px]">
 
               {/* LEFT PANEL (Main): In-Progress OR Pre-Launch (60% width) */}
-              {/* Natural height determines the row height */}
-              <div className="lg:col-span-3">
+              <div className="col-span-3">
                 {currentSegment ? (
                   <CountdownBlock
                     segment={currentSegment}
@@ -382,9 +382,9 @@ export default function PublicCountdownDisplay() {
               </div>
 
               {/* RIGHT PANEL: Upcoming Agenda (40% width) */}
-              {/* Constrained to match the height of the left panel on desktop */}
-              <div className="lg:col-span-2 relative min-h-[300px] lg:min-h-0">
-                <div className="lg:absolute lg:inset-0 h-full">
+              {/* Constrained to match the height of the left panel */}
+              <div className="col-span-2 relative min-h-0">
+                <div className="absolute inset-0 h-full">
                   {upcomingSegments.length > 0 ? (
                     <SegmentTimeline
                       segments={upcomingSegments}
