@@ -196,6 +196,8 @@ export default function CustomServiceBuilder() {
       leader: "",
       messageTitle: "",
       verse: "",
+      presentation_url: "",
+      content_is_slides_only: false,
       songs: [
         { title: "", lead: "", key: "" },
         { title: "", lead: "", key: "" },
@@ -219,6 +221,8 @@ export default function CustomServiceBuilder() {
     leader: "",
     messageTitle: "",
     verse: "",
+    presentation_url: "",
+    content_is_slides_only: false,
     songs: [
       { title: "", lead: "", key: "" },
       { title: "", lead: "", key: "" },
@@ -719,6 +723,8 @@ export default function CustomServiceBuilder() {
         stage_decor_notes: getData('stage_decor_notes'),
         message_title: getData('messageTitle'),
         scripture_references: getData('verse'),
+        presentation_url: getData('presentation_url'),
+        content_is_slides_only: !!getData('content_is_slides_only'),
         parsed_verse_data: getData('parsed_verse_data'),
         ...flatSongs,
         segment_actions: getData('actions'),
@@ -1757,6 +1763,25 @@ export default function CustomServiceBuilder() {
                                       ✓ Analizado ({(segment.parsed_verse_data || segment.data?.parsed_verse_data).sections?.length || 0} elementos)
                                     </Badge>
                                   )}
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Enlace a Presentación (Slides)</Label>
+                                  <Input
+                                    value={segment.presentation_url}
+                                    onChange={(e) => updateSegmentField(idx, 'presentation_url', e.target.value)}
+                                    placeholder="https://..."
+                                    className="text-sm"
+                                  />
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    <Checkbox
+                                        id={`slides_only_${idx}`}
+                                        checked={segment.content_is_slides_only}
+                                        onCheckedChange={(checked) => updateSegmentField(idx, 'content_is_slides_only', checked)}
+                                    />
+                                    <label htmlFor={`slides_only_${idx}`} className="text-xs cursor-pointer text-gray-600">
+                                        Solo Slides (Sin versículos)
+                                    </label>
+                                  </div>
                                 </div>
                               </>
                             )}

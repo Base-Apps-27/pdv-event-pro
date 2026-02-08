@@ -106,6 +106,8 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     major_break: segment?.major_break || false,
     segment_actions: segment?.segment_actions || [],
     parsed_verse_data: segment?.parsed_verse_data || null,
+    presentation_url: segment?.presentation_url || "",
+    content_is_slides_only: segment?.content_is_slides_only || false,
   });
 
   const calculateTimes = (startTime, durationMin, offsetMin) => {
@@ -449,6 +451,26 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
               <label htmlFor="requires_translation" className="text-sm cursor-pointer">
                 Requiere traducción
               </label>
+            </div>
+
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+                <Label htmlFor="presentation_url">Enlace a Presentación (Slides)</Label>
+                <Input 
+                    id="presentation_url" 
+                    value={formData.presentation_url}
+                    onChange={(e) => setFormData({...formData, presentation_url: e.target.value})}
+                    placeholder="https://..."
+                />
+                <div className="flex items-center space-x-2 mt-2">
+                    <Checkbox 
+                        id="content_is_slides_only"
+                        checked={formData.content_is_slides_only}
+                        onCheckedChange={(checked) => setFormData({...formData, content_is_slides_only: checked})}
+                    />
+                    <label htmlFor="content_is_slides_only" className="text-sm cursor-pointer text-gray-600">
+                        Solo Slides (Sin versículos)
+                    </label>
+                </div>
             </div>
 
             {formData.requires_translation && (
