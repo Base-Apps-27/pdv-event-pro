@@ -36,8 +36,11 @@ Deno.serve(async (req) => {
         const { segment_id, content, presentation_url, content_is_slides_only, idempotencyKey } = await req.json();
 
         // Validate Input First
-        if (!segment_id || !content) {
-            return Response.json({ error: "Missing segment_id or content" }, { status: 400, headers: corsHeaders });
+        if (!segment_id) {
+            return Response.json({ error: "Missing segment_id" }, { status: 400, headers: corsHeaders });
+        }
+        if (!content_is_slides_only && (!content || !content.trim())) {
+            return Response.json({ error: "Content is required" }, { status: 400, headers: corsHeaders });
         }
 
         // Idempotency Check
