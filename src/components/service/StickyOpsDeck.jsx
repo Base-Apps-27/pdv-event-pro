@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, ChevronDown, Clock, AlertCircle, CheckCircle2, ArrowRight, RotateCcw, MessageCircle } from "lucide-react";
+import { ChevronUp, ChevronDown, Clock, AlertCircle, CheckCircle2, ArrowRight, RotateCcw, MessageCircle, ClipboardList, Minimize2, X } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 
@@ -27,7 +27,8 @@ export default function StickyOpsDeck({
   chatUnreadCount = 0,
   chatOpen = false
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [viewState, setViewState] = useState('icon'); // 'icon' | 'bar' | 'expanded'
+  const isExpanded = viewState === 'expanded';
 
   // Flatten and sort all actions
   const { upcomingActions, pastActions, isServiceDay } = useMemo(() => {
@@ -223,6 +224,13 @@ export default function StickyOpsDeck({
   const diffMin = isServiceDay ? Math.floor(diffMs / 60000) : 0;
   const isUrgent = isServiceDay && !isPast && diffMin < 5;
 
+  // Auto-expand on urgency (only if in icon mode)
+  useEffect(() => {
+    if (isUrgent && viewState === 'icon') {
+      setViewState('bar');
+    }
+  }, [isUrgent]);
+
   const moreCount = Math.max(0, concurrentCount - 1);
   
   // Glass Control Deck: Light/Tranquil theme - High Contrast & Large Text
@@ -230,24 +238,73 @@ export default function StickyOpsDeck({
   const bgClass = 'bg-slate-100/95 backdrop-blur-xl';
   const textClass = 'text-slate-900';
 
+  // ICON VIEW (Stage 3)
+  if (viewState === 'icon') {
+    return (
+      <div className="fixed bottom-4 left-4 z-40 print:hidden flex flex-col justify-end items-start">
+        <div className="relative">
+          <Button
+            onClick={() => setViewState('bar')}
+            className={`h-14 w-14 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all duration-300 flex items-center justify-center ${
+              isUrgent 
+                ? 'bg-amber-100 border-amber-400 text-amber-900 animate-pulse' 
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <ClipboardList className={`w-6 h-6 ${isUrgent ? 'text-amber-800' : 'text-slate-600'}`} />
+          </Button>
+          
+          {/* Urgency Badge */}
+          {isUrgent && (
+            <span className="absolute -top-1 -right-1 h-5 min-w-[1.25rem] px-1.5 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center border-2 border-white shadow-sm z-10 animate-bounce">
+              !
+            </span>
+          )}
+
+          {/* Chat Badge (if chat is closed) */}
+          {!chatOpen && chatUnreadCount > 0 && (
+            <span className="absolute -top-1 -left-1 h-5 min-w-[1.25rem] px-1.5 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center border-2 border-white shadow-sm z-10">
+              {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // BAR / EXPANDED VIEW (Stages 2 & 1)
   return (
-    // Floating container
-    <div className="fixed bottom-20 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[650px] z-40 print:hidden flex flex-col justify-end items-center pointer-events-none transition-all duration-300">
+    // Floating container - LOWERED position (bottom-4 instead of bottom-20)
+    <div className="fixed bottom-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[650px] z-40 print:hidden flex flex-col justify-end items-center pointer-events-none transition-all duration-300">
       
       {/* Wrapper for the deck */}
       <div className="w-full relative pointer-events-auto">
         
         {/* Label Shelf - Attached to top */}
         <div 
-          onClick={() => setIsExpanded(!isExpanded)}
-          className={`absolute -top-7 left-4 px-4 py-1.5 rounded-t-lg text-xs font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 z-0 ${
-            isUrgent 
-              ? 'bg-amber-500 text-black shadow-lg' 
-              : 'bg-slate-200/90 backdrop-blur-md text-slate-700 border-t border-x border-slate-300 shadow-sm'
-          }`}
-          style={{ height: '28px' }}
+          className="absolute -top-7 left-0 right-0 flex justify-between items-end px-4 z-0 pointer-events-none"
         >
-          <span>Acciones de Coord</span>
+          {/* Label Tab */}
+          <div 
+            onClick={() => setViewState(viewState === 'expanded' ? 'bar' : 'expanded')}
+            className={`pointer-events-auto px-4 py-1.5 rounded-t-lg text-xs font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 flex items-center gap-1.5 ${
+              isUrgent 
+                ? 'bg-amber-500 text-black shadow-lg' 
+                : 'bg-slate-200/90 backdrop-blur-md text-slate-700 border-t border-x border-slate-300 shadow-sm'
+            }`}
+            style={{ height: '28px' }}
+          >
+            <span>Acciones de Coord</span>
+          </div>
+
+          {/* Minimize Button - Floating separately to the right */}
+          <button
+            onClick={() => setViewState('icon')}
+            className="pointer-events-auto mb-1 p-1.5 rounded-full bg-white/80 hover:bg-white text-slate-500 hover:text-slate-800 shadow-sm border border-slate-200 backdrop-blur-sm transition-all"
+            title="Minimizar a icono"
+          >
+            <Minimize2 className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Main Content Box - Floating, Rounded, Shadowed */}
@@ -262,7 +319,7 @@ export default function StickyOpsDeck({
             {/* Left Side: Countdown + Info */}
             <div 
               className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 cursor-pointer"
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={() => setViewState(viewState === 'expanded' ? 'bar' : 'expanded')}
             >
               {/* Countdown Badge — compact on mobile, roomy on desktop */}
               <div className={`flex flex-col items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl shrink-0 shadow-sm ${
@@ -325,12 +382,12 @@ export default function StickyOpsDeck({
                       </Badge>
                     )}
                     
-                    {isExpanded ? <ChevronUp className="w-4 h-4 opacity-60 text-slate-600" /> : <ChevronDown className="w-4 h-4 opacity-60 text-slate-600" />}
+                    {viewState === 'expanded' ? <ChevronUp className="w-4 h-4 opacity-60 text-slate-600" /> : <ChevronDown className="w-4 h-4 opacity-60 text-slate-600" />}
                   </div>
                 </div>
 
                 {/* Row 3: Notes preview — only if notes exist and deck is collapsed */}
-                {!isExpanded && activeAction.notes && (
+                {viewState === 'bar' && activeAction.notes && (
                   <p className={`text-[11px] leading-snug line-clamp-1 ${isPast ? 'text-slate-400' : 'text-slate-500'}`}>
                     {activeAction.notes}
                   </p>
@@ -384,7 +441,7 @@ export default function StickyOpsDeck({
           </div>
           
           {/* Expanded List - Rendered SECOND so it appears BELOW the bar */}
-          {isExpanded && (
+          {viewState === 'expanded' && (
             <div className={`border-t border-slate-200 px-5 py-4 space-y-4 max-h-[45vh] overflow-y-auto bg-slate-50/90`}>
               <p className="text-xs font-bold uppercase tracking-widest mb-3 text-slate-500">
                 {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
