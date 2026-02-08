@@ -219,6 +219,15 @@ export default function PublicProgramSegment({
             )}
           </div>
 
+          {/* Message Title - Prominent & High Up (Above Speaker) */}
+          {(isMessage || segmentType === 'Plenaria') && (getData('message_title') || segment.data?.title) && (
+            <div className="mt-1.5 mb-1">
+              <h5 className="text-xl sm:text-2xl font-bold text-blue-900 leading-tight">
+                {getData('message_title') || segment.data?.title}
+              </h5>
+            </div>
+          )}
+
           {/* Presenter/Leader/Preacher/Translator Info */}
           <div className="space-y-1 mt-1">
            {/* Panel: Moderators & Panelists */}
@@ -606,14 +615,7 @@ export default function PublicProgramSegment({
               </div>
             )}
 
-            {/* Message Title (for message segments) */}
-            {/* Weekly services store message title in data.title, Events use message_title */}
-            {/* Scriptures are accessed via the "Ver Versículos" button, not displayed inline */}
-            {(getData('message_title') || (isMessage && segment.data?.title)) && (
-              <div className="bg-blue-50 p-2 rounded border border-blue-200 text-xs">
-                <p className="font-semibold text-blue-800">{t('live.message')}: {getData('message_title') || segment.data?.title}</p>
-              </div>
-            )}
+            {/* Message Title moved to header area per user request */}
 
             {/* Video (if attached) */}
             {segment.has_video && (

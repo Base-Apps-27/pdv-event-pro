@@ -168,6 +168,16 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-pdv-teal transition-colors line-clamp-2">
                 {currentSegment.title || currentSegment.data?.title}
               </h3>
+              {/* Prominent Message Title in Live Card */}
+              {(['Plenaria', 'message', 'Message'].includes(currentSegment.segment_type || currentSegment.type) || currentSegment.type === 'message') && 
+               (getSegmentData(currentSegment, 'message_title') || currentSegment.data?.title) && 
+               (getSegmentData(currentSegment, 'message_title') || currentSegment.data?.title) !== (currentSegment.title || currentSegment.data?.title) && (
+                <div className="mt-1 mb-0.5">
+                  <h4 className="text-lg font-bold text-blue-900 leading-tight line-clamp-2">
+                    {getSegmentData(currentSegment, 'message_title') || currentSegment.data?.title}
+                  </h4>
+                </div>
+              )}
             </div>
             {getPersonName(currentSegment) && (
               <p className="text-xs sm:text-sm text-gray-500 mt-1.5 sm:mt-2 line-clamp-1">{getPersonName(currentSegment)}</p>
