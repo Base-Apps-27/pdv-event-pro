@@ -242,28 +242,29 @@ export default function StickyOpsDeck({
   if (viewState === 'icon') {
     return (
       <div className="fixed bottom-4 left-4 z-40 print:hidden flex flex-col justify-end items-start">
-        <div className="relative">
-          <Button
+        <div className="relative group">
+          <div
             onClick={() => setViewState('bar')}
-            className={`h-14 w-14 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 transition-all duration-300 flex items-center justify-center ${
-              isUrgent 
-                ? 'bg-amber-100 border-amber-400 text-amber-900 animate-pulse' 
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+            className={`flex flex-col items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95 ${
+              isUrgent ? 'bg-amber-500 text-black border-amber-600 shadow-lg animate-pulse' : 
+              isPast ? 'bg-slate-200 text-slate-400 border-slate-300' : 'bg-white text-pdv-teal border-slate-200'
             }`}
           >
-            <ClipboardList className={`w-6 h-6 ${isUrgent ? 'text-amber-800' : 'text-slate-600'}`} />
-          </Button>
-          
-          {/* Urgency Badge */}
-          {isUrgent && (
-            <span className="absolute -top-1 -right-1 h-5 min-w-[1.25rem] px-1.5 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center border-2 border-white shadow-sm z-10 animate-bounce">
-              !
+            {!isServiceDay ? (
+              <Clock className="w-8 h-8 opacity-60" />
+            ) : isPast ? (
+              <CheckCircle2 className="w-8 h-8" />
+            ) : (
+              <span className="text-3xl sm:text-4xl font-black leading-none tracking-tight">{diffMin}</span>
+            )}
+            <span className="text-[10px] sm:text-xs uppercase font-bold opacity-70 leading-none mt-0.5">
+              {!isServiceDay ? '' : isPast ? '' : 'min'}
             </span>
-          )}
+          </div>
 
           {/* Chat Badge (if chat is closed) */}
           {!chatOpen && chatUnreadCount > 0 && (
-            <span className="absolute -top-1 -left-1 h-5 min-w-[1.25rem] px-1.5 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center border-2 border-white shadow-sm z-10">
+            <span className="absolute -top-1 -left-1 h-6 min-w-[1.5rem] px-1.5 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center border-2 border-white shadow-sm z-10">
               {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
             </span>
           )}
@@ -318,14 +319,18 @@ export default function StickyOpsDeck({
           >
             {/* Left Side: Countdown + Info */}
             <div 
-              className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 cursor-pointer"
-              onClick={() => setViewState(viewState === 'expanded' ? 'bar' : 'expanded')}
+              className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0"
             >
               {/* Countdown Badge — compact on mobile, roomy on desktop */}
-              <div className={`flex flex-col items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl shrink-0 shadow-sm ${
-                isUrgent ? 'bg-amber-500 text-black shadow-md animate-pulse' : 
-                isPast ? 'bg-slate-200 text-slate-400' : 'bg-white text-pdv-teal border-2 border-slate-200'
-              }`}>
+              {/* CLICKING THIS MINIMIZES TO ICON */}
+              <div 
+                onClick={(e) => { e.stopPropagation(); setViewState('icon'); }}
+                className={`flex flex-col items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl shrink-0 shadow-sm cursor-pointer hover:scale-105 active:scale-95 transition-transform ${
+                  isUrgent ? 'bg-amber-500 text-black shadow-md animate-pulse' : 
+                  isPast ? 'bg-slate-200 text-slate-400' : 'bg-white text-pdv-teal border-2 border-slate-200'
+                }`}
+                title="Minimizar a icono"
+              >
                 {!isServiceDay ? (
                   <Clock className="w-6 h-6 sm:w-7 sm:h-7 opacity-60" />
                 ) : isPast ? (
@@ -339,7 +344,11 @@ export default function StickyOpsDeck({
               </div>
 
               {/* Action Info — Adaptive layout: badges + time row, then label row */}
-              <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
+              {/* CLICKING THIS EXPANDS TO LIST */}
+              <div 
+                className="flex-1 min-w-0 flex flex-col justify-center gap-1 cursor-pointer"
+                onClick={() => setViewState(viewState === 'expanded' ? 'bar' : 'expanded')}
+              >
                 
                 {/* Row 1: Metadata badges + time — wraps on small screens */}
                 <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
