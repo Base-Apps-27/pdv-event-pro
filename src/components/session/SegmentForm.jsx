@@ -107,6 +107,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     segment_actions: segment?.segment_actions || [],
     parsed_verse_data: segment?.parsed_verse_data || null,
     presentation_url: segment?.presentation_url || "",
+    notes_url: segment?.notes_url || "",
     content_is_slides_only: segment?.content_is_slides_only || false,
   });
 
@@ -461,7 +462,8 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
                     onChange={(e) => setFormData({...formData, presentation_url: e.target.value})}
                     placeholder="https://..."
                 />
-                <div className="flex items-center space-x-2 mt-2">
+                
+                <div className="flex items-center space-x-2 mt-2 mb-2">
                     <Checkbox 
                         id="content_is_slides_only"
                         checked={formData.content_is_slides_only}
@@ -471,6 +473,14 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
                         Solo Slides (Sin versículos)
                     </label>
                 </div>
+
+                <Label htmlFor="notes_url">Link de Bosquejo / Notas (PDF o Doc)</Label>
+                <Input 
+                    id="notes_url" 
+                    value={formData.notes_url}
+                    onChange={(e) => setFormData({...formData, notes_url: e.target.value})}
+                    placeholder="Enlace a notas para el equipo de medios"
+                />
             </div>
 
             {formData.requires_translation && (
