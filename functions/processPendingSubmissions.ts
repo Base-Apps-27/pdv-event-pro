@@ -189,6 +189,7 @@ async function processSubmission(base44, submission) {
       parsed_verse_data: parsedData,
       submission_status: 'processed',
       presentation_url: submission.presentation_url || "",
+      notes_url: submission.notes_url || "",
       content_is_slides_only: isSlidesOnly,
       projection_notes: projectionNotes
     };
@@ -207,6 +208,7 @@ async function processSubmission(base44, submission) {
       verse: scriptureReferences,
       scripture_references: scriptureReferences,
       presentation_url: submission.presentation_url || "",
+      notes_url: submission.notes_url || "",
       content_is_slides_only: isSlidesOnly
     };
 
@@ -223,6 +225,7 @@ async function processSubmission(base44, submission) {
         parsed_verse_data: parsedData,
         scripture_references: scriptureReferences,
         presentation_url: submission.presentation_url || "",
+        notes_url: submission.notes_url || "",
         content_is_slides_only: isSlidesOnly
       };
 

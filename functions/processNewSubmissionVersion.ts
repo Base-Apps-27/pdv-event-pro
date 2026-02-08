@@ -223,6 +223,7 @@ Deno.serve(async (req) => {
                     parsed_verse_data: parsedData,
                     scripture_references: scriptureReferences,
                     presentation_url: submission.presentation_url || "",
+                    notes_url: submission.notes_url || "",
                     content_is_slides_only: !!submission.content_is_slides_only
                 };
 

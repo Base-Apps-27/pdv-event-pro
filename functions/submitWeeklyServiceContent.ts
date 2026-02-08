@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
 
     try {
         const base44 = createClientFromRequest(req);
-        const { segment_id, content, title, presentation_url, content_is_slides_only, idempotencyKey } = await req.json();
+        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, idempotencyKey } = await req.json();
 
         if (!segment_id || !content) {
             return Response.json({ error: "Missing required fields" }, { status: 400, headers: corsHeaders });
@@ -249,6 +249,7 @@ Deno.serve(async (req) => {
             submission_status: 'processed',  // Immediately processed, no 'pending' limbo
             scripture_references: scriptureReferences,
             presentation_url: presentation_url || "",
+            notes_url: notes_url || "",
             content_is_slides_only: !!content_is_slides_only,
             projection_notes: projectionNotes // Update projection notes
         };
@@ -269,6 +270,7 @@ Deno.serve(async (req) => {
             verse: scriptureReferences,
             scripture_references: scriptureReferences,
             presentation_url: presentation_url || "",
+            notes_url: notes_url || "",
             content_is_slides_only: !!content_is_slides_only
         };
 
@@ -290,6 +292,7 @@ Deno.serve(async (req) => {
             content: content,
             title: title || "",
             presentation_url: presentation_url || "",
+            notes_url: notes_url || "",
             content_is_slides_only: !!content_is_slides_only,
             parsed_data_snapshot: parsedData,
             submitted_at: new Date().toISOString(),
