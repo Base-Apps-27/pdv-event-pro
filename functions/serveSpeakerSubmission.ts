@@ -434,6 +434,21 @@ Deno.serve(async (req) => {
 
       <!-- Section 2 -->
       <div class="form-section">
+        <h3>Material Visual</h3>
+        <div class="form-group">
+          <label for="presentationUrl">Enlace a Presentación / Imágenes (Opcional)</label>
+          <input type="url" id="presentationUrl" placeholder="https://drive.google.com/..." style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white);">
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="slidesOnly" style="width: 18px; height: 18px;">
+            <label for="slidesOnly" style="margin: 0; font-size: 0.9rem; font-weight: 500; color: var(--text-primary); text-transform: none;">
+                Este material contiene todo el contenido (No se requieren versículos aparte)
+            </label>
+        </div>
+      </div>
+
+      <!-- Section 3 -->
+      <div class="form-section">
         <h3>Versículos Para Proyección</h3>
         <p class="instruction-text">
             Para proyectar sus textos bíblicos en pantalla, necesitamos identificarlos. Por favor, <strong>pegue aquí sus notas o bosquejo completo</strong>. Nuestro sistema identificará y extraerá automáticamente todos los versículos por usted.
@@ -488,6 +503,8 @@ Deno.serve(async (req) => {
         
         const segmentId = document.getElementById('segmentId').value;
         const content = document.getElementById('content').value;
+        const presentationUrl = document.getElementById('presentationUrl').value;
+        const slidesOnly = document.getElementById('slidesOnly').checked;
 
         if (!segmentId || !content.trim()) return;
 
@@ -504,6 +521,8 @@ Deno.serve(async (req) => {
                 body: JSON.stringify({
                     segment_id: segmentId,
                     content: content,
+                    presentation_url: presentationUrl,
+                    content_is_slides_only: slidesOnly,
                     idempotencyKey: IDEMPOTENCY_KEY
                 })
             });

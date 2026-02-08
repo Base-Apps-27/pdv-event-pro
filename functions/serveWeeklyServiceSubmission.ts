@@ -178,6 +178,18 @@ Deno.serve(async (req) => {
           </div>
 
           <div class="form-section">
+            <label for="presentationUrl">Enlace a Presentación / Imágenes (Opcional)</label>
+            <input type="url" id="presentationUrl" placeholder="https://dropbox.com/..." style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white); margin-bottom: 8px;">
+            
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="slidesOnly" style="width: 18px; height: 18px;">
+                <label for="slidesOnly" style="margin: 0; font-size: 0.9rem; font-weight: 500; color: var(--text-primary); text-transform: none;">
+                    Este material contiene todo el contenido (No se requieren versículos aparte)
+                </label>
+            </div>
+          </div>
+
+          <div class="form-section">
             <label for="content">Pegue su mensaje completo (para extracción de versículos) <span style="color:red">*</span></label>
             <textarea id="content" placeholder="No necesita separar los versículos manualmente. Simplemente pegue su bosquejo o notas completas aquí, y el sistema detectará y extraerá las referencias bíblicas automáticamente." required></textarea>
           </div>
@@ -224,6 +236,8 @@ Deno.serve(async (req) => {
         const segmentId = segmentSelect.value;
         const content = document.getElementById('content').value;
         const title = titleInput.value;
+        const presentationUrl = document.getElementById('presentationUrl').value;
+        const slidesOnly = document.getElementById('slidesOnly').checked;
 
         if (!segmentId || !content.trim()) return;
 
@@ -239,6 +253,8 @@ Deno.serve(async (req) => {
                     segment_id: segmentId,
                     content: content,
                     title: title,
+                    presentation_url: presentationUrl,
+                    content_is_slides_only: slidesOnly,
                     idempotencyKey: IDEMPOTENCY_KEY
                 })
             });
