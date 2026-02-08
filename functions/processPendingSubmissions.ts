@@ -132,10 +132,16 @@ function parseScriptureReferences(rawText) {
 async function processSubmission(base44, submission) {
   console.log(`[PROCESS] Processing submission ${submission.id}...`);
   
-  const parsedData = parseScriptureReferences(submission.content);
+  // Parse verses (Condition: Only if NOT slides only)
+  let parsedData = { type: 'empty', sections: [] };
   let scriptureReferences = '';
-  if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
-    scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
+  const isSlidesOnly = !!submission.content_is_slides_only;
+
+  if (!isSlidesOnly) {
+    parsedData = parseScriptureReferences(submission.content);
+    if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
+      scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
+    }
   }
 
   const segmentId = submission.segment_id;
@@ -169,11 +175,22 @@ async function processSubmission(base44, submission) {
       return { success: false, id: submission.id, error: 'Invalid segment type' };
     }
 
+    // If Slides Only and content exists, append to projection notes
+    let projectionNotes = currentSegment.projection_notes || "";
+    if (isSlidesOnly && submission.content && submission.content.trim()) {
+        if (!projectionNotes.includes(submission.content.trim())) {
+            projectionNotes = (projectionNotes ? projectionNotes + "\n\n" : "") + `[Nota del Orador]: ${submission.content.trim()}`;
+        }
+    }
+
     const updatedSegment = {
       ...currentSegment,
       submitted_content: submission.content,
       parsed_verse_data: parsedData,
-      submission_status: 'processed'
+      submission_status: 'processed',
+      presentation_url: submission.presentation_url || "",
+      content_is_slides_only: isSlidesOnly,
+      projection_notes: projectionNotes
     };
 
     if (submission.title && submission.title.trim() !== "") {
@@ -188,25 +205,39 @@ async function processSubmission(base44, submission) {
     updatedSegment.data = {
       ...updatedSegment.data,
       verse: scriptureReferences,
-      scripture_references: scriptureReferences
+      scripture_references: scriptureReferences,
+      presentation_url: submission.presentation_url || "",
+      content_is_slides_only: isSlidesOnly
     };
 
     currentArray[segmentIdx] = updatedSegment;
     await base44.asServiceRole.entities.Service.update(serviceId, { [timeSlot]: currentArray });
     console.log(`[PROCESS] Updated Service ${serviceId} for submission ${submission.id}`);
 
-  } else {
+    } else {
     // Event segment
     const currentSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
     if (currentSegment) {
-      await base44.asServiceRole.entities.Segment.update(segmentId, {
+      const updateData = {
         submission_status: 'processed',
         parsed_verse_data: parsedData,
-        scripture_references: scriptureReferences
-      });
+        scripture_references: scriptureReferences,
+        presentation_url: submission.presentation_url || "",
+        content_is_slides_only: isSlidesOnly
+      };
+
+      // If Slides Only and content exists, append to projection notes
+      if (isSlidesOnly && submission.content && submission.content.trim()) {
+        const currentNotes = currentSegment.projection_notes || "";
+        if (!currentNotes.includes(submission.content.trim())) {
+            updateData.projection_notes = (currentNotes ? currentNotes + "\n\n" : "") + `[Nota del Orador]: ${submission.content.trim()}`;
+        }
+      }
+
+      await base44.asServiceRole.entities.Segment.update(segmentId, updateData);
       console.log(`[PROCESS] Updated Segment ${segmentId} for submission ${submission.id}`);
     }
-  }
+    }
 
   // Update the submission record
   await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
