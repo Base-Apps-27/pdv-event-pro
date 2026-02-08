@@ -326,53 +326,59 @@ export default function PublicCountdownDisplay() {
       {/* Top Gradient Bar */}
       <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
 
-      {/* Controls (Hidden by default, show on hover/interaction) */}
-      <div className="absolute top-3 left-3 z-30 opacity-0 group-hover/ui:opacity-100 transition-opacity duration-300">
-        <Select onValueChange={handleSelectionChange}>
-          <SelectTrigger className="w-auto h-10 bg-white/80 backdrop-blur border-none shadow-sm text-slate-600 font-medium px-4 gap-2 hover:bg-white transition-all rounded-full">
-            <Settings className="w-4 h-4" />
-            <span>Switch Program</span>
-          </SelectTrigger>
-          <SelectContent align="start">
-            {availableOptions.events.length > 0 && (
-              <>
-                <div className="px-2 py-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Events</div>
-                {availableOptions.events.map(e => (
-                  <SelectItem key={e.id} value={`event:${e.id}`}>
-                    {e.name} <span className="text-slate-400 text-xs">({formatDateET(e.start_date)})</span>
-                  </SelectItem>
-                ))}
-              </>
-            )}
-            {availableOptions.services.length > 0 && (
-              <>
-                <div className="px-2 py-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider mt-2">Services</div>
-                {availableOptions.services.map(s => (
-                  <SelectItem key={s.id} value={`service:${s.id}`}>
-                    {s.name} <span className="text-slate-400 text-xs">({formatDateET(s.date)})</span>
-                  </SelectItem>
-                ))}
-              </>
-            )}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Header Container - Flexbox to prevent overlap */}
+      <div className="w-full flex items-center justify-between px-6 py-4 z-20 relative mb-4">
+        
+        {/* Left: Controls */}
+        <div className="flex-shrink-0 w-[350px] flex justify-start">
+          <div className="opacity-0 group-hover/ui:opacity-100 transition-opacity duration-300">
+            <Select onValueChange={handleSelectionChange}>
+              <SelectTrigger className="w-auto h-10 bg-white/80 backdrop-blur border-none shadow-sm text-slate-600 font-medium px-4 gap-2 hover:bg-white transition-all rounded-full">
+                <Settings className="w-4 h-4" />
+                <span>Switch Program</span>
+              </SelectTrigger>
+              <SelectContent align="start">
+                {availableOptions.events.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Events</div>
+                    {availableOptions.events.map(e => (
+                      <SelectItem key={e.id} value={`event:${e.id}`}>
+                        {e.name} <span className="text-slate-400 text-xs">({formatDateET(e.start_date)})</span>
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+                {availableOptions.services.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider mt-2">Services</div>
+                    {availableOptions.services.map(s => (
+                      <SelectItem key={s.id} value={`service:${s.id}`}>
+                        {s.name} <span className="text-slate-400 text-xs">({formatDateET(s.date)})</span>
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-      {/* Top Right Clock */}
-      <div className="absolute top-4 right-4 z-20">
-        <div className="text-4xl md:text-6xl text-slate-800 font-mono font-bold tracking-tight bg-white/60 backdrop-blur-md px-6 py-2 rounded-2xl border border-white/50 shadow-sm">
-          {formatTimeToEST(currentTime.toTimeString().substring(0, 5))}
+        {/* Center: Service Name */}
+        <div className="flex-1 text-center px-4 min-w-0">
+          <h1 className={`text-5xl md:text-7xl font-black uppercase tracking-tight ${gradientText} drop-shadow-sm truncate`}>
+            {service.name}
+          </h1>
+        </div>
+
+        {/* Right: Clock */}
+        <div className="flex-shrink-0 w-[350px] flex justify-end">
+          <div className="text-4xl md:text-6xl text-slate-800 font-mono font-bold tracking-tight bg-white/60 backdrop-blur-md px-6 py-2 rounded-2xl border border-white/50 shadow-sm">
+            {formatTimeToEST(currentTime.toTimeString().substring(0, 5))}
+          </div>
         </div>
       </div>
 
       <div className="w-full max-w-7xl flex flex-col gap-5 items-center z-10">
-
-        {/* Header: Service Name */}
-        <div className="text-center mb-2">
-          <h1 className={`text-6xl md:text-7xl font-black mb-1 uppercase tracking-tight ${gradientText} drop-shadow-sm`}>
-            {service.name}
-          </h1>
-        </div>
 
         {allDone ? (
           <StandbyScreen />
