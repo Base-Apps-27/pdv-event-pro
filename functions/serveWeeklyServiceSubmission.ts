@@ -181,6 +181,9 @@ Deno.serve(async (req) => {
             <label for="presentationUrl">Enlace a Presentación / Imágenes (Opcional)</label>
             <input type="url" id="presentationUrl" placeholder="https://dropbox.com/..." style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white); margin-bottom: 8px;">
             
+            <label for="notesUrl" style="margin-top: 12px;">Link de Bosquejo / Notas (PDF o Doc)</label>
+            <input type="url" id="notesUrl" placeholder="Enlace a notas para el equipo de medios (Opcional)" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white); margin-bottom: 8px;">
+
             <div style="display: flex; align-items: center; gap: 8px;">
                 <input type="checkbox" id="slidesOnly" style="width: 18px; height: 18px;">
                 <label for="slidesOnly" style="margin: 0; font-size: 0.9rem; font-weight: 500; color: var(--text-primary); text-transform: none;">
@@ -255,6 +258,7 @@ Deno.serve(async (req) => {
         const content = document.getElementById('content').value;
         const title = titleInput.value;
         const presentationUrl = document.getElementById('presentationUrl').value;
+        const notesUrl = document.getElementById('notesUrl').value;
         const slidesOnly = document.getElementById('slidesOnly').checked;
 
         // Validation: Content is required ONLY if not slidesOnly
@@ -274,6 +278,7 @@ Deno.serve(async (req) => {
                     content: content,
                     title: title,
                     presentation_url: presentationUrl,
+                    notes_url: notesUrl,
                     content_is_slides_only: slidesOnly,
                     idempotencyKey: IDEMPOTENCY_KEY
                 })

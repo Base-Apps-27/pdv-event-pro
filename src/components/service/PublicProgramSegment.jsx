@@ -56,6 +56,7 @@ export default function PublicProgramSegment({
   const getData = (field) => getSegmentData(segment, field);
   
   const presentationUrl = getData('presentation_url');
+  const notesUrl = getData('notes_url');
   const isSlidesOnly = getData('content_is_slides_only');
   
   // Determine segment type and characteristics
@@ -333,6 +334,22 @@ export default function PublicProgramSegment({
                 <a href={presentationUrl} target="_blank" rel="noopener noreferrer">
                   {isSlidesOnly ? <AlertTriangle className="w-3 h-3" /> : <Monitor className="w-4 h-4" />}
                   <span>{isSlidesOnly ? 'Solo Slides' : 'Abrir Slides'}</span>
+                </a>
+              </Button>
+            )}
+
+            {/* Notes Button */}
+            {notesUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="h-7 px-2 border-2 border-purple-500 text-purple-700 hover:bg-purple-50 text-xs gap-1"
+                title="Abrir Notas"
+              >
+                <a href={notesUrl} target="_blank" rel="noopener noreferrer">
+                  <BookOpen className="w-4 h-4" />
+                  <span>Notas</span>
                 </a>
               </Button>
             )}
