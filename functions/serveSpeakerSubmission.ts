@@ -494,6 +494,24 @@ Deno.serve(async (req) => {
     const statusMsg = document.getElementById('statusMessage');
     const mainContainer = document.getElementById('mainContainer');
     const successContainer = document.getElementById('successContainer');
+    const contentInput = document.getElementById('content');
+    const slidesOnlyCheckbox = document.getElementById('slidesOnly');
+    const contentLabelStar = document.querySelector('label[for="content"] .required');
+
+    // Toggle content requirement based on slidesOnly
+    if (slidesOnlyCheckbox) {
+        slidesOnlyCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                contentInput.removeAttribute('required');
+                if (contentLabelStar) contentLabelStar.style.display = 'none';
+                contentInput.placeholder = "Si marcó 'Solo Slides', este campo es opcional. Puede dejarlo vacío o agregar notas para el equipo de proyección.";
+            } else {
+                contentInput.setAttribute('required', 'true');
+                if (contentLabelStar) contentLabelStar.style.display = 'inline';
+                contentInput.placeholder = "No es necesario separar los versículos. Puede pegar todo su documento aquí y nosotros haremos el resto.";
+            }
+        });
+    }
     
     // Generate idempotency key
     const IDEMPOTENCY_KEY = crypto.randomUUID();
@@ -506,7 +524,9 @@ Deno.serve(async (req) => {
         const presentationUrl = document.getElementById('presentationUrl').value;
         const slidesOnly = document.getElementById('slidesOnly').checked;
 
-        if (!segmentId || !content.trim()) return;
+        // Validation: Content is required ONLY if not slidesOnly
+        if (!segmentId) return;
+        if (!slidesOnly && !content.trim()) return;
 
         // Loading State
         submitBtn.disabled = true;

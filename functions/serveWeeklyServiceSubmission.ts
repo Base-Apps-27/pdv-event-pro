@@ -218,6 +218,24 @@ Deno.serve(async (req) => {
     const successContainer = document.getElementById('successContainer');
     const segmentSelect = document.getElementById('segmentId');
     const titleInput = document.getElementById('title');
+    const contentInput = document.getElementById('content');
+    const slidesOnlyCheckbox = document.getElementById('slidesOnly');
+    const contentLabelStar = document.querySelector('label[for="content"] span');
+
+    // Toggle content requirement based on slidesOnly
+    if (slidesOnlyCheckbox) {
+        slidesOnlyCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                contentInput.removeAttribute('required');
+                if (contentLabelStar) contentLabelStar.style.display = 'none';
+                contentInput.placeholder = "Si marcó 'Solo Slides', este campo es opcional. Puede dejarlo vacío o agregar notas para el equipo de proyección.";
+            } else {
+                contentInput.setAttribute('required', 'true');
+                if (contentLabelStar) contentLabelStar.style.display = 'inline';
+                contentInput.placeholder = "No necesita separar los versículos manualmente. Simplemente pegue su bosquejo o notas completas aquí, y el sistema detectará y extraerá las referencias bíblicas automáticamente.";
+            }
+        });
+    }
     
     // Auto-populate title on selection change
     segmentSelect.addEventListener('change', (e) => {
@@ -239,7 +257,9 @@ Deno.serve(async (req) => {
         const presentationUrl = document.getElementById('presentationUrl').value;
         const slidesOnly = document.getElementById('slidesOnly').checked;
 
-        if (!segmentId || !content.trim()) return;
+        // Validation: Content is required ONLY if not slidesOnly
+        if (!segmentId) return;
+        if (!slidesOnly && !content.trim()) return;
 
         submitBtn.disabled = true;
         submitBtn.innerText = 'Enviando...';
