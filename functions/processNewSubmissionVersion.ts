@@ -151,11 +151,16 @@ Deno.serve(async (req) => {
             return Response.json({ message: 'Invalid submission data' });
         }
 
-        // Parse verses
-        const parsedData = parseScriptureReferences(submission.content);
+        // Parse verses (Condition: Only if NOT slides only)
+        let parsedData = { type: 'empty', sections: [] };
         let scriptureReferences = '';
-        if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
-            scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
+        const isSlidesOnly = !!submission.content_is_slides_only;
+
+        if (!isSlidesOnly) {
+            parsedData = parseScriptureReferences(submission.content);
+            if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
+                scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
+            }
         }
 
         const segmentId = submission.segment_id;
@@ -213,13 +218,23 @@ Deno.serve(async (req) => {
             const currentSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
             
             if (currentSegment && currentSegment.submitted_content === submission.content) {
-                await base44.asServiceRole.entities.Segment.update(segmentId, {
+                const updateData = {
                     submission_status: 'processed', 
                     parsed_verse_data: parsedData,
                     scripture_references: scriptureReferences,
                     presentation_url: submission.presentation_url || "",
                     content_is_slides_only: !!submission.content_is_slides_only
-                });
+                };
+
+                // If Slides Only and content exists, append to projection notes
+                if (isSlidesOnly && submission.content && submission.content.trim()) {
+                    const currentNotes = currentSegment.projection_notes || "";
+                    if (!currentNotes.includes(submission.content.trim())) {
+                        updateData.projection_notes = (currentNotes ? currentNotes + "\n\n" : "") + `[Nota del Orador]: ${submission.content.trim()}`;
+                    }
+                }
+
+                await base44.asServiceRole.entities.Segment.update(segmentId, updateData);
             } else {
                 console.log(`[EVENT_SKIP] Content mismatch for ${submissionId}, skipping live update.`);
             }

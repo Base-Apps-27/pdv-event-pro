@@ -214,18 +214,34 @@ Deno.serve(async (req) => {
         }
 
         // --- INLINE PROCESSING: Parse verses right here, no automation dependency ---
-        console.log("[INLINE_PROCESS] Parsing scripture references...");
-        const parsedData = parseScriptureReferences(content);
+        let parsedData = { type: 'empty', sections: [] };
         let scriptureReferences = '';
-        if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
-            scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
-        }
-        console.log(`[INLINE_PROCESS] Parsed ${parsedData.sections.length} verse references`);
-
+        
         // Build fully processed segment update (content + parsed verses + title + status=processed)
         const currentArray = [...(service[timeSlot] || [])];
         const currentSegment = currentArray[segmentIdx];
         
+        let projectionNotes = currentSegment.projection_notes || "";
+
+        if (!content_is_slides_only) {
+            console.log("[INLINE_PROCESS] Parsing scripture references...");
+            parsedData = parseScriptureReferences(content);
+            if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
+                scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
+            }
+            console.log(`[INLINE_PROCESS] Parsed ${parsedData.sections.length} verse references`);
+        } else {
+            console.log("[INLINE_PROCESS] Slides Only mode - Skipping verse parsing.");
+            // If content is present in Slides Only mode, treat it as a projection note
+            if (content && content.trim()) {
+                // Append to existing notes to avoid overwriting admin instructions
+                // Check if already exists to avoid duplication on re-submit
+                if (!projectionNotes.includes(content.trim())) {
+                    projectionNotes = (projectionNotes ? projectionNotes + "\n\n" : "") + `[Nota del Orador]: ${content.trim()}`;
+                }
+            }
+        }
+
         const updatedSegment = {
             ...currentSegment,
             submitted_content: content,
@@ -233,7 +249,8 @@ Deno.serve(async (req) => {
             submission_status: 'processed',  // Immediately processed, no 'pending' limbo
             scripture_references: scriptureReferences,
             presentation_url: presentation_url || "",
-            content_is_slides_only: !!content_is_slides_only
+            content_is_slides_only: !!content_is_slides_only,
+            projection_notes: projectionNotes // Update projection notes
         };
 
         // Update title if provided (message_title, not block title)
