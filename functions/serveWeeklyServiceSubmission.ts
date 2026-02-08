@@ -181,8 +181,10 @@ Deno.serve(async (req) => {
             <label for="presentationUrl">Enlace a Presentación / Imágenes (Opcional)</label>
             <input type="url" id="presentationUrl" placeholder="https://dropbox.com/..." style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white); margin-bottom: 8px;">
             
-            <label for="notesUrl" style="margin-top: 12px;">Link de Bosquejo / Notas (PDF o Doc)</label>
-            <input type="url" id="notesUrl" placeholder="Enlace a notas para el equipo de medios (Opcional)" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white); margin-bottom: 8px;">
+            <div id="notesFieldContainer" style="display: none;">
+                <label for="notesUrl" style="margin-top: 12px;">Link de Bosquejo / Notas (PDF o Doc)</label>
+                <input type="url" id="notesUrl" placeholder="Enlace a notas para el equipo de medios (Opcional)" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white); margin-bottom: 8px;">
+            </div>
 
             <div style="display: flex; align-items: center; gap: 8px;">
                 <input type="checkbox" id="slidesOnly" style="width: 18px; height: 18px;">
@@ -224,15 +226,24 @@ Deno.serve(async (req) => {
     const contentInput = document.getElementById('content');
     const slidesOnlyCheckbox = document.getElementById('slidesOnly');
     const contentLabelStar = document.querySelector('label[for="content"] span');
+    const notesContainer = document.getElementById('notesFieldContainer');
 
     // Toggle content requirement based on slidesOnly
     if (slidesOnlyCheckbox) {
         slidesOnlyCheckbox.addEventListener('change', (e) => {
             if (e.target.checked) {
+                // Show Notes field
+                if (notesContainer) notesContainer.style.display = 'block';
+                
+                // Make content optional
                 contentInput.removeAttribute('required');
                 if (contentLabelStar) contentLabelStar.style.display = 'none';
                 contentInput.placeholder = "Si marcó 'Solo Slides', este campo es opcional. Puede dejarlo vacío o agregar notas para el equipo de proyección.";
             } else {
+                // Hide Notes field
+                if (notesContainer) notesContainer.style.display = 'none';
+
+                // Make content required
                 contentInput.setAttribute('required', 'true');
                 if (contentLabelStar) contentLabelStar.style.display = 'inline';
                 contentInput.placeholder = "No necesita separar los versículos manualmente. Simplemente pegue su bosquejo o notas completas aquí, y el sistema detectará y extraerá las referencias bíblicas automáticamente.";
