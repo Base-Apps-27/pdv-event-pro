@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tv, Settings, LogOut, Loader2 } from "lucide-react";
+import StandbyScreen from "@/components/service/StandbyScreen";
 
 /**
  * PublicCountdownDisplay
@@ -131,17 +132,21 @@ export default function PublicCountdownDisplay() {
   // No real-time subscriptions for public/kiosk view to avoid auth prompts.
   // We rely on the 30s polling in useQuery above.
 
-  // ─── CANONICAL TIME PARSER (mirrors LiveStatusCard.getTimeDate) ───
-  const getTimeDate = (timeStr) => {
+  // ─── CANONICAL TIME PARSER ───
+  // Improved to handle explicit segment dates (for multi-day events)
+  const getTimeDate = (timeStr, segmentDate = null) => {
     if (!timeStr) return null;
     const [hours, mins] = timeStr.split(':').map(Number);
-    const date = new Date(currentTime);
-    if (serviceDate) {
-      const [y, m, d] = serviceDate.split('-').map(Number);
-      date.setFullYear(y);
-      date.setMonth(m - 1);
-      date.setDate(d);
+    
+    // Determine the base date: explicit segment date > service context date > current time
+    let date = new Date(currentTime);
+    const targetDateStr = segmentDate || serviceDate;
+
+    if (targetDateStr) {
+      const [y, m, d] = targetDateStr.split('-').map(Number);
+      date = new Date(y, m - 1, d); // Construct new date to avoid timezone shifts from current time
     }
+    
     date.setHours(hours, mins, 0, 0);
     return date;
   };
@@ -168,48 +173,39 @@ export default function PublicCountdownDisplay() {
       return { currentSegment: null, nextSegment: null, preLaunchSegment: null, upcomingSegments: [] };
     }
 
-    // Check isToday
-    const isToday = (() => {
-      if (!serviceDate) return true;
-      const [y, m, d] = serviceDate.split('-').map(Number);
-      const targetDate = new Date(y, m - 1, d);
-      targetDate.setHours(0, 0, 0, 0);
-      const today = new Date(currentTime);
-      today.setHours(0, 0, 0, 0);
-      return targetDate.getTime() === today.getTime();
-    })();
-
-    if (!isToday) {
-      return { currentSegment: null, nextSegment: null, preLaunchSegment: null, upcomingSegments: [] };
-    }
-
     // Find current: segment where start <= now <= end
     const current = validSegments.find(s => {
-      const start = getTimeDate(s.start_time);
-      const end = s.end_time ? getTimeDate(s.end_time) : (start ? new Date(start.getTime() + (s.duration_min || 0) * 60000) : null);
+      const start = getTimeDate(s.start_time, s.date);
+      const end = s.end_time ? getTimeDate(s.end_time, s.date) : (start ? new Date(start.getTime() + (s.duration_min || 0) * 60000) : null);
       return start && end && currentTime >= start && currentTime <= end;
     }) || null;
 
     // Find next (single immediate next)
+    // Must handle segment dates to correctly find the "next" in absolute time
     const next = validSegments.find(s => {
-      const start = getTimeDate(s.start_time);
+      const start = getTimeDate(s.start_time, s.date);
       return start && start > currentTime;
     }) || null;
 
     // Find all upcoming (for list) - limit to next 5
     const upcoming = validSegments.filter(s => {
-      const start = getTimeDate(s.start_time);
+      const start = getTimeDate(s.start_time, s.date);
       return start && start > currentTime;
     }).slice(0, 5) || [];
 
-    // Pre-launch: if nothing is current, countdown to FIRST segment
+    // Pre-launch: if nothing is current, countdown to NEXT AVAILABLE segment
+    // This handles "Tomorrow" or "Next Day" logic automatically because validSegments are sorted by time
     let preLaunch = null;
-    if (!current) {
-      const first = validSegments[0];
-      const firstStart = getTimeDate(first.start_time);
-      if (firstStart && currentTime < firstStart) {
-        preLaunch = first;
-      }
+    if (!current && next) {
+      preLaunch = next;
+    } else if (!current && !next && validSegments.length > 0) {
+       // If no next but we have segments, check if we are before the very first one
+       // (Redundant if 'next' covers it, but safe fallback)
+       const first = validSegments[0];
+       const firstStart = getTimeDate(first.start_time, first.date);
+       if (firstStart && currentTime < firstStart) {
+         preLaunch = first;
+       }
     }
 
     return { 
@@ -356,13 +352,7 @@ export default function PublicCountdownDisplay() {
         </div>
 
         {allDone ? (
-          <div className="w-full max-w-2xl mx-auto bg-white rounded-3xl border-4 border-slate-100 p-12 shadow-xl text-center opacity-0 animate-in fade-in duration-1000 slide-in-from-bottom-8 fill-mode-forwards" style={{ animationDelay: '0.2s' }}>
-             <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                <span className="text-4xl">👋</span>
-             </div>
-             <h2 className="text-4xl font-black text-slate-800 uppercase mb-3 tracking-tight">{t('live.endOfProgram')}</h2>
-             <p className="text-slate-400 text-xl font-medium">Have a blessed week!</p>
-          </div>
+          <StandbyScreen />
         ) : (
           <>
             {/* Main Content Grid - Force Horizontal Layout (TV Kiosk Mode) */}
@@ -376,7 +366,7 @@ export default function PublicCountdownDisplay() {
                     segment={currentSegment}
                     displayMode="in-progress"
                     currentTime={currentTime}
-                    serviceDate={serviceDate}
+                    serviceDate={currentSegment?.date || serviceDate}
                     getTimeDate={getTimeDate}
                     className="h-full"
                   />
@@ -385,7 +375,7 @@ export default function PublicCountdownDisplay() {
                     segment={preLaunchSegment}
                     displayMode="pre-launch"
                     currentTime={currentTime}
-                    serviceDate={serviceDate}
+                    serviceDate={preLaunchSegment?.date || serviceDate}
                     getTimeDate={getTimeDate}
                     className="h-full"
                   />
@@ -402,9 +392,10 @@ export default function PublicCountdownDisplay() {
                 <div className="absolute inset-0 h-full">
                   {upcomingSegments.length > 0 ? (
                     <SegmentTimeline
-                      segments={upcomingSegments}
-                      getTimeDate={getTimeDate}
-                      className="h-full"
+                    segments={upcomingSegments}
+                    getTimeDate={getTimeDate}
+                    serviceDate={serviceDate} // Pass fallback context if needed
+                    className="h-full"
                     />
                   ) : (
                     <div className="h-full bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200 p-8 flex items-center justify-center">

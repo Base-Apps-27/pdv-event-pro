@@ -133,8 +133,17 @@ Deno.serve(async (req) => {
                 
                 // Sort Segments
                 const orderMap = new Map(sessionIds.map((id, i) => [id, i]));
+                
+                // Create a map of session dates for easy lookup
+                const sessionDateMap = new Map(sessions.map(s => [s.id, s.date]));
+
                 segments = allSegments
                     .filter(seg => seg.show_in_general)
+                    .map(seg => ({
+                        ...seg,
+                        // Inherit date from session if not present
+                        date: sessionDateMap.get(seg.session_id) || null
+                    }))
                     .sort((a, b) => {
                         const aIndex = orderMap.get(a.session_id);
                         const bIndex = orderMap.get(b.session_id);
