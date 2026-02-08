@@ -666,7 +666,7 @@ export default function WeeklyServiceManager() {
             }
             
             return {
-              ...savedSeg,
+              ...savedSeg, // CRITICAL: This spreads ALL fields including root-level presentation_url, notes_url, etc.
               fields: blueprintSeg.fields || savedSeg.fields,
               sub_assignments: subAssignments,
               actions: blueprintSeg.actions || savedSeg.actions || [],
