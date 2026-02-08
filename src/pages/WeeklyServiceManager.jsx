@@ -942,22 +942,35 @@ export default function WeeklyServiceManager() {
   // Update handlers (pure state mutation, no saves)
   const updateSegmentField = (service, segmentIndex, field, value) => {
     setServiceData(prev => {
-      const updated = { ...prev };
+      // Deep clone the service array we are modifying to ensure immutability
+      const newServiceArray = [...(prev[service] || [])];
+      
+      // Clone the specific segment we are updating
+      if (!newServiceArray[segmentIndex]) return prev;
+      const newSegment = { ...newServiceArray[segmentIndex] };
       
       // Define fields that sit at the root of the segment object
       const rootFields = ['songs', 'presentation_url', 'notes_url', 'content_is_slides_only'];
       
       if (rootFields.includes(field)) {
-        updated[service][segmentIndex][field] = value;
+        newSegment[field] = value;
       } else {
-        updated[service][segmentIndex].data = {
-          ...updated[service][segmentIndex].data,
+        newSegment.data = {
+          ...newSegment.data,
           [field]: value
         };
       }
       
+      // Place the updated segment back into the new array
+      newServiceArray[segmentIndex] = newSegment;
+      
+      const updated = { 
+        ...prev,
+        [service]: newServiceArray
+      };
+      
       // Auto-propagate translator from worship to other segments in 11:30am
-      if (field === 'translator' && service === '11:30am' && updated[service][segmentIndex].type === 'worship') {
+      if (field === 'translator' && service === '11:30am' && newSegment.type === 'worship') {
         const worshipTranslator = value;
         updated['11:30am'] = updated['11:30am'].map((seg, idx) => {
           if (idx !== segmentIndex && seg.default_translator_source === 'worship_segment_translator' && !seg.data?.translator) {

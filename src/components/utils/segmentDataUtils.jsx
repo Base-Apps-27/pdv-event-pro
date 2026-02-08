@@ -37,7 +37,8 @@ export const normalizeSegment = (rawSegment) => {
     'description', 'description_details',
     'coordinator_notes', 'projection_notes', 'sound_notes',
     'ushers_notes', 'translation_notes', 'stage_decor_notes',
-    'actions', 'parsed_verse_data'
+    'actions', 'parsed_verse_data',
+    'presentation_url', 'notes_url', 'content_is_slides_only'
   ];
 
   // Move legacy fields to data if they exist at root and NOT in data
