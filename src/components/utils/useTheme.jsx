@@ -17,10 +17,9 @@ const VALID_THEMES = ['light', 'dark', 'system'];
  */
 export function useTheme() {
   const [theme, setThemeState] = useState(() => {
-    // Initialize from localStorage or default to 'system'
-    if (typeof window === 'undefined') return 'system';
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    return VALID_THEMES.includes(stored) ? stored : 'system';
+    // Default to 'light' as dark mode needs work.
+    // Ignoring localStorage to force existing users to light mode.
+    return 'light';
   });
 
   const [isSystemPreference, setIsSystemPreference] = useState(false);

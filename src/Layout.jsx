@@ -413,42 +413,7 @@ function LayoutContentInner({ children }) {
 
             {/* Theme & Language Toggle */}
             <div className="pt-4 mt-4 border-t border-gray-700 space-y-2 pb-4">
-              {/* Theme Toggle */}
-              <div className="relative group">
-                <button
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all w-full"
-                  title={isSidebarCollapsed ? t('theme.label') : ''}
-                >
-                  {theme === 'dark' ? <Moon className="w-5 h-5 shrink-0" /> : <Sun className="w-5 h-5 shrink-0" />}
-                  {!isSidebarCollapsed && (
-                    <>
-                      <span className="flex-1 text-left">{t('theme.label')}</span>
-                      <ChevronDown className="w-4 h-4 shrink-0" />
-                    </>
-                  )}
-                </button>
-                {/* Theme Dropdown */}
-                <div className={`absolute bg-gray-900 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 ${isSidebarCollapsed ? 'left-full ml-2 w-32 bottom-0' : 'left-0 right-0 bottom-full mb-1'}`}>
-                  <button
-                    onClick={() => setTheme('light')}
-                    className={`w-full text-left px-4 py-2 text-sm ${theme === 'light' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'} transition-colors`}
-                  >
-                    {t('theme.light')}
-                  </button>
-                  <button
-                    onClick={() => setTheme('dark')}
-                    className={`w-full text-left px-4 py-2 text-sm ${theme === 'dark' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'} transition-colors`}
-                  >
-                    {t('theme.dark')}
-                  </button>
-                  <button
-                    onClick={() => setTheme('system')}
-                    className={`w-full text-left px-4 py-2 text-sm ${theme === 'system' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'} transition-colors`}
-                  >
-                    {t('theme.system')}
-                  </button>
-                </div>
-              </div>
+              {/* Theme Toggle Removed - Forcing Light Mode */}
 
               {/* Language Toggle */}
               <button
