@@ -254,20 +254,9 @@ export default function ServiceProgramView({
   return (
     <div className="space-y-6">
       {/* Sticky Ops Deck for Weekly Services - PERMISSION-GATED */}
-      {canAccessLiveOps && (() => {
-        const allServiceSegments = [
-          ...(adjustedServiceData?.['9:30am'] || []),
-          ...(adjustedServiceData?.['11:30am'] || [])
-        ].map(s => ({
-          ...s,
-          start_time: s.start_time || s.data?.start_time,
-          end_time: s.end_time || s.data?.end_time,
-          title: s.title || s.data?.title || 'Untitled'
-        }));
-
-        return (
+      {canAccessLiveOps && (
         <StickyOpsDeck 
-          segments={allServiceSegments}
+          segments={adjustedAllSegments} // Use adjusted flat list (includes Break)
           sessionDate={adjustedServiceData.date}
           currentTime={currentTime}
           onScrollToSegment={scrollToSegment}
@@ -275,30 +264,15 @@ export default function ServiceProgramView({
           chatUnreadCount={chatUnreadCount}
           chatOpen={chatOpen}
         />
-        );
-        })()}
+      )}
 
-        {/* Live Status Card for Weekly Services */}
-      {(() => {
-        const allServiceSegments = [
-          ...(adjustedServiceData?.['9:30am'] || []),
-          ...(adjustedServiceData?.['11:30am'] || [])
-        ].map(s => ({
-          ...s,
-          start_time: s.start_time || s.data?.start_time,
-          end_time: s.end_time || s.data?.end_time,
-          title: s.title || s.data?.title || 'Untitled'
-        }));
-
-        return (
-          <LiveStatusCard 
-            segments={allServiceSegments} 
-            currentTime={currentTime}
-            onScrollTo={scrollToSegment}
-            serviceDate={adjustedServiceData.date}
-          />
-        );
-      })()}
+      {/* Live Status Card for Weekly Services */}
+      <LiveStatusCard 
+        segments={adjustedAllSegments} // Use adjusted flat list (includes Break)
+        currentTime={currentTime}
+        onScrollTo={scrollToSegment}
+        serviceDate={adjustedServiceData.date}
+      />
 
       {/* 9:30am Service */}
       {adjustedServiceData["9:30am"] && (
