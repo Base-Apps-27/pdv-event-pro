@@ -1,65 +1,68 @@
-import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React from "react";
+import { formatTimeToEST, formatDateET } from "@/components/utils/timeFormat";
 
-export default function StandbyScreen() {
-    const [mounted, setMounted] = useState(false);
+/**
+ * StandbyScreen
+ * 
+ * TV-optimized idle screen displayed when no program is currently active.
+ * Intentionally static — no framer-motion, no animated orbs.
+ * Layout: clock top-right, brand center, status footer.
+ * 
+ * Receives currentTime as prop so it ticks from the parent's interval.
+ */
+export default function StandbyScreen({ currentTime }) {
+  const now = currentTime || new Date();
+  const timeStr = now.toTimeString().substring(0, 5);
+  
+  // Format date for display: "Domingo — 02-09-2026"
+  const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+  const dayName = dayNames[now.getDay()];
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const dateStr = formatDateET(`${year}-${month}-${day}`);
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+  return (
+    <div className="w-full h-screen bg-slate-50 flex flex-col overflow-hidden">
+      {/* Top Gradient Bar */}
+      <div className="w-full h-2 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23] shrink-0" />
 
-    return (
-        <div className="fixed inset-0 w-full h-full bg-slate-50 flex flex-col items-center justify-center overflow-hidden z-50">
-            {/* Ambient Background - Light Mode */}
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-100 opacity-100" />
-            
-            {/* Animated Glow Orbs - Adjusted for Light Background (Multiply blend) */}
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#1F8A70] rounded-full mix-blend-multiply filter blur-[128px] opacity-10 animate-pulse" style={{ animationDuration: '4s' }} />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#8DC63F] rounded-full mix-blend-multiply filter blur-[128px] opacity-10 animate-pulse" style={{ animationDuration: '7s' }} />
-
-            {/* Content Container */}
-            <div className="relative z-10 flex flex-col items-center text-center p-12">
-                
-                {/* Main Logo Text */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="mb-8"
-                >
-                    <h1 className="text-7xl md:text-9xl font-black text-slate-900 tracking-tighter uppercase mb-2 font-anton drop-shadow-sm">
-                        Palabras de Vida
-                    </h1>
-                </motion.div>
-
-                {/* Divider */}
-                <motion.div 
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 0.5, duration: 0.8 }}
-                    className="w-32 h-2 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23] rounded-full mb-8"
-                />
-
-                {/* Motto */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.8, duration: 0.8 }}
-                >
-                    <h2 className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23] uppercase tracking-widest">
-                        ¡Atrévete a Cambiar!
-                    </h2>
-                    <p className="text-slate-500 mt-2 text-sm uppercase tracking-[0.3em] font-medium opacity-80">
-                        Dare to Change
-                    </p>
-                </motion.div>
-
-            </div>
-
-            {/* Footer / Status */}
-            <div className="absolute bottom-8 text-slate-400 text-xs font-mono uppercase tracking-widest">
-                Standby Mode • Waiting for Program
-            </div>
+      {/* Clock — Top Right */}
+      <div className="w-full flex justify-end px-8 pt-6 shrink-0">
+        <div className="text-3xl md:text-4xl text-slate-800 font-mono font-bold tracking-tight bg-white/90 backdrop-blur-md px-5 py-2 rounded-xl border border-slate-200 shadow-sm">
+          {formatTimeToEST(timeStr)}
         </div>
-    );
+      </div>
+
+      {/* Center Content — Brand */}
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
+        <h1 className="text-7xl md:text-9xl text-slate-900 tracking-tighter uppercase mb-4 leading-none">
+          Palabras de Vida
+        </h1>
+        
+        {/* Gradient Divider */}
+        <div className="w-32 h-2 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23] rounded-full mb-6" />
+
+        {/* Date */}
+        <p className="text-xl md:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23] uppercase tracking-widest font-semibold mb-2">
+          {dayName} — {dateStr}
+        </p>
+
+        {/* Motto */}
+        <h2 className="text-3xl md:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23] uppercase tracking-widest">
+          ¡Atrévete a Cambiar!
+        </h2>
+        <p className="text-slate-400 mt-2 text-sm uppercase tracking-[0.3em] font-medium">
+          Dare to Change
+        </p>
+      </div>
+
+      {/* Footer / Status */}
+      <div className="w-full text-center pb-8 shrink-0">
+        <p className="text-slate-400 text-xs font-mono uppercase tracking-widest">
+          Standby Mode • Waiting for Program
+        </p>
+      </div>
+    </div>
+  );
 }
