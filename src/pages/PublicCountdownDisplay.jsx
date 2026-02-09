@@ -385,7 +385,7 @@ export default function PublicCountdownDisplay() {
       <div className="w-full max-w-7xl flex flex-col gap-5 items-center z-10">
 
         {allDone ? (
-          <StandbyScreen />
+          <StandbyScreen currentTime={currentTime} />
         ) : (
           <>
             {/* Main Content Grid - Force Horizontal Layout (TV Kiosk Mode) */}
