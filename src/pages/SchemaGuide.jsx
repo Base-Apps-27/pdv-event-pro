@@ -62,250 +62,342 @@ Teams: Sound=[Name], Lights=[Name], Video=[Name], Photography=[Name], Translatio
 SESSION: [Next Session Name] | ...
   ...same pattern...`;
 
-// ─── Comprehensive JSON Example ─────────────────────────────────────────
+// ─── Real JSON Example from Juntos 2026 Conference ─────────────────────
 const FULL_JSON_EXAMPLE = {
   "event": {
-    "name": "Congreso Visión 2025",
+    "name": "Juntos",
     "origin": "manual",
-    "theme": "Atrévete a Cambiar",
-    "year": 2025,
-    "location": "Auditorio Principal, PDV",
-    "start_date": "2025-10-15",
-    "end_date": "2025-10-17",
-    "description": "Congreso anual de liderazgo y capacitación.",
+    "theme": "Amor Que Sana",
+    "year": 2026,
+    "location": "Palabras de Vida Bronx",
+    "start_date": "2026-02-06",
+    "end_date": "2026-02-07",
+    "description": "",
     "status": "confirmed",
-    "print_color": "teal",
-    "promote_in_announcements": true,
-    "promotion_start_date": "2025-08-01",
-    "promotion_end_date": "2025-10-14",
-    "announcement_blurb": "Regístrate antes del 1 de Septiembre.",
-    "announcement_has_video": false,
-    "promotion_targets": ["Domingo AM", "Líderes"]
+    "print_color": "charcoal",
+    "promote_in_announcements": false
   },
   "sessions": [
     {
-      "name": "Sesión 1: Apertura Viernes PM",
-      "date": "2025-10-15",
-      "planned_start_time": "19:00",
-      "planned_end_time": "21:30",
+      "name": "Viernes PM - SESIÓN I",
+      "date": "2026-02-06",
+      "planned_start_time": "19:30",
+      "planned_end_time": "",
       "order": 1,
       "session_color": "blue",
       "is_translated_session": true,
       "default_stage_call_offset_min": 15,
-      "admin_team": "Carlos M., Ana P.",
-      "coordinators": "Pedro L.",
-      "sound_team": "José R., Marcos T.",
-      "lights_team": "Daniel V.",
-      "video_team": "Samuel G.",
-      "tech_team": "Daniel V., Samuel G.",
-      "ushers_team": "Equipo A",
-      "translation_team": "Mesa 1 (ES→EN)",
-      "hospitality_team": "Equipo Hospitalidad",
-      "photography_team": "Miguel F.",
-      "worship_leader": "Marcos A.",
-      "notes": "Puertas abren a las 6:30PM",
+      "location": "Palabras de Vida Bronx",
+      "admin_team": "Isabel Gómez & Yassiel Santos",
+      "coordinators": "Indiana A. & Luis A.",
+      "sound_team": "Randy Gerónimo",
+      "lights_team": "Danny M",
+      "video_team": "Rick P",
+      "tech_team": "Rick & Danny",
+      "translation_team": "Jessica & Ana V.",
+      "hospitality_team": "Mercedes García & Verla Solís",
+      "photography_team": "Emily Vásquez",
+      "worship_leader": "Anthony Estrella",
       "segments": [
         {
-          "title": "Adoración de Apertura",
+          "title": "Alabanza",
           "segment_type": "Alabanza",
           "order": 1,
-          "start_time": "19:00",
+          "start_time": "19:30",
           "duration_min": 30,
           "color_code": "worship",
-          "stage_call_offset_min": 20,
-          "show_in_general": true,
-          "show_in_projection": true,
-          "show_in_sound": true,
-          "show_in_ushers": true,
+          "presenter": "David & Thais Amaya",
           "number_of_songs": 3,
-          "song_1_title": "Gracia Sublime",
-          "song_1_lead": "Marcos A.",
-          "song_1_key": "G",
-          "song_2_title": "En Tu Luz",
-          "song_2_lead": "Elena R.",
-          "song_2_key": "A",
-          "song_3_title": "Santo Es El Señor",
-          "song_3_lead": "Marcos A.",
-          "song_3_key": "D",
+          "song_1_title": "Gloria Aleluya",
+          "song_2_title": "Deseo Eterno",
+          "song_3_title": "Cristo Eres Tu",
           "requires_translation": false,
-          "projection_notes": "Letras en español. Cambiar a inglés en coro de song 2.",
-          "sound_notes": "Subir monitor del vocalista principal en Song 1."
-        },
-        {
-          "title": "Bienvenida y Oración",
-          "segment_type": "Bienvenida",
-          "order": 2,
-          "start_time": "19:30",
-          "duration_min": 10,
-          "presenter": "Pastor Juan M.",
-          "color_code": "default",
-          "requires_translation": true,
-          "translation_mode": "InPerson",
-          "translator_name": "Sarah J."
-        },
-        {
-          "title": "Mensaje Principal",
-          "segment_type": "Plenaria",
-          "order": 3,
-          "start_time": "19:40",
-          "duration_min": 45,
-          "presenter": "Dr. Juan Pérez",
-          "message_title": "Expandiendo el Reino",
-          "scripture_references": "Habacuc 2:2-3; Isaías 54:2",
-          "color_code": "preach",
-          "stage_call_offset_min": 10,
-          "requires_translation": true,
-          "translation_mode": "BoothHeadphones",
-          "translator_name": "Sarah J.",
-          "presentation_url": "https://docs.google.com/presentation/d/...",
-          "notes_url": "https://drive.google.com/file/d/.../notes.pdf",
-          "content_is_slides_only": false,
-          "projection_notes": "Versículos en español e inglés side-by-side.",
-          "sound_notes": "Mic handheld #3. Monitor bajo.",
-          "ushers_notes": "No abrir puertas durante mensaje.",
-          "translation_notes": "Traductor en cabina. Canal 2 para auriculares."
-        },
-        {
-          "title": "Drama: La Encrucijada",
-          "segment_type": "Artes",
-          "order": 4,
-          "start_time": "20:25",
-          "duration_min": 12,
-          "color_code": "special",
-          "art_types": ["DRAMA", "DANCE"],
-          "drama_handheld_mics": 0,
-          "drama_headset_mics": 3,
-          "drama_start_cue": "Luces apagadas, música intro fade in",
-          "drama_end_cue": "Fade to black, 3 sec silence",
-          "drama_has_song": true,
-          "drama_song_title": "Yo Me Rindo",
-          "drama_song_source": "https://youtube.com/watch?v=...",
-          "drama_song_owner": "Ministerio Artes",
-          "drama_song_2_title": "Reckless Love (ES)",
-          "drama_song_2_url": "https://youtube.com/watch?v=...",
-          "drama_song_2_owner": "Ministerio Artes",
-          "dance_has_song": true,
-          "dance_song_title": "Way Maker (Instrumental)",
-          "dance_song_source": "https://spotify.com/track/...",
-          "dance_song_owner": "Equipo Danza",
-          "dance_handheld_mics": 0,
-          "dance_headset_mics": 1,
-          "dance_start_cue": "After drama blackout, 5 sec transition",
-          "dance_end_cue": "Freeze pose, lights fade",
-          "art_other_description": "",
-          "arts_run_of_show_url": "https://drive.google.com/file/d/.../artes_ros.pdf",
-          "sound_notes": "3 headsets for drama. 1 headset for dance lead. Playback from Mac Mini.",
-          "projection_notes": "No slides during drama. Background loop during dance.",
-          "stage_decor_notes": "Remove podium before drama. Place cross prop center stage."
-        },
-        {
-          "title": "Receso",
-          "segment_type": "Break",
-          "order": 5,
-          "start_time": "20:37",
-          "duration_min": 15,
-          "color_code": "break",
-          "major_break": false
-        },
-        {
-          "title": "Panel: El Futuro del Ministerio",
-          "segment_type": "Panel",
-          "order": 6,
-          "start_time": "20:52",
-          "duration_min": 25,
-          "color_code": "preach",
-          "panel_moderators": "Pastor Juan M.",
-          "panel_panelists": "Dr. Pérez, Pastora Ana L., Líder Carlos G.",
-          "requires_translation": true,
-          "translation_mode": "BoothHeadphones",
-          "translator_name": "Sarah J.",
-          "microphone_assignments": "Handheld #1 moderator, #2-#4 panelists"
-        },
-        {
-          "title": "Video Testimonio",
-          "segment_type": "Video",
-          "order": 7,
-          "start_time": "21:17",
-          "duration_min": 5,
-          "color_code": "tech",
-          "has_video": true,
-          "video_name": "Testimonio_Maria_2025.mp4",
-          "video_location": "Flash Drive A / Carpeta Testimonios",
-          "video_owner": "Equipo Producción",
-          "video_length_sec": 285,
-          "video_url": "https://drive.google.com/file/d/..."
-        },
-        {
-          "title": "Anuncios",
-          "segment_type": "Anuncio",
-          "order": 8,
-          "start_time": "21:22",
-          "duration_min": 5,
-          "presenter": "MC Daniela",
-          "color_code": "default",
-          "announcement_title": "Inscripción Talleres Sábado",
-          "announcement_description": "Recuerden inscribirse en la mesa de registro para los talleres de mañana sábado.",
-          "announcement_date": "2025-10-16",
-          "announcement_tone": "Energetic"
-        },
-        {
-          "title": "Cierre y Oración",
-          "segment_type": "Cierre",
-          "order": 9,
-          "start_time": "21:27",
-          "duration_min": 3,
-          "presenter": "Pastor Juan M.",
-          "color_code": "default"
-        }
-      ]
-    },
-    {
-      "name": "Sesión 2: Talleres Sábado AM",
-      "date": "2025-10-16",
-      "planned_start_time": "09:00",
-      "planned_end_time": "12:00",
-      "order": 2,
-      "session_color": "green",
-      "is_translated_session": false,
-      "segments": [
-        {
-          "title": "Talleres Simultáneos",
-          "segment_type": "Breakout",
-          "order": 1,
-          "start_time": "09:30",
-          "duration_min": 90,
-          "color_code": "break",
-          "breakout_rooms": [
+          "segment_actions": [
             {
-              "room_id": "uuid-room-salon-a",
-              "topic": "Liderazgo Transformacional",
-              "hosts": "Pastor Pedro L.",
-              "speakers": "Dr. Juan Pérez",
-              "general_notes": "Proyector y micrófono de mano.",
-              "other_notes": "Sillas en semicírculo.",
-              "requires_translation": true,
-              "translation_mode": "InPerson",
-              "translator_name": "Sarah J."
-            },
-            {
-              "room_id": "uuid-room-salon-b",
-              "topic": "Finanzas del Reino",
-              "hosts": "Pastora Ana L.",
-              "speakers": "Líder Carlos G.",
-              "general_notes": "Necesita pizarra.",
-              "requires_translation": false
+              "label": "Equipo debe estar listo para iniciar",
+              "department": "Coordinador",
+              "timing": "before_start",
+              "offset_min": 2,
+              "is_prep": true,
+              "is_required": false
             }
           ]
         },
         {
-          "title": "Almuerzo",
-          "segment_type": "Almuerzo",
+          "title": "BIENVENIDA Y ANUNCIOS",
+          "segment_type": "Anuncio",
           "order": 2,
-          "start_time": "11:00",
+          "start_time": "20:00",
+          "duration_min": 5,
+          "color_code": "default",
+          "presenter": "P. Yajardo & Darling Garrido",
+          "requires_translation": true,
+          "translation_mode": "InPerson",
+          "translator_name": "Jeremy Mateo",
+          "projection_notes": "-Conferencia Juntos 2026: \"Amor Que Sana\"\n-Venta de Mercancía\n-Libros de P. Riqui Gell\n-QR CODE Programa",
+          "sound_notes": "2 micrófonos",
+          "ushers_notes": "No colocar púlpito y mesita ya que habrá una presentación de Artes",
+          "segment_actions": [
+            {
+              "label": "MCs listos para salir",
+              "department": "Coordinador",
+              "timing": "before_start",
+              "offset_min": 2,
+              "is_prep": true,
+              "is_required": false
+            }
+          ]
+        },
+        {
+          "title": "OFRENDAS",
+          "segment_type": "Ofrenda",
+          "order": 3,
+          "start_time": "20:05",
+          "duration_min": 10,
+          "color_code": "default",
+          "presenter": "P. Yajardo Garrido",
+          "requires_translation": true,
+          "translation_mode": "InPerson",
+          "translator_name": "Jeremy Mateo",
+          "projection_notes": "QR code de MANERAS DE DAR",
+          "ushers_notes": "Estar listos con canastas",
+          "segment_actions": [
+            {
+              "label": "Tener las canastas listas",
+              "department": "Ujieres",
+              "timing": "before_start",
+              "offset_min": 5,
+              "is_prep": true,
+              "is_required": false
+            }
+          ]
+        },
+        {
+          "title": "PLENARIA #1",
+          "segment_type": "Plenaria",
+          "order": 4,
+          "start_time": "20:15",
+          "duration_min": 60,
+          "color_code": "preach",
+          "presenter": "Pastores Rafael & Maria Isabel Paz",
+          "message_title": "\"CUANDO EL AMOR SANA\" - El Amor Que Restaura",
+          "requires_translation": true,
+          "translation_mode": "RemoteBooth",
+          "projection_notes": "-Proyectar el nombre y título de la plenaria y conferencistas\n-Proyectar citas bíblicas",
+          "sound_notes": "2 micrófonos para Pastores Paz",
+          "stage_decor_notes": "Púlpito y mesita"
+        },
+        {
+          "title": "MINISTRACIÓN",
+          "segment_type": "Ministración",
+          "order": 5,
+          "start_time": "21:15",
+          "duration_min": 15,
+          "color_code": "worship",
+          "presenter": "Pastores Rafael & Maria Isabel Paz"
+        }
+      ]
+    },
+    {
+      "name": "Sábado AM - SESIÓN II",
+      "date": "2026-02-07",
+      "planned_start_time": "09:00",
+      "planned_end_time": "13:00",
+      "order": 2,
+      "session_color": "green",
+      "is_translated_session": true,
+      "default_stage_call_offset_min": 15,
+      "location": "Palabras de Vida Bronx",
+      "admin_team": "Yassiel Santos",
+      "coordinators": "Rita R & Jordan",
+      "sound_team": "Jerry Xelo",
+      "lights_team": "Danny M & Hector M",
+      "video_team": "Rick P",
+      "tech_team": "Rick & Danny",
+      "translation_team": "Jessica & Ana V.",
+      "hospitality_team": "Mercedes García & Verla Solís",
+      "photography_team": "Alexis Polanco",
+      "worship_leader": "Anthony Estrella",
+      "segments": [
+        {
+          "title": "ALABANZA & ADORACIÓN",
+          "segment_type": "Alabanza",
+          "order": 1,
+          "start_time": "09:00",
+          "duration_min": 30,
+          "color_code": "worship",
+          "presenter": "Anthony y Lauren Estrella",
+          "number_of_songs": 3,
+          "song_1_title": "High Praise",
+          "song_2_title": "Yo Te Amo",
+          "song_3_title": "En Tu Presencia",
+          "requires_translation": false,
+          "segment_actions": [
+            {
+              "label": "Equipo de A&A listos para salir",
+              "department": "Coordinador",
+              "timing": "before_start",
+              "offset_min": 2,
+              "is_prep": true,
+              "is_required": false
+            }
+          ]
+        },
+        {
+          "title": "BIENVENIDA Y ANUNCIOS",
+          "segment_type": "Bienvenida",
+          "order": 2,
+          "start_time": "09:30",
+          "duration_min": 10,
+          "color_code": "default",
+          "presenter": "MC: Pastores Luis & Scarlet García (bilingüe)",
+          "requires_translation": true,
+          "translation_mode": "InPerson",
+          "translator_name": "Melodie Espinal",
+          "projection_notes": "-QR code PROGRAMA JUNTOS 2026\n-Venta de Mercancía\n-Libros de P. Riqui Gell\n-ÚNICA 2026 con QR code\n-Programa por sesiones sábado am\n\nMostrar imagen de pastores Riqui & Anamaria Gell cuando los Pastores García los estén presentando",
+          "sound_notes": "2 mics",
+          "ushers_notes": "Colocar púlpito y mesita",
+          "segment_actions": [
+            {
+              "label": "Mcs deben estar listos para salir a la tarima",
+              "department": "Coordinador",
+              "timing": "before_start",
+              "offset_min": 2,
+              "is_prep": true,
+              "is_required": false
+            }
+          ]
+        },
+        {
+          "title": "PLENARIA #2",
+          "segment_type": "Plenaria",
+          "order": 3,
+          "start_time": "09:40",
+          "duration_min": 60,
+          "color_code": "default",
+          "presenter": "Pastores Riqui & Anamaria Gell",
+          "message_title": "\"RESTAURANDO LO QUE ESTÁ ROTO: El Poder del Perdón\"",
+          "requires_translation": true,
+          "translation_mode": "RemoteBooth",
+          "projection_notes": "-Proyectar el nombre y título de la plenaria y conferencistas\n-Proyectar citas bíblicas\n-Material para proyectar",
+          "sound_notes": "Riqui & Anamaria Gell (2 mics)",
+          "stage_decor_notes": "Púlpito y mesita (no sillas altas)"
+        },
+        {
+          "title": "ALMUERZO",
+          "segment_type": "Almuerzo",
+          "order": 4,
+          "start_time": "11:40",
           "duration_min": 60,
           "color_code": "break",
-          "major_break": true,
-          "ushers_notes": "Dirigir a cafetería nivel 1."
+          "major_break": true
+        }
+      ]
+    },
+    {
+      "name": "Sábado PM - SESIÓN III",
+      "date": "2026-02-07",
+      "planned_start_time": "14:15",
+      "planned_end_time": "18:00",
+      "order": 3,
+      "session_color": "orange",
+      "is_translated_session": true,
+      "default_stage_call_offset_min": 15,
+      "location": "Palabras de Vida Bronx",
+      "admin_team": "Yassiel Santos",
+      "coordinators": "Rita R & Sarai",
+      "sound_team": "Kelbin Fabian",
+      "lights_team": "Danny M & Hector M",
+      "video_team": "Rick P.",
+      "tech_team": "Rick & Danny",
+      "translation_team": "Ana V. & Jessica",
+      "photography_team": "Cristina Rosario",
+      "worship_leader": "Anthony Estrella",
+      "segments": [
+        {
+          "title": "SESIONES GRUPALES (I, II & III)",
+          "segment_type": "Breakout",
+          "order": 1,
+          "start_time": "14:15",
+          "duration_min": 50,
+          "color_code": "default",
+          "breakout_rooms": [
+            {
+              "topic": "\"SANANDO DESDE EL LIDERAZGO\" - Hombres",
+              "hosts": "P. Yajardo Garrido",
+              "speakers": "PASTORES RAFAEL & MARIA ISABEL PAZ",
+              "general_notes": "Coord: RITA RODRÍGUEZ",
+              "requires_translation": true,
+              "translation_mode": "RemoteBooth",
+              "translator_name": "Jeremy Mateo"
+            },
+            {
+              "topic": "\"SANANDO DESDE LA TERNURA\" - Mujeres",
+              "hosts": "P. Darling Garrido",
+              "speakers": "PASTORES RIQUI & ANAMARIA GELL",
+              "general_notes": "COORD.: SARAI MATEO",
+              "requires_translation": true,
+              "translation_mode": "RemoteBooth",
+              "translator_name": "Ana V. Marcelo"
+            },
+            {
+              "topic": "\"SANANDO DESDE EL PRINCIPIO\"",
+              "hosts": "Pastores Luis & Scarlet García",
+              "speakers": "Pastores Luis & Scarlet García",
+              "general_notes": "COORD.: RITA RODRÍGUEZ",
+              "requires_translation": true,
+              "translation_mode": "InPerson",
+              "translator_name": "Pastores García"
+            }
+          ],
+          "segment_actions": [
+            {
+              "label": "Confirmar Musica de presentadores",
+              "department": "Coordinador",
+              "timing": "before_start",
+              "offset_min": 5,
+              "is_prep": true,
+              "is_required": false
+            },
+            {
+              "label": "MCs en las sesiones grupales",
+              "department": "Coordinador",
+              "timing": "before_start",
+              "offset_min": 5,
+              "is_prep": true,
+              "is_required": false,
+              "notes": "SANTUARIO: MC P. Darling Garrido/ ÁREA ABIERTA: MC P. Yajardo Garrido"
+            }
+          ]
+        },
+        {
+          "title": "Importante: TODOS AL SANTUARIO",
+          "segment_type": "Especial",
+          "order": 2,
+          "start_time": "15:05",
+          "duration_min": 10,
+          "color_code": "special",
+          "presenter": "Santuario: P. Darling G | Nivel Infer: P. Yajardo G. | Cuarto 3: P. Luis G."
+        },
+        {
+          "title": "Conversación del Corazón",
+          "segment_type": "Dinámica",
+          "order": 3,
+          "start_time": "15:15",
+          "duration_min": 15,
+          "color_code": "default",
+          "projection_notes": "Proyectar título \"Conversación del Corazón\"",
+          "segment_actions": [
+            {
+              "label": "Pastores Gerónimo deben subir",
+              "department": "Coordinador",
+              "timing": "before_start",
+              "offset_min": 3,
+              "is_prep": true,
+              "is_required": false,
+              "notes": "Presentar plenaria #5"
+            }
+          ]
         }
       ]
     }
