@@ -911,9 +911,11 @@ export default function SchemaGuide() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-500 mb-4">
-                Este ejemplo incluye un evento completo con 2 sesiones y segmentos de todos los tipos principales:
-                Alabanza (3 canciones con claves), Bienvenida con traducción InPerson, Plenaria con slides y notas,
-                Artes (Drama+Danza con canciones y cues), Break, Panel, Video, Anuncio con tono, Cierre, Breakout con traducción por sala, y Almuerzo.
+                Datos reales de la conferencia <strong>Juntos 2026 — "Amor Que Sana"</strong> (Feb 6–7, 2026, PDV Bronx). 
+                Incluye 3 sesiones: Viernes PM (Alabanza, Anuncios con traducción InPerson, Ofrenda, Plenaria con traducción RemoteBooth, Ministración), 
+                Sábado AM (Alabanza bilingüe, Bienvenida, Plenaria, Almuerzo), 
+                y Sábado PM (Breakout con 3 salas con traducción por sala, Especial, Dinámica). 
+                Muestra equipos reales, acciones de segmento, notas departamentales, y configuración de traducción mixta.
               </p>
               <div className="flex gap-2 mb-4">
                 <Button onClick={copyJson} variant="outline" size="sm" className="gap-2">
