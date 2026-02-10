@@ -123,28 +123,10 @@ export default function EventDetail() {
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: allSessions = [] } = useQuery({
-    queryKey: ['allSessions', eventId],
-    queryFn: () => base44.entities.Session.filter({ event_id: eventId }, 'order'),
-    enabled: !!eventId,
-    staleTime: 5 * 60 * 1000,
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: allSegments = [] } = useQuery({
-    queryKey: ['allSegments', eventId, sessionIdsKey],
-    queryFn: async () => {
-      // DEV-ONLY: Uncomment to verify refetch after mutations
-      // console.log('[EventDetail] allSegments queryFn RUNNING', { eventId, sessionIdsKey, timestamp: new Date().toISOString() });
-      if (sessions.length === 0) return [];
-      const sessionIds = sessions.map(s => s.id);
-      const response = await base44.functions.invoke('getSegmentsBySessionIds', { sessionIds });
-      return response.data.segments || [];
-    },
-    enabled: !!eventId && sessions.length > 0,
-    staleTime: 5 * 60 * 1000,
-    placeholderData: (previousData) => previousData,
-  });
+  // CLEANUP (2026-02-10): allSessions and allSegments were duplicate queries of sessionsRaw/segments.
+  // EventCalendar now receives the same shared data. Zero API calls saved per render.
+  const allSessions = sessions;
+  const allSegments = segments;
 
   if (isLoading) {
     return (

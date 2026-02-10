@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Clock, MapPin, Users, Languages, Mic, ChevronDown, ChevronUp, Filter, List, ListChecks, BookOpen, BellRing, Sparkles, History, Tv } from "lucide-react";
+import { Calendar, Clock, History, Tv } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
@@ -9,13 +9,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { formatTimeToEST, formatTimestampToEST, formatDateET } from "../components/utils/timeFormat";
-import { normalizeName } from "@/components/utils/textNormalization";
 import StructuredVersesModal from "@/components/service/StructuredVersesModal";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
-import PublicProgramSegment from "@/components/service/PublicProgramSegment";
-import LiveStatusCard from "@/components/service/LiveStatusCard";
 import LiveTimeAdjustmentModal from "@/components/service/LiveTimeAdjustmentModal";
 import TimeAdjustmentHistoryModal from "@/components/service/TimeAdjustmentHistoryModal";
 
@@ -61,9 +57,7 @@ export default function PublicProgramView() {
   const [viewType, setViewType] = useState(preloadedServiceId || preloadedDate ? "service" : "event");
   const [selectedEventId, setSelectedEventId] = useState(preloadedEventId);
   const [selectedServiceId, setSelectedServiceId] = useState(preloadedServiceId);
-  const [showEventDetails, setShowEventDetails] = useState(false);
-  const [viewMode, setViewMode] = useState("simple");
-  const [selectedSessionId, setSelectedSessionId] = useState("all");
+  // CLEANUP (2026-02-10): showEventDetails, viewMode, selectedSessionId removed — only used in deleted legacy blocks
   
   // Shared state for both views
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -859,55 +853,7 @@ export default function PublicProgramView() {
 
             {/* Live Admin Controls moved to EventProgramView - LiveDirectorPanel */}
 
-            {/* View Mode and Filters Card - EventProgramView handles this now */}
-            {false && viewType === "event" && (
-              <Card className="bg-white border-2 border-gray-300">
-                <CardHeader className="bg-gray-100 border-b-2 border-gray-300">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Filter className="w-5 h-5" style={{ color: '#1F8A70' }} />
-                      <h3 className="text-lg font-bold uppercase text-gray-900">Vista y Filtros</h3>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setViewMode("simple")}
-                        className="px-3 py-1.5 text-sm rounded-lg font-semibold flex items-center gap-2"
-                        style={viewMode === "simple" ? { backgroundColor: '#1F8A70', color: '#ffffff' } : { backgroundColor: '#ffffff', border: '2px solid #9ca3af', color: '#111827' }}
-                      >
-                        <List className="w-4 h-4" />
-                        Simple
-                      </button>
-                      <button
-                        onClick={() => setViewMode("full")}
-                        className="px-3 py-1.5 text-sm rounded-lg font-semibold flex items-center gap-2"
-                        style={viewMode === "full" ? { backgroundColor: '#1F8A70', color: '#ffffff' } : { backgroundColor: '#ffffff', border: '2px solid #9ca3af', color: '#111827' }}
-                      >
-                        <ListChecks className="w-4 h-4" />
-                        Run of Show
-                      </button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-900">Filtrar por Sesión</label>
-                    <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
-                      <SelectTrigger className="bg-white border-2 border-gray-400 text-gray-900">
-                        <SelectValue className="text-gray-900" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white text-gray-900">
-                        <SelectItem value="all" className="text-gray-900">Todas las Sesiones</SelectItem>
-                        {eventSessions.map((session) => (
-                          <SelectItem key={session.id} value={session.id} className="text-gray-900">
-                            {session.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {/* CLEANUP: Legacy filter card removed (2026-02-10). EventProgramView handles filters internally. */}
 
             {/* Live Time Adjustment Banner */}
             {viewType === "service" && liveAdjustments.length > 0 && liveAdjustments.some(adj => adj.offset_minutes !== 0) && (
@@ -1604,7 +1550,8 @@ export default function PublicProgramView() {
           });
           setVersesModalData({ parsedData: parsed_data, rawText: verse });
           setVersesModalOpen(true);
-          refetchSegments();
+          // BREADCRUMB: refetchSegments was undefined here (dead code path). Use refetchProgram instead.
+          refetchProgram();
         }}
         language={language}
       />

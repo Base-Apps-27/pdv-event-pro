@@ -31,15 +31,7 @@ export default function Reports() {
   const [activeReport, setActiveReport] = useState("detailed");
   const [copySuccess, setCopySuccess] = useState(false);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const isAuthenticated = await base44.auth.isAuthenticated();
-      if (!isAuthenticated) {
-        base44.auth.redirectToLogin();
-      }
-    };
-    checkAuth();
-  }, []);
+  // CLEANUP (2026-02-10): Auth check removed — Layout already gates all non-public pages.
 
   const { data: events = [] } = useQuery({
     queryKey: ['events'],
