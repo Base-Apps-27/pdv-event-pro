@@ -1078,8 +1078,7 @@ export default function PublicProgramView() {
     </div>
   );
 }
-// EOF — Legacy blocks fully removed 2026-02-10.
-                           <span><strong>🚪 Ujieres:</strong> {normalizeName(actualServiceData.ujieres["9:30am"] || actualServiceData.ujieres["11:30am"] || Object.values(actualServiceData.ujieres).find(v => v))}</span>
+// EOF {normalizeName(actualServiceData.ujieres["9:30am"] || actualServiceData.ujieres["11:30am"] || Object.values(actualServiceData.ujieres).find(v => v))}</span>
                          </>
                        )}
                        {actualServiceData.sound && Object.values(actualServiceData.sound).find(v => v) && (
