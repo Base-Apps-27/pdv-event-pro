@@ -1042,13 +1042,9 @@ export default function PublicProgramView() {
                                />
             )}
 
-            {/* CLEANUP (2026-02-10): All legacy {false && ...} rendering blocks removed.
-               Service rendering handled by ServiceProgramView (line ~985).
-               Event rendering handled by EventProgramView (line ~1012). */}
-            {false && null && (
-              // Check for CustomServiceBuilder format (segments array)
-              (actualServiceData.segments && actualServiceData.segments.length > 0) ? (
-              <div className="space-y-6">
+            {/* Legacy blocks removed 2026-02-10 — see AttemptLog */}
+            {false && (
+              <div>
                 {/* Live Status Card for Custom Services */}
                 <LiveStatusCard 
                   segments={actualServiceData.segments || []} 
