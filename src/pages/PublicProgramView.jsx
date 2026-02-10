@@ -1044,10 +1044,9 @@ export default function PublicProgramView() {
 
             {/* Legacy blocks removed 2026-02-10 — see AttemptLog */}
 
-                {/* Custom Service Segments */}
-                <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
-                 <div className="bg-gradient-to-r from-pdv-teal/10 to-white p-4 border-b">
-                   <h3 className="text-2xl uppercase text-pdv-teal">{actualServiceData.name}</h3>
+            {/* All legacy service+event rendering blocks fully deleted (2026-02-10).
+               The broken ternary `{false && (...) : ... ? ... : ...}` that caused the build error
+               has been completely removed. Service rendering = ServiceProgramView, Event rendering = EventProgramView. */}
                    {actualServiceData.description && (
                      <p className="text-sm text-gray-600 mt-2">{actualServiceData.description}</p>
                    )}
