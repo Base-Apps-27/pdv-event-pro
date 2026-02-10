@@ -1078,23 +1078,7 @@ export default function PublicProgramView() {
     </div>
   );
 }
-// EOF - PublicProgramView cleaned 2026-02-10
-
-                         <>
-                           <span className="text-gray-400">|</span>
-                           <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["9:30am"] || actualServiceData.luces["11:30am"] || Object.values(actualServiceData.luces).find(v => v))}</span>
-                         </>
-                       )}
-                       {actualServiceData.fotografia && Object.values(actualServiceData.fotografia).find(v => v) && (
-                         <>
-                           <span className="text-gray-400">|</span>
-                           <span><strong>📸 Foto:</strong> {normalizeName(actualServiceData.fotografia["9:30am"] || actualServiceData.fotografia["11:30am"] || Object.values(actualServiceData.fotografia).find(v => v))}</span>
-                         </>
-                       )}
-                     </div>
-                   )}
-                 </div>
-                  <div className="divide-y divide-gray-200">
+// EOF
                     {actualServiceData.segments.filter(seg => seg.type !== 'break').map((segment, idx) => (
                       <PublicProgramSegment
                         key={segment.id || idx}
