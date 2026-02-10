@@ -2320,24 +2320,6 @@ Return ONLY valid JSON:
                     </div>
                   )}
 
-                  {segment.data?.ushers_notes && (
-                    <div className="print-note-ushers-team">
-                      <strong>🚪 Ujieres:</strong> {segment.data.ushers_notes}
-                    </div>
-                  )}
-
-                  {segment.data?.translation_notes && (
-                    <div className="print-note-translation-team">
-                      <strong>🌐 Traducción:</strong> {segment.data.translation_notes}
-                    </div>
-                  )}
-
-                  {segment.data?.stage_decor_notes && (
-                    <div className="print-note-stage-team">
-                      <strong>🎨 Stage:</strong> {segment.data.stage_decor_notes}
-                    </div>
-                  )}
-
                   {segment.actions && segment.actions.length > 0 && (
                     <div className="print-note-coordinator-actions">
                       {segment.actions.map((action, aIdx) => {
