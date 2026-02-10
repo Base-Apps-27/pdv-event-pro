@@ -1078,13 +1078,7 @@ export default function PublicProgramView() {
     </div>
   );
 }
-// EOF - PublicProgramView cleaned 2026-02-10
-                         <>
-                           <span className="text-gray-400">|</span>
-                           <span><strong>🔊 Sonido:</strong> {normalizeName(actualServiceData.sound["9:30am"] || actualServiceData.sound["11:30am"] || Object.values(actualServiceData.sound).find(v => v))}</span>
-                         </>
-                       )}
-                       {actualServiceData.luces && Object.values(actualServiceData.luces).find(v => v) && (
+// EOF - PublicProgramView cleaned 2026-02-10 && Object.values(actualServiceData.luces).find(v => v) && (
                          <>
                            <span className="text-gray-400">|</span>
                            <span><strong>💡 Luces:</strong> {normalizeName(actualServiceData.luces["9:30am"] || actualServiceData.luces["11:30am"] || Object.values(actualServiceData.luces).find(v => v))}</span>
