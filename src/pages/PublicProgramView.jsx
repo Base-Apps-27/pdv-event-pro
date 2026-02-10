@@ -1079,7 +1079,7 @@ export default function PublicProgramView() {
   );
 }
 // EOF - PublicProgramView cleaned 2026-02-10
-                       {actualServiceData.sound && Object.values(actualServiceData.sound).find(v => v) && (
+/* ALL ORPHAN LEGACY CODE BELOW THIS LINE WAS DELETED 2026-02-10 */
                          <>
                            <span className="text-gray-400">|</span>
                            <span><strong>🔊 Sonido:</strong> {normalizeName(actualServiceData.sound["9:30am"] || actualServiceData.sound["11:30am"] || Object.values(actualServiceData.sound).find(v => v))}</span>
