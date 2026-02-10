@@ -1078,7 +1078,7 @@ export default function PublicProgramView() {
     </div>
   );
 }
-// EOF {normalizeName(actualServiceData.ujieres["9:30am"] || actualServiceData.ujieres["11:30am"] || Object.values(actualServiceData.ujieres).find(v => v))}</span>
+// EOF - PublicProgramView cleaned 2026-02-10
                          </>
                        )}
                        {actualServiceData.sound && Object.values(actualServiceData.sound).find(v => v) && (
