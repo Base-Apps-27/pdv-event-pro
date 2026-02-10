@@ -1046,7 +1046,6 @@ export default function PublicProgramView() {
 
             {/* All legacy service+event rendering blocks fully deleted (2026-02-10).
                Service rendering = ServiceProgramView, Event rendering = EventProgramView. */}
-                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
                        {actualServiceData.coordinators && Object.values(actualServiceData.coordinators).find(v => v) && (
                          <span><strong>👤 Coord:</strong> {normalizeName(actualServiceData.coordinators["9:30am"] || actualServiceData.coordinators["11:30am"] || Object.values(actualServiceData.coordinators).find(v => v))}</span>
                        )}
