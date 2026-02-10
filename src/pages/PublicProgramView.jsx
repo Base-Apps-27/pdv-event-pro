@@ -1043,14 +1043,6 @@ export default function PublicProgramView() {
             )}
 
             {/* Legacy blocks removed 2026-02-10 — see AttemptLog */}
-            {false && (
-              <div>
-                {/* Live Status Card for Custom Services */}
-                <LiveStatusCard 
-                  segments={actualServiceData.segments || []} 
-                  currentTime={currentTime}
-                  onScrollTo={scrollToSegment}
-                />
 
                 {/* Custom Service Segments */}
                 <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
