@@ -5,16 +5,14 @@ import { Calendar, Clock, History, Tv } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatTimeToEST, formatTimestampToEST, formatDateET } from "../components/utils/timeFormat";
 import StructuredVersesModal from "@/components/service/StructuredVersesModal";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import LiveTimeAdjustmentModal from "@/components/service/LiveTimeAdjustmentModal";
 import TimeAdjustmentHistoryModal from "@/components/service/TimeAdjustmentHistoryModal";
-
 import { hasPermission } from "@/components/utils/permissions";
 import { useSegmentNotifications } from "@/components/service/useSegmentNotifications";
 import ServiceProgramView from "@/components/service/ServiceProgramView";
