@@ -1078,8 +1078,7 @@ export default function PublicProgramView() {
     </div>
   );
 }
-// EOF
-                    {actualServiceData.segments.filter(seg => seg.type !== 'break').map((segment, idx) => (
+// EOF - all orphan code removed
                       <PublicProgramSegment
                         key={segment.id || idx}
                         segment={segment}
