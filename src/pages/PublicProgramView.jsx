@@ -1078,10 +1078,7 @@ export default function PublicProgramView() {
     </div>
   );
 }
-// EOF — Legacy blocks fully removed 2026-02-10. Previous dead ternary caused build error at line 1119.
-// SENTINEL: Do not add code below this line. If you see orphan JSX fragments below, delete them. && Object.values(actualServiceData.ujieres).find(v => v) && (
-                         <>
-                           <span className="text-gray-400">|</span>
+// EOF — Legacy blocks fully removed 2026-02-10.
                            <span><strong>🚪 Ujieres:</strong> {normalizeName(actualServiceData.ujieres["9:30am"] || actualServiceData.ujieres["11:30am"] || Object.values(actualServiceData.ujieres).find(v => v))}</span>
                          </>
                        )}
