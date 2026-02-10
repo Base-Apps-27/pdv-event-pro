@@ -1045,9 +1045,8 @@ export default function PublicProgramView() {
             {/* Legacy blocks removed 2026-02-10 — see AttemptLog */}
 
             {/* All legacy service+event rendering blocks fully deleted (2026-02-10).
-               The broken ternary `{false && (...) : ... ? ... : ...}` that caused the build error
-               has been completely removed. Service rendering = ServiceProgramView, Event rendering = EventProgramView. */}
-                   {actualServiceData.description && (
+               The broken ternary that caused the build error has been completely removed.
+               Service rendering = ServiceProgramView, Event rendering = EventProgramView. */}
                      <p className="text-sm text-gray-600 mt-2">{actualServiceData.description}</p>
                    )}
                    {/* Team Info - Compact */}
