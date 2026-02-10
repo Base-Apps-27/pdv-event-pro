@@ -1045,12 +1045,7 @@ export default function PublicProgramView() {
             {/* Legacy blocks removed 2026-02-10 — see AttemptLog */}
 
             {/* All legacy service+event rendering blocks fully deleted (2026-02-10).
-               The broken ternary that caused the build error has been completely removed.
                Service rendering = ServiceProgramView, Event rendering = EventProgramView. */}
-                     <p className="text-sm text-gray-600 mt-2">{actualServiceData.description}</p>
-                   )}
-                   {/* Team Info - Compact */}
-                   {(actualServiceData.coordinators || actualServiceData.ujieres || actualServiceData.sound || actualServiceData.luces) && (
                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-700">
                        {actualServiceData.coordinators && Object.values(actualServiceData.coordinators).find(v => v) && (
                          <span><strong>👤 Coord:</strong> {normalizeName(actualServiceData.coordinators["9:30am"] || actualServiceData.coordinators["11:30am"] || Object.values(actualServiceData.coordinators).find(v => v))}</span>
