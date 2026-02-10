@@ -1079,8 +1079,6 @@ export default function PublicProgramView() {
   );
 }
 // EOF - PublicProgramView cleaned 2026-02-10
-                         </>
-                       )}
                        {actualServiceData.sound && Object.values(actualServiceData.sound).find(v => v) && (
                          <>
                            <span className="text-gray-400">|</span>
