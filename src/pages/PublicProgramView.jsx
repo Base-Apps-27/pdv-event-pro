@@ -1044,10 +1044,42 @@ export default function PublicProgramView() {
 
             {/* Legacy blocks removed 2026-02-10 — see AttemptLog */}
 
-            {/* All legacy service+event rendering blocks fully deleted (2026-02-10).
-               Service rendering = ServiceProgramView, Event rendering = EventProgramView. */}
-                       )}
-                       {actualServiceData.ujieres && Object.values(actualServiceData.ujieres).find(v => v) && (
+            {viewType === "event" && filteredSessions.length === 0 && (
+                  <Card className="p-12 text-center bg-white border-2 border-gray-300">
+                <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">{t('public.noSessions')}</p>
+              </Card>
+            )}
+          </>
+        )}
+
+        {!selectedEventId && !selectedServiceId && (
+          <Card className="p-12 text-center bg-white border-dashed border-2 border-gray-400">
+            <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">{viewType === 'event' ? t('public.selectPromptEvent') : t('public.selectPromptService')}</p>
+          </Card>
+        )}
+      </div>
+
+      <StructuredVersesModal open={versesModalOpen} onOpenChange={setVersesModalOpen} parsedData={versesModalData.parsedData} rawText={versesModalData.rawText} language={language} />
+      <VerseParserDialog open={verseParserOpen} onOpenChange={setVerseParserOpen} initialText={verseParserInitial} onSave={async ({ parsed_data, verse }) => { if (!verseParserSegment) return; await base44.entities.Segment.update(verseParserSegment.id, { scripture_references: verse, parsed_verse_data: parsed_data }); setVersesModalData({ parsedData: parsed_data, rawText: verse }); setVersesModalOpen(true); refetchProgram(); }} language={language} />
+      <LiveTimeAdjustmentModal isOpen={timeAdjustmentModalOpen} onClose={() => { setTimeAdjustmentModalOpen(false); setAdjustmentModalTimeSlot(null); setCurrentAdjustment(null); }} timeSlot={adjustmentModalTimeSlot} currentOffset={currentAdjustment?.offset_minutes || 0} onSave={handleSaveTimeAdjustment} serviceTime={actualServiceData?.time} />
+      <TimeAdjustmentHistoryModal isOpen={historyModalOpen} onClose={() => setHistoryModalOpen(false)} logs={adjustmentLogs} selectedDate={rawServiceData?.date ? formatDateET(rawServiceData.date) : ''} />
+      {currentUser && hasPermission(currentUser, 'view_live_chat') && (viewType === "event" ? selectedEvent : selectedService) && (
+        <LiveOperationsChat currentUser={currentUser} contextType={viewType} contextId={viewType === "event" ? selectedEventId : selectedServiceId} contextDate={viewType === "event" ? selectedEvent?.end_date : rawServiceData?.date} contextName={viewType === "event" ? selectedEvent?.name : selectedService?.name} isOpen={chatOpen} onToggle={setChatOpen} onUnreadCountChange={setChatUnreadCount} hideTrigger={true} />
+      )}
+      <div style={gradientStyle} className="mt-12 py-6">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" className="w-12 h-12 mx-auto mb-3" />
+          <p className="text-white font-semibold text-lg tracking-wide uppercase">¡Atrévete a cambiar!</p>
+          <p className="text-white text-sm mt-2">Palabras de Vida</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+// EOF — Legacy blocks fully removed 2026-02-10. Previous dead ternary caused build error at line 1119.
+// SENTINEL: Do not add code below this line. If you see orphan JSX fragments below, delete them. && Object.values(actualServiceData.ujieres).find(v => v) && (
                          <>
                            <span className="text-gray-400">|</span>
                            <span><strong>🚪 Ujieres:</strong> {normalizeName(actualServiceData.ujieres["9:30am"] || actualServiceData.ujieres["11:30am"] || Object.values(actualServiceData.ujieres).find(v => v))}</span>
