@@ -399,7 +399,7 @@ export default function DirectorTimeline({
             
             let cardClass = 'p-3 rounded-lg border transition-colors ';
             if (status === 'active') cardClass += 'bg-amber-900/40 border-amber-500';
-            else if (status === 'held') cardClass += 'bg-purple-900/40 border-purple-500';
+            else if (status === 'held') cardClass += 'bg-teal-900/40 border-teal-500';
             else if (status === 'completed') cardClass += 'bg-green-900/20 border-green-700';
             else if (status === 'skipped') cardClass += 'opacity-40 bg-slate-800 border-slate-700';
             else cardClass += 'bg-slate-800 border-slate-700';
@@ -410,7 +410,7 @@ export default function DirectorTimeline({
                   <div className="flex items-center gap-2">
                     {status === 'completed' && <CheckCircle2 className="w-4 h-4 text-green-500" />}
                     {status === 'active' && <Radio className="w-4 h-4 text-amber-500 animate-pulse" />}
-                    {status === 'held' && <Hand className="w-4 h-4 text-purple-500" />}
+                    {status === 'held' && <Hand className="w-4 h-4 text-teal-500" />}
                     {status === 'pending' && <Clock className="w-4 h-4 text-slate-500" />}
                     <span className="text-sm font-medium text-white">{segment.title}</span>
                   </div>
