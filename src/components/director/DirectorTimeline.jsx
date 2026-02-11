@@ -440,7 +440,7 @@ export default function DirectorTimeline({
                       variant="outline"
                       onClick={() => handlePlaceHold(segment)}
                       disabled={isLoading}
-                      className="flex-1 border-purple-700 text-purple-400 text-xs"
+                      className="flex-1 border-teal-700 text-teal-400 hover:bg-teal-900/30 text-xs"
                     >
                       <Hand className="w-3 h-3 mr-1" /> Hold
                     </Button>
