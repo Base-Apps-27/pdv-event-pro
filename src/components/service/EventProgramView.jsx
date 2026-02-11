@@ -208,9 +208,9 @@ export default function EventProgramView({
         </div>
 
         {/* Director Console Entry - Permission Gated */}
-        {hasPermission(currentUser, 'manage_live_director') && selectedSessionId !== "all" && (
+        {hasPermission(currentUser, 'manage_live_director') && eventSessions.length > 0 && (
           <Link
-            to={createPageUrl('DirectorConsole') + `?sessionId=${selectedSessionId}`}
+            to={createPageUrl('DirectorConsole') + `?sessionId=${selectedSessionId !== "all" ? selectedSessionId : eventSessions[0]?.id}`}
             className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-md font-semibold bg-red-600 hover:bg-red-700 text-white transition-all shrink-0"
           >
             <Radio className="w-3.5 h-3.5" />
