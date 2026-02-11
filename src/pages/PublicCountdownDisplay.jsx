@@ -184,12 +184,28 @@ export default function PublicCountdownDisplay() {
       return { currentSegment: null, nextSegment: null, preLaunchSegment: null, upcomingSegments: [] };
     }
 
-    // Filter out breaks, require start_time
+    // Filter out breaks, skipped segments, and require start_time
+    // Use actual_start_time if available (Live Director adjusted), else start_time
     const validSegments = segments
-      .filter(s => s.start_time && s.segment_type !== 'Break' && s.segment_type !== 'break')
+      .filter(s => {
+        // Skip segments marked as skipped by Live Director
+        if (s.live_status === 'skipped') return false;
+        // Require a start time (planned or actual)
+        const hasTime = s.actual_start_time || s.start_time;
+        if (!hasTime) return false;
+        // Filter out breaks
+        if (s.segment_type === 'Break' || s.segment_type === 'break') return false;
+        return true;
+      })
+      .map(s => ({
+        ...s,
+        // Use actual times if available (Live Director adjusted)
+        _effectiveStart: s.actual_start_time || s.start_time,
+        _effectiveEnd: s.actual_end_time || s.end_time
+      }))
       .sort((a, b) => {
-        const tA = getTimeDate(a.start_time);
-        const tB = getTimeDate(b.start_time);
+        const tA = getTimeDate(a._effectiveStart);
+        const tB = getTimeDate(b._effectiveStart);
         if (!tA && !tB) return 0;
         if (!tA) return 1;
         if (!tB) return -1;
@@ -200,23 +216,27 @@ export default function PublicCountdownDisplay() {
       return { currentSegment: null, nextSegment: null, preLaunchSegment: null, upcomingSegments: [] };
     }
 
-    // Find current: segment where start <= now <= end
+    // Find current: segment where start <= now <= end (using effective times)
     const current = validSegments.find(s => {
-      const start = getTimeDate(s.start_time, s.date);
-      const end = s.end_time ? getTimeDate(s.end_time, s.date) : (start ? new Date(start.getTime() + (s.duration_min || 0) * 60000) : null);
+      const start = getTimeDate(s._effectiveStart, s.date);
+      const end = s._effectiveEnd ? getTimeDate(s._effectiveEnd, s.date) : (start ? new Date(start.getTime() + (s.duration_min || 0) * 60000) : null);
+      // Also check for "held" segments - they are considered current even if time exceeded
+      if (s.live_hold_status === 'held') return true;
       return start && end && currentTime >= start && currentTime <= end;
     }) || null;
 
     // Find next (single immediate next)
     // Must handle segment dates to correctly find the "next" in absolute time
     const next = validSegments.find(s => {
-      const start = getTimeDate(s.start_time, s.date);
+      if (s === current) return false; // Skip the current segment
+      const start = getTimeDate(s._effectiveStart, s.date);
       return start && start > currentTime;
     }) || null;
 
     // Find all upcoming (for list) - limit to next 5
     const upcoming = validSegments.filter(s => {
-      const start = getTimeDate(s.start_time, s.date);
+      if (s === current) return false;
+      const start = getTimeDate(s._effectiveStart, s.date);
       return start && start > currentTime;
     }).slice(0, 5) || [];
 
@@ -229,7 +249,7 @@ export default function PublicCountdownDisplay() {
        // If no next but we have segments, check if we are before the very first one
        // (Redundant if 'next' covers it, but safe fallback)
        const first = validSegments[0];
-       const firstStart = getTimeDate(first.start_time, first.date);
+       const firstStart = getTimeDate(first._effectiveStart, first.date);
        if (firstStart && currentTime < firstStart) {
          preLaunch = first;
        }
