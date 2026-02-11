@@ -222,19 +222,19 @@ export default function DirectorHoldPanel({
   };
   
   return (
-    <Card className="bg-purple-950 border-purple-700">
+    <Card className="bg-slate-900 border-teal-700/50">
       <CardHeader className="pb-2">
         <CardTitle className="text-white flex items-center gap-2">
-          <Hand className="w-5 h-5 text-purple-400" />
+          <Hand className="w-5 h-5 text-teal-400" />
           {language === 'es' ? 'Hold Activo' : 'Active Hold'}
-          <Badge className="bg-purple-600 ml-2">{heldSegment.title}</Badge>
+          <Badge className="bg-teal-600 hover:bg-teal-700 ml-2">{heldSegment.title}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Step 1: Finalize */}
         {step === 'finalize' && (
           <div className="space-y-4">
-            <p className="text-purple-200 text-sm">
+            <p className="text-slate-300 text-sm">
               {language === 'es' 
                 ? 'El segmento está en hold. Ingresa la hora de finalización real para continuar.'
                 : 'Segment is on hold. Enter the actual end time to continue.'}
@@ -242,20 +242,20 @@ export default function DirectorHoldPanel({
             
             <div className="flex items-end gap-3">
               <div className="flex-1 max-w-48">
-                <Label className="text-purple-200 text-xs">
+                <Label className="text-slate-400 text-xs">
                   {language === 'es' ? 'Hora de Fin Real' : 'Actual End Time'}
                 </Label>
                 <Input
                   value={actualEndTime}
                   onChange={(e) => setActualEndTime(e.target.value)}
                   placeholder="HH:MM"
-                  className="bg-purple-900/50 border-purple-600 text-white font-mono"
+                  className="bg-slate-950 border-teal-700/50 text-white font-mono focus:border-teal-500"
                 />
               </div>
               <Button
                 onClick={() => setActualEndTime(getNowHHMM())}
                 variant="outline"
-                className="border-purple-600 text-purple-200 hover:bg-purple-800"
+                className="border-teal-700/50 text-teal-400 hover:bg-teal-950 hover:text-teal-300"
               >
                 <Clock className="w-4 h-4 mr-1" />
                 {language === 'es' ? 'Ahora' : 'Now'}
@@ -263,7 +263,7 @@ export default function DirectorHoldPanel({
               <Button
                 onClick={handleFinalizeHold}
                 disabled={!actualEndTime || isLoading}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-teal-600 hover:bg-teal-700 text-white"
               >
                 {language === 'es' ? 'Continuar' : 'Continue'}
                 <ArrowRight className="w-4 h-4 ml-1" />
