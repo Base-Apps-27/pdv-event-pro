@@ -29,6 +29,8 @@ import DirectorTimeline from '@/components/director/DirectorTimeline';
 import DirectorHoldPanel from '@/components/director/DirectorHoldPanel';
 import DirectorDriftIndicator from '@/components/director/DirectorDriftIndicator';
 import DirectorPingFeed from '@/components/director/DirectorPingFeed';
+import StickyOpsDeck from '@/components/service/StickyOpsDeck';
+import LiveOperationsChat from '@/components/live/LiveOperationsChat';
 
 /**
  * DirectorConsole - Phase 2 Core
@@ -37,6 +39,32 @@ import DirectorPingFeed from '@/components/director/DirectorPingFeed';
  * Provides real-time segment timing control with hold/finalize/cascade flow.
  * 
  * URL: /DirectorConsole?sessionId=xxx
+ * 
+ * ============================================================================
+ * ARCHITECTURE DECISION: Shared Live Ops Components (2026-02-11)
+ * ============================================================================
+ * 
+ * This page reuses StickyOpsDeck and LiveOperationsChat from the PublicProgramView.
+ * These are the SAME components used in EventProgramView and ServiceProgramView.
+ * 
+ * RATIONALE:
+ * - Single source of truth for chat UI and ops deck behavior
+ * - Directors need the same real-time chat access as coordinators in Live View
+ * - Prevents drift between Director Console and Live View chat experiences
+ * 
+ * INTEGRATION PATTERN:
+ * - StickyOpsDeck receives segments with date, preSessionData, currentTime
+ * - LiveOperationsChat receives contextType="event", contextId=event_id
+ * - Chat visibility state (chatOpen) is lifted to this component
+ * - Both components are permission-gated via hasPermission('view_live_chat')
+ * 
+ * MAINTENANCE NOTE:
+ * - If chat behavior changes in PublicProgramView, it automatically applies here
+ * - If StickyOpsDeck adds features, they appear in both views
+ * - DO NOT create Director-specific chat/ops components without explicit approval
+ * 
+ * See: DecisionLog entry "Shared Live Ops Components Across Views" (2026-02-11)
+ * ============================================================================
  */
 
 export default function DirectorConsole() {
