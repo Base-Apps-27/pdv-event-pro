@@ -1,3 +1,4 @@
+
 import { timeFormatTests } from './timeFormat.test';
 import { segmentDataUtilsTests } from './segmentDataUtils.test';
 import { segmentValidationTests } from './segmentValidation.test';
@@ -6,6 +7,7 @@ import { segmentFlexibilityTests } from './segmentFlexibility.test';
 import { segmentTypeDisplayTests } from './segmentTypeDisplay.test';
 import { segmentNormalizationTests } from './segmentNormalization.test';
 import { permissionsTests } from './permissions.test';
+import { reportHelpersTests } from './reportHelpers.test';
 
 export const ALL_SUITES = [
   { name: 'timeFormat', run: timeFormatTests },
@@ -16,4 +18,5 @@ export const ALL_SUITES = [
   { name: 'segmentTypeDisplay', run: segmentTypeDisplayTests },
   { name: 'segmentNormalization', run: segmentNormalizationTests },
   { name: 'permissions', run: permissionsTests },
+  { name: 'reportHelpers', run: reportHelpersTests },
 ];
