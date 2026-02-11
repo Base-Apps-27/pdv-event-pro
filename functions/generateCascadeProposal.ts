@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     const segmentContext = activeSegments.map(s => {
       const flex = FLEX_SCORES[s.segment_type] || 5;
       const maxCompress = Math.floor((flex / 10) * s.duration_min);
-      return `- ${s.title} (${s.segment_type}, ${s.duration_min}min, planned ${s.planned_start_time}-${s.planned_end_time}, flex=${flex}/10, max_compress=${maxCompress}min)`;
+      return `- id="${s.id}" title="${s.title}" (${s.segment_type}, ${s.duration_min}min, planned ${s.planned_start_time}-${s.planned_end_time}, flex=${flex}/10, max_compress=${maxCompress}min)`;
     }).join('\n');
 
     const reconciledContext = reconciled_segments?.length > 0
@@ -110,7 +110,8 @@ RULES:
 Generate 3 cascade options. For each:
 - Give it a short descriptive label (English) and label_es (Spanish)
 - Brief description (English) and description_es (Spanish) explaining the strategy
-- List each segment with: id, new_start_time (HH:MM), new_end_time (HH:MM), new_duration_min, delta_min (negative = shortened, 0 = unchanged, positive = extended)
+- List each segment using the EXACT id value from above (the string in id="..."). Do NOT use titles or other identifiers.
+- For each segment: id (exact string), new_start_time (HH:MM), new_end_time (HH:MM), new_duration_min, delta_min (negative = shortened, 0 = unchanged, positive = extended)
 - projected_session_end (HH:MM)
 - exceeds_hard_limit (boolean)
 - recovery_min (how many minutes recovered vs simple shift-all)
