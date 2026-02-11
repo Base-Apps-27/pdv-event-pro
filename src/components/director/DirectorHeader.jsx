@@ -184,18 +184,16 @@ export default function DirectorHeader({
             
             {/* Controls */}
             <div className="flex items-center gap-2">
-              {/* Chat link */}
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="border-slate-700 text-slate-300 hover:bg-slate-800"
-              >
-                <Link to={createPageUrl('PublicProgramView') + `?view=event&eventId=${session.event_id}`}>
-                  <MessageSquare className="w-4 h-4 mr-1" />
-                  <span className="hidden sm:inline">{language === 'es' ? 'Chat' : 'Chat'}</span>
-                </Link>
-              </Button>
+              {/* 
+               * REMOVED: Chat link button (2026-02-11)
+               * 
+               * Chat is now integrated via StickyOpsDeck + LiveOperationsChat
+               * in DirectorConsole.js, matching the Live View experience.
+               * 
+               * See Decision: "Shared Live Ops Components Across Views"
+               * 
+               * DO NOT re-add a separate chat trigger here.
+               */}
               
               {/* Lock/Unlock controls */}
               {!isLiveActive && (
