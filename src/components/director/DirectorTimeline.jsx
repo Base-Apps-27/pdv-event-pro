@@ -358,7 +358,7 @@ export default function DirectorTimeline({
                             variant="outline"
                             onClick={() => handlePlaceHold(segment)}
                             disabled={isLoading}
-                            className="border-purple-700 text-purple-400 hover:bg-purple-900/30 text-xs"
+                            className="border-teal-700 text-teal-400 hover:bg-teal-900/30 text-xs"
                           >
                             <Hand className="w-3 h-3 mr-1" />
                             Hold
@@ -377,7 +377,7 @@ export default function DirectorTimeline({
                       )}
                       
                       {status === 'held' && (
-                        <Badge className="bg-purple-600 text-white">
+                        <Badge className="bg-teal-600 text-white hover:bg-teal-700">
                           <Hand className="w-3 h-3 mr-1" />
                           {language === 'es' ? 'En Hold' : 'On Hold'}
                         </Badge>
