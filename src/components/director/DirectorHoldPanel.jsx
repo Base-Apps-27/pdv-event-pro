@@ -223,11 +223,11 @@ export default function DirectorHoldPanel({
   
   return (
     <Card className="bg-slate-900 border-teal-700/50">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 border-b border-teal-900/30">
         <CardTitle className="text-white flex items-center gap-2">
           <Hand className="w-5 h-5 text-teal-400" />
           {language === 'es' ? 'Hold Activo' : 'Active Hold'}
-          <Badge className="bg-teal-600 hover:bg-teal-700 ml-2">{heldSegment.title}</Badge>
+          <Badge className="bg-teal-600/20 text-teal-300 hover:bg-teal-600/30 border border-teal-500/50 ml-2">{heldSegment.title}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
