@@ -18,6 +18,8 @@ export default function RolePermissionManager() {
   const queryClient = useQueryClient();
   const [editingRole, setEditingRole] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // Phase 1: State-driven delete confirmation (2026-02-11)
+  const [roleToDelete, setRoleToDelete] = useState(null);
 
   const allPermissions = getAllPermissionDefinitions();
 
@@ -132,6 +134,32 @@ export default function RolePermissionManager() {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Delete Role Confirmation Dialog — Phase 1 (2026-02-11) */}
+        <Dialog open={!!roleToDelete} onOpenChange={(open) => !open && setRoleToDelete(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>{language === 'es' ? '¿Eliminar este rol?' : 'Delete this role?'}</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-gray-600">
+              {language === 'es' ? 'Esta acción no se puede deshacer.' : 'This action cannot be undone.'}
+            </p>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button variant="outline" onClick={() => setRoleToDelete(null)}>
+                {language === 'es' ? 'Cancelar' : 'Cancel'}
+              </Button>
+              <Button 
+                className="bg-red-600 text-white hover:bg-red-700"
+                onClick={() => {
+                  deleteRoleMutation.mutate(roleToDelete.id);
+                  setRoleToDelete(null);
+                }}
+              >
+                {language === 'es' ? 'Eliminar' : 'Delete'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <div className="grid gap-6">
           {roleTemplates.map((role) => (

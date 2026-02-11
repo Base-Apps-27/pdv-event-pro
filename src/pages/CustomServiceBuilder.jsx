@@ -1360,6 +1360,27 @@ export default function CustomServiceBuilder() {
         </div>
       </div>
 
+      {/* Delete Segment Confirmation Dialog — Phase 1 (2026-02-11) */}
+      <Dialog open={segmentToDelete !== null} onOpenChange={(open) => !open && setSegmentToDelete(null)}>
+        <DialogContent className="max-w-sm bg-white">
+          <DialogHeader>
+            <DialogTitle>¿Eliminar este segmento?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">Esta acción no se puede deshacer.</p>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setSegmentToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={confirmRemoveSegment}
+            >
+              Eliminar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Verse Parser Dialog */}
       <VerseParserDialog
         open={verseParserOpen}

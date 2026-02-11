@@ -2772,7 +2772,7 @@ Return ONLY valid JSON:
           
           {hasPermission(user, 'edit_services') && (
             <Button 
-              onClick={resetToBlueprint}
+              onClick={() => setShowResetConfirm(true)}
               variant="destructive"
               className="border-2 border-red-600 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-semibold px-2"
               title="Restablecer diseño original (Borrar datos)"
@@ -4226,6 +4226,27 @@ Return ONLY valid JSON:
         language="es"
         serviceData={serviceData}
       />
+
+      {/* Reset Blueprint Confirmation Dialog — Phase 1 (2026-02-11) */}
+      <Dialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+        <DialogContent className="max-w-sm bg-white">
+          <DialogHeader>
+            <DialogTitle>Confirmar Restablecimiento</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">¿Estás seguro? Esto restablecerá TODOS los segmentos y campos al diseño original. Se perderán los datos ingresados en los segmentos.</p>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setShowResetConfirm(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={executeResetToBlueprint}
+            >
+              Restablecer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Verse Parser Dialog */}
       <VerseParserDialog
