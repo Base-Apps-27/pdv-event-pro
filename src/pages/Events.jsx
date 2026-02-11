@@ -215,46 +215,48 @@ export default function Events() {
                   </div>
                 )}
 
-                <div className="pt-3 border-t border-gray-200 flex gap-2">
-                  <Link to={createPageUrl(`EventDetail?id=${event.id}`)} className="flex-1">
+                <div className="pt-3 border-t border-gray-200 flex flex-wrap gap-2">
+                  <Link to={createPageUrl(`EventDetail?id=${event.id}`)} className="flex-1 min-w-[100px]">
                     <Button variant="outline" size="sm" className="w-full" style={{ borderColor: '#1F8A70', color: '#1F8A70' }}>
                       {t('events.viewDetails')}
                     </Button>
                   </Link>
-                  {hasPermission(user, 'edit_events') && (
-                    <Button variant="outline" size="sm" onClick={() => openEditDialog(event)}>
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  )}
-                  {hasPermission(user, 'create_events') && (
-                    <>
+                  <div className="flex gap-1 shrink-0">
+                    {hasPermission(user, 'edit_events') && (
+                      <Button variant="outline" size="sm" onClick={() => openEditDialog(event)}>
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {hasPermission(user, 'create_events') && (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setEventToDuplicate(event)}
+                          title={t('events.duplicate')}
+                        >
+                          <Copy className="w-4 h-4 text-blue-500" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setEventToTemplate(event)}
+                          title={t('events.saveAsTemplate')}
+                        >
+                          <Save className="w-4 h-4 text-amber-600" />
+                        </Button>
+                      </>
+                    )}
+                    {hasPermission(user, 'delete_events') && (
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => setEventToDuplicate(event)}
-                        title={t('events.duplicate')}
+                        onClick={() => handleDeleteClick(event)}
                       >
-                        <Copy className="w-4 h-4 text-blue-500" />
+                        <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setEventToTemplate(event)}
-                        title={t('events.saveAsTemplate')}
-                      >
-                        <Save className="w-4 h-4 text-amber-600" />
-                      </Button>
-                    </>
-                  )}
-                  {hasPermission(user, 'delete_events') && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => handleDeleteClick(event)}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>
