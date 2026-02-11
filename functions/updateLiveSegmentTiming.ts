@@ -149,13 +149,38 @@ Deno.serve(async (req) => {
         }), { status: 200 });
 
       } else {
-        // Disabling - capture segment states for undo
+        // ================================================================
+        // DISABLING LIVE MODE
+        // ================================================================
+        // DECISION (2026-02-11): Preserve completed work, abort in-progress.
+        //
+        // Completed segments (have both actual_start_time AND actual_end_time,
+        // or have finalized hold status) keep their timing data — that work
+        // was confirmed by the director and is part of the audit trail.
+        //
+        // In-progress holds (live_hold_status === 'held' but NOT 'finalized')
+        // are aborted: hold status is cleared so the segment returns to its
+        // pre-hold state. The segment keeps its actual_start_time (it was
+        // genuinely started) but the hold metadata is removed.
+        //
+        // Segments that only have actual_start_time but no actual_end_time
+        // (i.e. the "currently active" segment at deactivation) keep their
+        // actual_start_time — they truly did start at that time.
+        // ================================================================
+
         const segments = await base44.asServiceRole.entities.Segment.filter({ session_id: sessionId }, 'order');
+
+        // Snapshot for undo/audit
         const previousSegmentStates = segments.map(seg => ({
           id: seg.id,
           actual_start_time: seg.actual_start_time,
           actual_end_time: seg.actual_end_time,
-          is_live_adjusted: seg.is_live_adjusted
+          is_live_adjusted: seg.is_live_adjusted,
+          live_hold_status: seg.live_hold_status,
+          live_hold_placed_at: seg.live_hold_placed_at,
+          live_hold_placed_by: seg.live_hold_placed_by,
+          live_status: seg.live_status,
+          timing_source: seg.timing_source
         }));
 
         const previousState = {
@@ -165,7 +190,37 @@ Deno.serve(async (req) => {
           segments: previousSegmentStates
         };
 
-        // Update session
+        // Categorize segments and build update operations
+        const abortedHolds = [];
+        const preservedSegments = [];
+        const updateOps = [];
+
+        for (const seg of segments) {
+          const isCompleted = seg.actual_start_time && seg.actual_end_time;
+          const isFinalizedHold = seg.live_hold_status === 'finalized';
+          const isInProgressHold = seg.live_hold_status === 'held' && !isFinalizedHold;
+
+          if (isInProgressHold) {
+            // ABORT: Clear hold metadata. Keep actual_start_time (it really started).
+            abortedHolds.push(seg.id);
+            updateOps.push(
+              base44.asServiceRole.entities.Segment.update(seg.id, {
+                live_hold_status: null,
+                live_hold_placed_at: null,
+                live_hold_placed_by: null
+              })
+            );
+          } else if (isCompleted || isFinalizedHold) {
+            // PRESERVE: This segment's timing is confirmed director work.
+            preservedSegments.push(seg.id);
+            // No update needed — keep everything as-is.
+          }
+          // Pending segments (no actual times) need no changes either.
+        }
+
+        await Promise.all(updateOps);
+
+        // Update session: release director ownership, disable live mode
         await base44.asServiceRole.entities.Session.update(sessionId, {
           live_adjustment_enabled: false,
           live_director_user_id: null,
@@ -174,21 +229,22 @@ Deno.serve(async (req) => {
           last_live_adjustment_time: new Date().toISOString()
         });
 
-        // Reset all segments
-        await Promise.all(segments.map(seg => 
-          base44.asServiceRole.entities.Segment.update(seg.id, {
-            actual_start_time: null,
-            actual_end_time: null,
-            is_live_adjusted: false
-          })
-        ));
-
         await logAction('toggle_live_mode', null, previousState, {
           live_adjustment_enabled: false,
-          segments_reset: true
-        });
+          aborted_holds: abortedHolds,
+          preserved_segments: preservedSegments,
+          segments_reset: false
+        }, abortedHolds.length > 0 
+          ? `Aborted ${abortedHolds.length} in-progress hold(s); preserved ${preservedSegments.length} completed segment(s)` 
+          : `Preserved ${preservedSegments.length} completed segment(s)`
+        );
 
-        return new Response(JSON.stringify({ success: true, enabled: false }), { status: 200 });
+        return new Response(JSON.stringify({ 
+          success: true, 
+          enabled: false,
+          abortedHolds: abortedHolds.length,
+          preservedSegments: preservedSegments.length
+        }), { status: 200 });
       }
     }
 
