@@ -37,6 +37,7 @@ export default function DirectorHeader({
   currentTime,
   isCurrentDirector,
   isLocked,
+  heldSegment,
   onRefetch,
   language
 }) {
