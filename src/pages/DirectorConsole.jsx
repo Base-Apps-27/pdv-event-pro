@@ -82,6 +82,11 @@ export default function DirectorConsole() {
   const [currentUser, setCurrentUser] = useState(null);
   const [userLoading, setUserLoading] = useState(true);
   
+  // Chat state (lifted for StickyOpsDeck + LiveOperationsChat integration)
+  // ARCHITECTURE: Same pattern as EventProgramView - single chat state shared between components
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
+  
   // Update current time every second
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 1000);
