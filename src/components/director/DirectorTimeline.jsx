@@ -212,7 +212,7 @@ export default function DirectorTimeline({
                 // Row styling
                 let rowClass = 'border-b border-slate-800 transition-colors';
                 if (status === 'active') rowClass += ' bg-amber-900/30 border-l-4 border-l-amber-500';
-                else if (status === 'held') rowClass += ' bg-purple-900/30 border-l-4 border-l-purple-500';
+                else if (status === 'held') rowClass += ' bg-teal-900/30 border-l-4 border-l-teal-500';
                 else if (status === 'completed') rowClass += ' bg-green-900/10';
                 else if (status === 'skipped') rowClass += ' opacity-40 line-through';
                 else if (isDownstreamFrozen && status === 'pending') rowClass += ' opacity-50';
@@ -223,7 +223,7 @@ export default function DirectorTimeline({
                     <td className="px-4 py-3">
                       {status === 'completed' && <CheckCircle2 className="w-5 h-5 text-green-500" />}
                       {status === 'active' && <Radio className="w-5 h-5 text-amber-500 animate-pulse" />}
-                      {status === 'held' && <Hand className="w-5 h-5 text-purple-500" />}
+                      {status === 'held' && <Hand className="w-5 h-5 text-teal-500" />}
                       {status === 'skipped' && <SkipForward className="w-5 h-5 text-slate-500" />}
                       {status === 'pending' && <Clock className="w-5 h-5 text-slate-600" />}
                     </td>
