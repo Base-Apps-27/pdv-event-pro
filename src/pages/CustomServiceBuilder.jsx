@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { Calendar, Clock, Save, Plus, Trash2, Printer, ArrowLeft, ChevronUp, ChevronDown, Sparkles, Settings, ArrowUp, ArrowDown } from "lucide-react";
 import AnnouncementListSelector from "@/components/announcements/AnnouncementListSelector";
