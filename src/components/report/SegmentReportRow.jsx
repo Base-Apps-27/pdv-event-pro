@@ -1,47 +1,8 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Languages, Mic, Utensils } from "lucide-react";
-import { formatTimeToEST } from "@/components/utils/timeFormat";
-
-// Helper to calculate action time based on segment timing and offset
-function calculateActionTime(segment, action) {
-  const segmentStart = segment.start_time;
-  const segmentEnd = segment.end_time;
-  if (!segmentStart) return null;
-  
-  const [startH, startM] = segmentStart.split(':').map(Number);
-  const startMinutes = startH * 60 + startM;
-  
-  let endMinutes = startMinutes + (segment.duration_min || 0);
-  if (segmentEnd) {
-    const [endH, endM] = segmentEnd.split(':').map(Number);
-    endMinutes = endH * 60 + endM;
-  }
-  
-  const offset = action.offset_min || 0;
-  let targetMinutes;
-  
-  switch (action.timing) {
-    case 'before_start':
-      targetMinutes = startMinutes - offset;
-      break;
-    case 'after_start':
-      targetMinutes = startMinutes + offset;
-      break;
-    case 'before_end':
-      targetMinutes = endMinutes - offset;
-      break;
-    case 'absolute':
-      return action.absolute_time ? formatTimeToEST(action.absolute_time) : null;
-    default:
-      return null;
-  }
-  
-  if (targetMinutes < 0) targetMinutes += 24 * 60;
-  const h = Math.floor(targetMinutes / 60) % 24;
-  const m = targetMinutes % 60;
-  return formatTimeToEST(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-}
+// Phase 3D: calculateActionTime deduplicated — single source in reportHelpers
+import { calculateActionTime } from "./reportHelpers";
 
 export default function SegmentReportRow({
   segment,

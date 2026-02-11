@@ -11,7 +11,8 @@
  *   calculateActionTimeForPDF(seg, act)
  *   buildDetailsRightCell(seg)
  */
-import { pdfTheme, getSegmentColor, getLabelStyle, toESTTimeStr } from '../pdfThemeSystem';
+// Phase 3 cleanup: removed unused getLabelStyle import
+import { pdfTheme, getSegmentColor, toESTTimeStr } from '../pdfThemeSystem';
 
 // Session color to light background hex mapping for time cell visibility
 export const SESSION_COLOR_BG_MAP = {

@@ -11,7 +11,8 @@
  *   buildPrepActionRow(act, seg)
  *   buildBreakPrepActionRow(act, seg)
  */
-import { pdfTheme, getSegmentColor, toESTTimeStr } from '../pdfThemeSystem';
+// Phase 3 cleanup: removed unused getSegmentColor import
+import { pdfTheme, toESTTimeStr } from '../pdfThemeSystem';
 import { calculateActionTimeForPDF } from './cellBuilders';
 
 export function buildNotesCell(seg) {
