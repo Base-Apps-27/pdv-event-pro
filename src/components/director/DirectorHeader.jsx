@@ -273,9 +273,16 @@ export default function DirectorHeader({
               {language === 'es' ? 'Desactivar Modo Director' : 'Disable Director Mode'}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
+              {heldSegment ? (
+                <span className="block mb-2 text-amber-400 font-medium">
+                  ⚠️ {language === 'es'
+                    ? `"${heldSegment.title}" tiene un Hold activo que será abortado. Los segmentos completados se conservarán.`
+                    : `"${heldSegment.title}" has an active Hold that will be aborted. Completed segments will be preserved.`}
+                </span>
+              ) : null}
               {language === 'es'
-                ? '¿Estás seguro? Los tiempos actuales se mantendrán, pero liberarás el control para que otro usuario pueda tomar el mando.'
-                : 'Are you sure? Current times will be preserved, but you will release control so another user can take over.'}
+                ? 'Los segmentos completados conservarán sus tiempos. Liberarás el control para que otro usuario pueda tomar el mando.'
+                : 'Completed segments will keep their times. You will release control so another user can take over.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
