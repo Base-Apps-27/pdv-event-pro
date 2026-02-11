@@ -349,6 +349,53 @@ export default function DirectorConsole() {
           language={language}
         />
       </div>
+      
+      {/* 
+       * ========================================================================
+       * SHARED LIVE OPS COMPONENTS
+       * ========================================================================
+       * StickyOpsDeck + LiveOperationsChat are the SAME components used in:
+       * - pages/PublicProgramView.js (via EventProgramView / ServiceProgramView)
+       * 
+       * They share the same props interface and behavior.
+       * Chat is scoped to the EVENT context (not session) for continuity.
+       * 
+       * If you modify chat/deck behavior, test BOTH views to prevent drift.
+       * ========================================================================
+       */}
+      
+      {/* StickyOpsDeck - Coordinator Actions + Chat Toggle */}
+      {hasPermission(currentUser, 'view_live_chat') && (
+        <StickyOpsDeck
+          segments={sortedSegments.map(seg => ({ ...seg, date: session?.date }))}
+          preSessionData={null} // Director focuses on session, not pre-session
+          sessionDate={session?.date}
+          currentTime={currentTime}
+          onScrollToSegment={(seg) => {
+            // Scroll to segment in Director Timeline (if element exists)
+            const el = document.getElementById(`director-segment-${seg.id}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
+          onToggleChat={() => setChatOpen(!chatOpen)}
+          chatUnreadCount={chatUnreadCount}
+          chatOpen={chatOpen}
+        />
+      )}
+      
+      {/* LiveOperationsChat - Same component as Live View */}
+      {currentUser && hasPermission(currentUser, 'view_live_chat') && session?.event_id && event && (
+        <LiveOperationsChat
+          currentUser={currentUser}
+          contextType="event"
+          contextId={session.event_id}
+          contextDate={event.end_date}
+          contextName={event.name}
+          isOpen={chatOpen}
+          onToggle={setChatOpen}
+          onUnreadCountChange={setChatUnreadCount}
+          hideTrigger={true} // StickyOpsDeck handles the trigger
+        />
+      )}
     </div>
   );
 }
