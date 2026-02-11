@@ -295,7 +295,7 @@ export default function DirectorHoldPanel({
         {/* Step 2: Reconcile Phantoms */}
         {step === 'reconcile' && (
           <div className="space-y-4">
-            <p className="text-purple-200 text-sm">
+            <p className="text-slate-300 text-sm">
               {language === 'es'
                 ? 'Decide qué hacer con los segmentos que fueron "comidos" por el overrun:'
                 : 'Decide what to do with segments that were "eaten" by the overrun:'}
@@ -305,21 +305,21 @@ export default function DirectorHoldPanel({
               {reconciledSegments.map(seg => {
                 const rigid = seg.flex_score <= 2;
                 return (
-                  <div key={seg.id} className="p-3 bg-slate-900/50 rounded-lg border border-slate-700">
+                  <div key={seg.id} className="p-3 bg-slate-950 rounded-lg border border-slate-800">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-white font-medium">{seg.title}</span>
-                        <Badge variant="outline" className="text-xs border-slate-600 text-slate-400">
+                        <Badge variant="outline" className="text-xs border-slate-700 text-slate-400">
                           {seg.segment_type}
                         </Badge>
                         {rigid && (
-                          <Badge className="bg-red-600 text-white text-xs">
+                          <Badge className="bg-red-900/50 text-red-200 border-red-800 border text-xs">
                             <AlertTriangle className="w-3 h-3 mr-1" />
                             {language === 'es' ? 'Rígido' : 'Rigid'}
                           </Badge>
                         )}
                       </div>
-                      <span className="text-xs text-slate-400">Flex: {seg.flex_score}/10</span>
+                      <span className="text-xs text-slate-500">Flex: {seg.flex_score}/10</span>
                     </div>
                     
                     <RadioGroup
@@ -328,14 +328,14 @@ export default function DirectorHoldPanel({
                       className="flex gap-4"
                     >
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="skip" id={`skip-${seg.id}`} />
-                        <Label htmlFor={`skip-${seg.id}`} className="text-slate-300 text-sm">
+                        <RadioGroupItem value="skip" id={`skip-${seg.id}`} className="border-slate-600 text-teal-500" />
+                        <Label htmlFor={`skip-${seg.id}`} className="text-slate-300 text-sm cursor-pointer hover:text-white">
                           {language === 'es' ? 'Omitir' : 'Skip'}
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="shift" id={`shift-${seg.id}`} />
-                        <Label htmlFor={`shift-${seg.id}`} className="text-slate-300 text-sm">
+                        <RadioGroupItem value="shift" id={`shift-${seg.id}`} className="border-slate-600 text-teal-500" />
+                        <Label htmlFor={`shift-${seg.id}`} className="text-slate-300 text-sm cursor-pointer hover:text-white">
                           {language === 'es' ? 'Mover después' : 'Shift later'}
                         </Label>
                       </div>
@@ -349,13 +349,13 @@ export default function DirectorHoldPanel({
               <Button
                 variant="outline"
                 onClick={() => setStep('finalize')}
-                className="border-slate-600 text-slate-300"
+                className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
               >
                 {language === 'es' ? 'Atrás' : 'Back'}
               </Button>
               <Button
                 onClick={handleReconcileComplete}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-teal-600 hover:bg-teal-700 text-white"
               >
                 {language === 'es' ? 'Ver Opciones de Cascade' : 'View Cascade Options'}
                 <ArrowRight className="w-4 h-4 ml-1" />
@@ -369,14 +369,14 @@ export default function DirectorHoldPanel({
           <div className="space-y-4">
             {loadingCascade ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-                <span className="ml-3 text-purple-200">
+                <Loader2 className="w-8 h-8 text-teal-400 animate-spin" />
+                <span className="ml-3 text-slate-300">
                   {language === 'es' ? 'Generando opciones...' : 'Generating options...'}
                 </span>
               </div>
             ) : (
               <>
-                <p className="text-purple-200 text-sm">
+                <p className="text-slate-300 text-sm">
                   {language === 'es'
                     ? 'Selecciona cómo rebalancear el tiempo restante:'
                     : 'Select how to rebalance the remaining time:'}
@@ -392,13 +392,13 @@ export default function DirectorHoldPanel({
                       key={idx}
                       className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                         selectedCascade === idx 
-                          ? 'bg-purple-900/50 border-purple-500' 
-                          : 'bg-slate-900/50 border-slate-700 hover:border-slate-600'
+                          ? 'bg-teal-950/30 border-teal-500/50' 
+                          : 'bg-slate-950 border-slate-800 hover:border-slate-700'
                       }`}
                       onClick={() => setSelectedCascade(idx)}
                     >
                       <div className="flex items-start gap-3">
-                        <RadioGroupItem value={idx.toString()} id={`cascade-${idx}`} className="mt-1" />
+                        <RadioGroupItem value={idx.toString()} id={`cascade-${idx}`} className="mt-1 border-slate-600 text-teal-500" />
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
                             <Label htmlFor={`cascade-${idx}`} className="text-white font-medium cursor-pointer">
