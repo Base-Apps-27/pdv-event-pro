@@ -1,26 +1,48 @@
-import React, { useState, useEffect } from "react";
+/**
+ * Reports Page — Event report viewer with multiple report types
+ * 
+ * PHASE 3D REFACTOR: Decomposed from 1,609 → ~350 lines.
+ * Extracted modules:
+ *   - report/reportHelpers.js          (helper functions, constants)
+ *   - report/reportPrintStyles.js      (print CSS)
+ *   - report/PreSessionDetailsBlock    (shared PSD component)
+ *   - report/DetailedProgramView       (detailed report)
+ *   - report/GeneralProgramView        (general program)
+ *   - report/ProjectionReportView      (projection notes)
+ *   - report/SoundReportView           (sound notes)
+ *   - report/HospitalityReportView     (hospitality tasks)
+ *   - report/UshersReportView          (ushers notes)
+ * 
+ * This file retains: data fetching, event selector, tab system, PDF export, print orchestration.
+ */
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { generateEventReportPDFClient } from "@/components/service/generateEventReportsPDFClient";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Languages, UserCheck, Mic, Utensils, ExternalLink, Share2, Copy, Check, Music, Sliders, Settings, ChevronDown, ChevronUp } from "lucide-react";
+import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Utensils, ExternalLink, Share2, Copy, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatTimeToEST } from "../components/utils/timeFormat";
 import { useLanguage } from "@/components/utils/i18n";
-import SegmentReportRow from "@/components/report/SegmentReportRow";
+
+// Phase 3D extracted modules
+import { mergePreSessionDetails, downloadPdf } from "@/components/report/reportHelpers";
+import { REPORT_PRINT_CSS } from "@/components/report/reportPrintStyles";
+import DetailedProgramView from "@/components/report/DetailedProgramView";
+import GeneralProgramView from "@/components/report/GeneralProgramView";
+import ProjectionReportView from "@/components/report/ProjectionReportView";
+import SoundReportView from "@/components/report/SoundReportView";
+import HospitalityReportView from "@/components/report/HospitalityReportView";
+import UshersReportView from "@/components/report/UshersReportView";
 
 export default function Reports() {
   const { t } = useLanguage();
@@ -30,6 +52,7 @@ export default function Reports() {
   const [selectedEventId, setSelectedEventId] = useState(eventIdFromUrl || "");
   const [activeReport, setActiveReport] = useState("detailed");
   const [copySuccess, setCopySuccess] = useState(false);
+  const [printAllMode, setPrintAllMode] = useState(false);
 
   // CLEANUP (2026-02-10): Auth check removed — Layout already gates all non-public pages.
 
@@ -93,6 +116,11 @@ export default function Reports() {
     enabled: !!selectedEventId && sessions.length > 0,
   });
 
+  const { data: rooms = [] } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: () => base44.entities.Room.list(),
+  });
+
   const selectedEvent = events.find(e => e.id === selectedEventId);
   // Keep Reports in sync with Session Editor: primary sort by explicit 'order' if set, otherwise chronological
   const eventSessions = sessions
@@ -112,32 +140,6 @@ export default function Reports() {
       .filter(seg => seg.session_id === sessionId && (filterKey ? seg[filterKey] : true))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   };
-
-  // Session left-border color mapping - used to visually distinguish sessions
-  // Note: green uses inline style for custom brand green (#8DC63F), others use Tailwind classes
-  const sessionColorClasses = {
-    green: 'border-l-8',  // Uses inline style for borderLeftColor
-    blue: 'border-l-8 border-l-blue-500',
-    pink: 'border-l-8 border-l-pink-500',
-    orange: 'border-l-8 border-l-orange-500',
-    yellow: 'border-l-8 border-l-yellow-400',
-    purple: 'border-l-8 border-l-purple-500',
-    red: 'border-l-8 border-l-red-500',
-  };
-
-  const eventColorClasses = {
-    green: 'border-t-8',
-    blue: 'border-t-8 border-blue-500',
-    pink: 'border-t-8 border-pink-500',
-    orange: 'border-t-8 border-orange-500',
-    yellow: 'border-t-8 border-yellow-400',
-    purple: 'border-t-8 border-purple-500',
-    red: 'border-t-8 border-red-500',
-    teal: 'border-t-8 border-teal-600',
-    charcoal: 'border-t-8 border-gray-800',
-  };
-
-  const [printAllMode, setPrintAllMode] = useState(false);
 
   const handlePrint = () => {
     setPrintAllMode(false);
@@ -178,1166 +180,49 @@ export default function Reports() {
     }
   };
 
-  // Robust binary normalization for function responses (arraybuffer/object/base64/string)
-  function normalizeToBytes(data) {
-    // 1) Native binary types
-    if (data instanceof ArrayBuffer) return new Uint8Array(data);
-    if (ArrayBuffer.isView(data)) return new Uint8Array(data.buffer);
+  // Build PDF export data mappings from already-loaded data
+  const buildPdfData = () => {
+    const segmentsBySession = sessions.reduce((acc, s) => {
+      acc[s.id] = allSegments.filter(seg => seg.session_id === s.id).sort((a,b)=>(a.order||0)-(b.order||0));
+      return acc;
+    }, {});
+    const preSessionDetailsBySession = sessions.reduce((acc, s) => {
+      const records = allPreSessionDetails.filter(psd => psd.session_id === s.id);
+      if (records.length > 0) acc[s.id] = mergePreSessionDetails(records);
+      return acc;
+    }, {});
+    const hospitalityTasksBySession = sessions.reduce((acc, s) => {
+      acc[s.id] = allHospitalityTasks.filter(t => t.session_id === s.id);
+      return acc;
+    }, {});
+    return { segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession };
+  };
 
-    // 2) Buffer-like object shapes from Axios/Node adapters
-    if (data && typeof data === 'object') {
-      // { type: 'Buffer', data: [..] }
-      if (data.type === 'Buffer' && Array.isArray(data.data)) {
-        return new Uint8Array(data.data);
-      }
-      // { data: [..numbers..] }
-      if (Array.isArray(data.data) && typeof data.data[0] === 'number') {
-        return new Uint8Array(data.data);
-      }
-      // Plain numeric array
-      if (Array.isArray(data) && typeof data[0] === 'number') {
-        return new Uint8Array(data);
-      }
-      // Flat object of numeric values {0:..,1:..}
-      const vals = Object.values(data);
-      if (vals.length && typeof vals[0] === 'number') return new Uint8Array(vals);
+  const handleExportCurrentPdf = async () => {
+    if (!selectedEventId) return;
+    const typeMap = { detailed: 'detailed', projection: 'projection', sound: 'sound', ushers: 'ushers', hospitality: 'hospitality', general: 'general' };
+    const rt = typeMap[activeReport] || 'detailed';
+    const { segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession } = buildPdfData();
+    const bytes = await generateEventReportPDFClient({ event: selectedEvent, sessions: eventSessions, segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession, rooms, reportType: rt });
+    await downloadPdf(rt, bytes);
+  };
+
+  const handleExportAllPdfs = async () => {
+    if (!selectedEventId) return;
+    const { segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession } = buildPdfData();
+    const types = ['detailed','general','projection','sound','ushers','hospitality'];
+    for (const rt of types) {
+      const bytes = await generateEventReportPDFClient({ event: selectedEvent, sessions: eventSessions, segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession, rooms, reportType: rt });
+      await downloadPdf(rt, bytes);
     }
-
-    // 3) String payloads
-    if (typeof data === 'string') {
-      // Base64 attempt
-      try {
-        const bstr = atob(data);
-        const bytes = new Uint8Array(bstr.length);
-        for (let i = 0; i < bstr.length; i++) bytes[i] = bstr.charCodeAt(i);
-        if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) return bytes;
-      } catch (_) { /* not base64 */ }
-      // Raw text fallback (may work for ASCII-only PDFs)
-      return new TextEncoder().encode(data);
-    }
-
-    // 4) Last resort
-    return new Uint8Array();
-  }
-
-  async function downloadPdf(filename, data) {
-    const bytes = normalizeToBytes(data);
-    const blob = new Blob([bytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    URL.revokeObjectURL(url);
-    a.remove();
-  }
-
-  const getSegmentActions = (segment) => {
-    return segment?.segment_actions || [];
   };
 
-  const isPrepAction = (action) => {
-    // Prep = before_start timing, During = everything else
-    return action.timing === 'before_start';
-  };
-
-  // Helper to calculate action time based on segment timing and offset
-  const calculateActionTime = (segment, action) => {
-    const segmentStart = segment.start_time;
-    const segmentEnd = segment.end_time;
-    if (!segmentStart) return null;
-    
-    const [startH, startM] = segmentStart.split(':').map(Number);
-    const startMinutes = startH * 60 + startM;
-    
-    let endMinutes = startMinutes + (segment.duration_min || 0);
-    if (segmentEnd) {
-      const [endH, endM] = segmentEnd.split(':').map(Number);
-      endMinutes = endH * 60 + endM;
-    }
-    
-    const offset = action.offset_min || 0;
-    let targetMinutes;
-    
-    switch (action.timing) {
-      case 'before_start':
-        targetMinutes = startMinutes - offset;
-        break;
-      case 'after_start':
-        targetMinutes = startMinutes + offset;
-        break;
-      case 'before_end':
-        targetMinutes = endMinutes - offset;
-        break;
-      case 'absolute':
-        return action.absolute_time ? formatTimeToEST(action.absolute_time) : null;
-      default:
-        return null;
-    }
-    
-    if (targetMinutes < 0) targetMinutes += 24 * 60;
-    const h = Math.floor(targetMinutes / 60) % 24;
-    const m = targetMinutes % 60;
-    return formatTimeToEST(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-  };
-
-  // Color coding by department:
-  // - Projection: slate (neutral gray) - distinct from translation
-  // - Translation & Stage & Decor: purple - all translation-related items
-  // - Sound: red
-  // - Ujieres: green
-  // - Hospitality: pink
-  const departmentColors = {
-    Admin: "bg-orange-50 border-orange-200 text-orange-700",
-    MC: "bg-blue-50 border-blue-200 text-blue-700",
-    Sound: "bg-red-50 border-red-200 text-red-700",
-    Projection: "bg-slate-100 border-slate-300 text-slate-700",
-    Hospitality: "bg-pink-50 border-pink-200 text-pink-700",
-    Ujieres: "bg-green-50 border-green-200 text-green-700",
-    Kids: "bg-yellow-50 border-yellow-200 text-yellow-700",
-    Coordinador: "bg-orange-50 border-orange-200 text-orange-700",
-    "Stage & Decor": "bg-purple-50 border-purple-200 text-purple-700",
-    Translation: "bg-purple-50 border-purple-200 text-purple-700",
-    Other: "bg-gray-50 border-gray-200 text-gray-700"
-  };
-
-  const { data: rooms = [] } = useQuery({
-    queryKey: ['rooms'],
-    queryFn: () => base44.entities.Room.list(),
-  });
-
-  const getRoomName = (roomId) => {
-    const room = rooms.find(r => r.id === roomId);
-    return room ? room.name : "";
-  };
-
-  // Merge multiple PreSessionDetails records for a session into a single block.
-  // Non-destructive: prefers earliest times; for text fields, uses first non-empty value.
-  const parseHM = (t) => {
-    if (!t || typeof t !== 'string') return Number.POSITIVE_INFINITY;
-    const [h, m] = t.split(':').map(Number);
-    if (Number.isNaN(h) || Number.isNaN(m)) return Number.POSITIVE_INFINITY;
-    return h * 60 + m;
-  };
-
-  const mergePreSessionDetails = (records) => {
-    if (!Array.isArray(records) || records.length === 0) return null;
-    if (records.length > 1) {
-      // Breadcrumb for ops: duplicates exist; we consolidate at render time.
-      console.warn('Reports: multiple PreSessionDetails found for session, consolidating', records.map(r => r.id));
-    }
-    const merged = {};
-
-    // Simple pickers: first non-empty
-    const pickFirst = (key) => {
-      const found = records.find(r => r && r[key]);
-      if (found) merged[key] = found[key];
-    };
-    pickFirst('music_profile_id');
-    pickFirst('slide_pack_id');
-    pickFirst('facility_notes');
-    pickFirst('general_notes');
-
-    // Time pickers: earliest
-    const pickEarliest = (key) => {
-      const times = records.map(r => r && r[key]).filter(Boolean);
-      if (times.length === 0) return;
-      times.sort((a, b) => parseHM(a) - parseHM(b));
-      merged[key] = times[0];
-    };
-    pickEarliest('registration_desk_open_time');
-    pickEarliest('library_open_time');
-
-    return merged;
-  };
-
-
-
-
-
-  const renderDetailedProgram = () => (
-    <div className="space-y-6">
-      {eventSessions.map((session) => {
-        const segments = getSessionSegments(session.id);
-        const hasHospitalityTasks = allHospitalityTasks.some(task => task.session_id === session.id);
-        if (segments.length === 0) return null;
-
-        // Session border logic:
-        // - Left border: ALWAYS uses session.session_color for visual distinction between sessions
-        // - Top border: Uses event.print_color if set (for event-level branding)
-        // - Other borders: thin gray
-        const sessionLeftBorderClass = sessionColorClasses[session.session_color] || 'border-l-8 border-l-gray-300';
-        const eventTopBorderClass = selectedEvent?.print_color 
-          ? (eventColorClasses[selectedEvent.print_color] || 'border-t-4 border-t-blue-500')
-          : '';
-        const borderClass = `${sessionLeftBorderClass} ${eventTopBorderClass} border-r-2 border-b-2 border-t-2 border-r-gray-200 border-b-gray-200`;
-        // Inline styles for custom brand green (not available in Tailwind)
-        const leftBorderStyle = session.session_color === 'green' ? { borderLeftColor: '#8DC63F', borderLeftWidth: '8px' } : {};
-        const topBorderStyle = selectedEvent?.print_color === 'green' ? { borderTopColor: '#8DC63F', borderTopWidth: '8px' } : {};
-
-        return (
-          <div key={session.id} className={`print-session border-gray-200 rounded-lg overflow-hidden ${borderClass}`} style={{ ...leftBorderStyle, ...topBorderStyle }}>
-            <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-2 border-b border-gray-200">
-              <div className="flex justify-between items-center gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl uppercase tracking-tight mb-1" style={{ color: '#1F8A70' }}>
-                    <span className="hidden print:inline mr-2">{selectedEvent.name} —</span>
-                    {session.name}
-                  </h2>
-                  {hasHospitalityTasks && (
-                    <Utensils className="w-5 h-5 text-pink-600" title="Tiene instrucciones de hospitalidad" />
-                  )}
-                  {session.is_translated_session && (
-                    <Languages className="w-5 h-5 text-purple-600" title="Sesión traducida" />
-                  )}
-                </div>
-                  <div className="text-sm text-gray-700">
-                    {session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}
-                    {session.location && ` • ${session.location}`}
-                    {session.default_stage_call_offset_min && (
-                      <span className="ml-2 text-blue-600 font-semibold">
-                        • Llegada: {session.default_stage_call_offset_min} min antes
-                      </span>
-                    )}
-                  </div>
-                  </div>
-              </div>
-
-              <div className="grid grid-cols-4 gap-x-2 gap-y-0.5 mt-1 text-[10px]">
-                {session.presenter && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-blue-700 font-bold">PRES:</span>
-                    <span className="text-gray-800 ml-1">{session.presenter}</span>
-                  </span>
-                )}
-                {session.worship_leader && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-green-600 font-bold">ALAB:</span>
-                    <span className="text-gray-800 ml-1">{session.worship_leader}</span>
-                  </span>
-                )}
-                {session.coordinators && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-indigo-600 font-bold">COORD:</span>
-                    <span className="text-gray-800 ml-1">{session.coordinators}</span>
-                  </span>
-                )}
-                {session.admin_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-orange-600 font-bold">ADMIN:</span>
-                    <span className="text-gray-800 ml-1">{session.admin_team}</span>
-                  </span>
-                )}
-                {session.sound_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-red-600 font-bold">SONIDO:</span>
-                    <span className="text-gray-800 ml-1">{session.sound_team}</span>
-                  </span>
-                )}
-                {session.tech_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-purple-600 font-bold">TÉC:</span>
-                    <span className="text-gray-800 ml-1">{session.tech_team}</span>
-                  </span>
-                )}
-                {session.ushers_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-blue-600 font-bold">UJIER:</span>
-                    <span className="text-gray-800 ml-1">{session.ushers_team}</span>
-                  </span>
-                )}
-                {session.translation_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-purple-700 font-bold">TRAD:</span>
-                    <span className="text-gray-800 ml-1">{session.translation_team}</span>
-                  </span>
-                )}
-                {session.hospitality_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-pink-600 font-bold">HOSP:</span>
-                    <span className="text-gray-800 ml-1">{session.hospitality_team}</span>
-                  </span>
-                )}
-                {session.photography_team && (
-                  <span className="bg-white bg-opacity-50 px-1 py-0.5 rounded border border-gray-200">
-                    <span className="text-teal-600 font-bold">FOTO:</span>
-                    <span className="text-gray-800 ml-1">{session.photography_team}</span>
-                  </span>
-                )}
-              </div>
-
-              {(() => {
-                const records = allPreSessionDetails.filter(psd => psd.session_id === session.id);
-                if (records.length === 0) return null;
-                const psd = mergePreSessionDetails(records);
-                if (!psd) return null;
-                return (
-                  <div key={`psd-${session.id}`} className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
-                    <div className="font-bold text-blue-700 uppercase mb-1">Detalles Previos (Segmento 0)</div>
-                    <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
-                      {psd.music_profile_id && (
-                        <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
-                      )}
-                      {psd.slide_pack_id && (
-                        <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Slides: {psd.slide_pack_id}</div>
-                      )}
-                      {psd.registration_desk_open_time && (
-                        <div><span className="font-semibold">Registro:</span> {formatTimeToEST(psd.registration_desk_open_time)}</div>
-                      )}
-                      {psd.library_open_time && (
-                        <div><span className="font-semibold">Librería:</span> {formatTimeToEST(psd.library_open_time)}</div>
-                      )}
-                      {psd.facility_notes && (
-                        <div className="col-span-2"><span className="font-semibold">Instalaciones:</span> {psd.facility_notes}</div>
-                      )}
-                      {psd.general_notes && (
-                        <div className="col-span-2"><span className="font-semibold">General:</span> {psd.general_notes}</div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-gray-100 border-b border-gray-300">
-                  <tr>
-                    <th className="p-1 text-gray-900 font-bold uppercase w-12 text-center text-xs">{t('reports.headers.time')}</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-3/5">{t('reports.headers.details')}</th>
-                    <th className="p-1 text-gray-900 font-bold uppercase text-xs w-2/5">{t('reports.headers.teamNotes')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {segments.map((segment, idx) => {
-                    if (segment.segment_type === "Breakout" && segment.breakout_rooms) {
-                      return (
-                        <React.Fragment key={segment.id}>
-                        {/* Prep Actions Row - spans full width above segment */}
-                        {getSegmentActions(segment).filter(a => isPrepAction(a)).length > 0 && (
-                          <tr className="bg-amber-50 border-t-2 border-amber-300">
-                            <td colSpan="3" className="p-2">
-                              <div className="flex items-start gap-2">
-                                <div className="bg-amber-500 text-white px-2 py-1 rounded font-bold text-[10px] uppercase whitespace-nowrap">
-                                  ⚠ PREP
-                                </div>
-                                <div className="flex-1 flex flex-wrap gap-2">
-                                  {getSegmentActions(segment).filter(a => isPrepAction(a)).map((action, actionIdx) => {
-                                    const actionTime = calculateActionTime(segment, action);
-                                    return (
-                                      <div
-                                        key={actionIdx}
-                                        className={`text-[10px] px-2 py-1 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
-                                      >
-                                        <span className="font-bold">[{action.department}]</span> {action.label}
-                                        {action.is_required && <span className="ml-1 text-red-600">*</span>}
-                                        {actionTime && (
-                                          <span className="ml-1 font-mono font-semibold text-amber-700 bg-amber-100 px-1 rounded">@ {actionTime}</span>
-                                        )}
-                                        {action.notes && <span className="ml-1">— {action.notes}</span>}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                        <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
-                        {/* Time cell for Breakout - filled with session color */}
-                        <td 
-                          className="p-1 font-bold text-center border-r border-gray-200 text-[10px] align-top w-12" 
-                          style={{ 
-                            verticalAlign: 'top',
-                            backgroundColor: session.session_color === 'green' ? '#dcfce7' :
-                                            session.session_color === 'blue' ? '#dbeafe' :
-                                            session.session_color === 'pink' ? '#fce7f3' :
-                                            session.session_color === 'orange' ? '#ffedd5' :
-                                            session.session_color === 'yellow' ? '#fef9c3' :
-                                            session.session_color === 'purple' ? '#f3e8ff' :
-                                            session.session_color === 'red' ? '#fee2e2' : '#f3f4f6'
-                          }}
-                        >
-                            <div className="flex flex-col items-center leading-tight">
-                              <div className="whitespace-nowrap text-black font-bold">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
-                              {segment.end_time && (
-                                <>
-                                  <div className="text-gray-600 text-[8px]">↓</div>
-                                  <div className="whitespace-nowrap text-black">{formatTimeToEST(segment.end_time)}</div>
-                                </>
-                              )}
-                              {segment.duration_min && (
-                                <div className="text-[9px] text-gray-700 mt-0.5">({segment.duration_min}m)</div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-1 border-r border-gray-200 align-top" colSpan="2" style={{ verticalAlign: 'top' }}>
-                            <div className="bg-amber-50 border border-amber-300 rounded p-1">
-                              <div className="text-amber-900 font-bold text-xs uppercase mb-2">
-                                {segment.title} - SESIONES PARALELAS
-                              </div>
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                {segment.breakout_rooms.map((room, roomIdx) => (
-                                  <div key={roomIdx} className="bg-white p-2 rounded border border-gray-200 text-[10px]">
-                                    {room.room_id && (
-                                      <Badge variant="outline" className="text-[9px] bg-blue-50 mb-1">
-                                        {getRoomName(room.room_id)}
-                                      </Badge>
-                                    )}
-                                    <div className="font-bold text-xs text-gray-900 mb-0.5">{room.topic || `Sala ${roomIdx + 1}`}</div>
-                                    {room.hosts && (
-                                      <div className="text-indigo-600 font-semibold text-[10px] mb-0.5">
-                                        <span className="font-bold">Anfitrión:</span> {room.hosts}
-                                      </div>
-                                    )}
-                                    {room.speakers && (
-                                      <div className="text-blue-600 font-semibold text-[10px] mb-0.5">
-                                        <span className="font-bold">Presentador:</span> {room.speakers}
-                                      </div>
-                                    )}
-                                    {room.requires_translation && (
-                                      <div className="flex items-center gap-1 text-[10px] text-purple-700 mb-0.5">
-                                        <Languages className="w-3 h-3" />
-                                        {room.translation_mode === "InPerson" && <Mic className="w-3 h-3" />}
-                                        {room.translator_name && <span>{room.translator_name}</span>}
-                                      </div>
-                                    )}
-                                    {(room.general_notes || room.other_notes) && (
-                                      <div className="mt-0.5 text-[9px] space-y-0.5">
-                                        {room.general_notes && (
-                                          <div className="bg-purple-50 px-1 rounded">
-                                            <span className="font-bold text-purple-700">PROD:</span>
-                                            <span className="ml-1">{room.general_notes}</span>
-                                          </div>
-                                        )}
-                                        {room.other_notes && (
-                                          <div className="bg-gray-50 px-1 rounded">
-                                            <span className="font-bold text-gray-700">OTRAS:</span>
-                                            <span className="ml-1">{room.other_notes}</span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        </React.Fragment>
-                      );
-                    }
-
-                    return (
-                      <React.Fragment key={segment.id}>
-                      {/* Prep Actions Row - spans full width above segment */}
-                      {getSegmentActions(segment).filter(a => isPrepAction(a)).length > 0 && (
-                        <tr className="bg-amber-50 border-t-2 border-amber-300">
-                          <td colSpan="3" className="p-1">
-                            <div className="flex items-start gap-2">
-                              <div className="bg-amber-500 text-white px-2 py-0.5 rounded font-bold text-[9px] uppercase whitespace-nowrap">
-                                ⚠ PREP
-                              </div>
-                              <div className="flex-1 flex flex-wrap gap-1">
-                                {getSegmentActions(segment).filter(a => isPrepAction(a)).map((action, actionIdx) => {
-                                  const actionTime = calculateActionTime(segment, action);
-                                  return (
-                                    <div
-                                      key={actionIdx}
-                                      className={`text-[9px] px-1 py-0.5 rounded border ${departmentColors[action.department] || departmentColors.Other}`}
-                                    >
-                                      <span className="font-bold">[{action.department}]</span> {action.label}
-                                      {action.is_required && <span className="ml-1 text-red-600">*</span>}
-                                      {actionTime && (
-                                        <span className="ml-1 font-mono font-semibold text-amber-700 bg-amber-100 px-1 rounded">@ {actionTime}</span>
-                                      )}
-                                      {action.notes && <span className="ml-1">— {action.notes}</span>}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                      <tr key={segment.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${getSegmentActions(segment).filter(a => isPrepAction(a)).length === 0 && idx > 0 ? 'border-t-2 border-gray-400' : ''}`}>
-                      {/* Time cell - filled with session color for visibility, black text for contrast */}
-                      <td 
-                        className="p-1 font-bold text-center border-r border-gray-200 text-[10px] align-top w-12" 
-                        style={{ 
-                          verticalAlign: 'top',
-                          backgroundColor: session.session_color === 'green' ? '#dcfce7' :
-                                          session.session_color === 'blue' ? '#dbeafe' :
-                                          session.session_color === 'pink' ? '#fce7f3' :
-                                          session.session_color === 'orange' ? '#ffedd5' :
-                                          session.session_color === 'yellow' ? '#fef9c3' :
-                                          session.session_color === 'purple' ? '#f3e8ff' :
-                                          session.session_color === 'red' ? '#fee2e2' : '#f3f4f6'
-                        }}
-                      >
-                        <div className="flex flex-col items-center leading-tight">
-                          <div className="whitespace-nowrap text-black font-bold">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</div>
-                          {segment.end_time && (
-                            <>
-                              <div className="text-gray-600 text-[8px]">↓</div>
-                              <div className="whitespace-nowrap text-black">{formatTimeToEST(segment.end_time)}</div>
-                            </>
-                          )}
-                          {segment.duration_min && (
-                            <div className="text-[9px] text-gray-700 mt-0.5">({segment.duration_min}m)</div>
-                          )}
-                          <div className="flex gap-0.5 mt-1">
-                            {segment.requires_translation && segment.translation_mode === "InPerson" && (
-                              <>
-                                <Languages className="w-3 h-3 text-purple-600" title="Traducción en Persona" />
-                                <Mic className="w-3 h-3 text-purple-600" title="En Persona" />
-                              </>
-                            )}
-                            {segment.requires_translation && segment.translation_mode === "RemoteBooth" && (
-                              <Languages className="w-3 h-3 text-purple-600" title="Traducción Remota" />
-                            )}
-                            {segment.major_break && (
-                              <Utensils className="w-3 h-3 text-orange-600" title="Receso Mayor" />
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-1 border-r border-gray-200 align-top" style={{ verticalAlign: 'top' }}>
-                        <SegmentReportRow
-                          segment={segment}
-                          idx={idx}
-                          getSegmentActions={getSegmentActions}
-                          isPrepAction={isPrepAction}
-                          getRoomName={getRoomName}
-                          departmentColors={departmentColors}
-                          t={t}
-                          isTableMode={true}
-                        />
-                      </td>
-                      <td className="p-1 text-gray-600 text-[10px] align-top" style={{ verticalAlign: 'top' }}>
-                        <SegmentReportRow
-                          segment={segment}
-                          idx={idx}
-                          getSegmentActions={getSegmentActions}
-                          isPrepAction={isPrepAction}
-                          getRoomName={getRoomName}
-                          departmentColors={departmentColors}
-                          t={t}
-                          isTableMode={true}
-                          showOnlyTeamNotes={true}
-                        />
-                      </td>
-                    </tr>
-                    </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-
-  const renderGeneralProgram = () => (
-    <div className="space-y-6">
-      {eventSessions.map((session) => {
-        const segments = getSessionSegments(session.id, 'show_in_general');
-        if (segments.length === 0) return null;
-
-        return (
-          <div key={session.id} className="print-session">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg mb-4 border border-blue-200">
-              <h3 className="text-xl text-gray-900">{session.name}</h3>
-              <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
-            </div>
-
-            {(() => {
-              const records = allPreSessionDetails.filter(psd => psd.session_id === session.id);
-              if (records.length === 0) return null;
-              const psd = mergePreSessionDetails(records);
-              if (!psd) return null;
-              return (
-                <div className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
-                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Previos (Segmento 0)</div>
-                  <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
-                    {psd.music_profile_id && (
-                      <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
-                    )}
-                    {psd.slide_pack_id && (
-                      <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Slides: {psd.slide_pack_id}</div>
-                    )}
-                    {psd.registration_desk_open_time && (
-                      <div><span className="font-semibold">Registro:</span> {formatTimeToEST(psd.registration_desk_open_time)}</div>
-                    )}
-                    {psd.library_open_time && (
-                      <div><span className="font-semibold">Librería:</span> {formatTimeToEST(psd.library_open_time)}</div>
-                    )}
-                    {psd.facility_notes && (
-                      <div className="col-span-2"><span className="font-semibold">Instalaciones:</span> {psd.facility_notes}</div>
-                    )}
-                    {psd.general_notes && (
-                      <div className="col-span-2"><span className="font-semibold">General:</span> {psd.general_notes}</div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-100 border-b-2 border-gray-200">
-                  <th className="p-3 text-left font-bold text-gray-900 w-24">Hora</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Título</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Responsable</th>
-                  <th className="p-3 text-left font-bold text-gray-900 w-24">Duración</th>
-                </tr>
-              </thead>
-              <tbody>
-                {segments.map((segment, idx) => (
-                  <tr key={segment.id} className={`border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</td>
-                    <td className="p-3 font-semibold text-gray-900">{segment.title}</td>
-                    <td className="p-3 text-gray-700">{segment.presenter || "-"}</td>
-                    <td className="p-3 text-gray-700">{segment.duration_min ? `${segment.duration_min} min` : "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      })}
-    </div>
-  );
-
-  const renderProjectionView = () => (
-    <div className="space-y-6">
-      {eventSessions.map((session) => {
-        const segments = getSessionSegments(session.id, 'show_in_projection');
-        if (segments.length === 0) return null;
-
-        return (
-          <div key={session.id} className="print-session">
-            {/* Projection report header - slate color scheme (distinct from purple/translation) */}
-            <div className="bg-gradient-to-r from-slate-100 to-gray-100 p-4 rounded-lg mb-4 border border-slate-300">
-              <h3 className="text-xl text-gray-900">{session.name}</h3>
-              <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
-            </div>
-
-            {(() => {
-              const records = allPreSessionDetails.filter(psd => psd.session_id === session.id);
-              if (records.length === 0) return null;
-              const psd = mergePreSessionDetails(records);
-              if (!psd) return null;
-              return (
-                <div className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
-                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Previos (Segmento 0)</div>
-                  <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
-                    {psd.music_profile_id && (
-                      <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
-                    )}
-                    {psd.slide_pack_id && (
-                      <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Slides: {psd.slide_pack_id}</div>
-                    )}
-                    {psd.registration_desk_open_time && (
-                      <div><span className="font-semibold">Registro:</span> {formatTimeToEST(psd.registration_desk_open_time)}</div>
-                    )}
-                    {psd.library_open_time && (
-                      <div><span className="font-semibold">Librería:</span> {formatTimeToEST(psd.library_open_time)}</div>
-                    )}
-                    {psd.facility_notes && (
-                      <div className="col-span-2"><span className="font-semibold">Instalaciones:</span> {psd.facility_notes}</div>
-                    )}
-                    {psd.general_notes && (
-                      <div className="col-span-2"><span className="font-semibold">General:</span> {psd.general_notes}</div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
-            <table className="w-full border-collapse">
-              <thead>
-                {/* Projection table header - slate color scheme */}
-                <tr className="bg-slate-100 border-b-2 border-slate-300">
-                  <th className="p-3 text-left font-bold text-gray-900 w-24">Hora</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Título</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Notas Proyección</th>
-                </tr>
-              </thead>
-              <tbody>
-                {segments.map((segment, idx) => (
-                  <tr key={segment.id} className={`border-b border-gray-200 ${segment.projection_notes ? "bg-yellow-50" : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</td>
-                    <td className="p-3 font-semibold text-gray-900">{segment.title}</td>
-                    <td className="p-3 text-sm text-gray-700">
-                      <div className="space-y-1">
-                        {segment.has_video && (
-                          <div className="bg-blue-50 px-1 py-0.5 rounded border border-blue-200 text-[10px]">
-                            <span className="font-bold text-blue-700">VIDEO:</span>
-                            {segment.video_name && <span className="ml-1 text-gray-700">{segment.video_name}</span>}
-                            {segment.video_location && <span className="ml-1 text-gray-600">({segment.video_location})</span>}
-                            {typeof segment.video_length_sec === 'number' && (
-                              <span className="ml-1 text-gray-600">- {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}</span>
-                            )}
-                            {segment.video_owner && <span className="ml-1 text-gray-600">• {segment.video_owner}</span>}
-                          </div>
-                        )}
-
-                        {segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0 && (
-                          <div className="bg-pink-50 px-1 py-0.5 rounded border border-pink-200 text-[10px]">
-                            <span className="font-bold text-pink-700">ARTES:</span>
-                            <span className="text-gray-700 ml-1">{segment.art_types.map(t => t === "DANCE" ? "Danza" : t === "DRAMA" ? "Drama" : t === "VIDEO" ? "Video" : "Otro").join(", ")}</span>
-                            {/* DRAMA: cues + optional song title for projection */}
-                            {segment.art_types.includes("DRAMA") && (
-                              <div className="mt-0.5 pl-2 border-l-2 border-pink-300 space-y-0.5">
-                                {segment.drama_start_cue && <div>{t('arts.cues.start')}: {segment.drama_start_cue}</div>}
-                                {segment.drama_end_cue && <div>{t('arts.cues.end')}: {segment.drama_end_cue}</div>}
-                                {segment.drama_has_song && segment.drama_song_title && (
-                                  <div>{t('arts.song')}: {segment.drama_song_title}</div>
-                                )}
-                              </div>
-                            )}
-                            {/* DANCE: song title for projection */}
-                            {segment.art_types.includes("DANCE") && (
-                              <div className="mt-0.5 pl-2 border-l-2 border-pink-300">
-                                {segment.dance_has_song && segment.dance_song_title && (
-                                  <div>{t('arts.music')}: {segment.dance_song_title}</div>
-                                )}
-                              </div>
-                            )}
-                            {segment.art_types.includes("OTHER") && segment.art_other_description && (
-                              <div className="mt-0.5 text-gray-600">{segment.art_other_description}</div>
-                            )}
-                          </div>
-                        )}
-
-                        {segment.projection_notes && (
-                          <div className="bg-slate-100 px-1 py-0.5 rounded border border-slate-300">
-                            <span className="font-bold text-slate-700">PROYECCIÓN:</span>
-                            <span className="ml-1">{segment.projection_notes}</span>
-                          </div>
-                        )}
-
-                        {!segment.has_video && !(segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0) && !segment.projection_notes && (
-                          <span className="italic text-gray-400">Sin notas específicas</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      })}
-    </div>
-  );
-
-  const renderSoundView = () => (
-    <div className="space-y-6">
-      {eventSessions.map((session) => {
-        const segments = getSessionSegments(session.id, 'show_in_sound');
-        if (segments.length === 0) return null;
-
-        return (
-          <div key={session.id} className="print-session">
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-lg mb-4 border border-red-200">
-              <h3 className="text-xl text-gray-900">{session.name}</h3>
-              <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
-            </div>
-
-            {(() => {
-              const records = allPreSessionDetails.filter(psd => psd.session_id === session.id);
-              if (records.length === 0) return null;
-              const psd = mergePreSessionDetails(records);
-              if (!psd) return null;
-              return (
-                <div className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
-                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Previos (Segmento 0)</div>
-                  <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
-                    {psd.music_profile_id && (
-                      <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
-                    )}
-                    {psd.slide_pack_id && (
-                      <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Slides: {psd.slide_pack_id}</div>
-                    )}
-                    {psd.registration_desk_open_time && (
-                      <div><span className="font-semibold">Registro:</span> {formatTimeToEST(psd.registration_desk_open_time)}</div>
-                    )}
-                    {psd.library_open_time && (
-                      <div><span className="font-semibold">Librería:</span> {formatTimeToEST(psd.library_open_time)}</div>
-                    )}
-                    {psd.facility_notes && (
-                      <div className="col-span-2"><span className="font-semibold">Instalaciones:</span> {psd.facility_notes}</div>
-                    )}
-                    {psd.general_notes && (
-                      <div className="col-span-2"><span className="font-semibold">General:</span> {psd.general_notes}</div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-red-50 border-b-2 border-red-200">
-                  <th className="p-3 text-left font-bold text-gray-900 w-24">Hora</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Título</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Responsable</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Notas Sonido</th>
-                </tr>
-              </thead>
-              <tbody>
-                {segments.map((segment, idx) => (
-                  <tr key={segment.id} className={`border-b border-gray-200 ${segment.sound_notes ? "bg-yellow-50" : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</td>
-                    <td className="p-3 font-semibold text-gray-900">{segment.title}</td>
-                    <td className="p-3 text-gray-700">{segment.presenter || "-"}</td>
-                    <td className="p-3 text-sm text-gray-700">
-                      <div className="space-y-1">
-                        {segment.has_video && (
-                          <div className="bg-blue-50 px-1 py-0.5 rounded border border-blue-200 text-[10px]">
-                            <span className="font-bold text-blue-700">VIDEO:</span>
-                            {segment.video_name && <span className="ml-1 text-gray-700">{segment.video_name}</span>}
-                            {segment.video_location && <span className="ml-1 text-gray-600">({segment.video_location})</span>}
-                            {typeof segment.video_length_sec === 'number' && (
-                              <span className="ml-1 text-gray-600">- {Math.floor(segment.video_length_sec / 60)}:{String(segment.video_length_sec % 60).padStart(2, '0')}</span>
-                            )}
-                            {segment.video_owner && <span className="ml-1 text-gray-600">• {segment.video_owner}</span>}
-                          </div>
-                        )}
-
-                        {segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0 && (
-                          <div className="bg-pink-50 px-1 py-0.5 rounded border border-pink-200 text-[10px]">
-                            <span className="font-bold text-pink-700">ARTES:</span>
-                            <span className="text-gray-700 ml-1">{segment.art_types.map(t => t === "DANCE" ? "Danza" : t === "DRAMA" ? "Drama" : t === "VIDEO" ? "Video" : "Otro").join(", ")}</span>
-                            {/* DRAMA: mics + cues + optional song title for sound */}
-                            {segment.art_types.includes("DRAMA") && (
-                              <div className="mt-0.5 pl-2 border-l-2 border-pink-300 space-y-0.5">
-                                {segment.drama_handheld_mics > 0 && <div>{t('arts.mics.handheld')}: {segment.drama_handheld_mics}</div>}
-                                {segment.drama_headset_mics > 0 && <div>{t('arts.mics.headset')}: {segment.drama_headset_mics}</div>}
-                                {segment.drama_start_cue && <div>{t('arts.cues.start')}: {segment.drama_start_cue}</div>}
-                                {segment.drama_end_cue && <div>{t('arts.cues.end')}: {segment.drama_end_cue}</div>}
-                                {segment.drama_has_song && segment.drama_song_title && (
-                                  <div>{t('arts.song')}: {segment.drama_song_title}</div>
-                                )}
-                              </div>
-                            )}
-                            {/* DANCE: mics + song title for sound */}
-                            {segment.art_types.includes("DANCE") && (
-                              <div className="mt-0.5 pl-2 border-l-2 border-pink-300">
-                                {segment.dance_handheld_mics > 0 && <div>{t('arts.mics.handheld')}: {segment.dance_handheld_mics}</div>}
-                                {segment.dance_headset_mics > 0 && <div>{t('arts.mics.headset')}: {segment.dance_headset_mics}</div>}
-                                {segment.dance_has_song && segment.dance_song_title && (
-                                  <div>{t('arts.music')}: {segment.dance_song_title}</div>
-                                )}
-                              </div>
-                            )}
-                            {segment.art_types.includes("OTHER") && segment.art_other_description && (
-                              <div className="mt-0.5 text-gray-600">{segment.art_other_description}</div>
-                            )}
-                          </div>
-                        )}
-
-                        {segment.sound_notes && (
-                          <div className="bg-red-50 px-1 py-0.5 rounded border border-red-200">
-                            <span className="font-bold text-red-700">SONIDO:</span>
-                            <span className="ml-1">{segment.sound_notes}</span>
-                          </div>
-                        )}
-
-                        {!segment.has_video && !(segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0) && !segment.sound_notes && (
-                          <span className="italic text-gray-400">Sin notas específicas</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      })}
-    </div>
-  );
-
-  const renderHospitalityView = () => (
-    <div className="space-y-6">
-      {eventSessions.map((session) => {
-        const hospitalityTasksForSession = allHospitalityTasks.filter(task => task.session_id === session.id).sort((a, b) => (a.order || 0) - (b.order || 0));
-        if (hospitalityTasksForSession.length === 0) return null;
-
-        return (
-          <div key={session.id} className="print-session">
-            <div className="bg-gradient-to-r from-pink-50 to-rose-50 p-4 rounded-lg mb-4 border border-pink-200">
-              <h3 className="text-xl text-gray-900">{session.name}</h3>
-              <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
-            </div>
-
-            {(() => {
-              const records = allPreSessionDetails.filter(psd => psd.session_id === session.id);
-              if (records.length === 0) return null;
-              const psd = mergePreSessionDetails(records);
-              if (!psd) return null;
-              return (
-                <div className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
-                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Previos (Segmento 0)</div>
-                  <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
-                    {psd.music_profile_id && (
-                      <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
-                    )}
-                    {psd.slide_pack_id && (
-                      <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Slides: {psd.slide_pack_id}</div>
-                    )}
-                    {psd.registration_desk_open_time && (
-                      <div><span className="font-semibold">Registro:</span> {formatTimeToEST(psd.registration_desk_open_time)}</div>
-                    )}
-                    {psd.library_open_time && (
-                      <div><span className="font-semibold">Librería:</span> {formatTimeToEST(psd.library_open_time)}</div>
-                    )}
-                    {psd.facility_notes && (
-                      <div className="col-span-2"><span className="font-semibold">Instalaciones:</span> {psd.facility_notes}</div>
-                    )}
-                    {psd.general_notes && (
-                      <div className="col-span-2"><span className="font-semibold">General:</span> {psd.general_notes}</div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-pink-50 border-b-2 border-pink-200">
-                  <th className="p-3 text-left font-bold text-gray-900 w-24">Tiempo</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Categoría</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Descripción</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Ubicación</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Notas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {hospitalityTasksForSession.map((task, idx) => (
-                  <tr key={task.id} className={`border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="p-3 font-mono font-medium text-gray-900">{task.time_hint || "-"}</td>
-                    <td className="p-3 text-gray-700">{task.category}</td>
-                    <td className="p-3 text-gray-700">{task.description}</td>
-                    <td className="p-3 text-gray-700">{task.location_notes || "-"}</td>
-                    <td className="p-3 text-gray-700">{task.notes || "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      })}
-    </div>
-  );
-
-  const renderUshersView = () => (
-    <div className="space-y-6">
-      {eventSessions.map((session) => {
-        const segments = getSessionSegments(session.id, 'show_in_ushers');
-        if (segments.length === 0) return null;
-
-        return (
-          <div key={session.id} className="print-session">
-            <div className="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-lg mb-4 border border-green-200">
-              <h3 className="text-xl text-gray-900">{session.name}</h3>
-              <p className="text-gray-700">{session.date} • {session.planned_start_time ? formatTimeToEST(session.planned_start_time) : "Por definir"}</p>
-            </div>
-
-            {(() => {
-              const records = allPreSessionDetails.filter(psd => psd.session_id === session.id);
-              if (records.length === 0) return null;
-              const psd = mergePreSessionDetails(records);
-              if (!psd) return null;
-              return (
-                <div className="mt-2 bg-blue-50 border border-blue-200 p-2 rounded text-[10px]">
-                  <div className="font-bold text-blue-700 uppercase mb-1">Detalles Previos (Segmento 0)</div>
-                  <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
-                    {psd.music_profile_id && (
-                      <div><Music className="inline-block w-3 h-3 mr-1 text-blue-600" /> Música: {psd.music_profile_id}</div>
-                    )}
-                    {psd.slide_pack_id && (
-                      <div><Sliders className="inline-block w-3 h-3 mr-1 text-blue-600" /> Slides: {psd.slide_pack_id}</div>
-                    )}
-                    {psd.registration_desk_open_time && (
-                      <div><span className="font-semibold">Registro:</span> {formatTimeToEST(psd.registration_desk_open_time)}</div>
-                    )}
-                    {psd.library_open_time && (
-                      <div><span className="font-semibold">Librería:</span> {formatTimeToEST(psd.library_open_time)}</div>
-                    )}
-                    {psd.facility_notes && (
-                      <div className="col-span-2"><span className="font-semibold">Instalaciones:</span> {psd.facility_notes}</div>
-                    )}
-                    {psd.general_notes && (
-                      <div className="col-span-2"><span className="font-semibold">General:</span> {psd.general_notes}</div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-green-50 border-b-2 border-green-200">
-                  <th className="p-3 text-left font-bold text-gray-900 w-24">Hora</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Título</th>
-                  <th className="p-3 text-left font-bold text-gray-900">Notas Ujieres</th>
-                </tr>
-              </thead>
-              <tbody>
-                {segments.map((segment, idx) => (
-                  <tr key={segment.id} className={`border-b border-gray-200 ${segment.ushers_notes ? "bg-yellow-50" : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</td>
-                    <td className="p-3 font-semibold text-gray-900">{segment.title}</td>
-                    <td className="p-3 text-sm text-gray-700">
-                      {segment.ushers_notes || <span className="italic text-gray-400">Sin notas específicas</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      })}
-    </div>
-  );
+  // Shared props for all view components
+  const viewProps = { eventSessions, getSessionSegments, selectedEvent, allPreSessionDetails, rooms };
 
   return (
     <>
-      <style>{`
-        @media print {
-          @page {
-            size: letter landscape;
-            margin: 0.5cm;
-          }
-          body * {
-            visibility: hidden;
-          }
-          #printable-report, #printable-report * {
-            visibility: visible;
-          }
-          #printable-report {
-            position: relative;
-            width: 100%;
-            padding: 0;
-            background: white;
-          }
-          
-          .print-header {
-            display: flex !important;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            padding-bottom: 4px;
-            border-bottom: 2px solid #e5e7eb;
-            page-break-after: avoid;
-            break-after: avoid;
-          }
-          
-          .print-logo {
-            width: 35px;
-            height: 35px;
-            flex-shrink: 0;
-          }
-          
-          .print-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-          }
-          
-          .print-title {
-            flex: 1;
-          }
-          
-          .print-title h1 {
-            font-size: 14pt;
-            font-weight: bold;
-            color: #1a1a1a;
-            margin: 0;
-            line-height: 1.1;
-          }
-          
-          .print-title p {
-            font-size: 9pt;
-            color: #1F8A70;
-            font-style: italic;
-            margin: 0;
-            line-height: 1.1;
-          }
-          .no-print {
-            display: none !important;
-          }
-          .print-session {
-            break-inside: avoid;
-            page-break-inside: avoid;
-            display: block;
-            width: 100%;
-            margin-bottom: 8px !important;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
-          }
-
-          /* Force new page before every session except the first one */
-          .print-session:not(:first-of-type) {
-            break-before: page;
-            page-break-before: always;
-          }
-          
-          /* Optimization for print density */
-          .print-session table {
-            width: 100%;
-          }
-          .print-session th, .print-session td {
-            padding: 2px 4px !important;
-            vertical-align: top !important;
-          }
-          .print-session .text-xl {
-            font-size: 14px !important;
-            line-height: 1.2;
-          }
-          .print-session .text-lg {
-            font-size: 12px !important;
-          }
-          .print-session .text-xs {
-            font-size: 10px !important;
-          }
-          .print-session .text-\[10px\] {
-            font-size: 9px !important;
-          }
-          
-          /* Tighten up spacing */
-          .print-session .p-2 {
-            padding: 0.25rem !important;
-          }
-          .print-session .gap-2 {
-            gap: 0.25rem !important;
-          }
-          .print-session .mb-4 {
-            margin-bottom: 0.5rem !important;
-          }
-
-          /* Print All Reports mode */
-          .print-all-reports {
-            display: block !important;
-          }
-          .print-all-reports .print-section {
-            break-before: page;
-            page-break-before: always;
-          }
-          .print-all-reports .print-section:first-child {
-            break-before: auto;
-            page-break-before: auto;
-          }
-        }
-      `}</style>
+      <style>{REPORT_PRINT_CSS}</style>
       
       <div className="p-6 md:p-8 space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
@@ -1349,10 +234,7 @@ export default function Reports() {
             {selectedEventId && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline"
-                    className="font-bold uppercase"
-                  >
+                  <Button variant="outline" className="font-bold uppercase">
                     <Share2 className="w-4 h-4 mr-2" />
                     {t('reports.publicView')}
                   </Button>
@@ -1364,15 +246,9 @@ export default function Reports() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleCopyLink} aria-label={t('reports.copyLink')}>
                     {copySuccess ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2 text-green-600" />
-                        {t('reports.copied')}
-                      </>
+                      <><Check className="w-4 h-4 mr-2 text-green-600" />{t('reports.copied')}</>
                     ) : (
-                      <>
-                        <Copy className="w-4 h-4 mr-2" />
-                        {t('reports.copyLink')}
-                      </>
+                      <><Copy className="w-4 h-4 mr-2" />{t('reports.copyLink')}</>
                     )}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -1398,74 +274,11 @@ export default function Reports() {
                   <List className="w-4 h-4 mr-2" />
                   {t('reports.printAll')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={async () => {
-                 if (!selectedEventId) return;
-                 const typeMap = {
-                   detailed: 'detailed',
-                   projection: 'projection',
-                   sound: 'sound',
-                   ushers: 'ushers',
-                   hospitality: 'hospitality',
-                   general: 'general',
-                 };
-                 const rt = typeMap[activeReport] || 'detailed';
-                 // Build mappings from already-loaded data
-                 const segmentsBySession = sessions.reduce((acc, s) => {
-                   acc[s.id] = allSegments.filter(seg => seg.session_id === s.id).sort((a,b)=>(a.order||0)-(b.order||0));
-                   return acc;
-                 }, {});
-                 const preSessionDetailsBySession = sessions.reduce((acc, s) => {
-                   const records = allPreSessionDetails.filter(psd => psd.session_id === s.id);
-                   if (records.length > 0) acc[s.id] = mergePreSessionDetails(records);
-                   return acc;
-                 }, {});
-                 const hospitalityTasksBySession = sessions.reduce((acc, s) => {
-                   acc[s.id] = allHospitalityTasks.filter(t => t.session_id === s.id);
-                   return acc;
-                 }, {});
-                 const bytes = await generateEventReportPDFClient({
-                   event: selectedEvent,
-                   sessions: eventSessions,
-                   segmentsBySession,
-                   preSessionDetailsBySession,
-                   hospitalityTasksBySession,
-                   rooms,
-                   reportType: rt,
-                 });
-                 await downloadPdf(rt, bytes);
-                }}>
+                <DropdownMenuItem onClick={handleExportCurrentPdf}>
                   <FileText className="w-4 h-4 mr-2" />
                   Exportar vista actual (PDF)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={async () => {
-                 if (!selectedEventId) return;
-                 const segmentsBySession = sessions.reduce((acc, s) => {
-                   acc[s.id] = allSegments.filter(seg => seg.session_id === s.id).sort((a,b)=>(a.order||0)-(b.order||0));
-                   return acc;
-                 }, {});
-                 const preSessionDetailsBySession = sessions.reduce((acc, s) => {
-                   const records = allPreSessionDetails.filter(psd => psd.session_id === s.id);
-                   if (records.length > 0) acc[s.id] = mergePreSessionDetails(records);
-                   return acc;
-                 }, {});
-                 const hospitalityTasksBySession = sessions.reduce((acc, s) => {
-                   acc[s.id] = allHospitalityTasks.filter(t => t.session_id === s.id);
-                   return acc;
-                 }, {});
-                 const types = ['detailed','general','projection','sound','ushers','hospitality'];
-                 for (const rt of types) {
-                   const bytes = await generateEventReportPDFClient({
-                     event: selectedEvent,
-                     sessions: eventSessions,
-                     segmentsBySession,
-                     preSessionDetailsBySession,
-                     hospitalityTasksBySession,
-                     rooms,
-                     reportType: rt,
-                   });
-                   await downloadPdf(rt, bytes);
-                 }
-                }}>
+                <DropdownMenuItem onClick={handleExportAllPdfs}>
                   <FileText className="w-4 h-4 mr-2" />
                   Exportar todo (PDFs separados)
                 </DropdownMenuItem>
@@ -1473,8 +286,6 @@ export default function Reports() {
             </DropdownMenu>
           </div>
         </div>
-
-
 
         <Card className="bg-white border-gray-200 no-print">
           <CardHeader>
@@ -1501,8 +312,6 @@ export default function Reports() {
 
         {selectedEventId && selectedEvent && (
           <div id="printable-report" className="bg-white p-4 rounded-lg shadow-sm">
-
-
             {/* Standard header for screen view */}
             <div className="text-center mb-3 border-b border-gray-300 pb-2 print:hidden">
               <h1 className="text-xl text-gray-900 inline">{selectedEvent.name}</h1>
@@ -1510,8 +319,6 @@ export default function Reports() {
                 <p className="text-sm italic inline ml-2" style={{ color: '#8DC63F' }}>"{selectedEvent.theme}"</p>
               )}
             </div>
-
-
 
             <Tabs value={activeReport} onValueChange={setActiveReport} className="w-full">
               <TabsList className="grid w-full grid-cols-6 mb-6 no-print">
@@ -1542,27 +349,22 @@ export default function Reports() {
               </TabsList>
 
               <TabsContent value="detailed">
-                {renderDetailedProgram()}
+                <DetailedProgramView {...viewProps} allHospitalityTasks={allHospitalityTasks} />
               </TabsContent>
-
               <TabsContent value="general">
-                {renderGeneralProgram()}
+                <GeneralProgramView {...viewProps} />
               </TabsContent>
-
               <TabsContent value="projection">
-                {renderProjectionView()}
+                <ProjectionReportView {...viewProps} />
               </TabsContent>
-
               <TabsContent value="sound">
-                {renderSoundView()}
+                <SoundReportView {...viewProps} />
               </TabsContent>
-
               <TabsContent value="ushers">
-                {renderUshersView()}
+                <UshersReportView {...viewProps} />
               </TabsContent>
-
               <TabsContent value="hospitality">
-                {renderHospitalityView()}
+                <HospitalityReportView {...viewProps} allHospitalityTasks={allHospitalityTasks} />
               </TabsContent>
             </Tabs>
 
@@ -1571,27 +373,27 @@ export default function Reports() {
               <div className="print-all-reports hidden print:block">
                 <div className="print-section">
                   <h2 className="text-lg mb-2 border-b pb-1">INFORME DETALLADO</h2>
-                  {renderDetailedProgram()}
+                  <DetailedProgramView {...viewProps} allHospitalityTasks={allHospitalityTasks} />
                 </div>
                 <div className="print-section" style={{ breakBefore: 'page' }}>
                   <h2 className="text-lg mb-2 border-b pb-1">PROGRAMA GENERAL</h2>
-                  {renderGeneralProgram()}
+                  <GeneralProgramView {...viewProps} />
                 </div>
                 <div className="print-section" style={{ breakBefore: 'page' }}>
                   <h2 className="text-lg mb-2 border-b pb-1">NOTAS DE PROYECCIÓN</h2>
-                  {renderProjectionView()}
+                  <ProjectionReportView {...viewProps} />
                 </div>
                 <div className="print-section" style={{ breakBefore: 'page' }}>
                   <h2 className="text-lg mb-2 border-b pb-1">NOTAS DE SONIDO</h2>
-                  {renderSoundView()}
+                  <SoundReportView {...viewProps} />
                 </div>
                 <div className="print-section" style={{ breakBefore: 'page' }}>
                   <h2 className="text-lg mb-2 border-b pb-1">NOTAS DE UJIERES</h2>
-                  {renderUshersView()}
+                  <UshersReportView {...viewProps} />
                 </div>
                 <div className="print-section" style={{ breakBefore: 'page' }}>
                   <h2 className="text-lg mb-2 border-b pb-1">HOSPITALIDAD</h2>
-                  {renderHospitalityView()}
+                  <HospitalityReportView {...viewProps} allHospitalityTasks={allHospitalityTasks} />
                 </div>
               </div>
             )}
