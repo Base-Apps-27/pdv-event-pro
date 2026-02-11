@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText, History, Link as LinkIcon, MoreHorizontal, Tv } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText, History, Link as LinkIcon, MoreHorizontal, Tv, Radio } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ import EventEditDialog from "../components/event/EventEditDialog";
 import EventCalendar from "../components/event/EventCalendar";
 import EventAIHelper from "../components/event/EventAIHelper";
 import EditHistoryModal from "../components/event/EditHistoryModal";
+import { hasPermission } from "@/components/utils/permissions";
 
 export default function EventDetail() {
   const navigate = useNavigate();
@@ -273,6 +274,12 @@ export default function EventDetail() {
                   <Tv className="w-4 h-4 mr-2" />
                   TV Display (Countdown)
                 </DropdownMenuItem>
+                {hasPermission(currentUser, 'manage_live_director') && sessions.length > 0 && (
+                  <DropdownMenuItem onClick={() => navigate(createPageUrl("DirectorConsole") + `?sessionId=${sessions[0]?.id}`)}>
+                    <Radio className="w-4 h-4 mr-2" />
+                    Director Console
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
                   <a 
                     href={`${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`} 
