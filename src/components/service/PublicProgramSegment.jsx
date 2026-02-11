@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Sparkles, Languages, Mic, Users, MapPin, BookOpen, ExternalLink, Monitor, AlertTriangle } from "lucide-react";
+import { Clock, Sparkles, Languages, Mic, Users, MapPin, BookOpen, ExternalLink, Monitor, AlertTriangle, Pause, SkipForward, ArrowRightLeft } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { getSegmentData, getNormalizedSongs } from "@/components/utils/segmentDataUtils";
@@ -148,6 +148,20 @@ export default function PublicProgramSegment({
   // VISUAL HIERARCHY LOGIC
   // Mobile-first: start compact (p-3 my-2), scale up on sm+ (sm:p-5 sm:my-4)
   const getContainerStyles = () => {
+    // 0. Live Director Status Overrides
+    // Skipped segments are visually de-emphasized
+    if (segment.live_status === 'skipped') {
+      return 'bg-gray-100 border border-gray-300 rounded-xl my-2 sm:my-4 opacity-50 line-through-children p-3 sm:p-5';
+    }
+    // Held segments get amber emphasis
+    if (segment.live_hold_status === 'held') {
+      return 'bg-amber-50 border-2 border-amber-500 shadow-lg z-10 scale-[1.01] rounded-xl my-2 sm:my-4 mx-[-4px] sm:mx-[-8px] animate-pulse';
+    }
+    // Shifted segments get purple indicator
+    if (segment.live_status === 'shifted') {
+      return 'bg-purple-50 border-2 border-purple-400 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
+    }
+
     // 1. Critical Override: Active/Upcoming status always wins
     if (isCurrent) return 'bg-yellow-50 border-2 border-yellow-400 shadow-md z-10 scale-[1.01] rounded-xl my-2 sm:my-4 mx-[-4px] sm:mx-[-8px]';
     if (isUpcoming) return 'bg-blue-50 border-l-4 border-blue-400 rounded-xl my-2 sm:my-4 shadow-sm p-3 sm:p-5';
@@ -170,13 +184,42 @@ export default function PublicProgramSegment({
       id={domId}
       className={`p-3 sm:p-4 transition-all duration-300 scroll-mt-24 ${getContainerStyles()}`}
     >
+      {/* Live Director Status Badges (Hold/Skip/Shift) */}
+      {segment.live_hold_status === 'held' && (
+        <div className="mb-2 flex items-center gap-2">
+          <Badge className="bg-amber-600 text-white animate-pulse flex items-center gap-1">
+            <Pause className="w-3 h-3" />
+            {language === 'es' ? 'EN ESPERA' : 'ON HOLD'}
+          </Badge>
+          <span className="text-xs text-amber-700">
+            {language === 'es' ? 'Director ajustando tiempo' : 'Director adjusting time'}
+          </span>
+        </div>
+      )}
+      {segment.live_status === 'skipped' && (
+        <div className="mb-2">
+          <Badge className="bg-gray-500 text-white flex items-center gap-1">
+            <SkipForward className="w-3 h-3" />
+            {language === 'es' ? 'OMITIDO' : 'SKIPPED'}
+          </Badge>
+        </div>
+      )}
+      {segment.live_status === 'shifted' && (
+        <div className="mb-2">
+          <Badge className="bg-purple-500 text-white flex items-center gap-1">
+            <ArrowRightLeft className="w-3 h-3" />
+            {language === 'es' ? 'MOVIDO' : 'SHIFTED'}
+          </Badge>
+        </div>
+      )}
+
       {/* Current/Upcoming Status Badges */}
-      {isCurrent && (
+      {isCurrent && segment.live_status !== 'skipped' && (
         <div className="mb-2">
           <Badge className="bg-yellow-500 text-white animate-pulse">EN CURSO AHORA</Badge>
         </div>
       )}
-      {isUpcoming && (
+      {isUpcoming && segment.live_status !== 'skipped' && (
         <div className="mb-2">
           <Badge className="bg-blue-500 text-white">PRÓXIMO (15 min)</Badge>
         </div>
@@ -185,15 +228,37 @@ export default function PublicProgramSegment({
       {/* Main Segment Header (Always Visible) */}
       <div className="flex items-start justify-between gap-2 sm:gap-4">
         <div className="flex-1 min-w-0">
-          {/* Time Display */}
+          {/* Time Display - Shows actual times if live-adjusted */}
           <div className="flex items-center gap-2 sm:gap-3 mb-1">
             <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-pdv-teal flex-shrink-0" />
             <div className="flex items-baseline flex-wrap gap-x-2">
-              <span className="font-bold text-base sm:text-lg text-gray-900">
-                {getData('start_time') ? formatTimeToEST(getData('start_time')) : "-"}
-              </span>
-              {getData('end_time') && (
-                <span className="text-gray-600 text-sm">- {formatTimeToEST(getData('end_time'))}</span>
+              {/* Show actual times if available, otherwise planned */}
+              {segment.actual_start_time ? (
+                <>
+                  <span className="font-bold text-base sm:text-lg text-green-700">
+                    {formatTimeToEST(segment.actual_start_time)}
+                  </span>
+                  {segment.actual_end_time ? (
+                    <span className="text-green-600 text-sm">- {formatTimeToEST(segment.actual_end_time)}</span>
+                  ) : getData('end_time') && (
+                    <span className="text-gray-400 text-sm line-through">- {formatTimeToEST(getData('end_time'))}</span>
+                  )}
+                  {/* Show original planned time crossed out */}
+                  {getData('start_time') && getData('start_time') !== segment.actual_start_time && (
+                    <span className="text-gray-400 text-xs line-through ml-1">
+                      (plan: {formatTimeToEST(getData('start_time'))})
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="font-bold text-base sm:text-lg text-gray-900">
+                    {getData('start_time') ? formatTimeToEST(getData('start_time')) : "-"}
+                  </span>
+                  {getData('end_time') && (
+                    <span className="text-gray-600 text-sm">- {formatTimeToEST(getData('end_time'))}</span>
+                  )}
+                </>
               )}
               {segment.duration_min && (
                 <span className="text-xs sm:text-sm text-gray-600">({segment.duration_min} min)</span>
