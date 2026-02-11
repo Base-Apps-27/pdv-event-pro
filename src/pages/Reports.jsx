@@ -33,10 +33,13 @@ export default function Reports() {
 
   // CLEANUP (2026-02-10): Auth check removed — Layout already gates all non-public pages.
 
-  const { data: events = [] } = useQuery({
+  const { data: eventsRaw = [] } = useQuery({
     queryKey: ['events'],
     queryFn: () => base44.entities.Event.list('-year'),
   });
+  
+  // Filter out templates to match Events.js behavior - only show real events
+  const events = eventsRaw.filter(e => e.status !== 'template');
 
   const { data: sessions = [] } = useQuery({
     queryKey: ['sessions', selectedEventId],
