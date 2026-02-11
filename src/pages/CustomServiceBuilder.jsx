@@ -506,7 +506,8 @@ export default function CustomServiceBuilder() {
       console.log('[PDF] Announcements PDF download initiated');
     } catch (error) {
       console.error('[PDF ERROR]', error);
-      alert('Error generando PDF de anuncios: ' + (error?.message || 'Error desconocido'));
+      // Phase 2: Replaced stray alert() with toast (2026-02-11)
+      toast.error('Error generando PDF de anuncios: ' + (error?.message || 'Error desconocido'));
     }
   };
 
