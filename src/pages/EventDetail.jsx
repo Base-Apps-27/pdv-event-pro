@@ -291,7 +291,7 @@ export default function EventDetail() {
                     }}
                   >
                     <LinkIcon className="w-4 h-4 mr-2" />
-                    Formulario de Contenido
+                    Formulario de Predicas/Versículos
                   </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
