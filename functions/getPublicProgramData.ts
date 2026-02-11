@@ -20,13 +20,13 @@ Deno.serve(async (req) => {
             const today = new Date();
             today.setHours(0,0,0,0);
             
-            // TV Display: only show events within 7 days (past 2 days + future 7 days)
+            // TV Display: show events within window (past 7 days for testing Director, future 7 days)
             const relevantEvents = allEvents.filter(e => {
                 if (e.status !== 'confirmed' && e.status !== 'in_progress') return false;
                 if (!e.start_date) return false;
                 const start = new Date(e.start_date);
                 const diffDays = (start - today) / (1000 * 60 * 60 * 24);
-                return diffDays > -2 && diffDays <= 7;
+                return diffDays > -7 && diffDays <= 7;
             });
 
             // 2. Fetch Services (Active)
