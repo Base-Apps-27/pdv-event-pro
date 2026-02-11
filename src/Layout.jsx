@@ -7,6 +7,7 @@ import { hasPermission } from "@/components/utils/permissions";
 import { useTheme } from "@/components/utils/useTheme";
 import { Calendar, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus, Shield, Moon, Sun, ChevronLeft, ChevronRight } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import ErrorBoundary from "@/components/utils/ErrorBoundary";
 
 function LayoutContent({ children }) {
   return (
@@ -578,16 +579,18 @@ export default function Layout({ children }) {
   return (
     <LanguageProvider>
       <TooltipProvider delayDuration={200}>
-        <>
-          <style>{`
-            @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
-            h1, h2 {
-              font-family: 'Anton', sans-serif !important;
-              font-weight: 400;
-            }
-          `}</style>
-          <LayoutContent>{children}</LayoutContent>
-        </>
+        <ErrorBoundary>
+          <>
+            <style>{`
+              @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+              h1, h2 {
+                font-family: 'Anton', sans-serif !important;
+                font-weight: 400;
+              }
+            `}</style>
+            <LayoutContent>{children}</LayoutContent>
+          </>
+        </ErrorBoundary>
       </TooltipProvider>
     </LanguageProvider>
   );

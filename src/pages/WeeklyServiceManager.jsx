@@ -576,7 +576,8 @@ export default function WeeklyServiceManager() {
       }));
     },
     onError: (error) => {
-      alert('Error al guardar: ' + error.message);
+      // Phase 1: Replaced alert() with toast (2026-02-11)
+      toast.error('Error al guardar: ' + error.message);
     }
   });
 
@@ -611,7 +612,8 @@ export default function WeeklyServiceManager() {
       queryClient.invalidateQueries(['dynamicAnnouncements']);
     },
     onError: (error) => {
-      alert('Error al eliminar: ' + (error.message || JSON.stringify(error)));
+      // Phase 1: Replaced alert() with toast (2026-02-11)
+      toast.error('Error al eliminar: ' + (error.message || JSON.stringify(error)));
     }
   });
 
@@ -722,18 +724,27 @@ export default function WeeklyServiceManager() {
       setPrintSettingsPage2(existingData.print_settings_page2 || null);
       setHasUnsavedChanges(false);
       
+      // Phase 1: Replaced window.confirm with toast action for backup recovery (2026-02-11)
+      // Non-blocking: user sees toast with "Restore" action instead of blocking confirm dialog
       const backupKey = `service_backup_${selectedDate}`;
       const backup = localStorage.getItem(backupKey);
       if (backup) {
         try {
-          const { data, timestamp } = JSON.parse(backup);
+          const { data: backupData, timestamp } = JSON.parse(backup);
           const backupDate = new Date(timestamp);
           const serverDate = existingData.updated_date ? new Date(existingData.updated_date) : new Date(0);
           if (backupDate > serverDate) {
-            if (window.confirm('Se encontró una versión más reciente en el navegador. ¿Restaurar datos del backup local?')) {
-              setServiceData(data);
-              setLastSavedData(JSON.parse(JSON.stringify(data)));
-            }
+            toast('Se encontró una versión más reciente en el navegador.', {
+              duration: 15000,
+              action: {
+                label: 'Restaurar',
+                onClick: () => {
+                  setServiceData(backupData);
+                  setLastSavedData(JSON.parse(JSON.stringify(backupData)));
+                  toast.success('Datos restaurados del backup local');
+                },
+              },
+            });
           }
         } catch (error) {
           console.error('[BACKUP RECOVERY ERROR] Failed to restore localStorage backup', {
@@ -1107,10 +1118,15 @@ export default function WeeklyServiceManager() {
     }));
   };
 
+  // Phase 1: resetToBlueprint now uses state + confirmation dialog instead of window.confirm (2026-02-11)
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  
   const resetToBlueprint = () => {
-    if (!window.confirm("¿Estás seguro? Esto restablecerá TODOS los segmentos y campos al diseño original. Se perderán los datos ingresados en los segmentos.")) {
-      return;
-    }
+    setShowResetConfirm(true);
+  };
+
+  const executeResetToBlueprint = () => {
+    setShowResetConfirm(false);
 
     setSavingField('reset-blueprint');
     
@@ -1402,7 +1418,8 @@ Return ONLY valid JSON:
       }
     } catch (error) {
       console.error('AI optimization error:', error);
-      alert('Error al optimizar / Error optimizing: ' + error.message);
+      // Phase 1: Replaced alert() with toast (2026-02-11)
+      toast.error('Error al optimizar / Error optimizing: ' + error.message);
     } finally {
       setOptimizingAnnouncement(false);
     }

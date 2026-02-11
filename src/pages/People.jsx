@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPageUrl } from "@/utils";
 import { hasPermission } from "@/components/utils/permissions";
+import { toast } from "sonner";
 import { Users, Upload, Loader2, Search, Filter, FileDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,10 +115,11 @@ export default function People() {
     setRefreshing(true);
     try {
       const response = await base44.functions.invoke('refreshSuggestions', {});
-      alert(`Actualizado: ${response.data.updated} actualizados, ${response.data.deleted} eliminados, ${response.data.unchanged} sin cambios`);
+      // Phase 1: Replaced alert() with toast (2026-02-11)
+      toast.success(`Actualizado: ${response.data.updated} actualizados, ${response.data.deleted} eliminados, ${response.data.unchanged} sin cambios`);
       queryClient.invalidateQueries(['suggestions']);
     } catch (error) {
-      alert('Error al actualizar sugerencias: ' + error.message);
+      toast.error('Error al actualizar sugerencias: ' + error.message);
     } finally {
       setRefreshing(false);
     }

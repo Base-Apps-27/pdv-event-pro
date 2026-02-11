@@ -170,9 +170,8 @@ export default function RolePermissionManager() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          if (confirm(language === 'es' ? '¿Eliminar este rol?' : 'Delete this role?')) {
-                            deleteRoleMutation.mutate(role.id);
-                          }
+                          // Phase 1: Replaced confirm() with state-driven dialog (2026-02-11)
+                          setRoleToDelete(role);
                         }}
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />

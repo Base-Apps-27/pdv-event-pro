@@ -79,11 +79,10 @@ export default function Events() {
     },
   });
 
+  // Phase 1: Replaced window.confirm with direct dialog flow (2026-02-11)
+  // DeleteEventDialog already provides a proper confirmation UI
   const handleDeleteClick = (event) => {
-    // First confirmation: Browser alert
-    if (window.confirm(t('events.deleteConfirm'))) {
-      setEventToDelete(event);
-    }
+    setEventToDelete(event);
   };
 
   const updateFormField = (field, value) => {

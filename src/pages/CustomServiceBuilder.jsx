@@ -388,15 +388,16 @@ export default function CustomServiceBuilder() {
         console.log('[BACKUP] Saved to localStorage:', backupKey);
       }
       
-      // Only alert if manual save (status is saving)
+      // Phase 1: Replaced alert() with toast (2026-02-11)
       if (autoSaveStatus !== "saving") {
-         alert('Servicio guardado exitosamente en ' + new Date().toLocaleTimeString('es-ES', { timeZone: 'America/New_York' }));
+         toast.success('Servicio guardado exitosamente en ' + new Date().toLocaleTimeString('es-ES', { timeZone: 'America/New_York' }));
       }
     },
     onError: (error) => {
       console.error('[MUTATION ERROR]', error);
       setAutoSaveStatus("error");
-      alert('Error al guardar: ' + error.message);
+      // Phase 1: Replaced alert() with toast (2026-02-11)
+      toast.error('Error al guardar: ' + error.message);
     }
   });
 
@@ -494,7 +495,8 @@ export default function CustomServiceBuilder() {
   const handleDownloadAnnouncementsPDF = async () => {
     try {
       if (!selectedAnnouncementsForPrint || selectedAnnouncementsForPrint.length === 0) {
-        alert('Por favor, selecciona al menos un anuncio.');
+        // Phase 1: Replaced alert() with toast (2026-02-11)
+        toast.error('Por favor, selecciona al menos un anuncio.');
         return;
       }
       console.log('[PDF] Generating announcements PDF...');
@@ -515,12 +517,20 @@ export default function CustomServiceBuilder() {
     }));
   };
 
+  // Phase 1: Replaced window.confirm with state-driven dialog (2026-02-11)
+  const [segmentToDelete, setSegmentToDelete] = useState(null);
+  
   const removeSegment = (idx) => {
-    if (window.confirm('¿Eliminar este segmento?')) {
+    setSegmentToDelete(idx);
+  };
+
+  const confirmRemoveSegment = () => {
+    if (segmentToDelete !== null) {
       setServiceData(prev => ({
         ...prev,
-        segments: prev.segments.filter((_, i) => i !== idx)
+        segments: prev.segments.filter((_, i) => i !== segmentToDelete)
       }));
+      setSegmentToDelete(null);
     }
   };
 
