@@ -28,6 +28,7 @@ import DirectorHeader from '@/components/director/DirectorHeader';
 import DirectorTimeline from '@/components/director/DirectorTimeline';
 import DirectorHoldPanel from '@/components/director/DirectorHoldPanel';
 import DirectorDriftIndicator from '@/components/director/DirectorDriftIndicator';
+import DirectorPingFeed from '@/components/director/DirectorPingFeed';
 
 /**
  * DirectorConsole - Phase 2 Core

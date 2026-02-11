@@ -52,6 +52,7 @@ import BuildMemory from './pages/BuildMemory';
 import CustomServiceBuilder from './pages/CustomServiceBuilder';
 import CustomServicesManager from './pages/CustomServicesManager';
 import Dashboard from './pages/Dashboard';
+import DirectorConsole from './pages/DirectorConsole';
 import EventDetail from './pages/EventDetail';
 import Events from './pages/Events';
 import Home from './pages/Home';
@@ -70,7 +71,6 @@ import TestDashboard from './pages/TestDashboard';
 import UserManagement from './pages/UserManagement';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import DirectorConsole from './pages/DirectorConsole';
 import __Layout from './Layout.jsx';
 
 
@@ -80,6 +80,7 @@ export const PAGES = {
     "CustomServiceBuilder": CustomServiceBuilder,
     "CustomServicesManager": CustomServicesManager,
     "Dashboard": Dashboard,
+    "DirectorConsole": DirectorConsole,
     "EventDetail": EventDetail,
     "Events": Events,
     "Home": Home,
@@ -98,7 +99,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "DirectorConsole": DirectorConsole,
 }
 
 export const pagesConfig = {
