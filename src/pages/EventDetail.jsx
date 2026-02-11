@@ -194,68 +194,105 @@ export default function EventDetail() {
           </div>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            {/* Primary Actions - Always Visible */}
-            <Button 
-              onClick={() => setShowEditEvent(true)}
-              variant="outline"
-              className="border-gray-300 hover:border-gray-400 text-gray-700"
-            >
-              <Edit className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Editar</span>
-            </Button>
+            {/* Primary Actions Row */}
+            <div className="hidden sm:flex items-center gap-2">
+              <Button 
+                onClick={() => navigate(createPageUrl("Reports") + `?eventId=${eventId}`)}
+                variant="outline"
+                className="border-gray-300 hover:border-gray-400 text-gray-700"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Reportes
+              </Button>
+              <Button 
+                onClick={() => setShowEditHistory(true)}
+                variant="outline"
+                className="border-gray-300 hover:border-gray-400 text-gray-700"
+              >
+                <History className="w-4 h-4 mr-2" />
+                Historial
+              </Button>
+              <Button 
+                onClick={() => setShowEditEvent(true)}
+                variant="outline"
+                className="border-gray-300 hover:border-gray-400 text-gray-700"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Editar
+              </Button>
+            </div>
 
-            {/* AI Assistant */}
-            <Button 
-              onClick={() => setShowAIHelper(true)}
-              variant="outline"
-              style={{ 
-                background: 'linear-gradient(to right, rgba(31, 138, 112, 0.1), rgba(141, 198, 63, 0.1))',
-                borderColor: 'rgba(31, 138, 112, 0.3)',
-                color: '#1F8A70'
-              }}
-            >
-              <Sparkles className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Asistente IA</span>
-            </Button>
+            {/* AI Assistant - Icon only */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    onClick={() => setShowAIHelper(true)}
+                    variant="outline"
+                    size="icon"
+                    style={{ 
+                      background: 'linear-gradient(to right, rgba(31, 138, 112, 0.1), rgba(141, 198, 63, 0.1))',
+                      borderColor: 'rgba(31, 138, 112, 0.3)',
+                      color: '#1F8A70'
+                    }}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Asistente IA</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
             {/* More Actions Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="border-gray-300">
-                  <MoreHorizontal className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Más</span>
+                <Button variant="outline" size="icon" className="border-gray-300">
+                  <MoreHorizontal className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuItem asChild>
-                  <a href={`${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
-                    <LinkIcon className="w-4 h-4 mr-2" />
-                    Abrir Formulario
-                  </a>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={async () => {
-                   try {
-                     const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`;
-                     await navigator.clipboard.writeText(url);
-                     toast.success("Link copiado");
-                   } catch (err) {
-                     toast.error("Error al copiar link");
-                   }
-                }}>
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copiar Link Formulario
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-56">
+                {/* Mobile-only primary actions */}
+                <div className="sm:hidden">
+                  <DropdownMenuItem onClick={() => navigate(createPageUrl("Reports") + `?eventId=${eventId}`)}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Reportes
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowEditHistory(true)}>
+                    <History className="w-4 h-4 mr-2" />
+                    Historial
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowEditEvent(true)}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Editar Evento
+                  </DropdownMenuItem>
+                  <div className="my-1 border-t border-gray-100" />
+                </div>
                 <DropdownMenuItem onClick={() => navigate(createPageUrl("PublicCountdownDisplay") + `?event_id=${eventId}`)}>
                   <Tv className="w-4 h-4 mr-2" />
-                  TV Display
+                  TV Display (Countdown)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate(createPageUrl("Reports") + `?eventId=${eventId}`)}>
-                  <FileText className="w-4 h-4 mr-2" />
-                  Reportes
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowEditHistory(true)}>
-                  <History className="w-4 h-4 mr-2" />
-                  Historial de Edición
+                <DropdownMenuItem asChild>
+                  <a 
+                    href={`${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex items-center w-full"
+                    onClick={async (e) => {
+                      // Copy link when clicking, also opens in new tab
+                      try {
+                        const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`;
+                        await navigator.clipboard.writeText(url);
+                        toast.success("Link copiado al portapapeles");
+                      } catch (err) {
+                        // Silent fail on copy, still opens link
+                      }
+                    }}
+                  >
+                    <LinkIcon className="w-4 h-4 mr-2" />
+                    Formulario de Contenido
+                  </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
