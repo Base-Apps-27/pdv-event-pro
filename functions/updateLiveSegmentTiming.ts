@@ -3,11 +3,15 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 /**
  * Live Director Timing Control Backend
  * 
+ * DECISION: Live Director Architecture (2026-02-11)
+ * 
  * Features:
  * - Single-user ownership: Only one person can be Live Director at a time
  * - Takeover mechanism with notification to previous director
  * - Action logging for undo functionality
  * - Undo last action capability
+ * - Hold/Finalize flow for overrun reconciliation
+ * - Cascade application from AI proposals
  * 
  * Actions:
  * - toggle_live_adjustment: Enable/disable live mode (requires confirmation on frontend)
@@ -16,6 +20,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
  * - takeover: Take control from another Live Director
  * - undo_last: Undo the most recent action
  * - release_control: Release Live Director control without disabling
+ * - place_hold: Place a hold on a segment (freezes downstream)
+ * - finalize_hold: Finalize held segment with actual end, apply reconciliation + cascade
  */
 
 Deno.serve(async (req) => {
@@ -24,7 +30,7 @@ Deno.serve(async (req) => {
   }
 
   const base44 = createClientFromRequest(req);
-  const { sessionId, segmentId, action, value, field, confirmTakeover } = await req.json();
+  const { sessionId, segmentId, action, value, field, confirmTakeover, actual_end_time, reconciled_segments, cascade_option } = await req.json();
 
   try {
     const user = await base44.auth.me();
@@ -522,6 +528,164 @@ Deno.serve(async (req) => {
       });
 
       return new Response(JSON.stringify({ success: true, offset }), { status: 200 });
+    }
+
+    // ============================================================
+    // ACTION: place_hold
+    // Place a hold on a segment - freezes downstream advancement
+    // ============================================================
+    if (action === 'place_hold') {
+      if (!session || !session.live_adjustment_enabled) {
+        return new Response(JSON.stringify({ error: 'Live adjustment not enabled for this session' }), { status: 400 });
+      }
+
+      if (!segmentId) {
+        return new Response(JSON.stringify({ error: 'place_hold requires segmentId' }), { status: 400 });
+      }
+
+      const [segment] = await base44.asServiceRole.entities.Segment.filter({ id: segmentId });
+      if (!segment) {
+        return new Response(JSON.stringify({ error: 'Segment not found' }), { status: 404 });
+      }
+
+      // Verify segment is currently active (has start but no end)
+      if (!segment.actual_start_time || segment.actual_end_time) {
+        return new Response(JSON.stringify({ error: 'Can only place hold on active segment' }), { status: 400 });
+      }
+
+      // Check if another segment is already held
+      const heldSegments = await base44.asServiceRole.entities.Segment.filter({ 
+        session_id: sessionId, 
+        live_hold_status: 'held' 
+      });
+      if (heldSegments.length > 0) {
+        return new Response(JSON.stringify({ 
+          error: 'Another segment is already held', 
+          heldSegmentId: heldSegments[0].id 
+        }), { status: 400 });
+      }
+
+      const previousState = {
+        live_hold_status: segment.live_hold_status,
+        live_hold_placed_at: segment.live_hold_placed_at,
+        live_hold_placed_by: segment.live_hold_placed_by
+      };
+
+      await base44.asServiceRole.entities.Segment.update(segmentId, {
+        live_hold_status: 'held',
+        live_hold_placed_at: new Date().toISOString(),
+        live_hold_placed_by: user.id
+      });
+
+      await base44.asServiceRole.entities.Session.update(sessionId, {
+        last_live_adjustment_time: new Date().toISOString()
+      });
+
+      await logAction('place_hold', segmentId, previousState, {
+        live_hold_status: 'held',
+        live_hold_placed_by: user.id
+      });
+
+      return new Response(JSON.stringify({ success: true, held: true }), { status: 200 });
+    }
+
+    // ============================================================
+    // ACTION: finalize_hold
+    // Finalize held segment with actual end time, apply reconciliation + cascade
+    // ============================================================
+    if (action === 'finalize_hold') {
+      if (!session || !session.live_adjustment_enabled) {
+        return new Response(JSON.stringify({ error: 'Live adjustment not enabled for this session' }), { status: 400 });
+      }
+
+      if (!segmentId) {
+        return new Response(JSON.stringify({ error: 'finalize_hold requires segmentId' }), { status: 400 });
+      }
+
+      if (!actual_end_time || !actual_end_time.match(/^\d{2}:\d{2}$/)) {
+        return new Response(JSON.stringify({ error: 'finalize_hold requires actual_end_time in HH:MM format' }), { status: 400 });
+      }
+
+      const [segment] = await base44.asServiceRole.entities.Segment.filter({ id: segmentId });
+      if (!segment) {
+        return new Response(JSON.stringify({ error: 'Segment not found' }), { status: 404 });
+      }
+
+      if (segment.live_hold_status !== 'held') {
+        return new Response(JSON.stringify({ error: 'Segment is not currently held' }), { status: 400 });
+      }
+
+      // Calculate drift
+      const plannedEnd = segment.end_time;
+      const [ph, pm] = (plannedEnd || '00:00').split(':').map(Number);
+      const [ah, am] = actual_end_time.split(':').map(Number);
+      const drift = (ah * 60 + am) - (ph * 60 + pm);
+
+      const previousState = {
+        segment: {
+          actual_end_time: segment.actual_end_time,
+          live_hold_status: segment.live_hold_status,
+          timing_source: segment.timing_source
+        }
+      };
+
+      // Finalize the held segment
+      await base44.asServiceRole.entities.Segment.update(segmentId, {
+        actual_end_time: actual_end_time,
+        live_hold_status: 'finalized',
+        timing_source: 'director',
+        is_live_adjusted: true
+      });
+
+      // Process reconciled segments (skip/shift)
+      if (reconciled_segments && Array.isArray(reconciled_segments)) {
+        for (const rec of reconciled_segments) {
+          if (rec.disposition === 'skip') {
+            await base44.asServiceRole.entities.Segment.update(rec.id, {
+              live_status: 'skipped',
+              timing_source: 'director'
+            });
+          } else if (rec.disposition === 'shift') {
+            await base44.asServiceRole.entities.Segment.update(rec.id, {
+              live_status: 'shifted',
+              timing_source: 'director'
+            });
+          }
+        }
+      }
+
+      // Apply cascade option
+      let cascadeApplied = [];
+      if (cascade_option && cascade_option.segments && Array.isArray(cascade_option.segments)) {
+        for (const seg of cascade_option.segments) {
+          await base44.asServiceRole.entities.Segment.update(seg.id, {
+            actual_start_time: seg.new_start_time,
+            actual_end_time: seg.new_end_time,
+            is_live_adjusted: true,
+            timing_source: 'director'
+          });
+          cascadeApplied.push(seg.id);
+        }
+      }
+
+      await base44.asServiceRole.entities.Session.update(sessionId, {
+        last_live_adjustment_time: new Date().toISOString()
+      });
+
+      await logAction('finalize_hold', segmentId, previousState, {
+        actual_end_time,
+        reconciled_count: reconciled_segments?.length || 0,
+        cascade_label: cascade_option?.label,
+        cascade_segments_affected: cascadeApplied,
+        cumulative_drift_min: drift
+      }, `Finalized with ${drift}m drift`);
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        finalized: true,
+        drift,
+        cascadeApplied: cascadeApplied.length
+      }), { status: 200 });
     }
 
     return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400 });
