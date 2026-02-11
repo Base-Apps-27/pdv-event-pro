@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, X, Send, Loader2, ImagePlus } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, ImagePlus, Radio } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { hasPermission } from "@/components/utils/permissions";
 import LiveChatMessage from "./LiveChatMessage";
 import LiveChatPinnedSection from "./LiveChatPinnedSection";
@@ -50,6 +51,7 @@ export default function LiveOperationsChat({
   };
 
   const [messageText, setMessageText] = useState("");
+  const [isDirectorPing, setIsDirectorPing] = useState(false);
   // ═══════════════════════════════════════════════════════════════════════
   // READ MARKER SYSTEM — Single durable read marker per chat context.
   //
@@ -606,8 +608,8 @@ export default function LiveOperationsChat({
   // CRITICAL FIX: On success, directly inject the server response into the query cache
   // instead of invalidating (which triggers a full refetch and causes 8-10s perceived lag).
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ text, imageUrl, _optimisticId }) => {
-      return await base44.entities.LiveOperationsMessage.create({
+    mutationFn: async ({ text, imageUrl, _optimisticId, directorPing }) => {
+      const newMessage = await base44.entities.LiveOperationsMessage.create({
         context_type: contextType,
         context_id: contextId,
         context_date: contextDate,
@@ -616,8 +618,29 @@ export default function LiveOperationsChat({
         created_by_name: currentUser?.display_name || currentUser?.full_name || null,
         is_pinned: false,
         is_archived: false,
+        is_director_ping: directorPing || false,
         reactions: []
       });
+      
+      // If this is a director ping, trigger backend notification
+      if (directorPing) {
+        try {
+          await base44.functions.invoke('sendChatNotification', {
+            contextType,
+            contextId,
+            contextName,
+            messageId: newMessage.id,
+            senderName: currentUser?.display_name || currentUser?.full_name || currentUser?.email,
+            messagePreview: text?.substring(0, 100) || '[Image]',
+            isDirectorPing: true
+          });
+        } catch (err) {
+          console.error('Failed to send director ping notification:', err);
+          // Don't fail the message send if notification fails
+        }
+      }
+      
+      return newMessage;
     },
     onSuccess: (serverMsg, variables) => {
       // Remove the optimistic message
@@ -630,6 +653,7 @@ export default function LiveOperationsChat({
         return [...old, serverMsg];
       });
       setMessageText("");
+      setIsDirectorPing(false); // Reset director ping toggle
     },
     onError: (error, variables) => {
       console.error('Failed to send message:', error);
@@ -719,6 +743,7 @@ export default function LiveOperationsChat({
   const handleSend = () => {
     if (!messageText.trim()) return;
     const text = messageText;
+    const directorPing = isDirectorPing;
     const optimisticId = `opt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     
     // OPTIMISTIC: Insert a local placeholder message immediately
@@ -732,10 +757,12 @@ export default function LiveOperationsChat({
       created_by_name: currentUser?.display_name || currentUser?.full_name || null,
       created_date: new Date().toISOString(),
       is_pinned: false,
+      is_director_ping: directorPing,
       reactions: []
     };
     setOptimisticMessages(prev => [...prev, optimisticMsg]);
     setMessageText(""); // Clear input immediately for responsiveness
+    setIsDirectorPing(false); // Reset toggle
     
     // Clear typing indicator since we just sent
     clearTypingSelf();
@@ -749,7 +776,7 @@ export default function LiveOperationsChat({
     }, 50);
     
     // Fire server mutation
-    sendMessageMutation.mutate({ text, imageUrl: null, _optimisticId: optimisticId });
+    sendMessageMutation.mutate({ text, imageUrl: null, _optimisticId: optimisticId, directorPing });
   };
 
   const handleKeyPress = (e) => {
@@ -892,6 +919,19 @@ export default function LiveOperationsChat({
 
           {/* Input Area - Matching OpsDeck bar aesthetic */}
           <div className="border-t border-slate-200 px-4 py-3 bg-slate-100/95 backdrop-blur-xl">
+            {/* Director Ping Toggle */}
+            {isDirectorPing && (
+              <div className="flex items-center gap-2 mb-2 px-2 py-1.5 bg-red-50 border border-red-200 rounded-lg">
+                <Radio className="w-4 h-4 text-red-600 animate-pulse" />
+                <span className="text-xs font-semibold text-red-700">@Director Priority — Will notify active Live Director</span>
+                <button 
+                  onClick={() => setIsDirectorPing(false)}
+                  className="ml-auto text-red-500 hover:text-red-700 text-xs font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               {/* Hidden file input */}
               <input
@@ -914,13 +954,30 @@ export default function LiveOperationsChat({
                   <ImagePlus className="w-5 h-5" />
                 )}
               </button>
+              {/* @Director ping button */}
+              <button
+                onClick={() => setIsDirectorPing(!isDirectorPing)}
+                disabled={isUploading || sendMessageMutation.isLoading}
+                className={`h-10 w-10 p-0 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                  isDirectorPing 
+                    ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' 
+                    : 'text-slate-500 bg-white border-2 border-slate-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200'
+                } disabled:opacity-50`}
+                title="@Director — Priority ping to Live Director"
+              >
+                <Radio className="w-5 h-5" />
+              </button>
               <Input
                 ref={inputRef}
                 value={messageText}
                 onChange={handleTypingInput}
                 onKeyPress={handleKeyPress}
-                placeholder="Escribe un mensaje..."
-                className="flex-1 text-sm h-10 rounded-full border-2 border-slate-200 bg-white px-4 focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300"
+                placeholder={isDirectorPing ? "@Director: urgent message..." : "Escribe un mensaje..."}
+                className={`flex-1 text-sm h-10 rounded-full border-2 bg-white px-4 focus:ring-2 ${
+                  isDirectorPing 
+                    ? 'border-red-300 focus:ring-red-300 focus:border-red-300 placeholder:text-red-400' 
+                    : 'border-slate-200 focus:ring-indigo-300 focus:border-indigo-300'
+                }`}
                 disabled={sendMessageMutation.isLoading || isUploading}
               />
               <button

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Pin, PinOff, ThumbsUp, ThumbsDown, Trash2, Pencil } from "lucide-react";
+import { Pin, PinOff, ThumbsUp, ThumbsDown, Trash2, Pencil, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { formatTimestampToEST } from "@/components/utils/timeFormat";
 import LiveChatEditInput from "./LiveChatEditInput";
 
@@ -119,16 +120,33 @@ export default function LiveChatMessage({
               {/* Message bubble */}
               <div
                 style={{
-                  backgroundColor: isOwnMessage ? '#1F8A70' : '#FFFFFF',
-                  color: isOwnMessage ? '#FFFFFF' : '#1F2937',
-                  border: isOwnMessage ? 'none' : '1px solid #E5E7EB',
-                  boxShadow: message.is_pinned ? '0 0 0 2px #FBBF24, 0 0 0 4px white' : '0 1px 2px rgba(0,0,0,0.05)',
+                  backgroundColor: message.is_director_ping 
+                    ? (isOwnMessage ? '#DC2626' : '#FEF2F2') 
+                    : (isOwnMessage ? '#1F8A70' : '#FFFFFF'),
+                  color: message.is_director_ping 
+                    ? (isOwnMessage ? '#FFFFFF' : '#991B1B')
+                    : (isOwnMessage ? '#FFFFFF' : '#1F2937'),
+                  border: message.is_director_ping 
+                    ? '2px solid #DC2626'
+                    : (isOwnMessage ? 'none' : '1px solid #E5E7EB'),
+                  boxShadow: message.is_pinned 
+                    ? '0 0 0 2px #FBBF24, 0 0 0 4px white' 
+                    : (message.is_director_ping ? '0 0 12px rgba(220, 38, 38, 0.3)' : '0 1px 2px rgba(0,0,0,0.05)'),
                   opacity: isOptimistic ? 0.6 : 1
                 }}
                 className={`px-3.5 py-2.5 text-sm leading-relaxed ${
                   isOwnMessage ? 'rounded-2xl rounded-br-sm' : 'rounded-2xl rounded-bl-sm'
-                }`}
+                } ${message.is_director_ping ? 'animate-pulse' : ''}`}
               >
+                {/* Director Ping Badge */}
+                {message.is_director_ping && (
+                  <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-red-300">
+                    <Radio className="w-4 h-4 text-red-600 animate-pulse" />
+                    <span className="text-xs font-bold uppercase tracking-wide text-red-700">
+                      @Director Priority
+                    </span>
+                  </div>
+                )}
                 {/* Image attachment */}
                 {message.image_url && (
                   <a href={message.image_url} target="_blank" rel="noopener noreferrer" className="block mb-2">
