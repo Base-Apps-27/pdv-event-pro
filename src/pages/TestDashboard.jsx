@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle2, XCircle, AlertTriangle, Play, RotateCcw, ExternalLink, Activity, Database, Code } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CheckCircle2, XCircle, AlertTriangle, Play, RotateCcw, ExternalLink, Activity, Database, Code, FlaskConical } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
+import TestResultsUI from "@/components/testing/TestResultsUI";
 
 export default function TestDashboard() {
   const [manualTests, setManualTests] = useState(() => {
@@ -348,175 +350,202 @@ export default function TestDashboard() {
         </CardContent>
       </Card>
 
-      {/* Automated Tests */}
-      <Card className="border-2 border-blue-300">
-        <CardHeader className="bg-blue-50 border-b-2 border-blue-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Code className="w-5 h-5 text-blue-600" />
-              <CardTitle>Tests Automáticos</CardTitle>
-            </div>
-            <Button
-              onClick={runAutoTests}
-              disabled={runningTests}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {runningTests ? (
-                <>
-                  <Activity className="w-4 h-4 mr-2 animate-spin" />
-                  Ejecutando...
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  Ejecutar
-                </>
-              )}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="space-y-3">
-            {Object.entries(autoTests).map(([key, result]) => (
-              <div key={key} className={`flex items-center justify-between p-3 rounded border ${getStatusColor(result.status)}`}>
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(result.status)}
-                  <div>
-                    <p className="font-semibold">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
-                    <p className="text-xs">{result.message}</p>
-                  </div>
-                </div>
-                <Badge className={result.status === 'pass' ? 'bg-green-600' : result.status === 'fail' ? 'bg-red-600' : 'bg-yellow-600'}>
-                  {result.status}
-                </Badge>
-              </div>
-            ))}
-            {Object.keys(autoTests).length === 0 && !runningTests && (
-              <p className="text-center text-gray-500 py-4">Click "Ejecutar" para correr tests automáticos</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Tabs: Automated / Manual QA / Unit Tests */}
+      <Tabs defaultValue="automated" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="automated" className="flex items-center gap-1">
+            <Code className="w-4 h-4" />
+            Automated
+          </TabsTrigger>
+          <TabsTrigger value="manual" className="flex items-center gap-1">
+            <Database className="w-4 h-4" />
+            Manual QA
+          </TabsTrigger>
+          <TabsTrigger value="unit" className="flex items-center gap-1">
+            <FlaskConical className="w-4 h-4" />
+            Unit Tests
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Manual Tests by Category */}
-      {categories.map(category => {
-        const tests = MANUAL_TESTS.filter(t => t.category === category);
-        const { completed, total } = getCompletedByCategory(category);
-        const allCategoryComplete = completed === total;
-
-        return (
-          <Card key={category} className={`border-2 ${allCategoryComplete ? 'border-green-300' : 'border-gray-300'}`}>
-            <CardHeader className={`border-b-2 ${allCategoryComplete ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+        {/* ─── Automated Tab ─── */}
+        <TabsContent value="automated" className="space-y-6">
+          <Card className="border-2 border-blue-300">
+            <CardHeader className="bg-blue-50 border-b-2 border-blue-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Database className="w-5 h-5 text-gray-700" />
-                  <CardTitle>{category}</CardTitle>
+                  <Code className="w-5 h-5 text-blue-600" />
+                  <CardTitle>Tests Automáticos</CardTitle>
                 </div>
-                <Badge variant="outline" className={allCategoryComplete ? 'bg-green-100 border-green-400 text-green-800' : ''}>
-                  {completed}/{total}
-                </Badge>
+                <Button
+                  onClick={runAutoTests}
+                  disabled={runningTests}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {runningTests ? (
+                    <>
+                      <Activity className="w-4 h-4 mr-2 animate-spin" />
+                      Ejecutando...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      Ejecutar
+                    </>
+                  )}
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="space-y-4">
-                {tests.map(test => {
-                  const isCompleted = manualTests[test.id]?.completed;
-                  const timestamp = manualTests[test.id]?.timestamp;
-
-                  return (
-                    <div key={test.id} className={`p-4 rounded-lg border-2 ${isCompleted ? 'border-green-300 bg-green-50' : 'border-gray-300 bg-white'}`}>
-                      <div className="flex items-start gap-3">
-                        <Checkbox
-                          checked={isCompleted}
-                          onCheckedChange={() => toggleManualTest(test.id)}
-                          className="mt-1"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-bold text-lg">{test.title}</h3>
-                            {test.link && (
-                              <Link to={test.link}>
-                                <Button variant="ghost" size="sm">
-                                  <ExternalLink className="w-4 h-4" />
-                                </Button>
-                              </Link>
-                            )}
-                          </div>
-                          <ol className="space-y-1 text-sm text-gray-700 list-decimal list-inside">
-                            {test.steps.map((step, idx) => (
-                              <li key={idx} className={step.startsWith('✓') ? 'text-blue-600 font-semibold' : ''}>
-                                {step}
-                              </li>
-                            ))}
-                          </ol>
-                          {isCompleted && timestamp && (
-                            <p className="text-xs text-green-700 mt-2">
-                              ✓ Completado: {new Date(timestamp).toLocaleString('es-ES')}
-                            </p>
-                          )}
-                        </div>
+              <div className="space-y-3">
+                {Object.entries(autoTests).map(([key, result]) => (
+                  <div key={key} className={`flex items-center justify-between p-3 rounded border ${getStatusColor(result.status)}`}>
+                    <div className="flex items-center gap-3">
+                      {getStatusIcon(result.status)}
+                      <div>
+                        <p className="font-semibold">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                        <p className="text-xs">{result.message}</p>
                       </div>
                     </div>
-                  );
-                })}
+                    <Badge className={result.status === 'pass' ? 'bg-green-600' : result.status === 'fail' ? 'bg-red-600' : 'bg-yellow-600'}>
+                      {result.status}
+                    </Badge>
+                  </div>
+                ))}
+                {Object.keys(autoTests).length === 0 && !runningTests && (
+                  <p className="text-center text-gray-500 py-4">Click "Ejecutar" para correr tests automáticos</p>
+                )}
               </div>
             </CardContent>
           </Card>
-        );
-      })}
+        </TabsContent>
 
-      {/* Known Issues Log */}
-      <Card className="border-2 border-red-300">
-        <CardHeader className="bg-red-50 border-b-2 border-red-200">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-600" />
-            <CardTitle>Issues Conocidos (Resueltos)</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="space-y-2 text-sm">
-            <div className="flex items-start gap-2">
-              <Badge className="bg-red-600 text-white flex-shrink-0">FIXED</Badge>
-              <div>
-                <p className="font-semibold">Drag & Drop en SegmentList roto</p>
-                <p className="text-gray-600">Fecha: 2025-12-22 • Causa: Incompatibilidad @hello-pangea/dnd con tablas HTML • Solución: Reemplazado con botones de flecha</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <Badge className="bg-red-600 text-white flex-shrink-0">FIXED</Badge>
-              <div>
-                <p className="font-semibold">Drag & Drop en WeeklyServiceManager roto</p>
-                <p className="text-gray-600">Fecha: 2025-12-22 • Causa: Misma raíz que SegmentList • Solución: Reemplazado con botones de flecha</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        {/* ─── Manual QA Tab ─── */}
+        <TabsContent value="manual" className="space-y-6">
+          {categories.map(category => {
+            const tests = MANUAL_TESTS.filter(t => t.category === category);
+            const { completed, total } = getCompletedByCategory(category);
+            const allCategoryComplete = completed === total;
 
-      {/* Instructions */}
-      <Card className="border-2 border-blue-300">
-        <CardHeader className="bg-blue-50 border-b-2 border-blue-200">
-          <CardTitle>Instrucciones de Uso</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 space-y-3 text-sm">
-          <div>
-            <p className="font-semibold mb-1">Antes de Lanzar a Producción:</p>
-            <ol className="list-decimal list-inside space-y-1 text-gray-700">
-              <li>Ejecutar Tests Automáticos - verificar que todos pasen</li>
-              <li>Ejecutar Tests Manuales - marcar cada uno al completar</li>
-              <li>Si algún test falla, investigar y corregir antes de lanzar</li>
-              <li>Documentar cualquier issue nuevo en "Issues Conocidos"</li>
-            </ol>
-          </div>
-          <div className="bg-yellow-50 border border-yellow-300 p-3 rounded">
-            <p className="font-semibold text-yellow-900 mb-1">⚠️ Recomendación:</p>
-            <p className="text-yellow-800 text-xs">
-              Ejecuta este checklist completo cada vez que hayas hecho cambios significativos al código (más de 5 archivos editados o funcionalidades nuevas). Los tests manuales toman ~30min pero previenen horas de debugging en producción.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+            return (
+              <Card key={category} className={`border-2 ${allCategoryComplete ? 'border-green-300' : 'border-gray-300'}`}>
+                <CardHeader className={`border-b-2 ${allCategoryComplete ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Database className="w-5 h-5 text-gray-700" />
+                      <CardTitle>{category}</CardTitle>
+                    </div>
+                    <Badge variant="outline" className={allCategoryComplete ? 'bg-green-100 border-green-400 text-green-800' : ''}>
+                      {completed}/{total}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    {tests.map(test => {
+                      const isCompleted = manualTests[test.id]?.completed;
+                      const timestamp = manualTests[test.id]?.timestamp;
+
+                      return (
+                        <div key={test.id} className={`p-4 rounded-lg border-2 ${isCompleted ? 'border-green-300 bg-green-50' : 'border-gray-300 bg-white'}`}>
+                          <div className="flex items-start gap-3">
+                            <Checkbox
+                              checked={isCompleted}
+                              onCheckedChange={() => toggleManualTest(test.id)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-bold text-lg">{test.title}</h3>
+                                {test.link && (
+                                  <Link to={test.link}>
+                                    <Button variant="ghost" size="sm">
+                                      <ExternalLink className="w-4 h-4" />
+                                    </Button>
+                                  </Link>
+                                )}
+                              </div>
+                              <ol className="space-y-1 text-sm text-gray-700 list-decimal list-inside">
+                                {test.steps.map((step, idx) => (
+                                  <li key={idx} className={step.startsWith('✓') ? 'text-blue-600 font-semibold' : ''}>
+                                    {step}
+                                  </li>
+                                ))}
+                              </ol>
+                              {isCompleted && timestamp && (
+                                <p className="text-xs text-green-700 mt-2">
+                                  Completado: {new Date(timestamp).toLocaleString('es-ES')}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+
+          {/* Known Issues Log */}
+          <Card className="border-2 border-red-300">
+            <CardHeader className="bg-red-50 border-b-2 border-red-200">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+                <CardTitle>Issues Conocidos (Resueltos)</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-2 text-sm">
+                <div className="flex items-start gap-2">
+                  <Badge className="bg-red-600 text-white flex-shrink-0">FIXED</Badge>
+                  <div>
+                    <p className="font-semibold">Drag & Drop en SegmentList roto</p>
+                    <p className="text-gray-600">Fecha: 2025-12-22 - Causa: Incompatibilidad @hello-pangea/dnd con tablas HTML - Solucion: Reemplazado con botones de flecha</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Badge className="bg-red-600 text-white flex-shrink-0">FIXED</Badge>
+                  <div>
+                    <p className="font-semibold">Drag & Drop en WeeklyServiceManager roto</p>
+                    <p className="text-gray-600">Fecha: 2025-12-22 - Causa: Misma raiz que SegmentList - Solucion: Reemplazado con botones de flecha</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Instructions */}
+          <Card className="border-2 border-blue-300">
+            <CardHeader className="bg-blue-50 border-b-2 border-blue-200">
+              <CardTitle>Instrucciones de Uso</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-3 text-sm">
+              <div>
+                <p className="font-semibold mb-1">Antes de Lanzar a Produccion:</p>
+                <ol className="list-decimal list-inside space-y-1 text-gray-700">
+                  <li>Ejecutar Tests Automaticos - verificar que todos pasen</li>
+                  <li>Ejecutar Tests Manuales - marcar cada uno al completar</li>
+                  <li>Si algun test falla, investigar y corregir antes de lanzar</li>
+                  <li>Documentar cualquier issue nuevo en "Issues Conocidos"</li>
+                </ol>
+              </div>
+              <div className="bg-yellow-50 border border-yellow-300 p-3 rounded">
+                <p className="font-semibold text-yellow-900 mb-1">Recomendacion:</p>
+                <p className="text-yellow-800 text-xs">
+                  Ejecuta este checklist completo cada vez que hayas hecho cambios significativos al codigo (mas de 5 archivos editados o funcionalidades nuevas). Los tests manuales toman ~30min pero previenen horas de debugging en produccion.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ─── Unit Tests Tab ─── */}
+        <TabsContent value="unit" className="space-y-6">
+          <TestResultsUI />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

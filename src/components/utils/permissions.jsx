@@ -4,7 +4,7 @@
  */
 
 // Permission hierarchy: higher levels include all lower levels
-const PERMISSION_HIERARCHY = {
+export const PERMISSION_HIERARCHY = {
   view: 0,
   edit: 1,
   create: 2,
@@ -15,7 +15,7 @@ const PERMISSION_HIERARCHY = {
 
 // Default role permissions (fallback for legacy app_role field)
 // Role = template, user-level custom_permissions/revoked_permissions = final authority
-const DEFAULT_ROLE_PERMISSIONS = {
+export const DEFAULT_ROLE_PERMISSIONS = {
   Admin: [
     'view_events', 'edit_events', 'create_events', 'delete_events',
     'view_services', 'edit_services', 'create_services', 'delete_services',
