@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils, Music, Monitor, Users } from "lucide-react";
+import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils, Music, Monitor, Users, Radio, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import HospitalityTasksViewModal from "@/components/service/HospitalityTasksViewModal";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import StickyOpsDeck from "@/components/service/StickyOpsDeck";
@@ -204,7 +206,42 @@ export default function EventProgramView({
             Run of Show
           </button>
         </div>
+
+        {/* Director Console Entry - Permission Gated */}
+        {hasPermission(currentUser, 'manage_live_director') && selectedSessionId !== "all" && (
+          <Link
+            to={createPageUrl('DirectorConsole') + `?sessionId=${selectedSessionId}`}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-md font-semibold bg-red-600 hover:bg-red-700 text-white transition-all shrink-0"
+          >
+            <Radio className="w-3.5 h-3.5" />
+            Director
+          </Link>
+        )}
       </div>
+
+      {/* Live Director Active Banner - Shows when a session has active director */}
+      {filteredSessions.some(s => s.live_adjustment_enabled && s.live_director_user_id) && (
+        <div className="bg-red-900/90 text-white rounded-lg p-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Radio className="w-5 h-5 text-red-400 animate-pulse" />
+              <span className="font-bold uppercase text-sm">Live Director Active</span>
+            </div>
+            <span className="text-red-200 text-sm">
+              {filteredSessions.find(s => s.live_adjustment_enabled)?.live_director_user_name || 'Director'}
+            </span>
+          </div>
+          {hasPermission(currentUser, 'manage_live_director') && (
+            <Link
+              to={createPageUrl('DirectorConsole') + `?sessionId=${filteredSessions.find(s => s.live_adjustment_enabled)?.id}`}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-md font-semibold bg-white/20 hover:bg-white/30 text-white transition-all"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              Open Console
+            </Link>
+          )}
+        </div>
+      )}
 
       {/* Sessions Display */}
       {filteredSessions.map((session) => {
