@@ -1,7 +1,7 @@
 // Validation utility for AI-proposed segment/session changes
 // Ensures type safety, enum validity, and required fields before execution
 
-const VALID_SEGMENT_TYPES = [
+export const VALID_SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video", "Anuncio",
   "Dinámica", "Break", "TechOnly", "Oración", "Especial", "Cierre",
   "MC", "Ministración", "Receso", "Almuerzo", "Artes", "Breakout", "Panel"
@@ -19,7 +19,7 @@ const VALID_COLOR_CODES = ["worship", "preach", "break", "tech", "special", "def
 
 const VALID_PRINT_COLORS = ["green", "blue", "pink", "orange", "yellow", "purple", "red", "teal", "charcoal"];
 
-const SEGMENT_TYPE_REQUIRED_FIELDS = {
+export const SEGMENT_TYPE_REQUIRED_FIELDS = {
   Plenaria: ["message_title"],
   Alabanza: ["number_of_songs"],
   Video: ["video_name"],
