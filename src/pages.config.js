@@ -70,6 +70,7 @@ import TestDashboard from './pages/TestDashboard';
 import UserManagement from './pages/UserManagement';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
+import DirectorConsole from './pages/DirectorConsole';
 import __Layout from './Layout.jsx';
 
 
@@ -97,6 +98,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
+    "DirectorConsole": DirectorConsole,
 }
 
 export const pagesConfig = {
