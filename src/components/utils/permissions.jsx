@@ -28,12 +28,14 @@ const DEFAULT_ROLE_PERMISSIONS = {
     'view_live_program',
     'view_live_chat',
     'manage_live_timing',
+    'manage_live_director',
     'manage_users',
   ],
   LiveManager: [
     'view_live_program',
     'view_live_chat',
     'manage_live_timing',
+    'manage_live_director',
     'adjust_service_timing',
   ],
   AdmAsst: [
@@ -209,5 +211,8 @@ export function getAllPermissionDefinitions() {
 
     // Service Time Adjustment (for service coordinators to adjust start times)
     { key: 'adjust_service_timing', resource: 'service_timing', action: 'edit', category: 'live', hierarchy_level: 1, label_en: 'Adjust Service Timing', label_es: 'Ajustar Horario del Servicio' },
+
+    // Live Director (for managing live event session timing via Director Console)
+    { key: 'manage_live_director', resource: 'live_director', action: 'manage', category: 'live', hierarchy_level: 4, label_en: 'Manage Live Director', label_es: 'Gestionar Director en Vivo' },
   ];
 }
