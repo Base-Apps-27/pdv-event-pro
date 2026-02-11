@@ -298,6 +298,7 @@ export default function DirectorConsole() {
         currentTime={currentTime}
         isCurrentDirector={isCurrentDirector}
         isLocked={isLocked}
+        heldSegment={heldSegment}
         onRefetch={refetchData}
         language={language}
       />
