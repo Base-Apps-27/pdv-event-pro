@@ -269,6 +269,15 @@ export default function DirectorConsole() {
         language={language}
       />
       
+      {/* Director Ping Feed - Shows incoming @Director pings */}
+      {session?.event_id && (
+        <DirectorPingFeed
+          eventId={session.event_id}
+          currentUser={currentUser}
+          language={language}
+        />
+      )}
+      
       {/* Main content */}
       <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-4">
         {/* Drift Indicator */}
