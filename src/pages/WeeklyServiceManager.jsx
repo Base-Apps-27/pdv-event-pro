@@ -43,6 +43,8 @@ import WeeklyServiceDialogs from "@/components/service/weekly/WeeklyServiceDialo
 import { ServiceDataContext, UpdatersContext } from "@/components/service/WeeklyServiceInputs";
 import { WEEKLY_BLUEPRINT } from "@/components/service/weekly/weeklyBlueprint";
 import { useWeeklyServiceHandlers } from "@/components/service/weekly/useWeeklyServiceHandlers";
+import useStaleGuard from "@/components/utils/useStaleGuard";
+import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
 
 export default function WeeklyServiceManager() {
   const navigate = useNavigate();
@@ -100,6 +102,11 @@ export default function WeeklyServiceManager() {
   const [verseParserOpen, setVerseParserOpen] = useState(false);
   const [verseParserContext, setVerseParserContext] = useState({ timeSlot: null, segmentIdx: null });
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  // Phase 5: Concurrent editing guard
+  const { captureBaseline: captureServiceBaseline, checkStale: checkServiceStale } = useStaleGuard();
+  const [showStaleWarning, setShowStaleWarning] = useState(false);
+  const [staleInfo, setStaleInfo] = useState(null);
 
   // ── Queries ──
   const { data: blueprintData } = useQuery({
@@ -307,6 +314,8 @@ export default function WeeklyServiceManager() {
       setPrintSettingsPage1(existingData.print_settings_page1 || null);
       setPrintSettingsPage2(existingData.print_settings_page2 || null);
       setHasUnsavedChanges(false);
+      // Phase 5: Capture baseline for stale detection
+      captureServiceBaseline(existingData.updated_date);
 
       // Backup recovery toast
       const backupKey = `service_backup_${selectedDate}`;

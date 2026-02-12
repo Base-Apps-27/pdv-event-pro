@@ -44,6 +44,8 @@ import { getCompressionLevel } from "@/components/utils/compressionLevel";
 import { CUSTOM_SERVICE_PRINT_CSS } from "@/components/print/customServicePrintStyles";
 import { syncToSession } from "@/components/service/sessionSync";
 import SegmentTimelineCard from "@/components/service/custom-builder/SegmentTimelineCard";
+import useStaleGuard from "@/components/utils/useStaleGuard";
+import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
 
 export default function CustomServiceBuilder() {
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
@@ -75,6 +77,11 @@ export default function CustomServiceBuilder() {
   const [verseParserOpen, setVerseParserOpen] = useState(false);
   const [verseParserContext, setVerseParserContext] = useState({ segmentIdx: null });
   const [segmentToDelete, setSegmentToDelete] = useState(null);
+
+  // Phase 5: Concurrent editing guard for service-level saves
+  const { captureBaseline, checkStale, updateBaseline } = useStaleGuard();
+  const [showStaleWarning, setShowStaleWarning] = useState(false);
+  const [staleInfo, setStaleInfo] = useState(null);
 
   const generateUiId = () => Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
 
@@ -110,6 +117,8 @@ export default function CustomServiceBuilder() {
       setServiceData(sanitizedService);
       setLastSavedData(JSON.parse(JSON.stringify(sanitizedService)));
       setHasUnsavedChanges(false);
+      // Phase 5: Capture baseline for stale detection
+      captureBaseline(existingService.updated_date);
 
       const backupKey = `service_backup_${existingService.id}`;
       const backup = safeGetItem(backupKey);
@@ -158,7 +167,24 @@ export default function CustomServiceBuilder() {
     onError: (error) => { setAutoSaveStatus("error"); toast.error('Error al guardar: ' + error.message); }
   });
 
-  const handleSave = () => saveServiceMutation.mutate({ ...serviceData, status: 'active' });
+  const handleSave = async () => {
+    // Phase 5: Check for concurrent edits before manual save
+    if (serviceId) {
+      const stale = await checkStale("Service", serviceId);
+      if (stale.isStale) {
+        setStaleInfo(stale);
+        setShowStaleWarning(true);
+        return;
+      }
+    }
+    saveServiceMutation.mutate({ ...serviceData, status: 'active' });
+  };
+
+  const forceSaveService = () => {
+    setShowStaleWarning(false);
+    setStaleInfo(null);
+    saveServiceMutation.mutate({ ...serviceData, status: 'active' });
+  };
 
   // ── Side effects ──
   useEffect(() => {
@@ -303,6 +329,9 @@ export default function CustomServiceBuilder() {
 
       {/* Verse Parser Dialog */}
       <VerseParserDialog open={verseParserOpen} onOpenChange={setVerseParserOpen} initialText={verseParserContext.initialText || ""} onSave={handleSaveParsedVerses} language="es" />
+
+      {/* Phase 5: Concurrent editing warning */}
+      <StaleEditWarningDialog open={showStaleWarning} onCancel={() => setShowStaleWarning(false)} onForceSave={forceSaveService} staleInfo={staleInfo} language="es" />
 
       {/* Service Details */}
       <Card className="print:hidden">
