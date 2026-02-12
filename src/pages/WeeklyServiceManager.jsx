@@ -2155,8 +2155,19 @@ Return ONLY valid JSON:
         }
       `}</style>
 
-      {/* Print Layout */}
-      <div className="hidden print:block">
+      {/* Print Layout — Phase 3B: Extracted to WeeklyServicePrintView component */}
+      <WeeklyServicePrintView
+        serviceData={serviceData}
+        selectedDate={selectedDate}
+        fixedAnnouncements={fixedAnnouncements}
+        dynamicAnnouncements={dynamicAnnouncements}
+        selectedAnnouncements={selectedAnnouncements}
+        printSettingsPage1={printSettingsPage1}
+        printSettingsPage2={printSettingsPage2}
+        isQuickPrint={isQuickPrint}
+      />
+      {/* REMOVED: ~500 lines of inline print HTML moved to WeeklyServicePrintView (Phase 3B) */}
+      {false && <div className="hidden print:block">
         {/* PAGE 1 */}
         <div className="print-page-1-wrapper">
         <div className="print-header" style={{ position: 'relative' }}>
