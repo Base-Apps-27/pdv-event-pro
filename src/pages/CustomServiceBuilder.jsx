@@ -30,7 +30,8 @@ import AnimatedSortableItem from "@/components/shared/AnimatedSortableItem";
 import { AnimatePresence } from "framer-motion";
 import { addMinutes, parse, format } from "date-fns";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
-import { normalizeSegment, normalizeServiceTeams, getSegmentData } from "@/components/utils/segmentDataUtils";
+// Phase 4: removed unused getSegmentData import (now only used in sessionSync.js)
+import { normalizeSegment, normalizeServiceTeams } from "@/components/utils/segmentDataUtils";
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
 import { generateServiceProgramPDFWithAutoFit } from "@/components/service/generateProgramPDFWithAutoFit";
 import { useLanguage } from "@/components/utils/i18n";
