@@ -2177,15 +2177,6 @@ Return ONLY valid JSON:
           <p className="text-gray-500 mt-1">{t('dashboard.services.subtitle')}</p>
           {/* Service ID for debugging */}
           {existingData?.id && (
-            <div className="print-service-time">11:30 A.M.</div>
-            {serviceData?.pre_service_notes?.["11:30am"] && (
-              <div className="print-segment">
-                <div className="print-note-general-info">
-                  {serviceData.pre_service_notes["11:30am"]}
-                </div>
-              </div>
-            )}
-            {serviceData?.["11:30am"]?.filter(s => s.type !== 'break').map((segment, idx) => {
               let currentTime = parse("11:30am", "h:mma", new Date());
               for (let i = 0; i < idx; i++) {
                 if (serviceData["11:30am"][i].type !== 'break' && serviceData["11:30am"][i].type !== 'ministry') {
