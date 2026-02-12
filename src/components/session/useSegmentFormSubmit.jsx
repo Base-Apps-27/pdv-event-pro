@@ -5,7 +5,7 @@
  * Verbatim extraction — zero logic changes.
  */
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { useLanguage } from "@/components/utils/i18n";
 import { logCreate, logUpdate } from "@/components/utils/editActionLogger";
 import { invalidateSegmentCaches } from "@/components/utils/queryKeys";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
+import useStaleGuard from "@/components/utils/useStaleGuard";
 
 /**
  * Calculate end time from start + duration.
@@ -63,6 +64,20 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
   const [overlapText, setOverlapText] = useState("");
   const [showShiftPreview, setShowShiftPreview] = useState(false);
 
+  // Phase 5: Concurrent editing guard — capture baseline on hook init
+  const { captureBaseline, checkStale, updateBaseline } = useStaleGuard();
+  // pendingSubmit holds form args when awaiting user force-save decision
+  const pendingSubmitRef = useRef(null);
+  const [showStaleWarning, setShowStaleWarning] = useState(false);
+  const [staleInfo, setStaleInfo] = useState(null);
+
+  // Capture baseline from segment on mount (segment.updated_date is set by platform)
+  useState(() => {
+    if (segment?.updated_date) {
+      captureBaseline(segment.updated_date);
+    }
+  });
+
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const created = await base44.entities.Segment.create(data);
@@ -87,9 +102,36 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
    * Build and execute submit. Receives all form state as arguments
    * to avoid coupling this hook to formData/breakoutRooms/fieldOrigins state.
    */
+  /**
+   * Force-save: bypasses stale check (user chose to overwrite).
+   */
+  const forceSave = useCallback(() => {
+    if (!pendingSubmitRef.current) return;
+    const { formData, breakoutRooms, fieldOrigins } = pendingSubmitRef.current;
+    pendingSubmitRef.current = null;
+    setShowStaleWarning(false);
+    setStaleInfo(null);
+    executeSubmit({ formData, breakoutRooms, fieldOrigins });
+  }, []);
+
   const handleSubmit = async (e, { formData, breakoutRooms, fieldOrigins }) => {
     e.preventDefault();
 
+    // Phase 5: Stale check before save (only for existing segments)
+    if (segment?.id) {
+      const stale = await checkStale("Segment", segment.id);
+      if (stale.isStale) {
+        pendingSubmitRef.current = { formData, breakoutRooms, fieldOrigins };
+        setStaleInfo(stale);
+        setShowStaleWarning(true);
+        return; // Halt — user must confirm or cancel
+      }
+    }
+
+    executeSubmit({ formData, breakoutRooms, fieldOrigins });
+  };
+
+  const executeSubmit = async ({ formData, breakoutRooms, fieldOrigins }) => {
     const times = calculateTimes(formData.start_time, formData.duration_min);
 
     // Basic required fields validation (bilingual toast)
@@ -207,5 +249,9 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
     showOverlapDialog, setShowOverlapDialog, overlapText,
     showShiftPreview, setShowShiftPreview,
     calculateTimes,
+    // Phase 5: Stale guard exports
+    showStaleWarning, setShowStaleWarning,
+    staleInfo,
+    forceSave,
   };
 }
