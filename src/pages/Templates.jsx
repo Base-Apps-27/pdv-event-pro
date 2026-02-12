@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DuplicateEventDialog from "@/components/event/DuplicateEventDialog";
 import ServiceTemplatesTab from "@/components/templates/ServiceTemplatesTab";
+import { useLanguage } from "@/components/utils/i18n";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -30,6 +31,7 @@ const COLOR_CODES = [
 ];
 
 export default function Templates() {
+  const { t } = useLanguage();
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
@@ -123,8 +125,8 @@ export default function Templates() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Gestor de Plantillas</h1>
-          <p className="text-slate-600 mt-1">Administra plantillas de eventos y segmentos</p>
+          <h1 className="text-3xl font-bold text-slate-900">{t('templates.title')}</h1>
+          <p className="text-slate-600 mt-1">{t('templates.subtitle')}</p>
         </div>
       </div>
 
@@ -132,15 +134,15 @@ export default function Templates() {
         <TabsList className="mb-6">
           <TabsTrigger value="services" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Blueprints (Servicios)
+            {t('templates.serviceBlueprints')}
           </TabsTrigger>
           <TabsTrigger value="events" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            Plantillas de Eventos
+            {t('templates.eventTemplates')}
           </TabsTrigger>
           <TabsTrigger value="segments" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Plantillas de Segmentos
+            {t('templates.segmentTemplates')}
           </TabsTrigger>
         </TabsList>
 
@@ -166,7 +168,7 @@ export default function Templates() {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="text-sm text-slate-600">
-                      Esta plantilla incluye toda la estructura de sesiones, segmentos y notas del evento original.
+                      {t('templates.thisTemplateIncludes')}
                     </div>
 
                     <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
@@ -175,20 +177,20 @@ export default function Templates() {
                         onClick={() => setTemplateToUse(template)}
                       >
                         <Plus className="w-4 h-4 mr-2" />
-                        Crear Evento
+                        {t('templates.createEvent')}
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"
                         onClick={() => {
-                          if (confirm('¿Eliminar esta plantilla de evento? Esta acción no se puede deshacer.')) {
+                          if (confirm(t('templates.deleteConfirm'))) {
                             deleteEventTemplateMutation.mutate(template.id);
                           }
                         }}
                         className="text-red-500 hover:text-red-600 hover:bg-red-50"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Eliminar Plantilla
+                        {t('templates.deleteTemplate')}
                       </Button>
                     </div>
                   </div>
@@ -199,13 +201,13 @@ export default function Templates() {
             {eventTemplates.length === 0 && (
               <Card className="col-span-full p-12 text-center border-dashed border-2 bg-slate-50">
                 <Calendar className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No hay plantillas de eventos</h3>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">{t('templates.noEventTemplates')}</h3>
                 <p className="text-slate-500 mb-4">
-                  Puedes guardar cualquier evento existente como plantilla desde la página de Eventos.
+                  {t('templates.noEventTemplatesDesc')}
                 </p>
                 <Button variant="outline" asChild>
                   <a href="/Events">
-                    Ir a Eventos <ArrowRight className="w-4 h-4 ml-2" />
+                    {t('templates.goToEvents')} <ArrowRight className="w-4 h-4 ml-2" />
                   </a>
                 </Button>
               </Card>
@@ -217,7 +219,7 @@ export default function Templates() {
           <div className="flex justify-end mb-4">
             <Button onClick={() => { setEditingTemplate(null); setShowDialog(true); }} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="w-4 h-4 mr-2" />
-              Nueva Plantilla de Segmento
+              {t('templates.newSegmentTemplate')}
             </Button>
           </div>
 
@@ -241,19 +243,19 @@ export default function Templates() {
                   <div className="space-y-3">
                     {template.default_title && (
                       <div>
-                        <p className="text-xs text-slate-500">Título predeterminado</p>
+                        <p className="text-xs text-slate-500">{t('templates.defaultTitle')}</p>
                         <p className="text-sm font-medium text-slate-900">{template.default_title}</p>
                       </div>
                     )}
                     
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <p className="text-xs text-slate-500">Duración</p>
+                        <p className="text-xs text-slate-500">{t('templates.duration')}</p>
                         <p className="font-medium">{template.default_duration_min} min</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500">Llamado</p>
-                        <p className="font-medium">{template.default_stage_call_offset_min} min antes</p>
+                        <p className="text-xs text-slate-500">{t('templates.stageCall')}</p>
+                        <p className="font-medium">{template.default_stage_call_offset_min} {t('templates.minBefore')}</p>
                       </div>
                     </div>
 
@@ -265,7 +267,7 @@ export default function Templates() {
                         className="flex-1"
                       >
                         <Edit className="w-4 h-4 mr-1" />
-                        Editar
+                        {t('common.edit')}
                       </Button>
                       <Button 
                         variant="outline" 
@@ -287,11 +289,11 @@ export default function Templates() {
             {segmentTemplates.length === 0 && (
               <Card className="col-span-full p-12 text-center border-dashed border-2">
                 <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No hay plantillas de segmentos</h3>
-                <p className="text-slate-500 mb-4">Crea tu primera plantilla para agilizar la creación de segmentos</p>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">{t('templates.noSegmentTemplates')}</h3>
+                <p className="text-slate-500 mb-4">{t('templates.noSegmentTemplatesDesc')}</p>
                 <Button onClick={() => setShowDialog(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Crear Plantilla
+                  {t('templates.createTemplate')}
                 </Button>
               </Card>
             )}
@@ -309,11 +311,11 @@ export default function Templates() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingTemplate ? 'Editar Plantilla' : 'Nueva Plantilla'}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingTemplate ? t('templates.editTemplate') : t('templates.newSegmentTemplate')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nombre de la Plantilla *</Label>
+              <Label htmlFor="name">{t('templates.templateName')} *</Label>
               <Input 
                 id="name" 
                 name="name" 
@@ -325,7 +327,7 @@ export default function Templates() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="segment_type">Tipo de Segmento *</Label>
+                <Label htmlFor="segment_type">{t('templates.segmentType')} *</Label>
                 <Select name="segment_type" defaultValue={editingTemplate?.segment_type || "Plenaria"}>
                   <SelectTrigger>
                     <SelectValue />
@@ -354,7 +356,7 @@ export default function Templates() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="default_title">Título Predeterminado</Label>
+              <Label htmlFor="default_title">{t('templates.defaultTitle')}</Label>
               <Input 
                 id="default_title" 
                 name="default_title" 
@@ -365,7 +367,7 @@ export default function Templates() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="default_duration_min">Duración (minutos)</Label>
+                <Label htmlFor="default_duration_min">{t('templates.duration')} (min)</Label>
                 <Input 
                   id="default_duration_min" 
                   name="default_duration_min" 
@@ -374,7 +376,7 @@ export default function Templates() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="default_stage_call_offset_min">Citación (min antes)</Label>
+                <Label htmlFor="default_stage_call_offset_min">{t('templates.stageCall')} ({t('templates.minBefore')})</Label>
                 <Input 
                   id="default_stage_call_offset_min" 
                   name="default_stage_call_offset_min" 
@@ -385,7 +387,7 @@ export default function Templates() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="default_projection_notes">Notas Proyección</Label>
+              <Label htmlFor="default_projection_notes">{t('templates.projectionNotes')}</Label>
               <Textarea 
                 id="default_projection_notes" 
                 name="default_projection_notes" 
@@ -395,7 +397,7 @@ export default function Templates() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="default_sound_notes">Notas Sonido</Label>
+              <Label htmlFor="default_sound_notes">{t('templates.soundNotes')}</Label>
               <Textarea 
                 id="default_sound_notes" 
                 name="default_sound_notes" 
@@ -405,7 +407,7 @@ export default function Templates() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="default_ushers_notes">Notas Ujieres</Label>
+              <Label htmlFor="default_ushers_notes">{t('templates.ushersNotes')}</Label>
               <Textarea 
                 id="default_ushers_notes" 
                 name="default_ushers_notes" 
@@ -415,7 +417,7 @@ export default function Templates() {
             </div>
 
             <div className="space-y-3">
-              <Label>Visibilidad Predeterminada</Label>
+              <Label>{t('templates.defaultVisibility')}</Label>
               <div className="grid md:grid-cols-2 gap-3">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -424,7 +426,7 @@ export default function Templates() {
                     defaultChecked={editingTemplate?.show_in_general ?? true}
                   />
                   <label htmlFor="show_in_general" className="text-sm cursor-pointer">
-                    Programa General
+                    {t('templates.generalProgram')}
                   </label>
                 </div>
 
@@ -435,7 +437,7 @@ export default function Templates() {
                     defaultChecked={editingTemplate?.show_in_projection ?? true}
                   />
                   <label htmlFor="show_in_projection" className="text-sm cursor-pointer">
-                    Vista Proyección
+                    {t('templates.projectionView')}
                   </label>
                 </div>
 
@@ -446,7 +448,7 @@ export default function Templates() {
                     defaultChecked={editingTemplate?.show_in_sound ?? true}
                   />
                   <label htmlFor="show_in_sound" className="text-sm cursor-pointer">
-                    Vista Sonido
+                    {t('templates.soundView')}
                   </label>
                 </div>
 
@@ -457,7 +459,7 @@ export default function Templates() {
                     defaultChecked={editingTemplate?.show_in_ushers ?? true}
                   />
                   <label htmlFor="show_in_ushers" className="text-sm cursor-pointer">
-                    Vista Ujieres
+                    {t('templates.ushersView')}
                   </label>
                 </div>
               </div>
@@ -465,10 +467,10 @@ export default function Templates() {
 
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
-                Cancelar
+                {t('common.cancel')}
               </Button>
               <Button type="submit" style={gradientStyle} className="text-white font-bold uppercase">
-                {editingTemplate ? 'Guardar' : 'Crear'}
+                {editingTemplate ? t('common.save') : t('common.create')}
               </Button>
             </div>
           </form>

@@ -9,8 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useLanguage } from "@/components/utils/i18n";
 
 export default function Rooms() {
+  const { t } = useLanguage();
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
@@ -73,12 +75,12 @@ export default function Rooms() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-tight">Salas</h1>
-          <p className="text-gray-600 mt-1">Administra las salas y sus capacidades técnicas</p>
+          <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-tight">{t('rooms.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('rooms.subtitle')}</p>
         </div>
         <Button onClick={() => { setEditingRoom(null); setShowDialog(true); }} style={gradientStyle} className="text-white font-bold uppercase">
           <Plus className="w-4 h-4 mr-2" />
-          Nueva Sala
+          {t('rooms.newRoom')}
         </Button>
       </div>
 
@@ -98,7 +100,7 @@ export default function Rooms() {
                     <Edit className="w-4 h-4 text-gray-600" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => {
-                    if (confirm('¿Eliminar esta sala?')) {
+                    if (confirm(t('rooms.deleteConfirm'))) {
                       deleteMutation.mutate(room.id);
                     }
                   }}>
@@ -112,25 +114,25 @@ export default function Rooms() {
                 <p className="text-sm text-gray-600">{room.location_description}</p>
               )}
               {room.capacity && (
-                <p className="text-sm text-gray-600">Capacidad: {room.capacity} personas</p>
+                <p className="text-sm text-gray-600">{t('common.capacity')}: {room.capacity} {t('common.people')}</p>
               )}
               <div className="flex gap-2 mt-3">
                 {room.has_projection && (
                   <div className="flex items-center gap-1 text-xs text-pdv-green">
                     <Video className="w-4 h-4" />
-                    <span>Proyección</span>
+                    <span>{t('common.projection')}</span>
                   </div>
                 )}
                 {room.has_sound_system && (
                   <div className="flex items-center gap-1 text-xs text-pdv-green">
                     <Volume2 className="w-4 h-4" />
-                    <span>Sonido</span>
+                    <span>{t('common.sound')}</span>
                   </div>
                 )}
                 {room.has_translation_feed && (
                   <div className="flex items-center gap-1 text-xs text-pdv-green">
                     <Radio className="w-4 h-4" />
-                    <span>Traducción</span>
+                    <span>{t('common.translation')}</span>
                   </div>
                 )}
               </div>
@@ -142,11 +144,11 @@ export default function Rooms() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingRoom ? 'Editar Sala' : 'Nueva Sala'}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingRoom ? t('rooms.editRoom') : t('rooms.newRoom')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nombre *</Label>
+              <Label htmlFor="name">{t('common.name')} *</Label>
               <Input 
                 id="name" 
                 name="name" 
@@ -156,7 +158,7 @@ export default function Rooms() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location_description">Descripción de ubicación</Label>
+              <Label htmlFor="location_description">{t('rooms.locationDesc')}</Label>
               <Input 
                 id="location_description" 
                 name="location_description" 
@@ -165,7 +167,7 @@ export default function Rooms() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="capacity">Capacidad</Label>
+              <Label htmlFor="capacity">{t('common.capacity')}</Label>
               <Input 
                 id="capacity" 
                 name="capacity" 
@@ -175,14 +177,14 @@ export default function Rooms() {
             </div>
 
             <div className="space-y-3">
-              <Label>Capacidades Técnicas</Label>
+              <Label>{t('rooms.technicalCapabilities')}</Label>
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="has_projection" 
                   name="has_projection"
                   defaultChecked={editingRoom?.has_projection ?? true}
                 />
-                <label htmlFor="has_projection" className="text-sm">Proyección</label>
+                <label htmlFor="has_projection" className="text-sm">{t('common.projection')}</label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox 
@@ -190,7 +192,7 @@ export default function Rooms() {
                   name="has_sound_system"
                   defaultChecked={editingRoom?.has_sound_system ?? true}
                 />
-                <label htmlFor="has_sound_system" className="text-sm">Sistema de sonido</label>
+                <label htmlFor="has_sound_system" className="text-sm">{t('rooms.soundSystem')}</label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox 
@@ -198,12 +200,12 @@ export default function Rooms() {
                   name="has_translation_feed"
                   defaultChecked={editingRoom?.has_translation_feed ?? false}
                 />
-                <label htmlFor="has_translation_feed" className="text-sm">Señal de traducción</label>
+                <label htmlFor="has_translation_feed" className="text-sm">{t('rooms.translationFeed')}</label>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notas</Label>
+              <Label htmlFor="notes">{t('common.notes')}</Label>
               <Textarea 
                 id="notes" 
                 name="notes" 
@@ -214,10 +216,10 @@ export default function Rooms() {
 
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
-                Cancelar
+                {t('common.cancel')}
               </Button>
               <Button type="submit" style={gradientStyle} className="text-white font-bold uppercase">
-                {editingRoom ? 'Guardar' : 'Crear'}
+                {editingRoom ? t('common.save') : t('common.create')}
               </Button>
             </div>
           </form>

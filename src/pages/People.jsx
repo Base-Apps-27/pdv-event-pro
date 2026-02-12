@@ -15,8 +15,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import SuggestionsManager from "@/components/people/SuggestionsManager";
+import { useLanguage } from "@/components/utils/i18n";
 
 export default function People() {
+  const { t } = useLanguage();
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
   
   const [activeTab, setActiveTab] = useState("persons");
@@ -136,9 +138,9 @@ export default function People() {
       <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-gray-200 pb-6">
         <div>
           <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">
-            Personas y Sugerencias
+            {t('people.title')}
           </h1>
-          <p className="text-gray-500 mt-1 font-medium">Directorio de miembros y listas de autocompletado</p>
+          <p className="text-gray-500 mt-1 font-medium">{t('people.subtitle')}</p>
         </div>
         {activeTab === "persons" && hasPermission(user, 'create_people') && (
           <Button 
@@ -147,28 +149,28 @@ export default function People() {
             className="shadow-md hover:shadow-lg transition-all font-bold uppercase px-6"
           >
             <Upload className="w-5 h-5 mr-2" />
-            Importar CSV
+            {t('people.importCsv')}
           </Button>
         )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full max-w-[600px] grid-cols-2">
-          <TabsTrigger value="persons">Personas (Eventos)</TabsTrigger>
-          <TabsTrigger value="suggestions">Sugerencias (Servicios)</TabsTrigger>
+          <TabsTrigger value="persons">{t('people.personsTab')}</TabsTrigger>
+          <TabsTrigger value="suggestions">{t('people.suggestionsTab')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="persons" className="space-y-6 mt-6">
           <div className="flex gap-4 items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100">
             <Search className="w-5 h-5 text-gray-400" />
             <Input 
-              placeholder="Buscar por nombre o email..." 
+              placeholder={t('people.searchPlaceholder')} 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="border-none shadow-none focus-visible:ring-0"
             />
             <Badge variant="secondary" className="ml-auto">
-              {filteredPeople.length} Personas
+              {filteredPeople.length} {t('common.people')}
             </Badge>
           </div>
 
@@ -177,12 +179,12 @@ export default function People() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Red</TableHead>
-                    <TableHead>Contacto</TableHead>
-                    <TableHead>Estado Civil</TableHead>
-                    <TableHead>Encuentro</TableHead>
-                    <TableHead>Nueva Vida</TableHead>
+                    <TableHead>{t('common.name')}</TableHead>
+                    <TableHead>{t('people.network')}</TableHead>
+                    <TableHead>{t('people.contact')}</TableHead>
+                    <TableHead>{t('people.maritalStatus')}</TableHead>
+                    <TableHead>{t('people.encounter')}</TableHead>
+                    <TableHead>{t('people.nuevaVida')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -190,14 +192,14 @@ export default function People() {
                      <TableRow>
                        <TableCell colSpan={6} className="h-24 text-center">
                          <div className="flex justify-center items-center text-gray-500">
-                           <Loader2 className="w-6 h-6 animate-spin mr-2" /> Cargando...
+                           <Loader2 className="w-6 h-6 animate-spin mr-2" /> {t('common.loading')}
                          </div>
                        </TableCell>
                      </TableRow>
                   ) : filteredPeople.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="h-24 text-center text-gray-500">
-                        No se encontraron personas. ¡Importa datos para comenzar!
+                        {t('people.noResults')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -225,14 +227,14 @@ export default function People() {
                         <TableCell>{person.marital_status}</TableCell>
                         <TableCell>
                           {person.attended_encounter ? (
-                            <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200">Sí</Badge>
+                            <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200">{t('common.yes')}</Badge>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
                         </TableCell>
                         <TableCell>
                           {person.attended_nueva_vida ? (
-                             <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 border-purple-200">Sí</Badge>
+                             <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 border-purple-200">{t('common.yes')}</Badge>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
@@ -255,7 +257,7 @@ export default function People() {
               className="bg-white"
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-              {refreshing ? 'Actualizando...' : 'Actualizar y Limpiar Sugerencias'}
+              {refreshing ? t('people.refreshing') : t('people.refreshSuggestions')}
             </Button>
           </div>
           <SuggestionsManager />
@@ -265,18 +267,18 @@ export default function People() {
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Importar Personas (CSV)</DialogTitle>
+            <DialogTitle>{t('people.importTitle')}</DialogTitle>
             <DialogDescription>
-              Sube un archivo CSV con los datos de las personas. El sistema intentará mapear automáticamente las columnas.
+              {t('people.importDesc')}
             </DialogDescription>
           </DialogHeader>
           
           {!uploading ? (
             <div className="grid w-full max-w-sm items-center gap-1.5 py-4">
-              <Label htmlFor="file">Archivo CSV / Excel</Label>
+              <Label htmlFor="file">{t('people.fileLabel')}</Label>
               <Input id="file" type="file" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
               <p className="text-xs text-gray-500 mt-2">
-                Columnas esperadas: Nombre, Apellido, Email, Teléfono, Género, Fecha Nacimiento, etc.
+                {t('people.expectedColumns')}
               </p>
             </div>
           ) : (
