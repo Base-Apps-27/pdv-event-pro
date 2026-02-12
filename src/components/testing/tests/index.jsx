@@ -8,8 +8,8 @@ import { segmentTypeDisplayTests } from './segmentTypeDisplay.test';
 import { segmentNormalizationTests } from './segmentNormalization.test';
 import { permissionsTests } from './permissions.test';
 import { reportHelpersTests } from './reportHelpers.test';
-import { pdfScalingTests } from './pdfScaling.test';
-import { i18nTests } from './i18n.test';
+import { pdfScalingTests } from '../../testing/tests/pdfScalingTest';
+import { i18nTests } from '../../testing/tests/i18nTest';
 
 export const ALL_SUITES = [
   { name: 'timeFormat', run: timeFormatTests },
