@@ -817,7 +817,7 @@ export default function PublicProgramView() {
               }
               target="_blank"
               className="flex items-center justify-center w-12 h-12 rounded-lg bg-white border-2 border-gray-300 text-gray-500 hover:text-pdv-teal hover:border-pdv-teal transition-all shrink-0 shadow-sm"
-              title="TV View / Countdown"
+              title={t('public.tvViewTooltip')}
             >
               <Tv className="w-5 h-5" />
             </Link>
@@ -908,7 +908,7 @@ export default function PublicProgramView() {
                               onClick={() => openAdjustmentModal(adj.adjustment_type === 'global' ? 'custom' : adj.time_slot)}
                               className="shrink-0"
                             >
-                              Editar
+                              {t('common.edit')}
                             </Button>
                           )}
                         </div>
@@ -926,7 +926,7 @@ export default function PublicProgramView() {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-blue-400" />
-                      <span className="font-bold uppercase text-xs sm:text-sm">Ajustar Hora de Inicio</span>
+                      <span className="font-bold uppercase text-xs sm:text-sm">{t('public.adjustStartTime')}</span>
                     </div>
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center">
                       {/* Custom services: show single button regardless of 9:30am/11:30am data */}
@@ -969,7 +969,7 @@ export default function PublicProgramView() {
                         size="sm"
                         onClick={() => setHistoryModalOpen(true)}
                         className="text-gray-400 hover:text-white hover:bg-white/10 px-2"
-                        title="Ver historial de ajustes"
+                        title={t('public.viewHistory')}
                       >
                         <History className="w-4 h-4" />
                       </Button>
@@ -1069,8 +1069,8 @@ export default function PublicProgramView() {
       <div style={gradientStyle} className="mt-12 py-6">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" className="w-12 h-12 mx-auto mb-3" />
-          <p className="text-white font-semibold text-lg tracking-wide uppercase">¡Atrévete a cambiar!</p>
-          <p className="text-white text-sm mt-2">Palabras de Vida</p>
+          <p className="text-white font-semibold text-lg tracking-wide uppercase">{t('public.footer.motto')}</p>
+          <p className="text-white text-sm mt-2">{t('public.footer.name')}</p>
         </div>
       </div>
     </div>

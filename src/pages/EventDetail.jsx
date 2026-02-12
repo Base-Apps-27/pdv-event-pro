@@ -23,9 +23,11 @@ import EventCalendar from "../components/event/EventCalendar";
 import EventAIHelper from "../components/event/EventAIHelper";
 import EditHistoryModal from "../components/event/EditHistoryModal";
 import { hasPermission } from "@/components/utils/permissions";
+import { useLanguage } from "@/components/utils/i18n";
 
 export default function EventDetail() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { search } = useLocation();
   const eventId = React.useMemo(() => new URLSearchParams(search).get("id"), [search]);
   const queryClient = useQueryClient();
@@ -132,7 +134,7 @@ export default function EventDetail() {
   if (isLoading) {
     return (
       <div className="p-8 text-center">
-        <p className="text-slate-600">Cargando evento...</p>
+        <p className="text-slate-600">{t('eventDetail.loading')}</p>
       </div>
     );
   }
@@ -140,7 +142,7 @@ export default function EventDetail() {
   if (!event) {
     return (
       <div className="p-8 text-center">
-        <p className="text-red-600">Evento no encontrado</p>
+        <p className="text-red-600">{t('eventDetail.notFound')}</p>
       </div>
     );
   }
@@ -166,11 +168,11 @@ export default function EventDetail() {
                     <TooltipTrigger>
                       <Badge variant="outline" className="h-6 px-2 bg-blue-50 text-blue-600 border-blue-200 text-xs">
                         <Bookmark className="w-3 h-3 mr-1" />
-                        Plantilla
+                        {t('eventDetail.tabs.info')}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Este evento fue creado desde una plantilla</p>
+                      <p>{t('eventDetail.fromTemplate')}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -181,11 +183,11 @@ export default function EventDetail() {
                     <TooltipTrigger>
                       <Badge variant="outline" className="h-6 px-2 bg-amber-50 text-amber-600 border-amber-200 text-xs">
                         <Copy className="w-3 h-3 mr-1" />
-                        Copia
+                        {t('common.edit')}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Este evento es una copia duplicada</p>
+                      <p>{t('eventDetail.duplicate')}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -203,7 +205,7 @@ export default function EventDetail() {
                 className="border-gray-300 hover:border-gray-400 text-gray-700"
               >
                 <FileText className="w-4 h-4 mr-2" />
-                Reportes
+                {t('eventDetail.reports')}
               </Button>
               <Button 
                 onClick={() => setShowEditHistory(true)}
@@ -211,7 +213,7 @@ export default function EventDetail() {
                 className="border-gray-300 hover:border-gray-400 text-gray-700"
               >
                 <History className="w-4 h-4 mr-2" />
-                Historial
+                {t('eventDetail.history')}
               </Button>
               <Button 
                 onClick={() => setShowEditEvent(true)}
@@ -219,7 +221,7 @@ export default function EventDetail() {
                 className="border-gray-300 hover:border-gray-400 text-gray-700"
               >
                 <Edit className="w-4 h-4 mr-2" />
-                Editar
+                {t('eventDetail.edit')}
               </Button>
             </div>
 
@@ -241,7 +243,7 @@ export default function EventDetail() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Asistente IA</p>
+                  <p>{t('eventDetail.aiAssistant')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -258,26 +260,26 @@ export default function EventDetail() {
                 <div className="sm:hidden">
                   <DropdownMenuItem onClick={() => navigate(createPageUrl("Reports") + `?eventId=${eventId}`)}>
                     <FileText className="w-4 h-4 mr-2" />
-                    Reportes
+                    {t('eventDetail.reports')}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShowEditHistory(true)}>
                     <History className="w-4 h-4 mr-2" />
-                    Historial
+                    {t('eventDetail.history')}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShowEditEvent(true)}>
                     <Edit className="w-4 h-4 mr-2" />
-                    Editar Evento
+                    {t('eventDetail.edit')}
                   </DropdownMenuItem>
                   <div className="my-1 border-t border-gray-100" />
                 </div>
                 <DropdownMenuItem onClick={() => navigate(createPageUrl("PublicCountdownDisplay") + `?event_id=${eventId}`)}>
                   <Tv className="w-4 h-4 mr-2" />
-                  TV Display (Countdown)
+                  {t('eventDetail.tvDisplay')}
                 </DropdownMenuItem>
                 {hasPermission(currentUser, 'manage_live_director') && sessions.length > 0 && (
                   <DropdownMenuItem onClick={() => navigate(createPageUrl("DirectorConsole") + `?sessionId=${sessions[0]?.id}`)}>
                     <Radio className="w-4 h-4 mr-2" />
-                    Director Console
+                    {t('eventDetail.directorConsole')}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
@@ -291,14 +293,14 @@ export default function EventDetail() {
                       try {
                         const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`;
                         await navigator.clipboard.writeText(url);
-                        toast.success("Link copiado al portapapeles");
+                        toast.success(t('eventDetail.linkCopied'));
                       } catch (err) {
                         // Silent fail on copy, still opens link
                       }
                     }}
                   >
                     <LinkIcon className="w-4 h-4 mr-2" />
-                    Formulario de Predicas/Versículos
+                    {t('eventDetail.speakerForm')}
                   </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -331,9 +333,9 @@ export default function EventDetail() {
 
        <Tabs defaultValue="sessions" className="w-full">
         <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-gray-100">
-          <TabsTrigger value="info" className="text-gray-700 data-[state=active]:text-gray-900 data-[state=active]:bg-white">Información</TabsTrigger>
-          <TabsTrigger value="sessions" className="text-gray-700 data-[state=active]:text-gray-900 data-[state=active]:bg-white">Sesiones</TabsTrigger>
-          <TabsTrigger value="calendar" className="text-gray-700 data-[state=active]:text-gray-900 data-[state=active]:bg-white">Calendario</TabsTrigger>
+          <TabsTrigger value="info" className="text-gray-700 data-[state=active]:text-gray-900 data-[state=active]:bg-white">{t('eventDetail.tabs.info')}</TabsTrigger>
+          <TabsTrigger value="sessions" className="text-gray-700 data-[state=active]:text-gray-900 data-[state=active]:bg-white">{t('eventDetail.tabs.sessions')}</TabsTrigger>
+          <TabsTrigger value="calendar" className="text-gray-700 data-[state=active]:text-gray-900 data-[state=active]:bg-white">{t('eventDetail.tabs.calendar')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="mt-6">

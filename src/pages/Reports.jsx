@@ -276,11 +276,11 @@ export default function Reports() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportCurrentPdf}>
                   <FileText className="w-4 h-4 mr-2" />
-                  Exportar vista actual (PDF)
+                  {t('reports.exportCurrentPdf')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportAllPdfs}>
                   <FileText className="w-4 h-4 mr-2" />
-                  Exportar todo (PDFs separados)
+                  {t('reports.exportAllPdfs')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
