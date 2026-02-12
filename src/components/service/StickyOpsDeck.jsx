@@ -200,17 +200,9 @@ export default function StickyOpsDeck({
   const activeAction = isServiceDay
     ? (upcomingActions[0] || pastActions[0])
     : allActionsSorted[0]; // Preview: show first chronological action
-  
-  // SERVICE OVER GUARD: Only applies on service day
-  if (isServiceDay && upcomingActions.length === 0 && pastActions.length > 0) {
-    const lastActionTime = pastActions[0].time.getTime();
-    const minutesSinceLast = (currentTime.getTime() - lastActionTime) / 60000;
-    if (minutesSinceLast > 30) return null;
-  }
 
   // Calculate concurrent actions (same time window) to indicate stacks
-  // We check the source list (upcoming or past) for items within the same minute
-  // Hook MUST be called unconditionally
+  // Hook MUST be called unconditionally (before any early returns)
   const isPastRef = activeAction ? activeAction.time.getTime() <= currentTime.getTime() : false;
   
   const concurrentCount = useMemo(() => {
@@ -221,20 +213,28 @@ export default function StickyOpsDeck({
     ).length;
   }, [activeAction, isPastRef, pastActions, upcomingActions]);
 
-  if (!activeAction) return null;
-
-  // On non-service days, force "preview" mode — no live countdown, no urgent styling
-  const isPast = isServiceDay ? activeAction.time.getTime() <= currentTime.getTime() : false;
-  const diffMs = isServiceDay ? Math.abs(activeAction.time.getTime() - currentTime.getTime()) : 0;
-  const diffMin = isServiceDay ? Math.floor(diffMs / 60000) : 0;
+  // Derived values — safe to compute even if activeAction is null (guarded below)
+  const isPast = activeAction && isServiceDay ? activeAction.time.getTime() <= currentTime.getTime() : false;
+  const diffMs = activeAction && isServiceDay ? Math.abs(activeAction.time.getTime() - currentTime.getTime()) : 0;
+  const diffMin = activeAction && isServiceDay ? Math.floor(diffMs / 60000) : 0;
   const isUrgent = isServiceDay && !isPast && diffMin < 5;
 
-  // Auto-expand on urgency (only if in icon mode)
+  // Auto-expand on urgency (only if in icon mode) — hook called unconditionally
   useEffect(() => {
     if (isUrgent && viewState === 'icon') {
       setViewState('bar');
     }
   }, [isUrgent]);
+
+  // ── Early returns AFTER all hooks ──────────────────────────────────
+  // SERVICE OVER GUARD: Only applies on service day
+  if (isServiceDay && upcomingActions.length === 0 && pastActions.length > 0) {
+    const lastActionTime = pastActions[0].time.getTime();
+    const minutesSinceLast = (currentTime.getTime() - lastActionTime) / 60000;
+    if (minutesSinceLast > 30) return null;
+  }
+
+  if (!activeAction) return null;
 
   const moreCount = Math.max(0, concurrentCount - 1);
   
