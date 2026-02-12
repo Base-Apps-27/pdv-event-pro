@@ -2177,7 +2177,10 @@ Return ONLY valid JSON:
           <p className="text-gray-500 mt-1">{t('dashboard.services.subtitle')}</p>
           {/* Service ID for debugging */}
           {existingData?.id && (
-              let currentTime = parse("11:30am", "h:mma", new Date());
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-gray-400 font-mono">ID: {existingData.id}</span>
+            </div>
+          )}
               for (let i = 0; i < idx; i++) {
                 if (serviceData["11:30am"][i].type !== 'break' && serviceData["11:30am"][i].type !== 'ministry') {
                   currentTime = addMinutes(currentTime, serviceData["11:30am"][i].duration || 0);
