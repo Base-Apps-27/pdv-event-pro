@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-export default function AnimatedSortableItem({
+// Phase 7: Memoized — lightweight wrapper, prevents cascading re-renders
+const AnimatedSortableItem = React.memo(function AnimatedSortableItem({
   children,
   id,
   isHighlighted,

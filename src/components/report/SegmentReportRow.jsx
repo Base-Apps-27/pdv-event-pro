@@ -4,7 +4,8 @@ import { Languages, Mic, Utensils } from "lucide-react";
 // Phase 3D: calculateActionTime deduplicated — single source in reportHelpers
 import { calculateActionTime } from "./reportHelpers";
 
-export default function SegmentReportRow({
+// Phase 7: Memoized — pure display component, re-renders only on prop changes
+const SegmentReportRow = React.memo(function SegmentReportRow({
   segment,
   getSegmentActions,
   isPrepAction,
