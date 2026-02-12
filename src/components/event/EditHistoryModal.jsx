@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { formatTimestampToEST } from "@/components/utils/timeFormat";
 import { useLanguage } from "@/components/utils/i18n";
+import { toast } from "sonner";
 import { undoUpdate, undoDelete } from "@/components/utils/editActionLogger";
 
 const ACTION_ICONS = {
@@ -190,20 +191,20 @@ function LogEntry({ log, language, sessions, onUndo, currentUser }) {
         const successMessage = log.action_type === 'delete' && result.newEntityId
           ? (language === 'es' ? `Restaurado con nuevo ID: ${result.newEntityId}` : `Restored with new ID: ${result.newEntityId}`)
           : (language === 'es' ? 'Cambio deshecho exitosamente' : 'Change undone successfully');
-        alert(successMessage);
+        toast.success(successMessage);
       } else {
         console.error('Undo failed:', result?.error);
         // Display conflict fields if present
         const errorMessage = result?.conflictFields
-          ? (language === 'es' 
+          ? (language === 'es'
               ? `No se puede deshacer: campos modificados posteriormente: ${result.conflictFields.join(', ')}`
               : `Cannot undo: fields modified since: ${result.conflictFields.join(', ')}`)
           : (result?.error || 'Failed to undo');
-        alert(errorMessage);
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error('Undo error:', error);
-      alert(language === 'es' ? 'Error al deshacer' : 'Error undoing action');
+      toast.error(language === 'es' ? 'Error al deshacer' : 'Error undoing action');
     } finally {
       setUndoing(false);
     }

@@ -42,11 +42,9 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
 
   const createTaskMutation = useMutation({
     mutationFn: (data) => {
-      console.log('[HospitalityTasksModal] mutationFn - creating with data:', data);
       return base44.entities.HospitalityTask.create(data);
     },
-    onSuccess: (result) => {
-      console.log('[HospitalityTasksModal] Create success:', result);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hospitalityTasks', sessionId] });
       setTaskForm({
         category: "Other",
@@ -170,8 +168,6 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
       notes: taskForm.notes || '',
       field_origins: fieldOrigins || {},
     };
-
-    console.log('[HospitalityTasksModal] Submitting:', { sessionId, dataToSubmit });
 
     if (editingTask) {
       updateTaskMutation.mutate({ id: editingTask.id, data: dataToSubmit });

@@ -58,13 +58,7 @@ export default function PublicCountdownDisplay() {
           const day = String(now.getDate()).padStart(2, '0');
           const todayStr = `${year}-${month}-${day}`;
           
-          setServiceDate(prev => {
-            if (prev !== todayStr) {
-              console.log("Date rollover detected, updating serviceDate to:", todayStr);
-              return todayStr;
-            }
-            return prev;
-          });
+          setServiceDate(prev => prev !== todayStr ? todayStr : prev);
         }
       }
     }, 1000);
@@ -139,7 +133,6 @@ export default function PublicCountdownDisplay() {
       // We also check for UTC strings vs local date strings
       const rawDate = service.date || service.start_date;
       if (rawDate && rawDate !== serviceDate) {
-        console.log(`[PublicCountdown] Syncing date context: ${serviceDate} -> ${rawDate}`);
         setServiceDate(rawDate);
       }
     }

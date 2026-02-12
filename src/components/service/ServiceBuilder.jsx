@@ -5,6 +5,7 @@ import { Copy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SessionColumn from "./SessionColumn";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
+import { toast } from "sonner";
 
 export default function ServiceBuilder({ serviceId }) {
   const queryClient = useQueryClient();
@@ -114,7 +115,7 @@ export default function ServiceBuilder({ serviceId }) {
         );
 
         if (!lastService) {
-            alert("No se encontró un servicio anterior con el mismo nombre.");
+            toast.warning("No se encontró un servicio anterior con el mismo nombre.");
             return;
         }
 
@@ -149,7 +150,7 @@ export default function ServiceBuilder({ serviceId }) {
     },
     onSuccess: () => {
         queryClient.invalidateQueries(['sessions']);
-        alert("Personal copiado exitosamente.");
+        toast.success("Personal copiado exitosamente.");
     }
   });
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, FileText, Copy, Calendar, ArrowRight } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Copy, Calendar, ArrowRight, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -42,19 +42,20 @@ export default function Templates() {
   const queryClient = useQueryClient();
 
   // Phase 7: Added staleTime to reduce unnecessary refetches
-  const { data: segmentTemplatesData } = useQuery({
+  const { data: segmentTemplatesData, isLoading: stLoading } = useQuery({
     queryKey: ['segmentTemplates'],
     queryFn: () => base44.entities.SegmentTemplate.list(),
     staleTime: 10 * 60 * 1000, // 10 minutes (templates change rarely)
   });
   const segmentTemplates = segmentTemplatesData || [];
 
-  const { data: eventTemplatesData } = useQuery({
+  const { data: eventTemplatesData, isLoading: etLoading } = useQuery({
     queryKey: ['eventTemplates'],
     queryFn: () => base44.entities.Event.filter({ status: 'template' }),
     staleTime: 10 * 60 * 1000, // 10 minutes (templates change rarely)
   });
   const eventTemplates = eventTemplatesData || [];
+  const isLoading = stLoading || etLoading;
 
   const deleteEventTemplateMutation = useMutation({
     mutationFn: (id) => base44.entities.Event.delete(id),
@@ -133,6 +134,11 @@ export default function Templates() {
         </div>
       </div>
 
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      )}
       <Tabs defaultValue="events">
         <TabsList className="mb-6">
           <TabsTrigger value="services" className="flex items-center gap-2">

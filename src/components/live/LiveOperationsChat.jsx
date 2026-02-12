@@ -10,6 +10,7 @@ import LiveChatPinnedSection from "./LiveChatPinnedSection";
 import NewMessagesPill from "./NewMessagesPill";
 import TypingIndicator from "./TypingIndicator";
 import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
+import { toast } from "sonner";
 
 /**
  * LiveOperationsChat Component
@@ -702,13 +703,13 @@ export default function LiveOperationsChat({
     
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Solo se permiten imágenes');
+      toast.warning('Solo se permiten imágenes');
       return;
     }
     
     // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
-      alert('La imagen debe ser menor a 5MB');
+      toast.warning('La imagen debe ser menor a 5MB');
       return;
     }
     
@@ -719,7 +720,7 @@ export default function LiveOperationsChat({
       await sendMessageMutation.mutateAsync({ text: messageText, imageUrl: file_url });
     } catch (error) {
       console.error('Image upload failed:', error);
-      alert('Error al subir imagen');
+      toast.error('Error al subir imagen');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

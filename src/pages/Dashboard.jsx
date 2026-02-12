@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n";
-import { Calendar, Clock, FileText, Plus, ArrowRight, Bell } from "lucide-react";
+import { Calendar, Clock, FileText, Plus, ArrowRight, Bell, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,17 +25,19 @@ export default function Dashboard() {
   const locale = language === 'es' ? es : enUS;
   
   // Phase 7: Added staleTime to reduce unnecessary refetches
-  const { data: events = [] } = useQuery({
+  const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['events'],
     queryFn: () => base44.entities.Event.list('-start_date'),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: sessions = [] } = useQuery({
+  const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
     queryKey: ['sessions'],
     queryFn: () => base44.entities.Session.list(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  const isLoading = eventsLoading || sessionsLoading;
 
   // Build a timezone-safe "today" string (YYYY-MM-DD) in America/New_York.
   // Comparing date STRINGS avoids UTC-vs-local midnight bugs that caused
@@ -97,6 +99,11 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-8 space-y-8">
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          </div>
+        )}
         {/* Live Program Hero Card */}
         <Card className="hover:shadow-lg transition-all border-0 cursor-pointer overflow-hidden" onClick={() => navigate(createPageUrl('PublicProgramView'))}>
           <CardContent className="p-3 md:p-4" style={gradientStyle}>

@@ -270,10 +270,10 @@ function LayoutContentInner({ children }) {
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
                   style={isActive(createPageUrl("CustomServicesManager")) || isActive(createPageUrl("CustomServiceBuilder")) ? gradientStyle : {}}
-                  title={isSidebarCollapsed ? 'Servicios Personalizados' : ''}
+                  title={isSidebarCollapsed ? t('nav.customServices') : ''}
                 >
                   <Plus className="w-5 h-5 shrink-0" />
-                  {!isSidebarCollapsed && <span>Servicios Personalizados</span>}
+                  {!isSidebarCollapsed && <span>{t('nav.customServices')}</span>}
                 </Link>
               </>
             )}
@@ -313,10 +313,10 @@ function LayoutContentInner({ children }) {
                           : "text-gray-400 hover:bg-white/5 hover:text-white"
                       }`}
                       style={isActive(createPageUrl("UserManagement")) ? gradientStyle : {}}
-                      title={isSidebarCollapsed ? 'User Management' : ''}
+                      title={isSidebarCollapsed ? t('nav.userManagement') : ''}
                     >
                       <Users className="w-5 h-5 shrink-0" />
-                      {!isSidebarCollapsed && <span>User Management</span>}
+                      {!isSidebarCollapsed && <span>{t('nav.userManagement')}</span>}
                     </Link>
                     <Link
                       to={createPageUrl("RolePermissionManager")}
@@ -326,10 +326,10 @@ function LayoutContentInner({ children }) {
                           : "text-gray-400 hover:bg-white/5 hover:text-white"
                       }`}
                       style={isActive(createPageUrl("RolePermissionManager")) ? gradientStyle : {}}
-                      title={isSidebarCollapsed ? (language === 'es' ? 'Roles y Permisos' : 'Roles & Permissions') : ''}
+                      title={isSidebarCollapsed ? t('nav.roles') : ''}
                     >
                       <Shield className="w-5 h-5 shrink-0" />
-                      {!isSidebarCollapsed && <span>{language === 'es' ? 'Roles y Permisos' : 'Roles & Permissions'}</span>}
+                      {!isSidebarCollapsed && <span>{t('nav.roles')}</span>}
                     </Link>
                     <Link
                       to={createPageUrl("MessageProcessing")}
@@ -339,10 +339,10 @@ function LayoutContentInner({ children }) {
                           : "text-gray-400 hover:bg-white/5 hover:text-white"
                       }`}
                       style={isActive(createPageUrl("MessageProcessing")) ? gradientStyle : {}}
-                      title={isSidebarCollapsed ? (language === 'es' ? 'Procesar Mensajes' : 'Process Messages') : ''}
+                      title={isSidebarCollapsed ? t('nav.messages') : ''}
                     >
                       <Sparkles className="w-5 h-5 shrink-0" />
-                      {!isSidebarCollapsed && <span>{language === 'es' ? 'Procesar Mensajes' : 'Process Messages'}</span>}
+                      {!isSidebarCollapsed && <span>{t('nav.messages')}</span>}
                     </Link>
                   </>
                 )}
@@ -431,10 +431,10 @@ function LayoutContentInner({ children }) {
               <button
                 onClick={toggleSidebar}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all w-full"
-                title={isSidebarCollapsed ? (language === 'es' ? 'Expandir' : 'Expand') : (language === 'es' ? 'Colapsar' : 'Collapse')}
+                title={isSidebarCollapsed ? t('nav.expandMenu') : t('nav.collapseMenu')}
               >
                 {isSidebarCollapsed ? <ChevronRight className="w-5 h-5 shrink-0" /> : <ChevronLeft className="w-5 h-5 shrink-0" />}
-                {!isSidebarCollapsed && <span>{language === 'es' ? 'Colapsar Menú' : 'Collapse Menu'}</span>}
+                {!isSidebarCollapsed && <span>{t('nav.collapseMenu')}</span>}
               </button>
             </div>
             </nav>
@@ -521,7 +521,7 @@ function LayoutContentInner({ children }) {
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Servicios Personalizados
+                    {t('nav.customServices')}
                   </Link>
 
                   <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">{t('section.resources')}</div>

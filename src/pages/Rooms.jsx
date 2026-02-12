@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, MapPin, Video, Volume2, Radio } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Video, Volume2, Radio, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -22,7 +22,7 @@ export default function Rooms() {
   const queryClient = useQueryClient();
 
   // Phase 7: Added staleTime to reduce unnecessary refetches
-  const { data: rooms = [] } = useQuery({
+  const { data: rooms = [], isLoading } = useQuery({
     queryKey: ['rooms'],
     queryFn: () => base44.entities.Room.list('name'),
     staleTime: 10 * 60 * 1000, // 10 minutes (rooms change rarely)
@@ -86,6 +86,11 @@ export default function Rooms() {
         </Button>
       </div>
 
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      )}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {rooms.map((room) => (
           <Card key={room.id} className="bg-white border-gray-200">

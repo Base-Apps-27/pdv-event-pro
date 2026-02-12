@@ -109,7 +109,6 @@ export default function CustomServiceBuilder() {
   // ── Load existing service ──
   useEffect(() => {
     if (existingService) {
-      console.log('[DATA LOAD] Service loaded from backend:', { id: existingService.id, name: existingService.name, segmentCount: existingService.segments?.length || 0 });
       const sanitizedService = normalizeServiceTeams(existingService);
       if (sanitizedService.segments) {
         sanitizedService.segments = sanitizedService.segments.map(s => ({ ...s, _uiId: s._uiId || generateUiId() }));
@@ -129,7 +128,7 @@ export default function CustomServiceBuilder() {
           const backupDate = new Date(timestamp);
           const serverDate = existingService.updated_date ? new Date(existingService.updated_date) : new Date(0);
           if (backupDate > serverDate) {
-            console.warn('[BACKUP RECOVERY] LocalStorage backup is newer than server data.');
+            // Backup is newer than server — user may have unsaved local changes
           }
         } catch (error) { console.error('[BACKUP RECOVERY ERROR]', error.message); }
       }

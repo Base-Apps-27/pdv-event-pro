@@ -15,7 +15,6 @@ import { getSegmentData } from "@/components/utils/segmentDataUtils";
 export async function syncToSession(base44, serviceResult, segments) {
   if (!serviceResult || !serviceResult.id) return;
   
-  console.log('[SYNC] Starting sync to Session entities...');
   const serviceId = serviceResult.id;
   
   // 1. Find or Create Session
@@ -186,5 +185,4 @@ export async function syncToSession(base44, serviceResult, segments) {
     await base44.entities.Segment.bulkCreate(subSegmentsWithParent);
   }
   
-  console.log('[SYNC] Completed sync to Session/Segments with sub-asignaciones');
 }
