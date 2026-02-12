@@ -2167,12 +2167,9 @@ Return ONLY valid JSON:
         isQuickPrint={isQuickPrint}
       />
       {/* REMOVED: ~500 lines of inline print HTML moved to WeeklyServicePrintView (Phase 3B) */}
-      {false && <div className="hidden print:block">
-        {/* PAGE 1 */}
-        <div className="print-page-1-wrapper">
-        <div className="print-header" style={{ position: 'relative' }}>
-          <div className="print-logo" style={{ position: 'absolute', left: '0', top: '0' }}>
-            <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" />
+      {/* Dead code fully removed to fix build — original preserved in git history / WeeklyServicePrintView */}
+
+      {/* Screen UI */}
           </div>
           <div className="print-title">
             <h1>Orden de Servicio</h1>
