@@ -200,6 +200,10 @@ const translations = {
     'error.please_complete': 'Por favor completa:',
     'hint.allowed_placeholders': 'Se permiten marcadores como "TBD", "Por definir" o "---"',
       'error.save_failed': 'No se pudo guardar el segmento',
+      // P0-2: Mutation error toast keys (2026-02-12)
+      'errors.createFailed': 'Error al crear',
+      'errors.updateFailed': 'Error al actualizar',
+      'errors.deleteFailed': 'Error al eliminar',
       // Phase 2 additions - Public program helpers
       'public.today': 'Hoy',
       'public.tomorrow': 'Mañana',
@@ -565,6 +569,10 @@ const translations = {
     'error.please_complete': 'Please complete:',
     'hint.allowed_placeholders': 'Placeholders like "TBD", "To be defined", or "---" are allowed',
       'error.save_failed': 'Failed to save segment',
+      // P0-2: Mutation error toast keys (2026-02-12)
+      'errors.createFailed': 'Failed to create',
+      'errors.updateFailed': 'Failed to update',
+      'errors.deleteFailed': 'Failed to delete',
       // Phase 2 additions - Public program helpers
       'public.today': 'Today',
       'public.tomorrow': 'Tomorrow',
