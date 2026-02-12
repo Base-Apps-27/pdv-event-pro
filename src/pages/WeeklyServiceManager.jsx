@@ -2672,12 +2672,6 @@ Return ONLY valid JSON:
         </div>
         </div>
 
-        <div className="print-footer">
-          ¡Atrévete a cambiar!
-        </div>
-      </div>}
-
-      {/* Screen UI */}
       <div className="flex justify-between items-center print:hidden">
         <div>
           <h1 className="text-5xl text-gray-900 uppercase tracking-tight">
