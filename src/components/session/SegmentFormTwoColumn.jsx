@@ -589,30 +589,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     }
   };
 
-  const addBreakoutRoom = () => {
-    setBreakoutRooms([...breakoutRooms, {
-      room_id: "",
-      hosts: "",
-      speakers: "",
-      topic: "",
-      general_notes: "",
-      other_notes: "",
-      requires_translation: false,
-      translation_mode: "InPerson",
-      translator_name: ""
-    }]);
-  };
-
-  const removeBreakoutRoom = (index) => {
-    setBreakoutRooms(breakoutRooms.filter((_, i) => i !== index));
-  };
-
-  const updateBreakoutRoom = (index, field, value) => {
-    const updated = [...breakoutRooms];
-    updated[index] = { ...updated[index], [field]: value };
-    setBreakoutRooms(updated);
-  };
-
   const isWorshipType = formData.segment_type === "Alabanza";
   const isPlenariaType = formData.segment_type === "Plenaria";
   const isBreakType = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
