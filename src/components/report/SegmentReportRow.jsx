@@ -251,4 +251,6 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
       )}
     </div>
   );
-}
+});
+
+export default SegmentReportRow;
