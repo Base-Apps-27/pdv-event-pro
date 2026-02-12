@@ -2169,12 +2169,6 @@ Return ONLY valid JSON:
       {/* REMOVED: ~500 lines of inline print HTML moved to WeeklyServicePrintView (Phase 3B) */}
 
       {/* Screen UI */}
-            </div>
-          </div>
-        </div>
-
-        <div className="print-body-content">
-        <div className="print-two-columns">
           <div className="print-service-column left">
             <div className="print-service-time">9:30 A.M.</div>
             {serviceData?.pre_service_notes?.["9:30am"] && (
