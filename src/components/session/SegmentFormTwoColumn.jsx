@@ -1,6 +1,23 @@
+/**
+ * SegmentFormTwoColumn.jsx
+ * Phase 3B FINAL: Slim orchestrator (~600 lines).
+ *
+ * Extracted (Phase 3B):
+ * - useSegmentFormState.js — form init, sync, template application (~200 lines)
+ * - useSegmentFormSubmit.js — validation, overlap, metadata, mutations (~200 lines)
+ * - segment-form/VideoSection.jsx — video fields
+ * - segment-form/PlenariaSection.jsx — message fields
+ * - segment-form/PanelSection.jsx — panel fields
+ *
+ * Previously extracted (before 3B):
+ * - ArtesFormSection, BreakoutRoomsEditor, SegmentActionsEditor
+ * - WorshipSongsSection, TeamNotesSection, VisibilityTogglesSection
+ * - AnnouncementSeriesSection
+ */
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, Plus, ScrollText, BookOpen, Sparkles } from "lucide-react";
+import { Save, X, ScrollText } from "lucide-react";
 import OverlapDetectedDialog from "./OverlapDetectedDialog";
 import ShiftPreviewModal from "./ShiftPreviewModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -17,7 +34,6 @@ import TimePicker from "@/components/ui/TimePicker";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import SegmentTimelinePreview from "./SegmentTimelinePreview";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
-// Note: FieldOriginIndicator still used in Básico section (title, presenter, description) and passed to TeamNotesSection
 import AnnouncementSeriesManager from "../announcements/AnnouncementSeriesManager";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import ArtesFormSection from "./ArtesFormSection";
@@ -27,561 +43,79 @@ import WorshipSongsSection from "./WorshipSongsSection";
 import AnnouncementSeriesSection from "./AnnouncementSeriesSection";
 import TeamNotesSection from "./TeamNotesSection";
 import VisibilityTogglesSection from "./VisibilityTogglesSection";
-// ResourceUrlInput removed - metadata now auto-fetched on save
 import { useLanguage } from "@/components/utils/i18n";
-import { toast } from "sonner";
-import { logCreate, logUpdate } from "@/components/utils/editActionLogger";
-import { invalidateSegmentCaches, segmentKeys } from "@/components/utils/queryKeys";
-import { isPresenterEditable, isPresenterOptional } from "@/components/utils/segmentTypeDisplay";
+import { invalidateSegmentCaches } from "@/components/utils/queryKeys";
 
-// Break type hidden from UI but kept in schema for backwards compatibility
-// Receso = short breaks (coffee, transition); Almuerzo = meal breaks
+// Phase 3B extracted hooks and components
+import useSegmentFormState from "./useSegmentFormState";
+import useSegmentFormSubmit, { calculateTimes } from "./useSegmentFormSubmit";
+import VideoSection from "./segment-form/VideoSection";
+import PlenariaSection from "./segment-form/PlenariaSection";
+import PanelSection from "./segment-form/PanelSection";
+
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
-  "Anuncio", "Dinámica", "TechOnly", "Oración", 
+  "Anuncio", "Dinámica", "TechOnly", "Oración",
   "Especial", "Cierre", "MC", "Ministración", "Receso", "Almuerzo", "Artes", "Panel", "Breakout"
 ];
 
 const TYPE_TO_COLOR = {
-  "Alabanza": "worship",
-  "Plenaria": "preach",
-  "Panel": "special",
-  "Break": "break",
-  "Receso": "break",
-  "Almuerzo": "break",
-  "TechOnly": "tech",
-  "Video": "tech",
-  "Especial": "special",
-  "Artes": "special",
-  "Ministración": "special",
+  "Alabanza": "worship", "Plenaria": "preach", "Panel": "special",
+  "Break": "break", "Receso": "break", "Almuerzo": "break",
+  "TechOnly": "tech", "Video": "tech", "Especial": "special",
+  "Artes": "special", "Ministración": "special",
 };
-
-const getColorForType = (type) => {
-  return TYPE_TO_COLOR[type] || "default";
-};
+const getColorForType = (type) => TYPE_TO_COLOR[type] || "default";
 
 export default function SegmentFormTwoColumn({ session, segment, templates, onClose, sessionId, user }) {
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
-  const [selectedTemplate, setSelectedTemplate] = useState("");
-  const [breakoutRooms, setBreakoutRooms] = useState(segment?.breakout_rooms || []);
   const [showSeriesManager, setShowSeriesManager] = useState(false);
   const [showVerseParser, setShowVerseParser] = useState(false);
-  
+
   // Fetch announcement series for selection
   const { data: announcementSeries = [] } = useQuery({
     queryKey: ['announcementSeries'],
     queryFn: () => base44.entities.AnnouncementSeries.list(),
   });
 
-  // ============================================================
-  // VALIDATION-ONLY QUERY - DO NOT USE FOR DISPLAY
-  // ============================================================
-  // Purpose: Calculate suggested start times and detect time overlaps
-  // Scope: Form validation ONLY - this data is NOT rendered in any UI
-  // Why session-level: Form needs fresh data for the specific session being edited
-  // 
-  // IMPORTANT: UI display derives from event-level cache (EventDetail segments prop)
-  // This query exists solely for overlap detection during save validation
-  // See: components/utils/queryKeys.js for canonical cache architecture
-  // ============================================================
+  // VALIDATION-ONLY QUERY — see queryKeys.js for cache architecture
   const { data: allSegments = [] } = useQuery({
-    queryKey: ['segments', sessionId], // Invalidated by segmentKeys.invalidateAll()
+    queryKey: ['segments', sessionId],
     queryFn: () => base44.entities.Segment.filter({ session_id: sessionId }, 'order'),
     enabled: !!sessionId,
   });
 
-  // Determine next sequential order for new segments (fallback to 1)
   const nextOrder = React.useMemo(() => {
     if (!allSegments || allSegments.length === 0) return 1;
     const max = Math.max(...allSegments.map(s => Number(s.order) || 0));
     return (isFinite(max) ? max : 0) + 1;
   }, [allSegments]);
-  
-  // Calculate suggested start time for new segments
-  const getSuggestedStartTime = () => {
-    if (segment) return segment.start_time || "";
-    if (allSegments.length === 0) return session?.planned_start_time || "";
-    
-    const sortedSegments = [...allSegments].sort((a, b) => (a.order || 0) - (b.order || 0));
-    const lastSegment = sortedSegments[sortedSegments.length - 1];
-    return lastSegment.end_time || lastSegment.start_time || "";
-  };
-  
-  const [formData, setFormData] = useState({
-    title: segment?.title || "",
-    segment_type: segment?.segment_type || "Plenaria",
-    presenter: segment?.presenter || "",
-    description_details: segment?.description_details || "",
-    prep_instructions: segment?.prep_instructions || "",
-    start_time: segment?.start_time || getSuggestedStartTime(),
-    duration_min: segment?.duration_min || 30,
-    projection_notes: segment?.projection_notes || "",
-    sound_notes: segment?.sound_notes || "",
-    ushers_notes: segment?.ushers_notes || "",
-    translation_notes: segment?.translation_notes || "",
-    stage_decor_notes: segment?.stage_decor_notes || "",
-    other_notes: segment?.other_notes || "",
-    show_in_general: segment?.show_in_general ?? true,
-    show_in_projection: segment?.show_in_projection ?? true,
-    show_in_sound: segment?.show_in_sound ?? true,
-    show_in_ushers: segment?.show_in_ushers ?? true,
-    color_code: segment?.color_code || "default",
-    order: segment?.order || 1,
-    message_title: segment?.message_title || "",
-    scripture_references: segment?.scripture_references || "",
-    number_of_songs: segment?.number_of_songs || 3,
-    song_1_title: segment?.song_1_title || "",
-    song_1_lead: segment?.song_1_lead || "",
-    song_2_title: segment?.song_2_title || "",
-    song_2_lead: segment?.song_2_lead || "",
-    song_3_title: segment?.song_3_title || "",
-    song_3_lead: segment?.song_3_lead || "",
-    song_4_title: segment?.song_4_title || "",
-    song_4_lead: segment?.song_4_lead || "",
-    song_5_title: segment?.song_5_title || "",
-    song_5_lead: segment?.song_5_lead || "",
-    song_6_title: segment?.song_6_title || "",
-    song_6_lead: segment?.song_6_lead || "",
-    requires_translation: segment?.requires_translation || false,
-    translation_mode: segment?.translation_mode || "InPerson",
-    translator_name: segment?.translator_name || "",
-    panel_moderators: segment?.panel_moderators || "",
-    panel_panelists: segment?.panel_panelists || "",
-    major_break: segment?.major_break || false,
-    room_id: segment?.room_id || "",
-    has_video: segment?.has_video || false,
-    video_name: segment?.video_name || "",
-    video_location: segment?.video_location || "",
-    video_owner: segment?.video_owner || "",
-    video_length_sec: segment?.video_length_sec || 0,
-    art_types: segment?.art_types || [],
-    drama_handheld_mics: segment?.drama_handheld_mics || 0,
-    drama_headset_mics: segment?.drama_headset_mics || 0,
-    drama_start_cue: segment?.drama_start_cue || "",
-    drama_end_cue: segment?.drama_end_cue || "",
-    drama_has_song: segment?.drama_has_song || false,
-    drama_song_title: segment?.drama_song_title || "",
-    drama_song_source: segment?.drama_song_source || "",
-    drama_song_owner: segment?.drama_song_owner || "",
-    dance_has_song: segment?.dance_has_song || false,
-    dance_song_title: segment?.dance_song_title || "",
-    dance_song_source: segment?.dance_song_source || "",
-    dance_song_owner: segment?.dance_song_owner || "",
-    dance_handheld_mics: segment?.dance_handheld_mics || 0,
-    dance_headset_mics: segment?.dance_headset_mics || 0,
-    dance_start_cue: segment?.dance_start_cue || "",
-    dance_end_cue: segment?.dance_end_cue || "",
-    art_other_description: segment?.art_other_description || "",
-    // Resource URLs and metadata
-    video_url: segment?.video_url || "",
-    video_url_meta: segment?.video_url_meta || null,
-    drama_song_1_url_meta: segment?.drama_song_1_url_meta || null,
-    drama_song_2_title: segment?.drama_song_2_title || "",
-    drama_song_2_url: segment?.drama_song_2_url || "",
-    drama_song_2_owner: segment?.drama_song_2_owner || "",
-    drama_song_2_url_meta: segment?.drama_song_2_url_meta || null,
-    drama_song_3_title: segment?.drama_song_3_title || "",
-    drama_song_3_url: segment?.drama_song_3_url || "",
-    drama_song_3_owner: segment?.drama_song_3_owner || "",
-    drama_song_3_url_meta: segment?.drama_song_3_url_meta || null,
-    dance_song_1_url_meta: segment?.dance_song_1_url_meta || null,
-    dance_song_2_title: segment?.dance_song_2_title || "",
-    dance_song_2_url: segment?.dance_song_2_url || "",
-    dance_song_2_owner: segment?.dance_song_2_owner || "",
-    dance_song_2_url_meta: segment?.dance_song_2_url_meta || null,
-    dance_song_3_title: segment?.dance_song_3_title || "",
-    dance_song_3_url: segment?.dance_song_3_url || "",
-    dance_song_3_owner: segment?.dance_song_3_owner || "",
-    dance_song_3_url_meta: segment?.dance_song_3_url_meta || null,
-    arts_run_of_show_url: segment?.arts_run_of_show_url || "",
-    arts_run_of_show_url_meta: segment?.arts_run_of_show_url_meta || null,
-    announcement_title: segment?.announcement_title || "",
-    announcement_description: segment?.announcement_description || "",
-    announcement_date: segment?.announcement_date || "",
-    announcement_tone: segment?.announcement_tone || "",
-    announcement_series_id: segment?.announcement_series_id || "",
-    segment_actions: segment?.segment_actions || [],
-    parsed_verse_data: segment?.parsed_verse_data || null,
-  });
 
-  const [fieldOrigins, setFieldOrigins] = useState(segment?.field_origins || {});
+  // Phase 3B: extracted form state hook
+  const {
+    formData, setFormData, updateField,
+    breakoutRooms, setBreakoutRooms,
+    fieldOrigins, setFieldOrigins,
+    selectedTemplate, setSelectedTemplate,
+  } = useSegmentFormState({ segment, session, allSegments, templates });
 
-  // CRITICAL: Re-sync formData when parent passes fresh segment after DB refetch
-  // Prevents stale display after save-without-close workflow
-  // Watch segment.updated_date to detect when React Query refetches fresh data
-  useEffect(() => {
-    if (segment) {
-      setFormData({
-        title: segment.title || "",
-        segment_type: segment.segment_type || "Plenaria",
-        presenter: segment.presenter || "",
-        description_details: segment.description_details || "",
-        prep_instructions: segment.prep_instructions || "",
-        start_time: segment.start_time || getSuggestedStartTime(),
-        duration_min: segment.duration_min || 30,
-        projection_notes: segment.projection_notes || "",
-        sound_notes: segment.sound_notes || "",
-        ushers_notes: segment.ushers_notes || "",
-        translation_notes: segment.translation_notes || "",
-        stage_decor_notes: segment.stage_decor_notes || "",
-        other_notes: segment.other_notes || "",
-        show_in_general: segment.show_in_general ?? true,
-        show_in_projection: segment.show_in_projection ?? true,
-        show_in_sound: segment.show_in_sound ?? true,
-        show_in_ushers: segment.show_in_ushers ?? true,
-        color_code: segment.color_code || "default",
-        order: segment.order || 1,
-        message_title: segment.message_title || "",
-        scripture_references: segment.scripture_references || "",
-        number_of_songs: segment.number_of_songs || 3,
-        song_1_title: segment.song_1_title || "",
-        song_1_lead: segment.song_1_lead || "",
-        song_2_title: segment.song_2_title || "",
-        song_2_lead: segment.song_2_lead || "",
-        song_3_title: segment.song_3_title || "",
-        song_3_lead: segment.song_3_lead || "",
-        song_4_title: segment.song_4_title || "",
-        song_4_lead: segment.song_4_lead || "",
-        song_5_title: segment.song_5_title || "",
-        song_5_lead: segment.song_5_lead || "",
-        song_6_title: segment.song_6_title || "",
-        song_6_lead: segment.song_6_lead || "",
-        requires_translation: segment.requires_translation || false,
-        translation_mode: segment.translation_mode || "InPerson",
-        translator_name: segment.translator_name || "",
-        panel_moderators: segment.panel_moderators || "",
-        panel_panelists: segment.panel_panelists || "",
-        major_break: segment.major_break || false,
-        room_id: segment.room_id || "",
-        has_video: segment.has_video || false,
-        video_name: segment.video_name || "",
-        video_location: segment.video_location || "",
-        video_owner: segment.video_owner || "",
-        video_length_sec: segment.video_length_sec || 0,
-        video_url: segment.video_url || "",
-        video_url_meta: segment.video_url_meta || null,
-        art_types: segment.art_types || [],
-        drama_handheld_mics: segment.drama_handheld_mics || 0,
-        drama_headset_mics: segment.drama_headset_mics || 0,
-        drama_start_cue: segment.drama_start_cue || "",
-        drama_end_cue: segment.drama_end_cue || "",
-        drama_has_song: segment.drama_has_song || false,
-        drama_song_title: segment.drama_song_title || "",
-        drama_song_source: segment.drama_song_source || "",
-        drama_song_owner: segment.drama_song_owner || "",
-        drama_song_1_url_meta: segment.drama_song_1_url_meta || null,
-        drama_song_2_title: segment.drama_song_2_title || "",
-        drama_song_2_url: segment.drama_song_2_url || "",
-        drama_song_2_owner: segment.drama_song_2_owner || "",
-        drama_song_2_url_meta: segment.drama_song_2_url_meta || null,
-        drama_song_3_title: segment.drama_song_3_title || "",
-        drama_song_3_url: segment.drama_song_3_url || "",
-        drama_song_3_owner: segment.drama_song_3_owner || "",
-        drama_song_3_url_meta: segment.drama_song_3_url_meta || null,
-        dance_has_song: segment.dance_has_song || false,
-        dance_song_title: segment.dance_song_title || "",
-        dance_song_source: segment.dance_song_source || "",
-        dance_song_owner: segment.dance_song_owner || "",
-        dance_song_1_url_meta: segment.dance_song_1_url_meta || null,
-        dance_song_2_title: segment.dance_song_2_title || "",
-        dance_song_2_url: segment.dance_song_2_url || "",
-        dance_song_2_owner: segment.dance_song_2_owner || "",
-        dance_song_2_url_meta: segment.dance_song_2_url_meta || null,
-        dance_song_3_title: segment.dance_song_3_title || "",
-        dance_song_3_url: segment.dance_song_3_url || "",
-        dance_song_3_owner: segment.dance_song_3_owner || "",
-        dance_song_3_url_meta: segment.dance_song_3_url_meta || null,
-        dance_handheld_mics: segment.dance_handheld_mics || 0,
-        dance_headset_mics: segment.dance_headset_mics || 0,
-        dance_start_cue: segment.dance_start_cue || "",
-        dance_end_cue: segment.dance_end_cue || "",
-        art_other_description: segment.art_other_description || "",
-        arts_run_of_show_url: segment.arts_run_of_show_url || "",
-        arts_run_of_show_url_meta: segment.arts_run_of_show_url_meta || null,
-        announcement_title: segment.announcement_title || "",
-        announcement_description: segment.announcement_description || "",
-        announcement_date: segment.announcement_date || "",
-        announcement_tone: segment.announcement_tone || "",
-        announcement_series_id: segment.announcement_series_id || "",
-        segment_actions: segment.segment_actions || [],
-        parsed_verse_data: segment.parsed_verse_data || null,
-      });
-      setBreakoutRooms(segment.breakout_rooms || []);
-      setFieldOrigins(segment.field_origins || {});
-    }
-  }, [segment?.id, segment?.updated_date]);
+  // Phase 3B: extracted submit hook
+  const {
+    handleSubmit: rawHandleSubmit,
+    createMutation, updateMutation,
+    showOverlapDialog, setShowOverlapDialog, overlapText,
+    showShiftPreview, setShowShiftPreview,
+  } = useSegmentFormSubmit({ segment, sessionId, session, user, allSegments, nextOrder, onClose });
 
-  const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (fieldOrigins[field] && fieldOrigins[field] !== 'manual') {
-      setFieldOrigins(prev => ({ ...prev, [field]: 'manual' }));
-    }
-  };
-
-  const calculateTimes = (startTime, durationMin) => {
-    if (!startTime || !durationMin) return { end_time: "" };
-    
-    const [hours, minutes] = startTime.split(':').map(Number);
-    const startMinutes = hours * 60 + minutes;
-    const endMinutes = startMinutes + durationMin;
-
-    const formatTime = (totalMinutes) => {
-      const h = Math.floor(totalMinutes / 60) % 24;
-      const m = totalMinutes % 60;
-      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    };
-
-    return {
-      end_time: formatTime(endMinutes)
-    };
-  };
-
-  const times = calculateTimes(
-    formData.start_time,
-    formData.duration_min
-  );
-
-  useEffect(() => {
-    if (selectedTemplate) {
-      const template = templates.find(t => t.id === selectedTemplate);
-      if (template) {
-        setFormData(prev => ({
-          ...prev,
-          title: template.default_title || prev.title,
-          segment_type: template.segment_type,
-          duration_min: template.default_duration_min || prev.duration_min,
-          projection_notes: template.default_projection_notes || "",
-          sound_notes: template.default_sound_notes || "",
-          ushers_notes: template.default_ushers_notes || "",
-          color_code: template.default_color_code || "default",
-          show_in_general: template.show_in_general ?? true,
-          show_in_projection: template.show_in_projection ?? true,
-          show_in_sound: template.show_in_sound ?? true,
-          show_in_ushers: template.show_in_ushers ?? true,
-        }));
-
-        // Mark fields from template
-        setFieldOrigins(prev => ({
-          ...prev,
-          title: template.default_title ? 'template' : prev.title,
-          segment_type: 'template',
-          duration_min: template.default_duration_min ? 'template' : prev.duration_min,
-          projection_notes: template.default_projection_notes ? 'template' : 'manual',
-          sound_notes: template.default_sound_notes ? 'template' : 'manual',
-          ushers_notes: template.default_ushers_notes ? 'template' : 'manual',
-          color_code: template.default_color_code ? 'template' : 'manual',
-        }));
-      }
-    }
-  }, [selectedTemplate, templates]);
-
-  const createMutation = useMutation({
-    mutationFn: async (data) => {
-      const created = await base44.entities.Segment.create(data);
-      await logCreate('Segment', created, sessionId, user);
-      return created;
-    },
-    onSuccess: () => {
-      // CRITICAL: Use centralized invalidation from queryKeys.js
-      // This ensures ALL segment caches are invalidated: ['segments', ...], ['allSegments', ...]
-      invalidateSegmentCaches(queryClient);
-      onClose();
-    },
-    onError: () => {
-      toast.error(t('error.save_failed'));
-    },
-  });
-
-  // State for conflict + preview modals
-  const [showOverlapDialog, setShowOverlapDialog] = useState(false);
-  const [overlapText, setOverlapText] = useState("");
-  const [showShiftPreview, setShowShiftPreview] = useState(false);
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data, previousState }) => {
-      const updated = await base44.entities.Segment.update(id, data);
-      await logUpdate('Segment', id, previousState, { ...previousState, ...data }, sessionId, user);
-      return updated;
-    },
-    onSuccess: () => {
-      // CRITICAL: Use centralized invalidation from queryKeys.js
-      // This ensures ALL segment caches are invalidated: ['segments', ...], ['allSegments', ...]
-      invalidateSegmentCaches(queryClient);
-      onClose();
-    },
-    onError: () => {
-      toast.error(t('error.save_failed'));
-    },
-  });
-
-
+  const times = calculateTimes(formData.start_time, formData.duration_min);
 
   const { data: rooms = [] } = useQuery({
     queryKey: ['rooms'],
     queryFn: () => base44.entities.Room.list(),
   });
 
-  // Helper to fetch metadata for a URL (silent, non-blocking)
-  const fetchMetaForUrl = async (url) => {
-    if (!url || !url.trim() || !url.startsWith('http')) return null;
-    try {
-      const response = await base44.functions.invoke('fetchUrlMetadata', { url: url.trim() });
-      if (response.data && !response.data.error) {
-        return {
-          title: response.data.title,
-          thumbnail: response.data.thumbnail,
-          fetched_at: response.data.fetched_at || new Date().toISOString()
-        };
-      }
-    } catch (e) {
-      console.warn('Auto-fetch metadata failed for', url, e);
-    }
-    return null;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Basic required fields validation (bilingual toast)
-    const isBreakTypeNow = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
-    const isTechOnlyNow = formData.segment_type === "TechOnly";
-    const isBreakoutTypeNow = formData.segment_type === "Breakout";
-    const needsPresenterNow = !isBreakTypeNow && !isTechOnlyNow && !isBreakoutTypeNow;
-
-    const missing = [];
-    if (!formData.title?.trim()) missing.push(t('field.title'));
-    if (!formData.start_time) missing.push(t('field.start_time'));
-    if (!formData.duration_min || formData.duration_min <= 0) missing.push(t('field.duration_min'));
-    // Presenter not required for break types (Receso/Almuerzo) - it's optional
-    const isBreakTypeNowForValidation = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
-    if (needsPresenterNow && !isBreakTypeNowForValidation && !formData.presenter?.trim()) missing.push(t('field.presenter'));
-    if (missing.length > 0) {
-      toast.error(`${t('error.required_fields_missing')}: ${missing.join(', ')}`);
-      return;
-    }
-
-    // Validate segment times don't overlap with other segments in the same session
-    if (formData.start_time && times.end_time && allSegments) {
-      const otherSegments = allSegments.filter(s => s.id !== segment?.id);
-      
-      // Convert HH:MM to minutes for proper numeric comparison
-      const toMinutes = (timeStr) => {
-        if (!timeStr) return null;
-        const [h, m] = String(timeStr).split(':').map(Number);
-        return (isFinite(h) && isFinite(m)) ? h * 60 + m : null;
-      };
-      
-      const newStartMin = toMinutes(formData.start_time);
-      const newEndMin = toMinutes(times.end_time);
-      
-      for (const existingSegment of otherSegments) {
-        if (existingSegment.start_time && existingSegment.end_time) {
-          const existingStartMin = toMinutes(existingSegment.start_time);
-          const existingEndMin = toMinutes(existingSegment.end_time);
-          
-          // Check for overlap using numeric comparison
-          if (newStartMin !== null && newEndMin !== null && existingStartMin !== null && existingEndMin !== null) {
-            if ((newStartMin >= existingStartMin && newStartMin < existingEndMin) ||
-                (newEndMin > existingStartMin && newEndMin <= existingEndMin) ||
-                (newStartMin <= existingStartMin && newEndMin >= existingEndMin)) {
-              setOverlapText(`El segmento se solapa con "${existingSegment.title}" (${formatTimeToEST(existingSegment.start_time)} - ${formatTimeToEST(existingSegment.end_time)}). ${language === 'es' ? 'Por favor ajusta los horarios o elige ajustar segmentos posteriores.' : 'Please adjust times or choose to shift downstream segments.'}`);
-              setShowOverlapDialog(true);
-              return;
-            }
-          }
-        }
-      }
-    }
-
-    // Auto-fetch metadata for URLs (fire-and-forget style, but wait for results)
-    const metaUpdates = {};
-    const urlsToFetch = [
-      { url: formData.video_url, metaField: 'video_url_meta', currentMeta: formData.video_url_meta },
-      { url: formData.drama_song_source, metaField: 'drama_song_1_url_meta', currentMeta: formData.drama_song_1_url_meta },
-      { url: formData.drama_song_2_url, metaField: 'drama_song_2_url_meta', currentMeta: formData.drama_song_2_url_meta },
-      { url: formData.drama_song_3_url, metaField: 'drama_song_3_url_meta', currentMeta: formData.drama_song_3_url_meta },
-      { url: formData.dance_song_source, metaField: 'dance_song_1_url_meta', currentMeta: formData.dance_song_1_url_meta },
-      { url: formData.dance_song_2_url, metaField: 'dance_song_2_url_meta', currentMeta: formData.dance_song_2_url_meta },
-      { url: formData.dance_song_3_url, metaField: 'dance_song_3_url_meta', currentMeta: formData.dance_song_3_url_meta },
-      { url: formData.arts_run_of_show_url, metaField: 'arts_run_of_show_url_meta', currentMeta: formData.arts_run_of_show_url_meta },
-    ];
-    
-    // Only fetch for URLs that don't already have metadata or URL changed
-    const fetchPromises = urlsToFetch
-      .filter(({ url, currentMeta }) => url && url.trim() && !currentMeta)
-      .map(async ({ url, metaField }) => {
-        const meta = await fetchMetaForUrl(url);
-        if (meta) metaUpdates[metaField] = meta;
-      });
-    
-    // Wait for all fetches (parallel)
-    await Promise.all(fetchPromises);
-
-    // Determine auto-insertion order by time (Option 1 - Gap-Fit, order-only)
-    // Only for new segments, when live adjustments are OFF, and we have valid time/duration.
-    let insertionOrder = null;
-    if (!segment && !session?.live_adjustment_enabled && formData.start_time && formData.duration_min && allSegments?.length) {
-      const parse = (t) => {
-        const [h, m] = String(t).split(":").map(Number);
-        return (isFinite(h) && isFinite(m)) ? h * 60 + m : null;
-      };
-      const newStartMin = parse(formData.start_time);
-      const newEndMin = newStartMin != null ? newStartMin + Number(formData.duration_min) : null;
-      if (newStartMin != null && newEndMin != null) {
-        // Consider only segments with both start and end times; sort by time
-        const byTime = allSegments
-          .filter(s => s.start_time && s.end_time)
-          .sort((a, b) => (parse(a.start_time) ?? 0) - (parse(b.start_time) ?? 0));
-
-        const sessionStartMin = session?.planned_start_time ? parse(session.planned_start_time) : null;
-        let prev = null;
-        for (let i = 0; i < byTime.length; i++) {
-          const next = byTime[i];
-          const gapStart = prev ? parse(prev.end_time) : (sessionStartMin ?? parse(next.start_time));
-          const gapEnd = parse(next.start_time);
-          // Fits entirely within the gap (boundaries inclusive)
-          if (gapStart != null && gapEnd != null && newStartMin >= gapStart && newEndMin <= gapEnd) {
-            const prevOrder = prev ? Number(prev.order) || 0 : 0;
-            const nextOrderVal = Number(next.order) || (prevOrder + 1);
-            // Place between prev and next using fractional order to avoid touching others
-            insertionOrder = prev ? (prevOrder + nextOrderVal) / 2 : (nextOrderVal - 0.5);
-            break;
-          }
-          prev = next;
-        }
-      }
-    }
-
-    // Strip internal UI state flags (prefixed with _) before saving
-    const cleanedFormData = Object.fromEntries(
-      Object.entries(formData).filter(([key]) => !key.startsWith('_'))
-    );
-
-    const data = {
-      session_id: sessionId,
-      ...cleanedFormData,
-      // Merge auto-fetched metadata
-      ...metaUpdates,
-      // Ensure a proper sequential order for new segments
-      // Only assign order when creating; preserve existing order on edits
-      ...(segment ? {} : { order: insertionOrder ?? nextOrder }),
-      ...times,
-      // Only include breakout_rooms for Breakout type; undefined fields are omitted by JSON.stringify
-      breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined,
-      // Include parsed_verse_data for Plenaria segments with scripture references
-      parsed_verse_data: formData.parsed_verse_data || undefined,
-      field_origins: fieldOrigins,
-    };
-
-    if (segment) {
-      // If an overlap was detected we halt earlier and show the guided fix.
-      updateMutation.mutate({ id: segment.id, data, previousState: segment });
-    } else {
-      createMutation.mutate(data);
-    }
-  };
-
+  // ── Type-derived booleans ──
   const isWorshipType = formData.segment_type === "Alabanza";
   const isPlenariaType = formData.segment_type === "Plenaria";
   const isBreakType = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
@@ -590,40 +124,29 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   const isVideoType = formData.segment_type === "Video";
   const isArtesType = formData.segment_type === "Artes";
   const isPanelType = formData.segment_type === "Panel";
-  const isMcLedType = ["Bienvenida", "Ofrenda", "Anuncio", "Dinámica", "Oración", "Especial", "Cierre", "MC", "Ministración"].includes(formData.segment_type);
   const isAnnouncementType = formData.segment_type === "Anuncio";
-  
-  // Break types (Receso/Almuerzo) can have optional presenter (person managing stage transition)
-  const needsPresenter = !isTechOnly && !isBreakoutType && !isPanelType; // dynamic required depending on type
-  const presenterOptionalForBreak = isBreakType; // presenter is optional but available for breaks
-  const showTranslation = !isBreakoutType; // Now available for break types too
-  const showActions = true; // Now available for all types including breaks
+
+  const needsPresenter = !isTechOnly && !isBreakoutType && !isPanelType;
+  const presenterOptionalForBreak = isBreakType;
+  const showTranslation = !isBreakoutType;
+  const showActions = true;
   const requiresSala = !isBreakoutType;
 
-  // Auto-default Sala to 'Santuario' when required and empty
+  // Auto-default Sala to 'Santuario'
   useEffect(() => {
     if (requiresSala && !formData.room_id && rooms && rooms.length) {
       const santuario = rooms.find(r => typeof r.name === 'string' && r.name.toLowerCase().includes('santuario'));
-      if (santuario) {
-        setFormData(prev => ({ ...prev, room_id: santuario.id }));
-      }
+      if (santuario) setFormData(prev => ({ ...prev, room_id: santuario.id }));
     }
   }, [requiresSala, rooms]);
 
-
-
-  // Computed submit readiness: enables the "Crear" button only when required fields are filled
-  // Allow placeholders: admins may intentionally leave fields as 'TBD' or '---' when scaffolding
+  // Computed submit readiness
   const isPlaceholder = (val) => typeof val === 'string' && /^(tbd|por definir|---)$/i.test(val.trim());
   const hasValueOrPlaceholder = (val) => Boolean(val && String(val).trim()) || isPlaceholder(val);
-
-  // Presenter is optional for break types
-  const canSubmit = hasValueOrPlaceholder(formData.title) &&
-    Boolean(formData.segment_type) &&
+  const canSubmit = hasValueOrPlaceholder(formData.title) && Boolean(formData.segment_type) &&
     (!needsPresenter || presenterOptionalForBreak || hasValueOrPlaceholder(formData.presenter)) &&
     (!requiresSala || Boolean(formData.room_id));
-  
-  // Returns the dynamic label for the presenter field based on type and language
+
   const getPresenterLabel = () => {
     if (isPlenariaType) return language === 'es' ? 'Predicador' : 'Preacher';
     if (isWorshipType) return language === 'es' ? 'Líder de Alabanza' : 'Worship Leader';
@@ -633,34 +156,15 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   };
 
   // Auto-lock has_video for Video type
-  React.useEffect(() => {
-    if (isVideoType && !formData.has_video) {
-      setFormData(prev => ({ ...prev, has_video: true }));
-    }
-  }, [isVideoType]);
+  React.useEffect(() => { if (isVideoType && !formData.has_video) setFormData(prev => ({ ...prev, has_video: true })); }, [isVideoType]);
+  React.useEffect(() => { if (isArtesType && formData.art_types?.includes('VIDEO') && !formData.has_video) setFormData(prev => ({ ...prev, has_video: true })); }, [isArtesType, formData.art_types]);
 
-  // Auto-enable video when Artes includes VIDEO type
-  React.useEffect(() => {
-    if (isArtesType && formData.art_types?.includes('VIDEO') && !formData.has_video) {
-      setFormData(prev => ({ ...prev, has_video: true }));
-    }
-  }, [isArtesType, formData.art_types]);
+  const scrollToSection = (sectionId) => document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  const scrollToSection = (sectionId) => {
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const colorCodeLabels = {
-    worship: "Adoración",
-    preach: "Predicación",
-    break: "Descanso",
-    tech: "Técnico",
-    special: "Especial",
-    default: "Predeterminado"
-  };
+  const colorCodeLabels = { worship: "Adoración", preach: "Predicación", break: "Descanso", tech: "Técnico", special: "Especial", default: "Predeterminado" };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col">
+    <form onSubmit={(e) => rawHandleSubmit(e, { formData, breakoutRooms, fieldOrigins })} className="flex flex-col">
       {/* Sticky Summary Header */}
       <div className="sticky top-0 z-10 bg-white border-b shadow-sm px-6 py-3">
         <div className="flex items-center justify-between gap-4 mb-2">
@@ -677,8 +181,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
             </div>
           </div>
         </div>
-
-        {/* Anchor Navigation */}
         <div className="flex gap-2 overflow-x-auto pb-1">
           <button type="button" onClick={() => scrollToSection('basico')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Básico</button>
           <button type="button" onClick={() => scrollToSection('contenido')} className="flex-shrink-0 text-xs px-2 py-1 rounded hover:bg-slate-100 whitespace-nowrap">Contenido</button>
@@ -698,109 +200,53 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 <div className="w-2 h-2 rounded-full bg-pdv-teal"></div>
                 <h3 className="font-bold text-lg text-slate-900">Información Básica</h3>
               </div>
-              
               <div className="p-4">
-              {!segment && templates.length > 0 && (
-                <Card className="p-3 bg-blue-50 border-blue-200 mb-4">
-                  <Label htmlFor="template" className="text-sm">Usar Plantilla</Label>
-                  <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                    <SelectTrigger className="mt-1 bg-white">
-                      <SelectValue placeholder="Seleccionar..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {templates.map((template) => (
-                        <SelectItem key={template.id} value={template.id}>
-                          {template.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Card>
-              )}
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Título <span className="text-red-500">*</span></Label>
-                  <div className="relative">
-                    <Input 
-                      id="title" 
-                      value={formData.title}
-                      onChange={(e) => updateField('title', e.target.value)}
-                      required 
-                      placeholder="PLENARIA #1: Conquistando"
-                    />
-                    <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'title')} />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="segment_type">Tipo <span className="text-red-500">*</span></Label>
-                    <Select 
-                      value={formData.segment_type}
-                      onValueChange={(value) => {
-                        updateField('segment_type', value);
-                        // Auto-update color based on type
-                        setFormData(prev => ({ ...prev, segment_type: value, color_code: getColorForType(value) }));
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SEGMENT_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
-                        ))}
-                      </SelectContent>
+                {!segment && templates.length > 0 && (
+                  <Card className="p-3 bg-blue-50 border-blue-200 mb-4">
+                    <Label htmlFor="template" className="text-sm">Usar Plantilla</Label>
+                    <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                      <SelectTrigger className="mt-1 bg-white"><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
+                      <SelectContent>{templates.map(tmpl => <SelectItem key={tmpl.id} value={tmpl.id}>{tmpl.name}</SelectItem>)}</SelectContent>
                     </Select>
-                  </div>
-                </div>
-
-                {needsPresenter && (
+                  </Card>
+                )}
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="presenter">
-                      {isBreakType ? (language === 'es' ? 'Encargado de Transición' : 'Transition Host') : getPresenterLabel()}
-                      {!presenterOptionalForBreak && <span className="text-red-500">*</span>}
-                    </Label>
+                    <Label htmlFor="title">Título <span className="text-red-500">*</span></Label>
                     <div className="relative">
-                      <Input 
-                        id="presenter" 
-                        value={formData.presenter}
-                        onChange={(e) => updateField('presenter', e.target.value)}
-                        placeholder={isBreakType ? (language === 'es' ? 'Persona dando instrucciones (opcional)' : 'Person giving instructions (optional)') : "Nombre"}
-                      />
-                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'presenter')} />
+                      <Input id="title" value={formData.title} onChange={(e) => updateField('title', e.target.value)} required placeholder="PLENARIA #1: Conquistando" />
+                      <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'title')} />
                     </div>
-                    {isBreakType && (
-                      <p className="text-xs text-gray-500">
-                        {language === 'es' 
-                          ? 'Persona que da instrucciones desde la tarima durante el receso' 
-                          : 'Person giving stage instructions during the break'}
-                      </p>
-                    )}
                   </div>
-                )}
-
-                {!isBreakoutType && (
-                  <div className="space-y-2">
-                    <Label htmlFor="room_id">Sala {requiresSala && <span className="text-red-500">*</span>}</Label>
-                    <Select 
-                      value={formData.room_id}
-                      onValueChange={(value) => setFormData({...formData, room_id: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar sala..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {rooms.map((room) => (
-                          <SelectItem key={room.id} value={room.id}>{room.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2 space-y-2">
+                      <Label htmlFor="segment_type">Tipo <span className="text-red-500">*</span></Label>
+                      <Select value={formData.segment_type} onValueChange={(value) => { updateField('segment_type', value); setFormData(prev => ({ ...prev, segment_type: value, color_code: getColorForType(value) })); }}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>{SEGMENT_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                )}
-
-              </div>
+                  {needsPresenter && (
+                    <div className="space-y-2">
+                      <Label htmlFor="presenter">{isBreakType ? (language === 'es' ? 'Encargado de Transición' : 'Transition Host') : getPresenterLabel()}{!presenterOptionalForBreak && <span className="text-red-500">*</span>}</Label>
+                      <div className="relative">
+                        <Input id="presenter" value={formData.presenter} onChange={(e) => updateField('presenter', e.target.value)} placeholder={isBreakType ? (language === 'es' ? 'Persona dando instrucciones (opcional)' : 'Person giving instructions (optional)') : "Nombre"} />
+                        <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'presenter')} />
+                      </div>
+                      {isBreakType && <p className="text-xs text-gray-500">{language === 'es' ? 'Persona que da instrucciones desde la tarima durante el receso' : 'Person giving stage instructions during the break'}</p>}
+                    </div>
+                  )}
+                  {!isBreakoutType && (
+                    <div className="space-y-2">
+                      <Label htmlFor="room_id">Sala {requiresSala && <span className="text-red-500">*</span>}</Label>
+                      <Select value={formData.room_id} onValueChange={(value) => setFormData({...formData, room_id: value})}>
+                        <SelectTrigger><SelectValue placeholder="Seleccionar sala..." /></SelectTrigger>
+                        <SelectContent>{rooms.map(room => <SelectItem key={room.id} value={room.id}>{room.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -810,217 +256,36 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 <h3 className="font-bold text-lg text-slate-900">Contenido Específico</h3>
               </div>
               <div className="p-4 space-y-4">
-                {isAnnouncementType && (
-                  <AnnouncementSeriesSection
-                    formData={formData}
-                    updateField={updateField}
-                    announcementSeries={announcementSeries}
-                    onManageSeries={() => setShowSeriesManager(true)}
-                  />
-                )}
-                {formData.has_video && (
-                  <div className="space-y-3 bg-blue-50 p-4 rounded border border-blue-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="font-semibold">Video</Label>
-                      {!isVideoType && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setFormData({...formData, has_video: false})}
-                          className="text-red-600"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">Nombre del Video *</Label>
-                      <Input 
-                        value={formData.video_name}
-                        onChange={(e) => setFormData({...formData, video_name: e.target.value})}
-                        placeholder="Video de Apertura"
-                        className="text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">Ubicación</Label>
-                      <Input 
-                        value={formData.video_location}
-                        onChange={(e) => setFormData({...formData, video_location: e.target.value})}
-                        placeholder="ProPresenter > Videos > Opening.mp4"
-                        className="text-sm"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-2">
-                        <Label className="text-xs">Propietario</Label>
-                        <Input 
-                          value={formData.video_owner}
-                          onChange={(e) => setFormData({...formData, video_owner: e.target.value})}
-                          placeholder="PDV Media"
-                          className="text-sm"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs">Duración (seg)</Label>
-                        <Input 
-                          type="number"
-                          value={formData.video_length_sec}
-                          onChange={(e) => setFormData({...formData, video_length_sec: parseInt(e.target.value) || 0})}
-                          placeholder="120"
-                          className="text-sm"
-                        />
-                      </div>
-                    </div>
-                    {/* Video URL - simple input, metadata fetched on save */}
-                    <div className="space-y-2">
-                      <Label className="text-xs">{language === 'es' ? 'Enlace al Video (URL)' : 'Video Link (URL)'}</Label>
-                      <Input
-                        value={formData.video_url}
-                        onChange={(e) => setFormData({...formData, video_url: e.target.value, video_url_meta: null})}
-                        placeholder="https://youtube.com/watch?v=..."
-                        className="h-9 text-sm"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {!formData.has_video && !isVideoType && !isBreakType && !isTechOnly && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setFormData({...formData, has_video: true})}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Añadir Video
-                  </Button>
-                )}
-
-                {isArtesType && (
-                  <ArtesFormSection formData={formData} setFormData={setFormData} language={language} />
-                )}
-
-                {isBreakoutType && (
-                  <BreakoutRoomsEditor breakoutRooms={breakoutRooms} setBreakoutRooms={setBreakoutRooms} rooms={rooms} language={language} />
-                )}
-
-                {isWorshipType && (
-                  <WorshipSongsSection formData={formData} setFormData={setFormData} />
-                )}
-
-                {isPlenariaType && (
-                  <div className="space-y-3 bg-orange-50 p-4 rounded border border-orange-200">
-                    <div className="space-y-2">
-                      <Label>Título del Mensaje</Label>
-                      <Input 
-                        value={formData.message_title}
-                        onChange={(e) => setFormData({...formData, message_title: e.target.value})}
-                        placeholder="Conquistando nuevas alturas"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label>Citas Bíblicas</Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowVerseParser(true)}
-                          className="h-7 px-2 bg-white border-orange-300 text-orange-700 hover:bg-orange-50"
-                        >
-                          <BookOpen className="w-3.5 h-3.5 mr-1" />
-                          <span className="text-xs">{language === 'es' ? 'Añadir Versículos' : 'Add Verses'}</span>
-                        </Button>
-                      </div>
-                      {/* Read-only display of verses - styled as inline text, not an input */}
-                      {formData.scripture_references ? (
-                        <p className="text-sm text-gray-700 py-2">{formData.scripture_references}</p>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic py-2">{language === 'es' ? 'Sin versículos añadidos' : 'No verses added'}</p>
-                      )}
-                      {formData.parsed_verse_data && (
-                        <p className="text-xs text-green-600 flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" />
-                          {language === 'es' ? 'Versos estructurados guardados' : 'Structured verses saved'}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
+                {isAnnouncementType && <AnnouncementSeriesSection formData={formData} updateField={updateField} announcementSeries={announcementSeries} onManageSeries={() => setShowSeriesManager(true)} />}
+                <VideoSection formData={formData} setFormData={setFormData} isVideoType={isVideoType} isBreakType={isBreakType} isTechOnly={isTechOnly} />
+                {isArtesType && <ArtesFormSection formData={formData} setFormData={setFormData} language={language} />}
+                {isBreakoutType && <BreakoutRoomsEditor breakoutRooms={breakoutRooms} setBreakoutRooms={setBreakoutRooms} rooms={rooms} language={language} />}
+                {isWorshipType && <WorshipSongsSection formData={formData} setFormData={setFormData} />}
+                {isPlenariaType && <PlenariaSection formData={formData} setFormData={setFormData} onOpenVerseParser={() => setShowVerseParser(true)} />}
                 {!isTechOnly && (
                   <div className="space-y-2">
                     <Label htmlFor="description_details">Descripción</Label>
                     <div className="relative">
-                      <Textarea 
-                        id="description_details" 
-                        value={formData.description_details}
-                        onChange={(e) => updateField('description_details', e.target.value)}
-                        rows={3}
-                        placeholder="Detalles adicionales"
-                      />
+                      <Textarea id="description_details" value={formData.description_details} onChange={(e) => updateField('description_details', e.target.value)} rows={3} placeholder="Detalles adicionales" />
                       <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'description_details')} />
                     </div>
                   </div>
                 )}
-
-                {isPanelType && (
-                  <div className="space-y-4 bg-amber-50 p-4 rounded border border-amber-200">
-                    <div className="space-y-2">
-                      <Label>{language === 'es' ? 'Anfitrión(es) / Moderador(es)' : 'Host(s) / Moderator(s)'}</Label>
-                      <Input 
-                        value={formData.panel_moderators}
-                        onChange={(e) => setFormData({...formData, panel_moderators: e.target.value})}
-                        placeholder={language === 'es' ? 'Nombres de los moderadores' : 'Moderator names'}
-                        className="text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{language === 'es' ? 'Panelista(s)' : 'Panelist(s)'}</Label>
-                      <Textarea 
-                        value={formData.panel_panelists}
-                        onChange={(e) => setFormData({...formData, panel_panelists: e.target.value})}
-                        placeholder={language === 'es' ? 'Nombres de los panelistas (uno por línea o separados por coma)' : 'Panelist names (one per line or comma-separated)'}
-                        className="text-sm"
-                        rows={3}
-                      />
-                    </div>
-                  </div>
-                )}
-
-
-
+                {isPanelType && <PanelSection formData={formData} setFormData={setFormData} />}
                 {isBreakType && (
                   <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="major_break"
-                      checked={formData.major_break}
-                      onCheckedChange={(checked) => setFormData({...formData, major_break: checked})}
-                    />
-                    <label htmlFor="major_break" className="text-sm cursor-pointer">
-                      Receso Mayor (Almuerzo/Cena)
-                    </label>
+                    <Checkbox id="major_break" checked={formData.major_break} onCheckedChange={(checked) => setFormData({...formData, major_break: checked})} />
+                    <label htmlFor="major_break" className="text-sm cursor-pointer">Receso Mayor (Almuerzo/Cena)</label>
                   </div>
                 )}
               </div>
             </div>
 
-            {showActions && (
-              <SegmentActionsEditor
-                actions={formData.segment_actions}
-                onChange={(newActions) => setFormData({...formData, segment_actions: newActions})}
-                formData={formData}
-                language={language}
-              />
-            )}
+            {showActions && <SegmentActionsEditor actions={formData.segment_actions} onChange={(newActions) => setFormData({...formData, segment_actions: newActions})} formData={formData} language={language} />}
           </div>
 
+          {/* RIGHT COLUMN */}
           <div className="space-y-6">
-
-            {/* Segment Timeline Preview */}
             {segment && (
               <div id="timeline" className="bg-white rounded-lg border border-slate-200 shadow-sm p-4">
                 <SegmentTimelinePreview segments={allSegments} currentSegmentId={segment.id} />
@@ -1032,138 +297,76 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 <div className="w-2 h-2 rounded-full bg-pdv-orange"></div>
                 <h3 className="font-bold text-lg text-slate-900">Tiempos y Ejecución</h3>
               </div>
-
               <div className="p-4 space-y-4">
                 <Card className="p-4 bg-blue-50 border-blue-200">
                   <Label className="font-semibold mb-3 block">Horarios *</Label>
                   <div className="space-y-3">
                     <div className="space-y-2">
                       <Label className="text-xs">Inicio <span className="text-red-500">*</span></Label>
-                      <TimePicker
-                        value={formData.start_time}
-                        onChange={(val) => setFormData({...formData, start_time: val})}
-                        placeholder="Seleccionar hora"
-                        className="h-9"
-                        invalid={!formData.start_time}
-                        required
-                      />
+                      <TimePicker value={formData.start_time} onChange={(val) => setFormData({...formData, start_time: val})} placeholder="Seleccionar hora" className="h-9" invalid={!formData.start_time} required />
                       {!segment && allSegments && allSegments.length > 0 && (() => {
-                        const sortedSegments = [...allSegments].sort((a, b) => (a.order || 0) - (b.order || 0));
-                        const lastSegment = sortedSegments[sortedSegments.length - 1];
-                        if (lastSegment?.end_time) {
-                          return (
-                            <p className="text-xs text-blue-600">
-                              Debe ser después de {formatTimeToEST(lastSegment.end_time)} (fin de "{lastSegment.title}")
-                            </p>
-                          );
-                        }
+                        const sortedSegs = [...allSegments].sort((a, b) => (a.order || 0) - (b.order || 0));
+                        const last = sortedSegs[sortedSegs.length - 1];
+                        if (last?.end_time) return <p className="text-xs text-blue-600">Debe ser después de {formatTimeToEST(last.end_time)} (fin de "{last.title}")</p>;
                       })()}
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs">Duración (min) <span className="text-red-500">*</span></Label>
-                      <Input 
-                        type="number"
-                        value={formData.duration_min}
-                        onChange={(e) => setFormData({...formData, duration_min: parseInt(e.target.value)})}
-                        className="h-9"
-                        min="1"
-                        required
-                      />
+                      <Input type="number" value={formData.duration_min} onChange={(e) => setFormData({...formData, duration_min: parseInt(e.target.value)})} className="h-9" min="1" required />
                     </div>
                   </div>
-
                   {times.end_time && (
                     <div className="mt-3 text-sm text-slate-600 border-t border-blue-300 pt-2">
-                      <div className="flex justify-between">
-                        <span>Fin estimado:</span>
-                        <span className="font-mono font-medium text-blue-700">{formatTimeToEST(times.end_time)}</span>
-                      </div>
+                      <div className="flex justify-between"><span>Fin estimado:</span><span className="font-mono font-medium text-blue-700">{formatTimeToEST(times.end_time)}</span></div>
                     </div>
                   )}
-
-                  {allSegments && allSegments.length > 0 && (
-                    <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
-                      ⚠️ Los segmentos no deben solaparse dentro de la sesión
-                    </div>
-                  )}
+                  {allSegments && allSegments.length > 0 && <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">⚠️ Los segmentos no deben solaparse dentro de la sesión</div>}
                 </Card>
 
                 {showTranslation && (
                   <Card className="p-4 bg-purple-50 border-purple-200">
                     <div className="flex items-center space-x-2 mb-3">
-                      <Checkbox 
-                        id="requires_translation"
-                        checked={formData.requires_translation}
-                        onCheckedChange={(checked) => setFormData({...formData, requires_translation: checked})}
-                      />
-                      <label htmlFor="requires_translation" className="font-semibold cursor-pointer">
-                        Requiere Traducción
-                      </label>
+                      <Checkbox id="requires_translation" checked={formData.requires_translation} onCheckedChange={(checked) => setFormData({...formData, requires_translation: checked})} />
+                      <label htmlFor="requires_translation" className="font-semibold cursor-pointer">Requiere Traducción</label>
                     </div>
-
                     {formData.requires_translation && (
                       <div className="space-y-3">
                         <div className="space-y-2">
                           <Label className="text-xs">Modo</Label>
-                          <Select
-                            value={formData.translation_mode}
-                            onValueChange={(value) => setFormData({...formData, translation_mode: value})}
-                          >
-                            <SelectTrigger className="h-9">
-                              <SelectValue />
-                            </SelectTrigger>
+                          <Select value={formData.translation_mode} onValueChange={(value) => setFormData({...formData, translation_mode: value})}>
+                            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="InPerson">En Persona (en tarima)</SelectItem>
                               <SelectItem value="RemoteBooth">Cabina Remota (audífonos)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
-
                         <div className="space-y-2">
-                          <Label className="text-xs">
-                            {formData.translation_mode === "InPerson" ? "Traductor (en tarima)" : "Traductor (cabina)"}
-                          </Label>
-                          <Input 
-                            value={formData.translator_name}
-                            onChange={(e) => setFormData({...formData, translator_name: e.target.value})}
-                            placeholder="Nombre"
-                            className="h-9"
-                          />
+                          <Label className="text-xs">{formData.translation_mode === "InPerson" ? "Traductor (en tarima)" : "Traductor (cabina)"}</Label>
+                          <Input value={formData.translator_name} onChange={(e) => setFormData({...formData, translator_name: e.target.value})} placeholder="Nombre" className="h-9" />
                         </div>
                       </div>
                     )}
                   </Card>
                 )}
 
-                <TeamNotesSection
-                  formData={formData}
-                  updateField={updateField}
-                  setFormData={setFormData}
-                  fieldOrigins={fieldOrigins}
-                  isBreakType={isBreakType}
-                  isBreakoutType={isBreakoutType}
-                  isTechOnly={isTechOnly}
-                  requiresTranslation={formData.requires_translation}
-                />
-                </div>
+                <TeamNotesSection formData={formData} updateField={updateField} setFormData={setFormData} fieldOrigins={fieldOrigins} isBreakType={isBreakType} isBreakoutType={isBreakoutType} isTechOnly={isTechOnly} requiresTranslation={formData.requires_translation} />
               </div>
+            </div>
 
-                <VisibilityTogglesSection formData={formData} setFormData={setFormData} />
+            <VisibilityTogglesSection formData={formData} setFormData={setFormData} />
+          </div>
         </div>
       </div>
-      </div>
 
+      {/* Footer */}
       <div className="border-t bg-slate-50 p-4 flex justify-end gap-3 sticky bottom-0 z-20">
-        <Button type="button" variant="outline" onClick={onClose}>
-          <X className="w-4 h-4 mr-2" />
-          {t('btn.cancel') || 'Cancelar'}
-        </Button>
+        <Button type="button" variant="outline" onClick={onClose}><X className="w-4 h-4 mr-2" />{t('btn.cancel') || 'Cancelar'}</Button>
         <Tooltip>
           <TooltipTrigger asChild>
             <span>
               <Button type="submit" disabled={!canSubmit} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                <Save className="w-4 h-4 mr-2" />
-                {segment ? (t('btn.save') || 'Guardar') : (t('btn.confirm') || 'Crear')}
+                <Save className="w-4 h-4 mr-2" />{segment ? (t('btn.save') || 'Guardar') : (t('btn.confirm') || 'Crear')}
               </Button>
             </span>
           </TooltipTrigger>
@@ -1183,40 +386,10 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
         </Tooltip>
       </div>
 
-      {/* Series Manager Modal */}
-      {showSeriesManager && (
-        <AnnouncementSeriesManager 
-            isOpen={showSeriesManager} 
-            onClose={() => setShowSeriesManager(false)}
-            initialSeriesId={formData.announcement_series_id || "new"}
-            onSelect={(seriesId) => updateField('announcement_series_id', seriesId)}
-        />
-      )}
-
-      {/* Verse Parser Dialog for Plenaria segments */}
-      <VerseParserDialog
-        open={showVerseParser}
-        onOpenChange={setShowVerseParser}
-        initialText={formData.scripture_references}
-        onSave={({ parsed_data, verse }) => {
-          // Update formData with the formatted verse string
-          setFormData(prev => ({ ...prev, scripture_references: verse }));
-          // Note: parsed_verse_data will be saved when the segment is saved
-          // We need to also store it in formData for persistence
-          setFormData(prev => ({ ...prev, parsed_verse_data: parsed_data }));
-        }}
-        language={language}
-      />
-      {/* Overlap → Adjust flow */}
-      <OverlapDetectedDialog
-        open={showOverlapDialog}
-        message={overlapText}
-        onCancel={() => setShowOverlapDialog(false)}
-        onProceed={() => {
-          setShowOverlapDialog(false);
-          setShowShiftPreview(true);
-        }}
-      />
+      {/* Modals */}
+      {showSeriesManager && <AnnouncementSeriesManager isOpen={showSeriesManager} onClose={() => setShowSeriesManager(false)} initialSeriesId={formData.announcement_series_id || "new"} onSelect={(seriesId) => updateField('announcement_series_id', seriesId)} />}
+      <VerseParserDialog open={showVerseParser} onOpenChange={setShowVerseParser} initialText={formData.scripture_references} onSave={({ parsed_data, verse }) => { setFormData(prev => ({ ...prev, scripture_references: verse, parsed_verse_data: parsed_data })); }} language={language} />
+      <OverlapDetectedDialog open={showOverlapDialog} message={overlapText} onCancel={() => setShowOverlapDialog(false)} onProceed={() => { setShowOverlapDialog(false); setShowShiftPreview(true); }} />
       <ShiftPreviewModal
         open={showShiftPreview}
         onClose={() => setShowShiftPreview(false)}
@@ -1225,29 +398,13 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
         editedSegment={segment}
         newStartTime={formData.start_time}
         onConfirm={async ({ affected }) => {
-          // Apply planned updates for affected segments + save current segment
           const updates = [];
-          // Apply downstream
-          for (const a of affected) {
-            updates.push(base44.entities.Segment.update(a.id, { start_time: a.newStart, end_time: a.newEnd }));
-          }
-          // Save current segment with full form data and computed times
+          for (const a of affected) { updates.push(base44.entities.Segment.update(a.id, { start_time: a.newStart, end_time: a.newEnd })); }
           const currentTimes = calculateTimes(formData.start_time, formData.duration_min);
-          const currentData = {
-            session_id: sessionId,
-            ...formData,
-            ...currentTimes,
-            breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined,
-            field_origins: fieldOrigins,
-            // preserve order on edit
-          };
-          if (segment) {
-            updates.push(base44.entities.Segment.update(segment.id, currentData));
-          } else {
-            updates.push(base44.entities.Segment.create(currentData));
-          }
+          const currentData = { session_id: sessionId, ...formData, ...currentTimes, breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined, field_origins: fieldOrigins };
+          if (segment) { updates.push(base44.entities.Segment.update(segment.id, currentData)); } else { updates.push(base44.entities.Segment.create(currentData)); }
           await Promise.all(updates);
-          await queryClient.invalidateQueries(['segments', sessionId]);
+          invalidateSegmentCaches(queryClient);
           setShowShiftPreview(false);
           onClose();
         }}
