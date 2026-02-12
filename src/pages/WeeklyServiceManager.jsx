@@ -2186,17 +2186,6 @@ Return ONLY valid JSON:
             {existingData?.updated_date && (
               <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
                 Última actualización: {new Date(existingData.updated_date).toLocaleString('es-ES', {
-                  currentTime = addMinutes(currentTime, serviceData["11:30am"][i].duration || 0);
-                }
-              }
-              const segmentTime = formatDate(currentTime, "h:mm a");
-
-              const presenterHasTranslation = /(trad|traduc)/i.test(segment.data?.presenter || '');
-              const preacherHasTranslation = /(trad|traduc)/i.test(segment.data?.preacher || '');
-              const leaderHasTranslation = /(trad|traduc)/i.test(segment.data?.leader || '');
-
-              return (
-                <div key={idx} className="print-segment">
                   <div>
                     <span className="print-segment-time">{segmentTime}</span>
                     <span className="print-segment-title">{segment.title}</span>
