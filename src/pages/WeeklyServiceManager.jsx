@@ -31,6 +31,7 @@ import { format as formatDate } from "date-fns";
 import { toast } from "sonner";
 import { es } from "date-fns/locale";
 import { useLanguage } from "@/components/utils/i18n";
+import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
 
 // Phase 3A extracted components
 import WeeklyServicePrintCSS from "@/components/service/WeeklyServicePrintCSS";
@@ -176,7 +177,7 @@ export default function WeeklyServiceManager() {
       setLastSaveTimestamp(new Date().toISOString());
       setHasUnsavedChanges(false);
       const backupKey = `service_backup_${selectedDate}`;
-      localStorage.setItem(backupKey, JSON.stringify({ data: result, timestamp: new Date().toISOString() }));
+      safeSetItem(backupKey, JSON.stringify({ data: result, timestamp: new Date().toISOString() }));
     },
     onError: (error) => {
       toast.error('Error al guardar: ' + error.message);
@@ -309,7 +310,7 @@ export default function WeeklyServiceManager() {
 
       // Backup recovery toast
       const backupKey = `service_backup_${selectedDate}`;
-      const backup = localStorage.getItem(backupKey);
+      const backup = safeGetItem(backupKey);
       if (backup) {
         try {
           const { data: backupData, timestamp } = JSON.parse(backup);
