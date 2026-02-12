@@ -617,6 +617,15 @@ export default function WeeklyServiceManager() {
         onAdd={handlers.addSpecialSegment} tealStyle={tealStyle}
       />
 
+      {/* Phase 5: Concurrent editing warning */}
+      <StaleEditWarningDialog
+        open={showStaleWarning}
+        onCancel={() => setShowStaleWarning(false)}
+        onForceSave={() => { setShowStaleWarning(false); setStaleInfo(null); }}
+        staleInfo={staleInfo}
+        language="es"
+      />
+
       {/* All remaining dialogs */}
       <WeeklyServiceDialogs
         deleteConfirmId={deleteConfirmId} setDeleteConfirmId={setDeleteConfirmId}
