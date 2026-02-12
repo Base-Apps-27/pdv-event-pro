@@ -296,4 +296,6 @@ const SegmentTimelineCard = React.memo(function SegmentTimelineCard({
       </CardContent>
     </Card>
   );
-}
+});
+
+export default SegmentTimelineCard;
