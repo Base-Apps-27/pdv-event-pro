@@ -38,4 +38,6 @@ const AnimatedSortableItem = React.memo(function AnimatedSortableItem({
       {children}
     </motion.div>
   );
-}
+});
+
+export default AnimatedSortableItem;
