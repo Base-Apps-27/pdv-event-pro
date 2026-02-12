@@ -52,6 +52,7 @@ import useSegmentFormSubmit, { calculateTimes } from "./useSegmentFormSubmit";
 import VideoSection from "./segment-form/VideoSection";
 import PlenariaSection from "./segment-form/PlenariaSection";
 import PanelSection from "./segment-form/PanelSection";
+import StaleEditWarningDialog from "./StaleEditWarningDialog";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -106,6 +107,10 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     createMutation, updateMutation,
     showOverlapDialog, setShowOverlapDialog, overlapText,
     showShiftPreview, setShowShiftPreview,
+    // Phase 5: Concurrent editing guard
+    showStaleWarning, setShowStaleWarning,
+    staleInfo,
+    forceSave,
   } = useSegmentFormSubmit({ segment, sessionId, session, user, allSegments, nextOrder, onClose });
 
   const times = calculateTimes(formData.start_time, formData.duration_min);
@@ -390,6 +395,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       {showSeriesManager && <AnnouncementSeriesManager isOpen={showSeriesManager} onClose={() => setShowSeriesManager(false)} initialSeriesId={formData.announcement_series_id || "new"} onSelect={(seriesId) => updateField('announcement_series_id', seriesId)} />}
       <VerseParserDialog open={showVerseParser} onOpenChange={setShowVerseParser} initialText={formData.scripture_references} onSave={({ parsed_data, verse }) => { setFormData(prev => ({ ...prev, scripture_references: verse, parsed_verse_data: parsed_data })); }} language={language} />
       <OverlapDetectedDialog open={showOverlapDialog} message={overlapText} onCancel={() => setShowOverlapDialog(false)} onProceed={() => { setShowOverlapDialog(false); setShowShiftPreview(true); }} />
+      <StaleEditWarningDialog open={showStaleWarning} onCancel={() => setShowStaleWarning(false)} onForceSave={forceSave} staleInfo={staleInfo} language={language} />
       <ShiftPreviewModal
         open={showShiftPreview}
         onClose={() => setShowShiftPreview(false)}
