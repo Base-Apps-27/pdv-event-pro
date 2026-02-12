@@ -8,6 +8,8 @@ import { segmentTypeDisplayTests } from './segmentTypeDisplay.test';
 import { segmentNormalizationTests } from './segmentNormalization.test';
 import { permissionsTests } from './permissions.test';
 import { reportHelpersTests } from './reportHelpers.test';
+import { pdfScalingTests } from './pdfScaling.test';
+import { i18nTests } from './i18n.test';
 
 export const ALL_SUITES = [
   { name: 'timeFormat', run: timeFormatTests },
@@ -19,4 +21,6 @@ export const ALL_SUITES = [
   { name: 'segmentNormalization', run: segmentNormalizationTests },
   { name: 'permissions', run: permissionsTests },
   { name: 'reportHelpers', run: reportHelpersTests },
+  { name: 'pdfScaling', run: pdfScalingTests },
+  { name: 'i18n', run: i18nTests },
 ];
