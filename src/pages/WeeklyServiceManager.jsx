@@ -2181,7 +2181,9 @@ Return ONLY valid JSON:
               <span className="text-xs text-gray-400 font-mono">ID: {existingData.id}</span>
             </div>
           )}
-              for (let i = 0; i < idx; i++) {
+          {/* Data Integrity Indicators */}
+          <div className="flex items-center gap-3 mt-2">
+            {existingData?.updated_date && (
                 if (serviceData["11:30am"][i].type !== 'break' && serviceData["11:30am"][i].type !== 'ministry') {
                   currentTime = addMinutes(currentTime, serviceData["11:30am"][i].duration || 0);
                 }
