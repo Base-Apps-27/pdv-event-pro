@@ -20,6 +20,9 @@ import SegmentTimelinePreview from "./SegmentTimelinePreview";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import AnnouncementSeriesManager from "../announcements/AnnouncementSeriesManager";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
+import ArtesFormSection from "./ArtesFormSection";
+import BreakoutRoomsEditor from "./BreakoutRoomsEditor";
+import SegmentActionsEditor from "./SegmentActionsEditor";
 // ResourceUrlInput removed - metadata now auto-fetched on save
 import { useLanguage } from "@/components/utils/i18n";
 import { toast } from "sonner";
