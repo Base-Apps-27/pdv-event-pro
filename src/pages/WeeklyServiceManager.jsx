@@ -29,6 +29,9 @@ import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { useLanguage } from "@/components/utils/i18n";
 import { useDebouncedCommit } from "@/components/utils/useDebouncedCommit";
 import WeeklyServicePrintCSS from "@/components/service/WeeklyServicePrintCSS";
+import WeeklyAnnouncementSection from "@/components/service/WeeklyAnnouncementSection";
+import SpecialSegmentDialog from "@/components/service/SpecialSegmentDialog";
+import { calculateServiceProgramOverflow, calculateAnnouncementOverflow } from "@/components/service/useOverflowDetection";
 
 // Context for sharing serviceData and updaters
 const ServiceDataContext = React.createContext(null);
@@ -1488,88 +1491,7 @@ Return ONLY valid JSON:
 
 
 
-  // Overflow detection helpers
-  const calculateServiceProgramOverflow = () => {
-    if (!serviceData) return { hasOverflow: false, level: 'low' };
-    
-    // Count content items for each service
-    const count930 = {
-      segments: serviceData["9:30am"]?.filter(s => s.type !== 'break').length || 0,
-      songs: serviceData["9:30am"]?.reduce((sum, seg) => sum + (seg.songs?.filter(s => s.title).length || 0), 0) || 0,
-      notes: (serviceData.pre_service_notes?.["9:30am"] ? 1 : 0)
-    };
-    
-    const count1130 = {
-      segments: serviceData["11:30am"]?.filter(s => s.type !== 'break').length || 0,
-      songs: serviceData["11:30am"]?.reduce((sum, seg) => sum + (seg.songs?.filter(s => s.title).length || 0), 0) || 0,
-      notes: (serviceData.pre_service_notes?.["11:30am"] ? 1 : 0)
-    };
-    
-    // Estimate page units (1 unit ≈ 1 line of content)
-    const units930 = count930.segments * 4 + count930.songs * 1.2 + count930.notes * 2;
-    const units1130 = count1130.segments * 4 + count1130.songs * 1.2 + count1130.notes * 2;
-    
-    // Each column can fit ~50 units comfortably
-    const maxUnitsPerColumn = 50;
-    
-    if (units930 > maxUnitsPerColumn || units1130 > maxUnitsPerColumn) {
-      return { hasOverflow: true, level: 'high', label: 'Sobrecarga Detectada', color: 'bg-red-100 text-red-800 border-red-300' };
-    }
-    if (units930 > maxUnitsPerColumn * 0.85 || units1130 > maxUnitsPerColumn * 0.85) {
-      return { hasOverflow: true, level: 'medium', label: 'Riesgo Moderado', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' };
-    }
-    
-    return { hasOverflow: false, level: 'low', label: 'Se Ajusta Bien', color: 'bg-green-100 text-green-800 border-green-300' };
-  };
-
-  const calculateAnnouncementOverflow = () => {
-    const selected = [...fixedAnnouncements, ...dynamicAnnouncements]
-      .filter(ann => selectedAnnouncements.includes(ann.id));
-    
-    if (selected.length === 0) return { hasOverflow: false, level: 'low', label: 'Sin Anuncios', color: 'bg-gray-100 text-gray-800 border-gray-300' };
-    
-    // Estimate content units for 2-column layout
-    // Fixed announcements go in left column, dynamic in right
-    const fixedSelected = selected.filter(a => !a.isEvent && a.category === 'General');
-    const dynamicSelected = selected.filter(a => a.isEvent || a.category !== 'General');
-    
-    // Calculate units (title=2, content line=1, instructions=1.5, video badge=0.5)
-    const calculateUnits = (ann) => {
-      const content = ann.isEvent ? (ann.announcement_blurb || ann.description || '') : (ann.content || '');
-      const instructions = ann.instructions || '';
-      
-      // Strip HTML and count characters
-      const contentText = content.replace(/<[^>]*>/g, '');
-      const instructionsText = instructions.replace(/<[^>]*>/g, '');
-      
-      // 2-column layout: ~40 chars per line
-      const contentLines = Math.ceil(contentText.length / 40);
-      const instructionLines = Math.ceil(instructionsText.length / 35);
-      
-      let units = 2; // Title
-      units += contentLines;
-      units += instructionLines * 1.5;
-      units += (ann.has_video || ann.announcement_has_video) ? 0.5 : 0;
-      units += 1; // Spacing
-      
-      return units;
-    };
-    
-    const fixedUnits = fixedSelected.reduce((sum, ann) => sum + calculateUnits(ann), 0);
-    const dynamicUnits = dynamicSelected.reduce((sum, ann) => sum + calculateUnits(ann), 0);
-    
-    // Each column can fit ~55 units
-    const maxUnitsPerColumn = 55;
-    
-    if (fixedUnits > maxUnitsPerColumn || dynamicUnits > maxUnitsPerColumn) {
-      return { hasOverflow: true, level: 'high', label: 'Sobrecarga Detectada', color: 'bg-red-100 text-red-800 border-red-300' };
-    }
-    if (fixedUnits > maxUnitsPerColumn * 0.85 || dynamicUnits > maxUnitsPerColumn * 0.85) {
-      return { hasOverflow: true, level: 'medium', label: 'Riesgo Moderado', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' };
-    }
-    
-    return { hasOverflow: false, level: 'low', label: 'Se Ajusta Bien', color: 'bg-green-100 text-green-800 border-green-300' };
-  };
+  // Phase 3A: Overflow detection extracted to useOverflowDetection.js
 
   const calculateServiceTimes = (timeSlot) => {
     const segments = serviceData?.[timeSlot] || [];
@@ -2813,347 +2735,37 @@ Return ONLY valid JSON:
         </div>
       </div>
 
-      {/* Announcements Section */}
-      <Card className="print:hidden border-2 border-gray-300 bg-white">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl font-bold uppercase">Anuncios</CardTitle>
-            {hasPermission(user, 'create_announcements') && (
-              <Button
-                onClick={() => {
-                  setEditingAnnouncement(null);
-                  setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, has_video: false, date_of_occurrence: "", emphasize: false });
-                  setShowAnnouncementDialog(true);
-                }}
-                size="sm"
-                style={tealStyle}
-                className="print:hidden"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Nuevo Anuncio
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Bulk Selection Controls */}
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                const allFixed = fixedAnnouncements.map(a => a.id);
-                setSelectedAnnouncements(prev => [...new Set([...prev, ...allFixed])]);
-              }}
-            >
-              ✓ Seleccionar todos los fijos
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                const allDynamic = dynamicAnnouncements.map(a => a.id);
-                setSelectedAnnouncements(prev => [...new Set([...prev, ...allDynamic])]);
-              }}
-            >
-              ✓ Seleccionar dinámicos relevantes
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                const defaultSelection = [
-                  ...fixedAnnouncements.map(a => a.id),
-                  ...dynamicAnnouncements.map(a => a.id)
-                ];
-                setSelectedAnnouncements(defaultSelection);
-              }}
-            >
-              ⟲ Restaurar selección por defecto
-            </Button>
-          </div>
+      {/* Phase 3A: Announcements section extracted to WeeklyAnnouncementSection (~270 lines) */}
+      <WeeklyAnnouncementSection
+        fixedAnnouncements={fixedAnnouncements}
+        dynamicAnnouncements={dynamicAnnouncements}
+        selectedAnnouncements={selectedAnnouncements}
+        setSelectedAnnouncements={setSelectedAnnouncements}
+        onNewAnnouncement={() => {
+          setEditingAnnouncement(null);
+          setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, has_video: false, date_of_occurrence: "", emphasize: false });
+          setShowAnnouncementDialog(true);
+        }}
+        onEditAnnouncement={openAnnouncementEdit}
+        onDeleteAnnouncement={(id) => setDeleteConfirmId(id)}
+        onMovePriority={moveAnnouncementPriority}
+        onUpdateEvent={({ id, data }) => updateAnnouncementMutation.mutate({ id, data })}
+        canCreate={hasPermission(user, 'create_announcements')}
+        canEdit={hasPermission(user, 'edit_announcements')}
+        canDelete={hasPermission(user, 'delete_announcements')}
+        tealStyle={tealStyle}
+      />
 
-          {/* Fixed Announcements */}
-          <div className="space-y-3">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <Label className="text-base font-bold text-gray-900">Anuncios Fijos / Static Announcements</Label>
-              <p className="text-xs text-gray-600 mt-1">
-                Los anuncios fijos aparecen cada semana. Manténgalos cortos y use el formato para claridad, no para longitud.
-              </p>
-              <p className="text-xs text-blue-600 mt-1">
-                Static announcements appear every week. Keep them short and use formatting for clarity, not length.
-              </p>
-            </div>
-            <div className="grid md:grid-cols-2 gap-3">
-              {fixedAnnouncements.map(ann => (
-                <div key={ann.id} className="flex items-start gap-2 p-3 border-2 border-gray-300 rounded-lg bg-white hover:border-gray-400 transition-colors">
-                  <Checkbox
-                    checked={selectedAnnouncements.includes(ann.id)}
-                    onCheckedChange={(checked) => {
-                      setSelectedAnnouncements(prev => 
-                        checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
-                      );
-                    }}
-                    className="mt-1"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <h3 className="font-bold text-sm leading-tight">{ann.title}</h3>
-                      {hasPermission(user, 'edit_announcements') && (
-                        <div className="flex gap-1 flex-shrink-0 print:hidden">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => moveAnnouncementPriority(ann, 'up')}
-                          >
-                            <ChevronUp className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => moveAnnouncementPriority(ann, 'down')}
-                          >
-                            <ChevronDown className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => openAnnouncementEdit(ann)}
-                          >
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                          {hasPermission(user, 'delete_announcements') && (
-                            <button
-                              type="button"
-                              className="h-7 w-7 flex items-center justify-center hover:bg-red-50 rounded"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setDeleteConfirmId(ann.id);
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" />
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <div 
-                      className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap mb-2"
-                      dangerouslySetInnerHTML={{ __html: (ann.content || '').replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '') }}
-                    />
-                    {ann.instructions && (
-                      <div className="bg-gray-100 border border-gray-300 rounded p-2 mt-2">
-                        <p className="text-[10px] text-gray-600 font-semibold mb-1">📋 Instrucciones (solo presentador):</p>
-                        <div 
-                          className="text-[10px] text-gray-600 italic whitespace-pre-wrap"
-                          dangerouslySetInnerHTML={{ __html: (ann.instructions || '').replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '') }}
-                        />
-                      </div>
-                    )}
-                    {ann.has_video && (
-                      <Badge className="bg-purple-100 text-purple-800 text-[10px] mt-2">
-                        📹 Video
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Dynamic Announcements */}
-          <div className="space-y-3">
-            <div>
-              <Label className="text-base font-bold text-gray-900">Anuncios Dinámicos</Label>
-              <p className="text-xs text-gray-600 mt-1">
-                Anuncios de Eventos, Ministerios o Urgentes activos. Expiran automáticamente después de su Fecha de Ocurrencia.
-              </p>
-            </div>
-            <div className="grid md:grid-cols-2 gap-3">
-              {dynamicAnnouncements.map(ann => (
-                <div key={ann.id} className={`flex items-start gap-2 p-3 rounded-lg transition-colors ${ann.emphasize || ann.category === 'Urgent' ? 'border-[3px] border-red-400 bg-red-50' : 'border-2 border-blue-300 bg-blue-50'}`}>
-                  <Checkbox
-                    checked={selectedAnnouncements.includes(ann.id)}
-                    onCheckedChange={(checked) => {
-                      setSelectedAnnouncements(prev => 
-                        checked ? [...prev, ann.id] : prev.filter(id => id !== ann.id)
-                      );
-                    }}
-                    className="mt-1"
-                  />
-                  <div className="flex-1 min-w-0">
-                   <div className="flex items-start justify-between gap-2 mb-2">
-                     <div className="flex-1">
-                       <div className="flex items-center gap-2 mb-1">
-                         <h3 className="font-bold text-sm leading-tight">{ann.isEvent ? ann.name : ann.title}</h3>
-                         {ann.isEvent && <Badge className="bg-purple-200 text-purple-800 text-[10px]">Evento</Badge>}
-                         {!ann.isEvent && (ann.emphasize || ann.category === 'Urgent') && <Badge className="bg-red-100 text-red-700 text-[10px] border border-red-300">⚡ DESTACADO</Badge>}
-                       </div>
-                        {(ann.date_of_occurrence || ann.start_date) && (
-                          <p className="text-xs font-semibold text-blue-600 mb-1">
-                            📅 {ann.date_of_occurrence || ann.start_date} {ann.end_date && `- ${ann.end_date}`}
-                          </p>
-                        )}
-                      </div>
-                      {ann.isEvent && (
-                        <div className="flex items-center gap-1 print:hidden">
-                          <Checkbox
-                            checked={ann.announcement_has_video}
-                            onCheckedChange={(checked) => {
-                              updateAnnouncementMutation.mutate({
-                                id: ann.id,
-                                data: { ...ann, announcement_has_video: checked }
-                              });
-                            }}
-                          />
-                          <span className="text-xs font-semibold text-purple-700">📹</span>
-                        </div>
-                      )}
-                      {!ann.isEvent && hasPermission(user, 'edit_announcements') && (
-                        <div className="flex gap-1 flex-shrink-0 print:hidden">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => moveAnnouncementPriority(ann, 'up')}
-                          >
-                            <ChevronUp className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => moveAnnouncementPriority(ann, 'down')}
-                          >
-                            <ChevronDown className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => openAnnouncementEdit(ann)}
-                          >
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                          {hasPermission(user, 'delete_announcements') && (
-                            <button
-                              type="button"
-                              className="h-7 w-7 flex items-center justify-center hover:bg-red-50 rounded"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setDeleteConfirmId(ann.id);
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" />
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <div 
-                      className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap mb-2"
-                      dangerouslySetInnerHTML={{ __html: ((ann.isEvent ? ann.announcement_blurb || ann.description : ann.content) || '').replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '') }}
-                    />
-                    {ann.instructions && (
-                      <div className="bg-gray-100 border border-gray-300 rounded p-2 mt-2">
-                        <p className="text-[10px] text-gray-600 font-semibold mb-1">📋 Instrucciones (solo presentador):</p>
-                        <div 
-                          className="text-[10px] text-gray-600 italic whitespace-pre-wrap"
-                          dangerouslySetInnerHTML={{ __html: (ann.instructions || '').replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '') }}
-                        />
-                      </div>
-                    )}
-                    {(ann.has_video || ann.announcement_has_video) && (
-                      <Badge className="bg-purple-100 text-purple-800 text-[10px] mt-2">
-                        📹 Video
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Special Segment Dialog */}
-      <Dialog open={showSpecialDialog} onOpenChange={setShowSpecialDialog}>
-        <DialogContent className="max-w-md bg-white max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-base md:text-lg">Insertar Segmento Especial ({specialSegmentDetails.timeSlot})</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Título del Segmento</Label>
-              <Input
-                value={specialSegmentDetails.title}
-                onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Ej. Presentación de Niños"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm">Presentador</Label>
-                <AutocompleteInput
-                  type="presenter"
-                  value={specialSegmentDetails.presenter}
-                  onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, presenter: e.target.value }))}
-                  placeholder="Nombre del presentador"
-                  className="text-sm"
-                />
-              </div>
-              {specialSegmentDetails.timeSlot === "11:30am" && (
-                <div className="space-y-2">
-                  <Label className="text-sm">Traductor</Label>
-                  <AutocompleteInput
-                    type="translator"
-                    value={specialSegmentDetails.translator}
-                    onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, translator: e.target.value }))}
-                    placeholder="Nombre del traductor"
-                    className="text-sm"
-                  />
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label>Duración (minutos)</Label>
-              <Input
-                type="number"
-                value={specialSegmentDetails.duration}
-                onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Insertar después de:</Label>
-              <select
-                className="w-full border rounded-md p-2 text-sm"
-                value={specialSegmentDetails.insertAfterIdx}
-                onChange={(e) => setSpecialSegmentDetails(prev => ({ ...prev, insertAfterIdx: parseInt(e.target.value) }))}
-              >
-                <option value="-1">Al inicio</option>
-                {serviceData[specialSegmentDetails.timeSlot]
-                  .filter(seg => seg.type !== "special")
-                  .map((segment, idx) => (
-                    <option key={idx} value={idx}>{segment.title}</option>
-                  ))}
-              </select>
-            </div>
-            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
-              <Button variant="outline" onClick={() => setShowSpecialDialog(false)} className="w-full sm:w-auto">
-                Cancelar
-              </Button>
-              <Button onClick={addSpecialSegment} style={tealStyle} className="w-full sm:w-auto">
-                Añadir Segmento
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Phase 3A: Special Segment Dialog extracted (~70 lines) */}
+      <SpecialSegmentDialog
+        open={showSpecialDialog}
+        onOpenChange={setShowSpecialDialog}
+        details={specialSegmentDetails}
+        setDetails={setSpecialSegmentDetails}
+        serviceSegments={serviceData[specialSegmentDetails.timeSlot]}
+        onAdd={addSpecialSegment}
+        tealStyle={tealStyle}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
