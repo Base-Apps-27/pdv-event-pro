@@ -2213,8 +2213,6 @@ Return ONLY valid JSON:
         </div>
         <div className="flex gap-3 items-center">
           {savingField && (
-                    <div className="print-segment-detail">
-                      Dirige: <span className="print-name-blue">{segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
                   )}
 
