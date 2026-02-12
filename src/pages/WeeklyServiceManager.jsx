@@ -22,6 +22,7 @@ import { createPageUrl } from "@/utils";
 import { addMinutes, parse, format as formatDate } from "date-fns";
 import { generateWeeklyProgramPDF } from "@/components/service/generateWeeklyProgramPDF";
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
+import WeeklyServicePrintView from "@/components/service/WeeklyServicePrintView";
 import { toast } from "sonner";
 import { es } from "date-fns/locale";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
