@@ -23,6 +23,10 @@ import VerseParserDialog from "@/components/service/VerseParserDialog";
 import ArtesFormSection from "./ArtesFormSection";
 import BreakoutRoomsEditor from "./BreakoutRoomsEditor";
 import SegmentActionsEditor from "./SegmentActionsEditor";
+import WorshipSongsSection from "./WorshipSongsSection";
+import AnnouncementSeriesSection from "./AnnouncementSeriesSection";
+import TeamNotesSection from "./TeamNotesSection";
+import VisibilityTogglesSection from "./VisibilityTogglesSection";
 // ResourceUrlInput removed - metadata now auto-fetched on save
 import { useLanguage } from "@/components/utils/i18n";
 import { toast } from "sonner";
@@ -812,71 +816,12 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
               </div>
               <div className="p-4 space-y-4">
                 {isAnnouncementType && (
-                  <div className="space-y-3 bg-indigo-50 p-4 rounded border border-indigo-200 mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Bell className="w-5 h-5 text-indigo-600" />
-                        <h4 className="font-bold text-indigo-800">Serie de Anuncios</h4>
-                      </div>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setShowSeriesManager(true)}
-                        className="bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50"
-                      >
-                        <ListChecks className="w-4 h-4 mr-2" />
-                        Gestionar Series
-                      </Button>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Seleccionar Serie de Anuncios</Label>
-                      <div className="relative">
-                        <Select 
-                          value={formData.announcement_series_id}
-                          onValueChange={(value) => updateField('announcement_series_id', value)}
-                        >
-                          <SelectTrigger className="bg-white">
-                            <SelectValue placeholder="Seleccionar configuración..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {announcementSeries.map(series => (
-                              <SelectItem key={series.id} value={series.id}>{series.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <p className="text-xs text-indigo-700 mt-1">
-                        Esta serie determina qué anuncios fijos y eventos dinámicos se mostrarán.
-                      </p>
-                    </div>
-
-                    {/* Legacy Fields / Manual Overrides (Collapsible or simplified?) */}
-                    {/* Keeping them accessible but secondary if manual override is needed */}
-                    <div className="mt-4 pt-4 border-t border-indigo-200">
-                        <Label className="text-xs font-bold text-indigo-800 uppercase mb-2 block">Overrides Manuales (Opcional)</Label>
-                        <div className="space-y-2">
-                            <Label className="text-xs">Título Alternativo (Sobreescribe nombre de serie)</Label>
-                            <Input 
-                                value={formData.announcement_title}
-                                onChange={(e) => updateField('announcement_title', e.target.value)}
-                                placeholder="Dejar vacío para usar nombre de serie"
-                                className="bg-white h-8 text-sm"
-                            />
-                        </div>
-                         <div className="space-y-2 mt-2">
-                            <Label className="text-xs">Notas Adicionales</Label>
-                            <Textarea 
-                                value={formData.announcement_description}
-                                onChange={(e) => updateField('announcement_description', e.target.value)}
-                                rows={2}
-                                placeholder="Notas extra específicas para este servicio..."
-                                className="bg-white text-sm"
-                            />
-                        </div>
-                    </div>
-                  </div>
+                  <AnnouncementSeriesSection
+                    formData={formData}
+                    updateField={updateField}
+                    announcementSeries={announcementSeries}
+                    onManageSeries={() => setShowSeriesManager(true)}
+                  />
                 )}
                 {formData.has_video && (
                   <div className="space-y-3 bg-blue-50 p-4 rounded border border-blue-200">
@@ -968,47 +913,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                 )}
 
                 {isWorshipType && (
-                  <div className="space-y-3 bg-purple-50 p-4 rounded border border-purple-200">
-                    <div className="flex items-center justify-between">
-                      <Label>Canciones</Label>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs">#</Label>
-                        <Input 
-                          type="number"
-                          min="1"
-                          max="6"
-                          value={formData.number_of_songs}
-                          onChange={(e) => setFormData({...formData, number_of_songs: parseInt(e.target.value) || 1})}
-                          className="w-16 h-8"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 mb-1">
-                      <Label className="text-xs">Título</Label>
-                      <Label className="text-xs">Vocalista</Label>
-                    </div>
-
-                    {[...Array(formData.number_of_songs || 0)].map((_, idx) => {
-                      const songNum = idx + 1;
-                      return (
-                        <div key={songNum} className="grid grid-cols-2 gap-2">
-                          <Input 
-                            value={formData[`song_${songNum}_title`]}
-                            onChange={(e) => setFormData({...formData, [`song_${songNum}_title`]: e.target.value})}
-                            placeholder={`Canción ${songNum}`}
-                            className="text-sm"
-                          />
-                          <Input 
-                            value={formData[`song_${songNum}_lead`]}
-                            onChange={(e) => setFormData({...formData, [`song_${songNum}_lead`]: e.target.value})}
-                            placeholder="Nombre"
-                            className="text-sm"
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <WorshipSongsSection formData={formData} setFormData={setFormData} />
                 )}
 
                 {isPlenariaType && (
@@ -1235,160 +1140,20 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   </Card>
                 )}
 
-                <div id="notas" className="bg-white rounded-lg border border-l-4 border-l-purple-500 border-slate-200 shadow-sm overflow-hidden mt-6">
-                  <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                    <h3 className="font-bold text-lg text-slate-900">Notas por Equipo</h3>
-                  </div>
-                  
-                  <div className="p-4 space-y-3">
-                  {isBreakoutType && (
-                    <div className="bg-amber-50 border border-amber-200 p-3 rounded text-sm">
-                      <p className="text-gray-700">
-                        Para segmentos de tipo Breakout, las notas se definen individualmente para cada sala en la sección de "Contenido Específico".
-                      </p>
-                    </div>
-                  )}
-
-                  {!isBreakType && !isBreakoutType && (
-                    <>
-                      <div className="space-y-1">
-                        <Label className="text-xs text-purple-700">Proyección</Label>
-                        <div className="relative">
-                          <Textarea 
-                            value={formData.projection_notes}
-                            onChange={(e) => updateField('projection_notes', e.target.value)}
-                            rows={2}
-                            placeholder="Slides, videos..."
-                            className="text-sm"
-                          />
-                          <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'projection_notes')} />
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label className="text-xs text-red-700">Sonido</Label>
-                        <div className="relative">
-                          <Textarea 
-                            value={formData.sound_notes}
-                            onChange={(e) => updateField('sound_notes', e.target.value)}
-                            rows={2}
-                            placeholder="Micrófonos, cues..."
-                            className="text-sm"
-                          />
-                          <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'sound_notes')} />
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {!isBreakType && !isTechOnly && !isBreakoutType && (
-                    <div className="space-y-1">
-                      <Label className="text-xs text-green-700">Ujieres</Label>
-                      <div className="relative">
-                        <Textarea 
-                          value={formData.ushers_notes}
-                          onChange={(e) => updateField('ushers_notes', e.target.value)}
-                          rows={2}
-                          placeholder="Instrucciones..."
-                          className="text-sm"
-                        />
-                        <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'ushers_notes')} />
-                      </div>
-                    </div>
-                  )}
-
-                  {formData.requires_translation && !isBreakoutType && (
-                    <div className="space-y-1">
-                      <Label className="text-xs text-purple-700">Traducción</Label>
-                      <Textarea 
-                        value={formData.translation_notes}
-                        onChange={(e) => setFormData({...formData, translation_notes: e.target.value})}
-                        rows={2}
-                        placeholder="Instrucciones para traductor..."
-                        className="text-sm"
-                      />
-                    </div>
-                  )}
-
-                  {!isBreakType && !isBreakoutType && (
-                    <div className="space-y-1">
-                      <Label className="text-xs text-amber-700">Stage & Decor</Label>
-                      <div className="relative">
-                        <Textarea 
-                          value={formData.stage_decor_notes}
-                          onChange={(e) => updateField('stage_decor_notes', e.target.value)}
-                          rows={2}
-                          placeholder="Mover mesas, preparar escenario..."
-                          className="text-sm"
-                        />
-                        <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'stage_decor_notes')} />
-                      </div>
-                    </div>
-                  )}
-
-                  {!isBreakoutType && (
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-700">Otras Notas</Label>
-                      <div className="relative">
-                        <Textarea 
-                          value={formData.other_notes}
-                          onChange={(e) => updateField('other_notes', e.target.value)}
-                          rows={2}
-                          className="text-sm"
-                        />
-                        <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'other_notes')} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                </div>
+                <TeamNotesSection
+                  formData={formData}
+                  updateField={updateField}
+                  setFormData={setFormData}
+                  fieldOrigins={fieldOrigins}
+                  isBreakType={isBreakType}
+                  isBreakoutType={isBreakoutType}
+                  isTechOnly={isTechOnly}
+                  requiresTranslation={formData.requires_translation}
+                />
                 </div>
               </div>
 
-                <div id="otros" className="bg-white rounded-lg border border-l-4 border-l-slate-500 border-slate-200 shadow-sm overflow-hidden mt-6">
-                  <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-slate-500"></div>
-                    <h3 className="font-bold text-lg text-slate-900">Opciones de Visibilidad</h3>
-                  </div>
-                  <div className="p-4 space-y-2">
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="show_in_general"
-                        checked={formData.show_in_general}
-                        onCheckedChange={(checked) => setFormData({...formData, show_in_general: checked})}
-                      />
-                      <label htmlFor="show_in_general" className="cursor-pointer">General</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="show_in_projection"
-                        checked={formData.show_in_projection}
-                        onCheckedChange={(checked) => setFormData({...formData, show_in_projection: checked})}
-                      />
-                      <label htmlFor="show_in_projection" className="cursor-pointer">Proyección</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="show_in_sound"
-                        checked={formData.show_in_sound}
-                        onCheckedChange={(checked) => setFormData({...formData, show_in_sound: checked})}
-                      />
-                      <label htmlFor="show_in_sound" className="cursor-pointer">Sonido</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="show_in_ushers"
-                        checked={formData.show_in_ushers}
-                        onCheckedChange={(checked) => setFormData({...formData, show_in_ushers: checked})}
-                      />
-                      <label htmlFor="show_in_ushers" className="cursor-pointer">Ujieres</label>
-                    </div>
-                  </div>
-                </div>
-          </div>
+                <VisibilityTogglesSection formData={formData} setFormData={setFormData} />
         </div>
       </div>
       </div>
