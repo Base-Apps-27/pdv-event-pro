@@ -1,3 +1,4 @@
+// Phase 7: Memoized to prevent cascading re-renders in sortable lists
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';

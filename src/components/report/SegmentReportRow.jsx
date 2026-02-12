@@ -1,3 +1,4 @@
+// Phase 7: Wrapped with React.memo for report rendering performance
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Languages, Mic, Utensils } from "lucide-react";

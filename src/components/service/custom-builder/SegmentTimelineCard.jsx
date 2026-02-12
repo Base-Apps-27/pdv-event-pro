@@ -3,6 +3,7 @@
  * Phase 3C extraction: Per-segment card body from CustomServiceBuilder.
  * Renders the full card interior for a single segment in the timeline.
  * Verbatim extraction — zero logic changes.
+ * Phase 7: Wrapped with React.memo for performance.
  */
 
 import React from "react";
