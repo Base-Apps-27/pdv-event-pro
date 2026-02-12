@@ -10,6 +10,7 @@ import { CheckCircle2, XCircle, AlertTriangle, Play, RotateCcw, ExternalLink, Ac
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import TestResultsUI from "@/components/testing/TestResultsUI";
+import { toast } from "sonner";
 
 export default function TestDashboard() {
   const [manualTests, setManualTests] = useState(() => {
@@ -35,9 +36,13 @@ export default function TestDashboard() {
   };
 
   const resetManualTests = () => {
-    if (confirm('¿Resetear todos los tests manuales?')) {
-      setManualTests({});
-    }
+    // Phase 7: Replaced confirm() with toast action
+    toast('¿Resetear todos los tests manuales?', {
+      action: {
+        label: 'Sí, resetear',
+        onClick: () => setManualTests({}),
+      },
+    });
   };
 
   // Automated health checks
