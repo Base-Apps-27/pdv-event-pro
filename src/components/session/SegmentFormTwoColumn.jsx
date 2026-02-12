@@ -596,12 +596,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   // Break types (Receso/Almuerzo) can have optional presenter (person managing stage transition)
   const needsPresenter = !isTechOnly && !isBreakoutType && !isPanelType; // dynamic required depending on type
   const presenterOptionalForBreak = isBreakType; // presenter is optional but available for breaks
-  const showDescription = !isTechOnly && !isVideoType;
   const showTranslation = !isBreakoutType; // Now available for break types too
-  const showUshersNotes = !isBreakType && !isTechOnly && !isBreakoutType;
-  const showProjectionNotes = !isBreakType && !isBreakoutType;
-  const showSoundNotes = !isBreakType && !isBreakoutType;
-  const showOtherNotes = !isBreakoutType;
   const showActions = true; // Now available for all types including breaks
   const requiresSala = !isBreakoutType;
 
