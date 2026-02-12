@@ -2167,12 +2167,8 @@ Return ONLY valid JSON:
         isQuickPrint={isQuickPrint}
       />
       {/* REMOVED: ~500 lines of inline print HTML moved to WeeklyServicePrintView (Phase 3B) */}
-      {/* Dead code fully removed to fix build — original preserved in git history / WeeklyServicePrintView */}
 
       {/* Screen UI */}
-          </div>
-          <div className="print-title">
-            <h1>Orden de Servicio</h1>
             <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
             <div className="print-team-info">
               <span><span className="print-team-label">Coordinador:</span> {serviceData?.coordinators?.["9:30am"] || serviceData?.coordinators?.["11:30am"] || "—"}</span>
