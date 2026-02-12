@@ -2175,7 +2175,8 @@ Return ONLY valid JSON:
             Servicios Dominicales
           </h1>
           <p className="text-gray-500 mt-1">{t('dashboard.services.subtitle')}</p>
-              for (let i = 0; i < idx; i++) {
+          {/* Service ID for debugging */}
+          {existingData?.id && (
                 if (serviceData["9:30am"][i].type !== 'break' && serviceData["9:30am"][i].type !== 'ministry') {
                   currentTime = addMinutes(currentTime, serviceData["9:30am"][i].duration || 0);
                 }
