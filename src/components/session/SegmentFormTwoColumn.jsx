@@ -8,9 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell, ListChecks, BookOpen, Sparkles } from "lucide-react";
+import { Save, X, Plus, ScrollText, BookOpen, Sparkles } from "lucide-react";
 import OverlapDetectedDialog from "./OverlapDetectedDialog";
 import ShiftPreviewModal from "./ShiftPreviewModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -18,6 +17,7 @@ import TimePicker from "@/components/ui/TimePicker";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import SegmentTimelinePreview from "./SegmentTimelinePreview";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
+// Note: FieldOriginIndicator still used in Básico section (title, presenter, description) and passed to TeamNotesSection
 import AnnouncementSeriesManager from "../announcements/AnnouncementSeriesManager";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import ArtesFormSection from "./ArtesFormSection";
