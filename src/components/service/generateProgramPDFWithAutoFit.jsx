@@ -25,8 +25,6 @@ if (pdfMake && !pdfMake.vfs && pdfFonts && pdfFonts.vfs) {
  * Returns { pdf, isCached, scale }
  */
 export async function generateServiceProgramPDFWithAutoFit(serviceData, onProgress) {
-  console.log('[PDF] Starting PDF generation with heuristic scaling...');
-  
   // Pre-calculate scale to include in cache key (ensures cache invalidates when scaling heuristic changes)
   const preCalculatedScale = estimateOptimalScale(serviceData);
   
@@ -36,14 +34,12 @@ export async function generateServiceProgramPDFWithAutoFit(serviceData, onProgre
     // Only use cache if the scale matches current heuristic
     const cachedScale = cached.metadata?.scale || 1.0;
     if (Math.abs(cachedScale - preCalculatedScale) < 0.01) {
-      console.log('[PDF] Cache hit - returning cached PDF');
       return {
         pdf: cached.blob,
         isCached: true,
         scale: cachedScale
       };
     } else {
-      console.log(`[PDF] Cache scale mismatch (cached: ${cachedScale.toFixed(2)}, current: ${preCalculatedScale.toFixed(2)}) - regenerating`);
     }
   }
   
@@ -55,8 +51,7 @@ export async function generateServiceProgramPDFWithAutoFit(serviceData, onProgre
   
   // Use proven heuristic to estimate optimal scale
   const globalScale = estimateOptimalScale(serviceData);
-  console.log(`[PDF] Heuristic scale: ${globalScale.toFixed(2)}`);
-  
+
   // Generate PDF once at calculated scale
   const pdfDoc = buildServiceProgramDocument(
     serviceData,
@@ -84,8 +79,6 @@ export async function generateServiceProgramPDFWithAutoFit(serviceData, onProgre
   await cachePDF(serviceData, pdfBlob, {
     scale: globalScale
   });
-  
-  console.log('[PDF] Generation complete');
   
   return {
     pdf: pdfBlob,

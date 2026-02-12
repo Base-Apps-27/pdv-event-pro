@@ -144,7 +144,6 @@ export async function saveSuggestion(base44, type, value) {
   
   if (personTypes.includes(type)) {
     if (!isValidName(value)) {
-      console.log(`Skipping invalid name format: "${value}"`);
       return;
     }
   }

@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/components/utils/i18n';
 import { getAllPermissionDefinitions } from '@/components/utils/permissions';
-import { Shield, Plus, Edit2, Trash2, Save, X } from 'lucide-react';
+import { Shield, Plus, Edit2, Trash2, Save, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function RolePermissionManager() {
@@ -31,7 +31,7 @@ export default function RolePermissionManager() {
   }, {});
 
   // Phase 7: Added staleTime to reduce unnecessary refetches
-  const { data: roleTemplates = [] } = useQuery({
+  const { data: roleTemplates = [], isLoading } = useQuery({
     queryKey: ['roleTemplates'],
     queryFn: () => base44.entities.RoleTemplate.list(),
     staleTime: 10 * 60 * 1000, // 10 minutes (role templates change rarely)
@@ -163,6 +163,11 @@ export default function RolePermissionManager() {
           </DialogContent>
         </Dialog>
 
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          </div>
+        )}
         <div className="grid gap-6">
           {roleTemplates.map((role) => (
             <Card key={role.id} className="border-2">

@@ -17,7 +17,12 @@ const translations = {
           'nav.customServices': 'Servicios Personalizados',
     'nav.importer': 'Importador IA',
     'nav.schema': 'Guía de Datos',
-    
+    'nav.userManagement': 'Gestión de Usuarios',
+    'nav.roles': 'Roles y Permisos',
+    'nav.messages': 'Procesar Mensajes',
+    'nav.collapseMenu': 'Colapsar Menú',
+    'nav.expandMenu': 'Expandir',
+
     // Sections
     'section.main': 'Panel Principal',
     'section.live': 'En Vivo',
@@ -457,7 +462,12 @@ const translations = {
           'nav.customServices': 'Custom Services',
     'nav.importer': 'AI Importer',
     'nav.schema': 'Data Guide',
-    
+    'nav.userManagement': 'User Management',
+    'nav.roles': 'Roles & Permissions',
+    'nav.messages': 'Process Messages',
+    'nav.collapseMenu': 'Collapse Menu',
+    'nav.expandMenu': 'Expand',
+
     // Sections
     'section.main': 'Main Panel',
     'section.live': 'Live',
