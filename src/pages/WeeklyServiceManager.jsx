@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { hasPermission } from "@/components/utils/permissions";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import StaticAnnouncementForm from "@/components/announcements/StaticAnnouncementForm";
 import { Badge } from "@/components/ui/badge";
