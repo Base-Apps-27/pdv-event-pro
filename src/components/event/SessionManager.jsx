@@ -8,6 +8,7 @@ import DatePicker from "@/components/ui/DatePicker";
 import TimePicker from "@/components/ui/TimePicker";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -196,7 +197,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
         if ((newStart >= existingStart && newStart < existingEnd) ||
             (newEnd > existingStart && newEnd <= existingEnd) ||
             (newStart <= existingStart && newEnd >= existingEnd)) {
-          alert(`La sesión se solapa con "${existingSession.name}" (${formatTimeToEST(existingStart)} - ${formatTimeToEST(existingEnd)}). Por favor ajusta los horarios.`);
+          toast.warning(`La sesión se solapa con "${existingSession.name}" (${formatTimeToEST(existingStart)} - ${formatTimeToEST(existingEnd)}). Por favor ajusta los horarios.`);
           return;
         }
       }

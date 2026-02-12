@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
+import { toast } from "sonner";
 
 export default function ServiceTemplatesTab() {
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
@@ -306,7 +307,7 @@ export default function ServiceTemplatesTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['sunday-blueprint']);
-      alert('Blueprint guardado correctamente');
+      toast.success('Blueprint guardado correctamente');
     }
   });
 
@@ -318,7 +319,7 @@ export default function ServiceTemplatesTab() {
     if (confirm("¿Estás seguro de restablecer el Blueprint a los valores de fábrica? Esto sobrescribirá la configuración actual.")) {
       setBlueprintData(FACTORY_DEFAULT);
       // We don't save automatically to give the user a chance to review, but we'll notify them
-      alert("Blueprint restablecido. Revisa los cambios y haz clic en 'Guardar Blueprint' para aplicar.");
+      toast.info("Blueprint restablecido. Revisa los cambios y haz clic en 'Guardar Blueprint' para aplicar.");
     }
   };
 

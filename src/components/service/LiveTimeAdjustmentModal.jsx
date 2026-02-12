@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/components/utils/i18n";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { Clock, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 
 export default function LiveTimeAdjustmentModal({ 
   isOpen, 
@@ -41,7 +42,7 @@ export default function LiveTimeAdjustmentModal({
 
   const handleSave = async () => {
     if (!authorizedBy.trim()) {
-      alert(t('live.authorization_required') || 'Por favor ingresa quién autorizó este cambio');
+      toast.warning(t('live.authorization_required') || 'Por favor ingresa quién autorizó este cambio');
       return;
     }
 
@@ -51,7 +52,7 @@ export default function LiveTimeAdjustmentModal({
       onClose();
     } catch (err) {
       console.error(err);
-      alert(t('error.generic') || 'Error al guardar el ajuste');
+      toast.error(t('error.generic') || 'Error al guardar el ajuste');
     } finally {
       setIsLoading(false);
     }
@@ -59,7 +60,7 @@ export default function LiveTimeAdjustmentModal({
 
   const handleClear = async () => {
     if (!authorizedBy.trim()) {
-      alert(t('live.authorization_required') || 'Por favor ingresa quién autorizó limpiar este ajuste');
+      toast.warning(t('live.authorization_required') || 'Por favor ingresa quién autorizó limpiar este ajuste');
       return;
     }
 
@@ -69,7 +70,7 @@ export default function LiveTimeAdjustmentModal({
       onClose();
     } catch (err) {
       console.error(err);
-      alert(t('error.generic') || 'Error al limpiar el ajuste');
+      toast.error(t('error.generic') || 'Error al limpiar el ajuste');
     } finally {
       setIsLoading(false);
     }
