@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { safeSetItem } from '@/components/utils/safeLocalStorage';
 
 const THEME_STORAGE_KEY = 'ui_theme';
 const VALID_THEMES = ['light', 'dark', 'system'];
@@ -50,7 +51,7 @@ export function useTheme() {
     if (!VALID_THEMES.includes(newTheme)) return;
     
     setThemeState(newTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+    safeSetItem(THEME_STORAGE_KEY, newTheme);
     applyTheme(newTheme);
   };
 

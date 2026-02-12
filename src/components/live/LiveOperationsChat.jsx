@@ -9,6 +9,7 @@ import LiveChatMessage from "./LiveChatMessage";
 import LiveChatPinnedSection from "./LiveChatPinnedSection";
 import NewMessagesPill from "./NewMessagesPill";
 import TypingIndicator from "./TypingIndicator";
+import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
 
 /**
  * LiveOperationsChat Component
@@ -117,7 +118,7 @@ export default function LiveOperationsChat({
   // Priority: localStorage (instant) > User entity DB read (durable) > auth.me() (stale fallback)
   useEffect(() => {
     const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
-    const fromLS = localStorage.getItem(lsKey);
+    const fromLS = safeGetItem(lsKey);
     
     if (fromLS) {
       // localStorage hit — instant, no async needed
@@ -146,7 +147,7 @@ export default function LiveOperationsChat({
                           || null;
         if (profileValue) {
           setLastSeenMessageId(profileValue);
-          localStorage.setItem(lsKey, profileValue); // re-cache for future
+          safeSetItem(lsKey, profileValue); // re-cache for future
         } else {
           // DB has no marker either → genuine first-time viewer
           setLastSeenMessageId(null);
@@ -158,7 +159,7 @@ export default function LiveOperationsChat({
         const fallback = currentUser?.chat_last_seen?.[chatContextKey];
         if (fallback) {
           setLastSeenMessageId(fallback);
-          localStorage.setItem(lsKey, fallback);
+          safeSetItem(lsKey, fallback);
         } else {
           setLastSeenMessageId(null);
         }
@@ -352,7 +353,7 @@ export default function LiveOperationsChat({
     
     // 2. localStorage — synchronous, survives refresh
     const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
-    localStorage.setItem(lsKey, messageId);
+    safeSetItem(lsKey, messageId);
     
     // 3. User entity — debounced for cross-device sync
     if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
@@ -402,7 +403,7 @@ export default function LiveOperationsChat({
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden' && isOpen && lastSeenMessageId && typeof lastSeenMessageId === 'string') {
         const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
-        localStorage.setItem(lsKey, lastSeenMessageId);
+        safeSetItem(lsKey, lastSeenMessageId);
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -411,7 +412,7 @@ export default function LiveOperationsChat({
       // Unmount flush
       if (isOpen && lastSeenMessageId && typeof lastSeenMessageId === 'string') {
         const lsKey = `${LOCAL_STORAGE_PREFIX}${chatContextKey}`;
-        localStorage.setItem(lsKey, lastSeenMessageId);
+        safeSetItem(lsKey, lastSeenMessageId);
       }
     };
   }, [isOpen, lastSeenMessageId, chatContextKey]);

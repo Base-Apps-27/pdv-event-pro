@@ -37,6 +37,7 @@ import { generateServiceProgramPDFWithAutoFit } from "@/components/service/gener
 import { useLanguage } from "@/components/utils/i18n";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { toast } from "sonner";
+import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
 
 // Phase 3C extracted modules
 import { getCompressionLevel } from "@/components/utils/compressionLevel";
@@ -111,7 +112,7 @@ export default function CustomServiceBuilder() {
       setHasUnsavedChanges(false);
 
       const backupKey = `service_backup_${existingService.id}`;
-      const backup = localStorage.getItem(backupKey);
+      const backup = safeGetItem(backupKey);
       if (backup) {
         try {
           const { timestamp } = JSON.parse(backup);
@@ -150,7 +151,7 @@ export default function CustomServiceBuilder() {
       setHasUnsavedChanges(false);
       setAutoSaveStatus("saved");
       if (result?.id) {
-        localStorage.setItem(`service_backup_${result.id}`, JSON.stringify({ data: result, timestamp: new Date().toISOString() }));
+        safeSetItem(`service_backup_${result.id}`, JSON.stringify({ data: result, timestamp: new Date().toISOString() }));
       }
       if (autoSaveStatus !== "saving") toast.success('Servicio guardado exitosamente en ' + new Date().toLocaleTimeString('es-ES', { timeZone: 'America/New_York' }));
     },

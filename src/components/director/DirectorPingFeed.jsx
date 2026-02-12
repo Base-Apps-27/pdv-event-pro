@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { formatTimestampToEST } from '@/components/utils/timeFormat';
 import { motion, AnimatePresence } from 'framer-motion';
+import { safeGetJSON, safeSetJSON } from '@/components/utils/safeLocalStorage';
 
 /**
  * DirectorPingFeed - Shows incoming @Director pings in the Director Console
@@ -30,9 +31,8 @@ export default function DirectorPingFeed({
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
   const [acknowledgedIds, setAcknowledgedIds] = useState(() => {
-    // Load acknowledged IDs from localStorage
-    const stored = localStorage.getItem(`director_ping_ack:${eventId}`);
-    return stored ? JSON.parse(stored) : [];
+    // Load acknowledged IDs from localStorage (Phase 5: safe wrapper)
+    return safeGetJSON(`director_ping_ack:${eventId}`, []);
   });
 
   // Fetch director pings for this event
@@ -76,13 +76,13 @@ export default function DirectorPingFeed({
   const acknowledgePing = (pingId) => {
     const newAcked = [...acknowledgedIds, pingId];
     setAcknowledgedIds(newAcked);
-    localStorage.setItem(`director_ping_ack:${eventId}`, JSON.stringify(newAcked));
+    safeSetJSON(`director_ping_ack:${eventId}`, newAcked);
   };
 
   const acknowledgeAll = () => {
     const newAcked = [...acknowledgedIds, ...unacknowledgedPings.map(p => p.id)];
     setAcknowledgedIds(newAcked);
-    localStorage.setItem(`director_ping_ack:${eventId}`, JSON.stringify(newAcked));
+    safeSetJSON(`director_ping_ack:${eventId}`, newAcked);
     setIsExpanded(false);
   };
 

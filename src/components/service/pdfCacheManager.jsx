@@ -15,6 +15,8 @@
  * }
  */
 
+import { safeGetItem, safeSetItem, safeRemoveItem, safeKeys } from '@/components/utils/safeLocalStorage';
+
 const CACHE_PREFIX = 'pdv_pdf_cache_';
 const TTL_MS = 48 * 60 * 60 * 1000; // 48 hours
 
@@ -46,7 +48,7 @@ export async function getCachedPDF(serviceData) {
     if (!hash) return null;
     
     const cacheKey = `${CACHE_PREFIX}${hash}`;
-    const cacheEntry = localStorage.getItem(cacheKey);
+    const cacheEntry = safeGetItem(cacheKey);
     
     if (!cacheEntry) return null;
     
@@ -56,7 +58,7 @@ export async function getCachedPDF(serviceData) {
     // Check TTL
     if (age > TTL_MS) {
       console.log(`[CACHE] Expired after ${Math.round(age / 1000)}s`);
-      localStorage.removeItem(cacheKey);
+      safeRemoveItem(cacheKey);
       return null;
     }
     
@@ -104,7 +106,7 @@ export async function cachePDF(serviceData, pdfBlob, metadata = {}) {
             }
           };
           
-          localStorage.setItem(cacheKey, JSON.stringify(cacheEntry));
+          safeSetItem(cacheKey, JSON.stringify(cacheEntry));
           console.log(`[CACHE] STORED: ${cacheKey} (segments: ${metadata.segmentCount}, size: ${(pdfBase64.length / 1024).toFixed(2)}KB)`);
           resolve(true);
         } catch (error) {
@@ -124,38 +126,32 @@ export async function cachePDF(serviceData, pdfBlob, metadata = {}) {
  * Clear all PDV PDF caches (admin utility)
  */
 export function clearAllPDFCaches() {
-  try {
-    const keys = Object.keys(localStorage);
-    const pdvKeys = keys.filter(k => k.startsWith(CACHE_PREFIX));
-    pdvKeys.forEach(k => localStorage.removeItem(k));
-    console.log(`[CACHE] Cleared ${pdvKeys.length} PDF caches`);
-    return pdvKeys.length;
-  } catch (error) {
-    console.error('[CACHE] Clear failed:', error);
-    return 0;
-  }
+  const keys = safeKeys();
+  const pdvKeys = keys.filter(k => k.startsWith(CACHE_PREFIX));
+  pdvKeys.forEach(k => safeRemoveItem(k));
+  console.log(`[CACHE] Cleared ${pdvKeys.length} PDF caches`);
+  return pdvKeys.length;
 }
 
 /**
  * Get cache stats (for debugging)
  */
 export function getCacheStats() {
-  try {
-    const keys = Object.keys(localStorage);
-    const pdvKeys = keys.filter(k => k.startsWith(CACHE_PREFIX));
-    const stats = pdvKeys.map(k => {
-      const entry = JSON.parse(localStorage.getItem(k));
+  const keys = safeKeys();
+  const pdvKeys = keys.filter(k => k.startsWith(CACHE_PREFIX));
+  const stats = pdvKeys.map(k => {
+    try {
+      const entry = JSON.parse(safeGetItem(k, '{}'));
       const age = Date.now() - new Date(entry.timestamp).getTime();
       return {
         key: k.replace(CACHE_PREFIX, ''),
         age: Math.round(age / 1000),
         service: entry.metadata?.serviceName,
-        size: Math.round(entry.pdfBase64.length / 1024)
+        size: Math.round((entry.pdfBase64?.length || 0) / 1024)
       };
-    });
-    return stats;
-  } catch (error) {
-    console.error('[CACHE] Stats failed:', error);
-    return [];
-  }
+    } catch {
+      return { key: k.replace(CACHE_PREFIX, ''), age: 0, service: 'corrupt', size: 0 };
+    }
+  });
+  return stats;
 }

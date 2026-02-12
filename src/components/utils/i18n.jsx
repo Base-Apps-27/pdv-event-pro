@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { safeGetItem, safeSetItem } from '@/components/utils/safeLocalStorage';
 
 const translations = {
   es: {
@@ -720,7 +721,7 @@ const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
   const [language, setLangState] = useState(() => {
-    const stored = localStorage.getItem('language') || 'es';
+    const stored = safeGetItem('language', 'es');
     return normalizeLang(stored);
   });
 
@@ -733,7 +734,7 @@ export function LanguageProvider({ children }) {
         const pref = user?.ui_language ? normalizeLang(user.ui_language) : null;
         if (pref && pref !== language) {
           setLangState(pref);
-          localStorage.setItem('language', pref);
+          safeSetItem('language', pref);
         }
       }
     })();
@@ -743,7 +744,7 @@ export function LanguageProvider({ children }) {
   const setLanguage = (lang) => {
     const norm = normalizeLang(lang);
     setLangState(norm);
-    localStorage.setItem('language', norm);
+    safeSetItem('language', norm);
     base44.analytics.track({ eventName: 'language_changed', properties: { lang: norm } });
     base44.auth.isAuthenticated().then((authed) => {
       if (authed) {

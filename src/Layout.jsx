@@ -8,6 +8,7 @@ import { useTheme } from "@/components/utils/useTheme";
 import { Calendar, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus, Shield, Moon, Sun, ChevronLeft, ChevronRight } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "@/components/utils/ErrorBoundary";
+import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
 
 function LayoutContent({ children }) {
   return (
@@ -37,7 +38,7 @@ function LayoutContentInner({ children }) {
   const [loading, setLoading] = useState(true);
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
-        return localStorage.getItem('sidebarCollapsed') === 'true';
+        return safeGetItem('sidebarCollapsed') === 'true';
     }
     return false;
   });
@@ -45,7 +46,7 @@ function LayoutContentInner({ children }) {
   const toggleSidebar = () => {
     setSidebarCollapsed(prev => {
         const next = !prev;
-        localStorage.setItem('sidebarCollapsed', String(next));
+        safeSetItem('sidebarCollapsed', String(next));
         return next;
     });
   };
