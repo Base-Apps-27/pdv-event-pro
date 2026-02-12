@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell, ListChecks, Zap, BookOpen, Sparkles } from "lucide-react";
+import { Save, X, FileText, Plus, Trash2, ChevronDown, ChevronUp, ScrollText, Bell, ListChecks, BookOpen, Sparkles } from "lucide-react";
 import OverlapDetectedDialog from "./OverlapDetectedDialog";
 import ShiftPreviewModal from "./ShiftPreviewModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
