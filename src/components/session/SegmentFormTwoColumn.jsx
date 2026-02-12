@@ -56,17 +56,6 @@ const getColorForType = (type) => {
   return TYPE_TO_COLOR[type] || "default";
 };
 
-const DEPARTMENTS = [
-  "Admin", "MC", "Sound", "Projection", "Hospitality", "Ujieres", "Kids", "Coordinador", "Stage & Decor", "Alabanza", "Translation", "Other"
-];
-
-const ACTION_TIMINGS = [
-  { value: "before_start", label: "Antes de iniciar" },
-  { value: "after_start", label: "Después de iniciar" },
-  { value: "before_end", label: "Antes de terminar" },
-  { value: "absolute", label: "Hora exacta" }
-];
-
 export default function SegmentFormTwoColumn({ session, segment, templates, onClose, sessionId, user }) {
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
