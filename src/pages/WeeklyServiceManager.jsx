@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, Copy, Edit, Sparkles, ChevronUp, ChevronDown, Loader2, ArrowRight, ChevronsRight, Mail, Eye, Wand2, Printer, ExternalLink, Settings, BookOpen, Download } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, Edit, Sparkles, ChevronUp, ChevronDown, Loader2, ArrowRight, ChevronsRight, Eye, Wand2, ExternalLink, Settings, BookOpen, Download } from "lucide-react";
 import PrintSettingsModal from "@/components/print/PrintSettingsModal";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import { Calendar } from "@/components/ui/calendar";
