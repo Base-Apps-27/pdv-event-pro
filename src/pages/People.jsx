@@ -38,9 +38,11 @@ export default function People() {
     fetchUser();
   }, []);
 
+  // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: people = [], isLoading } = useQuery({
     queryKey: ['people'],
     queryFn: () => base44.entities.Person.list(),
+    staleTime: 10 * 60 * 1000, // 10 minutes (people change rarely)
   });
 
   const handleFileUpload = async (e) => {

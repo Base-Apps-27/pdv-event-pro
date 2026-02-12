@@ -24,14 +24,17 @@ export default function Dashboard() {
   // Locale for date-fns based on current UI language
   const locale = language === 'es' ? es : enUS;
   
+  // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: events = [] } = useQuery({
     queryKey: ['events'],
-    queryFn: () => base44.entities.Event.list('-start_date')
+    queryFn: () => base44.entities.Event.list('-start_date'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: sessions = [] } = useQuery({
     queryKey: ['sessions'],
-    queryFn: () => base44.entities.Session.list()
+    queryFn: () => base44.entities.Session.list(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Build a timezone-safe "today" string (YYYY-MM-DD) in America/New_York.

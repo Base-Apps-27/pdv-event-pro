@@ -21,9 +21,11 @@ export default function Rooms() {
   const [editingRoom, setEditingRoom] = useState(null);
   const queryClient = useQueryClient();
 
+  // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: rooms = [] } = useQuery({
     queryKey: ['rooms'],
     queryFn: () => base44.entities.Room.list('name'),
+    staleTime: 10 * 60 * 1000, // 10 minutes (rooms change rarely)
   });
 
   const createMutation = useMutation({

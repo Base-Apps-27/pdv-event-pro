@@ -32,9 +32,11 @@ export default function UserManagement() {
 
   const allPermissions = getAllPermissionDefinitions();
 
+  // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list('-created_date'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const updateUserMutation = useMutation({

@@ -46,9 +46,11 @@ export default function Events() {
     fetchUser();
   }, []);
 
+  // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: allEvents = [], isLoading } = useQuery({
     queryKey: ['events'],
     queryFn: () => base44.entities.Event.list('-year'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const events = allEvents.filter(e => e.status !== 'template');

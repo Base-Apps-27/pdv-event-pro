@@ -41,15 +41,18 @@ export default function Templates() {
   const [templateToUse, setTemplateToUse] = useState(null);
   const queryClient = useQueryClient();
 
+  // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: segmentTemplatesData } = useQuery({
     queryKey: ['segmentTemplates'],
     queryFn: () => base44.entities.SegmentTemplate.list(),
+    staleTime: 10 * 60 * 1000, // 10 minutes (templates change rarely)
   });
   const segmentTemplates = segmentTemplatesData || [];
 
   const { data: eventTemplatesData } = useQuery({
     queryKey: ['eventTemplates'],
     queryFn: () => base44.entities.Event.filter({ status: 'template' }),
+    staleTime: 10 * 60 * 1000, // 10 minutes (templates change rarely)
   });
   const eventTemplates = eventTemplatesData || [];
 

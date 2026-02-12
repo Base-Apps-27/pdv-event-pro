@@ -56,9 +56,11 @@ export default function Reports() {
 
   // CLEANUP (2026-02-10): Auth check removed — Layout already gates all non-public pages.
 
+  // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: eventsRaw = [] } = useQuery({
     queryKey: ['events'],
     queryFn: () => base44.entities.Event.list('-year'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
   // Filter out templates to match Events.js behavior - only show real events
