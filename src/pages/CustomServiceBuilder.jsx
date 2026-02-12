@@ -37,6 +37,7 @@ import { generateServiceProgramPDFWithAutoFit } from "@/components/service/gener
 import { useLanguage } from "@/components/utils/i18n";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { toast } from "sonner";
+import { hasPermission } from "@/components/utils/permissions";
 import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
 
 // Phase 3C extracted modules
@@ -49,7 +50,7 @@ import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog"
 
 export default function CustomServiceBuilder() {
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const serviceId = searchParams.get('id');
@@ -293,68 +294,68 @@ export default function CustomServiceBuilder() {
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => navigate(createPageUrl('CustomServicesManager'))}><ArrowLeft className="w-5 h-5" /></Button>
           <div>
-            <h1 className="text-5xl text-gray-900 uppercase tracking-tight">{serviceId ? 'Editar Servicio' : 'Nuevo Servicio Personalizado'}</h1>
-            <p className="text-gray-500 mt-1">Crea servicios especiales con horarios y elementos personalizados</p>
+            <h1 className="text-5xl text-gray-900 uppercase tracking-tight">{serviceId ? (language === 'es' ? 'Editar Servicio' : 'Edit Service') : (language === 'es' ? 'Nuevo Servicio Personalizado' : 'New Custom Service')}</h1>
+            <p className="text-gray-500 mt-1">{language === 'es' ? 'Crea servicios especiales con horarios y elementos personalizados' : 'Create special services with custom schedules and elements'}</p>
             <div className="flex items-center gap-3 mt-2">
               {existingService?.updated_date && (
                 <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
-                  Última actualización: {new Date(existingService.updated_date).toLocaleString('es-ES', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' })}
+                  {language === 'es' ? 'Última actualización' : 'Last updated'}: {new Date(existingService.updated_date).toLocaleString(language === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' })}
                 </Badge>
               )}
-              {hasUnsavedChanges && <Badge className="text-xs bg-yellow-500 text-white animate-pulse">Cambios sin guardar</Badge>}
-              {autoSaveStatus === "saving" && <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">Guardando automáticamente...</Badge>}
-              {autoSaveStatus === "saved" && !hasUnsavedChanges && <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">✓ Auto-guardado</Badge>}
-              {autoSaveStatus === "error" && <Badge variant="outline" className="text-xs bg-red-50 border-red-200 text-red-700">⚠ Error al guardar</Badge>}
+              {hasUnsavedChanges && <Badge className="text-xs bg-yellow-500 text-white animate-pulse">{language === 'es' ? 'Cambios sin guardar' : 'Unsaved changes'}</Badge>}
+              {autoSaveStatus === "saving" && <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">{language === 'es' ? 'Guardando automáticamente...' : 'Auto-saving...'}</Badge>}
+              {autoSaveStatus === "saved" && !hasUnsavedChanges && <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">✓ {language === 'es' ? 'Auto-guardado' : 'Auto-saved'}</Badge>}
+              {autoSaveStatus === "error" && <Badge variant="outline" className="text-xs bg-red-50 border-red-200 text-red-700">⚠ {language === 'es' ? 'Error al guardar' : 'Save error'}</Badge>}
             </div>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleSave} disabled={saveServiceMutation.isPending} style={tealStyle} className="font-semibold"><Save className="w-5 h-5 mr-2" />{saveServiceMutation.isPending ? 'Guardando...' : 'Guardar'}</Button>
-          <Button onClick={handleDownloadProgramPDF} style={tealStyle} className="gap-2 font-semibold" title="Descargar Programa como PDF"><Download className="w-4 h-4" />PDF Programa</Button>
-          <Button onClick={handleDownloadAnnouncementsPDF} disabled={!serviceData.selected_announcements || serviceData.selected_announcements.length === 0} style={tealStyle} className="gap-2 font-semibold" title="Descargar Anuncios como PDF"><Download className="w-4 h-4" />PDF Anuncios</Button>
+          <Button onClick={handleSave} disabled={saveServiceMutation.isPending} style={tealStyle} className="font-semibold"><Save className="w-5 h-5 mr-2" />{saveServiceMutation.isPending ? t('btn.saving') : t('common.save')}</Button>
+          <Button onClick={handleDownloadProgramPDF} style={tealStyle} className="gap-2 font-semibold" title={language === 'es' ? 'Descargar Programa como PDF' : 'Download Program as PDF'}><Download className="w-4 h-4" />{language === 'es' ? 'PDF Programa' : 'Program PDF'}</Button>
+          <Button onClick={handleDownloadAnnouncementsPDF} disabled={!serviceData.selected_announcements || serviceData.selected_announcements.length === 0} style={tealStyle} className="gap-2 font-semibold" title={language === 'es' ? 'Descargar Anuncios como PDF' : 'Download Announcements as PDF'}><Download className="w-4 h-4" />{language === 'es' ? 'PDF Anuncios' : 'Announcements PDF'}</Button>
         </div>
       </div>
 
       {/* Delete Segment Confirmation */}
       <Dialog open={segmentToDelete !== null} onOpenChange={(open) => !open && setSegmentToDelete(null)}>
         <DialogContent className="max-w-sm bg-white">
-          <DialogHeader><DialogTitle>¿Eliminar este segmento?</DialogTitle></DialogHeader>
-          <p className="text-sm text-gray-600">Esta acción no se puede deshacer.</p>
+          <DialogHeader><DialogTitle>{language === 'es' ? '¿Eliminar este segmento?' : 'Delete this segment?'}</DialogTitle></DialogHeader>
+          <p className="text-sm text-gray-600">{language === 'es' ? 'Esta acción no se puede deshacer.' : 'This action cannot be undone.'}</p>
           <div className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" onClick={() => setSegmentToDelete(null)}>Cancelar</Button>
-            <Button className="bg-red-600 text-white hover:bg-red-700" onClick={confirmRemoveSegment}>Eliminar</Button>
+            <Button variant="outline" onClick={() => setSegmentToDelete(null)}>{t('common.cancel')}</Button>
+            <Button className="bg-red-600 text-white hover:bg-red-700" onClick={confirmRemoveSegment}>{t('common.delete')}</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Verse Parser Dialog */}
-      <VerseParserDialog open={verseParserOpen} onOpenChange={setVerseParserOpen} initialText={verseParserContext.initialText || ""} onSave={handleSaveParsedVerses} language="es" />
+      <VerseParserDialog open={verseParserOpen} onOpenChange={setVerseParserOpen} initialText={verseParserContext.initialText || ""} onSave={handleSaveParsedVerses} language={language} />
 
       {/* Phase 5: Concurrent editing warning */}
-      <StaleEditWarningDialog open={showStaleWarning} onCancel={() => setShowStaleWarning(false)} onForceSave={forceSaveService} staleInfo={staleInfo} language="es" />
+      <StaleEditWarningDialog open={showStaleWarning} onCancel={() => setShowStaleWarning(false)} onForceSave={forceSaveService} staleInfo={staleInfo} language={language} />
 
       {/* Service Details */}
       <Card className="print:hidden">
-        <CardHeader><CardTitle>Detalles del Servicio</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{language === 'es' ? 'Detalles del Servicio' : 'Service Details'}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Nombre del Servicio *</Label>
-              <Input value={serviceData.name} onChange={(e) => setServiceData(prev => ({ ...prev, name: e.target.value }))} placeholder="Ej. Servicio Especial de Navidad" required className="w-full" />
+              <Label>{language === 'es' ? 'Nombre del Servicio *' : 'Service Name *'}</Label>
+              <Input value={serviceData.name} onChange={(e) => setServiceData(prev => ({ ...prev, name: e.target.value }))} placeholder={language === 'es' ? 'Ej. Servicio Especial de Navidad' : 'E.g. Special Christmas Service'} required className="w-full" />
             </div>
             <div className="space-y-2">
-              <Label>Fecha *</Label>
-              <DatePicker value={serviceData.date} onChange={(val) => setServiceData(prev => ({ ...prev, date: val }))} placeholder="Seleccionar fecha" required className="w-full max-w-full" />
+              <Label>{language === 'es' ? 'Fecha *' : 'Date *'}</Label>
+              <DatePicker value={serviceData.date} onChange={(val) => setServiceData(prev => ({ ...prev, date: val }))} placeholder={t('placeholder.selectDate')} required className="w-full max-w-full" />
             </div>
           </div>
           <div className="grid md:grid-cols-3 gap-4">
-            <div className="space-y-2"><Label>Día de la Semana (auto)</Label><Input value={serviceData.day_of_week} disabled className="bg-gray-50" /></div>
-            <div className="space-y-2"><Label>Hora *</Label><TimePicker value={serviceData.time} onChange={(val) => setServiceData(prev => ({ ...prev, time: val }))} placeholder="Seleccionar hora" required /></div>
-            <div className="space-y-2"><Label>Ubicación</Label><Input value={serviceData.location} onChange={(e) => setServiceData(prev => ({ ...prev, location: e.target.value }))} placeholder="Santuario principal" /></div>
+            <div className="space-y-2"><Label>{language === 'es' ? 'Día de la Semana (auto)' : 'Day of Week (auto)'}</Label><Input value={serviceData.day_of_week} disabled className="bg-gray-50" /></div>
+            <div className="space-y-2"><Label>{language === 'es' ? 'Hora *' : 'Time *'}</Label><TimePicker value={serviceData.time} onChange={(val) => setServiceData(prev => ({ ...prev, time: val }))} placeholder={language === 'es' ? 'Seleccionar hora' : 'Select time'} required /></div>
+            <div className="space-y-2"><Label>{t('common.location')}</Label><Input value={serviceData.location} onChange={(e) => setServiceData(prev => ({ ...prev, location: e.target.value }))} placeholder={language === 'es' ? 'Santuario principal' : 'Main sanctuary'} /></div>
           </div>
           <div className="space-y-2">
-            <Label>Descripción</Label>
-            <Textarea value={serviceData.description} onChange={(e) => setServiceData(prev => ({ ...prev, description: e.target.value }))} rows={2} placeholder="Descripción breve del servicio..." />
+            <Label>{language === 'es' ? 'Descripción' : 'Description'}</Label>
+            <Textarea value={serviceData.description} onChange={(e) => setServiceData(prev => ({ ...prev, description: e.target.value }))} rows={2} placeholder={language === 'es' ? 'Descripción breve del servicio...' : 'Brief service description...'} />
           </div>
         </CardContent>
       </Card>
@@ -363,13 +364,13 @@ export default function CustomServiceBuilder() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl text-gray-900 uppercase">Programa del Servicio</h2>
+            <h2 className="text-2xl text-gray-900 uppercase">{language === 'es' ? 'Programa del Servicio' : 'Service Program'}</h2>
             <div className="flex items-center gap-3 mt-2">
-              <Badge variant="outline" className="bg-blue-50">{timeCalc.total} min total</Badge>
-              <span className="text-sm text-gray-600">Inicia: {formatTimeToEST(serviceData.time)} | Termina: {timeCalc.endTime}</span>
+              <Badge variant="outline" className="bg-blue-50">{timeCalc.total} min {language === 'es' ? 'total' : 'total'}</Badge>
+              <span className="text-sm text-gray-600">{language === 'es' ? 'Inicia' : 'Starts'}: {formatTimeToEST(serviceData.time)} | {language === 'es' ? 'Termina' : 'Ends'}: {timeCalc.endTime}</span>
             </div>
           </div>
-          <Button onClick={addSegment} style={tealStyle} className="print:hidden"><Plus className="w-4 h-4 mr-2" />Añadir Segmento</Button>
+          <Button onClick={addSegment} style={tealStyle} className="print:hidden"><Plus className="w-4 h-4 mr-2" />{language === 'es' ? 'Añadir Segmento' : 'Add Segment'}</Button>
         </div>
 
         <AnimatePresence>
@@ -401,7 +402,7 @@ export default function CustomServiceBuilder() {
           <Card className="border-dashed">
             <CardContent className="p-8 text-center text-gray-500">
               <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-              <p>No hay segmentos añadidos. Haz clic en "Añadir Segmento" para comenzar.</p>
+              <p>{language === 'es' ? 'No hay segmentos añadidos. Haz clic en "Añadir Segmento" para comenzar.' : 'No segments added. Click "Add Segment" to begin.'}</p>
             </CardContent>
           </Card>
         )}
@@ -416,13 +417,13 @@ export default function CustomServiceBuilder() {
 
       {/* Team Section */}
       <Card className="print:hidden">
-        <CardHeader><CardTitle>Equipo del Servicio</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{language === 'es' ? 'Equipo del Servicio' : 'Service Team'}</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
-          <div className="space-y-2"><Label>Coordinador(a)</Label><AutocompleteInput type="presenter" value={serviceData.coordinators?.main || ""} onChange={(e) => setServiceData(prev => ({ ...prev, coordinators: { ...prev.coordinators, main: e.target.value } }))} placeholder="Nombre del coordinador" /></div>
-          <div className="space-y-2"><Label>Ujieres</Label><AutocompleteInput type="ujieres" value={serviceData.ujieres?.main || ""} onChange={(e) => setServiceData(prev => ({ ...prev, ujieres: { ...prev.ujieres, main: e.target.value } }))} placeholder="Nombres de ujieres" /></div>
-          <div className="space-y-2"><Label>Sonido</Label><AutocompleteInput type="sound" value={serviceData.sound?.main || ""} onChange={(e) => setServiceData(prev => ({ ...prev, sound: { ...prev.sound, main: e.target.value } }))} placeholder="Equipo de sonido" /></div>
-          <div className="space-y-2"><Label>Luces/Proyección</Label><AutocompleteInput type="tech" value={serviceData.luces?.main || ""} onChange={(e) => setServiceData(prev => ({ ...prev, luces: { ...prev.luces, main: e.target.value } }))} placeholder="Equipo de luces" /></div>
-          <div className="space-y-2"><Label>Fotografía</Label><AutocompleteInput type="tech" value={serviceData.fotografia?.main || ""} onChange={(e) => setServiceData(prev => ({ ...prev, fotografia: { ...prev.fotografia, main: e.target.value } }))} placeholder="Equipo de fotografía" /></div>
+          <div className="space-y-2"><Label>{language === 'es' ? 'Coordinador(a)' : 'Coordinator'}</Label><AutocompleteInput type="presenter" value={serviceData.coordinators?.main || ""} onChange={(e) => setServiceData(prev => ({ ...prev, coordinators: { ...prev.coordinators, main: e.target.value } }))} placeholder={language === 'es' ? 'Nombre del coordinador' : 'Coordinator name'} /></div>
+          <div className="space-y-2"><Label>{language === 'es' ? 'Ujieres' : 'Ushers'}</Label><AutocompleteInput type="ujieres" value={serviceData.ujieres?.main || ""} onChange={(e) => setServiceData(prev => ({ ...prev, ujieres: { ...prev.ujieres, main: e.target.value } }))} placeholder={language === 'es' ? 'Nombres de ujieres' : 'Usher names'} /></div>
+          <div className="space-y-2"><Label>{language === 'es' ? 'Sonido' : 'Sound'}</Label><AutocompleteInput type="sound" value={serviceData.sound?.main || ""} onChange={(e) => setServiceData(prev => ({ ...prev, sound: { ...prev.sound, main: e.target.value } }))} placeholder={language === 'es' ? 'Equipo de sonido' : 'Sound team'} /></div>
+          <div className="space-y-2"><Label>{language === 'es' ? 'Luces/Proyección' : 'Lights/Projection'}</Label><AutocompleteInput type="tech" value={serviceData.luces?.main || ""} onChange={(e) => setServiceData(prev => ({ ...prev, luces: { ...prev.luces, main: e.target.value } }))} placeholder={language === 'es' ? 'Equipo de luces' : 'Lights team'} /></div>
+          <div className="space-y-2"><Label>{language === 'es' ? 'Fotografía' : 'Photography'}</Label><AutocompleteInput type="tech" value={serviceData.fotografia?.main || ""} onChange={(e) => setServiceData(prev => ({ ...prev, fotografia: { ...prev.fotografia, main: e.target.value } }))} placeholder={language === 'es' ? 'Equipo de fotografía' : 'Photography team'} /></div>
         </CardContent>
       </Card>
     </div>
