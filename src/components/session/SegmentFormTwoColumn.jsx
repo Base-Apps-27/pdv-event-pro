@@ -682,28 +682,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     }
   }, [isArtesType, formData.art_types]);
 
-  const handleAddAction = () => {
-    const newAction = {
-      label: "",
-      department: "Other",
-      timing: "before_start",
-      offset_min: 5,
-      notes: ""
-    };
-    setFormData({...formData, segment_actions: [...formData.segment_actions, newAction]});
-  };
-
-  const handleUpdateAction = (index, field, value) => {
-    const newActions = [...formData.segment_actions];
-    newActions[index] = {...newActions[index], [field]: value};
-    setFormData({...formData, segment_actions: newActions});
-  };
-
-  const handleDeleteAction = (index) => {
-    const newActions = formData.segment_actions.filter((_, i) => i !== index);
-    setFormData({...formData, segment_actions: newActions});
-  };
-
   const scrollToSection = (sectionId) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
