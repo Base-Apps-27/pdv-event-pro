@@ -421,7 +421,9 @@ export default function WeeklyServiceManager() {
     });
   }, [selectedAnnouncements]);
 
-  // Central auto-save
+  // Central auto-save (Phase 5: with stale guard for manual-save scenarios)
+  // Auto-save does NOT check staleness (would be disruptive).
+  // Staleness is only checked on the manual save path; auto-save is last-write-wins by design.
   useEffect(() => {
     if (!lastSavedData || !serviceData) return;
     if (JSON.stringify(serviceData) === JSON.stringify(lastSavedData)) return;
