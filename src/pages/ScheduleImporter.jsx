@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { useLanguage } from "@/components/utils/i18n";
 import { UploadCloud, FileText, ArrowRight, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
 import ScheduleReview from "@/components/importer/ScheduleReview";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function ScheduleImporter() {
+  const { language } = useLanguage();
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
   
   const [step, setStep] = useState("upload"); // upload, processing, review, success, error
@@ -33,30 +35,30 @@ export default function ScheduleImporter() {
     
     // Size check (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
-        toast.error("El archivo es demasiado grande (Máx 10MB)");
+        toast.error(language === 'es' ? "El archivo es demasiado grande (Máx 10MB)" : "File is too large (Max 10MB)");
         return;
     }
 
     setStep("processing");
     setIsLoading(true);
     setErrorMessage("");
-    setProcessingStatus("Iniciando proceso...");
+    setProcessingStatus(language === 'es' ? "Iniciando proceso..." : "Starting process...");
 
     try {
       // 1. Upload File
-      setProcessingStatus("Subiendo archivo al servidor...");
+      setProcessingStatus(language === 'es' ? "Subiendo archivo al servidor..." : "Uploading file...");
       let fileUrl = null;
       try {
           const uploadRes = await base44.integrations.Core.UploadFile({ file });
           fileUrl = uploadRes.file_url;
       } catch (uploadError) {
-          throw new Error(`Error al subir archivo: ${uploadError.message || 'Falló la subida'}`);
+          throw new Error(language === 'es' ? `Error al subir archivo: ${uploadError.message || 'Falló la subida'}` : `Upload error: ${uploadError.message || 'Upload failed'}`);
       }
 
-      if (!fileUrl) throw new Error("No se recibió la URL del archivo.");
+      if (!fileUrl) throw new Error(language === 'es' ? "No se recibió la URL del archivo." : "No file URL received.");
 
       // 2. Invoke LLM Directly (Stateless - No Agents SDK which was causing crashes)
-      setProcessingStatus("Analizando imagen con IA...");
+      setProcessingStatus(language === 'es' ? "Analizando imagen con IA..." : "Analyzing image with AI...");
       
       const schemaPrompt = `
 You are an AI specialized in extracting church event schedule data from images and PDFs.
@@ -445,7 +447,7 @@ Example structure:
         }
       });
 
-      setProcessingStatus("Procesando respuesta...");
+      setProcessingStatus(language === 'es' ? "Procesando respuesta..." : "Processing response...");
 
       // 3. Parse Response
       let parsedData = null;
@@ -465,7 +467,7 @@ Example structure:
 
       // Validate we got some data
       if (!parsedData) {
-         throw new Error("La IA no devolvió ningún dato. Por favor, intenta con una imagen más clara.");
+         throw new Error(language === 'es' ? "La IA no devolvió ningún dato. Por favor, intenta con una imagen más clara." : "AI returned no data. Please try with a clearer image.");
       }
 
       // Check if AI could read the image
@@ -473,7 +475,9 @@ Example structure:
       const hasSegments = parsedData.segments && parsedData.segments.length > 0;
       
       if (!hasEventData && !hasSegments) {
-         throw new Error("No se pudo extraer información de la imagen. Verifica que:\n• La imagen sea clara y legible\n• El texto sea visible\n• El archivo no esté corrupto");
+         throw new Error(language === 'es' 
+           ? "No se pudo extraer información de la imagen. Verifica que:\n• La imagen sea clara y legible\n• El texto sea visible\n• El archivo no esté corrupto"
+           : "Could not extract information from the image. Verify that:\n• The image is clear and readable\n• Text is visible\n• The file is not corrupt");
       }
 
       // Ensure type is set
@@ -490,7 +494,7 @@ Example structure:
 
       setReviewData(parsedData);
       setStep("review");
-      toast.success("Datos extraídos correctamente");
+      toast.success(language === 'es' ? "Datos extraídos correctamente" : "Data extracted successfully");
 
     } catch (error) {
       console.error("Error detailed:", error);
@@ -503,7 +507,7 @@ Example structure:
   // Step 2: Handle Confirmation & DB Creation
   const handleConfirmImport = async (finalData) => {
     setIsLoading(true);
-    setProcessingStatus("Guardando en base de datos...");
+    setProcessingStatus(language === 'es' ? "Guardando en base de datos..." : "Saving to database...");
     
     try {
         let eventId = finalData.existingEventId;
@@ -522,7 +526,7 @@ Example structure:
             eventId = newEvent.id;
         }
 
-        if (!eventId) throw new Error("No Event ID available");
+        if (!eventId) throw new Error(language === 'es' ? "No se encontró el ID del evento" : "No Event ID available");
 
         // 2. Create Session
         const newSession = await base44.entities.Session.create({
@@ -590,11 +594,11 @@ Example structure:
 
         setStep("success");
         queryClient.invalidateQueries(['events']);
-        toast.success("Importación completada exitosamente");
+        toast.success(language === 'es' ? "Importación completada exitosamente" : "Import completed successfully");
 
     } catch (error) {
         console.error("Import error:", error);
-        toast.error("Error al guardar los datos: " + error.message);
+        toast.error((language === 'es' ? "Error al guardar los datos: " : "Error saving data: ") + error.message);
         setIsLoading(false);
     }
   };
@@ -613,10 +617,12 @@ Example structure:
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase flex items-center justify-center gap-3">
           <Sparkles className="w-8 h-8" style={{ color: '#1F8A70' }} />
-          Importador Inteligente de Cronogramas
+          {language === 'es' ? 'Importador Inteligente de Cronogramas' : 'Smart Schedule Importer'}
         </h1>
         <p className="text-gray-500 mt-2 max-w-2xl mx-auto">
-          Transforma tus cronogramas en papel o PDF en eventos digitales estructurados en segundos.
+          {language === 'es' 
+            ? 'Transforma tus cronogramas en papel o PDF en eventos digitales estructurados en segundos.'
+            : 'Transform your paper or PDF schedules into structured digital events in seconds.'}
         </p>
       </div>
 
@@ -630,10 +636,12 @@ Example structure:
              <div className="h-20 w-20 bg-blue-50 rounded-full flex items-center justify-center mb-6">
                 <UploadCloud className="w-10 h-10 text-blue-500" />
              </div>
-             <h3 className="text-xl font-bold text-gray-900 mb-2">Sube tu archivo aquí</h3>
+             <h3 className="text-xl font-bold text-gray-900 mb-2">
+               {language === 'es' ? 'Sube tu archivo aquí' : 'Upload your file here'}
+             </h3>
              <p className="text-gray-500 mb-8 text-center">
-               Arrastra y suelta o haz clic para seleccionar.<br/>
-               Soporta imágenes (JPG, PNG) y documentos PDF.
+               {language === 'es' ? 'Arrastra y suelta o haz clic para seleccionar.' : 'Drag and drop or click to select.'}<br/>
+               {language === 'es' ? 'Soporta imágenes (JPG, PNG) y documentos PDF.' : 'Supports images (JPG, PNG) and PDF documents.'}
              </p>
              
              <input 
@@ -649,13 +657,13 @@ Example structure:
                   <FileText className="w-6 h-6 text-blue-600" />
                   <div className="flex-1 truncate font-medium text-blue-900">{file.name}</div>
                   <Button size="sm" onClick={(e) => { e.stopPropagation(); handleProcessFile(); }} className="bg-blue-600 hover:bg-blue-700">
-                    Procesar <ArrowRight className="w-4 h-4 ml-2" />
+                    {language === 'es' ? 'Procesar' : 'Process'} <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                </div>
              ) : (
                <Button variant="outline" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-                 Seleccionar Archivo
-               </Button>
+                   {language === 'es' ? 'Seleccionar Archivo' : 'Select File'}
+                 </Button>
              )}
           </div>
         </Card>
@@ -671,7 +679,7 @@ Example structure:
                     <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 animate-pulse" style={{ color: '#1F8A70' }} />
                 </div>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Procesando Cronograma</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{language === 'es' ? 'Procesando Cronograma' : 'Processing Schedule'}</h3>
             <p className="text-gray-500 animate-pulse">{processingStatus}</p>
         </Card>
       )}
@@ -682,10 +690,10 @@ Example structure:
             <div className="h-20 w-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <AlertCircle className="w-10 h-10 text-red-500" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Hubo un problema</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{language === 'es' ? 'Hubo un problema' : 'Something went wrong'}</h3>
             <p className="text-red-500 mb-6 text-sm bg-red-50 p-3 rounded-md font-mono">{errorMessage}</p>
             <Button onClick={() => setStep("upload")} variant="outline" className="w-full">
-                Intentar de Nuevo
+                {language === 'es' ? 'Intentar de Nuevo' : 'Try Again'}
             </Button>
         </Card>
       )}
@@ -707,16 +715,18 @@ Example structure:
             <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-10 h-10 text-green-600" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">¡Importación Exitosa!</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">{language === 'es' ? '¡Importación Exitosa!' : 'Import Successful!'}</h3>
             <p className="text-gray-500 mb-8">
-                El evento y la sesión han sido creados correctamente en la base de datos.
+                {language === 'es' 
+                  ? 'El evento y la sesión han sido creados correctamente en la base de datos.'
+                  : 'The event and session have been successfully created in the database.'}
             </p>
             <div className="flex flex-col gap-3">
                 <Button onClick={resetImporter} className="w-full bg-gray-900 text-white">
-                    Importar Otro
+                    {language === 'es' ? 'Importar Otro' : 'Import Another'}
                 </Button>
                 <Button variant="outline" onClick={() => window.location.href = '/events'} className="w-full">
-                    Ver en Eventos
+                    {language === 'es' ? 'Ver en Eventos' : 'View in Events'}
                 </Button>
             </div>
         </Card>

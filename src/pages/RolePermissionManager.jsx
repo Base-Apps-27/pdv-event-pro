@@ -30,9 +30,11 @@ export default function RolePermissionManager() {
     return acc;
   }, {});
 
+  // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: roleTemplates = [] } = useQuery({
     queryKey: ['roleTemplates'],
     queryFn: () => base44.entities.RoleTemplate.list(),
+    staleTime: 10 * 60 * 1000, // 10 minutes (role templates change rarely)
   });
 
   const createRoleMutation = useMutation({

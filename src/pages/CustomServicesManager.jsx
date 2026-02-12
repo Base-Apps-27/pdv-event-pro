@@ -30,8 +30,10 @@ export default function CustomServicesManager() {
   };
 
   // Fetch all custom services (those with 'segments' array populated)
+  // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: allServices = [], isLoading } = useQuery({
     queryKey: ['customServices'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
     queryFn: async () => {
       const services = await base44.entities.Service.filter({ status: 'active' }, '-date');
       // Filter to only custom services (those with segments array and not WeeklyServiceManager format)
