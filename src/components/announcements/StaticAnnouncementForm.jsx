@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { List, AlertTriangle, Loader2, Wand2 } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
+import { sanitizeHtml } from "@/components/utils/sanitizeHtml";
 
 // Character limits - different for static vs dynamic
 const STATIC_LIMITS = { title: 60, body: 420, cue: 200, date: 50 };
@@ -27,10 +28,11 @@ function RichTextArea({ value, onChange, placeholder, maxLength, rows = 4, id })
     setCharCount(getTextLength(value));
   }, [value]);
   
+  // P0-3: Sanitize before assigning to contentEditable innerHTML (2026-02-12)
   // Sync value to editor on mount and when value changes externally
   useEffect(() => {
     if (editorRef.current && !isFocused) {
-      editorRef.current.innerHTML = value || '';
+      editorRef.current.innerHTML = sanitizeHtml(value || '');
     }
   }, [value, isFocused]);
   

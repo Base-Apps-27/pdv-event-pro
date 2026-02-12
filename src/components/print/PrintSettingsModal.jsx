@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { formatDate as formatDateFn, addMinutes, format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { getSegmentData } from "@/components/utils/segmentDataUtils";
+import { sanitizeHtmlForPrint } from "@/components/utils/sanitizeHtml";
 
 const DEFAULT_SETTINGS = {
   globalScale: 1.0,
@@ -190,10 +191,8 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
     overflow: language === "es" ? "Desborda" : "Overflow",
   };
 
-  const sanitize = (html) => {
-    if (!html) return '';
-    return html.replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
-  };
+  // P0-1: Replaced regex sanitizer with DOMPurify-based sanitizeHtmlForPrint (2026-02-12)
+  const sanitize = sanitizeHtmlForPrint;
 
   const selectedDateFormatted = serviceData?.date 
     ? formatDateFn(new Date(serviceData.date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })

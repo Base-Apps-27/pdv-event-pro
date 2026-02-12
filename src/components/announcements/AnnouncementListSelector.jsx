@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { sanitizeHtml } from "@/components/utils/sanitizeHtml";
 
 export default function AnnouncementListSelector({ 
   selectedAnnouncementIds = [], 
@@ -128,14 +129,14 @@ export default function AnnouncementListSelector({
                   </div>
                   <div 
                     className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap mb-2"
-                    dangerouslySetInnerHTML={{ __html: (ann.content || '').replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '') }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(ann.content) }}
                   />
                   {ann.instructions && (
                     <div className="bg-gray-100 border border-gray-300 rounded p-2 mt-2">
                       <p className="text-[10px] text-gray-600 font-semibold mb-1">📋 Instrucciones (solo presentador):</p>
                       <div 
                         className="text-[10px] text-gray-600 italic whitespace-pre-wrap"
-                        dangerouslySetInnerHTML={{ __html: (ann.instructions || '').replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '') }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(ann.instructions) }}
                       />
                     </div>
                   )}
@@ -183,14 +184,14 @@ export default function AnnouncementListSelector({
                   </div>
                   <div 
                     className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap mb-2"
-                    dangerouslySetInnerHTML={{ __html: ((ann.isEvent ? ann.announcement_blurb || ann.description : ann.content) || '').replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '') }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(ann.isEvent ? ann.announcement_blurb || ann.description : ann.content) }}
                   />
                   {ann.instructions && (
                     <div className="bg-gray-100 border border-gray-300 rounded p-2 mt-2">
                       <p className="text-[10px] text-gray-600 font-semibold mb-1">📋 Instrucciones (solo presentador):</p>
                       <div 
                         className="text-[10px] text-gray-600 italic whitespace-pre-wrap"
-                        dangerouslySetInnerHTML={{ __html: (ann.instructions || '').replace(/<(?!\/?(b|i|strong|em|br)\b)[^>]*>/gi, '') }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(ann.instructions) }}
                       />
                     </div>
                   )}
