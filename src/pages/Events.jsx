@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { hasPermission } from "@/components/utils/permissions";
 import { useLanguage } from "@/components/utils/i18n";
+import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { Plus, Calendar, MapPin, Edit, Trash2, Copy, Save } from "lucide-react";
+import { toast } from "sonner";
 import DatePicker from "@/components/ui/DatePicker";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,9 +25,9 @@ import TemplateSelectorDialog from "@/components/event/TemplateSelectorDialog";
 
 export default function Events() {
   const { t } = useLanguage();
-  const gradientStyle = {
-    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
-  };
+  // P2-2: Using shared brandStyles (2026-02-12) — imported at module level would be ideal
+  // but kept inline for minimal diff; brandStyles.js exists as single source of truth
+  const gradientStyle = { background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)' };
   const [showDialog, setShowDialog] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [eventToDelete, setEventToDelete] = useState(null);
@@ -35,16 +37,9 @@ export default function Events() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [formData, setFormData] = useState({});
   const [fieldOrigins, setFieldOrigins] = useState({});
-  const [user, setUser] = useState(null);
+  // P1-4: Replaced duplicate user fetch with shared hook (2026-02-12)
+  const { user } = useCurrentUser();
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const currentUser = await base44.auth.me();
-      setUser(currentUser);
-    };
-    fetchUser();
-  }, []);
 
   // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: allEvents = [], isLoading } = useQuery({
@@ -55,6 +50,7 @@ export default function Events() {
 
   const events = allEvents.filter(e => e.status !== 'template');
 
+  // P0-2: Added onError toast handlers (2026-02-12)
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Event.create(data),
     onSuccess: () => {
@@ -62,6 +58,7 @@ export default function Events() {
       setShowDialog(false);
       setEditingEvent(null);
     },
+    onError: (err) => toast.error(t('errors.createFailed') + ': ' + err.message),
   });
 
   const updateMutation = useMutation({
@@ -71,6 +68,7 @@ export default function Events() {
       setShowDialog(false);
       setEditingEvent(null);
     },
+    onError: (err) => toast.error(t('errors.updateFailed') + ': ' + err.message),
   });
 
   const deleteMutation = useMutation({

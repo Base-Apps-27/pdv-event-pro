@@ -19,6 +19,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { hasPermission } from "@/components/utils/permissions";
+import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -53,15 +54,8 @@ export default function WeeklyServiceManager() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
 
-  // ── Auth ──
-  const [user, setUser] = useState(null);
-  useEffect(() => {
-    const fetchUser = async () => {
-      const currentUser = await base44.auth.me();
-      setUser(currentUser);
-    };
-    fetchUser();
-  }, []);
+  // P1-4: Replaced duplicate user fetch with shared hook (2026-02-12)
+  const { user } = useCurrentUser();
 
   // ── Core state ──
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -191,6 +185,7 @@ export default function WeeklyServiceManager() {
     }
   });
 
+  // P0-2: Added onError toast handlers (2026-02-12)
   const createAnnouncementMutation = useMutation({
     mutationFn: (data) => base44.entities.AnnouncementItem.create(data),
     onSuccess: () => {
@@ -200,6 +195,7 @@ export default function WeeklyServiceManager() {
       setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, has_video: false, date_of_occurrence: "" });
       setEditingAnnouncement(null);
     },
+    onError: (err) => toast.error('Error al crear anuncio: ' + err.message),
   });
 
   const updateAnnouncementMutation = useMutation({
@@ -211,6 +207,7 @@ export default function WeeklyServiceManager() {
       setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, has_video: false, date_of_occurrence: "" });
       setEditingAnnouncement(null);
     },
+    onError: (err) => toast.error('Error al actualizar anuncio: ' + err.message),
   });
 
   const deleteAnnouncementMutation = useMutation({

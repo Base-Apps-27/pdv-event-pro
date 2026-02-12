@@ -6,6 +6,7 @@ import { createPageUrl } from "@/utils";
 import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText, History, Link as LinkIcon, MoreHorizontal, Tv, Radio } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,20 +37,8 @@ export default function EventDetail() {
   const [wasValid, setWasValid] = React.useState(false);
   const [showEditEvent, setShowEditEvent] = useState(false);
   const [showEditHistory, setShowEditHistory] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-
-  // Fetch current user for logging
-  React.useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const user = await base44.auth.me();
-        setCurrentUser(user);
-      } catch (e) {
-        console.error('Failed to fetch user:', e);
-      }
-    };
-    fetchUser();
-  }, []);
+  // P1-4: Replaced duplicate user fetch with shared hook (2026-02-12)
+  const { user: currentUser } = useCurrentUser();
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['event', eventId],

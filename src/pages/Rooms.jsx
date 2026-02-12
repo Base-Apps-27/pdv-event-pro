@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Plus, Edit, Trash2, MapPin, Video, Volume2, Radio, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ export default function Rooms() {
     staleTime: 10 * 60 * 1000, // 10 minutes (rooms change rarely)
   });
 
+  // P0-2: Added onError toast handlers (2026-02-12)
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Room.create(data),
     onSuccess: () => {
@@ -35,6 +37,7 @@ export default function Rooms() {
       setShowDialog(false);
       setEditingRoom(null);
     },
+    onError: (err) => toast.error(t('errors.createFailed') + ': ' + err.message),
   });
 
   const updateMutation = useMutation({
@@ -44,6 +47,7 @@ export default function Rooms() {
       setShowDialog(false);
       setEditingRoom(null);
     },
+    onError: (err) => toast.error(t('errors.updateFailed') + ': ' + err.message),
   });
 
   const deleteMutation = useMutation({
@@ -51,6 +55,7 @@ export default function Rooms() {
     onSuccess: () => {
       queryClient.invalidateQueries(['rooms']);
     },
+    onError: (err) => toast.error(t('errors.deleteFailed') + ': ' + err.message),
   });
 
   const handleSubmit = (e) => {

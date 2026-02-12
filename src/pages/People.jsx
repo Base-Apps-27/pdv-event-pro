@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { createPageUrl } from "@/utils";
 import { hasPermission } from "@/components/utils/permissions";
 import { toast } from "sonner";
@@ -27,16 +28,9 @@ export default function People() {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const [user, setUser] = useState(null);
+  // P1-4: Replaced duplicate user fetch with shared hook (2026-02-12)
+  const { user } = useCurrentUser();
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const currentUser = await base44.auth.me();
-      setUser(currentUser);
-    };
-    fetchUser();
-  }, []);
 
   // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: people = [], isLoading } = useQuery({

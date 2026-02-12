@@ -39,6 +39,7 @@ export default function UserManagement() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  // P0-2: Added onError toast handler (2026-02-12)
   const updateUserMutation = useMutation({
     mutationFn: ({ userId, data }) => base44.entities.User.update(userId, data),
     onSuccess: () => {
@@ -48,6 +49,7 @@ export default function UserManagement() {
       setCustomPermissions([]);
       setRevokedPermissions([]);
     },
+    onError: (err) => toast.error(language === 'es' ? 'Error al actualizar usuario: ' + err.message : 'Failed to update user: ' + err.message),
   });
 
   // Bulk update mutation

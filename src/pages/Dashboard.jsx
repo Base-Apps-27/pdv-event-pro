@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -36,6 +36,17 @@ export default function Dashboard() {
     queryFn: () => base44.entities.Session.list(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // P1-2: Pre-compute session counts per event (was computed twice per card in render) (2026-02-12)
+  const sessionCountByEvent = useMemo(() => {
+    const map = {};
+    sessions.forEach(s => {
+      if (s.event_id) {
+        map[s.event_id] = (map[s.event_id] || 0) + 1;
+      }
+    });
+    return map;
+  }, [sessions]);
 
   const isLoading = eventsLoading || sessionsLoading;
 
@@ -228,11 +239,11 @@ export default function Dashboard() {
                           <Badge className={statusColors[event.status] || "bg-gray-500"}>
                             {statusLabels[event.status]}
                           </Badge>
-                          {sessions.filter(s => s.event_id === event.id).length > 0 && (
+                          {(sessionCountByEvent[event.id] || 0) > 0 && (
                             <div className="mt-3">
                               <p className="text-xs text-gray-600">{t('dashboard.events.sessions')}</p>
                               <p className="text-xl text-gray-900 font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>
-                                {sessions.filter(s => s.event_id === event.id).length}
+                                {sessionCountByEvent[event.id]}
                               </p>
                             </div>
                           )}

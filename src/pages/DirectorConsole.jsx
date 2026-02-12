@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
@@ -23,6 +23,8 @@ import {
 import { toast } from 'sonner';
 import { useLanguage } from '@/components/utils/i18n';
 import { hasPermission } from '@/components/utils/permissions';
+import { useCurrentUser } from '@/components/utils/useCurrentUser';
+import { useClockTick } from '@/components/utils/useClockTick';
 
 import DirectorHeader from '@/components/director/DirectorHeader';
 import DirectorTimeline from '@/components/director/DirectorTimeline';
@@ -71,42 +73,18 @@ export default function DirectorConsole() {
   const { t, language } = useLanguage();
   const queryClient = useQueryClient();
   
-  // Parse session ID from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const sessionId = urlParams.get('sessionId');
+  // P2-3: Memoized URL params (2026-02-12)
+  const sessionId = useMemo(() => new URLSearchParams(window.location.search).get('sessionId'), []);
   
-  // Current time state (updates every second)
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // P1-1: Isolated clock tick to avoid full-page re-renders (2026-02-12)
+  const currentTime = useClockTick(1000);
   
-  // User state
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userLoading, setUserLoading] = useState(true);
+  // P1-4: Consolidated user fetch (2026-02-12)
+  const { user: currentUser, isLoading: userLoading } = useCurrentUser();
   
   // Chat state (lifted for StickyOpsDeck + LiveOperationsChat integration)
-  // ARCHITECTURE: Same pattern as EventProgramView - single chat state shared between components
   const [chatOpen, setChatOpen] = useState(false);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
-  
-  // Update current time every second
-  useEffect(() => {
-    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(interval);
-  }, []);
-  
-  // Fetch current user
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const user = await base44.auth.me();
-        setCurrentUser(user);
-      } catch (err) {
-        console.error('Failed to fetch user:', err);
-      } finally {
-        setUserLoading(false);
-      }
-    };
-    fetchUser();
-  }, []);
   
   // Fetch session data
   const { data: session, isLoading: sessionLoading, refetch: refetchSession } = useQuery({
@@ -373,7 +351,9 @@ export default function DirectorConsole() {
           sessionDate={session?.date}
           currentTime={currentTime}
           onScrollToSegment={(seg) => {
-            // Scroll to segment in Director Timeline (if element exists)
+            // P3-5: Still using getElementById here because segment IDs are dynamic
+            // and created by DirectorTimeline — a ref map would require prop drilling.
+            // Low-risk: no React reconciliation issue, just a scroll convenience.
             const el = document.getElementById(`director-segment-${seg.id}`);
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }}

@@ -49,15 +49,20 @@
  */
 import AnnouncementsReport from './pages/AnnouncementsReport';
 import BuildMemory from './pages/BuildMemory';
+import Calendar from './pages/Calendar';
 import CustomServiceBuilder from './pages/CustomServiceBuilder';
 import CustomServicesManager from './pages/CustomServicesManager';
 import Dashboard from './pages/Dashboard';
+import DataSeeder from './pages/DataSeeder';
+import DetailedProgram from './pages/DetailedProgram';
 import DirectorConsole from './pages/DirectorConsole';
 import EventDetail from './pages/EventDetail';
 import Events from './pages/Events';
+import GeneralProgram from './pages/GeneralProgram';
 import Home from './pages/Home';
 import MessageProcessing from './pages/MessageProcessing';
 import People from './pages/People';
+import ProjectionView from './pages/ProjectionView';
 import PublicCountdownDisplay from './pages/PublicCountdownDisplay';
 import PublicProgramView from './pages/PublicProgramView';
 import Reports from './pages/Reports';
@@ -65,10 +70,18 @@ import RolePermissionManager from './pages/RolePermissionManager';
 import Rooms from './pages/Rooms';
 import ScheduleImporter from './pages/ScheduleImporter';
 import SchemaGuide from './pages/SchemaGuide';
+import ServiceAnnouncementBuilder from './pages/ServiceAnnouncementBuilder';
+import ServiceBlueprints from './pages/ServiceBlueprints';
+import ServiceDetail from './pages/ServiceDetail';
+import ServiceQuickEditor from './pages/ServiceQuickEditor';
+import Services from './pages/Services';
 import SessionDetail from './pages/SessionDetail';
+import SoundView from './pages/SoundView';
+import Teams from './pages/Teams';
 import Templates from './pages/Templates';
 import TestDashboard from './pages/TestDashboard';
 import UserManagement from './pages/UserManagement';
+import UshersView from './pages/UshersView';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
 import __Layout from './Layout.jsx';
@@ -77,15 +90,20 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "AnnouncementsReport": AnnouncementsReport,
     "BuildMemory": BuildMemory,
+    "Calendar": Calendar,
     "CustomServiceBuilder": CustomServiceBuilder,
     "CustomServicesManager": CustomServicesManager,
     "Dashboard": Dashboard,
+    "DataSeeder": DataSeeder,
+    "DetailedProgram": DetailedProgram,
     "DirectorConsole": DirectorConsole,
     "EventDetail": EventDetail,
     "Events": Events,
+    "GeneralProgram": GeneralProgram,
     "Home": Home,
     "MessageProcessing": MessageProcessing,
     "People": People,
+    "ProjectionView": ProjectionView,
     "PublicCountdownDisplay": PublicCountdownDisplay,
     "PublicProgramView": PublicProgramView,
     "Reports": Reports,
@@ -93,10 +111,18 @@ export const PAGES = {
     "Rooms": Rooms,
     "ScheduleImporter": ScheduleImporter,
     "SchemaGuide": SchemaGuide,
+    "ServiceAnnouncementBuilder": ServiceAnnouncementBuilder,
+    "ServiceBlueprints": ServiceBlueprints,
+    "ServiceDetail": ServiceDetail,
+    "ServiceQuickEditor": ServiceQuickEditor,
+    "Services": Services,
     "SessionDetail": SessionDetail,
+    "SoundView": SoundView,
+    "Teams": Teams,
     "Templates": Templates,
     "TestDashboard": TestDashboard,
     "UserManagement": UserManagement,
+    "UshersView": UshersView,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
 }
