@@ -2678,7 +2678,7 @@ Return ONLY valid JSON:
         <div className="print-footer">
           ¡Atrévete a cambiar!
         </div>
-      </div>
+      </div>}
 
       {/* Screen UI */}
       <div className="flex justify-between items-center print:hidden">
