@@ -2186,11 +2186,15 @@ Return ONLY valid JSON:
             {existingData?.updated_date && (
               <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
                 Última actualización: {new Date(existingData.updated_date).toLocaleString('es-ES', {
-                  <div>
-                    <span className="print-segment-time">{segmentTime}</span>
-                    <span className="print-segment-title">{segment.title}</span>
-                    {segment.duration && <span className="print-duration"> ({segment.duration} mins)</span>}
-                  </div>
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })}
+              </Badge>
+            )}
 
                   {segment.data?.leader && (
                     <div className="print-segment-detail">
