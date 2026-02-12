@@ -2195,8 +2195,24 @@ Return ONLY valid JSON:
                 })}
               </Badge>
             )}
-
-                  {segment.data?.leader && (
+            {hasUnsavedChanges && (
+              <Badge className="text-xs bg-yellow-500 text-white animate-pulse">
+                {t('btn.saving')}
+              </Badge>
+            )}
+            {lastSaveTimestamp && !hasUnsavedChanges && (
+              <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                ✓ Guardado a las {new Date(lastSaveTimestamp).toLocaleTimeString('es-ES', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })}
+              </Badge>
+            )}
+          </div>
+        </div>
+        <div className="flex gap-3 items-center">
+          {savingField && (
                     <div className="print-segment-detail">
                       Dirige: <span className="print-name-blue">{segment.data.leader.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '')}</span>
                     </div>
