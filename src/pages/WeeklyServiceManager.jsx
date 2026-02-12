@@ -2184,7 +2184,8 @@ Return ONLY valid JSON:
           {/* Data Integrity Indicators */}
           <div className="flex items-center gap-3 mt-2">
             {existingData?.updated_date && (
-                if (serviceData["11:30am"][i].type !== 'break' && serviceData["11:30am"][i].type !== 'ministry') {
+              <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                Última actualización: {new Date(existingData.updated_date).toLocaleString('es-ES', {
                   currentTime = addMinutes(currentTime, serviceData["11:30am"][i].duration || 0);
                 }
               }
