@@ -17,7 +17,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { Clock, Plus, Trash2, Sparkles, ArrowUp, ArrowDown, ChevronUp, ChevronDown, BookOpen } from "lucide-react";
 
-export default function SegmentTimelineCard({
+// Phase 7: Memoized — pure display component, re-renders only on prop changes
+const SegmentTimelineCard = React.memo(function SegmentTimelineCard({
   segment,
   idx,
   isExpanded,
