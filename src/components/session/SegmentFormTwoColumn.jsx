@@ -659,18 +659,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
     (!needsPresenter || presenterOptionalForBreak || hasValueOrPlaceholder(formData.presenter)) &&
     (!requiresSala || Boolean(formData.room_id));
   
-  const hasDrama = formData.art_types?.includes("DRAMA");
-  const hasDance = formData.art_types?.includes("DANCE");
-  const hasArtVideo = formData.art_types?.includes("VIDEO");
-  const hasOtherArt = formData.art_types?.includes("OTHER");
-
-  // Toggle helper for Artes multiselect
-  const toggleArtType = (val) => {
-    const set = new Set(formData.art_types || []);
-    if (set.has(val)) set.delete(val); else set.add(val);
-    setFormData(prev => ({ ...prev, art_types: Array.from(set) }));
-  };
-
   // Returns the dynamic label for the presenter field based on type and language
   const getPresenterLabel = () => {
     if (isPlenariaType) return language === 'es' ? 'Predicador' : 'Preacher';
