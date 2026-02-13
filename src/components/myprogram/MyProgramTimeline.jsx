@@ -9,6 +9,7 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { useLanguage } from '@/components/utils/i18n';
 import MyProgramSegmentCard from './MyProgramSegmentCard';
+import PostSessionBanner from './PostSessionBanner';
 
 function parseTimeToMinutes(timeStr) {
   if (!timeStr || typeof timeStr !== 'string') return null;
@@ -81,6 +82,12 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
     });
   }, [filtered, nowMinutes, isToday]);
 
+  // Check if session is fully finished (all segments done)
+  const isSessionFinished = useMemo(() => {
+    if (segmentsWithStatus.length === 0) return false;
+    return segmentsWithStatus.every(s => s._status === 'done');
+  }, [segmentsWithStatus]);
+
   // Auto-scroll to "now" or "next" on first render
   useEffect(() => {
     if (!hasScrolled.current && nowRef.current) {
@@ -110,7 +117,7 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
         <div
           key={seg.id}
           ref={seg._status === 'now' ? nowRef : undefined}
-          className="relative mb-6 last:mb-0"
+          className="relative mb-6"
         >
           {/* Timeline Dot */}
           <div className={`
@@ -137,6 +144,9 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
           />
         </div>
       ))}
+        
+        {/* Post-Session Banner */}
+        <PostSessionBanner isFinished={isSessionFinished} />
       </div>
     </div>
   );
