@@ -23,20 +23,22 @@ Deno.serve(async (req) => {
             today.setHours(0,0,0,0);
             
             // Sort ASCENDING so 'find' logic picks the earliest upcoming item
+            // Events: Visible from 4 days before (Date-4) until 7 days after
             const relevantEvents = allEvents.filter(e => {
                 if (e.status !== 'confirmed' && e.status !== 'in_progress') return false;
                 if (!e.start_date) return false;
                 const start = new Date(e.start_date);
                 const diffDays = (start - today) / (1000 * 60 * 60 * 24);
-                return diffDays > -7 && diffDays <= 7;
+                return diffDays > -7 && diffDays <= 4; 
             }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
+            // Services: Visible from 1 day before (Date-1) until 2 days after
             const relevantServices = allServices.filter(s => {
                  if (s.status !== 'active') return false;
                  if (!s.date || s.origin === 'blueprint') return false;
                  const sDate = new Date(s.date);
                  const diffDays = (sDate - today) / (1000 * 60 * 60 * 24);
-                 return diffDays > -2 && diffDays < 14;
+                 return diffDays > -2 && diffDays <= 1;
             }).sort((a, b) => new Date(a.date) - new Date(b.date));
 
             optionsData = { events: relevantEvents, services: relevantServices };
