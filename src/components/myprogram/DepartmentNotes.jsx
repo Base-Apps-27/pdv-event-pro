@@ -19,7 +19,7 @@ const DEPT_FIELD_MAP = {
   stage_decor: ['stage_decor_notes'],
   hospitality: ['ushers_notes'], // Often shared, or rely on actions
   coordination: ['prep_instructions', 'other_notes'],
-  livestream: ['livestream_notes'],
+  livestream: ['livestream_notes', 'projection_notes'],
 };
 
 // Updated Colors - Projection is now distinct (Indigo)
