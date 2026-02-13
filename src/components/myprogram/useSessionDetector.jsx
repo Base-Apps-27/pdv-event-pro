@@ -79,9 +79,13 @@ export default function useSessionDetector() {
     
     const validNextEvents = events.filter(e => e.start_date > todayStr && e.start_date <= fourStr);
     validNextEvents.forEach(e => {
+        // Events don't strictly have a single "start time" field in the list object usually, 
+        // but if they do, we use it. Default to end of day priority if no time (events usually span days).
+        // Actually, events usually start early. Let's treat them as 00:00 if undefined.
         candidates.push({
             type: 'event',
             date: e.start_date,
+            time: '00:00', 
             item: e
         });
     });
@@ -93,18 +97,23 @@ export default function useSessionDetector() {
 
     const validNextServices = services.filter(s => s.date > todayStr && s.date <= oneStr);
     validNextServices.forEach(s => {
+        // Services usually have a 'time' field (e.g. "10:00" or "19:30")
         candidates.push({
             type: 'service',
             date: s.date,
+            time: s.time || '00:00',
             item: s
         });
     });
 
-    // 3. Sort unified list by date ASC to find the absolute nearest
+    // 3. Sort unified list by Date ASC, then Time ASC to find the absolute nearest
     candidates.sort((a, b) => {
         if (a.date < b.date) return -1;
         if (a.date > b.date) return 1;
-        return 0;
+        // Same date: compare time
+        const timeA = a.time || '00:00';
+        const timeB = b.time || '00:00';
+        return timeA.localeCompare(timeB);
     });
 
     const winner = candidates[0];
