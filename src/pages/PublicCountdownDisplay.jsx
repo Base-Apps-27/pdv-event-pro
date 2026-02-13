@@ -305,17 +305,14 @@ export default function PublicCountdownDisplay() {
       <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
 
       {/* Header */}
-      <div className="w-full flex items-center justify-between px-6 py-4 z-20 relative mb-4">
-        {/* Left Spacer */}
-        <div className="flex-shrink-0 w-[300px]" />
-
-        <div className="flex-1 text-center px-4 min-w-0">
-          <h1 className={`text-3xl md:text-5xl font-black uppercase tracking-tight ${gradientText} drop-shadow-sm leading-tight`}>
+      <div className="w-full flex items-center justify-between px-4 py-3 z-20 relative mb-2">
+        <div className="flex-1 text-center min-w-0">
+          <h1 className={`text-2xl md:text-4xl font-black uppercase tracking-tight ${gradientText} drop-shadow-sm leading-tight`}>
             {service.name}
           </h1>
         </div>
-        <div className="flex-shrink-0 w-[300px] flex justify-end">
-          <div className="text-2xl md:text-4xl text-slate-800 font-mono font-bold tracking-tight bg-white/90 backdrop-blur-md px-5 py-2 rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex-shrink-0 ml-4">
+          <div className="text-xl md:text-3xl text-slate-800 font-mono font-bold tracking-tight bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-xl border border-slate-200 shadow-sm">
             {formatTimeToEST(currentTime.toTimeString().substring(0, 5))}
           </div>
         </div>
