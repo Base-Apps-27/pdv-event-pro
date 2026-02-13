@@ -324,31 +324,34 @@ export default function PublicCountdownDisplay() {
             {/* Col 1: Status Sidecar (Countdown + Actions) */}
             <div className="flex flex-col gap-3 overflow-visible min-w-0">
               {/* Primary Countdown (Compact) */}
-              {currentSegment ? (
-                <CountdownBlock
-                  segment={currentSegment}
-                  displayMode="in-progress"
-                  currentTime={currentTime}
-                  serviceDate={currentSegment?.date || serviceDate}
-                  getTimeDate={getTimeDate}
-                  size="compact"
-                  className="w-full"
-                />
-              ) : preLaunchSegment ? (
-                <CountdownBlock
-                  segment={preLaunchSegment}
-                  displayMode="pre-launch"
-                  currentTime={currentTime}
-                  serviceDate={preLaunchSegment?.date || serviceDate}
-                  getTimeDate={getTimeDate}
-                  size="compact"
-                  className="w-full"
-                />
-              ) : (
-                <div className="bg-white rounded-3xl border-4 border-slate-200 p-6 flex items-center justify-center min-h-[200px]">
-                  <p className="text-slate-400 italic text-sm">No active segment</p>
-                </div>
-              )}
+              {/* pt-5 ensures the floating label (-top-4) is not clipped */}
+              <div className="pt-5">
+                {currentSegment ? (
+                  <CountdownBlock
+                    segment={currentSegment}
+                    displayMode="in-progress"
+                    currentTime={currentTime}
+                    serviceDate={currentSegment?.date || serviceDate}
+                    getTimeDate={getTimeDate}
+                    size="compact"
+                    className="w-full"
+                  />
+                ) : preLaunchSegment ? (
+                  <CountdownBlock
+                    segment={preLaunchSegment}
+                    displayMode="pre-launch"
+                    currentTime={currentTime}
+                    serviceDate={preLaunchSegment?.date || serviceDate}
+                    getTimeDate={getTimeDate}
+                    size="compact"
+                    className="w-full"
+                  />
+                ) : (
+                  <div className="bg-white rounded-3xl border-4 border-slate-200 p-6 flex items-center justify-center min-h-[200px]">
+                    <p className="text-slate-400 italic text-sm">No active segment</p>
+                  </div>
+                )}
+              </div>
 
               {/* Coordinator Actions (Vertical Stack) */}
               <div className="flex-1 overflow-y-auto">
