@@ -5,7 +5,7 @@ import { ChevronUp, ChevronDown, Edit, Trash2, Link as LinkIcon, Radio, PowerOff
 import { resolveBlockTime } from "@/components/utils/streamTiming";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
-export default function StreamBlockItem({ block, index, total, segments, sessionDate, onEdit, onDelete, onMove, readOnly = false, isCurrent = false }) {
+export default function StreamBlockItem({ block, index, total, segments, sessionDate, onEdit, onDelete, onMove, readOnly = false, isCurrent = false, compact = false }) {
   // Resolve timing on the fly
   const { startTime, endTime, isOrphaned } = resolveBlockTime(block, segments, sessionDate);
 
@@ -31,6 +31,34 @@ export default function StreamBlockItem({ block, index, total, segments, session
 
   // Find anchor segment for display
   const anchorSegment = segments.find(s => s.id === block.anchor_segment_id);
+
+  if (compact) {
+    return (
+      <div className={`
+        relative flex flex-col gap-1 p-2 rounded-lg border transition-all
+        ${isOrphaned ? 'border-red-300 bg-red-50' : isCurrent ? 'bg-blue-50 border-blue-500 shadow-md ring-1 ring-blue-500' : 'bg-white border-gray-200'}
+      `}>
+        <div className="flex justify-between items-start">
+           <div className="font-mono text-xs font-bold text-slate-900 leading-none">
+             {startTime ? startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '--:--'}
+           </div>
+           <Badge variant="outline" className={`${config.color} h-4 px-1 text-[9px] uppercase`}>
+             {config.label}
+           </Badge>
+        </div>
+        
+        <div className="font-bold text-slate-800 text-xs leading-tight line-clamp-2">
+          {block.title}
+        </div>
+        
+        {isCurrent && (
+           <div className="text-[10px] text-blue-600 font-bold uppercase tracking-wide animate-pulse mt-1">
+             On Air
+           </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={`
