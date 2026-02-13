@@ -184,6 +184,22 @@ function LayoutContentInner({ children }) {
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
               </div>
             )}
+            {/* MyProgram — accessible to all roles (access_my_program) */}
+            <Link
+              to={createPageUrl("MyProgram")}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                isActive(createPageUrl("MyProgram"))
+                  ? "text-white shadow-md"
+                  : "text-gray-400 hover:bg-white/5 hover:text-white"
+              }`}
+              style={isActive(createPageUrl("MyProgram")) ? gradientStyle : {}}
+              title={isSidebarCollapsed ? t('myprogram.title') : ''}
+            >
+              <Calendar className="w-5 h-5 shrink-0" />
+              {!isSidebarCollapsed && <span>{t('myprogram.title')}</span>}
+            </Link>
+            {/* Live View — gated by access_live_view */}
+            {hasPermission(user, 'access_live_view') && (
             <Link
               to={createPageUrl("PublicProgramView")}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -197,6 +213,7 @@ function LayoutContentInner({ children }) {
               <Bell className="w-5 h-5 shrink-0" />
               {!isSidebarCollapsed && <span>{t('nav.liveProgram')}</span>}
             </Link>
+            )}
 
             {/* EVENTS PILLAR - Permission-based */}
             {hasPermission(user, 'view_events') && (
@@ -484,6 +501,13 @@ function LayoutContentInner({ children }) {
                   </Link>
 
                   <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">{t('section.live')}</div>
+                  <Link
+                    to={createPageUrl("MyProgram")}
+                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {t('myprogram.title')}
+                  </Link>
                   <Link
                     to={createPageUrl("PublicProgramView")}
                     className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
