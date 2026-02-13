@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils, Music, Monitor, Users, Radio, Zap } from "lucide-react";
+import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils, Music, Monitor, Users, Radio, Zap, LayoutGrid } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import HospitalityTasksViewModal from "@/components/service/HospitalityTasksViewModal";
@@ -71,6 +71,11 @@ export default function EventProgramView({
   const [expandedSegments, setExpandedSegments] = useState({});
   const [expandedSessions, setExpandedSessions] = useState({});
   const [hospitalityModalSessionId, setHospitalityModalSessionId] = useState(null);
+  // Stream toggle — initialize from URL param or default to room view
+  const [showStream, setShowStream] = useState(isStreamMode);
+
+  // Detect if any session has livestream enabled
+  const hasAnyLivestream = eventSessions.some(s => s.has_livestream);
 
   // Fetch live adjustments for event sessions
   const { data: liveAdjustments = [] } = useQuery({
@@ -210,6 +215,26 @@ export default function EventProgramView({
           </button>
         </div>
 
+        {/* Room / Stream Toggle — only when livestream exists */}
+        {hasAnyLivestream && (
+          <div className="flex bg-gray-200/50 p-1 rounded-lg shrink-0">
+            <button
+              onClick={() => setShowStream(false)}
+              className={`px-3 py-1.5 text-xs rounded-md font-semibold flex items-center gap-1.5 transition-all ${!showStream ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Room
+            </button>
+            <button
+              onClick={() => setShowStream(true)}
+              className={`px-3 py-1.5 text-xs rounded-md font-semibold flex items-center gap-1.5 transition-all ${showStream ? "bg-white shadow text-red-600" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              <Radio className="w-3.5 h-3.5" />
+              Stream
+            </button>
+          </div>
+        )}
+
         {/* Director Console Entry - Permission Gated */}
         {hasPermission(currentUser, 'manage_live_director') && eventSessions.length > 0 && (
           <Link
@@ -248,7 +273,7 @@ export default function EventProgramView({
       )}
 
       {/* Stream Mode Header */}
-      {isStreamMode && (
+      {showStream && (
         <div className="bg-slate-900 text-white p-4 rounded-xl mb-6 shadow-lg flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold uppercase tracking-wider text-red-500 flex items-center gap-2">
@@ -267,7 +292,7 @@ export default function EventProgramView({
         if (segments.length === 0) return null;
 
         // In Stream Mode, check if session has livestream enabled
-        if (isStreamMode) {
+        if (showStream) {
           if (!session.has_livestream) return null;
           return (
             <div key={session.id} className="mb-8">
