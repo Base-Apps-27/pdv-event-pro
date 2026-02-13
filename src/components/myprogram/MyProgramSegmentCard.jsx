@@ -191,15 +191,31 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
               <span>{normalizeName(getData('presenter'))}</span>
             </div>
           )}
-          {/* Translator: Only if InPerson (From Stage) */}
-          {(getData('translator_name') || getData('translator')) && getData('translation_mode') === 'InPerson' && (
-            <div className="flex items-center gap-2 text-xs text-purple-700 font-medium">
-              <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-                <Mic className="w-3 h-3" />
-              </div>
-              <span>{t('live.translator')}: {normalizeName(getData('translator_name') || getData('translator'))}</span>
-            </div>
-          )}
+          {/* Translator: InPerson (All) OR Remote (Translation Dept only) */}
+          {(() => {
+            const transName = getData('translator_name') || getData('translator');
+            const transMode = getData('translation_mode');
+            if (!transName) return null;
+
+            const isStage = transMode === 'InPerson';
+            const isTargetDept = ['translation', 'coordination', 'general'].includes(department);
+            
+            // Show if: From Stage (Everyone) OR Target Dept (sees all)
+            if (isStage || isTargetDept) {
+              return (
+                <div className="flex items-center gap-2 text-xs text-purple-700 font-medium">
+                  <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                    <Mic className="w-3 h-3" />
+                  </div>
+                  <span>
+                    {t('live.translator')}: {normalizeName(transName)} 
+                    {!isStage && <span className="text-purple-500 text-[10px] ml-1 uppercase border border-purple-200 px-1 rounded bg-white">Booth</span>}
+                  </span>
+                </div>
+              );
+            }
+            return null;
+          })()}
         </div>
 
         {/* Action Buttons */}
