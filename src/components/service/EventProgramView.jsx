@@ -149,8 +149,8 @@ export default function EventProgramView({
          Component preserved at: components/service/LiveDirectorPanel.jsx
       */}
 
-      {/* Sticky Ops Deck - PERMISSION-GATED: requires view_live_chat (Hidden in Stream Mode) */}
-      {canAccessLiveOps && !isStreamMode && (
+      {/* Sticky Ops Deck - PERMISSION-GATED: requires view_live_chat (Visible in both Room and Stream modes) */}
+      {canAccessLiveOps && (
       <StickyOpsDeck 
         segments={allSegments.map(seg => {
           const session = eventSessions.find(s => s.id === seg.session_id);
