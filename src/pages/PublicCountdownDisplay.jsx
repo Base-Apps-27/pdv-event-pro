@@ -318,11 +318,11 @@ export default function PublicCountdownDisplay() {
         </div>
       </div>
 
-      <div className="w-full max-w-[1800px] flex flex-col gap-5 items-center z-10 flex-1">
+      <div className="w-full flex flex-col gap-3 items-center z-10 flex-1 px-2">
         {(
-          <div className="w-full h-full flex-1 overflow-hidden min-h-[600px] grid gap-4" style={{ gridTemplateColumns: '40% 40% 20%' }}>
-            {/* Col 1: Status Sidecar (Countdown + Actions) - WIDER */}
-            <div className="flex flex-col gap-4 overflow-hidden">
+          <div className="w-full h-full flex-1 overflow-hidden min-h-[600px] grid gap-3" style={{ gridTemplateColumns: '1fr 1fr minmax(200px, 0.5fr)' }}>
+            {/* Col 1: Status Sidecar (Countdown + Actions) */}
+            <div className="flex flex-col gap-3 overflow-hidden min-w-0">
               {/* Primary Countdown (Compact) */}
               {currentSegment ? (
                 <CountdownBlock
