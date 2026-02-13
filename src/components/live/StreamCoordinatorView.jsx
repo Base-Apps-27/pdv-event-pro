@@ -105,6 +105,7 @@ export default function StreamCoordinatorView({ session, segments, currentUser, 
           return (
             <div
               key={block.id}
+              id={`stream-block-${block.id}`}
               ref={block.isCurrent ? currentBlockRef : undefined}
               className={`flex gap-3 px-4 py-3 transition-colors ${
                 block.isCurrent
