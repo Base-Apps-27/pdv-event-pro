@@ -18,6 +18,7 @@ import { formatTimeToEST, formatDateET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { hasPermission } from "@/components/utils/permissions";
 import StreamCoordinatorView from "@/components/live/StreamCoordinatorView";
+import { resolveBlockTime } from "@/components/utils/streamTiming";
 
 /**
  * EventProgramView Component
