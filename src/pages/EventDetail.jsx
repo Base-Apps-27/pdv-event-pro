@@ -103,12 +103,22 @@ export default function EventDetail() {
   const { data: segments = [] } = useQuery({
     queryKey: ['segments', eventId, sessionIdsKey],
     queryFn: async () => {
-      // DEV-ONLY: Uncomment to verify refetch after mutations
-      // console.log('[EventDetail] segments queryFn RUNNING', { eventId, sessionIdsKey, timestamp: new Date().toISOString() });
       if (sessions.length === 0) return [];
-      const sessionIds = sessions.map(s => s.id);
-      const response = await base44.functions.invoke('getSegmentsBySessionIds', { sessionIds });
-      return response.data.segments || [];
+      
+      // Use SDK directly to ensure correct environment (Dev/Prod) context is maintained
+      // Batch requests to avoid overwhelming the browser/API
+      const BATCH_SIZE = 5;
+      const allSegments = [];
+      
+      for (let i = 0; i < sessions.length; i += BATCH_SIZE) {
+        const batch = sessions.slice(i, i + BATCH_SIZE);
+        const results = await Promise.all(
+          batch.map(s => base44.entities.Segment.filter({ session_id: s.id }))
+        );
+        allSegments.push(...results.flat());
+      }
+      
+      return allSegments;
     },
     enabled: !!eventId && sessions.length > 0,
     staleTime: 5 * 60 * 1000,
