@@ -254,6 +254,17 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                     {upNextCountdown.segment.title || upNextCountdown.segment.data?.title}
                   </div>
                 )}
+                {/* LS line on pre-launch card */}
+                {currentStreamBlock && (
+                  <div 
+                    className="mt-2 flex items-center gap-1.5 text-xs text-red-600 font-semibold cursor-pointer hover:text-red-800 transition-colors"
+                    onClick={(e) => { e.stopPropagation(); onStreamBlockClick && onStreamBlockClick(); }}
+                    title="Click to jump to this stream block"
+                  >
+                    <Radio className="w-3 h-3 shrink-0" />
+                    <span className="truncate">LS: {currentStreamBlock.title}</span>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
