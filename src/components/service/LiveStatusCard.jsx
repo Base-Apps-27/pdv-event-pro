@@ -268,8 +268,19 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
               </div>
             </div>
           ) : (
-            <div className="p-4 bg-gray-50 flex items-center justify-center text-gray-400">
+            <div className="p-4 bg-gray-50 flex flex-col items-center justify-center text-gray-400">
               <span className="italic text-sm">{t('live.nothingNow')}</span>
+              {/* LS line even when no room segment is active */}
+              {currentStreamBlock && (
+                <div 
+                  className="mt-2 flex items-center gap-1.5 text-xs text-red-600 font-semibold cursor-pointer hover:text-red-800 transition-colors"
+                  onClick={() => onStreamBlockClick && onStreamBlockClick()}
+                  title="Click to jump to this stream block"
+                >
+                  <Radio className="w-3 h-3 shrink-0" />
+                  <span className="truncate">LS: {currentStreamBlock.title}</span>
+                </div>
+              )}
             </div>
           )
         )}
