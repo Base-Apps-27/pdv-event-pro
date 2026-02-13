@@ -293,6 +293,18 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
               <p className="text-sm text-gray-500 mt-2 line-clamp-1">{getPersonName(nextSegment)}</p>
             )}
 
+            {/* Livestream block indicator on "next" card too — same stream block context */}
+            {currentStreamBlock && (
+              <div 
+                className="mt-2 flex items-center gap-1.5 text-xs text-red-600 font-semibold cursor-pointer hover:text-red-800 transition-colors"
+                onClick={(e) => { e.stopPropagation(); onStreamBlockClick && onStreamBlockClick(); }}
+                title="Click to jump to this stream block"
+              >
+                <Radio className="w-3 h-3 shrink-0" />
+                <span className="truncate">LS: {currentStreamBlock.title}</span>
+              </div>
+            )}
+
             {/* Operator Resource Links (Next) */}
             <div className="flex flex-wrap gap-2 mt-3 pt-2 border-t border-gray-100">
               {getSegmentData(nextSegment, 'presentation_url') && (
