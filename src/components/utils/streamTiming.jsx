@@ -90,17 +90,35 @@ export function resolveBlockTime(block, segments, sessionDate) {
 }
 
 /**
- * Helper to parse HH:MM string into a Date object on a specific date
+ * Helper to parse HH:MM string into a Date object on a specific date.
+ *
+ * CRITICAL FIX (2026-02-13): When sessionDate is "YYYY-MM-DD" (no time/zone),
+ * `new Date("2026-02-13")` parses as midnight UTC = Feb 12 7pm ET.
+ * This caused all stream blocks to resolve to the WRONG date, so isCurrent
+ * was always false and everything appeared greyed out.
+ *
+ * Fix: Parse "YYYY-MM-DD" with explicit local-time components to avoid
+ * the UTC midnight shift.
  */
 function parseTimeOnDate(timeStr, dateContext) {
   if (!timeStr) return new Date(); // Fallback
-  const dateBase = dateContext ? new Date(dateContext) : new Date();
-  const parsed = parse(timeStr, 'HH:mm', dateBase);
-  
-  // Preserve the date part from dateContext
-  parsed.setFullYear(dateBase.getFullYear());
-  parsed.setMonth(dateBase.getMonth());
-  parsed.setDate(dateBase.getDate());
-  
-  return parsed;
+
+  // Parse dateContext safely — avoid UTC midnight shift for "YYYY-MM-DD" strings
+  let year, month, day;
+  if (typeof dateContext === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateContext)) {
+    // Explicit component extraction avoids Date constructor UTC parsing
+    const parts = dateContext.split('-').map(Number);
+    year = parts[0];
+    month = parts[1] - 1; // JS months are 0-based
+    day = parts[2];
+  } else {
+    const dateBase = dateContext ? new Date(dateContext) : new Date();
+    year = dateBase.getFullYear();
+    month = dateBase.getMonth();
+    day = dateBase.getDate();
+  }
+
+  // Parse HH:MM and set on the correct local date
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return new Date(year, month, day, hours, minutes, 0, 0);
 }
