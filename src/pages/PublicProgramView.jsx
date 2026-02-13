@@ -96,124 +96,33 @@ export default function PublicProgramView() {
     }
   }, [preloadedEventId]);
 
-  // Fetch available options for the selector (publicly accessible via backend function)
-  const { data: selectorOptions = { events: [], services: [] } } = useQuery({
-    queryKey: ['selectorOptions'],
+  // UNIFIED FETCH: Single query for options + initial data (Smart Load)
+  const { data: unifiedData, isLoading: isLoadingProgram, refetch: refetchProgram } = useQuery({
+    queryKey: ['publicProgramData', selectedEventId, selectedServiceId, viewType, preloadedDate, preloadedSlug],
     queryFn: async () => {
-      const response = await base44.functions.invoke('getPublicProgramData', { listOptions: true });
-      if (response.status >= 400) return { events: [], services: [] };
-      return response.data;
-    },
-    refetchInterval: 60000
-  });
+      // Build payload for "Smart Fetch"
+      const payload = {
+        // Request options if we don't have them yet (initial load)
+        // or just rely on the merged response to always keep them fresh
+        includeOptions: true 
+      };
 
-  const publicEvents = selectorOptions.events || [];
-  const services = selectorOptions.services || [];
-
-  // Handle preloaded date parameter
-  useEffect(() => {
-    if (preloadedDate && services.length > 0 && !selectedServiceId) {
-      const serviceForDate = services.find(s => s.date === preloadedDate && s.status === 'active');
-      if (serviceForDate) {
-        setSelectedServiceId(serviceForDate.id);
-        setViewType("service");
-      }
-    }
-  }, [preloadedDate, services, selectedServiceId]);
-
-  // If slug is provided, find the event and set the ID
-  useEffect(() => {
-    if (preloadedSlug && publicEvents.length > 0 && !selectedEventId) {
-      const event = publicEvents.find(e => e.slug === preloadedSlug);
-      if (event) {
-        setSelectedEventId(event.id);
-        setViewType("event");
-      }
-    }
-  }, [preloadedSlug, publicEvents, selectedEventId]);
-
-  // Auto-select what's happening TODAY (prioritize same-day activities)
-  useEffect(() => {
-    if (publicEvents.length > 0 && services.length > 0 && !selectedEventId && !selectedServiceId) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      // Check for events happening TODAY
-      const todayEvent = publicEvents.find(e => {
-        if (!e.start_date) return false;
-        const eventDate = getLocalDateAtMidnight(e.start_date);
-        const endDate = e.end_date ? getLocalDateAtMidnight(e.end_date) : eventDate;
-        return eventDate && endDate && today.getTime() >= eventDate.getTime() && today.getTime() <= endDate.getTime();
-      });
-      
-      // Check for services happening TODAY
-      const todayService = services.find(s => {
-        // String comparison is safest for YYYY-MM-DD
-        const todayString = today.toLocaleDateString('sv-SE'); // Returns YYYY-MM-DD in most locales, safe for comparison
-        // Fallback to manual construction if locale is weird
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        const manualTodayString = `${yyyy}-${mm}-${dd}`;
-        
-        return s.date === manualTodayString;
-      });
-      
-      // Priority: Today's service > Today's event > Next upcoming (within 7 days)
-      if (todayService) {
-        setSelectedServiceId(todayService.id);
-        setViewType("service");
-      } else if (todayEvent) {
-        setSelectedEventId(todayEvent.id);
-        setViewType("event");
+      // Explicit selection overrides auto-detect
+      if (viewType === 'event' && selectedEventId) {
+        payload.eventId = selectedEventId;
+      } else if (viewType === 'service' && selectedServiceId) {
+        payload.serviceId = selectedServiceId;
+      } else if (preloadedSlug) {
+        // Slug resolution happens backend side if we add support, 
+        // or we handle it here by finding the ID from options first (fallback)
+        // For now, let's let backend detect active if no explicit ID
+        payload.detectActive = true; 
+      } else if (preloadedDate) {
+        payload.date = preloadedDate;
       } else {
-        // Find next upcoming (within 7 days)
-        const sevenDaysOut = new Date(today);
-        sevenDaysOut.setDate(today.getDate() + 7);
-        
-        const nextEvent = publicEvents.find(e => {
-          if (!e.start_date) return false;
-          const eventDate = getLocalDateAtMidnight(e.start_date);
-          return eventDate && eventDate.getTime() > today.getTime() && eventDate.getTime() <= sevenDaysOut.getTime();
-        });
-        
-        // Services are already sorted by date, just find next one
-        const nextService = services.find(s => {
-          const serviceDate = getLocalDateAtMidnight(s.date);
-          return serviceDate && serviceDate.getTime() > today.getTime();
-        });
-        
-        if (nextEvent && nextService) {
-          const eventDaysAway = Math.floor((getLocalDateAtMidnight(nextEvent.start_date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          const serviceDaysAway = Math.floor((getLocalDateAtMidnight(nextService.date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          if (serviceDaysAway <= eventDaysAway) {
-            setSelectedServiceId(nextService.id);
-            setViewType("service");
-          } else {
-            setSelectedEventId(nextEvent.id);
-            setViewType("event");
-          }
-        } else if (nextEvent) {
-          setSelectedEventId(nextEvent.id);
-          setViewType("event");
-        } else if (nextService) {
-          setSelectedServiceId(nextService.id);
-          setViewType("service");
-        }
+        // Default landing: Ask backend to pick the "active" one and give us its data + options
+        payload.detectActive = true;
       }
-    }
-  }, [publicEvents, services, preloadedEventId, preloadedServiceId]);
-
-  // Fetch full program data (publicly accessible via backend function)
-  const { data: programData, isLoading: isLoadingProgram, refetch: refetchProgram } = useQuery({
-    queryKey: ['publicProgramData', selectedEventId, selectedServiceId, viewType, preloadedDate],
-    queryFn: async () => {
-      // Logic to determine what to fetch
-      const payload = {};
-      if (viewType === 'event' && selectedEventId) payload.eventId = selectedEventId;
-      else if (viewType === 'service' && selectedServiceId) payload.serviceId = selectedServiceId;
-      else if (preloadedDate) payload.date = preloadedDate;
-      else return null;
 
       const response = await base44.functions.invoke('getPublicProgramData', payload);
       if (response.status >= 400) {
@@ -222,9 +131,32 @@ export default function PublicProgramView() {
       }
       return response.data;
     },
-    enabled: !!(selectedEventId || selectedServiceId || preloadedDate),
     refetchInterval: 15000
   });
+
+  // Extract parts from unified response
+  const selectorOptions = {
+    events: unifiedData?.events || [],
+    services: unifiedData?.services || []
+  };
+  const publicEvents = selectorOptions.events;
+  const services = selectorOptions.services;
+  
+  // Program Data (Active Content)
+  const programData = unifiedData?.program ? unifiedData : null;
+
+  // Auto-set state based on what backend returned as "active"
+  useEffect(() => {
+    if (unifiedData?.program && !selectedEventId && !selectedServiceId) {
+      if (unifiedData.program._isEvent) {
+        setSelectedEventId(unifiedData.program.id);
+        setViewType("event");
+      } else {
+        setSelectedServiceId(unifiedData.program.id);
+        setViewType("service");
+      }
+    }
+  }, [unifiedData, selectedEventId, selectedServiceId]);
 
   // Derived state from programData
   const sessions = programData?.sessions || [];

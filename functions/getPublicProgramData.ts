@@ -6,21 +6,22 @@ Deno.serve(async (req) => {
         
         // Parse parameters from request body
         const body = await req.json();
-        const { eventId, serviceId, date, listOptions, sessionId } = body;
+        const { eventId, serviceId, date, listOptions, sessionId, includeOptions, detectActive } = body;
 
         // ---------------------------------------------------------
-        // MODE 1: List Options (for selectors)
+        // SHARED: Options Fetching (Mode 1 or Mode 4 combined)
         // ---------------------------------------------------------
-        if (listOptions) {
-            // 1. Fetch Events (Active/Confirmed)
-            // Use generic list and filter manually if simple filter not enough
-            const allEvents = await base44.asServiceRole.entities.Event.list('-start_date');
+        let optionsData = null;
+        
+        if (listOptions || includeOptions) {
+            const [allEvents, allServices] = await Promise.all([
+                base44.asServiceRole.entities.Event.list('-start_date'),
+                base44.asServiceRole.entities.Service.list('-date')
+            ]);
             
-            // Filter: confirmed/in_progress AND relevant date range (recent past 7d, future 90d)
             const today = new Date();
             today.setHours(0,0,0,0);
             
-            // TV Display: show events within window (past 7 days for testing Director, future 7 days)
             const relevantEvents = allEvents.filter(e => {
                 if (e.status !== 'confirmed' && e.status !== 'in_progress') return false;
                 if (!e.start_date) return false;
@@ -29,9 +30,6 @@ Deno.serve(async (req) => {
                 return diffDays > -7 && diffDays <= 7;
             });
 
-            // 2. Fetch Services (Active)
-            const allServices = await base44.asServiceRole.entities.Service.list('-date');
-            
             const relevantServices = allServices.filter(s => {
                  if (s.status !== 'active') return false;
                  if (!s.date || s.origin === 'blueprint') return false;
@@ -40,7 +38,12 @@ Deno.serve(async (req) => {
                  return diffDays > -2 && diffDays < 14;
             });
 
-            return Response.json({ events: relevantEvents, services: relevantServices });
+            optionsData = { events: relevantEvents, services: relevantServices };
+            
+            // Mode 1: Options Only (Legacy)
+            if (listOptions && !detectActive) {
+                return Response.json(optionsData);
+            }
         }
 
         // ---------------------------------------------------------
@@ -67,22 +70,67 @@ Deno.serve(async (req) => {
             }
         }
 
-        // C. Auto-detect by Date (if no specific ID)
-        if (!targetProgram && !eventId && !serviceId && date) {
-            // Try Event first
-            const allEvents = await base44.asServiceRole.entities.Event.filter({ status: 'confirmed' });
-            const activeEvent = allEvents.find(e => e.start_date <= date && e.end_date >= date);
-            
-            if (activeEvent) {
-                targetProgram = activeEvent;
-                isEvent = true;
-            } else {
-                // Try Service
-                const svcResults = await base44.asServiceRole.entities.Service.filter({ date: date, status: 'active' });
-                // If multiple services on same day, logic here mimics frontend: pick closest to now? 
-                // For simplicity, we return the first one, or the one with a time closest to now if possible.
-                // Since this is a simple backend function, returning the first valid one is usually safe for "auto-detect".
-                if (svcResults?.[0]) {
+        // C. Auto-detect logic (Date or Smart Detect)
+        if (!targetProgram && !eventId && !serviceId) {
+            // Determine date to check: explicit param or today
+            const checkDateStr = date || new Date().toISOString().split('T')[0];
+            const checkDate = new Date(checkDateStr + 'T00:00:00'); // Local midnight approx
+
+            if (detectActive && optionsData) {
+                // Smart Detect using already fetched options (fastest)
+                const { events, services } = optionsData;
+                
+                // 1. Check for TODAY match
+                // We use string comparison for YYYY-MM-DD
+                const todayStr = checkDateStr;
+                
+                const todayService = services.find(s => s.date === todayStr);
+                const todayEvent = events.find(e => {
+                    if (!e.start_date) return false;
+                    return todayStr >= e.start_date && todayStr <= (e.end_date || e.start_date);
+                });
+
+                if (todayService) {
+                    targetProgram = todayService;
+                    isEvent = false;
+                } else if (todayEvent) {
+                    targetProgram = todayEvent;
+                    isEvent = true;
+                } else {
+                    // 2. Fallback: Next upcoming (prioritize service then event)
+                    // Simplified logic: find first future service/event in the list
+                    const futureService = services.find(s => s.date > todayStr);
+                    const futureEvent = events.find(e => e.start_date > todayStr);
+                    
+                    if (futureService && futureEvent) {
+                        if (futureService.date <= futureEvent.start_date) {
+                            targetProgram = futureService;
+                            isEvent = false;
+                        } else {
+                            targetProgram = futureEvent;
+                            isEvent = true;
+                        }
+                    } else if (futureService) {
+                        targetProgram = futureService;
+                        isEvent = false;
+                    } else if (futureEvent) {
+                        targetProgram = futureEvent;
+                        isEvent = true;
+                    }
+                }
+            } else if (date) {
+                // Legacy Date-only auto-detect (fetches from DB)
+                const [allEvents, svcResults] = await Promise.all([
+                    base44.asServiceRole.entities.Event.filter({ status: 'confirmed' }),
+                    base44.asServiceRole.entities.Service.filter({ date: date, status: 'active' })
+                ]);
+                
+                const activeEvent = allEvents.find(e => e.start_date <= date && e.end_date >= date);
+                
+                if (activeEvent) {
+                    targetProgram = activeEvent;
+                    isEvent = true;
+                } else if (svcResults?.[0]) {
                     targetProgram = svcResults[0];
                     isEvent = false;
                 }
@@ -90,6 +138,10 @@ Deno.serve(async (req) => {
         }
 
         if (!targetProgram) {
+            // Mode 4 Special: If we tried to auto-detect but failed, we should still return options if requested
+            if (optionsData) {
+                return Response.json({ ...optionsData, error: "No active program found" });
+            }
             return Response.json({ error: "Program not found" }, { status: 404 });
         }
 
@@ -100,6 +152,17 @@ Deno.serve(async (req) => {
         let sessions = [];
         let rooms = [];
         let eventDays = [];
+        let preSessionDetails = [];
+        let liveAdjustments = [];
+
+        // Parallelize fetching of independent resources
+        const fetchExtrasPromise = Promise.all([
+            base44.asServiceRole.entities.Room.list(),
+            // Only fetch EventDay if it's an event
+            isEvent ? base44.asServiceRole.entities.EventDay.filter({ event_id: targetProgram.id }) : Promise.resolve([]),
+            // Fetch live adjustments for the program
+            !isEvent ? base44.asServiceRole.entities.LiveTimeAdjustment.filter({ service_id: targetProgram.id, date: targetProgram.date }) : Promise.resolve([])
+        ]);
 
         if (isEvent) {
             // Check public access for events
@@ -110,39 +173,53 @@ Deno.serve(async (req) => {
             // Fetch Sessions
             const sessionFilter = { event_id: targetProgram.id };
             if (sessionId && sessionId !== "all") sessionFilter.id = sessionId;
-            
+
             sessions = await base44.asServiceRole.entities.Session.filter(sessionFilter);
             sessions.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-            // Fetch Segments (from Sessions)
-            if (sessions.length > 0) {
-                const sessionIds = sessions.map(s => s.id);
-                // Batch query segments
-                const BATCH_SIZE = 10;
-                const batches = [];
-                for (let i = 0; i < sessionIds.length; i += BATCH_SIZE) {
-                    batches.push(sessionIds.slice(i, i + BATCH_SIZE));
-                }
+            // Parallelize fetching segments, preSessionDetails, and extras
+            const [extras, ...segmentsAndDetails] = await Promise.all([
+                fetchExtrasPromise,
+                // Fetch Segments (batched)
+                (async () => {
+                    if (sessions.length === 0) return [];
+                    const sessionIds = sessions.map(s => s.id);
+                    const BATCH_SIZE = 10;
+                    const batches = [];
+                    for (let i = 0; i < sessionIds.length; i += BATCH_SIZE) {
+                        batches.push(sessionIds.slice(i, i + BATCH_SIZE));
+                    }
+                    const allSegments = [];
+                    for (const batch of batches) {
+                        const batchResults = await Promise.all(
+                            batch.map(sid => base44.asServiceRole.entities.Segment.filter({ session_id: sid }, 'order'))
+                        );
+                        allSegments.push(...batchResults.flat());
+                    }
+                    return allSegments;
+                })(),
+                // Fetch PreSessionDetails
+                (async () => {
+                    if (sessions.length === 0) return [];
+                    return await Promise.all(
+                        sessions.map(s => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: s.id }))
+                    ).then(results => results.flat());
+                })()
+            ]);
 
-                const allSegments = [];
-                for (const batch of batches) {
-                    const batchResults = await Promise.all(
-                        batch.map(sid => base44.asServiceRole.entities.Segment.filter({ session_id: sid }, 'order'))
-                    );
-                    allSegments.push(...batchResults.flat());
-                }
-                
-                // Sort Segments
-                const orderMap = new Map(sessionIds.map((id, i) => [id, i]));
-                
-                // Create a map of session dates for easy lookup
+            [rooms, eventDays, liveAdjustments] = extras;
+            let allSegments = segmentsAndDetails[0];
+            preSessionDetails = segmentsAndDetails[1];
+
+            // Process Segments (Sort & Filter)
+            if (allSegments.length > 0) {
+                const orderMap = new Map(sessions.map((s, i) => [s.id, i]));
                 const sessionDateMap = new Map(sessions.map(s => [s.id, s.date]));
 
                 segments = allSegments
                     .filter(seg => seg.show_in_general)
                     .map(seg => ({
                         ...seg,
-                        // Inherit date from session if not present
                         date: sessionDateMap.get(seg.session_id) || null
                     }))
                     .sort((a, b) => {
@@ -178,11 +255,10 @@ Deno.serve(async (req) => {
                     actionsBySegment[action.segment_id].push(action);
                 }
 
-                // Attach to segments (merging with embedded if any, prioritizing linked entities)
+                // Attach to segments
                 segments = segments.map(s => {
                     const linked = actionsBySegment[s.id] || [];
                     const embedded = s.segment_actions || [];
-                    // We attach as 'actions' which the frontend checks
                     return {
                         ...s,
                         actions: [...embedded, ...linked].sort((a, b) => (a.order || 0) - (b.order || 0))
@@ -191,17 +267,11 @@ Deno.serve(async (req) => {
             }
 
             // INJECT: Pre-Session Details Logic
-            if (sessions.length > 0) {
-                const sessionIds = sessions.map(s => s.id);
-                // Fetch PreSessionDetails
-                const preSessionDetails = await Promise.all(
-                    sessionIds.map(sid => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: sid }))
-                ).then(results => results.flat());
-
+            // ... (same injection logic as before, using preSessionDetails fetched in parallel) ...
+            if (sessions.length > 0 && preSessionDetails.length > 0) {
                 const detailsBySession = {};
                 preSessionDetails.forEach(d => detailsBySession[d.session_id] = d);
 
-                // Group segments by session (using the updated 'segments' array)
                 const segmentsBySession = {};
                 segments.forEach(seg => {
                     if (seg.session_id) {
@@ -210,69 +280,36 @@ Deno.serve(async (req) => {
                     }
                 });
 
-                // Inject actions into first segment of each session
                 Object.keys(segmentsBySession).forEach(sid => {
                     const sessSegs = segmentsBySession[sid];
-                    // Sort by order to find the first one
                     sessSegs.sort((a, b) => (a.order || 0) - (b.order || 0));
                     const firstSeg = sessSegs[0];
                     const details = detailsBySession[sid];
 
                     if (firstSeg && details) {
                         const newActions = [];
-
-                        // Helper to calculate offset
                         const getOffset = (segStart, targetTime) => {
                             if (!segStart || !targetTime) return 0;
                             const [h1, m1] = segStart.split(':').map(Number);
                             const [h2, m2] = targetTime.split(':').map(Number);
                             return (h1 * 60 + m1) - (h2 * 60 + m2);
                         };
-                        
+
                         if (details.registration_desk_open_time) {
-                            const offset = getOffset(firstSeg.start_time, details.registration_desk_open_time);
                             newActions.push({
                                 id: `pre-reg-${details.id}`,
                                 label: 'REGISTRATION OPEN',
                                 department: 'Hospitality',
                                 timing: 'before_start',
-                                offset_min: offset,
+                                offset_min: getOffset(firstSeg.start_time, details.registration_desk_open_time),
                                 order: -100
                             });
                         }
-                        if (details.library_open_time) {
-                             const offset = getOffset(firstSeg.start_time, details.library_open_time);
-                             newActions.push({
-                                id: `pre-lib-${details.id}`,
-                                label: 'LIBRARY OPEN',
-                                department: 'Hospitality',
-                                timing: 'before_start',
-                                offset_min: offset,
-                                order: -99
-                            });
-                        }
-                        if (details.facility_notes) {
-                            newActions.push({
-                                id: `pre-fac-${details.id}`,
-                                label: 'FACILITY INSTRUCTIONS',
-                                department: 'Admin',
-                                timing: 'before_start',
-                                offset_min: 60,
-                                notes: details.facility_notes,
-                                order: -98
-                            });
-                        }
-                        if (details.general_notes) {
-                            newActions.push({
-                                id: `pre-gen-${details.id}`,
-                                label: 'GENERAL NOTES',
-                                department: 'Coordinador',
-                                timing: 'before_start',
-                                offset_min: 30,
-                                notes: details.general_notes,
-                                order: -97
-                            });
-                        }
+                        // ... (other injections same as original) ...
+                        // simplified copy for brevity in patch
+                        if (details.library_open_time) newActions.push({id:`pre-lib-${details.id}`, label:'LIBRARY OPEN', department:'Hospitality', timing:'before_start', offset_min: getOffset(firstSeg.start_time, details.library_open_time), order:-99});
+                        if (details.facility_notes) newActions.push({id:`pre-fac-${details.id}`, label:'FACILITY INSTRUCTIONS', department:'Admin', timing:'before_start', offset_min:60, notes:details.facility_notes, order:-98});
+                        if (details.general_notes) newActions.push({id:`pre-gen-${details.id}`, label:'GENERAL NOTES', department:'Coordinador', timing:'before_start', offset_min:30, notes:details.general_notes, order:-97});
 
                         if (newActions.length > 0) {
                             firstSeg.actions = [...(firstSeg.actions || []), ...newActions];
@@ -281,31 +318,19 @@ Deno.serve(async (req) => {
                 });
             }
 
-            // Fetch Extras
-            rooms = await base44.asServiceRole.entities.Room.list();
-            eventDays = await base44.asServiceRole.entities.EventDay.filter({ event_id: targetProgram.id });
-            
-            // Return raw PreSessionDetails for frontend (EventProgramView needs them)
-            // Note: preSessionDetails were fetched above in the injection block
-            const preSessionDetails = await Promise.all(
-                sessions.map(s => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: s.id }))
-            ).then(results => results.flat());
-
-            // Fetch Live Adjustments (if any)
-            // Events don't typically use LiveTimeAdjustment entity heavily yet (uses Session.live_adjustment_enabled), 
-            // but we fetch them just in case schema expands or for consistency
-            const liveAdjustments = []; 
-
-            return Response.json({
-                event: targetProgram, // Kept for compat
-                program: { ...targetProgram, _isEvent: true }, // Unified object
+            const responsePayload = {
+                event: targetProgram,
+                program: { ...targetProgram, _isEvent: true },
                 sessions,
                 segments,
                 rooms,
                 eventDays,
                 preSessionDetails,
                 liveAdjustments
-            });
+            };
+            // Merge options if requested
+            if (optionsData) Object.assign(responsePayload, optionsData);
+            return Response.json(responsePayload);
 
         } else {
             // It's a Service
@@ -617,16 +642,10 @@ Deno.serve(async (req) => {
                 injectServiceNotes("11:30am", "slot-11-30");
             }
 
-            // Fetch Rooms (Services need room names too)
-            const rooms = await base44.asServiceRole.entities.Room.list();
+            // Fetch Rooms & Adjustments (Parallelized above)
+            [rooms, eventDays, liveAdjustments] = await fetchExtrasPromise;
 
-            // Fetch Live Adjustments for this service
-            const liveAdjustments = await base44.asServiceRole.entities.LiveTimeAdjustment.filter({ 
-                service_id: targetProgram.id,
-                date: targetProgram.date 
-            });
-
-            return Response.json({
+            const responsePayload = {
                 event: null,
                 program: { ...targetProgram, _isEvent: false },
                 sessions,
@@ -635,7 +654,9 @@ Deno.serve(async (req) => {
                 eventDays: [],
                 preSessionDetails,
                 liveAdjustments
-            });
+            };
+            if (optionsData) Object.assign(responsePayload, optionsData);
+            return Response.json(responsePayload);
         }
 
     } catch (error) {
