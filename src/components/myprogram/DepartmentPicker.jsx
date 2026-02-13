@@ -10,17 +10,35 @@
 import React from 'react';
 import { useLanguage } from '@/components/utils/i18n';
 import { safeGetItem, safeSetItem } from '@/components/utils/safeLocalStorage';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  LayoutGrid, 
+  Monitor, 
+  Mic2, 
+  Users, 
+  Languages, 
+  Palette, 
+  Coffee, 
+  ClipboardList, 
+  Video 
+} from 'lucide-react';
 
 const DEPARTMENTS = [
-  'general',
-  'projection',
-  'sound',
-  'ushers',
-  'translation',
-  'stage_decor',
-  'hospitality',
-  'coordination',
-  'livestream',
+  { id: 'general', icon: LayoutGrid },
+  { id: 'projection', icon: Monitor },
+  { id: 'sound', icon: Mic2 },
+  { id: 'ushers', icon: Users },
+  { id: 'translation', icon: Languages },
+  { id: 'stage_decor', icon: Palette },
+  { id: 'hospitality', icon: Coffee },
+  { id: 'coordination', icon: ClipboardList },
+  { id: 'livestream', icon: Video },
 ];
 
 export function useDepartment() {
@@ -37,27 +55,38 @@ export function useDepartment() {
 export default function DepartmentPicker({ value, onChange }) {
   const { t } = useLanguage();
 
+  const selectedDept = DEPARTMENTS.find(d => d.id === value) || DEPARTMENTS[0];
+  const Icon = selectedDept.icon;
+
   return (
-    <div className="w-full overflow-x-auto scrollbar-none -mx-1 px-1">
-      <div className="flex gap-2 pb-1 min-w-max">
-        {DEPARTMENTS.map((dept) => {
-          const isActive = value === dept;
-          return (
-            <button
-              key={dept}
-              onClick={() => onChange(dept)}
-              className={`
-                px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all
-                ${isActive
-                  ? 'bg-gradient-to-r from-[#1F8A70] via-[#4DC15F] to-[#D9DF32] text-white shadow-md'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-400 hover:text-gray-900'}
-              `}
-            >
-              {t(`myprogram.dept.${dept}`)}
-            </button>
-          );
-        })}
-      </div>
+    <div className="w-full">
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="w-full h-12 bg-white border-gray-200 shadow-sm rounded-xl">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
+              <Icon className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col items-start">
+              <span className="text-[10px] uppercase text-gray-400 font-bold tracking-wider leading-none mb-0.5">
+                {t('myprogram.filterBy')}
+              </span>
+              <span className="text-sm font-bold text-gray-900 leading-none">
+                <SelectValue>{t(`myprogram.dept.${value}`)}</SelectValue>
+              </span>
+            </div>
+          </div>
+        </SelectTrigger>
+        <SelectContent>
+          {DEPARTMENTS.map((dept) => (
+            <SelectItem key={dept.id} value={dept.id}>
+              <div className="flex items-center gap-2">
+                <dept.icon className="w-4 h-4 text-gray-500" />
+                <span className="font-medium">{t(`myprogram.dept.${dept.id}`)}</span>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

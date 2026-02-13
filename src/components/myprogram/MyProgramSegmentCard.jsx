@@ -15,7 +15,41 @@ import { getSegmentData, getNormalizedSongs } from '@/components/utils/segmentDa
 import { normalizeName } from '@/components/utils/textNormalization';
 import DepartmentNotes from './DepartmentNotes';
 
-export default function MyProgramSegmentCard({ segment, status, department }) {
+function getCountdown(segment, currentTime, status, t) {
+  if (!currentTime || !segment.start_time) return null;
+  
+  const now = currentTime.getHours() * 60 + currentTime.getMinutes();
+  
+  // Calculate Start Time in Minutes
+  const [startH, startM] = segment.start_time.split(':').map(Number);
+  const startMinutes = startH * 60 + startM;
+  
+  // Calculate End Time
+  let endMinutes = startMinutes + (segment.duration_min || 0);
+  if (segment.end_time) {
+    const [endH, endM] = segment.end_time.split(':').map(Number);
+    endMinutes = endH * 60 + endM;
+  }
+
+  // Handle midnight crossing for end time (if end < start)
+  if (endMinutes < startMinutes) endMinutes += 24 * 60;
+
+  if (status === 'now') {
+    const remaining = endMinutes - now;
+    if (remaining <= 0) return t('myprogram.eventEnded');
+    return `${t('myprogram.countdown.endsIn')} ${remaining} min`;
+  }
+
+  if (status === 'next') {
+    const startsIn = startMinutes - now;
+    if (startsIn <= 0) return t('myprogram.now');
+    return `${t('myprogram.countdown.startsIn')} ${startsIn} min`;
+  }
+
+  return null;
+}
+
+export default function MyProgramSegmentCard({ segment, status, department, currentTime }) {
   const { t, language } = useLanguage();
   const getData = (field) => getSegmentData(segment, field);
 
@@ -25,14 +59,15 @@ export default function MyProgramSegmentCard({ segment, status, department }) {
   const isSpecial = ['Especial', 'Special'].includes(segment.segment_type);
 
   const songs = isWorship ? getNormalizedSongs(segment).filter(s => s.title) : [];
+  const countdown = getCountdown(segment, currentTime, status, t);
 
   // Container styles by status
   const containerClass = {
-    done: 'bg-gray-50 border-gray-200 opacity-60',
-    now: 'bg-yellow-50 border-yellow-400 border-2 shadow-md',
-    next: 'bg-blue-50 border-blue-300 border-2',
-    upcoming: 'bg-white border-gray-100',
-  }[status] || 'bg-white border-gray-100';
+    done: 'bg-gray-50 border-gray-200 opacity-60 grayscale',
+    now: 'bg-yellow-50/80 border-yellow-400 border-2 shadow-lg scale-[1.02]',
+    next: 'bg-white border-blue-200 border-l-4 border-l-blue-500 shadow-sm',
+    upcoming: 'bg-white border-gray-200',
+  }[status] || 'bg-white border-gray-200';
 
   // Type badge colors
   const typeBadgeClass = isMessage ? 'bg-blue-100 text-blue-800'
@@ -41,102 +76,132 @@ export default function MyProgramSegmentCard({ segment, status, department }) {
     : 'bg-gray-100 text-gray-700';
 
   return (
-    <div className={`rounded-xl border p-3 transition-all ${containerClass}`}>
-      {/* Status pill */}
-      {status === 'now' && (
-        <Badge className="bg-yellow-500 text-white text-[10px] mb-1.5 animate-pulse">{t('myprogram.now')}</Badge>
-      )}
-      {status === 'next' && (
-        <Badge className="bg-blue-500 text-white text-[10px] mb-1.5">{t('myprogram.next')}</Badge>
-      )}
-
-      {/* Time + Duration row */}
-      <div className="flex items-center gap-2 mb-1">
-        <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-        <span className={`font-mono text-sm font-bold ${status === 'done' ? 'text-gray-400' : 'text-gray-900'}`}>
-          {getData('start_time') ? formatTimeToEST(getData('start_time')) : '-'}
-        </span>
-        {getData('end_time') && (
-          <span className="text-gray-400 text-xs">- {formatTimeToEST(getData('end_time'))}</span>
-        )}
-        {segment.duration_min > 0 && (
-          <span className="text-gray-400 text-[10px]">({segment.duration_min}m)</span>
+    <div className={`rounded-2xl border p-4 transition-all duration-300 ${containerClass}`}>
+      {/* Header: Countdown / Status */}
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex items-center gap-2">
+          {status === 'now' && (
+            <Badge className="bg-yellow-500 text-white hover:bg-yellow-600 text-[10px] animate-pulse shadow-sm">
+              {t('myprogram.now')}
+            </Badge>
+          )}
+          {status === 'next' && (
+            <Badge className="bg-blue-500 text-white hover:bg-blue-600 text-[10px] shadow-sm">
+              {t('myprogram.next')}
+            </Badge>
+          )}
+          <span className={`font-mono text-sm font-bold ${status === 'done' ? 'text-gray-400' : 'text-gray-900'}`}>
+            {getData('start_time') ? formatTimeToEST(getData('start_time')) : '-'}
+          </span>
+        </div>
+        
+        {countdown && (
+          <div className={`text-xs font-bold px-2 py-1 rounded-md ${
+            status === 'now' ? 'bg-yellow-200 text-yellow-900' : 'bg-blue-100 text-blue-800'
+          }`}>
+            {countdown}
+          </div>
         )}
       </div>
 
       {/* Title + Type */}
-      <div className="flex items-center gap-1.5 flex-wrap mb-1">
-        {isSpecial && <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
-        <h4 className={`text-sm font-bold leading-snug ${status === 'done' ? 'text-gray-400' : 'text-gray-900'}`}>
-          {getData('title')}
-        </h4>
-        <Badge className={`text-[9px] px-1.5 py-0 ${typeBadgeClass}`}>
-          {segment.segment_type}
-        </Badge>
-        {segment.requires_translation && (
-          <Languages className="w-3 h-3 text-purple-500 shrink-0" />
-        )}
+      <div className="mb-2">
+        <div className="flex items-center gap-2 flex-wrap mb-1">
+          {isSpecial && <Sparkles className="w-4 h-4 text-amber-500 fill-amber-100 shrink-0" />}
+          <h4 className={`text-base font-extrabold leading-snug ${status === 'done' ? 'text-gray-500' : 'text-gray-900'}`}>
+            {getData('title')}
+          </h4>
+        </div>
+        <div className="flex gap-1.5 flex-wrap">
+          <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 font-medium ${typeBadgeClass}`}>
+            {segment.segment_type}
+          </Badge>
+          {segment.requires_translation && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-purple-200 text-purple-700 bg-purple-50 gap-1">
+              <Languages className="w-3 h-3" />
+              <span>Trad</span>
+            </Badge>
+          )}
+          {segment.duration_min > 0 && (
+            <span className="text-[10px] text-gray-400 font-medium self-center">
+              {segment.duration_min} min
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Message title */}
-      {isMessage && getData('message_title') && (
-        <p className="text-sm font-bold text-blue-800 mb-1">{getData('message_title')}</p>
-      )}
+      {/* Content Area */}
+      <div className={`space-y-2 ${status === 'done' ? 'opacity-80' : ''}`}>
+        {/* Message title */}
+        {isMessage && getData('message_title') && (
+          <p className="text-sm font-bold text-blue-800 bg-blue-50/50 p-2 rounded-lg border border-blue-100">
+            {getData('message_title')}
+          </p>
+        )}
 
-      {/* Presenter / Leader / Translator (always shown in general) */}
-      {department === 'general' && (
-        <div className="space-y-0.5">
-          {isMessage && getData('presenter') && (
-            <div className="flex items-center gap-1.5 text-xs text-blue-600">
-              <Users className="w-3 h-3" />
-              <span className="font-semibold">{t('live.preacher')}: {normalizeName(getData('presenter'))}</span>
-            </div>
-          )}
-          {isWorship && (getData('leader') || getData('presenter')) && (
-            <div className="flex items-center gap-1.5 text-xs text-green-600">
-              <Users className="w-3 h-3" />
-              <span className="font-semibold">{normalizeName(getData('leader') || getData('presenter'))}</span>
-            </div>
-          )}
-          {!isWorship && !isMessage && getData('presenter') && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
-              <Users className="w-3 h-3" />
-              <span>{normalizeName(getData('presenter'))}</span>
-            </div>
-          )}
-          {(getData('translator_name') || getData('translator')) && (
-            <div className="flex items-center gap-1.5 text-xs text-purple-600">
-              <Mic className="w-3 h-3" />
-              <span>{t('live.translator')}: {normalizeName(getData('translator_name') || getData('translator'))}</span>
-            </div>
-          )}
-        </div>
-      )}
+        {/* Presenter / Leader / Translator (always shown in general) */}
+        {department === 'general' && (
+          <div className="grid grid-cols-1 gap-1">
+            {isMessage && getData('presenter') && (
+              <div className="flex items-center gap-2 text-xs text-blue-700 font-medium">
+                <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                  <Users className="w-3 h-3" />
+                </div>
+                <span>{t('live.preacher')}: {normalizeName(getData('presenter'))}</span>
+              </div>
+            )}
+            {isWorship && (getData('leader') || getData('presenter')) && (
+              <div className="flex items-center gap-2 text-xs text-green-700 font-medium">
+                <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                  <Users className="w-3 h-3" />
+                </div>
+                <span>{normalizeName(getData('leader') || getData('presenter'))}</span>
+              </div>
+            )}
+            {!isWorship && !isMessage && getData('presenter') && (
+              <div className="flex items-center gap-2 text-xs text-gray-700 font-medium">
+                <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                  <Users className="w-3 h-3" />
+                </div>
+                <span>{normalizeName(getData('presenter'))}</span>
+              </div>
+            )}
+            {(getData('translator_name') || getData('translator')) && (
+              <div className="flex items-center gap-2 text-xs text-purple-700 font-medium">
+                <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                  <Mic className="w-3 h-3" />
+                </div>
+                <span>{t('live.translator')}: {normalizeName(getData('translator_name') || getData('translator'))}</span>
+              </div>
+            )}
+          </div>
+        )}
 
-      {/* Songs (general department, worship segments) */}
-      {department === 'general' && songs.length > 0 && (
-        <div className="mt-1.5 bg-slate-50 rounded p-1.5 text-[11px] text-gray-700">
-          {songs.map((s, i) => (
-            <div key={i} className="flex gap-1">
-              <span className="text-gray-400">{i + 1}.</span>
-              <span>{s.title}</span>
-              {s.lead && <span className="text-gray-400">({s.lead})</span>}
-              {s.key && <span className="text-gray-400 font-mono">{s.key}</span>}
-            </div>
-          ))}
-        </div>
-      )}
+        {/* Songs (general department, worship segments) */}
+        {department === 'general' && songs.length > 0 && (
+          <div className="bg-gray-50/80 rounded-lg p-2.5 text-xs text-gray-700 border border-gray-100">
+            {songs.map((s, i) => (
+              <div key={i} className="flex gap-2 mb-1 last:mb-0">
+                <span className="text-gray-400 font-mono w-3">{i + 1}.</span>
+                <span className="font-medium text-gray-800">{s.title}</span>
+                {s.lead && <span className="text-gray-500">({s.lead})</span>}
+                {s.key && <span className="text-gray-400 font-mono ml-auto text-[10px] bg-white px-1 rounded border border-gray-200">{s.key}</span>}
+              </div>
+            ))}
+          </div>
+        )}
 
-      {/* Department-specific notes */}
-      <DepartmentNotes segment={segment} department={department} />
+        {/* Department-specific notes */}
+        <DepartmentNotes segment={segment} department={department} />
 
-      {/* Break visual */}
-      {isBreak && (
-        <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-500">
-          <span>{segment.segment_type === 'Almuerzo' ? '🍽️' : '☕'}</span>
-          <span>{segment.duration_min}m</span>
-        </div>
-      )}
+        {/* Break visual */}
+        {isBreak && (
+          <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-100/50 p-2 rounded-lg border border-dashed border-gray-200">
+            <span className="text-base">{segment.segment_type === 'Almuerzo' ? '🍽️' : '☕'}</span>
+            <span className="font-medium">{segment.duration_min} min {segment.segment_type}</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -96,16 +96,37 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
   }
 
   return (
-    <div className="space-y-2">
-      {segmentsWithStatus.map((seg) => (
+    <div className="relative pl-6 sm:pl-8 space-y-0 py-4">
+      {/* Vertical Timeline Line */}
+      <div className="absolute left-2 sm:left-3 top-0 bottom-0 w-0.5 bg-gray-200" />
+
+      {segmentsWithStatus.map((seg, idx) => (
         <div
           key={seg.id}
-          ref={seg._status === 'now' || seg._status === 'next' ? nowRef : undefined}
+          ref={seg._status === 'now' ? nowRef : undefined}
+          className="relative mb-6 last:mb-0"
         >
+          {/* Timeline Dot */}
+          <div className={`
+            absolute -left-[1.35rem] sm:-left-[1.65rem] top-4 
+            w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 
+            flex items-center justify-center z-10 transition-all duration-500
+            ${seg._status === 'now' 
+              ? 'bg-yellow-400 border-yellow-500 shadow-[0_0_0_4px_rgba(250,204,21,0.2)] scale-110' 
+              : seg._status === 'done'
+                ? 'bg-gray-200 border-gray-300'
+                : 'bg-white border-gray-300'}
+          `}>
+            {seg._status === 'done' && <div className="w-2 h-2 bg-gray-400 rounded-full" />}
+            {seg._status === 'now' && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
+            {seg._status === 'next' && <div className="w-2 h-2 bg-blue-400 rounded-full" />}
+          </div>
+
           <MyProgramSegmentCard
             segment={seg}
             status={seg._status}
             department={department}
+            currentTime={currentTime}
           />
         </div>
       ))}
