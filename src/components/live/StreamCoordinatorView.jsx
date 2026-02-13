@@ -11,7 +11,7 @@ import { resolveBlockTime } from "@/components/utils/streamTiming";
 import StreamBlockItem from "@/components/session/StreamBlockItem";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
-export default function StreamCoordinatorView({ session, segments, currentUser }) {
+export default function StreamCoordinatorView({ session, segments, currentUser, embedded = false }) {
   const currentTime = useClockTick();
   const scrollRef = useRef(null);
   
@@ -73,22 +73,24 @@ export default function StreamCoordinatorView({ session, segments, currentUser }
   const isDiverging = currentBlock && currentBlock.block_type !== 'link';
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] bg-gray-100 rounded-xl overflow-hidden border border-gray-300">
-      {/* Top Bar */}
-      <div className="bg-slate-900 text-white p-4 flex justify-between items-center shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Radio className="w-5 h-5 text-red-500 animate-pulse" />
-            <h2 className="font-bold text-lg tracking-wide uppercase">Livestream Coordinator</h2>
+    <div className={`flex flex-col ${embedded ? 'h-full border-none rounded-none' : 'h-[calc(100vh-140px)] rounded-xl border border-gray-300'} bg-gray-100 overflow-hidden`}>
+      {/* Top Bar - Hidden in embedded mode */}
+      {!embedded && (
+        <div className="bg-slate-900 text-white p-4 flex justify-between items-center shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Radio className="w-5 h-5 text-red-500 animate-pulse" />
+              <h2 className="font-bold text-lg tracking-wide uppercase">Livestream Coordinator</h2>
+            </div>
+            <span className="text-slate-400 text-sm border-l border-slate-700 pl-3">
+              {session.name}
+            </span>
           </div>
-          <span className="text-slate-400 text-sm border-l border-slate-700 pl-3">
-            {session.name}
-          </span>
+          <div className="font-mono text-xl text-blue-400 font-bold">
+            {currentTime.toLocaleTimeString()}
+          </div>
         </div>
-        <div className="font-mono text-xl text-blue-400 font-bold">
-          {currentTime.toLocaleTimeString()}
-        </div>
-      </div>
+      )}
 
       {/* Hero Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-0 shrink-0 border-b-4 border-slate-900">
