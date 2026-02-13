@@ -357,131 +357,104 @@ export default function PublicCountdownDisplay() {
         {allDone ? (
           <StandbyScreen currentTime={currentTime} />
         ) : (
-          <>
-            {isCombined ? (
-              /* COMBINED SPLIT VIEW */
-              <div className="grid grid-cols-2 gap-4 w-full h-full min-h-[600px]">
-                {/* Left: Main Room */}
-                <div className="flex flex-col gap-4">
-                  <div className="bg-slate-200 text-slate-600 px-4 py-2 rounded-t-xl font-bold uppercase text-sm tracking-widest text-center">In-Room Program</div>
-                  {currentSegment ? (
-                    <CountdownBlock
-                      segment={currentSegment}
-                      displayMode="in-progress"
-                      currentTime={currentTime}
-                      serviceDate={currentSegment?.date || serviceDate}
-                      getTimeDate={getTimeDate}
-                      className="flex-1"
-                    />
-                  ) : preLaunchSegment ? (
-                    <CountdownBlock
-                      segment={preLaunchSegment}
-                      displayMode="pre-launch"
-                      currentTime={currentTime}
-                      serviceDate={preLaunchSegment?.date || serviceDate}
-                      getTimeDate={getTimeDate}
-                      className="flex-1"
-                    />
-                  ) : (
-                    <div className="flex-1 bg-white rounded-3xl border-4 border-slate-200 flex items-center justify-center">
-                      <p className="text-slate-400 italic">No active room segment</p>
-                    </div>
-                  )}
-                  
-                  <div className="h-1/3 relative min-h-[200px]">
-                    <div className="absolute inset-0">
-                       <SegmentTimeline
-                        segments={upcomingSegments}
-                        getTimeDate={getTimeDate}
-                        serviceDate={serviceDate}
-                        className="h-full"
-                       />
-                    </div>
-                  </div>
+          <div className="grid grid-cols-12 gap-4 w-full h-full flex-1 overflow-hidden min-h-[600px]">
+            {/* Col 1: Status Sidecar (Countdown + Actions) */}
+            <div className="col-span-3 flex flex-col gap-4 overflow-hidden">
+              {/* Primary Countdown (Compact) */}
+              {currentSegment ? (
+                <CountdownBlock
+                  segment={currentSegment}
+                  displayMode="in-progress"
+                  currentTime={currentTime}
+                  serviceDate={currentSegment?.date || serviceDate}
+                  getTimeDate={getTimeDate}
+                  size="compact"
+                  className="w-full"
+                />
+              ) : preLaunchSegment ? (
+                <CountdownBlock
+                  segment={preLaunchSegment}
+                  displayMode="pre-launch"
+                  currentTime={currentTime}
+                  serviceDate={preLaunchSegment?.date || serviceDate}
+                  getTimeDate={getTimeDate}
+                  size="compact"
+                  className="w-full"
+                />
+              ) : (
+                <div className="bg-white rounded-3xl border-4 border-slate-200 p-6 flex items-center justify-center min-h-[200px]">
+                  <p className="text-slate-400 italic text-sm">No active segment</p>
                 </div>
+              )}
 
-                {/* Right: Stream View */}
-                <div className="flex flex-col gap-4">
-                  <div className="bg-slate-800 text-white px-4 py-2 rounded-t-xl font-bold uppercase text-sm tracking-widest text-center flex items-center justify-center gap-2">
-                    <Radio className="w-4 h-4 text-red-500 animate-pulse" />
-                    Livestream
-                  </div>
-                  <div className="flex-1 overflow-hidden relative rounded-xl border border-slate-300 bg-gray-100">
-                    {/* Reuse StreamCoordinatorView but constrain it */}
-                    {(() => {
-                      const sess = (programData?.sessions || []).find(s => s.has_livestream) || (programData?.sessions || [])[0];
-                      if (sess) {
-                        return (
-                          <StreamCoordinatorView 
-                            session={sess}
-                            segments={segments.filter(s => s.session_id === sess.id)}
-                            currentUser={null}
-                            embedded={true}
-                          />
-                        );
-                      }
-                      return <div className="p-10 text-center text-slate-400">No stream session</div>;
-                    })()}
-                  </div>
+              {/* Coordinator Actions (Vertical Stack) */}
+              <div className="flex-1 overflow-y-auto">
+                <CoordinatorActionsDisplay
+                  currentSegment={currentSegment}
+                  nextSegment={nextSegment}
+                  currentTime={currentTime}
+                  serviceDate={serviceDate}
+                  layout="vertical"
+                />
+              </div>
+            </div>
+
+            {/* Col 2: Main Program Timeline (Full Height) */}
+            <div className="col-span-5 flex flex-col gap-0 overflow-hidden bg-white/80 rounded-2xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
+              <div className="bg-slate-100/80 px-4 py-3 border-b border-slate-200">
+                <div className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                  <Layout className="w-4 h-4" />
+                  Room Program
                 </div>
               </div>
-            ) : (
-              /* STANDARD TV LAYOUT (Room Only) */
-              <div className="grid grid-cols-5 gap-6 w-full items-stretch min-w-[1000px] flex-1">
-                <div className="col-span-3">
-                  {currentSegment ? (
-                    <CountdownBlock
-                      segment={currentSegment}
-                      displayMode="in-progress"
-                      currentTime={currentTime}
-                      serviceDate={currentSegment?.date || serviceDate}
-                      getTimeDate={getTimeDate}
-                      className="h-full"
-                    />
-                  ) : preLaunchSegment ? (
-                    <CountdownBlock
-                      segment={preLaunchSegment}
-                      displayMode="pre-launch"
-                      currentTime={currentTime}
-                      serviceDate={preLaunchSegment?.date || serviceDate}
-                      getTimeDate={getTimeDate}
-                      className="h-full"
-                    />
-                  ) : (
-                    <div className="h-full min-h-[400px] bg-white rounded-3xl border-4 border-slate-200 p-8 md:p-10 shadow-lg flex items-center justify-center">
-                      <p className="text-slate-400 italic text-lg">{t('live.nothingNow')}</p>
-                    </div>
-                  )}
-                </div>
-                <div className="col-span-2 relative min-h-0">
-                  <div className="absolute inset-0 h-full">
-                    {upcomingSegments.length > 0 ? (
-                      <SegmentTimeline
+              <div className="flex-1 relative p-2">
+                <div className="absolute inset-0 p-2">
+                  {upcomingSegments.length > 0 ? (
+                    <SegmentTimeline
                       segments={upcomingSegments}
                       getTimeDate={getTimeDate}
                       serviceDate={serviceDate}
                       className="h-full"
-                      />
-                    ) : (
-                      <div className="h-full bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200 p-8 flex items-center justify-center">
-                        <p className="text-slate-400 italic font-medium">{t('live.endOfProgram')}</p>
-                      </div>
-                    )}
-                  </div>
+                    />
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-slate-400 italic">
+                      {t('live.endOfProgram')}
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* Coordinator Actions (Shared) */}
-            {(currentSegment || nextSegment) && !isCombined && (
-              <CoordinatorActionsDisplay
-                currentSegment={currentSegment}
-                nextSegment={nextSegment}
-                currentTime={currentTime}
-                serviceDate={serviceDate}
-              />
-            )}
-          </>
+            {/* Col 3: Livestream Sidecar (Full Height) */}
+            <div className="col-span-4 flex flex-col gap-0 overflow-hidden bg-slate-900/5 rounded-2xl border border-slate-200/60 shadow-inner h-full">
+              <div className="bg-slate-800 px-4 py-3 text-white border-b border-slate-700">
+                <div className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-red-500 animate-pulse" />
+                  Livestream
+                </div>
+              </div>
+              <div className="flex-1 relative">
+                {(() => {
+                  const sess = (programData?.sessions || []).find(s => s.has_livestream) || (programData?.sessions || [])[0];
+                  if (sess) {
+                    return (
+                      <StreamCoordinatorView 
+                        session={sess}
+                        segments={segments.filter(s => s.session_id === sess.id)}
+                        currentUser={null}
+                        embedded={true}
+                      />
+                    );
+                  }
+                  return (
+                    <div className="h-full flex items-center justify-center p-8 text-center text-slate-400">
+                      <p>No livestream session configured</p>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
