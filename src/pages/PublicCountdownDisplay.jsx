@@ -10,7 +10,7 @@ import { normalizeProgramData } from "@/components/utils/normalizeProgram";
 import { normalizeStreamBlocks } from "@/components/utils/normalizeStreamBlocks";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Tv, Settings, Loader2, Radio, Layout, Columns } from "lucide-react";
+import { Tv, Settings, Loader2, Radio, Layout } from "lucide-react";
 import StandbyScreen from "@/components/service/StandbyScreen";
 import StreamSidecarTimeline from "@/components/live/StreamSidecarTimeline";
 
