@@ -25,7 +25,6 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     'view_announcements', 'edit_announcements', 'create_announcements', 'delete_announcements',
     'view_reports',
     'access_importer',
-    'view_live_program',
     'view_live_chat',
     'manage_live_timing',
     'manage_live_director',
@@ -34,11 +33,9 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     'access_live_view',
   ],
   LiveManager: [
-    'view_live_program',
     'view_live_chat',
     'manage_live_timing',
     'manage_live_director',
-    'adjust_service_timing',
     'access_my_program',
     'access_live_view',
   ],
@@ -48,7 +45,6 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     'view_reports',
     'view_announcements', 'edit_announcements', 'create_announcements',
     'view_people', 'edit_people', 'create_people',
-    'view_live_program',
     'view_live_chat',
     'access_my_program',
     'access_live_view',
@@ -56,12 +52,11 @@ export const DEFAULT_ROLE_PERMISSIONS = {
   EventDayViewer: [
     'access_my_program',
   ],
-  // EventDayCoordinator: Same as EventDayViewer + view_live_chat + adjust_service_timing
+  // EventDayCoordinator: Same as EventDayViewer + view_live_chat + manage_live_timing
   // For coordinators who need to participate in live operations chat and adjust service times
   EventDayCoordinator: [
-    'view_live_program',
     'view_live_chat',
-    'adjust_service_timing',
+    'manage_live_timing',
     'access_my_program',
   ],
 };
@@ -208,20 +203,14 @@ export function getAllPermissionDefinitions() {
     // Importer
     { key: 'access_importer', resource: 'importer', action: 'access', category: 'settings', hierarchy_level: 4, label_en: 'Access AI Importer', label_es: 'Acceder Importador IA' },
 
-    // Live Program
-    { key: 'view_live_program', resource: 'live_program', action: 'view', category: 'live', hierarchy_level: 0, label_en: 'View Live Program', label_es: 'Ver Programa en Vivo' },
-
     // User Management
     { key: 'manage_users', resource: 'users', action: 'manage', category: 'settings', hierarchy_level: 4, label_en: 'Manage Users', label_es: 'Gestionar Usuarios' },
 
-    // Live Timing
-    { key: 'manage_live_timing', resource: 'live_timing', action: 'manage', category: 'live', hierarchy_level: 2, label_en: 'Manage Live Timing', label_es: 'Gestionar Tiempos en Vivo' },
+    // Live Timing (Covers both Segment Actuals and Service Offsets)
+    { key: 'manage_live_timing', resource: 'live_timing', action: 'manage', category: 'live', hierarchy_level: 2, label_en: 'Manage Live Timing & Adjustments', label_es: 'Gestionar Tiempos y Ajustes' },
 
     // Live Chat
     { key: 'view_live_chat', resource: 'live_chat', action: 'view', category: 'live', hierarchy_level: 0, label_en: 'View Live Chat', label_es: 'Ver Chat en Vivo' },
-
-    // Service Time Adjustment (for service coordinators to adjust start times)
-    { key: 'adjust_service_timing', resource: 'service_timing', action: 'edit', category: 'live', hierarchy_level: 1, label_en: 'Adjust Service Timing', label_es: 'Ajustar Horario del Servicio' },
 
     // Live Director (for managing live event session timing via Director Console)
     { key: 'manage_live_director', resource: 'live_director', action: 'manage', category: 'live', hierarchy_level: 4, label_en: 'Manage Live Director', label_es: 'Gestionar Director en Vivo' },
