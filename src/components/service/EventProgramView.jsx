@@ -78,6 +78,29 @@ export default function EventProgramView({
   // Detect if any session has livestream enabled
   const hasAnyLivestream = eventSessions.some(s => s.has_livestream);
 
+  // Fetch stream blocks for livestream sessions to determine current LS block
+  const livestreamSession = eventSessions.find(s => s.has_livestream);
+  const { data: streamBlocks = [] } = useQuery({
+    queryKey: ['streamBlocksForStatusCard', livestreamSession?.id],
+    queryFn: () => base44.entities.StreamBlock.filter({ session_id: livestreamSession.id }, 'order'),
+    enabled: !!livestreamSession?.id,
+    refetchInterval: 5000
+  });
+
+  // Resolve current stream block independently of room program
+  const currentStreamBlock = useMemo(() => {
+    if (!livestreamSession || streamBlocks.length === 0) return null;
+    const sessionSegments = allSegments.filter(s => s.session_id === livestreamSession.id);
+    const now = currentTime;
+    for (const block of streamBlocks) {
+      const { startTime, endTime } = resolveBlockTime(block, sessionSegments, livestreamSession.date);
+      if (startTime && endTime && now >= startTime && now <= endTime) {
+        return block;
+      }
+    }
+    return null;
+  }, [streamBlocks, allSegments, livestreamSession, currentTime]);
+
   // Fetch live adjustments for event sessions
   const { data: liveAdjustments = [] } = useQuery({
     queryKey: ['eventLiveAdjustments', selectedEvent?.id, eventSessions.length > 0 ? eventSessions[0]?.date : null],
