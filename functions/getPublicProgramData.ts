@@ -22,13 +22,14 @@ Deno.serve(async (req) => {
             const today = new Date();
             today.setHours(0,0,0,0);
             
+            // Sort ASCENDING so 'find' logic picks the earliest upcoming item
             const relevantEvents = allEvents.filter(e => {
                 if (e.status !== 'confirmed' && e.status !== 'in_progress') return false;
                 if (!e.start_date) return false;
                 const start = new Date(e.start_date);
                 const diffDays = (start - today) / (1000 * 60 * 60 * 24);
                 return diffDays > -7 && diffDays <= 7;
-            });
+            }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
             const relevantServices = allServices.filter(s => {
                  if (s.status !== 'active') return false;
@@ -36,7 +37,7 @@ Deno.serve(async (req) => {
                  const sDate = new Date(s.date);
                  const diffDays = (sDate - today) / (1000 * 60 * 60 * 24);
                  return diffDays > -2 && diffDays < 14;
-            });
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
 
             optionsData = { events: relevantEvents, services: relevantServices };
             
