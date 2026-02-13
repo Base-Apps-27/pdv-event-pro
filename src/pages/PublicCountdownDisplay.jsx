@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card } from "@/components/ui/card";
 import { Tv, Settings, Loader2, Radio, Layout, Columns } from "lucide-react";
 import StandbyScreen from "@/components/service/StandbyScreen";
-import StreamCoordinatorView from "@/components/live/StreamCoordinatorView";
+import StreamSidecarTimeline from "@/components/live/StreamSidecarTimeline";
 
 /**
  * PublicCountdownDisplay
@@ -388,29 +388,24 @@ export default function PublicCountdownDisplay() {
               </div>
             </div>
 
-            {/* Col 3: Livestream Sidecar (Full Height) - VERY COMPACT */}
-            <div className="flex flex-col gap-0 overflow-hidden bg-slate-900/5 rounded-2xl border border-slate-200/60 shadow-inner h-full">
-              {/* No Header requested for sidecar */}
-              <div className="flex-1 relative">
-                {(() => {
-                  const sess = (programData?.sessions || []).find(s => s.has_livestream) || (programData?.sessions || [])[0];
-                  if (sess) {
-                    return (
-                      <StreamCoordinatorView 
-                        session={sess}
-                        segments={segments.filter(s => s.session_id === sess.id)}
-                        currentUser={null}
-                        embedded={true}
-                      />
-                    );
-                  }
+            {/* Col 3: Livestream Sidecar - purpose-built slim timeline */}
+            <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-2xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
+              {(() => {
+                const sess = (programData?.sessions || []).find(s => s.has_livestream) || (programData?.sessions || [])[0];
+                if (sess) {
                   return (
-                    <div className="h-full flex items-center justify-center p-8 text-center text-slate-400">
-                      <p>No livestream</p>
-                    </div>
+                    <StreamSidecarTimeline
+                      session={sess}
+                      segments={segments.filter(s => s.session_id === sess.id)}
+                    />
                   );
-                })()}
-              </div>
+                }
+                return (
+                  <div className="h-full flex items-center justify-center text-slate-400 text-xs italic">
+                    No livestream
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
