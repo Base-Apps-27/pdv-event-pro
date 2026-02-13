@@ -190,6 +190,7 @@ export default function StreamCoordinatorView({ session, segments, currentUser, 
                   sessionDate={session.date}
                   readOnly={true}
                   isCurrent={block.isCurrent}
+                  compact={embedded}
                 />
               </div>
             ))}

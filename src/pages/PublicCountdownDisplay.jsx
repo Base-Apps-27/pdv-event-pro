@@ -39,21 +39,8 @@ export default function PublicCountdownDisplay() {
     return `${year}-${month}-${day}`;
   });
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const [mode, setMode] = useState(urlParams.get('mode') || 'standard'); // standard, livestream, combined
-  
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const m = params.get('mode');
-    if (m && m !== mode) setMode(m);
-  }, [window.location.search]);
-
-  const updateMode = (newMode) => {
-    setMode(newMode);
-    const newUrl = new URL(window.location);
-    newUrl.searchParams.set('mode', newMode);
-    window.history.pushState({}, '', newUrl);
-  };
+  // Mode fixed to dashboard
+  const mode = 'dashboard';
   
   // Tick every second
   useEffect(() => {
@@ -314,32 +301,8 @@ export default function PublicCountdownDisplay() {
 
       {/* Header */}
       <div className="w-full flex items-center justify-between px-6 py-4 z-20 relative mb-4">
-        {/* View Controls */}
-        <div className="flex-shrink-0 w-[300px] flex items-center gap-2">
-          <div className="bg-white/90 backdrop-blur-md p-1 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1">
-            <button 
-              onClick={() => updateMode('standard')}
-              className={`p-2 rounded-md transition-colors ${mode === 'standard' ? 'bg-slate-200 text-slate-900' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
-              title="Standard View"
-            >
-              <Tv className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={() => updateMode('combined')}
-              className={`p-2 rounded-md transition-colors ${mode === 'combined' ? 'bg-slate-200 text-slate-900' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
-              title="Combined View (Split)"
-            >
-              <Columns className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={() => updateMode('livestream')}
-              className={`p-2 rounded-md transition-colors ${mode === 'livestream' ? 'bg-slate-200 text-slate-900' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
-              title="Livestream View Only"
-            >
-              <Radio className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+        {/* Left Spacer */}
+        <div className="flex-shrink-0 w-[300px]" />
 
         <div className="flex-1 text-center px-4 min-w-0">
           <h1 className={`text-3xl md:text-5xl font-black uppercase tracking-tight ${gradientText} drop-shadow-sm leading-tight`}>
@@ -357,9 +320,9 @@ export default function PublicCountdownDisplay() {
         {allDone ? (
           <StandbyScreen currentTime={currentTime} />
         ) : (
-          <div className="grid grid-cols-12 gap-4 w-full h-full flex-1 overflow-hidden min-h-[600px]">
-            {/* Col 1: Status Sidecar (Countdown + Actions) */}
-            <div className="col-span-3 flex flex-col gap-4 overflow-hidden">
+          <div className="w-full h-full flex-1 overflow-hidden min-h-[600px] grid gap-4" style={{ gridTemplateColumns: '40% 40% 20%' }}>
+            {/* Col 1: Status Sidecar (Countdown + Actions) - WIDER */}
+            <div className="flex flex-col gap-4 overflow-hidden">
               {/* Primary Countdown (Compact) */}
               {currentSegment ? (
                 <CountdownBlock
@@ -399,8 +362,8 @@ export default function PublicCountdownDisplay() {
               </div>
             </div>
 
-            {/* Col 2: Main Program Timeline (Full Height) */}
-            <div className="col-span-5 flex flex-col gap-0 overflow-hidden bg-white/80 rounded-2xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
+            {/* Col 2: Main Program Timeline (Full Height) - SLIGHTLY SMALLER */}
+            <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-2xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
               <div className="bg-slate-100/80 px-4 py-3 border-b border-slate-200">
                 <div className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
                   <Layout className="w-4 h-4" />
@@ -425,14 +388,9 @@ export default function PublicCountdownDisplay() {
               </div>
             </div>
 
-            {/* Col 3: Livestream Sidecar (Full Height) */}
-            <div className="col-span-4 flex flex-col gap-0 overflow-hidden bg-slate-900/5 rounded-2xl border border-slate-200/60 shadow-inner h-full">
-              <div className="bg-slate-800 px-4 py-3 text-white border-b border-slate-700">
-                <div className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                  <Radio className="w-4 h-4 text-red-500 animate-pulse" />
-                  Livestream
-                </div>
-              </div>
+            {/* Col 3: Livestream Sidecar (Full Height) - VERY COMPACT */}
+            <div className="flex flex-col gap-0 overflow-hidden bg-slate-900/5 rounded-2xl border border-slate-200/60 shadow-inner h-full">
+              {/* No Header requested for sidecar */}
               <div className="flex-1 relative">
                 {(() => {
                   const sess = (programData?.sessions || []).find(s => s.has_livestream) || (programData?.sessions || [])[0];
@@ -448,7 +406,7 @@ export default function PublicCountdownDisplay() {
                   }
                   return (
                     <div className="h-full flex items-center justify-center p-8 text-center text-slate-400">
-                      <p>No livestream session configured</p>
+                      <p>No livestream</p>
                     </div>
                   );
                 })()}
