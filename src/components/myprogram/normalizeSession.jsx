@@ -117,6 +117,7 @@ export function normalizeServiceSegments(serviceData) {
         ushers_notes: seg.data?.ushers_notes || seg.ushers_notes || '',
         translation_notes: seg.data?.translation_notes || seg.translation_notes || '',
         stage_decor_notes: seg.data?.stage_decor_notes || seg.stage_decor_notes || '',
+        livestream_notes: seg.data?.livestream_notes || seg.livestream_notes || '',
         other_notes: seg.data?.other_notes || seg.other_notes || '',
         prep_instructions: seg.data?.prep_instructions || seg.prep_instructions || '',
         microphone_assignments: seg.data?.microphone_assignments || seg.microphone_assignments || '',
