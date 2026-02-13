@@ -19,15 +19,20 @@ Deno.serve(async (req) => {
                 base44.asServiceRole.entities.Service.list('-date')
             ]);
             
-            const today = new Date();
-            today.setHours(0,0,0,0);
+            // Use ET for "Today" to match user perception (America/New_York)
+            // This ensures "Date-1" means "Day before in ET", not "Day before in UTC"
+            const getETDateStr = () => {
+                return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+            };
+            const todayStr = getETDateStr();
+            const today = new Date(todayStr); // UTC midnight of ET date
             
             // Sort ASCENDING so 'find' logic picks the earliest upcoming item
             // Events: Visible from 4 days before (Date-4) until 7 days after
             const relevantEvents = allEvents.filter(e => {
                 if (e.status !== 'confirmed' && e.status !== 'in_progress') return false;
                 if (!e.start_date) return false;
-                const start = new Date(e.start_date);
+                const start = new Date(e.start_date); // YYYY-MM-DD -> UTC Midnight
                 const diffDays = (start - today) / (1000 * 60 * 60 * 24);
                 return diffDays > -7 && diffDays <= 4; 
             }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
@@ -36,7 +41,7 @@ Deno.serve(async (req) => {
             const relevantServices = allServices.filter(s => {
                  if (s.status !== 'active') return false;
                  if (!s.date || s.origin === 'blueprint') return false;
-                 const sDate = new Date(s.date);
+                 const sDate = new Date(s.date); // YYYY-MM-DD -> UTC Midnight
                  const diffDays = (sDate - today) / (1000 * 60 * 60 * 24);
                  return diffDays > -2 && diffDays <= 1;
             }).sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -75,9 +80,10 @@ Deno.serve(async (req) => {
 
         // C. Auto-detect logic (Date or Smart Detect)
         if (!targetProgram && !eventId && !serviceId) {
-            // Determine date to check: explicit param or today
-            const checkDateStr = date || new Date().toISOString().split('T')[0];
-            const checkDate = new Date(checkDateStr + 'T00:00:00'); // Local midnight approx
+            // Determine date to check: explicit param or today (ET)
+            const getETDateStr = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+            const checkDateStr = date || getETDateStr();
+            const checkDate = new Date(checkDateStr + 'T00:00:00'); 
 
             if (detectActive && optionsData) {
                 // Smart Detect using already fetched options (fastest)
