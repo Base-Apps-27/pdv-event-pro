@@ -7,7 +7,14 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { useLanguage } from "@/components/utils/i18n";
 import { getSegmentData } from "@/components/utils/segmentDataUtils";
 
-export default function LiveStatusCard({ segments, currentTime, onScrollTo, liveAdjustmentEnabled, serviceDate }) {
+/**
+ * LiveStatusCard
+ * 
+ * Shows the current and next segment status.
+ * Optional: currentStreamBlock shows what the livestream is currently on,
+ * independently of the main room program. Clicking LS line triggers onStreamBlockClick.
+ */
+export default function LiveStatusCard({ segments, currentTime, onScrollTo, liveAdjustmentEnabled, serviceDate, currentStreamBlock, onStreamBlockClick }) {
   const { t } = useLanguage();
   // Helper to parse "HH:MM" to Date object
   const getTimeDate = (timeStr, segmentDate) => {
