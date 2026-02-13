@@ -19,7 +19,7 @@ const DEPT_FIELD_MAP = {
   stage_decor: ['stage_decor_notes'],
   hospitality: ['ushers_notes'], // Often shared, or rely on actions
   coordination: ['prep_instructions', 'other_notes'],
-  livestream: ['projection_notes'],
+  livestream: ['livestream_notes'],
 };
 
 // Updated Colors - Projection is now distinct (Indigo)
@@ -43,6 +43,7 @@ const FIELD_LABELS = {
   stage_decor_notes: { es: 'Stage & Decor', en: 'Stage & Decor' },
   prep_instructions: { es: 'Preparación', en: 'Preparation' },
   other_notes: { es: 'Notas', en: 'Notes' },
+  livestream_notes: { es: 'Livestream', en: 'Livestream' },
 };
 
 export default function DepartmentNotes({ segment, department }) {
