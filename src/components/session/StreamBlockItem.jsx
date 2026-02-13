@@ -5,7 +5,7 @@ import { ChevronUp, ChevronDown, Edit, Trash2, Link as LinkIcon, Radio, PowerOff
 import { resolveBlockTime } from "@/components/utils/streamTiming";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
-export default function StreamBlockItem({ block, index, total, segments, sessionDate, onEdit, onDelete, onMove }) {
+export default function StreamBlockItem({ block, index, total, segments, sessionDate, onEdit, onDelete, onMove, readOnly = false, isCurrent = false }) {
   // Resolve timing on the fly
   const { startTime, endTime, isOrphaned } = resolveBlockTime(block, segments, sessionDate);
 
@@ -34,30 +34,32 @@ export default function StreamBlockItem({ block, index, total, segments, session
 
   return (
     <div className={`
-      relative flex items-center gap-3 p-3 rounded-lg border bg-white hover:shadow-sm transition-all
-      ${isOrphaned ? 'border-red-300 bg-red-50' : 'border-gray-200'}
+      relative flex items-center gap-3 p-3 rounded-lg border transition-all
+      ${isOrphaned ? 'border-red-300 bg-red-50' : isCurrent ? 'bg-blue-50 border-blue-500 shadow-md ring-1 ring-blue-500' : 'bg-white border-gray-200 hover:shadow-sm'}
     `}>
       {/* Reorder Controls (Arrow System) */}
-      <div className="flex flex-col gap-0.5">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onMove(index, 'up')}
-          disabled={index === 0}
-          className="h-5 w-6 p-0 hover:bg-blue-100 text-slate-400 hover:text-blue-600"
-        >
-          <ChevronUp className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onMove(index, 'down')}
-          disabled={index === total - 1}
-          className="h-5 w-6 p-0 hover:bg-blue-100 text-slate-400 hover:text-blue-600"
-        >
-          <ChevronDown className="w-4 h-4" />
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex flex-col gap-0.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onMove(index, 'up')}
+            disabled={index === 0}
+            className="h-5 w-6 p-0 hover:bg-blue-100 text-slate-400 hover:text-blue-600"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onMove(index, 'down')}
+            disabled={index === total - 1}
+            className="h-5 w-6 p-0 hover:bg-blue-100 text-slate-400 hover:text-blue-600"
+          >
+            <ChevronDown className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Time Column */}
       <div className="flex flex-col items-end min-w-[70px]">
@@ -110,19 +112,21 @@ export default function StreamBlockItem({ block, index, total, segments, session
       </div>
 
       {/* Actions */}
-      <div className="flex gap-1">
-        <Button variant="ghost" size="sm" onClick={() => onEdit(block)} className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600">
-          <Edit className="w-4 h-4" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => onDelete(block)}
-          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" onClick={() => onEdit(block)} className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600">
+            <Edit className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => onDelete(block)}
+            className="h-8 w-8 p-0 text-slate-400 hover:text-red-600"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

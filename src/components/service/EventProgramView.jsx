@@ -17,6 +17,7 @@ import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import { formatTimeToEST, formatDateET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { hasPermission } from "@/components/utils/permissions";
+import StreamCoordinatorView from "@/components/live/StreamCoordinatorView";
 
 /**
  * EventProgramView Component
@@ -61,7 +62,8 @@ export default function EventProgramView({
   canAccessLiveOps = false,
   onToggleChat,
   chatUnreadCount = 0,
-  chatOpen = false
+  chatOpen = false,
+  isStreamMode = false
 }) {
   // Event-specific state
   const [selectedSessionId, setSelectedSessionId] = useState("all");
@@ -142,8 +144,8 @@ export default function EventProgramView({
          Component preserved at: components/service/LiveDirectorPanel.jsx
       */}
 
-      {/* Sticky Ops Deck - PERMISSION-GATED: requires view_live_chat */}
-      {canAccessLiveOps && (
+      {/* Sticky Ops Deck - PERMISSION-GATED: requires view_live_chat (Hidden in Stream Mode) */}
+      {canAccessLiveOps && !isStreamMode && (
       <StickyOpsDeck 
         segments={allSegments.map(seg => {
           const session = eventSessions.find(s => s.id === seg.session_id);
@@ -159,8 +161,8 @@ export default function EventProgramView({
       />
       )}
 
-      {/* Live Status Card - with date awareness */}
-      <LiveStatusCard 
+      {/* Live Status Card - with date awareness (Hidden in Stream Mode) */}
+      {!isStreamMode && <LiveStatusCard 
         segments={allSegments.map(seg => {
           // Augment segments with their session date for accurate live status
           const session = eventSessions.find(s => s.id === seg.session_id);
@@ -169,9 +171,10 @@ export default function EventProgramView({
         currentTime={currentTime}
         onScrollTo={scrollToSegment}
         liveAdjustmentEnabled={filteredSessions[0]?.live_adjustment_enabled}
-      />
+      />}
 
-      {/* Compact Filters Toolbar */}
+      {/* Compact Filters Toolbar - Hidden in Stream Mode */}
+      {!isStreamMode && (
       <div className="flex flex-col sm:flex-row gap-3 items-center bg-gray-100 p-2 rounded-xl border border-gray-200">
         <div className="flex-1 w-full sm:w-auto">
           <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
@@ -218,9 +221,10 @@ export default function EventProgramView({
           </Link>
         )}
       </div>
+      )}
 
-      {/* Live Director Active Banner - Shows when a session has active director */}
-      {filteredSessions.some(s => s.live_adjustment_enabled && s.live_director_user_id) && (
+      {/* Live Director Active Banner - Shows when a session has active director (Hidden in Stream Mode) */}
+      {!isStreamMode && filteredSessions.some(s => s.live_adjustment_enabled && s.live_director_user_id) && (
         <div className="bg-red-900/90 text-white rounded-lg p-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -243,10 +247,38 @@ export default function EventProgramView({
         </div>
       )}
 
+      {/* Stream Mode Header */}
+      {isStreamMode && (
+        <div className="bg-slate-900 text-white p-4 rounded-xl mb-6 shadow-lg flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold uppercase tracking-wider text-red-500 flex items-center gap-2">
+              <Radio className="w-6 h-6 animate-pulse" />
+              Livestream Control
+            </h1>
+            <p className="text-slate-400 text-sm">Monitoring {filteredSessions.filter(s => s.has_livestream).length} active stream sessions</p>
+          </div>
+          {/* Optional: Add global stream status or health here */}
+        </div>
+      )}
+
       {/* Sessions Display */}
       {filteredSessions.map((session) => {
         const segments = getSessionSegments(session.id);
         if (segments.length === 0) return null;
+
+        // In Stream Mode, check if session has livestream enabled
+        if (isStreamMode) {
+          if (!session.has_livestream) return null;
+          return (
+            <div key={session.id} className="mb-8">
+              <StreamCoordinatorView 
+                session={session}
+                segments={segments}
+                currentUser={currentUser}
+              />
+            </div>
+          );
+        }
 
         return (
           <div key={session.id} className={`bg-white rounded-lg overflow-hidden ${sessionColorClasses[session.session_color] || 'border-2 border-gray-300'}`}>

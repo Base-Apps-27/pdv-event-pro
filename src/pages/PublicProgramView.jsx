@@ -50,6 +50,8 @@ export default function PublicProgramView() {
   const preloadedEventId = urlParams.get('eventId') || "";
   const preloadedServiceId = urlParams.get('serviceId') || "";
   const preloadedDate = urlParams.get('date') || "";
+  const viewParam = urlParams.get('view'); // 'livestream'
+  const isStreamMode = viewParam === 'livestream';
   
   // Top-level state for view type selection and entity selection
   const [viewType, setViewType] = useState(preloadedServiceId || preloadedDate ? "service" : "event");
@@ -969,6 +971,7 @@ export default function PublicProgramView() {
                                onToggleChat={() => setChatOpen(!chatOpen)}
                                chatUnreadCount={chatUnreadCount}
                                chatOpen={chatOpen}
+                               isStreamMode={isStreamMode}
                                />
             )}
 
