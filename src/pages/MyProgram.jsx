@@ -148,17 +148,19 @@ export default function MyProgram() {
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="max-w-2xl mx-auto px-3 py-3 space-y-2">
-        {/* Department Picker */}
-        <DepartmentPicker value={department} onChange={setDepartment} />
+      {/* Sticky Controls */}
+      <div className="sticky top-0 z-40 bg-[#F0F1F3]/95 backdrop-blur-sm border-b border-white/20 shadow-sm transition-all">
+        <div className="max-w-2xl mx-auto px-3 py-3 space-y-2">
+          {/* Department Picker */}
+          <DepartmentPicker value={department} onChange={setDepartment} />
 
-        {/* Session Picker (events with multiple sessions) */}
-        <SessionPicker
-          sessions={sessionLabels}
-          value={selectedSession}
-          onChange={setSelectedSession}
-        />
+          {/* Session Picker (events with multiple sessions) */}
+          <SessionPicker
+            sessions={sessionLabels}
+            value={selectedSession}
+            onChange={setSelectedSession}
+          />
+        </div>
       </div>
 
       {/* Timeline */}

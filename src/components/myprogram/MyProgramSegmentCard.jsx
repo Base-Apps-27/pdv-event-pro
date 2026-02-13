@@ -9,33 +9,36 @@ import { normalizeName } from '@/components/utils/textNormalization';
 import DepartmentNotes from './DepartmentNotes';
 import SegmentResourcesModal from '@/components/service/SegmentResourcesModal';
 
-function getCountdown(segment, currentTime, status, t) {
-  if (!currentTime || !segment.start_time) return null;
+function getSegmentTiming(segment, currentTime) {
+  if (!currentTime || !segment.start_time) return { start: 0, end: 0, now: 0 };
   
   const now = currentTime.getHours() * 60 + currentTime.getMinutes();
-  
-  // Calculate Start Time in Minutes
   const [startH, startM] = segment.start_time.split(':').map(Number);
   const startMinutes = startH * 60 + startM;
   
-  // Calculate End Time
   let endMinutes = startMinutes + (segment.duration_min || 0);
   if (segment.end_time) {
     const [endH, endM] = segment.end_time.split(':').map(Number);
     endMinutes = endH * 60 + endM;
   }
-
-  // Handle midnight crossing for end time (if end < start)
+  
   if (endMinutes < startMinutes) endMinutes += 24 * 60;
+  
+  return { start: startMinutes, end: endMinutes, now };
+}
+
+function getCountdown(segment, currentTime, status, t) {
+  const { start, end, now } = getSegmentTiming(segment, currentTime);
+  if (!start) return null;
 
   if (status === 'now') {
-    const remaining = endMinutes - now;
+    const remaining = end - now;
     if (remaining <= 0) return t('myprogram.eventEnded');
     return `${t('myprogram.countdown.endsIn')} ${remaining} min`;
   }
 
   if (status === 'next') {
-    const startsIn = startMinutes - now;
+    const startsIn = start - now;
     if (startsIn <= 0) return t('myprogram.now');
     return `${t('myprogram.countdown.startsIn')} ${startsIn} min`;
   }
@@ -68,6 +71,17 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
 
   const songs = isWorship ? getNormalizedSongs(segment).filter(s => s.title) : [];
   const countdown = getCountdown(segment, currentTime, status, t);
+
+  // Calculate Progress if active
+  let progressPercent = 0;
+  if (status === 'now') {
+    const { start, end, now } = getSegmentTiming(segment, currentTime);
+    if (end > start) {
+      const total = end - start;
+      const elapsed = now - start;
+      progressPercent = Math.min(100, Math.max(0, (elapsed / total) * 100));
+    }
+  }
 
   // Filter Actions based on department
   const rawActions = segment.segment_actions || segment.actions || getData('actions') || [];
@@ -103,8 +117,18 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
 
   return (
     <div className={`rounded-2xl border p-4 transition-all duration-300 ${containerClass}`}>
+      {/* Progress Bar (Active Only) */}
+      {status === 'now' && (
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gray-100 rounded-t-2xl overflow-hidden">
+          <div 
+            className="h-full bg-yellow-500 transition-all duration-1000 ease-linear"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+      )}
+
       {/* Header: Countdown / Status */}
-      <div className="flex justify-between items-start mb-2">
+      <div className="flex justify-between items-start mb-2 relative">
         <div className="flex items-center gap-2">
           {status === 'now' && (
             <Badge className="bg-yellow-500 text-white hover:bg-yellow-600 text-[10px] animate-pulse shadow-sm">
