@@ -1,11 +1,10 @@
 /**
- * DepartmentNotes — MyProgram Step 6
+ * DepartmentNotes — MyProgram Step 6 (Refined)
  * 
  * Renders department-specific notes from segment fields.
- * Each department maps to specific segment fields.
- * 'general' shows all notes; specific depts show only their field.
- * 
- * Decision: "MyProgram: department filters mirror report options + Livestream placeholder"
+ * Updates:
+ * - Projection notes: High contrast (Indigo/Blue) per user feedback ("too grey")
+ * - Hospitality: Maps to 'ushers_notes' as fallback if needed, but actions are primary.
  */
 import React from 'react';
 import { useLanguage } from '@/components/utils/i18n';
@@ -18,17 +17,18 @@ const DEPT_FIELD_MAP = {
   ushers: ['ushers_notes'],
   translation: ['translation_notes'],
   stage_decor: ['stage_decor_notes'],
-  hospitality: [], // Hospitality tasks are separate entity — placeholder
+  hospitality: ['ushers_notes'], // Often shared, or rely on actions
   coordination: ['prep_instructions', 'other_notes'],
-  livestream: ['projection_notes'], // v1 placeholder: shows general + video fields
+  livestream: ['projection_notes'],
 };
 
+// Updated Colors - Projection is now distinct (Indigo)
 const DEPT_COLORS = {
-  projection: { bg: 'bg-slate-50', border: 'border-slate-400', text: 'text-slate-800', label: 'text-slate-600' },
+  projection: { bg: 'bg-indigo-50', border: 'border-indigo-500', text: 'text-indigo-900', label: 'text-indigo-700' },
   sound: { bg: 'bg-red-50', border: 'border-red-400', text: 'text-red-900', label: 'text-red-700' },
   ushers: { bg: 'bg-green-50', border: 'border-green-400', text: 'text-green-900', label: 'text-green-700' },
   translation: { bg: 'bg-purple-50', border: 'border-purple-400', text: 'text-purple-900', label: 'text-purple-700' },
-  stage_decor: { bg: 'bg-purple-50', border: 'border-purple-400', text: 'text-purple-900', label: 'text-purple-700' },
+  stage_decor: { bg: 'bg-fuchsia-50', border: 'border-fuchsia-400', text: 'text-fuchsia-900', label: 'text-fuchsia-700' },
   hospitality: { bg: 'bg-amber-50', border: 'border-amber-400', text: 'text-amber-900', label: 'text-amber-700' },
   coordination: { bg: 'bg-orange-50', border: 'border-orange-400', text: 'text-orange-900', label: 'text-orange-700' },
   livestream: { bg: 'bg-blue-50', border: 'border-blue-400', text: 'text-blue-900', label: 'text-blue-700' },
@@ -48,7 +48,6 @@ const FIELD_LABELS = {
 export default function DepartmentNotes({ segment, department }) {
   const { language, t } = useLanguage();
 
-  // General shows nothing extra here — the timeline card handles general display
   if (department === 'general') return null;
 
   const fields = DEPT_FIELD_MAP[department] || [];
@@ -62,16 +61,16 @@ export default function DepartmentNotes({ segment, department }) {
   if (notesContent.length === 0) return null;
 
   return (
-    <div className="space-y-1 mt-1.5">
+    <div className="space-y-2 mt-2">
       {notesContent.map(({ field, value }) => (
         <div
           key={field}
-          className={`${colors.bg} border-l-3 ${colors.border} pl-2.5 py-1.5 rounded-r text-xs border-l-[3px]`}
+          className={`${colors.bg} border-l-[4px] ${colors.border} pl-3 py-2 rounded-r-md text-xs shadow-sm`}
         >
-          <span className={`font-bold ${colors.label} block mb-0.5`}>
-            {FIELD_LABELS[field]?.[language] || field}:
+          <span className={`font-bold ${colors.label} block mb-1 uppercase tracking-wider text-[10px]`}>
+            {FIELD_LABELS[field]?.[language] || field}
           </span>
-          <p className={`${colors.text} leading-snug whitespace-pre-wrap`}>{value}</p>
+          <p className={`${colors.text} leading-relaxed whitespace-pre-wrap font-medium`}>{value}</p>
         </div>
       ))}
     </div>

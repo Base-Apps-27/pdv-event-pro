@@ -17,7 +17,9 @@ function parseTimeToMinutes(timeStr) {
   return parts[0] * 60 + parts[1];
 }
 
-export default function MyProgramTimeline({ segments, sessionFilter, department, currentTime, sessionDate }) {
+import MyProgramPreSessionCard from './MyProgramPreSessionCard';
+
+export default function MyProgramTimeline({ segments, sessionFilter, department, currentTime, sessionDate, preSessionDetails, onOpenVerses }) {
   const { t } = useLanguage();
   const nowRef = useRef(null);
   const hasScrolled = useRef(false);
@@ -96,11 +98,15 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
   }
 
   return (
-    <div className="relative pl-6 sm:pl-8 space-y-0 py-4">
-      {/* Vertical Timeline Line */}
-      <div className="absolute left-2 sm:left-3 top-0 bottom-0 w-0.5 bg-gray-200" />
+    <div className="relative pt-4">
+      {/* Pre-Session Card (Pinned top, no timeline line usually, or start of timeline) */}
+      <MyProgramPreSessionCard details={preSessionDetails} />
 
-      {segmentsWithStatus.map((seg, idx) => (
+      <div className="relative pl-6 sm:pl-8 space-y-0">
+        {/* Vertical Timeline Line */}
+        <div className="absolute left-2 sm:left-3 top-0 bottom-0 w-0.5 bg-gray-200" />
+
+        {segmentsWithStatus.map((seg, idx) => (
         <div
           key={seg.id}
           ref={seg._status === 'now' ? nowRef : undefined}
@@ -127,9 +133,11 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
             status={seg._status}
             department={department}
             currentTime={currentTime}
+            onOpenVerses={onOpenVerses}
           />
         </div>
       ))}
+      </div>
     </div>
   );
 }

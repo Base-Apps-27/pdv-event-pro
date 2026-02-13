@@ -167,8 +167,20 @@ export default function MyProgram() {
           department={department}
           currentTime={currentTime}
           sessionDate={sessionDate}
+          preSessionDetails={programData?.preSessionDetails} // Pass pre-session details
+          onOpenVerses={setVerseModalData} // Pass handler
         />
       </div>
+
+      {/* Verses Modal */}
+      {verseModalData && (
+        <StructuredVersesModal
+          isOpen={!!verseModalData}
+          onClose={() => setVerseModalData(null)}
+          verseData={verseModalData.parsedData}
+          rawText={verseModalData.rawText}
+        />
+      )}
     </div>
   );
 }

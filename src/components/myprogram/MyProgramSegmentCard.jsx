@@ -1,19 +1,13 @@
-/**
- * MyProgramSegmentCard — MyProgram Step 8
- * 
- * Single segment card for MyProgram timeline.
- * Compact, mobile-first, shows department-specific notes.
- * 
- * Visual states: done (gray), now (yellow pulse), next (blue), upcoming (white)
- */
-import React from 'react';
-import { Clock, Users, Sparkles, Languages, Mic } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, Users, Sparkles, Languages, Mic, BookOpen, ExternalLink, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { formatTimeToEST } from '@/components/utils/timeFormat';
 import { useLanguage } from '@/components/utils/i18n';
 import { getSegmentData, getNormalizedSongs } from '@/components/utils/segmentDataUtils';
 import { normalizeName } from '@/components/utils/textNormalization';
 import DepartmentNotes from './DepartmentNotes';
+import SegmentResourcesModal from '@/components/service/SegmentResourcesModal';
 
 function getCountdown(segment, currentTime, status, t) {
   if (!currentTime || !segment.start_time) return null;
@@ -49,8 +43,22 @@ function getCountdown(segment, currentTime, status, t) {
   return null;
 }
 
-export default function MyProgramSegmentCard({ segment, status, department, currentTime }) {
+// Map department IDs to internal labels for filtering actions
+const DEPT_LABEL_MAP = {
+  general: 'All',
+  projection: 'Projection',
+  sound: 'Sound',
+  ushers: 'Ushers', // Covers Ujieres
+  translation: 'Translation',
+  stage_decor: 'Stage & Decor',
+  hospitality: 'Hospitality',
+  coordination: 'Coordinador', // Coordinator
+  livestream: 'Projection', // Fallback for now
+};
+
+export default function MyProgramSegmentCard({ segment, status, department, currentTime, onOpenVerses }) {
   const { t, language } = useLanguage();
+  const [showResourcesModal, setShowResourcesModal] = useState(false);
   const getData = (field) => getSegmentData(segment, field);
 
   const isWorship = ['Alabanza', 'worship'].includes(segment.segment_type);
@@ -60,6 +68,24 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
 
   const songs = isWorship ? getNormalizedSongs(segment).filter(s => s.title) : [];
   const countdown = getCountdown(segment, currentTime, status, t);
+
+  // Filter Actions based on department
+  const rawActions = segment.segment_actions || segment.actions || getData('actions') || [];
+  const deptActions = rawActions.filter(action => {
+    if (department === 'general') return true; // Show all for general? Or maybe just 'Admin', 'MC'? Let's show all for now.
+    const target = DEPT_LABEL_MAP[department];
+    return action.department === target || action.department === 'All' || !action.department;
+  });
+
+  // Determine button visibility
+  const canSeeVerses = ['general', 'projection', 'livestream', 'translation'].includes(department);
+  const canSeeResources = ['general', 'sound', 'projection', 'stage_decor', 'livestream', 'coordination'].includes(department);
+  const hasResources = segment.video_url || 
+    segment.drama_song_source || segment.drama_song_2_url || segment.drama_song_3_url ||
+    segment.dance_song_source || segment.dance_song_2_url || segment.dance_song_3_url ||
+    segment.arts_run_of_show_url;
+  
+  const hasVerses = (isMessage || segment.segment_type === 'Ofrenda') && getData('parsed_verse_data');
 
   // Container styles by status
   const containerClass = {
@@ -131,7 +157,7 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
       </div>
 
       {/* Content Area */}
-      <div className={`space-y-2 ${status === 'done' ? 'opacity-80' : ''}`}>
+      <div className={`space-y-3 ${status === 'done' ? 'opacity-80' : ''}`}>
         {/* Message title */}
         {isMessage && getData('message_title') && (
           <p className="text-sm font-bold text-blue-800 bg-blue-50/50 p-2 rounded-lg border border-blue-100">
@@ -176,6 +202,71 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
           )}
         </div>
 
+        {/* Action Buttons */}
+        {( (hasVerses && canSeeVerses) || (hasResources && canSeeResources) ) && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {hasVerses && canSeeVerses && onOpenVerses && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="h-8 text-xs gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-50"
+                onClick={() => onOpenVerses({ parsedData: getData('parsed_verse_data'), rawText: getData('scripture_references') })}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                Ver Versículos
+              </Button>
+            )}
+            {hasResources && canSeeResources && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="h-8 text-xs gap-1.5 border-pink-200 text-pink-700 hover:bg-pink-50"
+                onClick={() => setShowResourcesModal(true)}
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Arts Resources
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Songs (general department, worship segments) */}
+        {department === 'general' && songs.length > 0 && (
+          <div className="bg-gray-50/80 rounded-lg p-2.5 text-xs text-gray-700 border border-gray-100">
+            {songs.map((s, i) => (
+              <div key={i} className="flex gap-2 mb-1 last:mb-0">
+                <span className="text-gray-400 font-mono w-3">{i + 1}.</span>
+                <span className="font-medium text-gray-800">{s.title}</span>
+                {s.lead && <span className="text-gray-500">({s.lead})</span>}
+                {s.key && <span className="text-gray-400 font-mono ml-auto text-[10px] bg-white px-1 rounded border border-gray-200">{s.key}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Department-specific notes */}
+        <DepartmentNotes segment={segment} department={department} />
+
+        {/* Segment Actions (Filtered) */}
+        {deptActions.length > 0 && (
+          <div className="space-y-1.5 mt-2 pt-2 border-t border-gray-100">
+            {deptActions.map((action, idx) => (
+              <div key={idx} className="flex items-start gap-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                <CheckCircle2 className="w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0" />
+                <div>
+                  <span className="font-bold text-gray-700 mr-1">
+                    {action.department ? `[${action.department}]` : ''}
+                  </span>
+                  <span>{action.label}</span>
+                  {action.notes && (
+                    <p className="text-[10px] text-gray-500 mt-0.5 italic">{action.notes}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Breakout Groups (Visible to ALL departments) */}
         {segment.breakout_rooms && segment.breakout_rooms.length > 0 && (
           <div className="mt-2 space-y-2">
@@ -211,23 +302,6 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
           </div>
         )}
 
-        {/* Songs (general department, worship segments) */}
-        {department === 'general' && songs.length > 0 && (
-          <div className="bg-gray-50/80 rounded-lg p-2.5 text-xs text-gray-700 border border-gray-100">
-            {songs.map((s, i) => (
-              <div key={i} className="flex gap-2 mb-1 last:mb-0">
-                <span className="text-gray-400 font-mono w-3">{i + 1}.</span>
-                <span className="font-medium text-gray-800">{s.title}</span>
-                {s.lead && <span className="text-gray-500">({s.lead})</span>}
-                {s.key && <span className="text-gray-400 font-mono ml-auto text-[10px] bg-white px-1 rounded border border-gray-200">{s.key}</span>}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Department-specific notes */}
-        <DepartmentNotes segment={segment} department={department} />
-
         {/* Break visual */}
         {isBreak && (
           <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-100/50 p-2 rounded-lg border border-dashed border-gray-200">
@@ -236,6 +310,12 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
           </div>
         )}
       </div>
+
+      <SegmentResourcesModal 
+        open={showResourcesModal}
+        onOpenChange={setShowResourcesModal}
+        segment={segment}
+      />
     </div>
   );
 }
