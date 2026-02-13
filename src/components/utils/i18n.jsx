@@ -450,7 +450,34 @@ const translations = {
       'people.importing': 'Importando {count} personas...',
       'people.importSuccess': '¡Importación completada con éxito!',
       'people.importError': 'Error al extraer datos. Asegúrate de usar el formato correcto.',
-      'people.importErrorGeneric': 'Error durante la importación: '
+      'people.importErrorGeneric': 'Error durante la importación: ',
+
+      // MyProgram (Step 2 — MyProgram i18n keys)
+      'myprogram.title': 'Mi Programa',
+      'myprogram.standby.title': 'Sin programa activo',
+      'myprogram.standby.subtitle': 'No hay servicio o evento programado en este momento',
+      'myprogram.standby.checkBack': 'Revisa más tarde o selecciona un programa',
+      'myprogram.dept.general': 'General',
+      'myprogram.dept.projection': 'Proyección',
+      'myprogram.dept.sound': 'Sonido',
+      'myprogram.dept.ushers': 'Ujieres',
+      'myprogram.dept.translation': 'Traducción',
+      'myprogram.dept.stage_decor': 'Stage & Decor',
+      'myprogram.dept.hospitality': 'Hospitalidad',
+      'myprogram.dept.coordination': 'Coordinación',
+      'myprogram.dept.livestream': 'Livestream',
+      'myprogram.filterBy': 'Filtrar por departamento',
+      'myprogram.now': 'AHORA',
+      'myprogram.next': 'SIGUIENTE',
+      'myprogram.done': 'TERMINADO',
+      'myprogram.upcoming': 'PRÓXIMO',
+      'myprogram.noNotes': 'Sin notas para este departamento',
+      'myprogram.eventEnded': 'Evento Finalizado',
+      'myprogram.serviceEnded': 'Servicio Finalizado',
+      'myprogram.selectSession': 'Seleccionar sesión',
+      'myprogram.loading': 'Cargando programa...',
+      'myprogram.countdown.startsIn': 'Inicia en',
+      'myprogram.countdown.endsIn': 'Termina en'
   },
   en: {
     // Navigation
@@ -908,7 +935,34 @@ const translations = {
     'people.importing': 'Importing {count} people...',
     'people.importSuccess': 'Import completed successfully!',
     'people.importError': 'Error extracting data. Make sure to use the correct format.',
-    'people.importErrorGeneric': 'Error during import: '
+    'people.importErrorGeneric': 'Error during import: ',
+
+    // MyProgram (Step 2 — MyProgram i18n keys)
+    'myprogram.title': 'My Program',
+    'myprogram.standby.title': 'No active program',
+    'myprogram.standby.subtitle': 'There is no service or event scheduled right now',
+    'myprogram.standby.checkBack': 'Check back later or select a program',
+    'myprogram.dept.general': 'General',
+    'myprogram.dept.projection': 'Projection',
+    'myprogram.dept.sound': 'Sound',
+    'myprogram.dept.ushers': 'Ushers',
+    'myprogram.dept.translation': 'Translation',
+    'myprogram.dept.stage_decor': 'Stage & Decor',
+    'myprogram.dept.hospitality': 'Hospitality',
+    'myprogram.dept.coordination': 'Coordination',
+    'myprogram.dept.livestream': 'Livestream',
+    'myprogram.filterBy': 'Filter by department',
+    'myprogram.now': 'NOW',
+    'myprogram.next': 'NEXT',
+    'myprogram.done': 'DONE',
+    'myprogram.upcoming': 'UPCOMING',
+    'myprogram.noNotes': 'No notes for this department',
+    'myprogram.eventEnded': 'Event Ended',
+    'myprogram.serviceEnded': 'Service Ended',
+    'myprogram.selectSession': 'Select session',
+    'myprogram.loading': 'Loading program...',
+    'myprogram.countdown.startsIn': 'Starts in',
+    'myprogram.countdown.endsIn': 'Ends in'
   }
 };
 
