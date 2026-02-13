@@ -56,7 +56,7 @@ const DEPT_LABEL_MAP = {
   stage_decor: 'Stage & Decor',
   hospitality: 'Hospitality',
   coordination: 'Coordinador', // Coordinator
-  livestream: 'Projection', // Fallback for now
+  livestream: 'Livestream',
 };
 
 export default function MyProgramSegmentCard({ segment, status, department, currentTime, onOpenVerses }) {

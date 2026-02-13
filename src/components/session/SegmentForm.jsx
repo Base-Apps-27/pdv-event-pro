@@ -44,6 +44,7 @@ const DEPARTMENTS = [
   "Stage & Decor",
   "Alabanza",
   "Translation",
+  "Livestream",
   "Other"
 ];
 
@@ -71,11 +72,13 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     sound_notes: segment?.sound_notes || "",
     ushers_notes: segment?.ushers_notes || "",
     translation_notes: segment?.translation_notes || "",
+    livestream_notes: segment?.livestream_notes || "",
     other_notes: segment?.other_notes || "",
     show_in_general: segment?.show_in_general ?? true,
     show_in_projection: segment?.show_in_projection ?? true,
     show_in_sound: segment?.show_in_sound ?? true,
     show_in_ushers: segment?.show_in_ushers ?? true,
+    show_in_livestream: segment?.show_in_livestream ?? true,
     color_code: segment?.color_code || "default",
     order: segment?.order || 1,
     message_title: segment?.message_title || "",
@@ -144,11 +147,13 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
           projection_notes: template.default_projection_notes || "",
           sound_notes: template.default_sound_notes || "",
           ushers_notes: template.default_ushers_notes || "",
+          livestream_notes: template.default_livestream_notes || "",
           color_code: template.default_color_code || "default",
           show_in_general: template.show_in_general ?? true,
           show_in_projection: template.show_in_projection ?? true,
           show_in_sound: template.show_in_sound ?? true,
           show_in_ushers: template.show_in_ushers ?? true,
+          show_in_livestream: template.show_in_livestream ?? true,
         }));
       }
     }
@@ -636,6 +641,17 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
         )}
 
         <div className="space-y-2">
+          <Label htmlFor="livestream_notes">Notas Livestream</Label>
+          <Textarea 
+            id="livestream_notes" 
+            value={formData.livestream_notes}
+            onChange={(e) => setFormData({...formData, livestream_notes: e.target.value})}
+            rows={2}
+            placeholder="Instrucciones para transmisión en vivo..."
+          />
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="other_notes">Otras Notas</Label>
           <Textarea 
             id="other_notes" 
@@ -800,6 +816,17 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
             />
             <label htmlFor="show_in_ushers" className="text-sm cursor-pointer">
               Mostrar en Vista Ujieres
+            </label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="show_in_livestream"
+              checked={formData.show_in_livestream}
+              onCheckedChange={(checked) => setFormData({...formData, show_in_livestream: checked})}
+            />
+            <label htmlFor="show_in_livestream" className="text-sm cursor-pointer">
+              Mostrar en Vista Livestream
             </label>
           </div>
         </div>

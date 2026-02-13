@@ -57,6 +57,7 @@ export const departmentColors = {
   Coordinador: "bg-orange-50 border-orange-200 text-orange-700",
   "Stage & Decor": "bg-purple-50 border-purple-200 text-purple-700",
   Translation: "bg-purple-50 border-purple-200 text-purple-700",
+  Livestream: "bg-indigo-50 border-indigo-200 text-indigo-700",
   Other: "bg-gray-50 border-gray-200 text-gray-700"
 };
 
