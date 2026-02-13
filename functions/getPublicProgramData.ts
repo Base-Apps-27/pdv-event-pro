@@ -7,6 +7,9 @@ Deno.serve(async (req) => {
         // Parse parameters from request body
         const body = await req.json();
         const { eventId, serviceId, date, listOptions, sessionId, includeOptions, detectActive } = body;
+        
+        // Context-aware environment
+        const dataEnv = req.headers.get('x-data-env') || 'prod';
 
         // ---------------------------------------------------------
         // SHARED: Options Fetching (Mode 1 or Mode 4 combined)
@@ -15,8 +18,8 @@ Deno.serve(async (req) => {
         
         if (listOptions || includeOptions) {
             const [allEvents, allServices] = await Promise.all([
-                base44.asServiceRole.entities.Event.list('-start_date'),
-                base44.asServiceRole.entities.Service.list('-date')
+                base44.asServiceRole.entities.Event.list('-start_date', undefined, undefined, dataEnv),
+                base44.asServiceRole.entities.Service.list('-date', undefined, undefined, dataEnv)
             ]);
             
             // Use ET for "Today" to match user perception (America/New_York)
@@ -62,7 +65,7 @@ Deno.serve(async (req) => {
 
         // A. Resolve by ID (Event)
         if (eventId) {
-            const results = await base44.asServiceRole.entities.Event.filter({ id: eventId });
+            const results = await base44.asServiceRole.entities.Event.filter({ id: eventId }, undefined, undefined, undefined, dataEnv);
             if (results?.[0]) {
                 targetProgram = results[0];
                 isEvent = true;
@@ -71,7 +74,7 @@ Deno.serve(async (req) => {
         
         // B. Resolve by ID (Service)
         if (serviceId && !targetProgram) {
-            const results = await base44.asServiceRole.entities.Service.filter({ id: serviceId });
+            const results = await base44.asServiceRole.entities.Service.filter({ id: serviceId }, undefined, undefined, undefined, dataEnv);
             if (results?.[0]) {
                 targetProgram = results[0];
                 isEvent = false;
@@ -130,8 +133,8 @@ Deno.serve(async (req) => {
             } else if (date) {
                 // Legacy Date-only auto-detect (fetches from DB)
                 const [allEvents, svcResults] = await Promise.all([
-                    base44.asServiceRole.entities.Event.filter({ status: 'confirmed' }),
-                    base44.asServiceRole.entities.Service.filter({ date: date, status: 'active' })
+                    base44.asServiceRole.entities.Event.filter({ status: 'confirmed' }, undefined, undefined, undefined, dataEnv),
+                    base44.asServiceRole.entities.Service.filter({ date: date, status: 'active' }, undefined, undefined, undefined, dataEnv)
                 ]);
                 
                 const activeEvent = allEvents.find(e => e.start_date <= date && e.end_date >= date);
@@ -167,11 +170,11 @@ Deno.serve(async (req) => {
 
         // Parallelize fetching of independent resources
         const fetchExtrasPromise = Promise.all([
-            base44.asServiceRole.entities.Room.list(),
+            base44.asServiceRole.entities.Room.list(undefined, undefined, undefined, dataEnv),
             // Only fetch EventDay if it's an event
-            isEvent ? base44.asServiceRole.entities.EventDay.filter({ event_id: targetProgram.id }) : Promise.resolve([]),
+            isEvent ? base44.asServiceRole.entities.EventDay.filter({ event_id: targetProgram.id }, undefined, undefined, undefined, dataEnv) : Promise.resolve([]),
             // Fetch live adjustments for the program
-            !isEvent ? base44.asServiceRole.entities.LiveTimeAdjustment.filter({ service_id: targetProgram.id, date: targetProgram.date }) : Promise.resolve([])
+            !isEvent ? base44.asServiceRole.entities.LiveTimeAdjustment.filter({ service_id: targetProgram.id, date: targetProgram.date }, undefined, undefined, undefined, dataEnv) : Promise.resolve([])
         ]);
 
         if (isEvent) {
@@ -184,7 +187,7 @@ Deno.serve(async (req) => {
             const sessionFilter = { event_id: targetProgram.id };
             if (sessionId && sessionId !== "all") sessionFilter.id = sessionId;
 
-            sessions = await base44.asServiceRole.entities.Session.filter(sessionFilter);
+            sessions = await base44.asServiceRole.entities.Session.filter(sessionFilter, undefined, undefined, undefined, dataEnv);
             sessions.sort((a, b) => (a.order || 0) - (b.order || 0));
 
             // Parallelize fetching segments, preSessionDetails, and extras
@@ -202,7 +205,7 @@ Deno.serve(async (req) => {
                     const allSegments = [];
                     for (const batch of batches) {
                         const batchResults = await Promise.all(
-                            batch.map(sid => base44.asServiceRole.entities.Segment.filter({ session_id: sid }, 'order'))
+                            batch.map(sid => base44.asServiceRole.entities.Segment.filter({ session_id: sid }, 'order', undefined, undefined, dataEnv))
                         );
                         allSegments.push(...batchResults.flat());
                     }
@@ -212,14 +215,14 @@ Deno.serve(async (req) => {
                 (async () => {
                     if (sessions.length === 0) return [];
                     return await Promise.all(
-                        sessions.map(s => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: s.id }))
+                        sessions.map(s => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: s.id }, undefined, undefined, undefined, dataEnv))
                     ).then(results => results.flat());
                 })(),
                 // Fetch StreamBlocks
                 (async () => {
                     if (sessions.length === 0) return [];
                     return await Promise.all(
-                        sessions.map(s => base44.asServiceRole.entities.StreamBlock.filter({ session_id: s.id }, 'order'))
+                        sessions.map(s => base44.asServiceRole.entities.StreamBlock.filter({ session_id: s.id }, 'order', undefined, undefined, dataEnv))
                     ).then(results => results.flat());
                 })()
             ]);
@@ -261,7 +264,7 @@ Deno.serve(async (req) => {
                 const allActions = [];
                 for (const batch of actionBatches) {
                     const batchResults = await Promise.all(
-                        batch.map(segId => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId }))
+                        batch.map(segId => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId }, undefined, undefined, undefined, dataEnv))
                     );
                     allActions.push(...batchResults.flat());
                 }
@@ -361,14 +364,14 @@ Deno.serve(async (req) => {
             if (targetProgram.event_id) {
                 // Fetch sessions for that event_id? Or usually just treat as service.
                 // Logic in frontend: "if (service.event_id) ... fetch sessions for event_id"
-                const linkedSessions = await base44.asServiceRole.entities.Session.filter({ event_id: targetProgram.event_id });
+                const linkedSessions = await base44.asServiceRole.entities.Session.filter({ event_id: targetProgram.event_id }, undefined, undefined, undefined, dataEnv);
                  // ... similar logic to Event ...
                  // For brevity, let's assume if it has event_id, we fetch those sessions
                  sessions = linkedSessions;
             } 
             // Also check for sessions linked directly to this service ID (uncommon but possible in schema)
             else {
-                 const directSessions = await base44.asServiceRole.entities.Session.filter({ service_id: targetProgram.id });
+                 const directSessions = await base44.asServiceRole.entities.Session.filter({ service_id: targetProgram.id }, undefined, undefined, undefined, dataEnv);
                  if (directSessions.length > 0) sessions.push(...directSessions);
             }
 
@@ -378,7 +381,7 @@ Deno.serve(async (req) => {
                  const BATCH_SIZE = 10;
                  // ... fetch segments loop ...
                  // Simplified for brevity in this large block replacement:
-                 const allResults = await Promise.all(sessionIds.map(sid => base44.asServiceRole.entities.Segment.filter({ session_id: sid })));
+                 const allResults = await Promise.all(sessionIds.map(sid => base44.asServiceRole.entities.Segment.filter({ session_id: sid }, undefined, undefined, undefined, dataEnv)));
                  segments = allResults.flat().filter(s => s.show_in_general).sort((a, b) => (a.order || 0) - (b.order || 0));
             } 
             // Fallback: Embedded Segments (Custom Services)
@@ -502,7 +505,7 @@ Deno.serve(async (req) => {
                     const allActions = [];
                     for (const batch of actionBatches) {
                         const batchResults = await Promise.all(
-                            batch.map(segId => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId }))
+                            batch.map(segId => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId }, undefined, undefined, undefined, dataEnv))
                         );
                         allActions.push(...batchResults.flat());
                     }
@@ -530,7 +533,7 @@ Deno.serve(async (req) => {
                 const sessionIds = sessions.map(s => s.id);
                 // Fetch PreSessionDetails
                 preSessionDetails = await Promise.all(
-                    sessionIds.map(sid => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: sid }))
+                    sessionIds.map(sid => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: sid }, undefined, undefined, undefined, dataEnv))
                 ).then(results => results.flat());
 
                 const detailsBySession = {};
