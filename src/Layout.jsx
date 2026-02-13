@@ -124,7 +124,7 @@ function LayoutContentInner({ children }) {
         if (location.pathname !== createPageUrl('PublicProgramView')) {
           navigate(createPageUrl('PublicProgramView'), { replace: true });
         }
-      } else {
+      } else if (hasPermission(user, 'access_my_program')) {
         // Lowest tier (EventDayViewer/General) -> MyProgram
         if (location.pathname !== createPageUrl('MyProgram')) {
           navigate(createPageUrl('MyProgram'), { replace: true });
@@ -194,7 +194,8 @@ function LayoutContentInner({ children }) {
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
               </div>
             )}
-            {/* MyProgram — accessible to all roles (access_my_program) */}
+            {/* MyProgram — accessible to roles with access_my_program */}
+            {hasPermission(user, 'access_my_program') && (
             <Link
               to={createPageUrl("MyProgram")}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
@@ -208,6 +209,7 @@ function LayoutContentInner({ children }) {
               <Calendar className="w-5 h-5 shrink-0" />
               {!isSidebarCollapsed && <span>{t('myprogram.title')}</span>}
             </Link>
+            )}
             {/* Live View — gated by access_live_view */}
             {hasPermission(user, 'access_live_view') && (
             <Link

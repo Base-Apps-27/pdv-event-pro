@@ -57,7 +57,9 @@ export const DEFAULT_ROLE_PERMISSIONS = {
   EventDayCoordinator: [
     'view_live_chat',
     'manage_live_timing',
-    'access_my_program',
+    'manage_live_director',
+    'access_live_view',
+    // 'access_my_program', // Unchecked by default in UI for this role
   ],
 };
 
