@@ -115,12 +115,21 @@ function LayoutContentInner({ children }) {
     if (!user || loading) return;
 
     const canViewDashboard = hasPermission(user, 'view_events') || hasPermission(user, 'view_services');
+    const canViewLive = hasPermission(user, 'access_live_view');
     
-    // If a user has no dashboard permissions, redirect them to the Public Program View
-    // This handles "Limited User" roles who can only see the schedule but are logged in
+    // If a user has no dashboard permissions, determine their landing page
     if (!canViewDashboard && !isPublicPage) {
-      // MyProgram is default landing for users without dashboard permissions
-      navigate(createPageUrl('MyProgram'), { replace: true });
+      if (canViewLive) {
+        // Coordinators/Tech with Live View access but no Dashboard access -> Live View
+        if (location.pathname !== createPageUrl('PublicProgramView')) {
+          navigate(createPageUrl('PublicProgramView'), { replace: true });
+        }
+      } else {
+        // Lowest tier (EventDayViewer/General) -> MyProgram
+        if (location.pathname !== createPageUrl('MyProgram')) {
+          navigate(createPageUrl('MyProgram'), { replace: true });
+        }
+      }
     }
   }, [user, location.pathname, loading, navigate, isPublicPage]);
 

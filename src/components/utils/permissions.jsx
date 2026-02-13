@@ -54,7 +54,6 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     'access_live_view',
   ],
   EventDayViewer: [
-    'view_live_program',
     'access_my_program',
   ],
   // EventDayCoordinator: Same as EventDayViewer + view_live_chat + adjust_service_timing
@@ -230,7 +229,7 @@ export function getAllPermissionDefinitions() {
     // MyProgram (department-filtered view for all users)
     { key: 'access_my_program', resource: 'my_program', action: 'access', category: 'live', hierarchy_level: 4, label_en: 'Access My Program', label_es: 'Acceder Mi Programa' },
 
-    // Live View (full coordinator view — gates PublicProgramView for authenticated users)
-    { key: 'access_live_view', resource: 'live_view', action: 'access', category: 'live', hierarchy_level: 4, label_en: 'Access Live View', label_es: 'Acceder Vista en Vivo' },
+    // Live View (full coordinator view + Sticky Ops)
+    { key: 'access_live_view', resource: 'live_view', action: 'access', category: 'live', hierarchy_level: 4, label_en: 'Access Live View & Ops', label_es: 'Acceder Vista en Vivo y Ops' },
   ];
 }
