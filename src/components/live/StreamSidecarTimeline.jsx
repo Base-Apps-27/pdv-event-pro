@@ -6,12 +6,18 @@ import { useClockTick } from "@/components/utils/useClockTick";
 import { resolveBlockTime } from "@/components/utils/streamTiming";
 
 /**
- * StreamSidecarTimeline
- * 
- * Purpose-built slim timeline for the TV Production Dashboard's
- * rightmost column (~20% width). Every element is designed to fit
- * within the constrained width — no badges that overflow, no
- * imported sub-components. Pure inline rendering.
+ * StreamSidecarTimeline — TV Dashboard Column 3
+ *
+ * Purpose-built for the ~20% rightmost column of the Production Dashboard.
+ * Mirrors the visual design language of SegmentTimeline (Column 2) —
+ * same card structure, rounded items, left-accent borders — but shows
+ * stream block data with ON AIR / type indicators.
+ *
+ * Design principles:
+ * - Every element uses relative sizing that naturally fits the container
+ * - No fixed widths, no overflowing badges
+ * - Current block is visually prominent; past blocks fade; future blocks neutral
+ * - Auto-scrolls to keep the current block visible
  */
 export default function StreamSidecarTimeline({ session, segments }) {
   const currentTime = useClockTick();
@@ -19,138 +25,168 @@ export default function StreamSidecarTimeline({ session, segments }) {
   const listRef = useRef(null);
 
   const { data: blocks = [] } = useQuery({
-    queryKey: ['streamBlocks', session.id],
-    queryFn: () => base44.entities.StreamBlock.filter({ session_id: session.id }, 'order'),
+    queryKey: ["streamBlocks", session.id],
+    queryFn: () =>
+      base44.entities.StreamBlock.filter(
+        { session_id: session.id },
+        "order"
+      ),
     enabled: !!session.id,
-    refetchInterval: 5000
+    refetchInterval: 5000,
   });
 
+  // Resolve times & compute live state per block
   const blocksWithState = useMemo(() => {
-    return blocks.map(block => {
-      const { startTime, endTime } = resolveBlockTime(block, segments, session.date);
-      const isCurrent = startTime && endTime && currentTime >= startTime && currentTime <= endTime;
+    return blocks.map((block) => {
+      const { startTime, endTime } = resolveBlockTime(
+        block,
+        segments,
+        session.date
+      );
+      const isCurrent =
+        startTime && endTime && currentTime >= startTime && currentTime <= endTime;
       const isPast = endTime && currentTime > endTime;
       return { ...block, startTime, endTime, isCurrent, isPast };
     });
   }, [blocks, segments, session.date, currentTime]);
 
-  const currentBlock = blocksWithState.find(b => b.isCurrent);
+  const currentBlock = blocksWithState.find((b) => b.isCurrent);
 
-  // Auto-scroll current block into view
+  // Auto-scroll
   useEffect(() => {
     if (currentRef.current && listRef.current) {
-      currentRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      currentRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [currentBlock?.id]);
 
+  // Helpers
   const fmtTime = (date) => {
     if (!date) return "--:--";
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York'
-    }).replace(/\s/g, ' ');
+    return date
+      .toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "America/New_York",
+      })
+      .replace(/\u202F|\u00A0/g, " ");
   };
 
-  // Type abbreviation — must fit in ~3-4 chars
-  const typeLabel = (t) => {
-    const map = { link: 'LNK', insert: 'INS', replace: 'RPL', offline: 'OFF' };
-    return map[t] || t?.substring(0, 3).toUpperCase() || '—';
+  const typeConfig = (t) => {
+    const map = {
+      link:    { label: "Link",    color: "#3b82f6" },
+      insert:  { label: "Insert",  color: "#10b981" },
+      replace: { label: "Replace", color: "#f59e0b" },
+      offline: { label: "Offline", color: "#94a3b8" },
+    };
+    return map[t] || { label: t || "—", color: "#94a3b8" };
   };
 
-  // Dot color per type
-  const dotColor = (t) => {
-    const map = { link: '#3b82f6', insert: '#10b981', replace: '#f59e0b', offline: '#94a3b8' };
-    return map[t] || '#94a3b8';
-  };
-
+  // Empty state
   if (blocks.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <p className="text-[10px] text-slate-400 italic">No stream blocks</p>
+      <div className="h-full flex items-center justify-center p-4">
+        <p className="text-xs text-slate-400 italic text-center">
+          No stream blocks configured
+        </p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Minimal header */}
-      <div className="shrink-0 px-2 py-1.5 border-b border-slate-200/80 bg-slate-50/60 flex items-center gap-1">
-        <Radio className="w-2.5 h-2.5 text-red-500 animate-pulse shrink-0" />
-        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 truncate">Stream</span>
+      {/* ── Header — matches Room Program header style ── */}
+      <div className="shrink-0 bg-slate-800/5 px-3 py-3 border-b border-slate-200/50 flex items-center gap-2">
+        <Radio className="w-4 h-4 text-red-500 animate-pulse shrink-0" />
+        <h3 className="font-bold text-slate-600 uppercase tracking-wider text-xs truncate">
+          Stream
+        </h3>
       </div>
 
-      {/* Block list — own scrolling context */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden" ref={listRef}>
-        <div className="py-1">
-          {blocksWithState.map((block) => {
-            const isCurrent = block.isCurrent;
-            const isPast = block.isPast;
+      {/* ── Block list — scrollable ── */}
+      <div
+        ref={listRef}
+        className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-1.5"
+      >
+        {blocksWithState.map((block, idx) => {
+          const { isCurrent, isPast } = block;
+          const cfg = typeConfig(block.block_type);
 
-            return (
-              <div
-                key={block.id}
-                ref={isCurrent ? currentRef : undefined}
-                className={`
-                  mx-1 mb-0.5 px-2 py-1.5 rounded transition-colors
-                  ${isCurrent
-                    ? 'bg-blue-50 border-l-2 border-blue-500'
-                    : isPast
-                      ? 'opacity-40 border-l-2 border-transparent'
-                      : 'border-l-2 border-transparent hover:bg-slate-50'
-                  }
-                `}
-              >
-                {/* Row 1: time + type */}
-                <div className="flex items-center justify-between gap-1">
-                  <span
-                    className="font-mono leading-none truncate"
-                    style={{ fontSize: '10px', fontWeight: 700, color: isCurrent ? '#2563eb' : isPast ? '#94a3b8' : '#475569' }}
-                  >
-                    {fmtTime(block.startTime)}
-                  </span>
-
-                  {/* Type pill — inline styled to guarantee fit */}
-                  <span
-                    className="shrink-0 rounded px-1 leading-none"
-                    style={{
-                      fontSize: '8px',
-                      fontWeight: 800,
-                      letterSpacing: '0.04em',
-                      color: dotColor(block.block_type),
-                      backgroundColor: dotColor(block.block_type) + '18',
-                      border: `1px solid ${dotColor(block.block_type)}40`,
-                      paddingTop: '2px',
-                      paddingBottom: '2px',
-                    }}
-                  >
-                    {typeLabel(block.block_type)}
-                  </span>
-                </div>
-
-                {/* Row 2: title */}
-                <div
-                  className="leading-tight truncate mt-0.5"
+          return (
+            <div
+              key={block.id}
+              ref={isCurrent ? currentRef : undefined}
+              className={`
+                flex items-start gap-2 p-2.5 rounded-xl transition-all
+                ${isCurrent
+                  ? "bg-white shadow-md border-l-4 border-blue-500"
+                  : isPast
+                    ? "opacity-35 border-l-4 border-transparent"
+                    : "bg-white/60 border-l-4 border-transparent hover:bg-white"
+                }
+              `}
+            >
+              {/* Left: time column */}
+              <div className="shrink-0 pt-0.5">
+                <span
+                  className="font-mono font-bold block leading-none"
                   style={{
-                    fontSize: '11px',
-                    fontWeight: isCurrent ? 700 : 500,
-                    color: isCurrent ? '#1e3a5f' : isPast ? '#94a3b8' : '#334155',
+                    fontSize: "13px",
+                    color: isCurrent ? "#2563eb" : isPast ? "#94a3b8" : "#64748b",
+                  }}
+                >
+                  {fmtTime(block.startTime)}
+                </span>
+              </div>
+
+              {/* Right: content */}
+              <div className="flex-1 min-w-0">
+                {/* Title */}
+                <div
+                  className="font-semibold leading-tight truncate"
+                  style={{
+                    fontSize: "13px",
+                    color: isCurrent ? "#0f172a" : isPast ? "#94a3b8" : "#334155",
                   }}
                 >
                   {block.title}
                 </div>
 
-                {/* ON AIR dot for current */}
-                {isCurrent && (
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <span className="w-1 h-1 rounded-full bg-red-500 animate-pulse" />
-                    <span style={{ fontSize: '8px', fontWeight: 800, color: '#dc2626', letterSpacing: '0.06em' }}>
-                      ON AIR
+                {/* Meta row: type + ON AIR */}
+                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                  {/* Type dot + label */}
+                  <span
+                    className="inline-flex items-center gap-1 leading-none"
+                    style={{ fontSize: "10px", color: cfg.color, fontWeight: 700 }}
+                  >
+                    <span
+                      className="inline-block w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ backgroundColor: cfg.color }}
+                    />
+                    {cfg.label}
+                  </span>
+
+                  {/* ON AIR indicator */}
+                  {isCurrent && (
+                    <span className="inline-flex items-center gap-1 leading-none">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                      <span
+                        style={{
+                          fontSize: "9px",
+                          fontWeight: 800,
+                          color: "#dc2626",
+                          letterSpacing: "0.05em",
+                        }}
+                      >
+                        ON AIR
+                      </span>
                     </span>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
