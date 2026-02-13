@@ -119,7 +119,8 @@ function LayoutContentInner({ children }) {
     // If a user has no dashboard permissions, redirect them to the Public Program View
     // This handles "Limited User" roles who can only see the schedule but are logged in
     if (!canViewDashboard && !isPublicPage) {
-      navigate(createPageUrl('PublicProgramView'), { replace: true });
+      // MyProgram is default landing for users without dashboard permissions
+      navigate(createPageUrl('MyProgram'), { replace: true });
     }
   }, [user, location.pathname, loading, navigate, isPublicPage]);
 
