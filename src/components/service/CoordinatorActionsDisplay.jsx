@@ -133,8 +133,8 @@ export default function CoordinatorActionsDisplay({
         upcomingActions.length === 3 ? 'lg:grid-cols-3' :
         'lg:grid-cols-4'
       }`}`}>
-        {/* If > 4 items, show 3 items + overflow card (total 4 slots). Else show all (max 4). */}
-        {upcomingActions.slice(0, upcomingActions.length > 4 ? 3 : 4).map((action) => {
+        {/* If > 4 items (Grid), show 3 items + overflow card. Vertical shows up to 6. */}
+        {upcomingActions.slice(0, layout === 'vertical' ? 6 : (upcomingActions.length > 4 ? 3 : 4)).map((action) => {
           const now = currentTime.getTime();
           const timeUntil = action.time.getTime() - now;
           const minutesUntil = Math.ceil(timeUntil / 60000);
