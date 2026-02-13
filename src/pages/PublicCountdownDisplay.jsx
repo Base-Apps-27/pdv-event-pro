@@ -10,7 +10,7 @@ import { normalizeProgramData } from "@/components/utils/normalizeProgram";
 import { normalizeStreamBlocks } from "@/components/utils/normalizeStreamBlocks";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Tv, Settings, Loader2, Radio } from "lucide-react";
+import { Tv, Settings, Loader2, Radio, Layout, Columns } from "lucide-react";
 import StandbyScreen from "@/components/service/StandbyScreen";
 import StreamCoordinatorView from "@/components/live/StreamCoordinatorView";
 
@@ -40,7 +40,20 @@ export default function PublicCountdownDisplay() {
   });
 
   const urlParams = new URLSearchParams(window.location.search);
-  const mode = urlParams.get('mode') || 'standard'; // standard, livestream, combined
+  const [mode, setMode] = useState(urlParams.get('mode') || 'standard'); // standard, livestream, combined
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get('mode');
+    if (m && m !== mode) setMode(m);
+  }, [window.location.search]);
+
+  const updateMode = (newMode) => {
+    setMode(newMode);
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.set('mode', newMode);
+    window.history.pushState({}, '', newUrl);
+  };
   
   // Tick every second
   useEffect(() => {
@@ -301,8 +314,33 @@ export default function PublicCountdownDisplay() {
 
       {/* Header */}
       <div className="w-full flex items-center justify-between px-6 py-4 z-20 relative mb-4">
-        {/* ... Controls ... */}
-        <div className="flex-shrink-0 w-[300px]"></div>
+        {/* View Controls */}
+        <div className="flex-shrink-0 w-[300px] flex items-center gap-2">
+          <div className="bg-white/90 backdrop-blur-md p-1 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1">
+            <button 
+              onClick={() => updateMode('standard')}
+              className={`p-2 rounded-md transition-colors ${mode === 'standard' ? 'bg-slate-200 text-slate-900' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
+              title="Standard View"
+            >
+              <Tv className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => updateMode('combined')}
+              className={`p-2 rounded-md transition-colors ${mode === 'combined' ? 'bg-slate-200 text-slate-900' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
+              title="Combined View (Split)"
+            >
+              <Columns className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => updateMode('livestream')}
+              className={`p-2 rounded-md transition-colors ${mode === 'livestream' ? 'bg-slate-200 text-slate-900' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
+              title="Livestream View Only"
+            >
+              <Radio className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
         <div className="flex-1 text-center px-4 min-w-0">
           <h1 className={`text-3xl md:text-5xl font-black uppercase tracking-tight ${gradientText} drop-shadow-sm leading-tight`}>
             {service.name}
@@ -374,13 +412,12 @@ export default function PublicCountdownDisplay() {
                       const sess = (programData?.sessions || []).find(s => s.has_livestream) || (programData?.sessions || [])[0];
                       if (sess) {
                         return (
-                          <div className="absolute inset-0 transform scale-90 origin-top">
-                            <StreamCoordinatorView 
-                              session={sess}
-                              segments={segments.filter(s => s.session_id === sess.id)}
-                              currentUser={null}
-                            />
-                          </div>
+                          <StreamCoordinatorView 
+                            session={sess}
+                            segments={segments.filter(s => s.session_id === sess.id)}
+                            currentUser={null}
+                            embedded={true}
+                          />
                         );
                       }
                       return <div className="p-10 text-center text-slate-400">No stream session</div>;
