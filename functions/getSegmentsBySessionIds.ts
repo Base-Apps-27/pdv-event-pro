@@ -45,10 +45,12 @@ Deno.serve(async (req) => {
     }
 
     const allResults = [];
+    const dataEnv = req.headers.get('x-data-env') || 'prod';
+    
     for (const batch of batches) {
       const batchResults = await Promise.all(
         batch.map(sessionId => 
-          base44.asServiceRole.entities.Segment.filter({ session_id: sessionId }, 'order')
+          base44.asServiceRole.entities.Segment.filter({ session_id: sessionId }, 'order', undefined, undefined, dataEnv)
         )
       );
       allResults.push(...batchResults.flat());
