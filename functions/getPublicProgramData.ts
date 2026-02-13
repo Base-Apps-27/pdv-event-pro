@@ -163,6 +163,7 @@ Deno.serve(async (req) => {
         let eventDays = [];
         let preSessionDetails = [];
         let liveAdjustments = [];
+        let streamBlocks = [];
 
         // Parallelize fetching of independent resources
         const fetchExtrasPromise = Promise.all([
@@ -213,12 +214,20 @@ Deno.serve(async (req) => {
                     return await Promise.all(
                         sessions.map(s => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: s.id }))
                     ).then(results => results.flat());
+                })(),
+                // Fetch StreamBlocks
+                (async () => {
+                    if (sessions.length === 0) return [];
+                    return await Promise.all(
+                        sessions.map(s => base44.asServiceRole.entities.StreamBlock.filter({ session_id: s.id }, 'order'))
+                    ).then(results => results.flat());
                 })()
             ]);
 
             [rooms, eventDays, liveAdjustments] = extras;
             let allSegments = segmentsAndDetails[0];
             preSessionDetails = segmentsAndDetails[1];
+            streamBlocks = segmentsAndDetails[2];
 
             // Process Segments (Sort & Filter)
             if (allSegments.length > 0) {
@@ -335,7 +344,8 @@ Deno.serve(async (req) => {
                 rooms,
                 eventDays,
                 preSessionDetails,
-                liveAdjustments
+                liveAdjustments,
+                streamBlocks
             };
             // Merge options if requested
             if (optionsData) Object.assign(responsePayload, optionsData);
@@ -662,7 +672,8 @@ Deno.serve(async (req) => {
                 rooms,
                 eventDays: [],
                 preSessionDetails,
-                liveAdjustments
+                liveAdjustments,
+                streamBlocks: []
             };
             if (optionsData) Object.assign(responsePayload, optionsData);
             return Response.json(responsePayload);

@@ -43,6 +43,8 @@ import ProjectionReportView from "@/components/report/ProjectionReportView";
 import SoundReportView from "@/components/report/SoundReportView";
 import HospitalityReportView from "@/components/report/HospitalityReportView";
 import UshersReportView from "@/components/report/UshersReportView";
+import LivestreamReportView from "@/components/report/LivestreamReportView";
+import { Radio } from "lucide-react";
 
 export default function Reports() {
   const { t } = useLanguage();
@@ -348,6 +350,10 @@ export default function Reports() {
                   <Utensils className="w-4 h-4" />
                   {t('reports.tabs.hospitality')}
                 </TabsTrigger>
+                <TabsTrigger value="livestream" className="flex items-center gap-2">
+                  <Radio className="w-4 h-4" />
+                  Livestream
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="detailed">
@@ -367,6 +373,9 @@ export default function Reports() {
               </TabsContent>
               <TabsContent value="hospitality">
                 <HospitalityReportView {...viewProps} allHospitalityTasks={allHospitalityTasks} />
+              </TabsContent>
+              <TabsContent value="livestream">
+                <LivestreamReportView {...viewProps} />
               </TabsContent>
             </Tabs>
 
@@ -396,6 +405,10 @@ export default function Reports() {
                 <div className="print-section" style={{ breakBefore: 'page' }}>
                   <h2 className="text-lg mb-2 border-b pb-1">HOSPITALIDAD</h2>
                   <HospitalityReportView {...viewProps} allHospitalityTasks={allHospitalityTasks} />
+                </div>
+                <div className="print-section" style={{ breakBefore: 'page' }}>
+                  <h2 className="text-lg mb-2 border-b pb-1">LIVESTREAM RUN OF SHOW</h2>
+                  <LivestreamReportView {...viewProps} />
                 </div>
               </div>
             )}
