@@ -272,19 +272,7 @@ export default function EventProgramView({
         </div>
       )}
 
-      {/* Stream Mode Header */}
-      {showStream && (
-        <div className="bg-slate-900 text-white p-4 rounded-xl mb-6 shadow-lg flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold uppercase tracking-wider text-red-500 flex items-center gap-2">
-              <Radio className="w-6 h-6 animate-pulse" />
-              Livestream Control
-            </h1>
-            <p className="text-slate-400 text-sm">Monitoring {filteredSessions.filter(s => s.has_livestream).length} active stream sessions</p>
-          </div>
-          {/* Optional: Add global stream status or health here */}
-        </div>
-      )}
+      {/* Stream Mode Info — lightweight department header, not a broadcast control center */}
 
       {/* Sessions Display */}
       {filteredSessions.map((session) => {

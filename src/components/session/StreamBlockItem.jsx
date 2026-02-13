@@ -52,8 +52,8 @@ export default function StreamBlockItem({ block, index, total, segments, session
         </div>
         
         {isCurrent && (
-           <div className="text-[10px] text-blue-600 font-bold uppercase tracking-wide animate-pulse mt-1">
-             On Air
+           <div className="text-[10px] text-blue-600 font-bold uppercase tracking-wide mt-1">
+             AHORA
            </div>
         )}
       </div>

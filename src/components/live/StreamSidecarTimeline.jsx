@@ -8,16 +8,12 @@ import { resolveBlockTime } from "@/components/utils/streamTiming";
 /**
  * StreamSidecarTimeline — TV Dashboard Column 3
  *
- * Purpose-built for the ~20% rightmost column of the Production Dashboard.
- * Mirrors the visual design language of SegmentTimeline (Column 2) —
- * same card structure, rounded items, left-accent borders — but shows
- * stream block data with ON AIR / type indicators.
+ * Department-style sidecar for the livestream team.
+ * Same concept as SegmentTimeline (Column 2) for the room program,
+ * but showing stream blocks mapped to the main schedule.
  *
- * Design principles:
- * - Every element uses relative sizing that naturally fits the container
- * - No fixed widths, no overflowing badges
- * - Current block is visually prominent; past blocks fade; future blocks neutral
- * - Auto-scrolls to keep the current block visible
+ * 2026-02-13: Stripped broadcast-control language (ON AIR, etc.).
+ * This is just the livestream team's timeline — a department view.
  */
 export default function StreamSidecarTimeline({ session, segments }) {
   const currentTime = useClockTick();
@@ -38,13 +34,8 @@ export default function StreamSidecarTimeline({ session, segments }) {
   // Resolve times & compute live state per block
   const blocksWithState = useMemo(() => {
     return blocks.map((block) => {
-      const { startTime, endTime } = resolveBlockTime(
-        block,
-        segments,
-        session.date
-      );
-      const isCurrent =
-        startTime && endTime && currentTime >= startTime && currentTime <= endTime;
+      const { startTime, endTime } = resolveBlockTime(block, segments, session.date);
+      const isCurrent = startTime && endTime && currentTime >= startTime && currentTime <= endTime;
       const isPast = endTime && currentTime > endTime;
       return { ...block, startTime, endTime, isCurrent, isPast };
     });
@@ -87,7 +78,7 @@ export default function StreamSidecarTimeline({ session, segments }) {
     return (
       <div className="h-full flex items-center justify-center p-4">
         <p className="text-xs text-slate-400 italic text-center">
-          No stream blocks configured
+          Sin bloques de stream
         </p>
       </div>
     );
@@ -95,20 +86,20 @@ export default function StreamSidecarTimeline({ session, segments }) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* ── Header — matches Room Program header style ── */}
+      {/* Header — matches Room Program header style */}
       <div className="shrink-0 bg-slate-800/5 px-3 py-3 border-b border-slate-200/50 flex items-center gap-2">
-        <Radio className="w-4 h-4 text-red-500 animate-pulse shrink-0" />
+        <Radio className="w-4 h-4 text-red-500 shrink-0" />
         <h3 className="font-bold text-slate-600 uppercase tracking-wider text-xs truncate">
-          Stream
+          Livestream
         </h3>
       </div>
 
-      {/* ── Block list — scrollable ── */}
+      {/* Block list — scrollable */}
       <div
         ref={listRef}
         className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-1.5"
       >
-        {blocksWithState.map((block, idx) => {
+        {blocksWithState.map((block) => {
           const { isCurrent, isPast } = block;
           const cfg = typeConfig(block.block_type);
 
@@ -152,7 +143,7 @@ export default function StreamSidecarTimeline({ session, segments }) {
                   {block.title}
                 </div>
 
-                {/* Meta row: type + ON AIR */}
+                {/* Meta row: type + current indicator */}
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   {/* Type dot + label */}
                   <span
@@ -166,20 +157,13 @@ export default function StreamSidecarTimeline({ session, segments }) {
                     {cfg.label}
                   </span>
 
-                  {/* ON AIR indicator */}
+                  {/* Current indicator — just "AHORA" label, no broadcast language */}
                   {isCurrent && (
-                    <span className="inline-flex items-center gap-1 leading-none">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                      <span
-                        style={{
-                          fontSize: "9px",
-                          fontWeight: 800,
-                          color: "#dc2626",
-                          letterSpacing: "0.05em",
-                        }}
-                      >
-                        ON AIR
-                      </span>
+                    <span
+                      className="inline-flex items-center gap-1 leading-none"
+                      style={{ fontSize: "9px", fontWeight: 800, color: "#2563eb", letterSpacing: "0.05em" }}
+                    >
+                      AHORA
                     </span>
                   )}
                 </div>

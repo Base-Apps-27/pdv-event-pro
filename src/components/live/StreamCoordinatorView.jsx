@@ -1,212 +1,193 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertTriangle, Radio, Link as LinkIcon, Clock, ChevronDown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Radio, Clock } from "lucide-react";
 import { useClockTick } from "@/components/utils/useClockTick";
 import { resolveBlockTime } from "@/components/utils/streamTiming";
-import StreamBlockItem from "@/components/session/StreamBlockItem";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
+/**
+ * StreamCoordinatorView — Livestream Department Timeline
+ *
+ * This is NOT a broadcast control center. It is a department-specific
+ * view of the program — the same concept as Projection Notes or Sound Notes,
+ * but for the Livestream team whose content is richer (timed blocks that
+ * map to the main program segments).
+ *
+ * No "ON AIR" triggers, no divergence detection, no broadcast management.
+ * Just the livestream team's annotated view of what's happening.
+ *
+ * 2026-02-13: Simplified from broadcast-control style to department-sidecar style.
+ */
 export default function StreamCoordinatorView({ session, segments, currentUser, embedded = false }) {
   const currentTime = useClockTick();
   const scrollRef = useRef(null);
-  
-  // Fetch StreamBlocks
+  const currentBlockRef = useRef(null);
+
+  // Fetch StreamBlocks for this session
   const { data: blocks = [] } = useQuery({
     queryKey: ['streamBlocks', session.id],
     queryFn: () => base44.entities.StreamBlock.filter({ session_id: session.id }, 'order'),
     enabled: !!session.id,
-    refetchInterval: 5000 // Poll for updates
+    refetchInterval: 5000
   });
 
-  // Calculate live state for all blocks
+  // Resolve times & compute state per block
   const blocksWithTime = React.useMemo(() => {
     return blocks.map(block => {
       const { startTime, endTime, isOrphaned } = resolveBlockTime(block, segments, session.date);
-      
       const isCurrent = startTime && endTime && currentTime >= startTime && currentTime <= endTime;
-      const isNext = startTime && currentTime < startTime;
-      
-      return {
-        ...block,
-        startTime,
-        endTime,
-        isOrphaned,
-        isCurrent,
-        isNext
-      };
+      const isPast = endTime && currentTime > endTime;
+      return { ...block, startTime, endTime, isOrphaned, isCurrent, isPast };
     });
-  }, [blocks, segments, session.date, currentTime]); // Updates every second due to currentTime
+  }, [blocks, segments, session.date, currentTime]);
 
-  // Find Current and Next
   const currentBlock = blocksWithTime.find(b => b.isCurrent);
-  
-  // Find next block (first one in future)
-  const nextBlock = blocksWithTime
-    .filter(b => b.isNext)
-    .sort((a, b) => a.startTime - b.startTime)[0];
 
-  // Auto-scroll to current block on change
+  // Auto-scroll to current block
   useEffect(() => {
-    if (currentBlock && scrollRef.current) {
-      const el = document.getElementById(`stream-block-${currentBlock.id}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+    if (currentBlockRef.current) {
+      currentBlockRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [currentBlock?.id]);
 
-  // Countdown logic
-  const getCountdown = (targetDate) => {
-    if (!targetDate) return "--:--";
-    const diff = targetDate - currentTime;
-    if (diff < 0) return "00:00";
-    const min = Math.floor(diff / 60000);
-    const sec = Math.floor((diff % 60000) / 1000);
-    return `${min}:${sec.toString().padStart(2, '0')}`;
+  const fmtTime = (date) => {
+    if (!date) return "--:--";
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric", minute: "2-digit", hour12: true, timeZone: "America/New_York"
+    }).replace(/\u202F|\u00A0/g, " ");
   };
 
-  const isDiverging = currentBlock && currentBlock.block_type !== 'link';
+  // Block type config — simple labels, no broadcast connotations
+  const typeLabel = (t) => {
+    const map = { link: "Link", insert: "Insert", replace: "Replace", offline: "Offline" };
+    return map[t] || t || "—";
+  };
+  const typeColor = (t) => {
+    const map = { link: "#3b82f6", insert: "#10b981", replace: "#f59e0b", offline: "#94a3b8" };
+    return map[t] || "#94a3b8";
+  };
+
+  if (blocks.length === 0) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+        <Radio className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+        <p className="text-sm text-gray-400">No hay bloques de stream configurados para esta sesión.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className={`flex flex-col ${embedded ? 'h-full border-none rounded-none' : 'h-[calc(100vh-140px)] rounded-xl border border-gray-300'} bg-gray-100 overflow-hidden`}>
-      {/* Top Bar - Hidden in embedded mode */}
-      {!embedded && (
-        <div className="bg-slate-900 text-white p-4 flex justify-between items-center shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Radio className="w-5 h-5 text-red-500 animate-pulse" />
-              <h2 className="font-bold text-lg tracking-wide uppercase">Livestream Coordinator</h2>
-            </div>
-            <span className="text-slate-400 text-sm border-l border-slate-700 pl-3">
-              {session.name}
-            </span>
-          </div>
-          <div className="font-mono text-xl text-blue-400 font-bold">
-            {currentTime.toLocaleTimeString()}
-          </div>
+    <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${embedded ? '' : 'shadow-sm'}`}>
+      {/* Session header — compact, informational */}
+      <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Radio className="w-4 h-4 text-red-500 shrink-0" />
+          <h3 className="font-bold text-sm text-gray-800 uppercase tracking-wide">
+            Notas de Livestream
+          </h3>
+          <span className="text-xs text-gray-500">— {session.name}</span>
         </div>
-      )}
-
-      {/* Hero Section - Hidden in embedded mode */}
-      {!embedded && (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-0 shrink-0 border-b-4 border-slate-900">
-        {/* Left: ON AIR */}
-        <div className={`p-6 ${isDiverging ? 'bg-red-900' : 'bg-slate-800'} text-white relative overflow-hidden`}>
-          <div className="absolute top-4 right-4 opacity-20">
-            <Radio className="w-32 h-32" />
-          </div>
-          
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-2">
-              <Badge className={`${isDiverging ? 'bg-red-600' : 'bg-green-600'} text-white border-none animate-pulse`}>
-                ON AIR
-              </Badge>
-              {isDiverging && (
-                <Badge variant="outline" className="text-red-200 border-red-400 font-bold">
-                  DIVERGING FROM ROOM
-                </Badge>
-              )}
-            </div>
-            
-            <h1 className="text-3xl md:text-4xl font-black uppercase leading-tight mb-2 line-clamp-2">
-              {currentBlock ? currentBlock.title : "WAITING FOR START"}
-            </h1>
-            
-            {currentBlock && (
-              <div className="text-slate-300 text-lg flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                <span>Ends in: <span className="font-mono font-bold text-white">{getCountdown(currentBlock.endTime)}</span></span>
-              </div>
-            )}
-
-            {/* Current Cues */}
-            {currentBlock?.stream_actions?.length > 0 && (
-              <div className="mt-4 bg-black/30 p-3 rounded-lg border border-white/10">
-                <div className="text-xs text-slate-400 uppercase font-bold mb-2">Active Cues</div>
-                <div className="space-y-1">
-                  {currentBlock.stream_actions.map((action, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm">
-                      <span className="text-yellow-400 font-bold">▶</span>
-                      <span>{action.label}</span>
-                      {action.notes && <span className="text-slate-400 text-xs">- {action.notes}</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right: UP NEXT */}
-        <div className="bg-slate-100 p-6 border-l border-slate-300 flex flex-col justify-center">
-          <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Up Next</div>
-          
-          {nextBlock ? (
-            <>
-              <h2 className="text-2xl font-bold text-slate-800 mb-1 line-clamp-1">{nextBlock.title}</h2>
-              <div className="flex items-center gap-2 mb-4">
-                <Badge variant="outline" className="border-slate-400 text-slate-600">
-                  {nextBlock.block_type.toUpperCase()}
-                </Badge>
-                <span className="text-slate-500 text-sm">
-                  Starts in <span className="font-mono font-bold text-slate-900">{getCountdown(nextBlock.startTime)}</span>
-                </span>
-              </div>
-              
-              {/* Prep Cues for Next */}
-              {nextBlock.stream_actions?.filter(a => a.timing === 'before_start').length > 0 && (
-                <div className="bg-white p-3 rounded border border-slate-200 shadow-sm">
-                  <div className="text-xs text-slate-400 uppercase font-bold mb-1">Prep Cues</div>
-                  {nextBlock.stream_actions.filter(a => a.timing === 'before_start').map((action, i) => (
-                    <div key={i} className="text-sm text-slate-700 flex items-center gap-2">
-                      <span className="text-blue-500 font-bold">⚠</span>
-                      {action.label}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="text-slate-400 italic">End of stream</div>
-          )}
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <Clock className="w-3 h-3" />
+          <span>{blocksWithTime.length} bloques</span>
         </div>
       </div>
-      )}
 
-      {/* Timeline List */}
-      <div className="flex-1 overflow-hidden relative bg-gray-50">
-        <ScrollArea className="h-full" ref={scrollRef}>
-          <div className={`${embedded ? 'p-2 space-y-1' : 'p-4 space-y-2 max-w-4xl mx-auto'}`}>
-            {blocksWithTime.map((block, index) => (
-              <div id={`stream-block-${block.id}`} key={block.id}>
-                <StreamBlockItem 
-                  block={block}
-                  index={index}
-                  total={blocks.length}
-                  segments={segments}
-                  sessionDate={session.date}
-                  readOnly={true}
-                  isCurrent={block.isCurrent}
-                  compact={embedded}
-                />
+      {/* Block list — department timeline */}
+      <div className="divide-y divide-gray-100">
+        {blocksWithTime.map((block) => {
+          const color = typeColor(block.block_type);
+          const anchorSegment = segments.find(s => s.id === block.anchor_segment_id);
+
+          return (
+            <div
+              key={block.id}
+              ref={block.isCurrent ? currentBlockRef : undefined}
+              className={`flex gap-3 px-4 py-3 transition-colors ${
+                block.isCurrent
+                  ? "bg-blue-50 border-l-4 border-l-blue-500"
+                  : block.isPast
+                    ? "opacity-40 border-l-4 border-l-transparent"
+                    : "border-l-4 border-l-transparent hover:bg-gray-50"
+              }`}
+            >
+              {/* Time column */}
+              <div className="shrink-0 w-20 pt-0.5">
+                <div className={`font-mono text-sm font-semibold ${block.isCurrent ? 'text-blue-700' : block.isPast ? 'text-gray-400' : 'text-gray-700'}`}>
+                  {fmtTime(block.startTime)}
+                </div>
+                <div className="font-mono text-xs text-gray-400">
+                  {fmtTime(block.endTime)}
+                </div>
               </div>
-            ))}
-            
-            {blocks.length === 0 && (
-              <div className="text-center py-12 text-slate-400">
-                No stream blocks configured for this session.
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                {/* Title + type badge row */}
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h4 className={`font-semibold text-sm truncate ${block.isCurrent ? 'text-gray-900' : block.isPast ? 'text-gray-400' : 'text-gray-800'}`}>
+                    {block.title}
+                  </h4>
+                  <span
+                    className="inline-flex items-center gap-1 text-[10px] font-bold uppercase shrink-0"
+                    style={{ color }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+                    {typeLabel(block.block_type)}
+                  </span>
+                  {block.isCurrent && (
+                    <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px] h-4 px-1.5">
+                      AHORA
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Presenter */}
+                {block.presenter && (
+                  <p className="text-xs text-gray-600">{block.presenter}</p>
+                )}
+
+                {/* Anchor reference — shows which main-program segment this relates to */}
+                {anchorSegment && (
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    ↳ {anchorSegment.title}
+                    {block.offset_min ? ` (${block.offset_min > 0 ? '+' : ''}${block.offset_min}m)` : ''}
+                  </p>
+                )}
+
+                {/* Stream notes — the actual department content */}
+                {block.description && (
+                  <p className="text-xs text-gray-600 mt-1 bg-gray-50 rounded p-2 border border-gray-100">
+                    {block.description}
+                  </p>
+                )}
+                {block.stream_notes && (
+                  <p className="text-xs text-gray-600 mt-1 bg-gray-50 rounded p-2 border border-gray-100">
+                    📝 {block.stream_notes}
+                  </p>
+                )}
+
+                {/* Stream actions/cues — presented as simple checklist-style notes */}
+                {block.stream_actions?.length > 0 && (
+                  <div className="mt-1.5 space-y-0.5">
+                    {block.stream_actions.map((action, i) => (
+                      <div key={i} className="flex items-start gap-1.5 text-xs text-gray-700">
+                        <span className="text-gray-400 shrink-0">•</span>
+                        <span>
+                          <strong>{action.label}</strong>
+                          {action.notes && <span className="text-gray-500"> — {action.notes}</span>}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </ScrollArea>
-        
-        {/* Scroll hint if needed */}
-        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-gray-100 to-transparent pointer-events-none" />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
