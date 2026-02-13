@@ -5,7 +5,7 @@ import CountdownBlock from "@/components/service/CountdownBlock";
 import CoordinatorActionsDisplay from "@/components/service/CoordinatorActionsDisplay";
 import SegmentTimeline from "@/components/service/SegmentTimeline";
 import { useLanguage } from "@/components/utils/i18n";
-import { formatTimeToEST } from "@/components/utils/timeFormat";
+import { formatTimeToEST, formatDateET } from "@/components/utils/timeFormat";
 import { normalizeProgramData } from "@/components/utils/normalizeProgram";
 import { normalizeStreamBlocks } from "@/components/utils/normalizeStreamBlocks";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,7 +28,7 @@ export default function PublicCountdownDisplay() {
   const { t } = useLanguage();
   const [currentTime, setCurrentTime] = useState(new Date());
   
-  // Brand gradient style (Hardcoded for reliability)
+  // Brand gradient style
   const gradientText = "bg-clip-text text-transparent bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]";
   const [serviceId, setServiceId] = useState(null);
   const [serviceDate, setServiceDate] = useState(() => {
@@ -42,7 +42,7 @@ export default function PublicCountdownDisplay() {
   const urlParams = new URLSearchParams(window.location.search);
   const mode = urlParams.get('mode') || 'standard'; // standard, livestream, combined
   
-  // Tick every second for countdown display
+  // Tick every second
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
@@ -98,7 +98,7 @@ export default function PublicCountdownDisplay() {
   const normalizedData = useMemo(() => normalizeProgramData(programData), [programData]);
   const service = normalizedData.program;
   const segments = normalizedData.segments;
-  // Fetch stream blocks if available in raw response
+  
   const streamBlocks = useMemo(() => 
     normalizeStreamBlocks(programData?.streamBlocks || [], segments), 
     [programData?.streamBlocks, segments]
@@ -254,9 +254,12 @@ export default function PublicCountdownDisplay() {
                 <SelectValue placeholder="Select program..." />
               </SelectTrigger>
               <SelectContent>
-                {/* ... options ... */}
-                {availableOptions.events.map(e => <SelectItem key={e.id} value={`event:${e.id}`}>{e.name} ({formatDateET(e.start_date)})</SelectItem>)}
-                {availableOptions.services.map(s => <SelectItem key={s.id} value={`service:${s.id}`}>{s.name} ({formatDateET(s.date)})</SelectItem>)}
+                {availableOptions.events.map(e => (
+                  <SelectItem key={e.id} value={`event:${e.id}`}>{e.name} ({formatDateET(e.start_date)})</SelectItem>
+                ))}
+                {availableOptions.services.map(s => (
+                  <SelectItem key={s.id} value={`service:${s.id}`}>{s.name} ({formatDateET(s.date)})</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
