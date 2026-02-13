@@ -69,13 +69,19 @@ export default function useSessionDetector() {
       return { contextType: 'event', contextId: tomorrowEvent.id, event: tomorrowEvent, service: null };
     }
 
-    // Nothing active — find next upcoming within 7 days
-    const sevenDaysOut = new Date();
-    sevenDaysOut.setDate(sevenDaysOut.getDate() + 7);
-    const sevenStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(sevenDaysOut);
+    // Nothing active — find next upcoming within visibility windows
+    // Events: Date-4 (4 days out)
+    const fourDaysOut = new Date();
+    fourDaysOut.setDate(fourDaysOut.getDate() + 4);
+    const fourStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(fourDaysOut);
 
-    const nextEvent = events.find(e => e.start_date > todayStr && e.start_date <= sevenStr);
-    const nextService = services.find(s => s.date > todayStr && s.date <= sevenStr);
+    // Services: Date-1 (1 day out)
+    const oneDayOut = new Date();
+    oneDayOut.setDate(oneDayOut.getDate() + 1);
+    const oneStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(oneDayOut);
+
+    const nextEvent = events.find(e => e.start_date > todayStr && e.start_date <= fourStr);
+    const nextService = services.find(s => s.date > todayStr && s.date <= oneStr);
 
     if (nextService && (!nextEvent || nextService.date <= nextEvent.start_date)) {
       return { contextType: 'service', contextId: nextService.id, event: null, service: nextService };
