@@ -29,8 +29,15 @@ export function normalizeEventSegments(programData) {
 
   return segments.map(seg => {
     const session = sessionMap[seg.session_id] || {};
+    // Enrich breakout rooms with room names if available
+    const enrichedBreakouts = (seg.breakout_rooms || []).map(br => ({
+      ...br,
+      _roomName: br.room_id ? (roomMap[br.room_id]?.name || '') : ''
+    }));
+
     return {
       ...seg,
+      breakout_rooms: enrichedBreakouts,
       // Augment with session metadata
       _sessionName: session.name || '',
       _sessionDate: session.date || '',
@@ -126,6 +133,7 @@ export function normalizeServiceSegments(serviceData) {
         message_title: seg.data?.message_title || seg.message_title || '',
         major_break: seg.major_break || false,
         sub_assignments: seg.sub_assignments || [],
+        breakout_rooms: seg.breakout_rooms || seg.data?.breakout_rooms || [],
         // data object passthrough for getSegmentData compatibility
         data: seg.data || {},
         _slotLabel: slotLabel,

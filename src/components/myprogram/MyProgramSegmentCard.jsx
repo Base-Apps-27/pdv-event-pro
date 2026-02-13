@@ -139,41 +139,75 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
           </p>
         )}
 
-        {/* Presenter / Leader / Translator (always shown in general) */}
-        {department === 'general' && (
-          <div className="grid grid-cols-1 gap-1">
-            {isMessage && getData('presenter') && (
-              <div className="flex items-center gap-2 text-xs text-blue-700 font-medium">
-                <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                  <Users className="w-3 h-3" />
-                </div>
-                <span>{t('live.preacher')}: {normalizeName(getData('presenter'))}</span>
+        {/* Presenter / Leader / Translator (Visible to ALL departments) */}
+        <div className="grid grid-cols-1 gap-1">
+          {isMessage && getData('presenter') && (
+            <div className="flex items-center gap-2 text-xs text-blue-700 font-medium">
+              <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                <Users className="w-3 h-3" />
               </div>
-            )}
-            {isWorship && (getData('leader') || getData('presenter')) && (
-              <div className="flex items-center gap-2 text-xs text-green-700 font-medium">
-                <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                  <Users className="w-3 h-3" />
-                </div>
-                <span>{normalizeName(getData('leader') || getData('presenter'))}</span>
+              <span>{t('live.preacher')}: {normalizeName(getData('presenter'))}</span>
+            </div>
+          )}
+          {isWorship && (getData('leader') || getData('presenter')) && (
+            <div className="flex items-center gap-2 text-xs text-green-700 font-medium">
+              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                <Users className="w-3 h-3" />
               </div>
-            )}
-            {!isWorship && !isMessage && getData('presenter') && (
-              <div className="flex items-center gap-2 text-xs text-gray-700 font-medium">
-                <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                  <Users className="w-3 h-3" />
-                </div>
-                <span>{normalizeName(getData('presenter'))}</span>
+              <span>{normalizeName(getData('leader') || getData('presenter'))}</span>
+            </div>
+          )}
+          {!isWorship && !isMessage && getData('presenter') && (
+            <div className="flex items-center gap-2 text-xs text-gray-700 font-medium">
+              <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                <Users className="w-3 h-3" />
               </div>
-            )}
-            {(getData('translator_name') || getData('translator')) && (
-              <div className="flex items-center gap-2 text-xs text-purple-700 font-medium">
-                <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-                  <Mic className="w-3 h-3" />
-                </div>
-                <span>{t('live.translator')}: {normalizeName(getData('translator_name') || getData('translator'))}</span>
+              <span>{normalizeName(getData('presenter'))}</span>
+            </div>
+          )}
+          {/* Translator: Only if InPerson (From Stage) */}
+          {(getData('translator_name') || getData('translator')) && getData('translation_mode') === 'InPerson' && (
+            <div className="flex items-center gap-2 text-xs text-purple-700 font-medium">
+              <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                <Mic className="w-3 h-3" />
               </div>
-            )}
+              <span>{t('live.translator')}: {normalizeName(getData('translator_name') || getData('translator'))}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Breakout Groups (Visible to ALL departments) */}
+        {segment.breakout_rooms && segment.breakout_rooms.length > 0 && (
+          <div className="mt-2 space-y-2">
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+              Breakout Groups
+            </p>
+            {segment.breakout_rooms.map((room, idx) => (
+              <div key={idx} className="bg-gray-50 rounded-lg p-2 border border-gray-200 text-xs">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-gray-800">{room.topic || 'Breakout'}</span>
+                  {room._roomName && (
+                    <Badge variant="outline" className="text-[9px] h-4 bg-white">
+                      {room._roomName}
+                    </Badge>
+                  )}
+                </div>
+                <div className="text-gray-600 space-y-0.5">
+                  {room.speakers && (
+                    <div className="flex items-center gap-1">
+                      <Users className="w-3 h-3 text-gray-400" />
+                      <span>{normalizeName(room.speakers)}</span>
+                    </div>
+                  )}
+                  {room.hosts && (
+                    <div className="flex items-center gap-1">
+                      <Users className="w-3 h-3 text-gray-400" />
+                      <span className="italic">{normalizeName(room.hosts)} (Host)</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
