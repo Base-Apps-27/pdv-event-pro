@@ -24,7 +24,8 @@ export default function CountdownBlock({
   displayMode = 'upcoming',
   currentTime,
   serviceDate,
-  getTimeDate
+  getTimeDate,
+  size = 'full' // 'full' | 'compact'
 }) {
   const { t, language } = useLanguage();
 
@@ -137,7 +138,7 @@ export default function CountdownBlock({
         {/* Countdown Timer — HERO ELEMENT */}
         <div className="text-center w-full overflow-hidden">
           {/* Responsive sizing accounts for 2-column split at md breakpoint */}
-          <div className={`text-5xl sm:text-6xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-black font-mono tracking-tighter leading-none mb-2 ${config.countdownColor} tabular-nums break-words`}>
+          <div className={`${size === 'compact' ? 'text-4xl md:text-5xl lg:text-6xl' : 'text-5xl sm:text-6xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl'} font-black font-mono tracking-tighter leading-none mb-2 ${config.countdownColor} tabular-nums break-words`}>
             {countdownText}
           </div>
           {isLiveAdjusted && (
@@ -149,7 +150,7 @@ export default function CountdownBlock({
 
         {/* Segment Title */}
         <div className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 uppercase tracking-tight">
+          <h2 className={`${size === 'compact' ? 'text-2xl md:text-3xl' : 'text-3xl md:text-4xl'} font-bold text-slate-900 uppercase tracking-tight`}>
             {segment.title}
           </h2>
         </div>

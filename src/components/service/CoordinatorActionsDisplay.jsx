@@ -15,7 +15,8 @@ export default function CoordinatorActionsDisplay({
   currentSegment,
   nextSegment,
   currentTime,
-  serviceDate
+  serviceDate,
+  layout = 'grid' // 'grid' | 'vertical'
 }) {
   const { t, language } = useLanguage();
 
@@ -125,13 +126,13 @@ export default function CoordinatorActionsDisplay({
         </h3>
       </div>
 
-      {/* Actions Grid (Horizontal) */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${
+      {/* Actions Grid (Horizontal or Vertical) */}
+      <div className={`${layout === 'vertical' ? 'flex flex-col space-y-3' : `grid grid-cols-1 md:grid-cols-2 gap-4 ${
         upcomingActions.length === 1 ? 'lg:grid-cols-1' :
         upcomingActions.length === 2 ? 'lg:grid-cols-2' :
         upcomingActions.length === 3 ? 'lg:grid-cols-3' :
         'lg:grid-cols-4'
-      }`}>
+      }`}`}>
         {/* If > 4 items, show 3 items + overflow card (total 4 slots). Else show all (max 4). */}
         {upcomingActions.slice(0, upcomingActions.length > 4 ? 3 : 4).map((action) => {
           const now = currentTime.getTime();
@@ -210,8 +211,8 @@ export default function CoordinatorActionsDisplay({
           );
         })}
 
-        {/* Overflow Card - Takes the 4th slot if we have > 4 items */}
-        {upcomingActions.length > 4 && (
+        {/* Overflow Card - Takes the 4th slot if we have > 4 items (Grid only) */}
+        {layout === 'grid' && upcomingActions.length > 4 && (
           <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-slate-800 text-white border border-slate-700 h-full text-center">
             <div className="text-4xl font-black mb-1">+{upcomingActions.length - 3}</div>
             <div className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">More Actions</div>
