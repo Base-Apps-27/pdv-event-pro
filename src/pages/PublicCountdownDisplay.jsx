@@ -300,9 +300,9 @@ export default function PublicCountdownDisplay() {
   const isCombined = mode === 'combined';
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 p-3 md:p-4 flex flex-col items-center overflow-hidden relative group/ui light">
+    <div className="w-full h-screen bg-slate-50 p-3 md:p-4 flex flex-col items-center overflow-hidden relative group/ui light">
       {/* Top Gradient */}
-      <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
+      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
 
       {/* Header */}
       <div className="w-full flex items-center justify-between px-4 py-3 z-20 relative mb-2">
