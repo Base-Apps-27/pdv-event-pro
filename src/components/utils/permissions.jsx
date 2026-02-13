@@ -30,6 +30,8 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     'manage_live_timing',
     'manage_live_director',
     'manage_users',
+    'access_my_program',
+    'access_live_view',
   ],
   LiveManager: [
     'view_live_program',
@@ -37,6 +39,8 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     'manage_live_timing',
     'manage_live_director',
     'adjust_service_timing',
+    'access_my_program',
+    'access_live_view',
   ],
   AdmAsst: [
     'view_events', 'edit_events', 'create_events',
@@ -46,9 +50,12 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     'view_people', 'edit_people', 'create_people',
     'view_live_program',
     'view_live_chat',
+    'access_my_program',
+    'access_live_view',
   ],
   EventDayViewer: [
     'view_live_program',
+    'access_my_program',
   ],
   // EventDayCoordinator: Same as EventDayViewer + view_live_chat + adjust_service_timing
   // For coordinators who need to participate in live operations chat and adjust service times
@@ -56,8 +63,13 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     'view_live_program',
     'view_live_chat',
     'adjust_service_timing',
+    'access_my_program',
   ],
 };
+
+// MyProgram: All roles get access_my_program by default.
+// This is enforced by adding it to every role above AND as a fallback in getUserPermissions.
+// access_live_view gates the full Live View (coordinator tool).
 
 /**
  * Get all permissions for a user (role defaults + custom + revoked)
@@ -214,5 +226,11 @@ export function getAllPermissionDefinitions() {
 
     // Live Director (for managing live event session timing via Director Console)
     { key: 'manage_live_director', resource: 'live_director', action: 'manage', category: 'live', hierarchy_level: 4, label_en: 'Manage Live Director', label_es: 'Gestionar Director en Vivo' },
+
+    // MyProgram (department-filtered view for all users)
+    { key: 'access_my_program', resource: 'my_program', action: 'access', category: 'live', hierarchy_level: 4, label_en: 'Access My Program', label_es: 'Acceder Mi Programa' },
+
+    // Live View (full coordinator view — gates PublicProgramView for authenticated users)
+    { key: 'access_live_view', resource: 'live_view', action: 'access', category: 'live', hierarchy_level: 4, label_en: 'Access Live View', label_es: 'Acceder Vista en Vivo' },
   ];
 }
