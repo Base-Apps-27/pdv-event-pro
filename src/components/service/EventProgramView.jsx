@@ -190,8 +190,12 @@ export default function EventProgramView({
       />
       )}
 
-      {/* Live Status Card - with date awareness (Hidden in Stream Mode) */}
-      {!isStreamMode && <LiveStatusCard 
+      {/* Live Status Card - with date awareness
+           Always visible (both room and stream mode).
+           Counter cards always show the ROOM program status.
+           LS line underneath shows what livestream is currently on.
+           Clicking the LS line switches to Stream mode and scrolls to that block. */}
+      <LiveStatusCard 
         segments={allSegments.map(seg => {
           // Augment segments with their session date for accurate live status
           const session = eventSessions.find(s => s.id === seg.session_id);
@@ -200,7 +204,23 @@ export default function EventProgramView({
         currentTime={currentTime}
         onScrollTo={scrollToSegment}
         liveAdjustmentEnabled={filteredSessions[0]?.live_adjustment_enabled}
-      />}
+        currentStreamBlock={currentStreamBlock}
+        onStreamBlockClick={() => {
+          // Switch to Stream view when LS line is clicked
+          setShowStream(true);
+          // After render, scroll to the current stream block
+          if (currentStreamBlock?.id) {
+            setTimeout(() => {
+              const el = document.getElementById(`stream-block-${currentStreamBlock.id}`);
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add('ring-4', 'ring-red-400', 'ring-offset-2', 'transition-all', 'duration-500');
+                setTimeout(() => el.classList.remove('ring-4', 'ring-red-400', 'ring-offset-2'), 2500);
+              }
+            }, 300);
+          }
+        }}
+      />
 
       {/* Compact Filters Toolbar - Hidden in Stream Mode */}
       {!isStreamMode && (
