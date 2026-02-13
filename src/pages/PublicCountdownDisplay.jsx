@@ -268,8 +268,13 @@ export default function PublicCountdownDisplay() {
     );
   }
 
-  const allDone = !currentSegment && !nextSegment && !preLaunchSegment;
+  const allDone = !currentSegment && !nextSegment && !preLaunchSegment && segments.length > 0;
   
+  // If all segments are done, show standby full-screen (no page header)
+  if (allDone) {
+    return <StandbyScreen currentTime={currentTime} />;
+  }
+
   // If Livestream Mode (Exclusive)
   if (mode === 'livestream') {
     // Find session with stream blocks
@@ -317,9 +322,7 @@ export default function PublicCountdownDisplay() {
       </div>
 
       <div className="w-full max-w-[1800px] flex flex-col gap-5 items-center z-10 flex-1">
-        {allDone ? (
-          <StandbyScreen currentTime={currentTime} />
-        ) : (
+        {(
           <div className="w-full h-full flex-1 overflow-hidden min-h-[600px] grid gap-4" style={{ gridTemplateColumns: '40% 40% 20%' }}>
             {/* Col 1: Status Sidecar (Countdown + Actions) - WIDER */}
             <div className="flex flex-col gap-4 overflow-hidden">
