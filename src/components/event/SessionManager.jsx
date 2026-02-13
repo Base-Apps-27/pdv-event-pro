@@ -23,6 +23,9 @@ import SegmentList from "../session/SegmentList";
 import SegmentFormTwoColumn from "../session/SegmentFormTwoColumn";
 import PreSessionDetailsForm from "../session/PreSessionDetailsForm";
 import HospitalityTasksModal from "../session/HospitalityTasksModal";
+import StreamBlockList from "../session/StreamBlockList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { logCreate, logUpdate, logDelete } from "@/components/utils/editActionLogger";
 
@@ -171,6 +174,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
       worship_leader: session?.worship_leader || '',
       session_color: session?.session_color || 'blue',
       is_translated_session: session?.is_translated_session || false,
+      has_livestream: session?.has_livestream || false,
     });
     setShowDialog(true);
   };
@@ -522,26 +526,91 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                   </div>
 
                   {isExpanded && (
-                    <div className="border-t pt-3 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-semibold text-slate-900">Segmentos del Programa</h3>
-                        <Button 
-                          size="sm"
-                          onClick={() => handleAddSegment(session.id)}
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          <Plus className="w-4 h-4 mr-1" />
-                          Nuevo Segmento
-                        </Button>
-                      </div>
-                      
-                      <SegmentList 
-                        segments={sessionSegments}
-                        sessionId={session.id}
-                        onEdit={(segment) => handleEditSegment(segment, session.id)}
-                        onEditPreSession={() => setShowPreSessionDetailsDialog(true)}
-                        user={user}
-                      />
+                    <div className="border-t pt-3">
+                      {session.has_livestream ? (
+                        <Tabs defaultValue="main" className="w-full">
+                          <TabsList className="grid w-full grid-cols-2 mb-4">
+                            <TabsTrigger value="main">Programa Principal (Sala)</TabsTrigger>
+                            <TabsTrigger value="stream" className="flex items-center gap-2">
+                              Livestream
+                              <Badge variant="secondary" className="ml-1 bg-red-100 text-red-700 hover:bg-red-100 text-[10px] px-1 h-4">LIVE</Badge>
+                            </TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="main" className="space-y-3 mt-0">
+                            <div className="flex justify-between items-center">
+                              <h3 className="font-semibold text-slate-900">Segmentos del Programa</h3>
+                              <Button 
+                                size="sm"
+                                onClick={() => handleAddSegment(session.id)}
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                <Plus className="w-4 h-4 mr-1" />
+                                Nuevo Segmento
+                              </Button>
+                            </div>
+                            <SegmentList 
+                              segments={sessionSegments}
+                              sessionId={session.id}
+                              onEdit={(segment) => handleEditSegment(segment, session.id)}
+                              onEditPreSession={() => setShowPreSessionDetailsDialog(true)}
+                              user={user}
+                            />
+                          </TabsContent>
+                          
+                          <TabsContent value="stream" className="mt-0">
+                            <div className="grid md:grid-cols-3 gap-6">
+                              {/* Left Rail: Reference */}
+                              <div className="md:col-span-1 border-r border-slate-100 pr-4 opacity-70 hover:opacity-100 transition-opacity hidden md:block">
+                                <h4 className="text-xs font-bold text-slate-400 uppercase mb-3">Referencia: Sala Principal</h4>
+                                <div className="space-y-2 text-xs">
+                                  {sessionSegments.map((seg, idx) => (
+                                    <div key={seg.id} className="p-2 border rounded bg-slate-50 flex justify-between">
+                                      <div>
+                                        <span className="font-bold mr-2 text-slate-500">{idx + 1}.</span>
+                                        {seg.title}
+                                      </div>
+                                      <div className="font-mono text-slate-400">{formatTimeToEST(seg.start_time)}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              {/* Right Rail: Stream Editor */}
+                              <div className="md:col-span-2">
+                                <StreamBlockList 
+                                  sessionId={session.id}
+                                  segments={sessionSegments}
+                                  sessionDate={session.date}
+                                  user={user}
+                                />
+                              </div>
+                            </div>
+                          </TabsContent>
+                        </Tabs>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <h3 className="font-semibold text-slate-900">Segmentos del Programa</h3>
+                            <Button 
+                              size="sm"
+                              onClick={() => handleAddSegment(session.id)}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Plus className="w-4 h-4 mr-1" />
+                              Nuevo Segmento
+                            </Button>
+                          </div>
+                          
+                          <SegmentList 
+                            segments={sessionSegments}
+                            sessionId={session.id}
+                            onEdit={(segment) => handleEditSegment(segment, session.id)}
+                            onEditPreSession={() => setShowPreSessionDetailsDialog(true)}
+                            user={user}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -802,6 +871,25 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                   >
                     Esta sesión requiere traducción (Bilingüe)
                   </label>
+                </div>
+
+                <div className="flex items-center space-x-2 pt-2 border-t mt-4">
+                  <Switch 
+                    id="has_livestream" 
+                    checked={formData.has_livestream}
+                    onCheckedChange={(checked) => updateFormField('has_livestream', checked)}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <label
+                      htmlFor="has_livestream"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Habilitar Livestream
+                    </label>
+                    <p className="text-[0.8rem] text-muted-foreground">
+                      Activa la pestaña de gestión para el programa paralelo de transmisión.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
