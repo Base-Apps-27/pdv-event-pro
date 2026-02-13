@@ -69,25 +69,52 @@ export default function useSessionDetector() {
       return { contextType: 'event', contextId: tomorrowEvent.id, event: tomorrowEvent, service: null };
     }
 
-    // Nothing active — find next upcoming within visibility windows
-    // Events: Date-4 (4 days out)
+    // Nothing active — find next upcoming within visibility windows (Unified Queue)
+    const candidates = [];
+
+    // 1. Events: Visible Date-4 (4 days out)
     const fourDaysOut = new Date();
     fourDaysOut.setDate(fourDaysOut.getDate() + 4);
     const fourStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(fourDaysOut);
+    
+    const validNextEvents = events.filter(e => e.start_date > todayStr && e.start_date <= fourStr);
+    validNextEvents.forEach(e => {
+        candidates.push({
+            type: 'event',
+            date: e.start_date,
+            item: e
+        });
+    });
 
-    // Services: Date-1 (1 day out)
+    // 2. Services: Visible Date-1 (1 day out)
     const oneDayOut = new Date();
     oneDayOut.setDate(oneDayOut.getDate() + 1);
     const oneStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(oneDayOut);
 
-    const nextEvent = events.find(e => e.start_date > todayStr && e.start_date <= fourStr);
-    const nextService = services.find(s => s.date > todayStr && s.date <= oneStr);
+    const validNextServices = services.filter(s => s.date > todayStr && s.date <= oneStr);
+    validNextServices.forEach(s => {
+        candidates.push({
+            type: 'service',
+            date: s.date,
+            item: s
+        });
+    });
 
-    if (nextService && (!nextEvent || nextService.date <= nextEvent.start_date)) {
-      return { contextType: 'service', contextId: nextService.id, event: null, service: nextService };
-    }
-    if (nextEvent) {
-      return { contextType: 'event', contextId: nextEvent.id, event: nextEvent, service: null };
+    // 3. Sort unified list by date ASC to find the absolute nearest
+    candidates.sort((a, b) => {
+        if (a.date < b.date) return -1;
+        if (a.date > b.date) return 1;
+        return 0;
+    });
+
+    const winner = candidates[0];
+
+    if (winner) {
+        if (winner.type === 'service') {
+             return { contextType: 'service', contextId: winner.item.id, event: null, service: winner.item };
+        } else {
+             return { contextType: 'event', contextId: winner.item.id, event: winner.item, service: null };
+        }
     }
 
     return { contextType: null, contextId: null, event: null, service: null };
