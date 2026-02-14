@@ -59,8 +59,20 @@ export default function DepartmentPicker({ value, onChange }) {
   const selectedDept = DEPARTMENTS.find(d => d.id === value) || DEPARTMENTS[0];
   const Icon = selectedDept.icon;
 
+  const isGeneral = value === 'general';
+
   return (
-    <div className="w-full">
+    <div className="w-full flex items-center gap-2">
+      {/* Home button — quick jump to General */}
+      {!isGeneral && (
+        <button
+          onClick={() => onChange('general')}
+          className="shrink-0 w-14 h-14 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors"
+          title={t('myprogram.dept.general')}
+        >
+          <Home className="w-5 h-5" />
+        </button>
+      )}
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="w-full h-14 bg-white border-gray-200 shadow-sm rounded-xl px-4">
           <div className="flex items-center gap-3">
