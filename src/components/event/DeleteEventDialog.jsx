@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 
 export default function DeleteEventDialog({ open, onOpenChange, onConfirm, eventName }) {
   const [confirmationText, setConfirmationText] = useState("");
@@ -11,6 +12,9 @@ export default function DeleteEventDialog({ open, onOpenChange, onConfirm, event
     if (confirmationText === "ELIMINAR") {
       onConfirm();
       setConfirmationText("");
+      // Close the modal after confirming — previously it relied on parent state only
+      onOpenChange(false);
+      toast.success("Evento eliminado exitosamente");
     }
   };
 
