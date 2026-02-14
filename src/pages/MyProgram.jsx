@@ -131,20 +131,11 @@ export default function MyProgram() {
 
   return (
     <div className="min-h-screen bg-[#F0F1F3]">
-      {/* Header */}
-      <div style={gradientStyle} className="py-5 px-5 shadow-md">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl text-white uppercase tracking-wide text-center mb-1.5">{t('myprogram.title')}</h1>
-          <div className="text-center">
-            <p className="text-white/90 text-base font-bold">{contextName}</p>
-            <div className="flex items-center justify-center gap-2 mt-1">
-              <Calendar className="w-3.5 h-3.5 text-white/70" />
-              <span className="text-white/70 text-sm">{contextDate ? formatDateET(contextDate) : ''}</span>
-              {contextTheme && (
-                <span className="text-white/80 text-sm italic">• "{contextTheme}"</span>
-              )}
-            </div>
-          </div>
+      {/* Header — thin bar: name + date */}
+      <div style={gradientStyle} className="py-2 px-4 shadow-sm">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <span className="text-white font-bold text-sm truncate">{contextName}</span>
+          <span className="text-white/80 text-xs whitespace-nowrap ml-3">{contextDate ? formatDateET(contextDate) : ''}</span>
         </div>
       </div>
 
