@@ -41,6 +41,7 @@ const FIELD_LABELS = {
   ushers_notes: { es: 'Ujieres', en: 'Ushers' },
   translation_notes: { es: 'Traducción', en: 'Translation' },
   stage_decor_notes: { es: 'Stage & Decor', en: 'Stage & Decor' },
+  coordinator_notes: { es: 'Coordinación', en: 'Coordination' },
   prep_instructions: { es: 'Preparación', en: 'Preparation' },
   other_notes: { es: 'Notas', en: 'Notes' },
   livestream_notes: { es: 'Livestream', en: 'Livestream' },
