@@ -110,40 +110,67 @@ export function normalizeServiceSegments(serviceData) {
       const resolvedTransMode = rawTransMode
         || (slotLabel === '11:30am' ? 'InPerson' : 'RemoteBooth');
 
+      // Service segments store content fields with different keys than Event Segments:
+      //   preacher  → data.preacher  (Events use "presenter" for Plenaria)
+      //   title     → data.title     (message title, NOT the segment block title)
+      //   leader    → data.leader    (worship leader)
+      // We must map these carefully so MyProgram cards render them.
+      const segData = seg.data || {};
+
+      // Presenter: services use data.presenter OR data.preacher for Plenaria
+      const presenter = segData.presenter || seg.presenter
+        || segData.preacher || seg.preacher || '';
+
+      // Message title: services store it as data.title (not data.message_title)
+      const messageTitle = segData.messageTitle || seg.messageTitle
+        || segData.message_title || seg.message_title || '';
+
+      // Leader (worship): data.leader
+      const leader = segData.leader || seg.leader || '';
+
       result.push({
         id: seg.id || `${slotLabel}-${idx}`,
-        title: seg.title || seg.data?.title || 'Untitled',
-        segment_type: seg.type || seg.segment_type || seg.data?.type || 'Especial',
+        title: seg.title || 'Untitled', // Block title lives at root only
+        segment_type: seg.type || seg.segment_type || segData.type || 'Especial',
         start_time: startTime,
         end_time: endTime,
         duration_min: duration,
-        presenter: seg.data?.presenter || seg.presenter || '',
-        description_details: seg.data?.description || seg.description_details || '',
-        projection_notes: seg.data?.projection_notes || seg.projection_notes || '',
-        sound_notes: seg.data?.sound_notes || seg.sound_notes || '',
-        ushers_notes: seg.data?.ushers_notes || seg.ushers_notes || '',
-        translation_notes: seg.data?.translation_notes || seg.translation_notes || '',
-        stage_decor_notes: seg.data?.stage_decor_notes || seg.stage_decor_notes || '',
-        livestream_notes: seg.data?.livestream_notes || seg.livestream_notes || '',
-        other_notes: seg.data?.other_notes || seg.other_notes || '',
-        prep_instructions: seg.data?.prep_instructions || seg.prep_instructions || '',
-        microphone_assignments: seg.data?.microphone_assignments || seg.microphone_assignments || '',
+        presenter: presenter,
+        leader: leader,
+        description_details: segData.description_details || seg.description_details
+          || segData.description || seg.description || '',
+        projection_notes: segData.projection_notes || seg.projection_notes || '',
+        sound_notes: segData.sound_notes || seg.sound_notes || '',
+        ushers_notes: segData.ushers_notes || seg.ushers_notes || '',
+        translation_notes: segData.translation_notes || seg.translation_notes || '',
+        stage_decor_notes: segData.stage_decor_notes || seg.stage_decor_notes || '',
+        livestream_notes: seg.livestream_notes || segData.livestream_notes || '',
+        other_notes: segData.other_notes || seg.other_notes || '',
+        coordinator_notes: segData.coordinator_notes || seg.coordinator_notes || '',
+        prep_instructions: segData.prep_instructions || seg.prep_instructions || '',
+        microphone_assignments: segData.microphone_assignments || seg.microphone_assignments || '',
         segment_actions: seg.actions || seg.segment_actions || [],
         songs: seg.songs || [],
         has_video: seg.has_video || false,
-        video_name: seg.video_name || seg.data?.video_name || '',
-        video_url: seg.video_url || seg.data?.video_url || '',
+        video_name: seg.video_name || segData.video_name || '',
+        video_url: seg.video_url || segData.video_url || '',
         requires_translation: seg.requires_translation || false,
-        translator_name: seg.data?.translator || seg.translator_name || '',
+        translator_name: segData.translator || seg.translator_name || '',
         translation_mode: resolvedTransMode,
-        parsed_verse_data: seg.parsed_verse_data || seg.data?.parsed_verse_data || null,
-        scripture_references: seg.scripture_references || seg.data?.scripture_references || '',
-        message_title: seg.data?.message_title || seg.message_title || '',
+        parsed_verse_data: seg.parsed_verse_data || segData.parsed_verse_data || null,
+        scripture_references: seg.scripture_references || segData.scripture_references || '',
+        message_title: messageTitle,
         major_break: seg.major_break || false,
         sub_assignments: seg.sub_assignments || [],
-        breakout_rooms: seg.breakout_rooms || seg.data?.breakout_rooms || [],
+        breakout_rooms: seg.breakout_rooms || segData.breakout_rooms || [],
+        // Presentation / notes URLs
+        presentation_url: seg.presentation_url || segData.presentation_url || '',
+        notes_url: seg.notes_url || segData.notes_url || '',
+        content_is_slides_only: seg.content_is_slides_only || segData.content_is_slides_only || false,
+        // Sub-assignment fields passthrough
+        show_in_livestream: seg.show_in_livestream !== undefined ? seg.show_in_livestream : true,
         // data object passthrough for getSegmentData compatibility
-        data: seg.data || {},
+        data: segData,
         _slotLabel: slotLabel,
         _sessionName: slotLabel,
         _sessionDate: serviceData.date || '',
