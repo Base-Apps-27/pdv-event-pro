@@ -353,14 +353,14 @@ export default function PublicCountdownDisplay() {
                 )}
               </div>
 
-              {/* Coordinator Actions (Vertical Stack) */}
+              {/* Coordinator Actions — horizontal cards when multiple, per bento spec */}
               <div className="flex-1 overflow-y-auto">
                 <CoordinatorActionsDisplay
                   currentSegment={currentSegment}
                   nextSegment={nextSegment}
                   currentTime={currentTime}
                   serviceDate={serviceDate}
-                  layout="vertical"
+                  layout="grid"
                 />
               </div>
             </div>
