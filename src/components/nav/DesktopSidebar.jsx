@@ -9,7 +9,6 @@ import { useLanguage } from "@/components/utils/i18n";
 import { hasPermission } from "@/components/utils/permissions";
 import { primaryNav, secondaryNav } from "@/components/nav/navItems";
 import { Calendar, Languages, MoreHorizontal, X, LogOut } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { base44 } from "@/api/base44Client";
 
 const GRADIENT = 'linear-gradient(180deg, #1F8A70 0%, #4DC15F 60%, #D9DF32 100%)';
