@@ -171,8 +171,17 @@ export function normalizeServiceSegments(serviceData) {
         content_is_slides_only: seg.content_is_slides_only || segData.content_is_slides_only || false,
         // Sub-assignment fields passthrough
         show_in_livestream: seg.show_in_livestream !== undefined ? seg.show_in_livestream : true,
-        // data object passthrough for getSegmentData compatibility
-        data: segData,
+        // Enriched data object for getSegmentData compatibility
+        // Merge resolved values back so getData() finds them in data.*
+        data: {
+          ...segData,
+          presenter: presenter || segData.presenter || '',
+          preacher: segData.preacher || presenter || '',
+          leader: leader || segData.leader || '',
+          message_title: messageTitle || '',
+          messageTitle: messageTitle || '',
+          translator: segData.translator || seg.translator_name || '',
+        },
         _slotLabel: slotLabel,
         _sessionName: slotLabel,
         _sessionDate: serviceData.date || '',
