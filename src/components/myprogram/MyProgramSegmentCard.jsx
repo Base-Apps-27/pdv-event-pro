@@ -37,12 +37,6 @@ function getCountdown(segment, currentTime, status, t) {
     return `${t('myprogram.countdown.endsIn')} ${remaining} min`;
   }
 
-  if (status === 'next') {
-    const startsIn = start - now;
-    if (startsIn <= 0) return t('myprogram.now');
-    return `${t('myprogram.countdown.startsIn')} ${startsIn} min`;
-  }
-
   return null;
 }
 
