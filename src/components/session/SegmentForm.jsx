@@ -166,7 +166,9 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     onSuccess: () => {
       queryClient.invalidateQueries(['segments', sessionId]);
       onClose();
+      toast.success("Segmento creado ✓");
     },
+    onError: (err) => toast.error(`${t('error.save_failed')}: ${err.message}`),
   });
 
   const updateMutation = useMutation({
@@ -174,7 +176,9 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
     onSuccess: () => {
       queryClient.invalidateQueries(['segments', sessionId]);
       onClose();
+      toast.success("Segmento guardado ✓");
     },
+    onError: (err) => toast.error(`${t('error.save_failed')}: ${err.message}`),
   });
 
 
