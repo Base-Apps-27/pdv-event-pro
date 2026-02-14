@@ -84,9 +84,9 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
   }
 
   // Filter Actions based on department
+  // General view: no actions (only pre-service notes + segment notes shown)
   const rawActions = segment.segment_actions || segment.actions || getData('actions') || [];
-  const deptActions = rawActions.filter(action => {
-    if (department === 'general') return true; // Show all for general? Or maybe just 'Admin', 'MC'? Let's show all for now.
+  const deptActions = department === 'general' ? [] : rawActions.filter(action => {
     const target = DEPT_LABEL_MAP[department];
     return action.department === target || action.department === 'All' || !action.department;
   });
