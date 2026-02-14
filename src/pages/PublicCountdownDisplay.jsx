@@ -268,6 +268,12 @@ export default function PublicCountdownDisplay() {
     );
   }
 
+  // Determine if livestream column should show
+  const hasLivestreamSession = useMemo(() => {
+    const sessions = programData?.sessions || [];
+    return sessions.some(s => s.has_livestream) && streamBlocks.length > 0;
+  }, [programData?.sessions, streamBlocks]);
+
   const allDone = !currentSegment && !nextSegment && !preLaunchSegment && segments.length > 0;
   
   // If all segments are done, show standby full-screen (no page header)
@@ -319,11 +325,14 @@ export default function PublicCountdownDisplay() {
       </div>
 
       <div className="w-full flex flex-col gap-3 items-center z-10 flex-1 px-2">
+        {/* Dynamic bento grid: 3-col when livestream exists, 2-col (wider) when it doesn't */}
         {(
-          <div className="w-full h-full flex-1 overflow-hidden min-h-[600px] grid gap-3" style={{ gridTemplateColumns: '1fr 1fr minmax(200px, 0.5fr)' }}>
+          <div
+            className="w-full h-full flex-1 overflow-hidden min-h-[600px] grid gap-3"
+            style={{ gridTemplateColumns: hasLivestreamSession ? '1fr 1fr minmax(200px, 0.5fr)' : '1fr 1fr' }}
+          >
             {/* Col 1: Status Sidecar (Countdown + Actions) */}
             <div className="flex flex-col gap-3 overflow-visible min-w-0">
-              {/* Primary Countdown (Compact) */}
               {/* pt-5 ensures the floating label (-top-4) is not clipped */}
               <div className="pt-5">
                 {currentSegment ? (
@@ -365,7 +374,7 @@ export default function PublicCountdownDisplay() {
               </div>
             </div>
 
-            {/* Col 2: Main Program Timeline (Full Height) - SLIGHTLY SMALLER */}
+            {/* Col 2: Main Program Timeline (Full Height) */}
             <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-2xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
               <div className="bg-slate-100/80 px-4 py-3 border-b border-slate-200">
                 <div className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
@@ -391,25 +400,23 @@ export default function PublicCountdownDisplay() {
               </div>
             </div>
 
-            {/* Col 3: Livestream Sidecar - purpose-built slim timeline */}
-            <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-2xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
-              {(() => {
-                const sess = (programData?.sessions || []).find(s => s.has_livestream) || (programData?.sessions || [])[0];
-                if (sess) {
-                  return (
-                    <StreamSidecarTimeline
-                      session={sess}
-                      segments={segments.filter(s => s.session_id === sess.id)}
-                    />
-                  );
-                }
-                return (
-                  <div className="h-full flex items-center justify-center text-slate-400 text-xs italic">
-                    No livestream
-                  </div>
-                );
-              })()}
-            </div>
+            {/* Col 3: Livestream Sidecar — only rendered when stream blocks exist */}
+            {hasLivestreamSession && (
+              <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-2xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
+                {(() => {
+                  const sess = (programData?.sessions || []).find(s => s.has_livestream);
+                  if (sess) {
+                    return (
+                      <StreamSidecarTimeline
+                        session={sess}
+                        segments={segments.filter(s => s.session_id === sess.id)}
+                      />
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            )}
           </div>
         )}
       </div>
