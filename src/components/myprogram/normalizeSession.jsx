@@ -103,6 +103,13 @@ export function normalizeServiceSegments(serviceData) {
         currentM = d2.getMinutes();
       }
 
+      // Resolve translation mode: explicit value wins, then slot-level default.
+      // 11:30am service translation is always InPerson (on-stage);
+      // 9:30am defaults to RemoteBooth when unspecified.
+      const rawTransMode = seg.data?.translation_mode || seg.translation_mode || '';
+      const resolvedTransMode = rawTransMode
+        || (slotLabel === '11:30am' ? 'InPerson' : 'RemoteBooth');
+
       result.push({
         id: seg.id || `${slotLabel}-${idx}`,
         title: seg.title || seg.data?.title || 'Untitled',
@@ -128,7 +135,7 @@ export function normalizeServiceSegments(serviceData) {
         video_url: seg.video_url || seg.data?.video_url || '',
         requires_translation: seg.requires_translation || false,
         translator_name: seg.data?.translator || seg.translator_name || '',
-        translation_mode: seg.data?.translation_mode || seg.translation_mode || '',
+        translation_mode: resolvedTransMode,
         parsed_verse_data: seg.parsed_verse_data || seg.data?.parsed_verse_data || null,
         scripture_references: seg.scripture_references || seg.data?.scripture_references || '',
         message_title: seg.data?.message_title || seg.message_title || '',
