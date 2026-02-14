@@ -95,23 +95,21 @@ export default function DesktopSidebar({ user }) {
           {visibleSecondary.length > 0 && (
             <>
               <div className="w-6 h-px bg-gray-700 my-2" />
-              <Tooltip delayDuration={100}>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setMoreOpen(prev => !prev)}
-                    className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                      moreOpen
-                        ? 'bg-white/10 text-white'
-                        : 'text-gray-500 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    {moreOpen ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="text-xs font-medium">
+              <button
+                onClick={() => setMoreOpen(prev => !prev)}
+                className={`group relative flex items-center h-11 rounded-xl transition-all duration-200 overflow-hidden ${
+                  moreOpen
+                    ? 'bg-white/10 text-white'
+                    : 'text-gray-500 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <span className="w-11 h-11 flex items-center justify-center shrink-0">
+                  {moreOpen ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
+                </span>
+                <span className="whitespace-nowrap text-sm font-medium pr-4 max-w-0 opacity-0 group-hover:max-w-[160px] group-hover:opacity-100 transition-all duration-200 overflow-hidden">
                   {language === 'es' ? 'Más opciones' : 'More options'}
-                </TooltipContent>
-              </Tooltip>
+                </span>
+              </button>
             </>
           )}
         </nav>
