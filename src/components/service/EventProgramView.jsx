@@ -200,6 +200,19 @@ export default function EventProgramView({
         onToggleChat={onToggleChat}
         chatUnreadCount={chatUnreadCount}
         chatOpen={chatOpen}
+        resolvedStreamActions={resolvedStreamOpsActions}
+        onScrollToStreamBlock={(blockId) => {
+          // Switch to Stream view and scroll to the block
+          setShowStream(true);
+          setTimeout(() => {
+            const el = document.getElementById(`stream-block-${blockId}`);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              el.classList.add('ring-4', 'ring-red-400', 'ring-offset-2', 'transition-all', 'duration-500');
+              setTimeout(() => el.classList.remove('ring-4', 'ring-red-400', 'ring-offset-2'), 2500);
+            }
+          }, 300);
+        }}
       />
       )}
 
