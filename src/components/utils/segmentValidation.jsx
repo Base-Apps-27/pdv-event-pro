@@ -61,7 +61,8 @@ export function validateAIActions(actions, context = {}, allowDraft = false) {
           errors.push(`Session ${idx + 1}: "name" is required`);
         }
         if (!sessionData.date) {
-          errors.push(`Session ${idx + 1}: "date" is required (format: YYYY-MM-DD)`);
+          // Downgraded: PDF docs often omit exact dates; admin will fix
+          warnings.push(`Session ${idx + 1}: "date" not specified — admin should set it`);
         }
         if (!sessionData.planned_start_time) {
           warnings.push(`Session ${idx + 1}: "planned_start_time" not specified`);
@@ -73,26 +74,30 @@ export function validateAIActions(actions, context = {}, allowDraft = false) {
     if (action.type === 'create_segments') {
       for (const [idx, segmentData] of (action.create_data || []).entries()) {
         if (!segmentData.title) {
-          errors.push(`Segment ${idx + 1}: "title" is required`);
+          // Downgraded: title can be set by admin later
+          warnings.push(`Segment ${idx + 1}: "title" not specified — admin should set it`);
         }
 
-        // Validate segment_type enum
+        // Validate segment_type enum — downgrade to warning if unrecognized
+        // (PDF parsing may produce unexpected labels; admin can fix)
         if (segmentData.segment_type && !VALID_SEGMENT_TYPES.includes(segmentData.segment_type)) {
-          errors.push(`Segment ${idx + 1}: Invalid segment_type "${segmentData.segment_type}". Must be one of: ${VALID_SEGMENT_TYPES.join(", ")}`);
+          warnings.push(`Segment ${idx + 1}: Unrecognized segment_type "${segmentData.segment_type}" — will default to "Especial"`);
         }
 
         // Check type-specific required fields — track as fixable
+        // PDF-ingested segments often lack type-specific detail fields; treat as warnings,
+        // not hard errors, so admins can review and fill them in later.
         if (segmentData.segment_type && SEGMENT_TYPE_REQUIRED_FIELDS[segmentData.segment_type]) {
           const required = SEGMENT_TYPE_REQUIRED_FIELDS[segmentData.segment_type];
           for (const field of required) {
             if (!segmentData[field]) {
-              const errorMsg = `Segment ${idx + 1} (${segmentData.segment_type}): "${field}" is required for this segment type`;
-              errors.push(errorMsg);
+              const warnMsg = `Segment ${idx + 1} (${segmentData.segment_type}): "${field}" is recommended for this segment type`;
+              warnings.push(warnMsg);
               fixableErrors.push({
                 actionIndex,
                 segmentIndex: idx,
                 field,
-                message: errorMsg
+                message: warnMsg
               });
             }
           }
