@@ -67,18 +67,41 @@ function LayoutContentInner({ children }) {
     }
   }, [loading, user, isPublicPage]);
 
-  // Permission-based redirects for authenticated users
+  // Permission-based redirects for authenticated users (2026-02-14)
+  // MyProgram is the default landing for anyone without explicit dashboard access.
+  // PublicProgramView requires access_live_view permission.
   useEffect(() => {
     if (!user || loading) return;
     const canViewDashboard = hasPermission(user, 'view_events') || hasPermission(user, 'view_services');
     const canViewLive = hasPermission(user, 'access_live_view');
+    const currentPath = location.pathname;
+
+    // If user is on PublicProgramView but lacks live view permission, redirect to MyProgram
+    if (
+      (currentPath === createPageUrl('PublicProgramView') || currentPath === '/PublicProgramView') &&
+      !canViewLive && !canViewDashboard
+    ) {
+      navigate(createPageUrl('MyProgram'), { replace: true });
+      return;
+    }
+
     if (!canViewDashboard && !isPublicPage) {
+      // Users with live view access can see PublicProgramView (now auth-gated)
       if (canViewLive) {
-        if (location.pathname !== createPageUrl('PublicProgramView')) {
-          navigate(createPageUrl('PublicProgramView'), { replace: true });
+        const allowedPaths = [
+          createPageUrl('PublicProgramView'), '/PublicProgramView',
+          createPageUrl('MyProgram'), '/MyProgram',
+        ];
+        if (!allowedPaths.includes(currentPath)) {
+          navigate(createPageUrl('MyProgram'), { replace: true });
         }
       } else if (hasPermission(user, 'access_my_program')) {
-        if (location.pathname !== createPageUrl('MyProgram')) {
+        if (currentPath !== createPageUrl('MyProgram') && currentPath !== '/MyProgram') {
+          navigate(createPageUrl('MyProgram'), { replace: true });
+        }
+      } else {
+        // Fallback: everyone authenticated gets MyProgram
+        if (currentPath !== createPageUrl('MyProgram') && currentPath !== '/MyProgram') {
           navigate(createPageUrl('MyProgram'), { replace: true });
         }
       }
