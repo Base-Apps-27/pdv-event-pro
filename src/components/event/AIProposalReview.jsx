@@ -131,13 +131,34 @@ export default function AIProposalReview({
           )}
 
           {/* No Errors / Ready to Execute */}
-          {!hasErrors && (
+          {!hasErrors && !hasWarnings && (
             <Card className="p-3 bg-green-50 border-green-200">
               <div className="flex items-center gap-2 text-green-900 text-sm">
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
                 <span>
                   {language === 'es' ? 'Validación correcta' : 'Validation passed'}
                 </span>
+              </div>
+            </Card>
+          )}
+
+          {/* Warnings-only state — ready but with notes for admin */}
+          {!hasErrors && hasWarnings && (
+            <Card className="p-3 bg-amber-50 border-amber-200">
+              <div className="flex items-start gap-2 text-amber-900 text-sm">
+                <Info className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">
+                    {language === 'es' 
+                      ? 'Listo para crear — algunos campos necesitan revisión después'
+                      : 'Ready to create — some fields need review afterward'}
+                  </p>
+                  <ul className="text-xs text-amber-800 mt-1 space-y-0.5">
+                    {validation.warnings.map((warn, i) => (
+                      <li key={i}>⚠ {warn}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </Card>
           )}
