@@ -10,7 +10,7 @@ import DatePicker from "@/components/ui/DatePicker";
 import { createFieldOrigins } from "@/components/utils/fieldOrigins";
 import {
   stripEvent, stripSession, stripPreSessionDetails,
-  stripSegment, stripSegmentAction, shouldCopyHospitalityTasks
+  stripSegment, stripSegmentAction, stripStreamBlock, shouldCopyHospitalityTasks
 } from "@/components/utils/stripEventContent";
 
 export default function DuplicateEventDialog({ event, open, onOpenChange, mode = "duplicate" }) {
