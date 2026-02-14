@@ -84,7 +84,7 @@ export default function DesktopSidebar({ user }) {
         <div className="w-8 h-0.5 rounded-full mb-5 opacity-40" style={{ background: GRADIENT_H }} />
 
         {/* Primary nav icons */}
-        <nav className="flex flex-col items-center gap-1.5 flex-1">
+        <nav className="flex flex-col items-center gap-1.5 flex-1 overflow-visible">
           {visiblePrimary.map(item => {
             const active = isPageActive(item.matchPages);
             return (
