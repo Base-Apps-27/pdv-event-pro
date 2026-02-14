@@ -28,10 +28,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { logCreate, logUpdate, logDelete } from "@/components/utils/editActionLogger";
+import { hasPermission } from "@/components/utils/permissions";
 
 // SessionManager - handles session CRUD with edit logging
 // user prop is required for audit logging of create/update/delete actions
+// Permission-aware: LivestreamAdmin (manage_stream_blocks only) gets read-only sessions,
+// can only interact with the Livestream tab on sessions that have has_livestream enabled.
 export default function SessionManager({ eventId, serviceId, sessions, segments, event, user }) {
+  // Permission booleans for scoped rendering
+  const canEditSessions = hasPermission(user, 'edit_events');
+  const canEditSegments = hasPermission(user, 'edit_events');
+  const canManageStreamBlocks = hasPermission(user, 'manage_stream_blocks');
+  // Stream-only user: has manage_stream_blocks but NOT edit_events
+  const isStreamOnly = canManageStreamBlocks && !canEditSessions;
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
