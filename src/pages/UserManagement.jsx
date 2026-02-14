@@ -185,6 +185,7 @@ export default function UserManagement() {
       Admin: "bg-purple-100 text-purple-800 border-purple-300",
       AdmAsst: "bg-blue-100 text-blue-800 border-blue-300",
       LiveManager: "bg-indigo-100 text-indigo-800 border-indigo-300",
+      LivestreamAdmin: "bg-red-100 text-red-800 border-red-300",
       EventDayCoordinator: "bg-teal-100 text-teal-800 border-teal-300",
       EventDayViewer: "bg-gray-100 text-gray-800 border-gray-300"
     };
@@ -196,6 +197,7 @@ export default function UserManagement() {
       Admin: language === 'es' ? "Super Admin" : "Super Admin",
       AdmAsst: language === 'es' ? "Asistente Admin" : "Assistant Admin",
       LiveManager: language === 'es' ? "Gerente en Vivo" : "Live Manager",
+      LivestreamAdmin: language === 'es' ? "Admin Livestream" : "Livestream Admin",
       EventDayCoordinator: language === 'es' ? "Coordinador del Día" : "Day Coordinator",
       EventDayViewer: language === 'es' ? "Visualizador" : "Viewer"
     };
@@ -482,6 +484,12 @@ export default function UserManagement() {
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-blue-600" />
                       <span>{language === 'es' ? 'Asistente Admin - Eventos y Servicios' : 'Assistant Admin - Events & Services'}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="LivestreamAdmin">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-red-600" />
+                      <span>{language === 'es' ? 'Admin Livestream - Solo Bloques de Stream' : 'Livestream Admin - Stream Blocks Only'}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="EventDayCoordinator">
