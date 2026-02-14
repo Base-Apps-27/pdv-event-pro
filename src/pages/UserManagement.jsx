@@ -625,6 +625,12 @@ export default function UserManagement() {
                       <span>{language === 'es' ? 'Asistente Admin' : 'Assistant Admin'}</span>
                     </div>
                   </SelectItem>
+                  <SelectItem value="LivestreamAdmin">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-red-600" />
+                      <span>{language === 'es' ? 'Admin Livestream' : 'Livestream Admin'}</span>
+                    </div>
+                  </SelectItem>
                   <SelectItem value="EventDayViewer">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-gray-600" />
