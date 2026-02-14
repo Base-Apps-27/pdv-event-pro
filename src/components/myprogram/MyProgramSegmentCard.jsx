@@ -244,26 +244,24 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
 
         {/* Action Buttons */}
         {( (hasVerses && canSeeVerses) || (hasResources && canSeeResources) ) && (
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-2.5 mt-3">
             {hasVerses && canSeeVerses && onOpenVerses && (
               <Button 
-                size="sm" 
                 variant="outline" 
-                className="h-8 text-xs gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-50"
+                className="h-10 text-sm gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 px-4"
                 onClick={() => onOpenVerses({ parsedData: getData('parsed_verse_data'), rawText: getData('scripture_references') })}
               >
-                <BookOpen className="w-3.5 h-3.5" />
+                <BookOpen className="w-4 h-4" />
                 Ver Versículos
               </Button>
             )}
             {hasResources && canSeeResources && (
               <Button 
-                size="sm" 
                 variant="outline" 
-                className="h-8 text-xs gap-1.5 border-pink-200 text-pink-700 hover:bg-pink-50"
+                className="h-10 text-sm gap-2 border-pink-200 text-pink-700 hover:bg-pink-50 px-4"
                 onClick={() => setShowResourcesModal(true)}
               >
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-4 h-4" />
                 Arts Resources
               </Button>
             )}
