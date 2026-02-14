@@ -459,6 +459,7 @@ If user mentions a past event and you're uncertain which one they mean (< 80% co
   "warnings": ["..."],
   "requires_confirmation": true
 }`,
+        ...(fileUrls ? { file_urls: fileUrls } : {}),
         response_json_schema: {
           type: "object",
           properties: {
