@@ -227,9 +227,9 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
             // Show if: From Stage (Everyone) OR Target Dept (sees all)
             if (isStage || isTargetDept) {
               return (
-                <div className="flex items-center gap-2 text-xs text-purple-700 font-medium">
-                  <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-                    <Mic className="w-3 h-3" />
+                <div className="flex items-center gap-2.5 text-sm text-purple-700 font-medium">
+                  <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                    <Mic className="w-3.5 h-3.5" />
                   </div>
                   <span>
                     {t('live.translator')}: {normalizeName(transName)} 
