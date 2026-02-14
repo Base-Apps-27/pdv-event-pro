@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import DatePicker from "@/components/ui/DatePicker";
 import { useLanguage } from "@/components/utils/i18n";
+import { toast } from "sonner";
 import { Calendar, AlertTriangle } from "lucide-react";
 
 /**
@@ -64,6 +65,7 @@ export default function OutOfRangeSessionsModal({ open, onOpenChange, eventId, n
         // Invalidate common caches used across pages
         queryClient.invalidateQueries(['sessions', eventId]);
         queryClient.invalidateQueries(['allSessions', eventId]);
+        toast.success(`${toUpdate.length} sesión(es) actualizada(s) ✓`);
       }
       onOpenChange(false);
     } finally {
