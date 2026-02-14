@@ -663,6 +663,7 @@ If user mentions a past event and you're uncertain which one they mean (< 80% co
     setClarificationOptions(null);
     setShowClarification(false);
     setSourceEventData(null);
+    setAttachedFileUrl(null);
   };
 
   return (
