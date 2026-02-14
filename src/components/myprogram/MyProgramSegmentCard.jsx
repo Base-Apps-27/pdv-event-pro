@@ -216,6 +216,18 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
               <span>{normalizeName(getData('presenter'))}</span>
             </div>
           )}
+          {/* Sub-assignments (e.g. Ministración, Cierre) */}
+          {(segment.sub_assignments || []).filter(sa => sa.label && sa._resolvedPerson).map((sa, idx) => (
+            <div key={`sa-${idx}`} className="flex items-center gap-2.5 text-sm text-teal-700 font-medium">
+              <div className="w-6 h-6 rounded-full bg-teal-100 flex items-center justify-center shrink-0">
+                <Users className="w-3.5 h-3.5" />
+              </div>
+              <span>{sa.label}: {normalizeName(sa._resolvedPerson)}</span>
+              {sa.duration_min > 0 && (
+                <span className="text-teal-400 text-[10px]">({sa.duration_min} min)</span>
+              )}
+            </div>
+          ))}
           {/* Translator: InPerson (All) OR Remote (Translation Dept only) */}
           {(() => {
             const transName = getData('translator_name') || getData('translator');
