@@ -109,9 +109,9 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
       {/* Pre-Session Card (Pinned top, no timeline line usually, or start of timeline) */}
       <MyProgramPreSessionCard details={preSessionDetails} />
 
-      <div className="relative pl-6 sm:pl-8 space-y-0">
+      <div className="relative pl-7 sm:pl-9 space-y-0">
         {/* Vertical Timeline Line */}
-        <div className="absolute left-2 sm:left-3 top-0 bottom-0 w-0.5 bg-gray-200" />
+        <div className="absolute left-2.5 sm:left-3.5 top-0 bottom-0 w-0.5 bg-gray-200" />
 
         {segmentsWithStatus.map((seg, idx) => (
         <div
