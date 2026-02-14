@@ -12,6 +12,7 @@ import DatePicker from "@/components/ui/DatePicker";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 import OutOfRangeSessionsModal from "./OutOfRangeSessionsModal";
 import { logUpdate } from "@/components/utils/editActionLogger";
+import { toast } from "sonner";
 
 // Edit dialog used in EventDetail (edit-only). Mirrors the Events page form for consistency.
 export default function EventEditDialog({ open, onOpenChange, event, onSaved, user }) {
@@ -82,6 +83,7 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved, us
       queryClient.invalidateQueries(['event', event?.id]);
       queryClient.invalidateQueries(['editActionLogs']);
       if (onSaved) onSaved();
+      toast.success("Evento actualizado ✓");
       // If range changed, open session-fix modal
       const changed = (previousRange.start !== pendingRange.start) || (previousRange.end !== pendingRange.end);
       if (changed) {
@@ -89,6 +91,9 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved, us
       } else {
         onOpenChange(false);
       }
+    },
+    onError: (err) => {
+      toast.error(`Error al actualizar: ${err.message}`);
     },
   });
 
