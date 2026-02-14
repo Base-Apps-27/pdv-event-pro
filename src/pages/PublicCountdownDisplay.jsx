@@ -7,8 +7,10 @@ import SegmentTimeline from "@/components/service/SegmentTimeline";
 import { useLanguage } from "@/components/utils/i18n";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { normalizeProgramData } from "@/components/utils/normalizeProgram";
-import { Loader2, Layout } from "lucide-react";
+import { Loader2, Layout, Radio } from "lucide-react";
 import StandbyScreen from "@/components/service/StandbyScreen";
+import StreamSidecarTimeline from "@/components/live/StreamSidecarTimeline";
+import { normalizeStreamBlocks } from "@/components/utils/normalizeStreamBlocks";
 
 /**
  * PublicCountdownDisplay — TV Display (Dumb Terminal)
