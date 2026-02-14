@@ -33,6 +33,8 @@ import DirectorDriftIndicator from '@/components/director/DirectorDriftIndicator
 import DirectorPingFeed from '@/components/director/DirectorPingFeed';
 import StickyOpsDeck from '@/components/service/StickyOpsDeck';
 import LiveOperationsChat from '@/components/live/LiveOperationsChat';
+import { resolveBlockTime } from '@/components/utils/streamTiming';
+import { resolveStreamActions } from '@/components/utils/resolveStreamActions';
 
 /**
  * DirectorConsole - Phase 2 Core
@@ -145,10 +147,24 @@ export default function DirectorConsole() {
     return unsubscribe;
   }, [sessionId, refetchSession]);
   
+  // FIX #1 (2026-02-14): Fetch StreamBlocks for this session so Director sees stream cues in OpsDeck
+  const { data: directorStreamBlocks = [] } = useQuery({
+    queryKey: ['directorStreamBlocks', sessionId],
+    queryFn: () => base44.entities.StreamBlock.filter({ session_id: sessionId }, 'order'),
+    enabled: !!sessionId && !!session?.has_livestream,
+    refetchInterval: 5000
+  });
+
   // Sort segments by order
   const sortedSegments = useMemo(() => {
     return [...segments].sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [segments]);
+
+  // FIX #1 (2026-02-14): Resolve stream actions for Director's StickyOpsDeck
+  const directorResolvedStreamActions = useMemo(() => {
+    if (!session?.has_livestream || directorStreamBlocks.length === 0) return [];
+    return resolveStreamActions(directorStreamBlocks, sortedSegments, session.date);
+  }, [directorStreamBlocks, sortedSegments, session]);
   
   // Calculate cumulative drift
   const { cumulativeDrift, timeBankMin, activeSegmentIndex, heldSegment } = useMemo(() => {
@@ -344,22 +360,22 @@ export default function DirectorConsole() {
        */}
       
       {/* StickyOpsDeck - Coordinator Actions + Chat Toggle */}
+      {/* FIX #1 (2026-02-14): Director StickyOpsDeck now receives resolved stream actions
+           so directors see stream cues alongside room segment actions */}
       {hasPermission(currentUser, 'view_live_chat') && (
         <StickyOpsDeck
           segments={sortedSegments.map(seg => ({ ...seg, date: session?.date }))}
-          preSessionData={null} // Director focuses on session, not pre-session
+          preSessionData={null}
           sessionDate={session?.date}
           currentTime={currentTime}
           onScrollToSegment={(seg) => {
-            // P3-5: Still using getElementById here because segment IDs are dynamic
-            // and created by DirectorTimeline — a ref map would require prop drilling.
-            // Low-risk: no React reconciliation issue, just a scroll convenience.
             const el = document.getElementById(`director-segment-${seg.id}`);
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }}
           onToggleChat={() => setChatOpen(!chatOpen)}
           chatUnreadCount={chatUnreadCount}
           chatOpen={chatOpen}
+          resolvedStreamActions={directorResolvedStreamActions}
         />
       )}
       

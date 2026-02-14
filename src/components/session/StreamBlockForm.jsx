@@ -270,12 +270,14 @@ export default function StreamBlockForm({ session, block, segments, onClose, onS
                         placeholder="Cue Label (e.g. Camera 1)"
                         className="h-8 text-sm"
                       />
+                      {/* FIX #4 (2026-02-14): Added 'absolute' timing option — schema supports it */}
                       <Select value={action.timing} onValueChange={(v) => updateAction(idx, 'timing', v)}>
                         <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="before_start">Before Start</SelectItem>
                           <SelectItem value="after_start">After Start</SelectItem>
                           <SelectItem value="before_end">Before End</SelectItem>
+                          <SelectItem value="absolute">Fixed Time</SelectItem>
                         </SelectContent>
                       </Select>
                       <Input 
@@ -286,12 +288,24 @@ export default function StreamBlockForm({ session, block, segments, onClose, onS
                         placeholder="Min"
                       />
                     </div>
-                    <Input 
-                      value={action.notes} 
-                      onChange={(e) => updateAction(idx, 'notes', e.target.value)}
-                      placeholder="Additional details..."
-                      className="h-7 text-xs bg-white"
-                    />
+                    <div className="flex gap-2">
+                      {/* FIX #4 (2026-02-14): Show time input when 'absolute' timing is selected */}
+                      {action.timing === 'absolute' && (
+                        <Input
+                          type="time"
+                          value={action.absolute_time || ''}
+                          onChange={(e) => updateAction(idx, 'absolute_time', e.target.value)}
+                          className="h-7 text-xs bg-white w-28"
+                          placeholder="HH:MM"
+                        />
+                      )}
+                      <Input 
+                        value={action.notes} 
+                        onChange={(e) => updateAction(idx, 'notes', e.target.value)}
+                        placeholder="Additional details..."
+                        className="h-7 text-xs bg-white flex-1"
+                      />
+                    </div>
                   </div>
                   <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-red-400 hover:text-red-600" onClick={() => removeAction(idx)}>
                     <Trash2 className="w-3 h-3" />

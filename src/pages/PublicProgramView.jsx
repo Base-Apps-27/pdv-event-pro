@@ -261,6 +261,18 @@ export default function PublicProgramView() {
       })
     );
 
+    // FIX #3 (2026-02-14): Subscribe to StreamBlock changes for real-time updates
+    // Without this, stream block edits only appear after the 15s poll cycle
+    if (viewType === 'event') {
+      unsubscribers.push(
+        base44.entities.StreamBlock.subscribe((event) => {
+          queryClient.invalidateQueries({ queryKey: ['publicProgramData'] });
+          // Also invalidate the status card's direct stream block query
+          queryClient.invalidateQueries({ queryKey: ['streamBlocksForStatusCard'] });
+        })
+      );
+    }
+
     return () => {
       unsubscribers.forEach(unsub => {
         if (typeof unsub === 'function') unsub();

@@ -66,14 +66,19 @@ function LivestreamSessionTable({ session }) {
           <th className="p-2 border">Tech Notes</th>
         </tr>
       </thead>
+      {/* FIX #2 (2026-02-14): Resolved clock times on stream action cues for print-ready reports */}
       <tbody>
         {blocks.map(block => {
           const { startTime, endTime } = resolveBlockTime(block, segments, session.date);
           const timeStr = startTime ? formatTimeToEST(startTime.toTimeString().substring(0, 5)) : '--:--';
+          const endStr = endTime ? formatTimeToEST(endTime.toTimeString().substring(0, 5)) : '';
           
           return (
             <tr key={block.id} className="border-b">
-              <td className="p-2 border font-mono whitespace-nowrap">{timeStr}</td>
+              <td className="p-2 border font-mono whitespace-nowrap">
+                <div>{timeStr}</div>
+                {endStr && <div className="text-gray-400 text-[10px]">{endStr}</div>}
+              </td>
               <td className="p-2 border">
                 <Badge variant="outline" className="text-[10px] uppercase">{block.block_type}</Badge>
               </td>
@@ -83,12 +88,33 @@ function LivestreamSessionTable({ session }) {
                 {block.description && <div className="text-xs mt-1 italic">{block.description}</div>}
               </td>
               <td className="p-2 border">
-                {block.stream_actions?.map((action, i) => (
-                  <div key={i} className="text-xs mb-1">
-                    <span className="font-bold">▶ {action.label}</span>
-                    {action.notes && <span className="text-gray-500"> - {action.notes}</span>}
-                  </div>
-                ))}
+                {block.stream_actions?.map((action, i) => {
+                  // Resolve absolute time for each cue
+                  let cueTimeStr = '';
+                  if (startTime && endTime) {
+                    const offsetMs = (action.offset_min || 0) * 60000;
+                    let t;
+                    switch (action.timing) {
+                      case 'before_start': t = new Date(startTime.getTime() - offsetMs); break;
+                      case 'after_start': t = new Date(startTime.getTime() + offsetMs); break;
+                      case 'before_end': t = new Date(endTime.getTime() - offsetMs); break;
+                      default: t = new Date(startTime.getTime() + offsetMs);
+                    }
+                    if (t && !isNaN(t.getTime())) {
+                      cueTimeStr = formatTimeToEST(t.toTimeString().substring(0, 5));
+                    }
+                  }
+                  const isPrepCue = action.timing === 'before_start';
+                  return (
+                    <div key={i} className={`text-xs mb-1 ${isPrepCue ? 'text-amber-800' : ''}`}>
+                      {cueTimeStr && <span className="font-mono text-[10px] text-gray-500 mr-1">[{cueTimeStr}]</span>}
+                      {isPrepCue && <span className="font-bold text-amber-700 text-[10px] mr-1">PREP</span>}
+                      {action.is_required && <span className="font-bold text-red-600 text-[10px] mr-1">REQ</span>}
+                      <span className="font-bold">▶ {action.label}</span>
+                      {action.notes && <span className="text-gray-500"> — {action.notes}</span>}
+                    </div>
+                  );
+                })}
               </td>
               <td className="p-2 border text-xs text-blue-800 bg-blue-50/30">
                 {block.stream_notes}
