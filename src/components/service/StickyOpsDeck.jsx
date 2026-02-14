@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, ChevronDown, Clock, AlertCircle, CheckCircle2, ArrowRight, RotateCcw, MessageCircle, ClipboardList, Minimize2, X } from "lucide-react";
+import { ChevronUp, ChevronDown, Clock, AlertCircle, CheckCircle2, ArrowRight, RotateCcw, MessageCircle, ClipboardList, Minimize2, X, Radio } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 
