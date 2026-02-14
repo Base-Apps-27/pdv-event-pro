@@ -690,14 +690,24 @@ If user mentions a past event and you're uncertain which one they mean (< 80% co
           {/* Input Area */}
           {!proposedActions && !queryResult && executionStatus !== 'success' && (
             <div className="space-y-3">
+              {/* File Upload Zone — PDFs and images */}
+              <AIFileUploadZone
+                onFileUploaded={(url) => setAttachedFileUrl(url)}
+                disabled={isProcessing}
+              />
+
               <Textarea
                 ref={textareaRef}
                 placeholder={language === 'es' 
-                  ? "Pregunta o solicita cambios. Ejemplos:\n\nCONSULTAS:\n• ¿Qué sesiones tienen traducción?\n• ¿Quién presenta los segmentos de Plenaria?\n\nACCIONES:\n• Cambiar todas las sesiones a traducción en persona"
-                  : "Ask a question or request changes. Examples:\n\nQUERIES:\n• What sessions have translation?\n• Who presents the Plenaria segments?\n\nACTIONS:\n• Change all sessions to in-person translation"}
+                  ? attachedFileUrl
+                    ? "Describe qué hacer con el archivo. Ej: 'Crea las sesiones y segmentos de este programa'"
+                    : "Pregunta o solicita cambios. Ejemplos:\n\nCONSULTAS:\n• ¿Qué sesiones tienen traducción?\n• ¿Quién presenta los segmentos de Plenaria?\n\nACCIONES:\n• Cambiar todas las sesiones a traducción en persona"
+                  : attachedFileUrl
+                    ? "Describe what to do with the file. E.g.: 'Create sessions and segments from this program'"
+                    : "Ask a question or request changes. Examples:\n\nQUERIES:\n• What sessions have translation?\n• Who presents the Plenaria segments?\n\nACTIONS:\n• Change all sessions to in-person translation"}
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
-                rows={5}
+                rows={attachedFileUrl ? 3 : 5}
                 className="resize-none"
               />
 
