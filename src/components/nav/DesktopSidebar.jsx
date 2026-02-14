@@ -104,16 +104,23 @@ export default function DesktopSidebar({ user }) {
               <div className="w-6 h-px bg-gray-700 my-2" />
               <button
                 onClick={() => setMoreOpen(prev => !prev)}
-                className={`group relative flex items-center h-11 rounded-xl transition-all duration-200 overflow-hidden ${
+                className={`group relative w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-150 ${
                   moreOpen
                     ? 'bg-white/10 text-white'
                     : 'text-gray-500 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <span className="w-11 h-11 flex items-center justify-center shrink-0">
-                  {moreOpen ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
-                </span>
-                <span className="whitespace-nowrap text-sm font-medium pr-4 max-w-0 opacity-0 group-hover:max-w-[160px] group-hover:opacity-100 transition-all duration-200 overflow-hidden">
+                {moreOpen ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
+                <span
+                  className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3
+                             flex items-center h-8 px-3.5 rounded-lg
+                             text-sm font-semibold text-white whitespace-nowrap
+                             opacity-0 -translate-x-2 scale-95
+                             group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-100
+                             transition-all duration-[180ms] ease-[cubic-bezier(0.22,1,0.36,1)]
+                             shadow-lg"
+                  style={{ background: GRADIENT_H }}
+                >
                   {language === 'es' ? 'Más opciones' : 'More options'}
                 </span>
               </button>
