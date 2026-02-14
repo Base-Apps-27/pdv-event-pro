@@ -88,19 +88,31 @@ export default function EventProgramView({
     refetchInterval: 5000
   });
 
+  // Segments for the livestream session (used by both current block detection and action resolution)
+  const livestreamSessionSegments = useMemo(() => {
+    if (!livestreamSession) return [];
+    return allSegments.filter(s => s.session_id === livestreamSession.id);
+  }, [allSegments, livestreamSession]);
+
   // Resolve current stream block independently of room program
   const currentStreamBlock = useMemo(() => {
     if (!livestreamSession || streamBlocks.length === 0) return null;
-    const sessionSegments = allSegments.filter(s => s.session_id === livestreamSession.id);
     const now = currentTime;
     for (const block of streamBlocks) {
-      const { startTime, endTime } = resolveBlockTime(block, sessionSegments, livestreamSession.date);
+      const { startTime, endTime } = resolveBlockTime(block, livestreamSessionSegments, livestreamSession.date);
       if (startTime && endTime && now >= startTime && now <= endTime) {
         return block;
       }
     }
     return null;
-  }, [streamBlocks, allSegments, livestreamSession, currentTime]);
+  }, [streamBlocks, livestreamSessionSegments, livestreamSession, currentTime]);
+
+  // Resolve stream block actions into timed operational actions for StickyOpsDeck
+  // This is the core of Option C: stream actions become first-class ops deck entries
+  const resolvedStreamOpsActions = useMemo(() => {
+    if (!livestreamSession || streamBlocks.length === 0) return [];
+    return resolveStreamActions(streamBlocks, livestreamSessionSegments, livestreamSession.date);
+  }, [streamBlocks, livestreamSessionSegments, livestreamSession]);
 
   // Fetch live adjustments for event sessions
   const { data: liveAdjustments = [] } = useQuery({
