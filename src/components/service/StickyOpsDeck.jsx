@@ -188,12 +188,22 @@ export default function StickyOpsDeck({
       });
     });
 
+    // 3. Merge resolved stream actions (pre-computed by parent via resolveStreamActions)
+    // These arrive as fully-resolved { id, time, label, ... isStreamAction: true }
+    if (resolvedStreamActions.length > 0) {
+      for (const sa of resolvedStreamActions) {
+        if (sa.time && !isNaN(sa.time.getTime())) {
+          actions.push(sa);
+        }
+      }
+    }
+
     const sorted = actions.sort((a, b) => a.time.getTime() - b.time.getTime());
     const upcoming = sorted.filter(a => a.time.getTime() > now);
     const past = sorted.filter(a => a.time.getTime() <= now).reverse();
 
     return { upcomingActions: upcoming, pastActions: past, isServiceDay: isServiceDayLocal };
-  }, [segments, preSessionData, sessionDate, currentTime]);
+  }, [segments, preSessionData, sessionDate, currentTime, resolvedStreamActions]);
 
   // On non-service days: show the FIRST action as a static preview (no countdown)
   // On service day: live countdown with service-over guard
