@@ -162,8 +162,10 @@ export default function MyProgram() {
           department={department}
           currentTime={currentTime}
           sessionDate={sessionDate}
-          preSessionDetails={programData?.preSessionDetails} // Pass pre-session details
-          onOpenVerses={setVerseModalData} // Pass handler
+          preSessionDetails={programData?.preSessionDetails}
+          preServiceNotes={contextType === 'service' ? (programData?.program?.pre_service_notes || null) : null}
+          selectedSession={selectedSession}
+          onOpenVerses={setVerseModalData}
         />
       </div>
 
