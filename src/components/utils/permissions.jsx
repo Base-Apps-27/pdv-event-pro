@@ -61,6 +61,15 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     'access_live_view',
     // 'access_my_program', // Unchecked by default in UI for this role
   ],
+  // LivestreamAdmin: Can view events read-only and manage only StreamBlocks
+  // Requires sessions to exist (created by main admin) with has_livestream enabled.
+  // Cannot create/edit/delete events, sessions, or segments.
+  LivestreamAdmin: [
+    'view_events',
+    'manage_stream_blocks',
+    'access_live_view',
+    'view_reports',
+  ],
 };
 
 // MyProgram: All roles get access_my_program by default.
@@ -222,5 +231,8 @@ export function getAllPermissionDefinitions() {
 
     // Live View (full coordinator view + Sticky Ops)
     { key: 'access_live_view', resource: 'live_view', action: 'access', category: 'live', hierarchy_level: 4, label_en: 'Access Live View & Ops', label_es: 'Acceder Vista en Vivo y Ops' },
+
+    // Stream Blocks (Livestream Admin)
+    { key: 'manage_stream_blocks', resource: 'stream_blocks', action: 'manage', category: 'events', hierarchy_level: 4, label_en: 'Manage Stream Blocks (Livestream)', label_es: 'Gestionar Bloques de Stream (Livestream)' },
   ];
 }
