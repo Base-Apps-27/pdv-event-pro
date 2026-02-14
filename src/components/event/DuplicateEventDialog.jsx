@@ -210,8 +210,10 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
           </DialogTitle>
           <DialogDescription>
             {isTemplateMode 
-              ? "Esto guardará el evento como una plantilla reutilizable en la sección de Plantillas."
-              : "Esto creará una copia completa del evento, incluyendo sesiones, segmentos y notas."}
+              ? "Se copiará la estructura del evento (sesiones, tipos de segmento, duraciones, orden) pero se eliminarán todos los nombres, canciones, versículos, notas y contenido específico. Los campos clave se marcarán como [TBD]."
+              : isFromTemplateMode
+              ? "Se creará un nuevo evento desde la plantilla. La estructura estará lista — solo necesitas llenar los nombres, canciones y contenido."
+              : "Esto creará una copia completa del evento, incluyendo sesiones, segmentos, notas y todo el contenido."}
           </DialogDescription>
         </DialogHeader>
 
