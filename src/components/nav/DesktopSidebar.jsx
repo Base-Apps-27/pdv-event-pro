@@ -69,7 +69,7 @@ export default function DesktopSidebar({ user }) {
   return (
     <>
       {/* Slim icon rail — 72px wide, always visible */}
-      <aside className="hidden lg:flex lg:flex-col w-[72px] bg-[#0D0D0D] fixed h-full z-50 print:hidden items-center py-4">
+      <aside className="hidden lg:flex lg:flex-col w-[72px] bg-[#0D0D0D] fixed h-full z-50 print:hidden items-center py-4 overflow-visible">
         {/* Brand mark */}
         <Link to={createPageUrl("Dashboard")} className="mb-6 group">
           <div
