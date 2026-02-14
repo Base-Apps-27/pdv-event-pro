@@ -281,6 +281,13 @@ export default function StickyOpsDeck({
             </span>
           </div>
 
+          {/* Stream action indicator on icon view */}
+          {activeAction.isStreamAction && !isPast && (
+            <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-red-500 flex items-center justify-center border-2 border-white shadow-sm z-10">
+              <Radio className="w-2.5 h-2.5 text-white" />
+            </div>
+          )}
+
           {/* Chat Badge (if chat is closed) */}
           {!chatOpen && chatUnreadCount > 0 && (
             <span className="absolute -top-1 -left-1 h-6 min-w-[1.5rem] px-1.5 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center border-2 border-white shadow-sm z-10">
