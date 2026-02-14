@@ -121,9 +121,11 @@ export function normalizeServiceSegments(serviceData) {
       const presenter = segData.presenter || seg.presenter
         || segData.preacher || seg.preacher || '';
 
-      // Message title: services store it as data.title (not data.message_title)
-      const messageTitle = segData.messageTitle || seg.messageTitle
-        || segData.message_title || seg.message_title || '';
+      // Message title: weekly services store it as data.title or data.messageTitle
+      // Custom services may use seg.messageTitle or seg.message_title
+      // IMPORTANT: data.title is the *message* title, NOT the block title (that's seg.title)
+      const messageTitle = segData.messageTitle || segData.title
+        || seg.messageTitle || segData.message_title || seg.message_title || '';
 
       // Leader (worship): data.leader
       const leader = segData.leader || seg.leader || '';
