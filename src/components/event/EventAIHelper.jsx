@@ -161,6 +161,9 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
         ? `\n\nSOURCE EVENT CONTEXT (user selected):\nEvent: ${sourceEventContext.sourceEvent.name} (${sourceEventContext.sourceEvent.year})\nSessions: ${sourceEventContext.sourceSessions.length}\nSegments: ${sourceEventContext.sourceSegments.length}`
         : '';
 
+      // Build file_urls array if user attached a file
+      const fileUrls = attachedFileUrl ? [attachedFileUrl] : undefined;
+
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `You are an AI assistant helping manage church event data. You can either QUERY information or PROPOSE actions.
 
@@ -172,6 +175,26 @@ ${availableEventsStr}${sourceEventStr}
 
 ## USER REQUEST
 "${finalInput}"
+
+${attachedFileUrl ? `## ATTACHED FILE
+The user has attached a PDF or image file. Analyze its content carefully.
+If it contains a schedule/program/itinerary, extract ALL sessions and segments from it.
+- Map each time block to the correct segment_type (Alabanza, Plenaria, Artes, Bienvenida, Ofrenda, Dinámica, Break, Receso, Almuerzo, Panel, MC, Ministración, Cierre, Especial, Oración, TechOnly, Video, Anuncio).
+- Use exact times from the document in HH:MM 24-hour format.
+- Extract presenter/speaker names when available.
+- For Plenaria segments, extract the message_title from the document.
+- For Artes segments with a song name, set the title to include it.
+- Group segments by "Sección" / "Session" / day as separate sessions.
+- Calculate duration_min from start times of consecutive segments (or use durations if explicitly stated).
+- For the last segment of a session where duration isn't clear, estimate based on context.
+- Use the event's existing start_date/end_date to set session dates. If not set, use dates from the document.
+- Set session planned_start_time to the first segment's time and planned_end_time to the last segment's end.
+- Set color_code: worship for Alabanza/Ministración, preach for Plenaria, break for Break/Receso/Almuerzo, special for Artes/Especial, default for others.
+- Mark Almuerzo segments as major_break: true.
+- IMPORTANT: Always create both sessions AND their segments in the correct order. Use order field (1, 2, 3...) for proper sequencing.
+- Leave team assignments, notes, and other instance fields blank — they'll be filled later.
+- For fields you cannot determine from the document, leave them blank or use "[TBD]" for presenter if not specified.
+` : ''}
 
 ## YOUR TASK
 First, determine if this is a QUERY (asking for information) or an ACTION (requesting changes).
