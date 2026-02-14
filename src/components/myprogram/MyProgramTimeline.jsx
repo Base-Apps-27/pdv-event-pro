@@ -117,12 +117,12 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
         <div
           key={seg.id}
           ref={seg._status === 'now' ? nowRef : undefined}
-          className="relative mb-6"
+          className="relative mb-7"
         >
           {/* Timeline Dot */}
           <div className={`
-            absolute -left-[1.35rem] sm:-left-[1.65rem] top-4 
-            w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 
+            absolute -left-[1.55rem] sm:-left-[1.8rem] top-5 
+            w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 
             flex items-center justify-center z-10 transition-all duration-500
             ${seg._status === 'now' 
               ? 'bg-yellow-400 border-yellow-500 shadow-[0_0_0_4px_rgba(250,204,21,0.2)] scale-110' 
