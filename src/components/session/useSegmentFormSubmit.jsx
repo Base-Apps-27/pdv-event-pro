@@ -84,7 +84,7 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       await logCreate('Segment', created, sessionId, user);
       return created;
     },
-    onSuccess: () => { invalidateSegmentCaches(queryClient); onClose(); },
+    onSuccess: () => { invalidateSegmentCaches(queryClient); onClose(); toast.success("Segmento creado ✓"); },
     onError: () => { toast.error(t('error.save_failed')); },
   });
 
@@ -94,7 +94,7 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       await logUpdate('Segment', id, previousState, { ...previousState, ...data }, sessionId, user);
       return updated;
     },
-    onSuccess: () => { invalidateSegmentCaches(queryClient); onClose(); },
+    onSuccess: () => { invalidateSegmentCaches(queryClient); onClose(); toast.success("Segmento guardado ✓"); },
     onError: () => { toast.error(t('error.save_failed')); },
   });
 
