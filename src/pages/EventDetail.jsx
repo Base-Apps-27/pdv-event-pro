@@ -196,7 +196,8 @@ export default function EventDetail() {
           </div>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            {/* Primary Actions Row */}
+            {/* Primary Actions Row — hidden for stream-only users */}
+            {hasPermission(currentUser, 'edit_events') && (
             <div className="hidden sm:flex items-center gap-2">
               <Button 
                 onClick={() => navigate(createPageUrl("Reports") + `?eventId=${eventId}`)}
@@ -223,8 +224,10 @@ export default function EventDetail() {
                 {t('eventDetail.edit')}
               </Button>
             </div>
+            )}
 
-            {/* AI Assistant - Icon only */}
+            {/* AI Assistant - Icon only, hidden for stream-only users */}
+            {hasPermission(currentUser, 'edit_events') && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -246,6 +249,7 @@ export default function EventDetail() {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+            )}
 
             {/* More Actions Dropdown */}
             <DropdownMenu>
