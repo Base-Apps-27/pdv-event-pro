@@ -163,7 +163,13 @@ export function normalizeServiceSegments(serviceData) {
         scripture_references: seg.scripture_references || segData.scripture_references || '',
         message_title: messageTitle,
         major_break: seg.major_break || false,
-        sub_assignments: seg.sub_assignments || [],
+        sub_assignments: (seg.sub_assignments || []).map(sa => ({
+          ...sa,
+          // Resolve the person name from data using person_field_name
+          _resolvedPerson: sa.person_field_name
+            ? (segData[sa.person_field_name] || seg[sa.person_field_name] || '')
+            : '',
+        })),
         breakout_rooms: seg.breakout_rooms || segData.breakout_rooms || [],
         // Presentation / notes URLs
         presentation_url: seg.presentation_url || segData.presentation_url || '',
