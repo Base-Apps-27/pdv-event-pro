@@ -48,19 +48,27 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
     mutationFn: async () => {
       setIsDuplicating(true);
       try {
-        // 1. Create New Event
-        setProgress("Creando nuevo evento...");
+        // Determine origin type for field_origins tracking
         const originType = isFromTemplateMode ? 'template' : (mode === 'duplicate' ? 'duplicate' : 'manual');
+        // Template mode: strip all instance-specific content, keep only structure
+        const shouldStrip = isTemplateMode;
+
+        // 1. Create New Event
+        setProgress(shouldStrip ? "Creando plantilla (limpiando contenido)..." : "Creando nuevo evento...");
+        let baseEventData = { ...event };
+        if (shouldStrip) {
+          baseEventData = stripEvent(baseEventData);
+        }
         const eventData = {
-          ...event,
-          id: undefined, // Clear ID to create new
+          ...baseEventData,
+          id: undefined,
           created_date: undefined,
           updated_date: undefined,
           created_by: undefined,
           name: newName,
           year: parseInt(newYear),
           start_date: newStartDate || null,
-          end_date: null, // Clear end date as it might not match duration
+          end_date: null,
           status: isTemplateMode ? "template" : "planning",
           origin: originType,
           field_origins: createFieldOrigins(event, originType)
@@ -68,69 +76,79 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
         
         const newEvent = await base44.entities.Event.create(eventData);
         
-        // 2. Fetch all data from source event
-        setProgress("Leyendo datos del evento original...");
+        // 2. Fetch sessions from source event
+        setProgress("Leyendo estructura del evento original...");
         const sessions = await base44.entities.Session.filter({ event_id: event.id });
-        const allSegments = await base44.entities.Segment.list(); // Optimization: filter in memory or use backend filter if needed. Using list might be heavy but safer if filter is limited. Better to filter by session IDs if possible but that's N calls.
-        // Actually, let's fetch segments per session to be safer or assume list is okay for now. 
-        // Given the platform constraints, listing all segments might be too much if there are thousands. 
-        // Let's filter segments by session_id in the loop.
         
         // 3. Duplicate Sessions and their children
         let sessionCount = 0;
         for (const session of sessions) {
           sessionCount++;
-          setProgress(`Duplicando sesión ${sessionCount} de ${sessions.length}...`);
+          setProgress(`${shouldStrip ? 'Copiando estructura' : 'Duplicando'} sesión ${sessionCount} de ${sessions.length}...`);
           
+          let sessionBase = { ...session };
+          if (shouldStrip) {
+            sessionBase = stripSession(sessionBase);
+          }
           const sessionData = {
-            ...session,
+            ...sessionBase,
             id: undefined,
             created_date: undefined,
             updated_date: undefined,
             created_by: undefined,
             event_id: newEvent.id,
-            date: null, // Clear date to force user to set it
+            date: null, // Always clear date to force user to set it
             origin: originType,
             field_origins: createFieldOrigins(session, originType)
           };
           
           const newSession = await base44.entities.Session.create(sessionData);
           
-          // 3a. Duplicate PreSessionDetails
+          // 3a. Duplicate PreSessionDetails (stripped for templates)
           const preSessionDetails = await base44.entities.PreSessionDetails.filter({ session_id: session.id });
           for (const detail of preSessionDetails) {
-          await base44.entities.PreSessionDetails.create({
-            ...detail,
-            id: undefined,
-            created_date: undefined,
-            updated_date: undefined,
-            created_by: undefined,
-            session_id: newSession.id,
-            origin: originType,
-            field_origins: createFieldOrigins(detail, originType)
-          });
+            let detailBase = { ...detail };
+            if (shouldStrip) {
+              detailBase = stripPreSessionDetails(detailBase);
+            }
+            await base44.entities.PreSessionDetails.create({
+              ...detailBase,
+              id: undefined,
+              created_date: undefined,
+              updated_date: undefined,
+              created_by: undefined,
+              session_id: newSession.id,
+              origin: originType,
+              field_origins: createFieldOrigins(detail, originType)
+            });
           }
 
-          // 3b. Duplicate HospitalityTasks
-          const hospitalityTasks = await base44.entities.HospitalityTask.filter({ session_id: session.id });
-          for (const task of hospitalityTasks) {
-          await base44.entities.HospitalityTask.create({
-            ...task,
-            id: undefined,
-            created_date: undefined,
-            updated_date: undefined,
-            created_by: undefined,
-            session_id: newSession.id,
-            origin: originType,
-            field_origins: createFieldOrigins(task, originType)
-          });
+          // 3b. Duplicate HospitalityTasks (skipped entirely for templates)
+          if (!shouldStrip || shouldCopyHospitalityTasks()) {
+            const hospitalityTasks = await base44.entities.HospitalityTask.filter({ session_id: session.id });
+            for (const task of hospitalityTasks) {
+              await base44.entities.HospitalityTask.create({
+                ...task,
+                id: undefined,
+                created_date: undefined,
+                updated_date: undefined,
+                created_by: undefined,
+                session_id: newSession.id,
+                origin: originType,
+                field_origins: createFieldOrigins(task, originType)
+              });
+            }
           }
 
-          // 3c. Duplicate Segments
+          // 3c. Duplicate Segments (stripped for templates)
           const segments = await base44.entities.Segment.filter({ session_id: session.id });
           for (const segment of segments) {
+            let segmentBase = { ...segment };
+            if (shouldStrip) {
+              segmentBase = stripSegment(segmentBase);
+            }
             const newSegment = await base44.entities.Segment.create({
-              ...segment,
+              ...segmentBase,
               id: undefined,
               created_date: undefined,
               updated_date: undefined,
@@ -140,11 +158,15 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
               field_origins: createFieldOrigins(segment, originType)
             });
 
-            // 3d. Duplicate Segment Actions
+            // 3d. Duplicate Segment Actions (stripped for templates)
             const actions = await base44.entities.SegmentAction.filter({ segment_id: segment.id });
             for (const action of actions) {
+              let actionBase = { ...action };
+              if (shouldStrip) {
+                actionBase = stripSegmentAction(actionBase);
+              }
               await base44.entities.SegmentAction.create({
-                ...action,
+                ...actionBase,
                 id: undefined,
                 created_date: undefined,
                 updated_date: undefined,
@@ -157,7 +179,7 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
           }
         }
 
-        setProgress("¡Duplicación completada!");
+        setProgress(shouldStrip ? "¡Plantilla creada!" : "¡Duplicación completada!");
         return newEvent;
       } catch (error) {
         console.error("Error duplicating event:", error);
@@ -168,6 +190,7 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['events']);
+      queryClient.invalidateQueries(['eventTemplates']);
       onOpenChange(false);
     }
   });
