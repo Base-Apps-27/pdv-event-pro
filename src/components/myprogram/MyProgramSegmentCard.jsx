@@ -182,21 +182,22 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
 
       {/* Content Area */}
       <div className={`space-y-3 ${status === 'done' ? 'opacity-80' : ''}`}>
-        {/* Message title */}
-        {isMessage && getData('message_title') && (
+        {/* Message title — resolve from message_title, messageTitle, or data.title */}
+        {isMessage && (getData('message_title') || getData('messageTitle')) && (
           <p className="text-sm font-bold text-blue-800 bg-blue-50/50 p-2.5 rounded-lg border border-blue-100">
-            {getData('message_title')}
+            {getData('message_title') || getData('messageTitle')}
           </p>
         )}
 
         {/* Presenter / Leader / Translator (Visible to ALL departments) */}
         <div className="grid grid-cols-1 gap-1.5">
-          {isMessage && getData('presenter') && (
+          {/* Preacher for message segments: check preacher first, then presenter */}
+          {isMessage && (getData('preacher') || getData('presenter')) && (
             <div className="flex items-center gap-2.5 text-sm text-blue-700 font-medium">
               <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                 <Users className="w-3.5 h-3.5" />
               </div>
-              <span>{t('live.preacher')}: {normalizeName(getData('presenter'))}</span>
+              <span>{t('live.preacher')}: {normalizeName(getData('preacher') || getData('presenter'))}</span>
             </div>
           )}
           {isWorship && (getData('leader') || getData('presenter')) && (
