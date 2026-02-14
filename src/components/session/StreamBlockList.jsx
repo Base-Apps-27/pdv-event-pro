@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Plus, AlertTriangle, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import HelpTooltip from "@/components/utils/HelpTooltip";
 import StreamBlockItem from "./StreamBlockItem";
 import StreamBlockForm from "./StreamBlockForm";
 import { toast } from "sonner";
@@ -111,7 +112,10 @@ export default function StreamBlockList({ sessionId, segments, sessionDate, user
           <div className="bg-white p-1.5 rounded-md border shadow-sm">
             <span className="font-bold text-lg text-blue-600 font-mono">{blocks.length}</span>
           </div>
-          <div className="text-sm font-medium text-slate-600">Stream Blocks</div>
+          <div className="text-sm font-medium text-slate-600 flex items-center gap-1">
+            Stream Blocks
+            <HelpTooltip helpKey="stream.overview" />
+          </div>
         </div>
         <Button onClick={openNew} size="sm" className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-1" /> Add Block

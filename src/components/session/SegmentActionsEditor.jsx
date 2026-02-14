@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Zap } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
+import HelpTooltip from "@/components/utils/HelpTooltip";
 
 const DEPARTMENTS = [
   "Admin", "MC", "Sound", "Projection", "Hospitality", "Ujieres", "Kids", "Coordinador", "Stage & Decor", "Alabanza", "Translation", "Other"
@@ -87,6 +88,7 @@ export default function SegmentActionsEditor({ actions, onChange, formData, lang
         <div className="flex items-center gap-2">
           <Zap className="w-4 h-4 text-orange-500" />
           <h3 className="font-bold text-lg text-slate-900">Acciones / Tareas de Preparación</h3>
+          <HelpTooltip helpKey="segment.actions" mode="modal" />
         </div>
         <Badge variant="outline" className="text-xs">{actions.length}</Badge>
       </div>

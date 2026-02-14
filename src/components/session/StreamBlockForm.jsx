@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Clock, Link as LinkIcon, Radio, PowerOff, ArrowRight } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import HelpTooltip from "@/components/utils/HelpTooltip";
 
 export default function StreamBlockForm({ session, block, segments, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -112,6 +113,10 @@ export default function StreamBlockForm({ session, block, segments, onClose, onS
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         
         {/* Block Type Selector */}
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Block Type</span>
+          <HelpTooltip helpKey="stream.blockTypes" mode="modal" />
+        </div>
         <div className="grid grid-cols-4 gap-2">
           {['link', 'insert', 'replace', 'offline'].map(type => (
             <div 
@@ -128,7 +133,10 @@ export default function StreamBlockForm({ session, block, segments, onClose, onS
                 {type === 'replace' && <Radio className="w-5 h-5 text-orange-600" />}
                 {type === 'offline' && <PowerOff className="w-5 h-5 text-gray-600" />}
               </div>
-              <div className="text-xs font-bold uppercase text-slate-700">{type}</div>
+              <div className="flex items-center justify-center gap-1">
+                <div className="text-xs font-bold uppercase text-slate-700">{type}</div>
+                <HelpTooltip helpKey={`stream.blockType.${type}`} side="bottom" />
+              </div>
             </div>
           ))}
         </div>
@@ -137,6 +145,7 @@ export default function StreamBlockForm({ session, block, segments, onClose, onS
         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4">
           <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
             <Clock className="w-3 h-3" /> Timing & Anchoring
+            <HelpTooltip helpKey="stream.anchoring" mode="modal" />
           </h4>
           
           <div className="grid md:grid-cols-2 gap-4">
@@ -248,7 +257,10 @@ export default function StreamBlockForm({ session, block, segments, onClose, onS
         {/* Stream Actions (Cues) */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <Label className="text-base">Stream Actions (Cues)</Label>
+            <div className="flex items-center gap-2">
+              <Label className="text-base">Stream Actions (Cues)</Label>
+              <HelpTooltip helpKey="stream.actions" />
+            </div>
             <Button type="button" size="sm" variant="outline" onClick={addAction}>
               <Plus className="w-3 h-3 mr-1" /> Add Cue
             </Button>
