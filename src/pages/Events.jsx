@@ -57,6 +57,7 @@ export default function Events() {
       queryClient.invalidateQueries(['events']);
       setShowDialog(false);
       setEditingEvent(null);
+      toast.success(t('events.newEvent') + ' ✓');
     },
     onError: (err) => toast.error(t('errors.createFailed') + ': ' + err.message),
   });
@@ -67,6 +68,7 @@ export default function Events() {
       queryClient.invalidateQueries(['events']);
       setShowDialog(false);
       setEditingEvent(null);
+      toast.success(t('btn.save') + ' ✓');
     },
     onError: (err) => toast.error(t('errors.updateFailed') + ': ' + err.message),
   });
@@ -76,7 +78,9 @@ export default function Events() {
     onSuccess: () => {
       queryClient.invalidateQueries(['events']);
       setEventToDelete(null);
+      // Toast handled in DeleteEventDialog itself
     },
+    onError: (err) => toast.error(t('errors.deleteFailed') + ': ' + err.message),
   });
 
   // Phase 1: Replaced window.confirm with direct dialog flow (2026-02-11)
