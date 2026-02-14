@@ -118,33 +118,29 @@ export default function DesktopSidebar({ user }) {
 
         {/* Bottom actions */}
         <div className="flex flex-col items-center gap-1.5 mt-auto pt-4">
-          <Tooltip delayDuration={100}>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-                className="w-11 h-11 rounded-xl flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 transition-all"
-              >
-                <Languages className="w-5 h-5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs font-medium">
+          <button
+            onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+            className="group relative flex items-center h-11 rounded-xl text-gray-500 hover:text-white hover:bg-white/5 transition-all duration-200 overflow-hidden"
+          >
+            <span className="w-11 h-11 flex items-center justify-center shrink-0">
+              <Languages className="w-5 h-5" />
+            </span>
+            <span className="whitespace-nowrap text-sm font-medium pr-4 max-w-0 opacity-0 group-hover:max-w-[160px] group-hover:opacity-100 transition-all duration-200 overflow-hidden">
               {language === 'es' ? 'English' : 'Español'}
-            </TooltipContent>
-          </Tooltip>
+            </span>
+          </button>
 
-          <Tooltip delayDuration={100}>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => base44.auth.logout()}
-                className="w-11 h-11 rounded-xl flex items-center justify-center text-gray-600 hover:text-red-400 hover:bg-white/5 transition-all"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs font-medium">
+          <button
+            onClick={() => base44.auth.logout()}
+            className="group relative flex items-center h-11 rounded-xl text-gray-600 hover:text-red-400 hover:bg-white/5 transition-all duration-200 overflow-hidden"
+          >
+            <span className="w-11 h-11 flex items-center justify-center shrink-0">
+              <LogOut className="w-4 h-4" />
+            </span>
+            <span className="whitespace-nowrap text-sm font-medium pr-4 max-w-0 opacity-0 group-hover:max-w-[160px] group-hover:opacity-100 transition-all duration-200 overflow-hidden">
               {language === 'es' ? 'Cerrar sesión' : 'Logout'}
-            </TooltipContent>
-          </Tooltip>
+            </span>
+          </button>
         </div>
       </aside>
 
