@@ -223,6 +223,12 @@ export default function PublicCountdownDisplay() {
     };
   }, [segments, currentTime, serviceDate]);
 
+  // Determine if livestream column should show
+  const hasLivestreamSession = useMemo(() => {
+    const sessions = programData?.sessions || [];
+    return sessions.some(s => s.has_livestream) && streamBlocks.length > 0;
+  }, [programData?.sessions, streamBlocks]);
+
   // Selection Switcher
   const handleSelectionChange = (val) => {
     if (!val) return;
