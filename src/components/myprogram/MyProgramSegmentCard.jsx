@@ -209,8 +209,8 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
             </div>
           )}
           {!isWorship && !isMessage && getData('presenter') && (
-            <div className="flex items-center gap-2.5 text-sm text-gray-700 font-medium">
-              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-2.5 text-sm text-blue-600 font-medium">
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                 <Users className="w-3.5 h-3.5" />
               </div>
               <span>{normalizeName(getData('presenter'))}</span>

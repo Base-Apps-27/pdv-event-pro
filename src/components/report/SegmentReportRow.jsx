@@ -90,7 +90,7 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
         )}
 
         {segment.presenter && (
-          <div className="text-blue-600 font-semibold text-[10px]">
+          <div className={`font-semibold text-[10px] ${segment.segment_type === 'Alabanza' ? 'text-green-600' : 'text-blue-600'}`}>
             {['Break', 'Receso', 'Almuerzo'].includes(segment.segment_type) 
               ? `Encargado: ${segment.presenter}` 
               : segment.presenter}
