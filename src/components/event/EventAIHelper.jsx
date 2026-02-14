@@ -33,6 +33,7 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
   const [showClarification, setShowClarification] = useState(false);
   const [sourceEventData, setSourceEventData] = useState(null);
   const [isLoadingSourceEvent, setIsLoadingSourceEvent] = useState(false);
+  const [attachedFileUrl, setAttachedFileUrl] = useState(null);
 
   const { data: event } = useQuery({
     queryKey: ['event', eventId],
