@@ -501,45 +501,49 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                       className="flex-1"
                     >
                       <List className="w-4 h-4 mr-2" />
-                      Ver Segmentos
+                      {isStreamOnly ? 'Stream Blocks' : 'Ver Segmentos'}
                       {isExpanded ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => recalculateTimesMutation.mutate(session.id)}
-                      disabled={recalculateTimesMutation.isPending}
-                      title="Recalcular horarios"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setHospitalityModalSessionId(session.id)}
-                      title="Tareas de Hospitalidad"
-                    >
-                      <Utensils className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => openDialog(session)}
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Editar
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        if (confirm('¿Eliminar esta sesión y todos sus segmentos?')) {
-                          deleteMutation.mutate(session);
-                        }
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
+                    {canEditSessions && (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => recalculateTimesMutation.mutate(session.id)}
+                          disabled={recalculateTimesMutation.isPending}
+                          title="Recalcular horarios"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setHospitalityModalSessionId(session.id)}
+                          title="Tareas de Hospitalidad"
+                        >
+                          <Utensils className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => openDialog(session)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Editar
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            if (confirm('¿Eliminar esta sesión y todos sus segmentos?')) {
+                              deleteMutation.mutate(session);
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </>
+                    )}
                   </div>
 
                   {isExpanded && (
