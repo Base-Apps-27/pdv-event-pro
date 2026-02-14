@@ -26,7 +26,8 @@ import {
   Palette, 
   Coffee, 
   ClipboardList, 
-  Video 
+  Video,
+  Home 
 } from 'lucide-react';
 
 const DEPARTMENTS = [
