@@ -13,6 +13,7 @@ import { validateAIActions, formatValidationForDisplay } from "@/components/util
 import AIProposalReview from "@/components/event/AIProposalReview";
 import VoiceInputButton from "@/components/event/VoiceInputButton";
 import EventClarificationPicker from "@/components/event/EventClarificationPicker";
+import AIFileUploadZone from "@/components/event/AIFileUploadZone";
 import { fuzzySearchEvents } from "@/components/utils/eventFuzzySearch";
 
 export default function EventAIHelper({ eventId, isOpen, onClose }) {
