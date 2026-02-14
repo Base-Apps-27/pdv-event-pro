@@ -434,6 +434,19 @@ CRITICAL: When user mentions song titles, map to these fields:
 → target_ids: [session1_id, session2_id]
 → changes: { photography_team: "Maria" }
 
+**FROM AN ATTACHED PDF/IMAGE with schedule "Sección 1 Viernes, Sección 2 Sábado AM, etc."**
+→ actions: [
+  { type: "create_sessions", create_data: [
+    { name: "Sección 1 — Viernes PM", temp_session_ref: "session_1", date: "2026-03-13", planned_start_time: "17:30", planned_end_time: "21:30", order: 1 },
+    { name: "Sección 2 — Sábado AM", temp_session_ref: "session_2", date: "2026-03-14", planned_start_time: "08:00", planned_end_time: "13:40", order: 2 }
+  ]},
+  { type: "create_segments", create_data: [
+    { temp_session_ref: "session_1", title: "Registración", segment_type: "TechOnly", start_time: "17:30", duration_min: 120, order: 1, color_code: "tech", show_in_general: true },
+    { temp_session_ref: "session_1", title: "Alabanza y Adoración", segment_type: "Alabanza", start_time: "19:30", duration_min: 40, order: 2, color_code: "worship" },
+    { temp_session_ref: "session_1", title: "Plenaria 1: Autor de La Vida", segment_type: "Plenaria", start_time: "20:30", duration_min: 60, presenter: "A. Tere Paz", message_title: "Autor de La Vida", order: 5, color_code: "preach" }
+  ]}
+]
+
 ## IMPORTANT: HANDLING CROSS-EVENT REFERENCES
 If user mentions a past event and you're uncertain which one they mean (< 80% confidence):
 - Respond with: {"type": "ask_event_clarification", "message": "Event X or Y?", "options": [{id, name, year}, ...]}
