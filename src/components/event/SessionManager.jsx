@@ -548,7 +548,45 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
 
                   {isExpanded && (
                     <div className="border-t pt-3">
-                      {session.has_livestream ? (
+                      {/* Stream-only users: only see the stream editor on livestream sessions */}
+                      {isStreamOnly ? (
+                        session.has_livestream ? (
+                          <div className="grid md:grid-cols-3 gap-6">
+                            {/* Left Rail: Read-only segment reference */}
+                            <div className="md:col-span-1 border-r border-slate-100 pr-4 opacity-70 hover:opacity-100 transition-opacity hidden md:block">
+                              <h4 className="text-xs font-bold text-slate-400 uppercase mb-3">Referencia: Sala Principal</h4>
+                              <div className="space-y-2 text-xs">
+                                {sessionSegments.map((seg, idx) => (
+                                  <div key={seg.id} className="p-2 border rounded bg-slate-50 flex justify-between">
+                                    <div>
+                                      <span className="font-bold mr-2 text-slate-500">{idx + 1}.</span>
+                                      {seg.title}
+                                    </div>
+                                    <div className="font-mono text-slate-400">{formatTimeToEST(seg.start_time)}</div>
+                                  </div>
+                                ))}
+                                {sessionSegments.length === 0 && (
+                                  <p className="text-slate-400 italic py-4 text-center">Esperando que el admin cree segmentos...</p>
+                                )}
+                              </div>
+                            </div>
+                            {/* Right Rail: Stream Editor (full CRUD for stream-only user) */}
+                            <div className="md:col-span-2">
+                              <StreamBlockList 
+                                sessionId={session.id}
+                                segments={sessionSegments}
+                                sessionDate={session.date}
+                                user={user}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-slate-400 text-sm">
+                            <p>Livestream no habilitado para esta sesión.</p>
+                            <p className="text-xs mt-1">El administrador principal debe habilitar Livestream en esta sesión.</p>
+                          </div>
+                        )
+                      ) : session.has_livestream ? (
                         <Tabs defaultValue="main" className="w-full">
                           <TabsList className="grid w-full grid-cols-2 mb-4">
                             <TabsTrigger value="main">Programa Principal (Sala)</TabsTrigger>
