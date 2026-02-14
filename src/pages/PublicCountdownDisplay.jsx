@@ -19,10 +19,11 @@ import { normalizeStreamBlocks } from "@/components/utils/normalizeStreamBlocks"
  * getPublicProgramData({ detectActive: true, includeOptions: true }).
  *
  * Two states:
- *   1. Active program found → bento grid (countdown + actions | program timeline)
+ *   1. Active program found → bento grid (countdown+actions | program timeline | stream sidecar if applicable)
  *   2. No active program   → StandbyScreen
  *
- * No selectors, no mode toggles, no stream columns, no URL-driven overrides.
+ * No selectors, no mode toggles, no URL-driven overrides.
+ * Stream column auto-appears when the active session has has_livestream + stream blocks.
  * Polls every 30s for data refresh. Clock ticks every second.
  */
 export default function PublicCountdownDisplay() {
