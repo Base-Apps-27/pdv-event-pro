@@ -310,16 +310,25 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
       {sessions.length === 0 ? (
         <Card className="p-12 text-center border-dashed border-2">
           <Calendar className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-900 mb-2">No hay sesiones</h3>
-          <p className="text-slate-500 mb-4">Comienza agregando la primera sesión del evento</p>
-          <Button onClick={() => openDialog()}>
-            <Plus className="w-4 h-4 mr-2" />
-            Crear Primera Sesión
-          </Button>
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            {isStreamOnly ? 'No hay sesiones con Livestream' : 'No hay sesiones'}
+          </h3>
+          <p className="text-slate-500 mb-4">
+            {isStreamOnly 
+              ? 'El administrador principal debe crear sesiones y habilitar Livestream'
+              : 'Comienza agregando la primera sesión del evento'}
+          </p>
+          {canEditSessions && (
+            <Button onClick={() => openDialog()}>
+              <Plus className="w-4 h-4 mr-2" />
+              Crear Primera Sesión
+            </Button>
+          )}
         </Card>
       ) : (
         <div className="grid gap-4">
-          {[...sessions].sort((a, b) => {
+          {/* Stream-only users only see sessions with has_livestream enabled */}
+          {[...(isStreamOnly ? sessions.filter(s => s.has_livestream) : sessions)].sort((a, b) => {
             if (a.date !== b.date) return a.date.localeCompare(b.date);
             const aTime = a.planned_start_time || '';
             const bTime = b.planned_start_time || '';
