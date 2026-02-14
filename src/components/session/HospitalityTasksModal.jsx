@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Utensils, ChevronUp, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 
 const HOSPITALITY_CATEGORIES = [
@@ -54,11 +55,11 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
         notes: "",
       });
       setEditingTask(null);
+      toast.success("Tarea creada ✓");
     },
     onError: (error) => {
-      console.error('[HospitalityTasksModal] Create failed - Error:', error);
-      if (error.response?.data) console.error('  Response:', error.response.data);
-      if (error.message) console.error('  Message:', error.message);
+      console.error('[HospitalityTasksModal] Create failed:', error);
+      toast.error(`Error al crear tarea: ${error.message}`);
     },
   });
 
@@ -74,9 +75,11 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
         notes: "",
       });
       setEditingTask(null);
+      toast.success("Tarea actualizada ✓");
     },
     onError: (error) => {
       console.error('[HospitalityTasksModal] Update error:', error);
+      toast.error(`Error al actualizar tarea: ${error.message}`);
     },
   });
 
@@ -84,9 +87,11 @@ export default function HospitalityTasksModal({ sessionId, isOpen, onClose }) {
     mutationFn: (id) => base44.entities.HospitalityTask.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hospitalityTasks', sessionId] });
+      toast.success("Tarea eliminada");
     },
     onError: (error) => {
       console.error('[HospitalityTasksModal] Delete error:', error);
+      toast.error(`Error al eliminar tarea: ${error.message}`);
     },
   });
 
