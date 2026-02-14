@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Save, X } from "lucide-react";
+import { toast } from "sonner";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
 
 export default function PreSessionDetailsForm({ sessionId, preSessionDetails, onClose }) {
@@ -34,7 +35,9 @@ export default function PreSessionDetailsForm({ sessionId, preSessionDetails, on
     onSuccess: () => {
       queryClient.invalidateQueries(['preSessionDetails', sessionId]);
       onClose();
+      toast.success("Detalles pre-sesión creados ✓");
     },
+    onError: (err) => toast.error(`Error: ${err.message}`),
   });
 
   const updateMutation = useMutation({
@@ -42,7 +45,9 @@ export default function PreSessionDetailsForm({ sessionId, preSessionDetails, on
     onSuccess: () => {
       queryClient.invalidateQueries(['preSessionDetails', sessionId]);
       onClose();
+      toast.success("Detalles pre-sesión guardados ✓");
     },
+    onError: (err) => toast.error(`Error: ${err.message}`),
   });
 
   const handleSubmit = (e) => {
