@@ -61,7 +61,9 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
       queryClient.invalidateQueries(['editActionLogs']);
       setShowDialog(false);
       setEditingSession(null);
+      toast.success("Sesión creada ✓");
     },
+    onError: (err) => toast.error(`Error al crear sesión: ${err.message}`),
   });
 
   const updateMutation = useMutation({
@@ -75,7 +77,9 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
       queryClient.invalidateQueries(['editActionLogs']);
       setShowDialog(false);
       setEditingSession(null);
+      toast.success("Sesión actualizada ✓");
     },
+    onError: (err) => toast.error(`Error al actualizar sesión: ${err.message}`),
   });
 
   const deleteMutation = useMutation({
@@ -86,7 +90,9 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
     onSuccess: () => {
       queryClient.invalidateQueries(['sessions', eventId || serviceId]);
       queryClient.invalidateQueries(['editActionLogs']);
+      toast.success("Sesión eliminada");
     },
+    onError: (err) => toast.error(`Error al eliminar sesión: ${err.message}`),
   });
 
   const recalculateTimesMutation = useMutation({
