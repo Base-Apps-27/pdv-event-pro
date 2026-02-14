@@ -184,33 +184,33 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
       <div className={`space-y-3 ${status === 'done' ? 'opacity-80' : ''}`}>
         {/* Message title */}
         {isMessage && getData('message_title') && (
-          <p className="text-sm font-bold text-blue-800 bg-blue-50/50 p-2 rounded-lg border border-blue-100">
+          <p className="text-sm font-bold text-blue-800 bg-blue-50/50 p-2.5 rounded-lg border border-blue-100">
             {getData('message_title')}
           </p>
         )}
 
         {/* Presenter / Leader / Translator (Visible to ALL departments) */}
-        <div className="grid grid-cols-1 gap-1">
+        <div className="grid grid-cols-1 gap-1.5">
           {isMessage && getData('presenter') && (
-            <div className="flex items-center gap-2 text-xs text-blue-700 font-medium">
-              <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                <Users className="w-3 h-3" />
+            <div className="flex items-center gap-2.5 text-sm text-blue-700 font-medium">
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                <Users className="w-3.5 h-3.5" />
               </div>
               <span>{t('live.preacher')}: {normalizeName(getData('presenter'))}</span>
             </div>
           )}
           {isWorship && (getData('leader') || getData('presenter')) && (
-            <div className="flex items-center gap-2 text-xs text-green-700 font-medium">
-              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                <Users className="w-3 h-3" />
+            <div className="flex items-center gap-2.5 text-sm text-green-700 font-medium">
+              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                <Users className="w-3.5 h-3.5" />
               </div>
               <span>{normalizeName(getData('leader') || getData('presenter'))}</span>
             </div>
           )}
           {!isWorship && !isMessage && getData('presenter') && (
-            <div className="flex items-center gap-2 text-xs text-gray-700 font-medium">
-              <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                <Users className="w-3 h-3" />
+            <div className="flex items-center gap-2.5 text-sm text-gray-700 font-medium">
+              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                <Users className="w-3.5 h-3.5" />
               </div>
               <span>{normalizeName(getData('presenter'))}</span>
             </div>
