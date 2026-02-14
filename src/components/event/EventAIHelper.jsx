@@ -212,9 +212,9 @@ Return information in a structured, readable format. Be comprehensive and pull r
 5. CRITICAL: Always infer the correct field and its specific meaning based on context. Use the detailed schema below.
 
 ## SUPPORTED ACTION TYPES
-- create_sessions: Create new sessions (provide full session data including event_id, name, date, times)
+- create_sessions: Create new sessions (provide full session data including event_id, name, date, times). You may include a "temp_session_ref" field (e.g. "session_1") for cross-referencing in create_segments.
 - update_sessions: Update existing session fields
-- create_segments: Create new segments (provide full segment data including session_id, title, segment_type, times)
+- create_segments: Create new segments (provide full segment data including session_id, title, segment_type, times). If creating segments for sessions that are also being created in this same request, set "temp_session_ref" to match the session's temp_session_ref instead of session_id. The system will resolve it after session creation. IMPORTANT: Always put create_sessions BEFORE create_segments in the actions array.
 - update_segments: Update existing segment fields
 - update_event: Update event fields
 
