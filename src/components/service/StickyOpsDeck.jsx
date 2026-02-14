@@ -428,18 +428,22 @@ export default function StickyOpsDeck({
 
             {/* Right Side: Actions (Scroll + Chat) — tighter on mobile */}
             <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-slate-200 ml-1 sm:ml-2">
-              {/* Jump to Segment */}
-              {activeAction.segmentId && (
+              {/* Jump to Segment or Stream Block */}
+              {(activeAction.segmentId || activeAction.blockId) && (
                 <Button
                   size="icon"
                   variant="ghost"
                   className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full hover:bg-slate-200 text-slate-500 hover:text-slate-800`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onScrollToSegment && onScrollToSegment({ id: activeAction.segmentId });
+                    if (activeAction.isStreamAction && activeAction.blockId && onScrollToStreamBlock) {
+                      onScrollToStreamBlock(activeAction.blockId);
+                    } else if (activeAction.segmentId) {
+                      onScrollToSegment && onScrollToSegment({ id: activeAction.segmentId });
+                    }
                   }}
                 >
-                  <ArrowRight className="w-5 h-5" />
+                  {activeAction.isStreamAction ? <Radio className="w-5 h-5 text-red-500" /> : <ArrowRight className="w-5 h-5" />}
                 </Button>
               )}
 
