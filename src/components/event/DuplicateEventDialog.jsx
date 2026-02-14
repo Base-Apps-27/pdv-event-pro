@@ -221,7 +221,18 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
     onSuccess: () => {
       queryClient.invalidateQueries(['events']);
       queryClient.invalidateQueries(['eventTemplates']);
+      // Close modal and notify user — this was previously missing, leaving the modal stuck open
       onOpenChange(false);
+      if (isTemplateMode) {
+        toast.success("¡Plantilla creada exitosamente!");
+      } else if (isFromTemplateMode) {
+        toast.success("¡Evento creado desde plantilla!");
+      } else {
+        toast.success("¡Evento duplicado exitosamente!");
+      }
+    },
+    onError: (err) => {
+      toast.error(`Error: ${err.message || 'No se pudo completar la operación'}`);
     }
   });
 
