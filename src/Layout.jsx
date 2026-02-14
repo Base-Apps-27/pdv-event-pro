@@ -1,98 +1,48 @@
-import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { useLanguage, LanguageProvider } from "@/components/utils/i18n";
+import { LanguageProvider } from "@/components/utils/i18n";
 import { hasPermission } from "@/components/utils/permissions";
-import { useTheme } from "@/components/utils/useTheme";
-import { Calendar, LayoutDashboard, ChevronDown, Menu, X, FileText, MapPin, Copy, Clock, Bell, Users, Sparkles, FileCode, Languages, Plus, Shield, Moon, Sun, ChevronLeft, ChevronRight } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "@/components/utils/ErrorBoundary";
-import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
-
-function LayoutContent({ children }) {
-  return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
-        h1, h2 {
-          font-family: 'Anton', sans-serif !important;
-          font-weight: 400;
-        }
-      `}</style>
-      <LayoutContentInner>{children}</LayoutContentInner>
-    </>
-  );
-}
+import DesktopSidebar from "@/components/nav/DesktopSidebar";
+import MobileNav from "@/components/nav/MobileNav";
 
 function LayoutContentInner({ children }) {
-  const { language, setLanguage, t } = useLanguage();
-  const { theme, setTheme } = useTheme();
-  const gradientStyle = {
-    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
-  };
   const location = useLocation();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isSidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-        return safeGetItem('sidebarCollapsed') === 'true';
-    }
-    return false;
-  });
 
-  const toggleSidebar = () => {
-    setSidebarCollapsed(prev => {
-        const next = !prev;
-        safeSetItem('sidebarCollapsed', String(next));
-        return next;
-    });
-  };
-
-  const isActive = (path) => location.pathname === path;
-
-  // Define strictly public routes (exact match or prefix for specific areas)
-  // All other routes will require authentication.
-  const isPublicPage = React.useMemo(() => {
+  // Define strictly public routes
+  const isPublicPage = useMemo(() => {
     const path = location.pathname;
-    
-    // 1. Exact matches for public apps
     const publicExactRoutes = [
       createPageUrl('PublicCountdownDisplay'),
       createPageUrl('PublicProgramView'),
-      '/PublicCountdownDisplay', // Fallback
-      '/PublicProgramView',      // Fallback
+      '/PublicCountdownDisplay',
+      '/PublicProgramView',
     ];
     if (publicExactRoutes.includes(path)) return true;
-
-    // 2. Prefixes for nested public routes (e.g. print views, if any)
-    const publicPrefixes = [
-      '/print/',
-      '/public/', // Future proofing
-    ];
+    const publicPrefixes = ['/print/', '/public/'];
     if (publicPrefixes.some(prefix => path.startsWith(prefix))) return true;
-
     return false;
   }, [location.pathname]);
 
-  // Check authentication and get user role
+  // Check authentication
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const authenticated = await base44.auth.isAuthenticated();
-        
         if (!authenticated) {
           setUser(null);
           setLoading(false);
           return;
         }
-
         const currentUser = await base44.auth.me();
         setUser(currentUser);
         setLoading(false);
-
       } catch (error) {
         console.error('Auth error:', error);
         setLoading(false);
@@ -102,10 +52,8 @@ function LayoutContentInner({ children }) {
   }, []);
 
   // Enforce authentication on private pages
-  // This is the primary gatekeeper for the application when platform is set to "Public"
   useEffect(() => {
     if (!loading && !user && !isPublicPage) {
-      // Redirect to login, preserving current URL as return destination
       base44.auth.redirectToLogin(window.location.href);
     }
   }, [loading, user, isPublicPage]);
@@ -113,19 +61,14 @@ function LayoutContentInner({ children }) {
   // Permission-based redirects for authenticated users
   useEffect(() => {
     if (!user || loading) return;
-
     const canViewDashboard = hasPermission(user, 'view_events') || hasPermission(user, 'view_services');
     const canViewLive = hasPermission(user, 'access_live_view');
-    
-    // If a user has no dashboard permissions, determine their landing page
     if (!canViewDashboard && !isPublicPage) {
       if (canViewLive) {
-        // Coordinators/Tech with Live View access but no Dashboard access -> Live View
         if (location.pathname !== createPageUrl('PublicProgramView')) {
           navigate(createPageUrl('PublicProgramView'), { replace: true });
         }
       } else if (hasPermission(user, 'access_my_program')) {
-        // Lowest tier (EventDayViewer/General) -> MyProgram
         if (location.pathname !== createPageUrl('MyProgram')) {
           navigate(createPageUrl('MyProgram'), { replace: true });
         }
@@ -133,9 +76,7 @@ function LayoutContentInner({ children }) {
     }
   }, [user, location.pathname, loading, navigate, isPublicPage]);
 
-  if (loading) {
-    return null;
-  }
+  if (loading) return null;
 
   // Public pages render without auth
   if (isPublicPage) {
@@ -143,471 +84,28 @@ function LayoutContentInner({ children }) {
   }
 
   // Private pages block access if not authenticated
-  if (!user) {
-    return null; // Effect above handles redirect
-  }
+  if (!user) return null;
 
-  // If user cannot view dashboard, they only get the minimal shell (similar to anonymous)
+  // Minimal shell for users without dashboard permissions
   if (!hasPermission(user, 'view_events') && !hasPermission(user, 'view_services')) {
     return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
   }
 
   return (
-    <div className="min-h-screen flex bg-[#F0F1F3]">
-      {/* Dark Sidebar */}
-      <aside className={`hidden lg:flex lg:flex-col ${isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'} bg-black text-white fixed h-full font-sans print:hidden transition-all duration-300 z-50`}>
-        <div className={`p-6 mb-2 ${isSidebarCollapsed ? 'px-4' : ''}`}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg shrink-0" style={gradientStyle}>
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
-            {!isSidebarCollapsed && (
-              <div className="overflow-hidden whitespace-nowrap">
-                <h2 className="text-white text-xl uppercase leading-none tracking-wide">PALABRAS DE VIDA</h2>
-                <p className="text-[10px] text-pdv-green font-medium tracking-wider mt-1">¡ATRÉVETE A CAMBIAR!</p>
-              </div>
-            )}
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#F0F1F3]">
+      {/* Desktop: slim icon rail sidebar */}
+      <DesktopSidebar user={user} />
 
-        <nav className="flex-1 px-3 space-y-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-800">
-            {!isSidebarCollapsed && <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 mt-2 pl-3">{t('section.main')}</div>}
-            <Link
-              to={createPageUrl("Dashboard")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                isActive(createPageUrl("Dashboard"))
-                  ? "text-white shadow-md"
-                  : "text-gray-400 hover:bg-white/5 hover:text-white"
-              }`}
-              style={isActive(createPageUrl("Dashboard")) ? gradientStyle : {}}
-              title={isSidebarCollapsed ? t('nav.dashboard') : ''}
-            >
-              <LayoutDashboard className="w-5 h-5 shrink-0" />
-              {!isSidebarCollapsed && <span>{t('nav.dashboard')}</span>}
-            </Link>
-
-            {/* LIVE VIEW - All Roles */}
-            {!isSidebarCollapsed && (
-              <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3 flex items-center gap-2">
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-                <span>{t('section.live')}</span>
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-              </div>
-            )}
-            {/* MyProgram — accessible to roles with access_my_program */}
-            {hasPermission(user, 'access_my_program') && (
-            <Link
-              to={createPageUrl("MyProgram")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                isActive(createPageUrl("MyProgram"))
-                  ? "text-white shadow-md"
-                  : "text-gray-400 hover:bg-white/5 hover:text-white"
-              }`}
-              style={isActive(createPageUrl("MyProgram")) ? gradientStyle : {}}
-              title={isSidebarCollapsed ? t('myprogram.title') : ''}
-            >
-              <Calendar className="w-5 h-5 shrink-0" />
-              {!isSidebarCollapsed && <span>{t('myprogram.title')}</span>}
-            </Link>
-            )}
-            {/* Live View — gated by access_live_view */}
-            {hasPermission(user, 'access_live_view') && (
-            <Link
-              to={createPageUrl("PublicProgramView")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                isActive(createPageUrl("PublicProgramView"))
-                  ? "text-white shadow-md"
-                  : "text-gray-400 hover:bg-white/5 hover:text-white"
-              }`}
-              style={isActive(createPageUrl("PublicProgramView")) ? gradientStyle : {}}
-              title={isSidebarCollapsed ? t('nav.liveProgram') : ''}
-            >
-              <Bell className="w-5 h-5 shrink-0" />
-              {!isSidebarCollapsed && <span>{t('nav.liveProgram')}</span>}
-            </Link>
-            )}
-
-            {/* EVENTS PILLAR - Permission-based */}
-            {hasPermission(user, 'view_events') && (
-              <>
-                {!isSidebarCollapsed && (
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3 flex items-center gap-2">
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-                    <span>{t('section.events')}</span>
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-                  </div>
-                )}
-                <Link
-                  to={createPageUrl("Events")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("Events")) || 
-                    isActive(createPageUrl("EventDetail"))
-                      ? "text-white shadow-md"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={isActive(createPageUrl("Events")) || isActive(createPageUrl("EventDetail")) ? gradientStyle : {}}
-                  title={isSidebarCollapsed ? t('nav.events') : ''}
-                >
-                  <Calendar className="w-5 h-5 shrink-0" />
-                  {!isSidebarCollapsed && <span>{t('nav.events')}</span>}
-                </Link>
-                <Link
-                  to={createPageUrl("Reports")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("Reports"))
-                      ? "text-white shadow-md"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={isActive(createPageUrl("Reports")) ? gradientStyle : {}}
-                  title={isSidebarCollapsed ? t('nav.reports') : ''}
-                >
-                  <FileText className="w-5 h-5 shrink-0" />
-                  {!isSidebarCollapsed && <span>{t('nav.reports')}</span>}
-                </Link>
-              </>
-            )}
-
-            {/* SERVICES PILLAR - Permission-based */}
-            {hasPermission(user, 'view_services') && (
-              <>
-                {!isSidebarCollapsed && (
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3 flex items-center gap-2">
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-                    <span>{t('section.services')}</span>
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-                  </div>
-                )}
-                <Link
-                  to={createPageUrl("WeeklyServiceManager")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("WeeklyServiceManager"))
-                      ? "text-white shadow-md"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={isActive(createPageUrl("WeeklyServiceManager")) ? gradientStyle : {}}
-                  title={isSidebarCollapsed ? t('nav.services') : ''}
-                >
-                  <Clock className="w-5 h-5 shrink-0" />
-                  {!isSidebarCollapsed && <span>{t('nav.services')}</span>}
-                </Link>
-                <Link
-                  to={createPageUrl("CustomServicesManager")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("CustomServicesManager")) || 
-                    isActive(createPageUrl("CustomServiceBuilder"))
-                      ? "text-white shadow-md"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={isActive(createPageUrl("CustomServicesManager")) || isActive(createPageUrl("CustomServiceBuilder")) ? gradientStyle : {}}
-                  title={isSidebarCollapsed ? t('nav.customServices') : ''}
-                >
-                  <Plus className="w-5 h-5 shrink-0" />
-                  {!isSidebarCollapsed && <span>{t('nav.customServices')}</span>}
-                </Link>
-              </>
-            )}
-
-            {/* SHARED RESOURCES - Permission-based */}
-            {hasPermission(user, 'view_people') && (
-              <>
-                {!isSidebarCollapsed && <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6 pl-3">{t('section.resources')}</div>}
-                <Link
-                  to={createPageUrl("People")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("People"))
-                      ? "text-white shadow-md"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={isActive(createPageUrl("People")) ? gradientStyle : {}}
-                  title={isSidebarCollapsed ? t('nav.people') : ''}
-                >
-                  <Users className="w-5 h-5 shrink-0" />
-                  {!isSidebarCollapsed && <span>{t('nav.people')}</span>}
-                </Link>
-              </>
-            )}
-
-            {/* SETTINGS - Permission-based */}
-            {(hasPermission(user, 'manage_users') || hasPermission(user, 'view_rooms') || hasPermission(user, 'view_templates') || hasPermission(user, 'access_importer')) && (
-              <>
-                {!isSidebarCollapsed && <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-6 mb-3 pl-3">{t('section.settings')}</div>}
-
-                {hasPermission(user, 'manage_users') && (
-                  <>
-                    <Link
-                      to={createPageUrl("UserManagement")}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                        isActive(createPageUrl("UserManagement"))
-                          ? "text-white shadow-md"
-                          : "text-gray-400 hover:bg-white/5 hover:text-white"
-                      }`}
-                      style={isActive(createPageUrl("UserManagement")) ? gradientStyle : {}}
-                      title={isSidebarCollapsed ? t('nav.userManagement') : ''}
-                    >
-                      <Users className="w-5 h-5 shrink-0" />
-                      {!isSidebarCollapsed && <span>{t('nav.userManagement')}</span>}
-                    </Link>
-                    <Link
-                      to={createPageUrl("RolePermissionManager")}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                        isActive(createPageUrl("RolePermissionManager"))
-                          ? "text-white shadow-md"
-                          : "text-gray-400 hover:bg-white/5 hover:text-white"
-                      }`}
-                      style={isActive(createPageUrl("RolePermissionManager")) ? gradientStyle : {}}
-                      title={isSidebarCollapsed ? t('nav.roles') : ''}
-                    >
-                      <Shield className="w-5 h-5 shrink-0" />
-                      {!isSidebarCollapsed && <span>{t('nav.roles')}</span>}
-                    </Link>
-                    <Link
-                      to={createPageUrl("MessageProcessing")}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                        isActive(createPageUrl("MessageProcessing"))
-                          ? "text-white shadow-md"
-                          : "text-gray-400 hover:bg-white/5 hover:text-white"
-                      }`}
-                      style={isActive(createPageUrl("MessageProcessing")) ? gradientStyle : {}}
-                      title={isSidebarCollapsed ? t('nav.messages') : ''}
-                    >
-                      <Sparkles className="w-5 h-5 shrink-0" />
-                      {!isSidebarCollapsed && <span>{t('nav.messages')}</span>}
-                    </Link>
-                  </>
-                )}
-
-                {hasPermission(user, 'view_rooms') && (
-                <Link
-                  to={createPageUrl("Rooms")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("Rooms"))
-                      ? "text-white shadow-md"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={isActive(createPageUrl("Rooms")) ? gradientStyle : {}}
-                  title={isSidebarCollapsed ? t('nav.rooms') : ''}
-                >
-                  <MapPin className="w-5 h-5 shrink-0" />
-                  {!isSidebarCollapsed && <span>{t('nav.rooms')}</span>}
-                </Link>
-                )}
-
-                {hasPermission(user, 'view_templates') && (
-                <Link
-                  to={createPageUrl("Templates")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("Templates"))
-                      ? "text-white shadow-md"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={isActive(createPageUrl("Templates")) ? gradientStyle : {}}
-                  title={isSidebarCollapsed ? t('nav.templates') : ''}
-                >
-                  <Copy className="w-5 h-5 shrink-0" />
-                  {!isSidebarCollapsed && <span>{t('nav.templates')}</span>}
-                </Link>
-                )}
-
-                {hasPermission(user, 'access_importer') && (
-                <Link
-                  to={createPageUrl("ScheduleImporter")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("ScheduleImporter"))
-                      ? "text-white shadow-md"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={isActive(createPageUrl("ScheduleImporter")) ? gradientStyle : {}}
-                  title={isSidebarCollapsed ? t('nav.importer') : ''}
-                >
-                  <Sparkles className="w-5 h-5 shrink-0" />
-                  {!isSidebarCollapsed && <span>{t('nav.importer')}</span>}
-                </Link>
-                )}
-
-                {hasPermission(user, 'manage_users') && (
-                <Link
-                  to={createPageUrl("SchemaGuide")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                    isActive(createPageUrl("SchemaGuide"))
-                      ? "text-white shadow-md"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={isActive(createPageUrl("SchemaGuide")) ? gradientStyle : {}}
-                  title={isSidebarCollapsed ? t('nav.schema') : ''}
-                >
-                  <FileCode className="w-5 h-5 shrink-0" />
-                  {!isSidebarCollapsed && <span>{t('nav.schema')}</span>}
-                </Link>
-                )}
-                </>
-                )}
-
-            {/* Theme & Language Toggle */}
-            <div className="pt-4 mt-4 border-t border-gray-700 space-y-2 pb-4">
-              {/* Theme Toggle Removed - Forcing Light Mode */}
-
-              {/* Language Toggle */}
-              <button
-                onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all w-full"
-                title={isSidebarCollapsed ? (language === 'es' ? 'English' : 'Español') : ''}
-              >
-                <Languages className="w-5 h-5 shrink-0" />
-                {!isSidebarCollapsed && (language === 'es' ? 'English' : 'Español')}
-              </button>
-
-              {/* Sidebar Collapse Toggle */}
-              <button
-                onClick={toggleSidebar}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all w-full"
-                title={isSidebarCollapsed ? t('nav.expandMenu') : t('nav.collapseMenu')}
-              >
-                {isSidebarCollapsed ? <ChevronRight className="w-5 h-5 shrink-0" /> : <ChevronLeft className="w-5 h-5 shrink-0" />}
-                {!isSidebarCollapsed && <span>{t('nav.collapseMenu')}</span>}
-              </button>
-            </div>
-            </nav>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className={`flex-1 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'} print:ml-0 transition-all duration-300`}>
-        {/* Mobile Header */}
-        <header className="lg:hidden bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50 print:hidden">
-          <div className="px-4 sm:px-6">
-            <div className="flex items-center justify-between h-16">
-              {/* Logo */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={gradientStyle}>
-                  <Calendar className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-gray-900 text-xl uppercase leading-none tracking-wide">PALABRAS DE VIDA</h2>
-                  <p className="text-[10px] text-pdv-teal font-bold tracking-wider mt-0.5">¡ATRÉVETE A CAMBIAR!</p>
-                </div>
-              </div>
-
-              {/* Mobile menu button */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded hover:bg-gray-100 text-gray-700"
-              >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
-
-            {/* Mobile Navigation */}
-            {mobileMenuOpen && (
-              <div className="py-4 border-t border-gray-200">
-                <div className="space-y-1">
-                  <Link
-                    to={createPageUrl("Dashboard")}
-                    className={`block px-4 py-2 rounded font-semibold uppercase text-sm ${
-                      isActive(createPageUrl("Dashboard"))
-                        ? "text-white"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                    style={isActive(createPageUrl("Dashboard")) ? gradientStyle : {}}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('nav.dashboard')}
-                  </Link>
-
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">{t('section.live')}</div>
-                  <Link
-                    to={createPageUrl("MyProgram")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('myprogram.title')}
-                  </Link>
-                  <Link
-                    to={createPageUrl("PublicProgramView")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('nav.liveProgram')}
-                  </Link>
-
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">{t('section.events')}</div>
-                  <Link
-                    to={createPageUrl("Events")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('nav.events')}
-                  </Link>
-                  <Link
-                    to={createPageUrl("Reports")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('nav.reports')}
-                  </Link>
-
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">{t('section.services')}</div>
-                  <Link
-                    to={createPageUrl("WeeklyServiceManager")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('nav.services')}
-                  </Link>
-                  <Link
-                    to={createPageUrl("CustomServicesManager")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('nav.customServices')}
-                  </Link>
-
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4">{t('section.resources')}</div>
-                  <Link
-                    to={createPageUrl("People")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('nav.people')}
-                  </Link>
-
-                  <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-2">{t('section.settings')}</div>
-                  <Link
-                    to={createPageUrl("Rooms")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('nav.rooms')}
-                  </Link>
-                  <Link
-                    to={createPageUrl("Templates")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('nav.templates')}
-                  </Link>
-                  <Link
-                    to={createPageUrl("ScheduleImporter")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('nav.importer')}
-                  </Link>
-                  <Link
-                    to={createPageUrl("SchemaGuide")}
-                    className="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('nav.schema')}
-                  </Link>
-                  </div>
-              </div>
-            )}
-          </div>
-        </header>
-
-        <main className="flex-1">
+      {/* Main content — offset for the 72px desktop rail */}
+      <div className="lg:ml-[72px] print:ml-0 transition-all duration-200">
+        {/* Mobile bottom padding so content doesn't hide behind the tab bar */}
+        <main className="flex-1 pb-20 lg:pb-0">
           {children}
         </main>
       </div>
+
+      {/* Mobile: bottom tab bar */}
+      <MobileNav user={user} />
     </div>
   );
 }
@@ -624,8 +122,12 @@ export default function Layout({ children }) {
                 font-family: 'Anton', sans-serif !important;
                 font-weight: 400;
               }
+              /* iOS safe area for bottom tab bar */
+              .safe-area-bottom {
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+              }
             `}</style>
-            <LayoutContent>{children}</LayoutContent>
+            <LayoutContentInner>{children}</LayoutContentInner>
           </>
         </ErrorBoundary>
       </TooltipProvider>
