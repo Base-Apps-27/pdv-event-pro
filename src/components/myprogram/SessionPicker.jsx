@@ -13,7 +13,7 @@ export default function SessionPicker({ sessions, value, onChange }) {
 
   return (
     <div className="w-full overflow-x-auto scrollbar-none -mx-1 px-1">
-      <div className="flex gap-2 pb-1 min-w-max">
+      <div className="flex gap-2.5 pb-1 min-w-max">
         {sessions.map((session) => {
           const isActive = value === session.id;
           return (
@@ -21,7 +21,7 @@ export default function SessionPicker({ sessions, value, onChange }) {
               key={session.id}
               onClick={() => onChange(session.id)}
               className={`
-                px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all
+                px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all min-h-[44px]
                 ${isActive
                   ? 'bg-gray-900 text-white shadow-sm'
                   : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-400'}
