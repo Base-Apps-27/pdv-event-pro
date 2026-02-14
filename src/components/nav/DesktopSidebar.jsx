@@ -14,31 +14,38 @@ import { base44 } from "@/api/base44Client";
 const GRADIENT = 'linear-gradient(180deg, #1F8A70 0%, #4DC15F 60%, #D9DF32 100%)';
 const GRADIENT_H = 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)';
 
-// Hoverable nav item that expands to show label on hover (aids transition for admins)
+// Hoverable nav item — icon stays fixed in rail, label floats out to the right as overlay pill.
+// Rail never changes width. Label uses absolute positioning so it's outside the rail DOM flow.
 function NavRailItem({ to, icon: Icon, label, active, onClick }) {
   return (
     <Link
       to={to}
       onClick={onClick}
-      className={`group relative flex items-center h-11 rounded-xl transition-all duration-200 overflow-hidden ${
+      className={`group relative w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-150 ${
         active
           ? 'text-white shadow-lg'
           : 'text-gray-500 hover:text-white hover:bg-white/5'
       }`}
       style={active ? { background: GRADIENT_H } : {}}
     >
-      {/* Icon — always centered in 44px zone */}
-      <span className="w-11 h-11 flex items-center justify-center shrink-0">
-        <Icon className="w-5 h-5" />
-      </span>
-      {/* Label — slides out on hover */}
-      <span className="whitespace-nowrap text-sm font-medium pr-4 max-w-0 opacity-0 group-hover:max-w-[160px] group-hover:opacity-100 transition-all duration-200 overflow-hidden">
-        {label}
-      </span>
-      {/* Active indicator */}
+      <Icon className="w-5 h-5 relative z-10" />
+      {/* Active indicator bar on right edge */}
       {active && (
         <span className="absolute -right-0.5 top-1/2 -translate-y-1/2 w-1 h-5 rounded-l-full bg-white/80" />
       )}
+      {/* Floating label — absolutely positioned to the right, outside the rail */}
+      <span
+        className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3
+                   flex items-center h-8 px-3.5 rounded-lg
+                   text-sm font-semibold text-white whitespace-nowrap
+                   opacity-0 -translate-x-2 scale-95
+                   group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-100
+                   transition-all duration-[180ms] ease-[cubic-bezier(0.22,1,0.36,1)]
+                   shadow-lg"
+        style={{ background: GRADIENT_H }}
+      >
+        {label}
+      </span>
     </Link>
   );
 }
