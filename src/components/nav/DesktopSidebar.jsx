@@ -15,6 +15,35 @@ import { base44 } from "@/api/base44Client";
 const GRADIENT = 'linear-gradient(180deg, #1F8A70 0%, #4DC15F 60%, #D9DF32 100%)';
 const GRADIENT_H = 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)';
 
+// Hoverable nav item that expands to show label on hover (aids transition for admins)
+function NavRailItem({ to, icon: Icon, label, active, onClick }) {
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      className={`group relative flex items-center h-11 rounded-xl transition-all duration-200 overflow-hidden ${
+        active
+          ? 'text-white shadow-lg'
+          : 'text-gray-500 hover:text-white hover:bg-white/5'
+      }`}
+      style={active ? { background: GRADIENT_H } : {}}
+    >
+      {/* Icon — always centered in 44px zone */}
+      <span className="w-11 h-11 flex items-center justify-center shrink-0">
+        <Icon className="w-5 h-5" />
+      </span>
+      {/* Label — slides out on hover */}
+      <span className="whitespace-nowrap text-sm font-medium pr-4 max-w-0 opacity-0 group-hover:max-w-[160px] group-hover:opacity-100 transition-all duration-200 overflow-hidden">
+        {label}
+      </span>
+      {/* Active indicator */}
+      {active && (
+        <span className="absolute -right-0.5 top-1/2 -translate-y-1/2 w-1 h-5 rounded-l-full bg-white/80" />
+      )}
+    </Link>
+  );
+}
+
 export default function DesktopSidebar({ user }) {
   const { language, setLanguage, t } = useLanguage();
   const location = useLocation();
