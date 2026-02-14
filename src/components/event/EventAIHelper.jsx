@@ -615,6 +615,11 @@ If user mentions a past event and you're uncertain which one they mean (< 80% co
               resolvedSessionId = sessionRefMap[resolvedSessionId];
             }
             const { temp_session_ref, ...cleanSegData } = segmentData;
+            // Auto-correct invalid segment_type to "Especial" (PDF parsing may produce unexpected labels)
+            const validTypes = ["Alabanza","Bienvenida","Ofrenda","Plenaria","Video","Anuncio","Dinámica","Break","TechOnly","Oración","Especial","Cierre","MC","Ministración","Receso","Almuerzo","Artes","Breakout","Panel"];
+            if (cleanSegData.segment_type && !validTypes.includes(cleanSegData.segment_type)) {
+              cleanSegData.segment_type = "Especial";
+            }
             await base44.entities.Segment.create({
               ...cleanSegData,
               session_id: resolvedSessionId
