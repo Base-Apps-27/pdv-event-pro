@@ -132,24 +132,37 @@ export default function DesktopSidebar({ user }) {
         <div className="flex flex-col items-center gap-1.5 mt-auto pt-4">
           <button
             onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-            className="group relative flex items-center h-11 rounded-xl text-gray-500 hover:text-white hover:bg-white/5 transition-all duration-200 overflow-hidden"
+            className="group relative w-11 h-11 rounded-xl flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 transition-colors duration-150"
           >
-            <span className="w-11 h-11 flex items-center justify-center shrink-0">
-              <Languages className="w-5 h-5" />
-            </span>
-            <span className="whitespace-nowrap text-sm font-medium pr-4 max-w-0 opacity-0 group-hover:max-w-[160px] group-hover:opacity-100 transition-all duration-200 overflow-hidden">
+            <Languages className="w-5 h-5" />
+            <span
+              className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3
+                         flex items-center h-8 px-3.5 rounded-lg
+                         text-sm font-semibold text-white whitespace-nowrap
+                         opacity-0 -translate-x-2 scale-95
+                         group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-100
+                         transition-all duration-[180ms] ease-[cubic-bezier(0.22,1,0.36,1)]
+                         shadow-lg"
+              style={{ background: GRADIENT_H }}
+            >
               {language === 'es' ? 'English' : 'Español'}
             </span>
           </button>
 
           <button
             onClick={() => base44.auth.logout()}
-            className="group relative flex items-center h-11 rounded-xl text-gray-600 hover:text-red-400 hover:bg-white/5 transition-all duration-200 overflow-hidden"
+            className="group relative w-11 h-11 rounded-xl flex items-center justify-center text-gray-600 hover:text-red-400 hover:bg-white/5 transition-colors duration-150"
           >
-            <span className="w-11 h-11 flex items-center justify-center shrink-0">
-              <LogOut className="w-4 h-4" />
-            </span>
-            <span className="whitespace-nowrap text-sm font-medium pr-4 max-w-0 opacity-0 group-hover:max-w-[160px] group-hover:opacity-100 transition-all duration-200 overflow-hidden">
+            <LogOut className="w-4 h-4" />
+            <span
+              className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3
+                         flex items-center h-8 px-3.5 rounded-lg
+                         text-sm font-semibold text-white whitespace-nowrap
+                         opacity-0 -translate-x-2 scale-95
+                         group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-100
+                         transition-all duration-[180ms] ease-[cubic-bezier(0.22,1,0.36,1)]
+                         shadow-lg bg-red-600/90"
+            >
               {language === 'es' ? 'Cerrar sesión' : 'Logout'}
             </span>
           </button>
