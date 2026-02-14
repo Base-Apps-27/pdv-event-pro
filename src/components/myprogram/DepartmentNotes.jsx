@@ -49,6 +49,7 @@ const FIELD_LABELS = {
 
 export default function DepartmentNotes({ segment, department }) {
   const { language, t } = useLanguage();
+  const getData = (field) => getSegmentData(segment, field);
 
   // General department: show only description_details (segment notes)
   // Department-specific views show their targeted notes
@@ -66,7 +67,6 @@ export default function DepartmentNotes({ segment, department }) {
 
   const fields = DEPT_FIELD_MAP[department] || [];
   const colors = DEPT_COLORS[department] || DEPT_COLORS.coordination;
-  const getData = (field) => getSegmentData(segment, field);
 
   const notesContent = fields
     .map((field) => ({ field, value: getData(field) }))
