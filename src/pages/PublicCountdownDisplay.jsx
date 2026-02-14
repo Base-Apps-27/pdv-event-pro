@@ -61,6 +61,18 @@ export default function PublicCountdownDisplay() {
   const service = normalizedData.program;
   const segments = normalizedData.segments;
 
+  // ── Stream blocks (for livestream sidecar column) ──
+  const streamBlocks = useMemo(
+    () => normalizeStreamBlocks(programData?.streamBlocks || [], segments),
+    [programData?.streamBlocks, segments]
+  );
+
+  // Show livestream column when session has has_livestream AND stream blocks exist
+  const hasLivestreamSession = useMemo(() => {
+    const sessions = programData?.sessions || [];
+    return sessions.some((s) => s.has_livestream) && streamBlocks.length > 0;
+  }, [programData?.sessions, streamBlocks]);
+
   // Derive serviceDate from program
   const serviceDate = useMemo(() => {
     if (service?.date) return service.date;
