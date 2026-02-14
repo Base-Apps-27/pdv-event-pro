@@ -171,18 +171,51 @@ export default function StreamCoordinatorView({ session, segments, currentUser, 
                   </p>
                 )}
 
-                {/* Stream actions/cues — presented as simple checklist-style notes */}
+                {/* Stream actions/cues — resolved times + labels for operational clarity */}
                 {block.stream_actions?.length > 0 && (
                   <div className="mt-1.5 space-y-0.5">
-                    {block.stream_actions.map((action, i) => (
-                      <div key={i} className="flex items-start gap-1.5 text-xs text-gray-700">
-                        <span className="text-gray-400 shrink-0">•</span>
-                        <span>
-                          <strong>{action.label}</strong>
-                          {action.notes && <span className="text-gray-500"> — {action.notes}</span>}
-                        </span>
-                      </div>
-                    ))}
+                    {block.stream_actions.map((action, i) => {
+                      // Resolve action time from block boundaries
+                      let actionTimeStr = null;
+                      if (block.startTime && block.endTime) {
+                        const offsetMs = (action.offset_min || 0) * 60000;
+                        let t;
+                        switch (action.timing) {
+                          case 'before_start':
+                            t = new Date(block.startTime.getTime() - offsetMs);
+                            break;
+                          case 'after_start':
+                            t = new Date(block.startTime.getTime() + offsetMs);
+                            break;
+                          case 'before_end':
+                            t = new Date(block.endTime.getTime() - offsetMs);
+                            break;
+                          default:
+                            t = new Date(block.startTime.getTime() + offsetMs);
+                        }
+                        if (t && !isNaN(t.getTime())) {
+                          actionTimeStr = fmtTime(t);
+                        }
+                      }
+                      const isPrepCue = action.timing === 'before_start';
+                      return (
+                        <div key={i} className={`flex items-start gap-2 text-xs rounded px-1.5 py-0.5 ${
+                          isPrepCue ? 'bg-amber-50 text-amber-900' : 'text-gray-700'
+                        }`}>
+                          {actionTimeStr ? (
+                            <span className="font-mono text-[10px] font-bold text-gray-500 shrink-0 min-w-[52px]">{actionTimeStr}</span>
+                          ) : (
+                            <span className="text-gray-400 shrink-0">•</span>
+                          )}
+                          <span className="flex-1 min-w-0">
+                            {isPrepCue && <span className="text-amber-700 font-bold text-[10px] mr-1">PREP</span>}
+                            {action.is_required && <span className="text-red-600 font-bold text-[10px] mr-1">REQ</span>}
+                            <strong>{action.label}</strong>
+                            {action.notes && <span className="text-gray-500"> — {action.notes}</span>}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
