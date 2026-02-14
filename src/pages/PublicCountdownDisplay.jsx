@@ -303,6 +303,20 @@ export default function PublicCountdownDisplay() {
               </div>
             </div>
           </div>
+
+          {/* Col 3: Livestream Sidecar — auto-appears when stream blocks exist */}
+          {hasLivestreamSession && (() => {
+            const sess = (programData?.sessions || []).find((s) => s.has_livestream);
+            if (!sess) return null;
+            return (
+              <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-2xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
+                <StreamSidecarTimeline
+                  session={sess}
+                  segments={segments.filter((s) => s.session_id === sess.id)}
+                />
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>
