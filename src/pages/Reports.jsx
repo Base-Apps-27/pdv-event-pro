@@ -325,7 +325,7 @@ export default function Reports() {
             </div>
 
             <Tabs value={activeReport} onValueChange={setActiveReport} className="w-full">
-              <TabsList className="grid w-full grid-cols-6 mb-6 no-print">
+              <TabsList className="grid w-full grid-cols-7 mb-6 no-print">
                 <TabsTrigger value="detailed" className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   {t('reports.tabs.detailed')}
@@ -352,7 +352,7 @@ export default function Reports() {
                 </TabsTrigger>
                 <TabsTrigger value="livestream" className="flex items-center gap-2">
                   <Radio className="w-4 h-4" />
-                  Livestream
+                  {t('myprogram.dept.livestream')}
                 </TabsTrigger>
               </TabsList>
 

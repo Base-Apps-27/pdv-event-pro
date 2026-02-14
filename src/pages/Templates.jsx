@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Edit, Trash2, FileText, Copy, Calendar, ArrowRight, Loader2 } from "lucide-react";
+import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -129,7 +130,7 @@ export default function Templates() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">{t('templates.title')}</h1>
+          <h1 className="text-3xl text-gray-900 uppercase tracking-tight">{t('templates.title')}</h1>
           <p className="text-slate-600 mt-1">{t('templates.subtitle')}</p>
         </div>
       </div>
@@ -215,7 +216,7 @@ export default function Templates() {
                   {t('templates.noEventTemplatesDesc')}
                 </p>
                 <Button variant="outline" asChild>
-                  <a href="/Events">
+                  <a href={createPageUrl('Events')}>
                     {t('templates.goToEvents')} <ArrowRight className="w-4 h-4 ml-2" />
                   </a>
                 </Button>

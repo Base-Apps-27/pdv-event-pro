@@ -236,7 +236,7 @@ export default function UserManagement() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">
+          <h1 className="text-5xl text-gray-900 uppercase tracking-tight">
             {language === 'es' ? 'Gestión de Usuarios' : 'User Management'}
           </h1>
           <p className="text-gray-500 mt-1">

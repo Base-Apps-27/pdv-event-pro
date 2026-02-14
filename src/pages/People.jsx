@@ -133,7 +133,7 @@ export default function People() {
     <div className="p-6 md:p-8 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-gray-200 pb-6">
         <div>
-          <h1 className="text-5xl font-bold text-gray-900 uppercase tracking-tight font-['Bebas_Neue']">
+          <h1 className="text-5xl text-gray-900 uppercase tracking-tight">
             {t('people.title')}
           </h1>
           <p className="text-gray-500 mt-1 font-medium">{t('people.subtitle')}</p>
