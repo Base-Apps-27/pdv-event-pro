@@ -548,15 +548,28 @@ If user mentions a past event and you're uncertain which one they mean (< 80% co
 
     try {
       let totalAffected = 0;
+      // Track session name → new ID mapping for cross-action references
+      // When AI creates sessions + segments from a PDF, segments reference session
+      // by temp_session_ref (e.g. "session_1") which must be resolved after creation.
+      const sessionRefMap = {};
       
       for (const action of actionsToExecute) {
         if (action.type === 'create_sessions') {
-          // Create new sessions
-          for (const sessionData of action.create_data || []) {
-            await base44.entities.Session.create({
+          // Create new sessions and build reference map
+          for (let i = 0; i < (action.create_data || []).length; i++) {
+            const sessionData = action.create_data[i];
+            // Extract temp ref before creating (AI may set temp_session_ref for cross-referencing)
+            const tempRef = sessionData.temp_session_ref || sessionData.name || `session_${i}`;
+            const { temp_session_ref, ...cleanData } = sessionData;
+            const newSession = await base44.entities.Session.create({
               event_id: eventId,
-              ...sessionData
+              ...cleanData
             });
+            // Map multiple keys to the same new session ID for flexible resolution
+            sessionRefMap[tempRef] = newSession.id;
+            sessionRefMap[`session_${i}`] = newSession.id;
+            sessionRefMap[`session_${i + 1}`] = newSession.id;
+            if (sessionData.name) sessionRefMap[sessionData.name] = newSession.id;
             totalAffected++;
           }
         }
