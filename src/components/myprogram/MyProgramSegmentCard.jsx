@@ -116,10 +116,10 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
     : 'bg-gray-100 text-gray-700';
 
   return (
-    <div className={`rounded-2xl border p-4 transition-all duration-300 ${containerClass}`}>
+    <div className={`rounded-2xl border p-5 transition-all duration-300 ${containerClass}`}>
       {/* Progress Bar (Active Only) */}
       {status === 'now' && (
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gray-100 rounded-t-2xl overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-100 rounded-t-2xl overflow-hidden">
           <div 
             className="h-full bg-yellow-500 transition-all duration-1000 ease-linear"
             style={{ width: `${progressPercent}%` }}
@@ -128,25 +128,25 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
       )}
 
       {/* Header: Countdown / Status */}
-      <div className="flex justify-between items-start mb-2 relative">
-        <div className="flex items-center gap-2">
+      <div className="flex justify-between items-start mb-3 relative">
+        <div className="flex items-center gap-2.5">
           {status === 'now' && (
-            <Badge className="bg-yellow-500 text-white hover:bg-yellow-600 text-[10px] animate-pulse shadow-sm">
+            <Badge className="bg-yellow-500 text-white hover:bg-yellow-600 text-xs px-2.5 py-0.5 animate-pulse shadow-sm">
               {t('myprogram.now')}
             </Badge>
           )}
           {status === 'next' && (
-            <Badge className="bg-blue-500 text-white hover:bg-blue-600 text-[10px] shadow-sm">
+            <Badge className="bg-blue-500 text-white hover:bg-blue-600 text-xs px-2.5 py-0.5 shadow-sm">
               {t('myprogram.next')}
             </Badge>
           )}
-          <span className={`font-mono text-sm font-bold ${status === 'done' ? 'text-gray-400' : 'text-gray-900'}`}>
+          <span className={`font-mono text-base font-bold ${status === 'done' ? 'text-gray-400' : 'text-gray-900'}`}>
             {getData('start_time') ? formatTimeToEST(getData('start_time')) : '-'}
           </span>
         </div>
         
         {countdown && (
-          <div className={`text-xs font-bold px-2 py-1 rounded-md ${
+          <div className={`text-xs font-bold px-2.5 py-1.5 rounded-lg ${
             status === 'now' ? 'bg-yellow-200 text-yellow-900' : 'bg-blue-100 text-blue-800'
           }`}>
             {countdown}
@@ -155,25 +155,25 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
       </div>
 
       {/* Title + Type */}
-      <div className="mb-2">
-        <div className="flex items-center gap-2 flex-wrap mb-1">
-          {isSpecial && <Sparkles className="w-4 h-4 text-amber-500 fill-amber-100 shrink-0" />}
-          <h4 className={`text-base font-extrabold leading-snug ${status === 'done' ? 'text-gray-500' : 'text-gray-900'}`}>
+      <div className="mb-3">
+        <div className="flex items-center gap-2 flex-wrap mb-1.5">
+          {isSpecial && <Sparkles className="w-5 h-5 text-amber-500 fill-amber-100 shrink-0" />}
+          <h4 className={`text-lg font-extrabold leading-snug ${status === 'done' ? 'text-gray-500' : 'text-gray-900'}`}>
             {getData('title')}
           </h4>
         </div>
-        <div className="flex gap-1.5 flex-wrap">
-          <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 font-medium ${typeBadgeClass}`}>
+        <div className="flex gap-2 flex-wrap">
+          <Badge variant="secondary" className={`text-xs px-2 py-0.5 font-medium ${typeBadgeClass}`}>
             {segment.segment_type}
           </Badge>
           {segment.requires_translation && (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-purple-200 text-purple-700 bg-purple-50 gap-1">
-              <Languages className="w-3 h-3" />
+            <Badge variant="outline" className="text-xs px-2 py-0.5 border-purple-200 text-purple-700 bg-purple-50 gap-1">
+              <Languages className="w-3.5 h-3.5" />
               <span>Trad</span>
             </Badge>
           )}
           {segment.duration_min > 0 && (
-            <span className="text-[10px] text-gray-400 font-medium self-center">
+            <span className="text-xs text-gray-400 font-medium self-center">
               {segment.duration_min} min
             </span>
           )}
