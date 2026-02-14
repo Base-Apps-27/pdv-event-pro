@@ -374,10 +374,13 @@ export default function StickyOpsDeck({
                   <Badge variant="outline" className={`h-5 text-[10px] px-1.5 rounded-md border font-bold shrink-0 ${
                     isUrgent ? 'bg-amber-100 text-amber-900 border-amber-300' : 
                     isPast ? 'bg-slate-100 text-slate-400 border-slate-200' : 
+                    activeAction.isStreamAction ? 'bg-red-100 text-red-700 border-red-300' :
                     activeAction.isPreSession ? 'bg-slate-200 text-slate-700 border-slate-300' :
                     activeAction.isPrep ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300'
                   }`}>
-                    {activeAction.isPreSession ? 'PRE' : activeAction.isPrep ? 'PREP' : 'DURANTE'}
+                    {activeAction.isStreamAction ? (
+                      <span className="flex items-center gap-1"><Radio className="w-2.5 h-2.5" />LS</span>
+                    ) : activeAction.isPreSession ? 'PRE' : activeAction.isPrep ? 'PREP' : 'DURANTE'}
                   </Badge>
                   
                   <span className={`text-[10px] font-bold uppercase tracking-wider shrink-0 ${
