@@ -61,16 +61,16 @@ export default function DepartmentPicker({ value, onChange }) {
   return (
     <div className="w-full">
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full h-12 bg-white border-gray-200 shadow-sm rounded-xl">
+        <SelectTrigger className="w-full h-14 bg-white border-gray-200 shadow-sm rounded-xl px-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
-              <Icon className="w-4 h-4" />
+            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
+              <Icon className="w-5 h-5" />
             </div>
             <div className="flex flex-col items-start">
-              <span className="text-[10px] uppercase text-gray-400 font-bold tracking-wider leading-none mb-0.5">
+              <span className="text-[10px] uppercase text-gray-400 font-bold tracking-wider leading-none mb-1">
                 {t('myprogram.filterBy')}
               </span>
-              <span className="text-sm font-bold text-gray-900 leading-none">
+              <span className="text-base font-bold text-gray-900 leading-none">
                 <SelectValue>{t(`myprogram.dept.${value}`)}</SelectValue>
               </span>
             </div>
@@ -78,10 +78,10 @@ export default function DepartmentPicker({ value, onChange }) {
         </SelectTrigger>
         <SelectContent>
           {DEPARTMENTS.map((dept) => (
-            <SelectItem key={dept.id} value={dept.id}>
-              <div className="flex items-center gap-2">
-                <dept.icon className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">{t(`myprogram.dept.${dept.id}`)}</span>
+            <SelectItem key={dept.id} value={dept.id} className="py-3">
+              <div className="flex items-center gap-3">
+                <dept.icon className="w-5 h-5 text-gray-500" />
+                <span className="font-medium text-base">{t(`myprogram.dept.${dept.id}`)}</span>
               </div>
             </SelectItem>
           ))}
