@@ -588,9 +588,22 @@ If user mentions a past event and you're uncertain which one they mean (< 80% co
           }
         }
         else if (action.type === 'create_segments') {
-          // Create new segments
+          // Create new segments, resolving temp session refs from sessionRefMap
           for (const segmentData of action.create_data || []) {
-            await base44.entities.Segment.create(segmentData);
+            let resolvedSessionId = segmentData.session_id;
+            // Resolve temp_session_ref → real session ID
+            if (segmentData.temp_session_ref && sessionRefMap[segmentData.temp_session_ref]) {
+              resolvedSessionId = sessionRefMap[segmentData.temp_session_ref];
+            }
+            // Also try to resolve session_id if it looks like a temp ref
+            if (resolvedSessionId && sessionRefMap[resolvedSessionId]) {
+              resolvedSessionId = sessionRefMap[resolvedSessionId];
+            }
+            const { temp_session_ref, ...cleanSegData } = segmentData;
+            await base44.entities.Segment.create({
+              ...cleanSegData,
+              session_id: resolvedSessionId
+            });
             totalAffected++;
           }
         }
