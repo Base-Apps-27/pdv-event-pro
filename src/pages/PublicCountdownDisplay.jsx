@@ -229,11 +229,11 @@ export default function PublicCountdownDisplay() {
         </div>
       </div>
 
-      {/* Bento grid: 2-column (countdown+actions | program timeline) */}
+      {/* Bento grid: 2-col or 3-col when livestream sidecar is present */}
       <div className="w-full flex-1 overflow-hidden px-2 z-10">
         <div
           className="w-full h-full grid gap-3"
-          style={{ gridTemplateColumns: "1fr 1fr" }}
+          style={{ gridTemplateColumns: hasLivestreamSession ? '1fr 1fr minmax(200px, 0.5fr)' : '1fr 1fr' }}
         >
           {/* Col 1: Countdown + Coordinator Actions */}
           <div className="flex flex-col gap-3 overflow-visible min-w-0">
