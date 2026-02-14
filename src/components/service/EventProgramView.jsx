@@ -19,6 +19,7 @@ import { normalizeName } from "@/components/utils/textNormalization";
 import { hasPermission } from "@/components/utils/permissions";
 import StreamCoordinatorView from "@/components/live/StreamCoordinatorView";
 import { resolveBlockTime } from "@/components/utils/streamTiming";
+import { resolveStreamActions } from "@/components/utils/resolveStreamActions";
 
 /**
  * EventProgramView Component
