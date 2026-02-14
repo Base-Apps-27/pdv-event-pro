@@ -501,8 +501,9 @@ export default function StickyOpsDeck({
                         {action.notes}
                       </div>
                     )}
-                    <div className="text-[10px] font-medium truncate text-slate-400 mt-1">
-                      {action.segmentTitle} • <span className="uppercase tracking-wide">{action.type}</span>
+                    <div className="text-[10px] font-medium truncate text-slate-400 mt-1 flex items-center gap-1">
+                      {action.isStreamAction && <Radio className="w-2.5 h-2.5 text-red-400 shrink-0" />}
+                      <span>{action.segmentTitle} • <span className="uppercase tracking-wide">{action.type}</span></span>
                     </div>
                   </div>
                 </div>
