@@ -26,7 +26,10 @@ export default function PublicProgramView() {
   const queryClient = useQueryClient();
   const { language, t } = useLanguage();
   const [currentUser, setCurrentUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
+  // AUTH GATE (2026-02-14): This page now requires authentication.
+  // Layout enforces the redirect, but we also guard here for defense-in-depth.
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -34,10 +37,16 @@ export default function PublicProgramView() {
         if (authenticated) {
           const user = await base44.auth.me();
           setCurrentUser(user);
+        } else {
+          // Not authenticated — redirect to login
+          base44.auth.redirectToLogin(window.location.href);
+          return;
         }
       } catch (e) {
-        // Not logged in
+        base44.auth.redirectToLogin(window.location.href);
+        return;
       }
+      setAuthChecked(true);
     };
     fetchUser();
   }, []);
@@ -630,6 +639,11 @@ export default function PublicProgramView() {
         console.warn('Scroll target not found:', id);
     }
   };
+
+  // AUTH GATE: Don't render anything until auth is confirmed
+  if (!authChecked) {
+    return <LiveViewSkeleton />;
+  }
 
   // Show skeleton loading state when primary data is loading
   const isContentLoading = (selectedEventId || selectedServiceId) && isLoadingProgram;
