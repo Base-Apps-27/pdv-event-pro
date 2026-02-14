@@ -186,10 +186,12 @@ If it contains a schedule/program/itinerary, extract ALL sessions and segments f
 - For Artes segments with a song name, set the title to include it.
 - Group segments by "Sección" / "Session" / day as separate sessions.
 - Calculate duration_min from start times of consecutive segments (or use durations if explicitly stated).
-- For the last segment of a session where duration isn't clear, estimate based on context.
+- For the last segment of a session where duration isn't clear, estimate based on context (30 min is a safe default).
+- IMPORTANT: Times and durations from preliminary documents may not be 100% accurate. Do your best to extract what's there, but don't worry about perfect alignment — admins will review and adjust. Use reasonable estimates when exact times are unclear. If a segment's start_time can't be determined, omit it (admin will set it later). If duration_min can't be determined, estimate based on segment type (e.g., Alabanza ~30min, Plenaria ~45min, Break ~15min, Receso ~10min, Almuerzo ~60min).
 - Use the event's existing start_date/end_date to set session dates. If not set, use dates from the document.
-- Set session planned_start_time to the first segment's time and planned_end_time to the last segment's end.
+- Set session planned_start_time to the first segment's time and planned_end_time to the last segment's end (estimate if unclear).
 - Set color_code: worship for Alabanza/Ministración, preach for Plenaria, break for Break/Receso/Almuerzo, special for Artes/Especial, default for others.
+- If any segment type doesn't cleanly map to the enum, use the closest match or "Especial" as fallback.
 - Mark Almuerzo segments as major_break: true.
 - IMPORTANT: Always create both sessions AND their segments in the correct order. Use order field (1, 2, 3...) for proper sequencing.
 - Leave team assignments, notes, and other instance fields blank — they'll be filled later.
