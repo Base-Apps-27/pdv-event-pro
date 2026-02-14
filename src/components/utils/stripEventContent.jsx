@@ -202,3 +202,33 @@ export function stripSegmentAction(actionData) {
   // Keep: order, label, department, time_hint (these define the action template)
   return stripped;
 }
+
+// ── StreamBlock (livestream timeline blocks) ──
+// Structural KEPT: block_type, anchor_point, offset_min, order, duration_min, color_code, title
+// Content CLEARED: presenter, description, stream_notes, absolute_time,
+//   stream_actions notes, orphaned state, last_known_start
+// NOTE: anchor_segment_id is remapped separately during duplication (not here)
+const STREAMBLOCK_CLEAR_FIELDS = [
+  'presenter', 'description', 'stream_notes',
+  'absolute_time', 'last_known_start',
+];
+
+export function stripStreamBlock(blockData) {
+  const stripped = { ...blockData };
+  STREAMBLOCK_CLEAR_FIELDS.forEach(field => {
+    stripped[field] = '';
+  });
+  stripped.orphaned = false;
+  // Keep stream_actions structure but clear instance-specific notes
+  if (Array.isArray(stripped.stream_actions)) {
+    stripped.stream_actions = stripped.stream_actions.map(action => ({
+      label: action.label || '',
+      timing: action.timing || 'before_start',
+      offset_min: action.offset_min || 0,
+      absolute_time: '',
+      notes: '',
+      is_required: action.is_required ?? false,
+    }));
+  }
+  return stripped;
+}
