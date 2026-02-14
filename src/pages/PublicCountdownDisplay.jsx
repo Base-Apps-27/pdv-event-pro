@@ -285,12 +285,6 @@ export default function PublicCountdownDisplay() {
     );
   }
 
-  // Determine if livestream column should show
-  const hasLivestreamSession = useMemo(() => {
-    const sessions = programData?.sessions || [];
-    return sessions.some(s => s.has_livestream) && streamBlocks.length > 0;
-  }, [programData?.sessions, streamBlocks]);
-
   const allDone = !currentSegment && !nextSegment && !preLaunchSegment && segments.length > 0;
   
   // If all segments are done, show standby full-screen (no page header)
