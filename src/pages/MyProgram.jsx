@@ -117,8 +117,8 @@ export default function MyProgram() {
   if (!contextId) {
     return (
       <div className="min-h-screen bg-[#F0F1F3]">
-        <div style={gradientStyle} className="py-4 px-4">
-          <h1 className="text-2xl text-white uppercase tracking-wide text-center">{t('myprogram.title')}</h1>
+        <div style={gradientStyle} className="py-2 px-4">
+          <span className="text-white font-bold text-sm">{t('myprogram.title')}</span>
         </div>
         <MyProgramStandby />
       </div>
