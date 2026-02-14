@@ -8,6 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Copy, Loader2 } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 import { createFieldOrigins } from "@/components/utils/fieldOrigins";
+import {
+  stripEvent, stripSession, stripPreSessionDetails,
+  stripSegment, stripSegmentAction, shouldCopyHospitalityTasks
+} from "@/components/utils/stripEventContent";
 
 export default function DuplicateEventDialog({ event, open, onOpenChange, mode = "duplicate" }) {
   const queryClient = useQueryClient();
