@@ -1,5 +1,6 @@
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import HelpTooltip from "@/components/utils/HelpTooltip";
 
 /**
  * VisibilityTogglesSection — Extracted from SegmentFormTwoColumn (Phase 3B).
@@ -16,6 +17,7 @@ export default function VisibilityTogglesSection({ formData, setFormData }) {
       <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
         <div className="w-2 h-2 rounded-full bg-slate-500"></div>
         <h3 className="font-bold text-lg text-slate-900">Opciones de Visibilidad</h3>
+        <HelpTooltip helpKey="segment.visibility" />
       </div>
       <div className="p-4 space-y-2">
         <div className="grid grid-cols-2 gap-2 text-xs">
