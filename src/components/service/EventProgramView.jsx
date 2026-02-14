@@ -186,7 +186,9 @@ export default function EventProgramView({
          Component preserved at: components/service/LiveDirectorPanel.jsx
       */}
 
-      {/* Sticky Ops Deck - PERMISSION-GATED: requires view_live_chat (Visible in both Room and Stream modes) */}
+      {/* ═══ StickyOpsDeck — REFERENCE INTEGRATION (zero-drift policy, see StickyOpsDeck header) ═══
+           All other StickyOpsDeck hosts (DirectorConsole, ServiceProgramView) must pass
+           the same prop contract. If you add a prop here, propagate it everywhere. */}
       {canAccessLiveOps && (
       <StickyOpsDeck 
         segments={allSegments.map(seg => {

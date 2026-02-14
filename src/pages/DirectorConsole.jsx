@@ -360,8 +360,9 @@ export default function DirectorConsole() {
        */}
       
       {/* StickyOpsDeck - Coordinator Actions + Chat Toggle */}
-      {/* FIX #1 (2026-02-14): Director StickyOpsDeck now receives resolved stream actions
-           so directors see stream cues alongside room segment actions */}
+      {/* ═══ StickyOpsDeck — MUST MATCH EventProgramView (zero-drift policy) ═══
+           See Decision: "StickyOpsDeck must remain in sync across all surfaces"
+           If EventProgramView passes a new prop, it MUST be added here too. */}
       {hasPermission(currentUser, 'view_live_chat') && (
         <StickyOpsDeck
           segments={sortedSegments.map(seg => ({ ...seg, date: session?.date }))}

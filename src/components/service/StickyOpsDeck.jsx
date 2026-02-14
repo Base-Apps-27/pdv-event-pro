@@ -13,6 +13,26 @@ import { normalizeName } from "@/components/utils/textNormalization";
  * Aggregates actions from:
  * 1. Segment Actions (Prep/Durante)
  * 2. PreSession Details (Doors Open, etc.)
+ * 3. Stream Actions (Livestream cues — resolved by parent via resolveStreamActions)
+ * 
+ * ════════════════════════════════════════════════════════════════════════════════
+ * ZERO-DRIFT POLICY (Decision: 2026-02-14)
+ * ════════════════════════════════════════════════════════════════════════════════
+ * This component renders in MULTIPLE host surfaces. ALL hosts MUST pass the
+ * same data contract. If a host omits a data source, operators on that surface
+ * see a DIFFERENT countdown — which during a live event causes missed cues.
+ *
+ * Current integration sites (keep this list updated):
+ *   1. EventProgramView  — REFERENCE IMPLEMENTATION (full props)
+ *   2. DirectorConsole    — must match EventProgramView's props
+ *   3. ServiceProgramView — stream props empty (services lack StreamBlocks)
+ *
+ * RULES:
+ *   • Any NEW prop added here MUST be propagated to ALL host surfaces.
+ *   • Any NEW integration site MUST match the full prop contract.
+ *   • No host may pre-filter or transform actions — aggregation lives HERE.
+ *   • Test ALL surfaces after any change to this component.
+ * ════════════════════════════════════════════════════════════════════════════════
  * 
  * REFINED VERSION: Compact, Translucent/Blur, Chat-Aware
  */
