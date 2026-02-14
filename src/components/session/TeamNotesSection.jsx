@@ -2,6 +2,7 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FieldOriginIndicator, getFieldOrigin } from "@/components/utils/fieldOrigins";
+import HelpTooltip from "@/components/utils/HelpTooltip";
 
 /**
  * TeamNotesSection — Extracted from SegmentFormTwoColumn (Phase 3B).
@@ -33,6 +34,7 @@ export default function TeamNotesSection({
       <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
         <div className="w-2 h-2 rounded-full bg-purple-500"></div>
         <h3 className="font-bold text-lg text-slate-900">Notas por Equipo</h3>
+        <HelpTooltip helpKey="segment.teamNotes" />
       </div>
       
       <div className="p-4 space-y-3">
