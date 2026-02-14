@@ -141,6 +141,8 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
           }
 
           // 3c. Duplicate Segments (stripped for templates)
+          // Build old→new segment ID map for StreamBlock anchor remapping
+          const segmentIdMap = {};
           const segments = await base44.entities.Segment.filter({ session_id: session.id });
           for (const segment of segments) {
             let segmentBase = { ...segment };
@@ -157,6 +159,7 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
               origin: originType,
               field_origins: createFieldOrigins(segment, originType)
             });
+            segmentIdMap[segment.id] = newSegment.id;
 
             // 3d. Duplicate Segment Actions (stripped for templates)
             const actions = await base44.entities.SegmentAction.filter({ segment_id: segment.id });
@@ -176,6 +179,32 @@ export default function DuplicateEventDialog({ event, open, onOpenChange, mode =
                 field_origins: createFieldOrigins(action, originType)
               });
             }
+          }
+
+          // 3e. Duplicate StreamBlocks (livestream timeline, stripped for templates)
+          // StreamBlocks reference session_id and optionally anchor_segment_id
+          const streamBlocks = await base44.entities.StreamBlock.filter({ session_id: session.id });
+          for (const block of streamBlocks) {
+            let blockBase = { ...block };
+            if (shouldStrip) {
+              blockBase = stripStreamBlock(blockBase);
+            }
+            // Remap anchor_segment_id to the new segment's ID
+            const remappedAnchor = block.anchor_segment_id
+              ? (segmentIdMap[block.anchor_segment_id] || null)
+              : null;
+            await base44.entities.StreamBlock.create({
+              ...blockBase,
+              id: undefined,
+              created_date: undefined,
+              updated_date: undefined,
+              created_by: undefined,
+              session_id: newSession.id,
+              anchor_segment_id: remappedAnchor,
+              // If anchor couldn't be remapped, mark orphaned and snapshot last known start
+              orphaned: (block.anchor_segment_id && !remappedAnchor) ? true : false,
+              last_known_start: (block.anchor_segment_id && !remappedAnchor) ? (block.last_known_start || '') : '',
+            });
           }
         }
 
