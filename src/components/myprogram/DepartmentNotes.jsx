@@ -18,7 +18,7 @@ const DEPT_FIELD_MAP = {
   translation: ['translation_notes'],
   stage_decor: ['stage_decor_notes'],
   hospitality: ['ushers_notes'], // Often shared, or rely on actions
-  coordination: ['prep_instructions', 'other_notes'],
+  coordination: ['coordinator_notes', 'prep_instructions', 'other_notes'],
   livestream: ['livestream_notes', 'projection_notes'],
 };
 
