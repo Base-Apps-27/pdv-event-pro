@@ -1,16 +1,32 @@
 import React from "react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { useLanguage } from "@/components/utils/i18n";
-import { Clock } from "lucide-react";
+import { getSegmentResponsibleDisplay, getSegmentSecondaryDisplay } from "@/components/utils/segmentTypeDisplay";
+import { Clock, Languages } from "lucide-react";
 
+/**
+ * SegmentTimeline — TV-optimized program column for PublicCountdownDisplay
+ *
+ * Displays a continuous day of segments with enriched metadata:
+ * - Speaker/presenter with role-aware labels (Leader, Preacher, etc.)
+ * - Message/plenaria title
+ * - Translator indicator
+ * - Visual break dividers for major breaks (Receso, Almuerzo) without hiding them
+ */
 export default function SegmentTimeline({ 
   segments = [], 
   getTimeDate, 
   className = "" 
 }) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   if (!segments || segments.length === 0) return null;
+
+  // Detect break types for visual dividers
+  const isBreakType = (seg) => {
+    const type = (seg.segment_type || seg.type || '').toLowerCase();
+    return ['receso', 'almuerzo', 'break'].includes(type) || seg.major_break;
+  };
 
   return (
     <div className={`flex flex-col h-full bg-white/50 backdrop-blur-sm rounded-3xl border border-white/40 shadow-sm overflow-hidden light text-slate-900 ${className}`}>
@@ -23,25 +39,49 @@ export default function SegmentTimeline({
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
         {segments.map((segment, index) => {
-          const startTime = getTimeDate(segment.start_time);
+          const startTime = getTimeDate(segment.start_time || segment.actual_start_time);
           const timeStr = startTime 
             ? formatTimeToEST(startTime.toTimeString().substring(0, 5)) 
             : "--:--";
+
+          const isFirst = index === 0;
+          const isBreak = isBreakType(segment);
+
+          // Rich metadata from canonical display config
+          const responsible = getSegmentResponsibleDisplay(segment, language);
+          const secondary = getSegmentSecondaryDisplay(segment, language);
+
+          // Translator
+          const translator = segment.translator || segment.translator_name || '';
+
+          // Break divider: visual separator, not a full card
+          if (isBreak) {
+            return (
+              <div key={segment.id || index} className="flex items-center gap-3 py-2 px-2">
+                <div className="h-px flex-1 bg-slate-300" />
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap flex items-center gap-2">
+                  <span className="font-mono text-slate-300">{timeStr}</span>
+                  <span>{segment.title}</span>
+                </div>
+                <div className="h-px flex-1 bg-slate-300" />
+              </div>
+            );
+          }
             
           return (
             <div 
               key={segment.id || index}
               className={`
-                group flex items-center gap-4 p-4 rounded-2xl transition-all
-                ${index === 0 ? 'bg-white shadow-lg border-l-4 border-pdv-teal scale-[1.02]' : 'bg-white/60 hover:bg-white border-l-4 border-transparent hover:border-slate-300'}
+                group flex items-start gap-3 p-3 rounded-2xl transition-all
+                ${isFirst ? 'bg-white shadow-lg border-l-4 border-pdv-teal scale-[1.01]' : 'bg-white/60 border-l-4 border-transparent'}
               `}
             >
               {/* Time */}
               <div className={`
-                font-mono font-bold text-lg
-                ${index === 0 ? 'text-pdv-teal' : 'text-slate-400'}
+                font-mono font-bold text-base pt-0.5 min-w-[65px] text-right
+                ${isFirst ? 'text-pdv-teal' : 'text-slate-400'}
               `}>
                 {timeStr}
               </div>
@@ -50,13 +90,33 @@ export default function SegmentTimeline({
               <div className="flex-1 min-w-0">
                 <div className={`
                   font-bold truncate leading-tight
-                  ${index === 0 ? 'text-slate-900 text-xl' : 'text-slate-600 text-lg'}
+                  ${isFirst ? 'text-slate-900 text-lg' : 'text-slate-700 text-base'}
                 `}>
                   {segment.title}
                 </div>
-                {segment.presenter && (
-                  <div className="text-sm text-slate-400 truncate mt-0.5">
-                    {segment.presenter}
+
+                {/* Speaker/presenter with role label */}
+                {responsible && (
+                  <div className={`text-sm truncate mt-0.5 ${isFirst ? 'text-slate-600' : 'text-slate-400'}`}>
+                    {responsible.label && <span className="font-semibold">{responsible.label}</span>}
+                    {responsible.value}
+                  </div>
+                )}
+
+                {/* Message title (Plenaria) */}
+                {secondary && (
+                  <div className={`text-xs truncate mt-0.5 italic ${isFirst ? 'text-blue-600' : 'text-blue-400'}`}>
+                    {secondary.value}
+                  </div>
+                )}
+
+                {/* Translator badge */}
+                {translator && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <Languages className="w-3 h-3 text-amber-500" />
+                    <span className="text-[10px] font-semibold text-amber-600 uppercase tracking-wide truncate">
+                      @ {translator}
+                    </span>
                   </div>
                 )}
               </div>
