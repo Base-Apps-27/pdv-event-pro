@@ -16,6 +16,7 @@ import { useLanguage } from "@/components/utils/i18n";
 import { toast } from "sonner";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
+import HelpTooltip from "@/components/utils/HelpTooltip";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -292,7 +293,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="segment_type">Tipo de Segmento *</Label>
+          <Label htmlFor="segment_type" className="flex items-center gap-1">Tipo de Segmento * <HelpTooltip helpKey="segment.types" mode="modal" /></Label>
           <Select 
             value={formData.segment_type}
             onValueChange={(value) => setFormData({...formData, segment_type: value})}
@@ -381,7 +382,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="stage_call_offset_min">Llegada de Equipos (min antes)</Label>
+          <Label htmlFor="stage_call_offset_min" className="flex items-center gap-1">Llegada de Equipos (min antes) <HelpTooltip helpKey="segment.stageCall" /></Label>
           <Input 
             id="stage_call_offset_min" 
             type="number"
@@ -590,7 +591,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
       <Separator />
 
       <div className="space-y-4">
-        <h3 className="font-semibold text-slate-900">Notas para Equipos</h3>
+        <h3 className="font-semibold text-slate-900 flex items-center gap-1">Notas para Equipos <HelpTooltip helpKey="segment.teamNotes" /></h3>
         
         {!isBreakType && (
           <div className="space-y-2">
@@ -673,6 +674,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
           <h3 className="font-semibold text-slate-900 flex items-center gap-2">
             <Zap className="w-4 h-4 text-orange-500" />
             Acciones / Tareas de Preparación
+            <HelpTooltip helpKey="segment.actions" mode="modal" />
           </h3>
           <Button
             type="button"
@@ -777,7 +779,7 @@ export default function SegmentForm({ session, segment, templates, onClose, sess
       <Separator />
 
       <div className="space-y-3">
-        <h3 className="font-semibold text-slate-900">Visibilidad en Reportes</h3>
+        <h3 className="font-semibold text-slate-900 flex items-center gap-1">Visibilidad en Reportes <HelpTooltip helpKey="segment.visibility" /></h3>
         <div className="grid md:grid-cols-2 gap-3">
           <div className="flex items-center space-x-2">
             <Checkbox 
