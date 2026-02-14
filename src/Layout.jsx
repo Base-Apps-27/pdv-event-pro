@@ -16,13 +16,13 @@ function LayoutContentInner({ children }) {
   const [loading, setLoading] = useState(true);
 
   // Define strictly public routes (no auth required, but authenticated users still get nav)
+  // AUTH GATE (2026-02-14): Only TV Display remains truly public.
+  // PublicProgramView now requires authentication.
   const isPublicPage = useMemo(() => {
     const path = location.pathname;
     const publicExactRoutes = [
       createPageUrl('PublicCountdownDisplay'),
-      createPageUrl('PublicProgramView'),
       '/PublicCountdownDisplay',
-      '/PublicProgramView',
     ];
     if (publicExactRoutes.includes(path)) return true;
     const publicPrefixes = ['/print/', '/public/'];
@@ -34,8 +34,6 @@ function LayoutContentInner({ children }) {
   const isPublicWithNav = useMemo(() => {
     const path = location.pathname;
     return [
-      createPageUrl('PublicProgramView'),
-      '/PublicProgramView',
       createPageUrl('PublicCountdownDisplay'),
       '/PublicCountdownDisplay',
     ].includes(path);
