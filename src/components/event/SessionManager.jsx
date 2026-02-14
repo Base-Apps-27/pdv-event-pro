@@ -299,10 +299,12 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-slate-900">Sesiones del Evento</h2>
-        <Button onClick={() => openDialog()} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Sesión
-        </Button>
+        {canEditSessions && (
+          <Button onClick={() => openDialog()} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Nueva Sesión
+          </Button>
+        )}
       </div>
 
       {sessions.length === 0 ? (
