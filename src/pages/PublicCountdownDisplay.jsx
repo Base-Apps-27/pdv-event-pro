@@ -176,7 +176,14 @@ export default function PublicCountdownDisplay() {
       return { currentSegment: null, nextSegment: null, preLaunchSegment: null, upcomingSegments: [] };
     }
 
+    // For countdown purposes, skip break types — they don't drive the timer
+    const isBreakSeg = (s) => {
+      const t = (s.segment_type || s.type || '').toLowerCase();
+      return ['receso', 'almuerzo', 'break'].includes(t) || s.major_break;
+    };
+
     const current = validSegments.find(s => {
+      if (isBreakSeg(s)) return false;
       const start = getTimeDate(s._effectiveStart, s.date);
       const end = s._effectiveEnd ? getTimeDate(s._effectiveEnd, s.date) : (start ? new Date(start.getTime() + (s.duration_min || 0) * 60000) : null);
       if (s.live_hold_status === 'held') return true;
@@ -185,15 +192,17 @@ export default function PublicCountdownDisplay() {
 
     const next = validSegments.find(s => {
       if (s === current) return false;
+      if (isBreakSeg(s)) return false;
       const start = getTimeDate(s._effectiveStart, s.date);
       return start && start > currentTime;
     }) || null;
 
+    // Upcoming includes ALL types (breaks render as dividers in SegmentTimeline)
     const upcoming = validSegments.filter(s => {
       if (s === current) return false;
       const start = getTimeDate(s._effectiveStart, s.date);
       return start && start > currentTime;
-    }).slice(0, 5) || [];
+    }).slice(0, 8) || [];
 
     let preLaunch = null;
     if (!current && next) {
