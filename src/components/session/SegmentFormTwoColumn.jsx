@@ -27,6 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Save, X, ScrollText } from "lucide-react";
+import HelpTooltip from "@/components/utils/HelpTooltip";
 import OverlapDetectedDialog from "./OverlapDetectedDialog";
 import ShiftPreviewModal from "./ShiftPreviewModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -225,7 +226,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="col-span-2 space-y-2">
-                      <Label htmlFor="segment_type">Tipo <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="segment_type" className="flex items-center gap-1">Tipo <span className="text-red-500">*</span> <HelpTooltip helpKey="segment.types" mode="modal" /></Label>
                       <Select value={formData.segment_type} onValueChange={(value) => { updateField('segment_type', value); setFormData(prev => ({ ...prev, segment_type: value, color_code: getColorForType(value) })); }}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>{SEGMENT_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
@@ -304,7 +305,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
               </div>
               <div className="p-4 space-y-4">
                 <Card className="p-4 bg-blue-50 border-blue-200">
-                  <Label className="font-semibold mb-3 block">Horarios *</Label>
+                  <Label className="font-semibold mb-3 flex items-center gap-1">Horarios * <HelpTooltip helpKey="segment.timing" /></Label>
                   <div className="space-y-3">
                     <div className="space-y-2">
                       <Label className="text-xs">Inicio <span className="text-red-500">*</span></Label>
@@ -333,6 +334,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     <div className="flex items-center space-x-2 mb-3">
                       <Checkbox id="requires_translation" checked={formData.requires_translation} onCheckedChange={(checked) => setFormData({...formData, requires_translation: checked})} />
                       <label htmlFor="requires_translation" className="font-semibold cursor-pointer">Requiere Traducción</label>
+                      <HelpTooltip helpKey="segment.translation" />
                     </div>
                     {formData.requires_translation && (
                       <div className="space-y-3">
