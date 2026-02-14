@@ -15,7 +15,7 @@ function LayoutContentInner({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Define strictly public routes
+  // Define strictly public routes (no auth required, but authenticated users still get nav)
   const isPublicPage = useMemo(() => {
     const path = location.pathname;
     const publicExactRoutes = [
@@ -28,6 +28,17 @@ function LayoutContentInner({ children }) {
     const publicPrefixes = ['/print/', '/public/'];
     if (publicPrefixes.some(prefix => path.startsWith(prefix))) return true;
     return false;
+  }, [location.pathname]);
+
+  // Pages that are public but should still show nav for authenticated users
+  const isPublicWithNav = useMemo(() => {
+    const path = location.pathname;
+    return [
+      createPageUrl('PublicProgramView'),
+      '/PublicProgramView',
+      createPageUrl('PublicCountdownDisplay'),
+      '/PublicCountdownDisplay',
+    ].includes(path);
   }, [location.pathname]);
 
   // Check authentication
