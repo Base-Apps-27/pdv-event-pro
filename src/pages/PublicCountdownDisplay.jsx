@@ -148,12 +148,14 @@ export default function PublicCountdownDisplay() {
       return { currentSegment: null, nextSegment: null, preLaunchSegment: null, upcomingSegments: [] };
     }
 
+    // Include ALL segment types (including breaks) so the timeline is continuous.
+    // Breaks render as visual dividers, not full cards — but they must be in the list
+    // to avoid a "program reset" gap after recess.
     const validSegments = segments
       .filter(s => {
         if (s.live_status === 'skipped') return false;
         const hasTime = s.actual_start_time || s.start_time;
         if (!hasTime) return false;
-        if (s.segment_type === 'Break' || s.segment_type === 'break') return false;
         return true;
       })
       .map(s => ({
