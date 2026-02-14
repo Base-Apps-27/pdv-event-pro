@@ -25,7 +25,11 @@ export default function StickyOpsDeck({
   // Chat integration props
   onToggleChat,
   chatUnreadCount = 0,
-  chatOpen = false
+  chatOpen = false,
+  // Stream actions — pre-resolved by parent (resolveStreamActions utility)
+  // Array of { id, time, label, segmentTitle, type, isPrep, notes, isStreamAction, blockId, blockTitle }
+  resolvedStreamActions = [],
+  onScrollToStreamBlock
 }) {
   const [viewState, setViewState] = useState('icon'); // 'icon' | 'bar' | 'expanded'
   const isExpanded = viewState === 'expanded';
