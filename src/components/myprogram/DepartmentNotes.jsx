@@ -50,7 +50,19 @@ const FIELD_LABELS = {
 export default function DepartmentNotes({ segment, department }) {
   const { language, t } = useLanguage();
 
-  if (department === 'general') return null;
+  // General department: show only description_details (segment notes)
+  // Department-specific views show their targeted notes
+  if (department === 'general') {
+    const desc = getData('description_details');
+    if (!desc) return null;
+    return (
+      <div className="space-y-2 mt-2">
+        <div className="bg-gray-50 border-l-[4px] border-gray-400 pl-3 py-2 rounded-r-md text-xs shadow-sm">
+          <p className="text-gray-800 leading-relaxed whitespace-pre-wrap font-medium">{desc}</p>
+        </div>
+      </div>
+    );
+  }
 
   const fields = DEPT_FIELD_MAP[department] || [];
   const colors = DEPT_COLORS[department] || DEPT_COLORS.coordination;
