@@ -20,7 +20,7 @@ function parseTimeToMinutes(timeStr) {
 
 import MyProgramPreSessionCard from './MyProgramPreSessionCard';
 
-export default function MyProgramTimeline({ segments, sessionFilter, department, currentTime, sessionDate, preSessionDetails, onOpenVerses }) {
+export default function MyProgramTimeline({ segments, sessionFilter, department, currentTime, sessionDate, preSessionDetails, preServiceNotes, selectedSession, onOpenVerses }) {
   const { t } = useLanguage();
   const nowRef = useRef(null);
   const hasScrolled = useRef(false);
@@ -104,10 +104,30 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
     );
   }
 
+  // Resolve pre-service notes for current session (weekly services)
+  const resolvedPreServiceNote = useMemo(() => {
+    if (!preServiceNotes) return null;
+    // Map session IDs to slot keys
+    if (selectedSession === '9:30am') return preServiceNotes['9:30am'] || null;
+    if (selectedSession === '11:30am') return preServiceNotes['11:30am'] || null;
+    // Custom services don't have slot-based notes
+    return null;
+  }, [preServiceNotes, selectedSession]);
+
   return (
     <div className="relative pt-4">
-      {/* Pre-Session Card (Pinned top, no timeline line usually, or start of timeline) */}
+      {/* Pre-Session Card (Events with PreSessionDetails entity) */}
       <MyProgramPreSessionCard details={preSessionDetails} />
+
+      {/* Pre-Service Notes (Weekly services — free-text, visible to all departments) */}
+      {resolvedPreServiceNote && (
+        <div className="relative mb-6 pl-6 sm:pl-8">
+          <div className="absolute left-[0.65rem] sm:left-[0.85rem] top-4 w-3 h-3 bg-yellow-400 rounded-full z-10 border-2 border-white box-content" />
+          <div className="bg-black border-l-4 border-yellow-400 rounded-r-2xl p-4 shadow-sm">
+            <p className="text-sm text-white font-bold whitespace-pre-wrap">{resolvedPreServiceNote}</p>
+          </div>
+        </div>
+      )}
 
       <div className="relative pl-7 sm:pl-9 space-y-0">
         {/* Vertical Timeline Line */}
