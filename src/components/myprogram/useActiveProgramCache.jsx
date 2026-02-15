@@ -6,22 +6,37 @@
  * entity (pre-computed by refreshActiveProgram function) so that
  * pages open INSTANTLY with zero backend function calls.
  *
- * REAL-TIME UPDATES:
- * - Subscribes to ActiveProgramCache entity changes so any refresh
- *   (midnight, service save, event save) propagates instantly.
- * - Subscribes to LiveTimeAdjustment for real-time timing updates
- *   from Live View / Director Console.
- * - Subscribes to Segment/Session for live director changes (events).
+ * STABILITY DESIGN (2026-02-15):
+ * - Single source of real-time updates: subscribes ONLY to ActiveProgramCache.
+ *   Entity automations (Service, Event, Segment, LiveTimeAdjustment) all
+ *   trigger refreshActiveProgram → which updates ActiveProgramCache →
+ *   which triggers this subscription. This eliminates redundant invalidation
+ *   storms that occurred when we subscribed to 4+ entities separately.
+ * - Debounced invalidation: rapid-fire entity changes (e.g., director bulk
+ *   edits) coalesce into a single refetch after a short settle period.
+ * - Safety-net poll every 2 min catches any missed subscription events.
  *
  * Decision: "Cache-first architecture for display surfaces"
- * Decision: "Entity subscriptions for real-time timing updates"
+ * Decision: "Single-subscription pattern to prevent invalidation storms"
  */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useRef, useCallback } from 'react';
 
 export default function useActiveProgramCache() {
   const queryClient = useQueryClient();
+  const debounceRef = useRef(null);
+
+  // Debounced invalidation: coalesces rapid-fire updates into one refetch.
+  // Settle time: 800ms — fast enough for user-perceived real-time,
+  // slow enough to absorb burst updates (director marking 3 segments in 2s).
+  const debouncedInvalidate = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['activeProgramCache'] });
+      debounceRef.current = null;
+    }, 800);
+  }, [queryClient]);
 
   // ── Primary: Read from ActiveProgramCache entity (instant, no function call) ──
   const { data: cacheRecord, isLoading: cacheLoading } = useQuery({
@@ -30,8 +45,8 @@ export default function useActiveProgramCache() {
       const records = await base44.entities.ActiveProgramCache.filter({ cache_key: 'current_display' });
       return records?.[0] || null;
     },
-    staleTime: 5 * 60 * 1000, // Cache is valid for 5 min (entity sub handles live updates)
-    refetchInterval: 5 * 60 * 1000, // Safety net poll every 5 min
+    staleTime: 60 * 1000,        // Treat data as fresh for 1 min (sub handles live updates)
+    refetchInterval: 2 * 60 * 1000, // Safety net poll every 2 min (catches missed subs)
     retry: 2,
   });
 
@@ -66,43 +81,21 @@ export default function useActiveProgramCache() {
     return cacheRecord.selector_options;
   }, [cacheRecord]);
 
-  // ── Real-time subscriptions ──
+  // ── Real-time subscription: ONLY ActiveProgramCache ──
+  // All entity automations (Service, Event, Segment, LiveTimeAdjustment)
+  // trigger refreshActiveProgram → updates this record → triggers this sub.
+  // This single-subscription pattern eliminates redundant refetches.
   useEffect(() => {
-    const unsubs = [];
+    const unsub = base44.entities.ActiveProgramCache.subscribe(() => {
+      debouncedInvalidate();
+    });
 
-    // 1. ActiveProgramCache changes → instant refresh (midnight job, service save, etc.)
-    unsubs.push(
-      base44.entities.ActiveProgramCache.subscribe(() => {
-        queryClient.invalidateQueries({ queryKey: ['activeProgramCache'] });
-      })
-    );
-
-    // 2. LiveTimeAdjustment changes → instant timing updates
-    //    When someone adjusts service start time from Live View or Director,
-    //    the cache will be refreshed by the entity automation, but we also
-    //    invalidate locally for immediate feedback.
-    unsubs.push(
-      base44.entities.LiveTimeAdjustment.subscribe(() => {
-        queryClient.invalidateQueries({ queryKey: ['activeProgramCache'] });
-      })
-    );
-
-    // 3. Segment changes → live director adjustments for events
-    unsubs.push(
-      base44.entities.Segment.subscribe(() => {
-        queryClient.invalidateQueries({ queryKey: ['activeProgramCache'] });
-      })
-    );
-
-    // 4. Session changes → session timing adjustments
-    unsubs.push(
-      base44.entities.Session.subscribe(() => {
-        queryClient.invalidateQueries({ queryKey: ['activeProgramCache'] });
-      })
-    );
-
-    return () => unsubs.forEach(u => typeof u === 'function' && u());
-  }, [queryClient]);
+    // Cleanup debounce timer and subscription on unmount
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (typeof unsub === 'function') unsub();
+    };
+  }, [debouncedInvalidate]);
 
   return {
     ...detected,
