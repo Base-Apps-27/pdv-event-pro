@@ -199,6 +199,17 @@ Deno.serve(async (req) => {
             <textarea id="content" placeholder="No necesita separar los versículos manualmente. Simplemente pegue su bosquejo o notas completas aquí, y el sistema detectará y extraerá las referencias bíblicas automáticamente." required></textarea>
           </div>
 
+          <!-- Apply to both services checkbox — only shown when 9:30am segment selected -->
+          <div id="applyBothContainer" style="display: none; margin-bottom: 16px;">
+            <div style="display: flex; align-items: flex-start; gap: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 12px;">
+                <input type="checkbox" id="applyBoth" style="width: 20px; height: 20px; margin-top: 2px; flex-shrink: 0;">
+                <label for="applyBoth" style="margin: 0; font-size: 0.9rem; font-weight: 500; color: #065f46; text-transform: none; line-height: 1.4;">
+                    Aplicar también al servicio de 11:30 AM<br>
+                    <span style="font-size: 0.8rem; font-weight: 400; color: #047857;">El mismo mensaje y versículos se aplicarán a ambos servicios.</span>
+                </label>
+            </div>
+          </div>
+
           <button type="submit" id="submitBtn">Enviar y Procesar</button>
         </form>
     </div>
@@ -251,12 +262,25 @@ Deno.serve(async (req) => {
         });
     }
     
-    // Auto-populate title on selection change
+    const applyBothContainer = document.getElementById('applyBothContainer');
+    const applyBothCheckbox = document.getElementById('applyBoth');
+
+    // Auto-populate title on selection change + toggle "apply to both" checkbox
     segmentSelect.addEventListener('change', (e) => {
         const selectedOption = e.target.options[e.target.selectedIndex];
         if (selectedOption) {
             // Always update the title field (populating it or clearing it) based on the selection
             titleInput.value = selectedOption.dataset.title || "";
+
+            // Show "apply to both" only when a 9:30am segment is selected
+            // Composite ID format: weekly_service|{serviceId}|{timeSlot}|{segmentIdx}|message
+            const compositeId = selectedOption.value || '';
+            const is930 = compositeId.includes('|9:30am|');
+            if (applyBothContainer) {
+                applyBothContainer.style.display = is930 ? 'block' : 'none';
+                // Reset checkbox when switching segments
+                if (applyBothCheckbox) applyBothCheckbox.checked = false;
+            }
         }
     });
 
@@ -291,6 +315,7 @@ Deno.serve(async (req) => {
                     presentation_url: presentationUrl,
                     notes_url: notesUrl,
                     content_is_slides_only: slidesOnly,
+                    apply_to_both_services: applyBothCheckbox ? applyBothCheckbox.checked : false,
                     idempotencyKey: IDEMPOTENCY_KEY
                 })
             });
