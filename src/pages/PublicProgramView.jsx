@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import useActiveProgramCache from "@/components/myprogram/useActiveProgramCache";
 import { Calendar, Clock, History, Tv } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -107,67 +108,77 @@ export default function PublicProgramView() {
     }
   }, [preloadedEventId]);
 
-  // UNIFIED FETCH: Single query for options + initial data (Smart Load)
-  const { data: unifiedData, isLoading: isLoadingProgram, refetch: refetchProgram } = useQuery({
-    queryKey: ['publicProgramData', selectedEventId, selectedServiceId, viewType, preloadedDate, preloadedSlug],
-    queryFn: async () => {
-      // Build payload for "Smart Fetch"
-      const payload = {
-        // Request options if we don't have them yet (initial load)
-        // or just rely on the merged response to always keep them fresh
-        includeOptions: true 
-      };
+  // ── CACHE-FIRST: Read from ActiveProgramCache (instant, no backend call) ──
+  // This provides the auto-detected program, selector options, and full snapshot.
+  const {
+    contextType: cacheContextType,
+    contextId: cacheContextId,
+    programData: cacheProgramData,
+    selectorOptions: cacheSelectorOptions,
+    isLoading: isCacheLoading,
+  } = useActiveProgramCache();
 
-      // Explicit selection overrides auto-detect
+  // Selector options always come from cache (wider window: 90d events, 7d services)
+  const publicEvents = cacheSelectorOptions?.events || [];
+  const services = cacheSelectorOptions?.services || [];
+
+  // Auto-set state from cache's detected program on first load
+  // (only when user hasn't explicitly picked something via URL params)
+  const [autoDetected, setAutoDetected] = useState(false);
+  useEffect(() => {
+    if (autoDetected || isCacheLoading) return;
+    if (preloadedEventId || preloadedServiceId || preloadedDate || preloadedSlug) {
+      setAutoDetected(true);
+      return;
+    }
+    if (cacheContextType && cacheContextId) {
+      if (cacheContextType === 'event') {
+        setSelectedEventId(cacheContextId);
+        setViewType('event');
+      } else if (cacheContextType === 'service') {
+        setSelectedServiceId(cacheContextId);
+        setViewType('service');
+      }
+      setAutoDetected(true);
+    }
+  }, [cacheContextType, cacheContextId, isCacheLoading, autoDetected, preloadedEventId, preloadedServiceId, preloadedDate, preloadedSlug]);
+
+  // Determine if the current selection matches the cached program
+  const isCachedSelection = useMemo(() => {
+    if (!cacheContextId) return false;
+    if (viewType === 'event' && selectedEventId === cacheContextId) return true;
+    if (viewType === 'service' && selectedServiceId === cacheContextId) return true;
+    return false;
+  }, [viewType, selectedEventId, selectedServiceId, cacheContextId]);
+
+  // When selection matches cache → use cached snapshot directly (zero latency)
+  // When user picks a DIFFERENT event/service → fetch via getPublicProgramData
+  const { data: explicitFetchData, isLoading: isExplicitLoading, refetch: refetchExplicit } = useQuery({
+    queryKey: ['publicProgramData-explicit', selectedEventId, selectedServiceId, viewType, preloadedDate, preloadedSlug],
+    queryFn: async () => {
+      const payload = { includeOptions: false };
       if (viewType === 'event' && selectedEventId) {
         payload.eventId = selectedEventId;
       } else if (viewType === 'service' && selectedServiceId) {
         payload.serviceId = selectedServiceId;
-      } else if (preloadedSlug) {
-        // Slug resolution happens backend side if we add support, 
-        // or we handle it here by finding the ID from options first (fallback)
-        // For now, let's let backend detect active if no explicit ID
-        payload.detectActive = true; 
       } else if (preloadedDate) {
         payload.date = preloadedDate;
       } else {
-        // Default landing: Ask backend to pick the "active" one and give us its data + options
         payload.detectActive = true;
       }
-
       const response = await base44.functions.invoke('getPublicProgramData', payload);
-      if (response.status >= 400) {
-        console.warn("Fetch failed:", response);
-        throw new Error("Failed to fetch program data");
-      }
+      if (response.status >= 400) throw new Error("Failed to fetch program data");
       return response.data;
     },
-    refetchInterval: 15000
+    // Only enable when user picks something NOT in cache
+    enabled: !isCachedSelection && !!(selectedEventId || selectedServiceId || preloadedDate),
+    refetchInterval: 15000,
   });
 
-  // Extract parts from unified response
-  const selectorOptions = {
-    events: unifiedData?.events || [],
-    services: unifiedData?.services || []
-  };
-  const publicEvents = selectorOptions.events;
-  const services = selectorOptions.services;
-  
-  // Program Data (Active Content)
-  const programData = unifiedData?.program ? unifiedData : null;
-
-  // Auto-set state based on what backend returned as "active"
-  useEffect(() => {
-    if (unifiedData?.program && !selectedEventId && !selectedServiceId) {
-      if (unifiedData.program._isEvent) {
-        setSelectedEventId(unifiedData.program.id);
-        setViewType("event");
-      } else {
-        setSelectedServiceId(unifiedData.program.id);
-        setViewType("service");
-      }
-    }
-  }, [unifiedData, selectedEventId, selectedServiceId]);
+  // Merge: cache-first, fallback to explicit fetch
+  const programData = isCachedSelection ? cacheProgramData : (explicitFetchData || null);
+  const isLoadingProgram = isCachedSelection ? isCacheLoading : isExplicitLoading;
+  const refetchProgram = isCachedSelection ? (() => {}) : refetchExplicit;
 
   // Derived state from programData
   const sessions = programData?.sessions || [];
