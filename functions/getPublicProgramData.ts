@@ -526,22 +526,14 @@ Deno.serve(async (req) => {
                 segments = [...segs930, ...(breakSegment ? [breakSegment] : []), ...segs1130];
             }
 
-            // Fetch Linked Segment Actions for Services too
+            // Fetch Linked Segment Actions for Services too (sequential with retry)
             if (segments.length > 0 && segments[0].id) { // Only if segments have IDs (real entities)
                 const segmentIds = segments.map(s => s.id).filter(Boolean);
                 if (segmentIds.length > 0) {
-                    const BATCH_SIZE = 10;
-                    const actionBatches = [];
-                    for (let i = 0; i < segmentIds.length; i += BATCH_SIZE) {
-                        actionBatches.push(segmentIds.slice(i, i + BATCH_SIZE));
-                    }
-
                     const allActions = [];
-                    for (const batch of actionBatches) {
-                        const batchResults = await Promise.all(
-                            batch.map(segId => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId }, undefined, undefined, undefined, dataEnv))
-                        );
-                        allActions.push(...batchResults.flat());
+                    for (const segId of segmentIds) {
+                        const actions = await withRetry(() => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId }, undefined, undefined, undefined, dataEnv));
+                        allActions.push(...actions);
                     }
 
                     const actionsBySegment = {};
