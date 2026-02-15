@@ -475,6 +475,21 @@ Deno.serve(async (req) => {
         nextSegment: nextSegment ? { actual_start_time: currentHHMM } : null
       });
 
+      // EXPLICIT CACHE REFRESH: Since Segment entity automation is disabled
+      // (to prevent fan-out storms), we explicitly trigger ONE cache rebuild
+      // after the batch completes. This is the single point of cache refresh
+      // for all Live Director segment mutations.
+      try {
+        await base44.asServiceRole.functions.invoke('refreshActiveProgram', {
+          trigger: 'live_director_mark_ended',
+          changedEntityType: 'Segment',
+          changedEntityId: segmentId
+        });
+      } catch (cacheErr) {
+        // Non-critical: cache will self-heal via 2-min poll. Log but don't fail.
+        console.error('[updateLiveSegmentTiming] Cache refresh failed (non-critical):', cacheErr.message);
+      }
+
       return new Response(JSON.stringify({ success: true, endedAt: currentHHMM }), { status: 200 });
     }
 
@@ -511,79 +526,32 @@ Deno.serve(async (req) => {
 
       await logAction('set_time', segmentId, { field, previousValue }, { field, newValue: value });
 
+      // EXPLICIT CACHE REFRESH (see mark_ended_manual for rationale)
+      try {
+        await base44.asServiceRole.functions.invoke('refreshActiveProgram', {
+          trigger: 'live_director_set_time',
+          changedEntityType: 'Segment',
+          changedEntityId: segmentId
+        });
+      } catch (cacheErr) {
+        console.error('[updateLiveSegmentTiming] Cache refresh failed (non-critical):', cacheErr.message);
+      }
+
       return new Response(JSON.stringify({ success: true, field, value }), { status: 200 });
     }
 
     // ============================================================
-    // LEGACY ACTIONS: mark_ended, adjust_start (kept for backward compatibility)
+    // LEGACY ACTIONS: mark_ended, adjust_start
+    // DEPRECATED (2026-02-15 audit): These caused unbounded fan-out
+    // (N segment updates → N entity automations → N×144 API calls).
+    // Superseded by mark_ended_manual. Return error directing to new action.
+    // Decision: "Remove legacy cascade to prevent fan-out storms"
     // ============================================================
     if (action === 'mark_ended' || action === 'adjust_start') {
-      if (!session || !session.live_adjustment_enabled) {
-        return new Response(JSON.stringify({ error: 'Live adjustment not enabled for this session' }), { status: 400 });
-      }
-
-      let segments = await base44.asServiceRole.entities.Segment.filter({ session_id: sessionId }, 'order');
-      segments = segments.sort((a, b) => (a.order || 0) - (b.order || 0));
-
-      const targetIndex = segments.findIndex(s => s.id === segmentId);
-      if (targetIndex === -1) {
-        return new Response(JSON.stringify({ error: 'Segment not found' }), { status: 404 });
-      }
-
-      const targetSegment = segments[targetIndex];
-      let offset = 0;
-
-      if (action === 'mark_ended') {
-        const now = new Date();
-        const currentHHMM = value || `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        
-        const expectedEnd = targetSegment.actual_end_time || targetSegment.end_time;
-        if (!expectedEnd) {
-             return new Response(JSON.stringify({ error: 'Segment has no end time defined' }), { status: 400 });
-        }
-
-        offset = getDiffMinutes(expectedEnd, currentHHMM);
-        
-        await base44.asServiceRole.entities.Segment.update(targetSegment.id, {
-          actual_end_time: currentHHMM,
-          is_live_adjusted: true,
-          actual_start_time: targetSegment.actual_start_time || targetSegment.start_time
-        });
-
-      } else if (action === 'adjust_start') {
-        offset = parseInt(value, 10);
-        
-        const newStart = addMinutes(targetSegment.actual_start_time || targetSegment.start_time, offset);
-        const newEnd = addMinutes(targetSegment.actual_end_time || targetSegment.end_time, offset);
-        
-        await base44.asServiceRole.entities.Segment.update(targetSegment.id, {
-          actual_start_time: newStart,
-          actual_end_time: newEnd,
-          is_live_adjusted: true
-        });
-      }
-
-      // Propagate to subsequent segments (legacy cascade behavior)
-      const updates = [];
-      for (let i = targetIndex + 1; i < segments.length; i++) {
-        const seg = segments[i];
-        const newStart = addMinutes(seg.actual_start_time || seg.start_time, offset);
-        const newEnd = addMinutes(seg.actual_end_time || seg.end_time, offset);
-        
-        updates.push(base44.asServiceRole.entities.Segment.update(seg.id, {
-          actual_start_time: newStart,
-          actual_end_time: newEnd,
-          is_live_adjusted: true
-        }));
-      }
-
-      await Promise.all(updates);
-      
-      await base44.asServiceRole.entities.Session.update(sessionId, {
-        last_live_adjustment_time: new Date().toISOString()
-      });
-
-      return new Response(JSON.stringify({ success: true, offset }), { status: 200 });
+      return new Response(JSON.stringify({ 
+        error: 'Deprecated: Use mark_ended_manual or set_time instead',
+        migration: 'Legacy cascade actions removed 2026-02-15 to prevent API fan-out storms'
+      }), { status: 400 });
     }
 
     // ============================================================
@@ -735,6 +703,17 @@ Deno.serve(async (req) => {
         cascade_segments_affected: cascadeApplied,
         cumulative_drift_min: drift
       }, `Finalized with ${drift}m drift`);
+
+      // EXPLICIT CACHE REFRESH after finalize_hold + cascade completes
+      try {
+        await base44.asServiceRole.functions.invoke('refreshActiveProgram', {
+          trigger: 'live_director_finalize_hold',
+          changedEntityType: 'Segment',
+          changedEntityId: segmentId
+        });
+      } catch (cacheErr) {
+        console.error('[updateLiveSegmentTiming] Cache refresh failed (non-critical):', cacheErr.message);
+      }
 
       return new Response(JSON.stringify({ 
         success: true, 

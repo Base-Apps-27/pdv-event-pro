@@ -48,9 +48,13 @@ Deno.serve(async (req) => {
     }).formatToParts(twentyFourHoursAgo);
     const cutoffDate = `${twentyFourHoursAgoParts.find(p => p.type === 'year')?.value}-${twentyFourHoursAgoParts.find(p => p.type === 'month')?.value}-${twentyFourHoursAgoParts.find(p => p.type === 'day')?.value}`;
 
-    // Fetch all non-archived messages
+    // HARDENED (2026-02-15 audit): Add date range to prevent unbounded table scan.
+    // Only fetch messages created in the last 14 days (covers any archival window).
+    // As chat accumulates over months/years, this prevents loading thousands of records.
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
     const allMessages = await base44.asServiceRole.entities.LiveOperationsMessage.filter({
-      is_archived: false
+      is_archived: false,
+      created_date: { $gte: fourteenDaysAgo.toISOString() }
     });
 
     if (!allMessages || allMessages.length === 0) {
