@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
             const sessionFilter = { event_id: targetProgram.id };
             if (sessionId && sessionId !== "all") sessionFilter.id = sessionId;
 
-            sessions = await base44.asServiceRole.entities.Session.filter(sessionFilter, undefined, undefined, undefined, dataEnv);
+            sessions = await withRetry(() => base44.asServiceRole.entities.Session.filter(sessionFilter, undefined, undefined, undefined, dataEnv));
             sessions.sort((a, b) => (a.order || 0) - (b.order || 0));
 
             // Fetch segments, preSessionDetails, streamBlocks, and extras SEQUENTIALLY
