@@ -289,8 +289,8 @@ Deno.serve(async (req) => {
             // Fetch Linked Segment Actions (ensure we get all defined actions, not just embedded ones)
             if (segments.length > 0) {
                 const segmentIds = segments.map(s => s.id);
-                // Batch fetch actions
-                const BATCH_SIZE = 10;
+                // Batch fetch actions — smaller batches with retry to avoid 429
+                const BATCH_SIZE = 5;
                 const actionBatches = [];
                 for (let i = 0; i < segmentIds.length; i += BATCH_SIZE) {
                     actionBatches.push(segmentIds.slice(i, i + BATCH_SIZE));
@@ -299,7 +299,7 @@ Deno.serve(async (req) => {
                 const allActions = [];
                 for (const batch of actionBatches) {
                     const batchResults = await Promise.all(
-                        batch.map(segId => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId }, undefined, undefined, undefined, dataEnv))
+                        batch.map(segId => withRetry(() => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId }, undefined, undefined, undefined, dataEnv)))
                     );
                     allActions.push(...batchResults.flat());
                 }
