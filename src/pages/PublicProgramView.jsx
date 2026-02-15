@@ -21,7 +21,6 @@ import EventProgramView from "@/components/service/EventProgramView";
 import LiveOperationsChat from "@/components/live/LiveOperationsChat";
 import { useLanguage } from "@/components/utils/i18n";
 import LiveViewSkeleton from "@/components/service/LiveViewSkeleton";
-import { buildChangeSummary, ChangeToastContent } from "@/components/live/LiveChangeToast";
 
 export default function PublicProgramView() {
   const queryClient = useQueryClient();
@@ -273,7 +272,8 @@ export default function PublicProgramView() {
       }, '-created_date');
     },
     enabled: viewType === "service" && !!selectedServiceId && !!rawServiceData?.date,
-    refetchInterval: 5000,
+    staleTime: 15 * 1000,    // Fresh for 15s
+    refetchInterval: 30000,  // Safety net: 30s poll (not time-critical, only for history modal)
   });
 
   // LiveTimeAdjustment subscription for explicit-fetch path only.
