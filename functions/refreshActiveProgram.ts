@@ -80,25 +80,43 @@ Deno.serve(async (req) => {
     );
 
     // ─── STEP 2: Filter to display windows ───
-    // Events: Visible from 4 days before start until 7 days after end
-    const relevantEvents = allEvents.filter(e => {
-      if (e.status !== 'confirmed' && e.status !== 'in_progress') return false;
+    // ── Selector options: wider window for Live View dropdowns ──
+    // Events: past 7 days + next 90 days (Live View shows ~90-day window)
+    const selectorEvents = allEvents.filter(e => {
+      if (e.status === 'archived' || e.status === 'template') return false;
       if (!e.start_date) return false;
       const start = new Date(e.start_date);
       const diffDays = (start - today) / (1000 * 60 * 60 * 24);
-      return diffDays > -7 && diffDays <= 4;
+      return diffDays > -7 && diffDays <= 90;
     }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
-    // Services: Visible from 1 day before until 2 days after
-    const relevantServices = allServices.filter(s => {
+    // Services: past 1 day + next 7 days (Live View shows ~7-day window)
+    const selectorServices = allServices.filter(s => {
       if (s.status !== 'active') return false;
       if (!s.date || s.origin === 'blueprint') return false;
       const sDate = new Date(s.date);
       const diffDays = (sDate - today) / (1000 * 60 * 60 * 24);
-      return diffDays > -2 && diffDays <= 1;
+      return diffDays >= -1 && diffDays <= 7;
     }).sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    const selectorOptions = { events: relevantEvents, services: relevantServices };
+    // ── Auto-detect window: tighter for active program detection ──
+    // Events: confirmed/in_progress within 4 days ahead or 7 days past
+    const relevantEvents = selectorEvents.filter(e => {
+      if (e.status !== 'confirmed' && e.status !== 'in_progress') return false;
+      const start = new Date(e.start_date);
+      const diffDays = (start - today) / (1000 * 60 * 60 * 24);
+      return diffDays > -7 && diffDays <= 4;
+    });
+
+    // Services: active within 1 day ahead or 2 days past
+    const relevantServices = selectorServices.filter(s => {
+      const sDate = new Date(s.date);
+      const diffDays = (sDate - today) / (1000 * 60 * 60 * 24);
+      return diffDays > -2 && diffDays <= 1;
+    });
+
+    // Selector options use the wider window so Live View dropdowns show more options
+    const selectorOptions = { events: selectorEvents, services: selectorServices };
 
     // ─── STEP 2b: Early exit for entity triggers outside display window ───
     if (changedEntityType && changedEntityId) {
