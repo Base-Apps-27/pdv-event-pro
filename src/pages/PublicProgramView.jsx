@@ -326,9 +326,10 @@ export default function PublicProgramView() {
     if (!currentUser || viewType !== "service" || !selectedServiceId || !rawServiceData?.date) return;
 
     const unsubscribe = base44.entities.LiveTimeAdjustment.subscribe((event) => {
-      if (event.data.date === rawServiceData.date && event.data.service_id === selectedServiceId) {
-        // Refetch program data to get updated adjustments
-        queryClient.invalidateQueries(['publicProgramData']);
+      if (event.data?.date === rawServiceData.date && event.data?.service_id === selectedServiceId) {
+        // Invalidate both cache and explicit-fetch paths
+        queryClient.invalidateQueries({ queryKey: ['activeProgramCache'] });
+        queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
       }
     });
 
