@@ -195,114 +195,68 @@ export default function PublicProgramView() {
   const selectedEvent = publicEvents.find(e => e.id === selectedEventId);
   const selectedService = services.find(s => s.id === selectedServiceId);
 
-  // REAL-TIME SUBSCRIPTIONS: Instant updates when admin edits program data
-  // For the CACHED path, useActiveProgramCache already subscribes to
-  // ActiveProgramCache + LiveTimeAdjustment + Segment + Session changes.
-  // These subscriptions handle the EXPLICIT fetch path (non-cached selection)
-  // and toast notifications for both paths.
+  // ── REAL-TIME SUBSCRIPTIONS (2026-02-15 stability refactor) ──
+  // CACHED path: useActiveProgramCache subscribes to ActiveProgramCache only.
+  //   Entity automations → refreshActiveProgram → ActiveProgramCache update → sub fires.
+  // EXPLICIT path: these subs invalidate 'publicProgramData-explicit' for non-cached selection.
+  // TOAST notifications: only for entities directly relevant to the current selection on today's date.
+  // Debounce timer ref to coalesce rapid entity changes into one invalidation.
+  const explicitDebounceRef = React.useRef(null);
   useEffect(() => {
     if (!currentUser) return;
 
+    // Only subscribe to entity changes when viewing a NON-cached selection
+    // (cached path is fully handled by useActiveProgramCache → ActiveProgramCache sub)
+    if (isCachedSelection) return;
+
     const unsubscribers = [];
 
-    const isActiveDay = () => {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const todayStr = `${yyyy}-${mm}-${dd}`;
-
-      if (viewType === 'service' && rawServiceData?.date) {
-        return rawServiceData.date === todayStr;
-      }
-      if (viewType === 'event' && selectedEvent) {
-        const start = selectedEvent.start_date || '';
-        const end = selectedEvent.end_date || start;
-        return todayStr >= start && todayStr <= end;
-      }
-      return false;
+    const debouncedInvalidateExplicit = () => {
+      if (explicitDebounceRef.current) clearTimeout(explicitDebounceRef.current);
+      explicitDebounceRef.current = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
+        explicitDebounceRef.current = null;
+      }, 800);
     };
 
-    const notify = (entityType, event) => {
-      if (isActiveDay()) {
-        const { title, details, icon } = buildChangeSummary(entityType, event, language);
-        toast(title, {
-          duration: 5000,
-          icon,
-          description: details.length > 0 ? <ChangeToastContent details={details} /> : undefined,
-        });
-      }
-    };
-
-    // Invalidate both cache and explicit-fetch query keys to cover both paths
-    const invalidateAll = () => {
-      queryClient.invalidateQueries({ queryKey: ['activeProgramCache'] });
-      queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
-    };
-
+    // Core entities that affect program display
     unsubscribers.push(
-      base44.entities.Segment.subscribe((event) => {
-        invalidateAll();
-        notify('Segment', event);
-      })
+      base44.entities.Segment.subscribe(() => debouncedInvalidateExplicit())
     );
-
     unsubscribers.push(
-      base44.entities.Session.subscribe((event) => {
-        invalidateAll();
-        notify('Session', event);
-      })
+      base44.entities.Session.subscribe(() => debouncedInvalidateExplicit())
+    );
+    unsubscribers.push(
+      base44.entities.SegmentAction.subscribe(() => debouncedInvalidateExplicit())
     );
 
     if (viewType === 'service' && selectedServiceId) {
       unsubscribers.push(
-        base44.entities.Service.subscribe((event) => {
-          invalidateAll();
-          notify('Service', event);
-        })
+        base44.entities.Service.subscribe(() => debouncedInvalidateExplicit())
       );
     }
-
     if (viewType === 'event' && selectedEventId) {
       unsubscribers.push(
-        base44.entities.Event.subscribe((event) => {
-          invalidateAll();
-          notify('Event', event);
-        })
+        base44.entities.Event.subscribe(() => debouncedInvalidateExplicit())
       );
-    }
-
-    if (viewType === 'event') {
       unsubscribers.push(
-        base44.entities.PreSessionDetails.subscribe((event) => {
-          invalidateAll();
-          notify('PreSessionDetails', event);
-        })
+        base44.entities.PreSessionDetails.subscribe(() => debouncedInvalidateExplicit())
       );
-    }
-
-    unsubscribers.push(
-      base44.entities.SegmentAction.subscribe((event) => {
-        invalidateAll();
-        notify('SegmentAction', event);
-      })
-    );
-
-    if (viewType === 'event') {
       unsubscribers.push(
-        base44.entities.StreamBlock.subscribe((event) => {
-          invalidateAll();
+        base44.entities.StreamBlock.subscribe(() => {
+          debouncedInvalidateExplicit();
           queryClient.invalidateQueries({ queryKey: ['streamBlocksForStatusCard'] });
         })
       );
     }
 
     return () => {
+      if (explicitDebounceRef.current) clearTimeout(explicitDebounceRef.current);
       unsubscribers.forEach(unsub => {
         if (typeof unsub === 'function') unsub();
       });
     };
-  }, [viewType, selectedServiceId, selectedEventId, rawServiceData?.date, selectedEvent?.start_date, selectedEvent?.end_date, language, queryClient, currentUser]);
+  }, [viewType, selectedServiceId, selectedEventId, isCachedSelection, queryClient, currentUser]);
 
   // Derived live adjustments from program data
   const liveAdjustments = programData?.liveAdjustments || [];
