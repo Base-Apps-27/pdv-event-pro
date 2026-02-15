@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
         
         // B. Resolve by ID (Service)
         if (serviceId && !targetProgram) {
-            const results = await base44.asServiceRole.entities.Service.filter({ id: serviceId }, undefined, undefined, undefined, dataEnv);
+            const results = await withRetry(() => base44.asServiceRole.entities.Service.filter({ id: serviceId }, undefined, undefined, undefined, dataEnv));
             if (results?.[0]) {
                 targetProgram = results[0];
                 isEvent = false;
