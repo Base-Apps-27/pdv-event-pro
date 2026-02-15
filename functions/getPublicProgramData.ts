@@ -196,14 +196,20 @@ Deno.serve(async (req) => {
         let liveAdjustments = [];
         let streamBlocks = [];
 
-        // Parallelize fetching of independent resources
-        const fetchExtrasPromise = Promise.all([
-            base44.asServiceRole.entities.Room.list(undefined, undefined, undefined, dataEnv),
-            // Only fetch EventDay if it's an event
-            isEvent ? base44.asServiceRole.entities.EventDay.filter({ event_id: targetProgram.id }, undefined, undefined, undefined, dataEnv) : Promise.resolve([]),
-            // Fetch live adjustments for the program
-            !isEvent ? base44.asServiceRole.entities.LiveTimeAdjustment.filter({ service_id: targetProgram.id, date: targetProgram.date }, undefined, undefined, undefined, dataEnv) : Promise.resolve([])
-        ]);
+        // Fetch independent resources SEQUENTIALLY to avoid rate-limit cascades.
+        // Using withRetry on each to handle transient 429s.
+        const fetchExtrasPromise = (async () => {
+            const rooms = await withRetry(() => 
+                base44.asServiceRole.entities.Room.list(undefined, undefined, undefined, dataEnv)
+            );
+            const eventDays = isEvent 
+                ? await withRetry(() => base44.asServiceRole.entities.EventDay.filter({ event_id: targetProgram.id }, undefined, undefined, undefined, dataEnv))
+                : [];
+            const adjustments = !isEvent
+                ? await withRetry(() => base44.asServiceRole.entities.LiveTimeAdjustment.filter({ service_id: targetProgram.id, date: targetProgram.date }, undefined, undefined, undefined, dataEnv))
+                : [];
+            return [rooms, eventDays, adjustments];
+        })();
 
         if (isEvent) {
             // Check public access for events
