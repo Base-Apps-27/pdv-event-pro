@@ -87,12 +87,6 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
 
   // Determine button visibility
   const canSeeVerses = ['general', 'projection', 'livestream', 'translation'].includes(department);
-  const canSeeResources = ['general', 'sound', 'projection', 'stage_decor', 'livestream', 'coordination'].includes(department);
-  const hasResources = segment.video_url || 
-    segment.drama_song_source || segment.drama_song_2_url || segment.drama_song_3_url ||
-    segment.dance_song_source || segment.dance_song_2_url || segment.dance_song_3_url ||
-    segment.arts_run_of_show_url;
-  
   const hasVerses = (isMessage || segment.segment_type === 'Ofrenda') && getData('parsed_verse_data');
 
   // Container styles by status
