@@ -337,11 +337,6 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
         )}
       </div>
 
-      <SegmentResourcesModal 
-        open={showResourcesModal}
-        onOpenChange={setShowResourcesModal}
-        segment={segment}
-      />
     </div>
   );
 }
