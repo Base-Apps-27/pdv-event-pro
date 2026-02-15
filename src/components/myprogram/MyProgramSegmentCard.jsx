@@ -243,29 +243,17 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
           })()}
         </div>
 
-        {/* Action Buttons */}
-        {( (hasVerses && canSeeVerses) || (hasResources && canSeeResources) ) && (
+        {/* Action Buttons — Verses only (Arts Resources not shown in MyProgram) */}
+        {hasVerses && canSeeVerses && onOpenVerses && (
           <div className="flex flex-wrap gap-2.5 mt-3">
-            {hasVerses && canSeeVerses && onOpenVerses && (
-              <Button 
-                variant="outline" 
-                className="h-10 text-sm gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 px-4"
-                onClick={() => onOpenVerses({ parsedData: getData('parsed_verse_data'), rawText: getData('scripture_references') })}
-              >
-                <BookOpen className="w-4 h-4" />
-                Ver Versículos
-              </Button>
-            )}
-            {hasResources && canSeeResources && (
-              <Button 
-                variant="outline" 
-                className="h-10 text-sm gap-2 border-pink-200 text-pink-700 hover:bg-pink-50 px-4"
-                onClick={() => setShowResourcesModal(true)}
-              >
-                <ExternalLink className="w-4 h-4" />
-                Arts Resources
-              </Button>
-            )}
+            <Button 
+              variant="outline" 
+              className="h-10 text-sm gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 px-4"
+              onClick={() => onOpenVerses({ parsedData: getData('parsed_verse_data'), rawText: getData('scripture_references') })}
+            >
+              <BookOpen className="w-4 h-4" />
+              Ver Versículos
+            </Button>
           </div>
         )}
 
