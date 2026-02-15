@@ -28,6 +28,9 @@ export default function useSessionDetector() {
   const tomorrowStr = getTomorrowETString();
 
   // Fetch program data via the same backend function PublicProgramView uses
+  // Resilient options fetch — retry on rate-limit / transient errors.
+  // staleTime bumped to 2 min and refetchInterval to 2 min to reduce
+  // pressure on the backend (multiple surfaces poll the same function).
   const { data: selectorOptions = { events: [], services: [] }, isLoading: optionsLoading } = useQuery({
     queryKey: ['myprogram-selectorOptions'],
     queryFn: async () => {
@@ -35,8 +38,10 @@ export default function useSessionDetector() {
       if (response.status >= 400) return { events: [], services: [] };
       return response.data;
     },
-    staleTime: 60 * 1000,
-    refetchInterval: 60000,
+    staleTime: 2 * 60 * 1000,
+    refetchInterval: 2 * 60 * 1000,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
   });
 
   const detected = useMemo(() => {
