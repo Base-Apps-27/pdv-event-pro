@@ -9,7 +9,6 @@
  */
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import { useLanguage } from '@/components/utils/i18n';
 import { useCurrentUser } from '@/components/utils/useCurrentUser';
 import { useClockTick } from '@/components/utils/useClockTick';
