@@ -263,9 +263,9 @@ Deno.serve(async (req) => {
             const segmentsAndDetails = [allSegmentsFetched, preSessionDetailsFetched, streamBlocksFetched];
 
             [rooms, eventDays, liveAdjustments] = extras;
-            let allSegments = segmentsAndDetails[0];
-            preSessionDetails = segmentsAndDetails[1];
-            streamBlocks = segmentsAndDetails[2];
+            let allSegments = allSegmentsFetched;
+            preSessionDetails = preSessionDetailsFetched;
+            streamBlocks = streamBlocksFetched;
 
             // Process Segments (Sort & Filter)
             if (allSegments.length > 0) {
