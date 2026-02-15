@@ -408,14 +408,15 @@ Deno.serve(async (req) => {
                  if (directSessions.length > 0) sessions.push(...directSessions);
             }
 
-            // Fetch segments from found sessions
+            // Fetch segments from found sessions (sequential with retry)
             if (sessions.length > 0) {
                  const sessionIds = sessions.map(s => s.id);
-                 const BATCH_SIZE = 10;
-                 // ... fetch segments loop ...
-                 // Simplified for brevity in this large block replacement:
-                 const allResults = await Promise.all(sessionIds.map(sid => base44.asServiceRole.entities.Segment.filter({ session_id: sid }, undefined, undefined, undefined, dataEnv)));
-                 segments = allResults.flat().filter(s => s.show_in_general).sort((a, b) => (a.order || 0) - (b.order || 0));
+                 const allResults = [];
+                 for (const sid of sessionIds) {
+                     const segs = await withRetry(() => base44.asServiceRole.entities.Segment.filter({ session_id: sid }, undefined, undefined, undefined, dataEnv));
+                     allResults.push(...segs);
+                 }
+                 segments = allResults.filter(s => s.show_in_general).sort((a, b) => (a.order || 0) - (b.order || 0));
             } 
             // Fallback: Embedded Segments (Custom Services)
             // CRITICAL FIX: Only use 'segments' if it actually has content. 
