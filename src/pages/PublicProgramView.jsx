@@ -275,20 +275,20 @@ export default function PublicProgramView() {
     refetchInterval: 5000,
   });
 
-  // Subscribe to live adjustments for real-time updates (Authenticated only)
+  // LiveTimeAdjustment subscription for explicit-fetch path only.
+  // Cached path: handled by entity automation → refreshActiveProgram → ActiveProgramCache sub.
   useEffect(() => {
     if (!currentUser || viewType !== "service" || !selectedServiceId || !rawServiceData?.date) return;
+    if (isCachedSelection) return; // Cached path already handles this
 
     const unsubscribe = base44.entities.LiveTimeAdjustment.subscribe((event) => {
       if (event.data?.date === rawServiceData.date && event.data?.service_id === selectedServiceId) {
-        // Invalidate both cache and explicit-fetch paths
-        queryClient.invalidateQueries({ queryKey: ['activeProgramCache'] });
         queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
       }
     });
 
     return unsubscribe;
-  }, [viewType, selectedServiceId, rawServiceData?.date, queryClient, currentUser]);
+  }, [viewType, selectedServiceId, rawServiceData?.date, isCachedSelection, queryClient, currentUser]);
 
   // Save time adjustment
   const handleSaveTimeAdjustment = async (offsetMinutes, authorizedBy) => {
