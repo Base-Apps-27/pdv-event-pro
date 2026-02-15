@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, Users, Sparkles, Languages, Mic, BookOpen, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { Clock, Users, Sparkles, Languages, Mic, BookOpen, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatTimeToEST } from '@/components/utils/timeFormat';
