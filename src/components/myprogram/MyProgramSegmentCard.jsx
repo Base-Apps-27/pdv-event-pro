@@ -7,7 +7,7 @@ import { useLanguage } from '@/components/utils/i18n';
 import { getSegmentData, getNormalizedSongs } from '@/components/utils/segmentDataUtils';
 import { normalizeName } from '@/components/utils/textNormalization';
 import DepartmentNotes from './DepartmentNotes';
-import SegmentResourcesModal from '@/components/service/SegmentResourcesModal';
+
 
 function getSegmentTiming(segment, currentTime) {
   if (!currentTime || !segment.start_time) return { start: 0, end: 0, now: 0 };
