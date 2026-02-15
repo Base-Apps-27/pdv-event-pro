@@ -397,9 +397,7 @@ Deno.serve(async (req) => {
 
             // Check if it's linked to an event (some services are just pointers to events)
             if (targetProgram.event_id) {
-                // Fetch sessions for that event_id? Or usually just treat as service.
-                // Logic in frontend: "if (service.event_id) ... fetch sessions for event_id"
-                const linkedSessions = await base44.asServiceRole.entities.Session.filter({ event_id: targetProgram.event_id }, undefined, undefined, undefined, dataEnv);
+                const linkedSessions = await withRetry(() => base44.asServiceRole.entities.Session.filter({ event_id: targetProgram.event_id }, undefined, undefined, undefined, dataEnv));
                  // ... similar logic to Event ...
                  // For brevity, let's assume if it has event_id, we fetch those sessions
                  sessions = linkedSessions;
