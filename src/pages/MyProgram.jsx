@@ -17,7 +17,7 @@ import { Loader2, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatDateET } from '@/components/utils/timeFormat';
 
-import useSessionDetector from '@/components/myprogram/useSessionDetector';
+import useActiveProgramCache from '@/components/myprogram/useActiveProgramCache';
 import { normalizeEventSegments, normalizeServiceSegments, getSessionLabels } from '@/components/myprogram/normalizeSession';
 import DepartmentPicker, { useDepartment } from '@/components/myprogram/DepartmentPicker';
 import SessionPicker from '@/components/myprogram/SessionPicker';
@@ -35,7 +35,7 @@ export default function MyProgram() {
   const [selectedSession, setSelectedSession] = useState(null);
   const [verseModalData, setVerseModalData] = useState(null);
 
-  const { contextType, contextId, event, service, programData, isLoading } = useSessionDetector();
+  const { contextType, contextId, event, service, programData, isLoading } = useActiveProgramCache();
 
   // Normalize segments based on context type
   const segments = useMemo(() => {
@@ -59,34 +59,9 @@ export default function MyProgram() {
     }
   }, [sessionLabels, selectedSession]);
 
-  // Real-time subscriptions for instant updates
-  useEffect(() => {
-    if (!user || !contextId) return;
-
-    const unsubs = [];
-
-    unsubs.push(base44.entities.Segment.subscribe(() => {
-      queryClient.invalidateQueries({ queryKey: ['myprogram-programData'] });
-    }));
-    unsubs.push(base44.entities.Session.subscribe(() => {
-      queryClient.invalidateQueries({ queryKey: ['myprogram-programData'] });
-    }));
-
-    if (contextType === 'service') {
-      unsubs.push(base44.entities.Service.subscribe(() => {
-        queryClient.invalidateQueries({ queryKey: ['myprogram-programData'] });
-        queryClient.invalidateQueries({ queryKey: ['myprogram-selectorOptions'] });
-      }));
-    }
-    if (contextType === 'event') {
-      unsubs.push(base44.entities.Event.subscribe(() => {
-        queryClient.invalidateQueries({ queryKey: ['myprogram-selectorOptions'] });
-        queryClient.invalidateQueries({ queryKey: ['myprogram-programData'] });
-      }));
-    }
-
-    return () => unsubs.forEach(u => typeof u === 'function' && u());
-  }, [user, contextId, contextType, queryClient]);
+  // Real-time subscriptions are now handled inside useActiveProgramCache.
+  // No need for manual subscriptions here — the cache hook subscribes to
+  // ActiveProgramCache, LiveTimeAdjustment, Segment, and Session changes.
 
   // Session date for timeline (used for "is today" checks)
   const sessionDate = useMemo(() => {
