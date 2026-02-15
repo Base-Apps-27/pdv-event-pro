@@ -556,11 +556,11 @@ Deno.serve(async (req) => {
             // INJECT: Pre-Session Details Logic (for Services too)
             let preSessionDetails = [];
             if (sessions.length > 0) {
-                const sessionIds = sessions.map(s => s.id);
-                // Fetch PreSessionDetails
-                preSessionDetails = await Promise.all(
-                    sessionIds.map(sid => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: sid }, undefined, undefined, undefined, dataEnv))
-                ).then(results => results.flat());
+                // Fetch PreSessionDetails (sequential with retry)
+                for (const s of sessions) {
+                    const details = await withRetry(() => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: s.id }, undefined, undefined, undefined, dataEnv));
+                    preSessionDetails.push(...details);
+                }
 
                 const detailsBySession = {};
                 preSessionDetails.forEach(d => detailsBySession[d.session_id] = d);
