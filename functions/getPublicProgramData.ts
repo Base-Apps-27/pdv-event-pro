@@ -404,7 +404,7 @@ Deno.serve(async (req) => {
             } 
             // Also check for sessions linked directly to this service ID (uncommon but possible in schema)
             else {
-                 const directSessions = await base44.asServiceRole.entities.Session.filter({ service_id: targetProgram.id }, undefined, undefined, undefined, dataEnv);
+                 const directSessions = await withRetry(() => base44.asServiceRole.entities.Session.filter({ service_id: targetProgram.id }, undefined, undefined, undefined, dataEnv));
                  if (directSessions.length > 0) sessions.push(...directSessions);
             }
 
