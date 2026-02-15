@@ -662,7 +662,8 @@ export default function PublicProgramView() {
   }
 
   // Show skeleton loading state when primary data is loading
-  const isContentLoading = (selectedEventId || selectedServiceId) && isLoadingProgram;
+  // For cached selection: only show skeleton on initial cache load, not on revalidation
+  const isContentLoading = (selectedEventId || selectedServiceId) && isLoadingProgram && !programData;
 
   if (isContentLoading) {
     return <LiveViewSkeleton />;
