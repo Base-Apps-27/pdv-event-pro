@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
 
     try {
         const base44 = createClientFromRequest(req);
-        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, idempotencyKey } = await req.json();
+        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, apply_to_both_services, idempotencyKey } = await req.json();
 
         if (!segment_id || !content) {
             return Response.json({ error: "Missing required fields" }, { status: 400, headers: corsHeaders });
@@ -276,16 +276,67 @@ Deno.serve(async (req) => {
 
         currentArray[segmentIdx] = updatedSegment;
 
+        // --- APPLY TO BOTH SERVICES ---
+        // If speaker selected 9:30am and checked "apply to both", also update 11:30am
+        // Find the matching message segment in the other time slot by type match
+        const updatePayload = { [timeSlot]: currentArray };
+
+        if (apply_to_both_services && timeSlot === '9:30am') {
+            const otherSlot = '11:30am';
+            const otherArray = [...(service[otherSlot] || [])];
+            // Find the first message-type segment in 11:30am
+            const otherIdx = otherArray.findIndex(seg => {
+                const t = (seg.type || '').toLowerCase();
+                return ['message', 'plenaria', 'predica', 'mensaje'].includes(t);
+            });
+
+            if (otherIdx !== -1) {
+                console.log(`[APPLY_BOTH] Piping submission to ${otherSlot} segment index ${otherIdx}`);
+                const otherSegment = otherArray[otherIdx];
+                let otherProjectionNotes = otherSegment.projection_notes || "";
+                if (content_is_slides_only && content && content.trim() && !otherProjectionNotes.includes(content.trim())) {
+                    otherProjectionNotes = (otherProjectionNotes ? otherProjectionNotes + "\n\n" : "") + `[Nota del Orador]: ${content.trim()}`;
+                }
+
+                const otherUpdated = {
+                    ...otherSegment,
+                    submitted_content: content,
+                    parsed_verse_data: parsedData,
+                    submission_status: 'processed',
+                    scripture_references: scriptureReferences,
+                    presentation_url: presentation_url || "",
+                    notes_url: notes_url || "",
+                    content_is_slides_only: !!content_is_slides_only,
+                    projection_notes: content_is_slides_only ? otherProjectionNotes : (otherSegment.projection_notes || "")
+                };
+                if (title && title.trim() !== "") {
+                    otherUpdated.message_title = title.trim();
+                    otherUpdated.data = { ...otherUpdated.data, message_title: title.trim() };
+                }
+                otherUpdated.data = {
+                    ...otherUpdated.data,
+                    verse: scriptureReferences,
+                    scripture_references: scriptureReferences,
+                    presentation_url: presentation_url || "",
+                    notes_url: notes_url || "",
+                    content_is_slides_only: !!content_is_slides_only
+                };
+                otherArray[otherIdx] = otherUpdated;
+                updatePayload[otherSlot] = otherArray;
+            } else {
+                console.warn("[APPLY_BOTH] No message segment found in 11:30am slot");
+            }
+        }
+
         // Single atomic Service update with fully processed data
         console.log("[INLINE_PROCESS] Updating Service with processed data...");
-        await base44.asServiceRole.entities.Service.update(serviceId, {
-            [timeSlot]: currentArray
-        });
+        await base44.asServiceRole.entities.Service.update(serviceId, updatePayload);
         console.log("[INLINE_PROCESS] Service updated successfully");
 
         // Create Version Record for audit trail — already processed, no automation needed
         // The entity automation may still fire but processNewSubmissionVersion will see
         // processing_status='processed' and the safety net will skip it too.
+        // Audit trail — primary submission
         console.log("[INLINE_PROCESS] Creating audit trail record...");
         await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
             segment_id: segment_id,
@@ -297,9 +348,27 @@ Deno.serve(async (req) => {
             parsed_data_snapshot: parsedData,
             submitted_at: new Date().toISOString(),
             source: 'weekly_service_form',
-            processing_status: 'processed'  // Already done — no automation dependency
+            processing_status: 'processed'
         });
-        console.log("[INLINE_PROCESS] Audit record created");
+
+        // Audit trail — mirrored 11:30am submission (if applied)
+        if (apply_to_both_services && timeSlot === '9:30am') {
+            const mirrorId = segment_id.replace('|9:30am|', '|11:30am|');
+            console.log("[APPLY_BOTH] Creating audit trail for mirrored 11:30am submission");
+            await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
+                segment_id: mirrorId,
+                content: content,
+                title: title || "",
+                presentation_url: presentation_url || "",
+                notes_url: notes_url || "",
+                content_is_slides_only: !!content_is_slides_only,
+                parsed_data_snapshot: parsedData,
+                submitted_at: new Date().toISOString(),
+                source: 'weekly_service_form_mirror',
+                processing_status: 'processed'
+            });
+        }
+        console.log("[INLINE_PROCESS] Audit record(s) created");
 
         // Success
         const responsePayload = { success: true };
