@@ -196,7 +196,10 @@ export default function PublicProgramView() {
   const selectedService = services.find(s => s.id === selectedServiceId);
 
   // REAL-TIME SUBSCRIPTIONS: Instant updates when admin edits program data
-  // Only subscribe if user is authenticated to avoid auth redirects on public view
+  // For the CACHED path, useActiveProgramCache already subscribes to
+  // ActiveProgramCache + LiveTimeAdjustment + Segment + Session changes.
+  // These subscriptions handle the EXPLICIT fetch path (non-cached selection)
+  // and toast notifications for both paths.
   useEffect(() => {
     if (!currentUser) return;
 
@@ -231,16 +234,22 @@ export default function PublicProgramView() {
       }
     };
 
+    // Invalidate both cache and explicit-fetch query keys to cover both paths
+    const invalidateAll = () => {
+      queryClient.invalidateQueries({ queryKey: ['activeProgramCache'] });
+      queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
+    };
+
     unsubscribers.push(
       base44.entities.Segment.subscribe((event) => {
-        queryClient.invalidateQueries({ queryKey: ['publicProgramData'] });
+        invalidateAll();
         notify('Segment', event);
       })
     );
 
     unsubscribers.push(
       base44.entities.Session.subscribe((event) => {
-        queryClient.invalidateQueries({ queryKey: ['publicProgramData'] });
+        invalidateAll();
         notify('Session', event);
       })
     );
@@ -248,8 +257,7 @@ export default function PublicProgramView() {
     if (viewType === 'service' && selectedServiceId) {
       unsubscribers.push(
         base44.entities.Service.subscribe((event) => {
-          queryClient.invalidateQueries({ queryKey: ['publicProgramData'] });
-          queryClient.invalidateQueries({ queryKey: ['selectorOptions'] });
+          invalidateAll();
           notify('Service', event);
         })
       );
@@ -258,8 +266,7 @@ export default function PublicProgramView() {
     if (viewType === 'event' && selectedEventId) {
       unsubscribers.push(
         base44.entities.Event.subscribe((event) => {
-          queryClient.invalidateQueries({ queryKey: ['selectorOptions'] });
-          queryClient.invalidateQueries({ queryKey: ['publicProgramData'] }); // In case event details changed
+          invalidateAll();
           notify('Event', event);
         })
       );
@@ -268,7 +275,7 @@ export default function PublicProgramView() {
     if (viewType === 'event') {
       unsubscribers.push(
         base44.entities.PreSessionDetails.subscribe((event) => {
-          queryClient.invalidateQueries({ queryKey: ['publicProgramData'] });
+          invalidateAll();
           notify('PreSessionDetails', event);
         })
       );
@@ -276,18 +283,15 @@ export default function PublicProgramView() {
 
     unsubscribers.push(
       base44.entities.SegmentAction.subscribe((event) => {
-        queryClient.invalidateQueries({ queryKey: ['publicProgramData'] });
+        invalidateAll();
         notify('SegmentAction', event);
       })
     );
 
-    // FIX #3 (2026-02-14): Subscribe to StreamBlock changes for real-time updates
-    // Without this, stream block edits only appear after the 15s poll cycle
     if (viewType === 'event') {
       unsubscribers.push(
         base44.entities.StreamBlock.subscribe((event) => {
-          queryClient.invalidateQueries({ queryKey: ['publicProgramData'] });
-          // Also invalidate the status card's direct stream block query
+          invalidateAll();
           queryClient.invalidateQueries({ queryKey: ['streamBlocksForStatusCard'] });
         })
       );
