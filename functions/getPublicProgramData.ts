@@ -1,5 +1,28 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+/**
+ * Retry wrapper — retries on 429 (rate limit) with exponential backoff.
+ * Critical for reliability: the function makes many parallel SDK calls
+ * and the platform has per-function rate limits.
+ *
+ * Decision: "Backend retry on 429 to prevent user-facing empty states"
+ */
+async function withRetry(fn, maxRetries = 2) {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            return await fn();
+        } catch (err) {
+            const status = err?.status || err?.response?.status || 0;
+            if (status === 429 && attempt < maxRetries) {
+                // Exponential backoff: 500ms, 1500ms
+                await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+                continue;
+            }
+            throw err;
+        }
+    }
+}
+
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
@@ -17,10 +40,15 @@ Deno.serve(async (req) => {
         let optionsData = null;
         
         if (listOptions || includeOptions) {
-            const [allEvents, allServices] = await Promise.all([
-                base44.asServiceRole.entities.Event.list('-start_date', undefined, undefined, dataEnv),
+            // Fetch events and services SEQUENTIALLY to avoid rate-limit spikes.
+            // These are list calls that return moderate-sized payloads; sequential
+            // adds ~200ms but avoids the 429 cascade that causes "no program" errors.
+            const allEvents = await withRetry(() =>
+                base44.asServiceRole.entities.Event.list('-start_date', undefined, undefined, dataEnv)
+            );
+            const allServices = await withRetry(() =>
                 base44.asServiceRole.entities.Service.list('-date', undefined, undefined, dataEnv)
-            ]);
+            );
             
             // Use ET for "Today" to match user perception (America/New_York)
             // This ensures "Date-1" means "Day before in ET", not "Day before in UTC"
