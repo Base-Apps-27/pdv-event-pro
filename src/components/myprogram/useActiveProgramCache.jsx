@@ -39,7 +39,8 @@ export default function useActiveProgramCache() {
   }, [queryClient]);
 
   // ── Primary: Read from ActiveProgramCache entity (instant, no function call) ──
-  const { data: cacheRecord, isLoading: cacheLoading } = useQuery({
+  // HARDENED (2026-02-15 audit): Added error recovery and retry with backoff.
+  const { data: cacheRecord, isLoading: cacheLoading, error: cacheError } = useQuery({
     queryKey: ['activeProgramCache'],
     queryFn: async () => {
       const records = await base44.entities.ActiveProgramCache.filter({ cache_key: 'current_display' });
@@ -47,7 +48,8 @@ export default function useActiveProgramCache() {
     },
     staleTime: 60 * 1000,        // Treat data as fresh for 1 min (sub handles live updates)
     refetchInterval: 2 * 60 * 1000, // Safety net poll every 2 min (catches missed subs)
-    retry: 2,
+    retry: 3,                     // Retry 3 times with exponential backoff
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
   });
 
   // ── Extract data from cache record ──
@@ -102,6 +104,7 @@ export default function useActiveProgramCache() {
     programData,
     selectorOptions,
     isLoading: cacheLoading,
+    isError: !!cacheError, // Expose error state for consumers to show fallback UI
     allEvents: selectorOptions.events || [],
     allServices: selectorOptions.services || [],
     cacheRecord, // For debugging / metadata display
