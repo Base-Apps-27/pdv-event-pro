@@ -134,7 +134,9 @@ export default function useSessionDetector() {
     return { contextType: null, contextId: null, event: null, service: null };
   }, [selectorOptions, todayStr, tomorrowStr]);
 
-  // Fetch full program data for the detected context
+  // Fetch full program data for the detected context.
+  // keepPreviousData ensures we don't flash "no program" if a refetch 429s.
+  // Retry 3 times with exponential backoff to handle transient rate limits.
   const { data: programData, isLoading: programLoading } = useQuery({
     queryKey: ['myprogram-programData', detected.contextType, detected.contextId],
     queryFn: async () => {
@@ -144,12 +146,15 @@ export default function useSessionDetector() {
       else return null;
 
       const response = await base44.functions.invoke('getPublicProgramData', payload);
-      if (response.status >= 400) return null;
+      if (response.status >= 400) throw new Error(`Backend error: ${response.status}`);
       return response.data;
     },
     enabled: !!detected.contextId,
-    refetchInterval: 15000,
-    staleTime: 5000,
+    refetchInterval: 30000,
+    staleTime: 15000,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
+    keepPreviousData: true,
   });
 
   return {
