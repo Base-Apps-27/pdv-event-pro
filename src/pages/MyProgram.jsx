@@ -172,9 +172,9 @@ export default function MyProgram() {
       {/* Verses Modal */}
       {verseModalData && (
         <StructuredVersesModal
-          isOpen={!!verseModalData}
-          onClose={() => setVerseModalData(null)}
-          verseData={verseModalData.parsedData}
+          open={!!verseModalData}
+          onOpenChange={(open) => { if (!open) setVerseModalData(null); }}
+          parsedData={verseModalData.parsedData}
           rawText={verseModalData.rawText}
         />
       )}
