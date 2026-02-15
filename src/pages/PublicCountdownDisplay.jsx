@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
 import CountdownBlock from "@/components/service/CountdownBlock";
 import CoordinatorActionsDisplay from "@/components/service/CoordinatorActionsDisplay";
 import SegmentTimeline from "@/components/service/SegmentTimeline";
@@ -11,6 +10,7 @@ import { Loader2, Layout, Radio } from "lucide-react";
 import StandbyScreen from "@/components/service/StandbyScreen";
 import StreamSidecarTimeline from "@/components/live/StreamSidecarTimeline";
 import { normalizeStreamBlocks } from "@/components/utils/normalizeStreamBlocks";
+import useActiveProgramCache from "@/components/myprogram/useActiveProgramCache";
 
 /**
  * PublicCountdownDisplay — TV Display (Dumb Terminal)
@@ -39,19 +39,8 @@ export default function PublicCountdownDisplay() {
     return () => clearInterval(id);
   }, []);
 
-  // ── Auto-detect active program ──
-  const { data: programData, isLoading } = useQuery({
-    queryKey: ["tv-auto-detect"],
-    queryFn: async () => {
-      const res = await base44.functions.invoke("getPublicProgramData", {
-        detectActive: true,
-        includeOptions: true,
-      });
-      if (res.status >= 400) return null;
-      return res.data;
-    },
-    refetchInterval: 30000, // 30 s poll
-  });
+  // ── Read from ActiveProgramCache (instant, no backend call) ──
+  const { programData, isLoading } = useActiveProgramCache();
 
   // ── Normalize ──
   const normalizedData = useMemo(
