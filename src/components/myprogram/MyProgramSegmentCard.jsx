@@ -55,7 +55,6 @@ const DEPT_LABEL_MAP = {
 
 export default function MyProgramSegmentCard({ segment, status, department, currentTime, onOpenVerses }) {
   const { t, language } = useLanguage();
-  const [showResourcesModal, setShowResourcesModal] = useState(false);
   const getData = (field) => getSegmentData(segment, field);
 
   const isWorship = ['Alabanza', 'worship'].includes(segment.segment_type);
