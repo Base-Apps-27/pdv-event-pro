@@ -172,7 +172,8 @@ export default function PublicProgramView() {
     },
     // Only enable when user picks something NOT in cache
     enabled: !isCachedSelection && !!(selectedEventId || selectedServiceId || preloadedDate),
-    refetchInterval: 15000,
+    staleTime: 30 * 1000,    // Fresh for 30s (entity subs handle live updates)
+    refetchInterval: 30000,  // Safety net: 30s poll (subs are primary update channel)
   });
 
   // Merge: cache-first, fallback to explicit fetch
