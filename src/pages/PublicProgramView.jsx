@@ -180,7 +180,7 @@ export default function PublicProgramView() {
   const isLoadingProgram = isCachedSelection ? isCacheLoading : isExplicitLoading;
   const refetchProgram = isCachedSelection ? (() => {}) : refetchExplicit;
 
-  // Derived state from programData
+  // Derived state from programData — works for both cache snapshot and explicit fetch shapes
   const sessions = programData?.sessions || [];
   const allSegments = programData?.segments || [];
   const rooms = programData?.rooms || [];
@@ -189,7 +189,7 @@ export default function PublicProgramView() {
   const rawServiceData = viewType === 'service' ? programData?.program : null;
 
   const refetchData = () => {
-    refetchProgram();
+    if (typeof refetchProgram === 'function') refetchProgram();
   };
 
   const selectedEvent = publicEvents.find(e => e.id === selectedEventId);
