@@ -160,10 +160,8 @@ Deno.serve(async (req) => {
                 }
             } else if (date) {
                 // Legacy Date-only auto-detect (fetches from DB)
-                const [allEvents, svcResults] = await Promise.all([
-                    base44.asServiceRole.entities.Event.filter({ status: 'confirmed' }, undefined, undefined, undefined, dataEnv),
-                    base44.asServiceRole.entities.Service.filter({ date: date, status: 'active' }, undefined, undefined, undefined, dataEnv)
-                ]);
+                const allEvents = await withRetry(() => base44.asServiceRole.entities.Event.filter({ status: 'confirmed' }, undefined, undefined, undefined, dataEnv));
+                const svcResults = await withRetry(() => base44.asServiceRole.entities.Service.filter({ date: date, status: 'active' }, undefined, undefined, undefined, dataEnv));
                 
                 const activeEvent = allEvents.find(e => e.start_date <= date && e.end_date >= date);
                 
