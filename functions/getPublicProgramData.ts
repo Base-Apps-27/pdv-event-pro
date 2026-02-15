@@ -224,42 +224,43 @@ Deno.serve(async (req) => {
             sessions = await base44.asServiceRole.entities.Session.filter(sessionFilter, undefined, undefined, undefined, dataEnv);
             sessions.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-            // Parallelize fetching segments, preSessionDetails, and extras
-            const [extras, ...segmentsAndDetails] = await Promise.all([
-                fetchExtrasPromise,
-                // Fetch Segments (batched)
-                (async () => {
-                    if (sessions.length === 0) return [];
-                    const sessionIds = sessions.map(s => s.id);
-                    const BATCH_SIZE = 10;
-                    const batches = [];
-                    for (let i = 0; i < sessionIds.length; i += BATCH_SIZE) {
-                        batches.push(sessionIds.slice(i, i + BATCH_SIZE));
-                    }
-                    const allSegments = [];
-                    for (const batch of batches) {
-                        const batchResults = await Promise.all(
-                            batch.map(sid => base44.asServiceRole.entities.Segment.filter({ session_id: sid }, 'order', undefined, undefined, dataEnv))
-                        );
-                        allSegments.push(...batchResults.flat());
-                    }
-                    return allSegments;
-                })(),
-                // Fetch PreSessionDetails
-                (async () => {
-                    if (sessions.length === 0) return [];
-                    return await Promise.all(
-                        sessions.map(s => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: s.id }, undefined, undefined, undefined, dataEnv))
-                    ).then(results => results.flat());
-                })(),
-                // Fetch StreamBlocks
-                (async () => {
-                    if (sessions.length === 0) return [];
-                    return await Promise.all(
-                        sessions.map(s => base44.asServiceRole.entities.StreamBlock.filter({ session_id: s.id }, 'order', undefined, undefined, dataEnv))
-                    ).then(results => results.flat());
-                })()
-            ]);
+            // Fetch segments, preSessionDetails, streamBlocks, and extras SEQUENTIALLY
+            // to avoid rate-limit cascades. Each batch uses withRetry for resilience.
+            const extras = await fetchExtrasPromise;
+
+            // Fetch Segments (batched, sequential batches)
+            let allSegmentsFetched = [];
+            if (sessions.length > 0) {
+                const sessionIds = sessions.map(s => s.id);
+                const BATCH_SIZE = 5; // Smaller batches to stay under rate limits
+                for (let i = 0; i < sessionIds.length; i += BATCH_SIZE) {
+                    const batch = sessionIds.slice(i, i + BATCH_SIZE);
+                    const batchResults = await Promise.all(
+                        batch.map(sid => withRetry(() => base44.asServiceRole.entities.Segment.filter({ session_id: sid }, 'order', undefined, undefined, dataEnv)))
+                    );
+                    allSegmentsFetched.push(...batchResults.flat());
+                }
+            }
+
+            // Fetch PreSessionDetails
+            let preSessionDetailsFetched = [];
+            if (sessions.length > 0) {
+                for (const s of sessions) {
+                    const details = await withRetry(() => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: s.id }, undefined, undefined, undefined, dataEnv));
+                    preSessionDetailsFetched.push(...details);
+                }
+            }
+
+            // Fetch StreamBlocks
+            let streamBlocksFetched = [];
+            if (sessions.length > 0) {
+                for (const s of sessions) {
+                    const blocks = await withRetry(() => base44.asServiceRole.entities.StreamBlock.filter({ session_id: s.id }, 'order', undefined, undefined, dataEnv));
+                    streamBlocksFetched.push(...blocks);
+                }
+            }
+
+            const segmentsAndDetails = [allSegmentsFetched, preSessionDetailsFetched, streamBlocksFetched];
 
             [rooms, eventDays, liveAdjustments] = extras;
             let allSegments = segmentsAndDetails[0];
