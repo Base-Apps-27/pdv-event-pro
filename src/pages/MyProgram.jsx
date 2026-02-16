@@ -53,8 +53,8 @@ export default function MyProgram() {
     return [];
   }, [programData, contextType]);
 
-  // Session labels for picker
-  const sessionLabels = useMemo(() => getSessionLabels(segments), [segments]);
+  // Session labels for picker (with auto-abbreviated labels)
+  const sessionLabels = useMemo(() => getSessionLabels(segments, language), [segments, language]);
 
   // Auto-detect which session is active (for auto-switching between 9:30am / 11:30am)
   // Only auto-switch if the user hasn't manually overridden their selection.
@@ -203,6 +203,7 @@ export default function MyProgram() {
             sessions={sessionLabels}
             value={selectedSession}
             onChange={handleSessionChange}
+            currentTime={currentTime}
           />
 
           {/* Now / Next status bar */}
