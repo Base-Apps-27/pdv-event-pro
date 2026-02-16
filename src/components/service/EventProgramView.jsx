@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Filter, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils, Music, Monitor, Users, Radio, Zap, LayoutGrid } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -17,6 +16,9 @@ import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import { formatTimeToEST, formatDateET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { hasPermission } from "@/components/utils/permissions";
+import { useLanguage } from "@/components/utils/i18n";
+import SessionPicker from "@/components/myprogram/SessionPicker";
+import { getSessionLabels } from "@/components/myprogram/normalizeSession";
 import StreamCoordinatorView from "@/components/live/StreamCoordinatorView";
 import { resolveBlockTime } from "@/components/utils/streamTiming";
 import { resolveStreamActions } from "@/components/utils/resolveStreamActions";
@@ -67,6 +69,8 @@ export default function EventProgramView({
   chatOpen = false,
   isStreamMode = false
 }) {
+  const { language } = useLanguage();
+
   // Event-specific state
   const [selectedSessionId, setSelectedSessionId] = useState("all");
   const [viewMode, setViewMode] = useState("simple"); // "simple" or "full"
@@ -75,6 +79,52 @@ export default function EventProgramView({
   const [hospitalityModalSessionId, setHospitalityModalSessionId] = useState(null);
   // Stream toggle — initialize from URL param or default to room view
   const [showStream, setShowStream] = useState(isStreamMode);
+
+  // Build session labels for the shared SessionPicker component
+  // We need to build a synthetic normalized-segments array just for label generation.
+  const sessionPickerLabels = useMemo(() => {
+    // Build minimal normalized segments from eventSessions + allSegments
+    const labels = eventSessions.map(session => {
+      const sessSegs = allSegments.filter(s => s.session_id === session.id);
+      let endMinutes = 0;
+      sessSegs.forEach(seg => {
+        if (seg.end_time) {
+          const [h, m] = seg.end_time.split(':').map(Number);
+          const e = h * 60 + m;
+          if (e > endMinutes) endMinutes = e;
+        }
+      });
+
+      // Generate short label from date + start time
+      const dayNames = language === 'es'
+        ? ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+        : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+      let shortLabel = session.name;
+      if (session.date) {
+        const [y, mo, d] = session.date.split('-').map(Number);
+        const dateObj = new Date(y, mo - 1, d);
+        const dayAbbr = dayNames[dateObj.getDay()];
+        let ampm = '';
+        if (session.planned_start_time) {
+          const [h] = session.planned_start_time.split(':').map(Number);
+          ampm = h < 12 ? ' AM' : ' PM';
+        }
+        shortLabel = `${dayAbbr}${ampm}`;
+      } else if (session.name.length > 12) {
+        shortLabel = session.name.substring(0, 10) + '…';
+      }
+
+      return {
+        id: session.id,
+        name: session.name,
+        shortLabel,
+        date: session.date || '',
+        endMinutes,
+      };
+    });
+    return labels;
+  }, [eventSessions, allSegments, language]);
 
   // Detect if any session has livestream enabled
   const hasAnyLivestream = eventSessions.some(s => s.has_livestream);
@@ -252,24 +302,19 @@ export default function EventProgramView({
 
       {/* Compact Filters Toolbar - Hidden in Stream Mode */}
       {!isStreamMode && (
-      <div className="flex flex-col sm:flex-row gap-3 items-center bg-gray-100 p-2 rounded-xl border border-gray-200">
-        <div className="flex-1 w-full sm:w-auto">
-          <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
-            <SelectTrigger className="bg-white border-gray-300 text-gray-900 h-9 text-sm font-medium">
-              <Filter className="w-3 h-3 mr-2 text-gray-500" />
-              <SelectValue placeholder="Todas las Sesiones" />
-            </SelectTrigger>
-            <SelectContent className="bg-white">
-              <SelectItem value="all">Todas las Sesiones</SelectItem>
-              {eventSessions.map((session) => (
-                <SelectItem key={session.id} value={session.id}>
-                  {session.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
+      <div className="space-y-3">
+        {/* Session pills — horizontal scroll with "All" button */}
+        {sessionPickerLabels.length > 1 && (
+          <SessionPicker
+            sessions={sessionPickerLabels}
+            value={selectedSessionId}
+            onChange={setSelectedSessionId}
+            showAll={true}
+            currentTime={currentTime}
+          />
+        )}
+
+        <div className="flex flex-row gap-3 items-center bg-gray-100 p-2 rounded-xl border border-gray-200">
         <div className="flex bg-gray-200/50 p-1 rounded-lg shrink-0 w-full sm:w-auto">
           <button
             onClick={() => setViewMode("simple")}
@@ -317,6 +362,7 @@ export default function EventProgramView({
             Director
           </Link>
         )}
+      </div>
       </div>
       )}
 
