@@ -214,19 +214,91 @@ export function normalizeServiceSegments(serviceData) {
 }
 
 /**
- * Get unique session labels from normalized segments.
- * @param {Array} segments - Normalized segments
- * @returns {Array} Unique session labels [{id, name}]
+ * Auto-generate a short session label from date + start time.
+ * E.g. "Viernes PM" → "Vie PM", "Sábado AM" → "Sáb AM"
+ * Service slots (9:30am, 11:30am, custom) pass through as-is.
  */
-export function getSessionLabels(segments) {
+function generateShortLabel(sessionName, sessionDate, startTime, language) {
+  // Service slot names — already short
+  if (['9:30am', '11:30am', 'custom'].includes(sessionName)) return sessionName;
+
+  // If we have a date, build "Day AM/PM" from it
+  if (sessionDate) {
+    const dayNames = language === 'es'
+      ? ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+      : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    const [y, m, d] = sessionDate.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const dayAbbr = dayNames[dateObj.getDay()];
+
+    // Determine AM/PM from start time
+    let ampm = '';
+    if (startTime) {
+      const [h] = startTime.split(':').map(Number);
+      ampm = h < 12 ? ' AM' : ' PM';
+    }
+
+    return `${dayAbbr}${ampm}`;
+  }
+
+  // Fallback: truncate the original name
+  if (sessionName.length <= 12) return sessionName;
+  return sessionName.substring(0, 10) + '…';
+}
+
+/**
+ * Get unique session labels from normalized segments.
+ * Returns [{id, name, shortLabel, date, endMinutes}]
+ *
+ * shortLabel: auto-abbreviated for pill display.
+ * endMinutes: last segment end time (minutes from midnight) — used for past-dimming.
+ * 
+ * @param {Array} segments - Normalized segments
+ * @param {string} language - 'en' | 'es'
+ * @returns {Array} Unique session labels
+ */
+export function getSessionLabels(segments, language = 'es') {
   const seen = new Set();
-  const labels = [];
+  const sessionMap = {};
+
   segments.forEach(seg => {
     const id = seg._sessionId;
-    if (id && !seen.has(id)) {
+    if (!id) return;
+
+    if (!seen.has(id)) {
       seen.add(id);
-      labels.push({ id, name: seg._sessionName || id });
+      sessionMap[id] = {
+        id,
+        name: seg._sessionName || id,
+        date: seg._sessionDate || '',
+        startTime: seg.start_time || '',
+        endMinutes: 0,
+      };
+    }
+
+    // Track latest end time across all segments in this session
+    if (seg.end_time) {
+      const [h, m] = seg.end_time.split(':').map(Number);
+      const endMin = h * 60 + m;
+      if (endMin > sessionMap[id].endMinutes) {
+        sessionMap[id].endMinutes = endMin;
+      }
     }
   });
+
+  // Build final array preserving insertion order
+  const labels = [];
+  seen.forEach(id => {
+    const s = sessionMap[id];
+    labels.push({
+      id: s.id,
+      name: s.name,
+      shortLabel: generateShortLabel(s.name, s.date, s.startTime, language),
+      date: s.date,
+      endMinutes: s.endMinutes,
+    });
+  });
+
   return labels;
 }
