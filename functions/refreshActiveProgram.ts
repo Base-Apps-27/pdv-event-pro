@@ -117,12 +117,15 @@ Deno.serve(async (req) => {
       return diffDays > -7 && diffDays <= 90;
     }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
+    // Selector window: only today and future services appear in the dropdown.
+    // Services are single-day, so there's no reason to show yesterday's.
+    // (Events keep a -7 day window because they can span multiple days.)
     const selectorServices = allServices.filter(s => {
       if (s.status !== 'active') return false;
       if (!s.date || s.origin === 'blueprint') return false;
       const sDate = new Date(s.date);
       const diffDays = (sDate - today) / (1000 * 60 * 60 * 24);
-      return diffDays >= -1 && diffDays <= 7;
+      return diffDays >= 0 && diffDays <= 7;
     }).sort((a, b) => new Date(a.date) - new Date(b.date));
 
     // Auto-detect window: tighter
