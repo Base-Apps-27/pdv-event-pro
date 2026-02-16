@@ -8,8 +8,10 @@ import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n";
 import { hasPermission, hasDashboardAccess } from "@/components/utils/permissions";
 import { primaryNav, secondaryNav } from "@/components/nav/navItems";
-import { MoreHorizontal, X, Languages, LogOut, Calendar } from "lucide-react";
+import { MoreHorizontal, X, Languages, LogOut, Calendar, Pin, PinOff } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import useNavPins from "@/components/nav/useNavPins";
+import { secondaryNav as secondaryNavAll } from "@/components/nav/navItems";
 
 const GRADIENT_H = 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)';
 
@@ -27,6 +29,13 @@ export default function MobileNav({ user }) {
     return hasPermission(user, item.permission);
   });
 
+  const { pinned, isPinned, togglePin, canPin } = useNavPins(user);
+
+  // Resolve pinned items (permission-gated)
+  const pinnedItems = pinned
+    .map(id => secondaryNavAll.find(s => s.id === id))
+    .filter(item => item && (!item.permission || hasPermission(user, item.permission)));
+
   const visibleSecondary = secondaryNav.filter(
     item => !item.permission || hasPermission(user, item.permission)
   );
@@ -36,6 +45,7 @@ export default function MobileNav({ user }) {
       {/* Fixed bottom tab bar */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 print:hidden safe-area-bottom">
         <div className="flex items-center justify-around h-16 px-1">
+          {/* Core primary items */}
           {visiblePrimary.slice(0, 4).map(item => {
             const active = isPageActive(item.matchPages);
             const Icon = item.icon;
@@ -43,17 +53,40 @@ export default function MobileNav({ user }) {
               <Link
                 key={item.id}
                 to={createPageUrl(item.page)}
-                className={`flex flex-col items-center justify-center gap-0.5 min-w-[56px] py-1 rounded-lg transition-colors ${
+                className={`flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 rounded-lg transition-colors ${
                   active ? 'text-[#1F8A70]' : 'text-gray-400'
                 }`}
               >
-                <div className={`relative ${active ? '' : ''}`}>
+                <div className="relative">
                   {active && (
                     <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full" style={{ background: GRADIENT_H }} />
                   )}
-                  <Icon className={`w-5 h-5 ${active ? '' : ''}`} />
+                  <Icon className="w-5 h-5" />
                 </div>
                 <span className="text-[10px] font-medium leading-tight">{t(item.labelKey)}</span>
+              </Link>
+            );
+          })}
+
+          {/* Pinned secondary items in tab bar (max 3, shown between primary and More) */}
+          {pinnedItems.slice(0, 2).map(item => {
+            const active = isPageActive(item.matchPages);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.id}
+                to={createPageUrl(item.page)}
+                className={`flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 rounded-lg transition-colors ${
+                  active ? 'text-[#1F8A70]' : 'text-gray-400'
+                }`}
+              >
+                <div className="relative">
+                  {active && (
+                    <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full" style={{ background: GRADIENT_H }} />
+                  )}
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="text-[10px] font-medium leading-tight truncate max-w-[52px]">{t(item.labelKey)}</span>
               </Link>
             );
           })}
@@ -62,7 +95,7 @@ export default function MobileNav({ user }) {
           {visibleSecondary.length > 0 && (
             <button
               onClick={() => setSheetOpen(true)}
-              className={`flex flex-col items-center justify-center gap-0.5 min-w-[56px] py-1 rounded-lg transition-colors ${
+              className={`flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 rounded-lg transition-colors ${
                 sheetOpen ? 'text-[#1F8A70]' : 'text-gray-400'
               }`}
             >
@@ -111,26 +144,51 @@ export default function MobileNav({ user }) {
               </button>
             </div>
 
+            {/* Pin hint */}
+            <p className="text-[10px] text-gray-400 px-5 pt-3">
+              {language === 'es'
+                ? `Fija hasta 3 ítems en la barra inferior (${pinned.length}/3)`
+                : `Pin up to 3 items to the tab bar (${pinned.length}/3)`}
+            </p>
+
             {/* Nav items */}
             <div className="p-4 space-y-1">
               {visibleSecondary.map(item => {
                 const active = isPageActive(item.matchPages);
                 const Icon = item.icon;
+                const itemPinned = isPinned(item.id);
                 return (
-                  <Link
-                    key={item.id}
-                    to={createPageUrl(item.page)}
-                    onClick={() => setSheetOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                      active
-                        ? 'text-white shadow-md'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                    style={active ? { background: GRADIENT_H } : {}}
-                  >
-                    <Icon className="w-5 h-5 shrink-0" />
-                    <span>{t(item.labelKey)}</span>
-                  </Link>
+                  <div key={item.id} className="flex items-center">
+                    <Link
+                      to={createPageUrl(item.page)}
+                      onClick={() => setSheetOpen(false)}
+                      className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                        active
+                          ? 'text-white shadow-md'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                      style={active ? { background: GRADIENT_H } : {}}
+                    >
+                      <Icon className="w-5 h-5 shrink-0" />
+                      <span>{t(item.labelKey)}</span>
+                    </Link>
+                    <button
+                      onClick={() => togglePin(item.id)}
+                      disabled={!itemPinned && !canPin}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0
+                        ${itemPinned
+                          ? 'text-[#1F8A70]'
+                          : canPin
+                            ? 'text-gray-300 hover:text-gray-500'
+                            : 'text-gray-200 cursor-not-allowed'
+                        }`}
+                      title={itemPinned
+                        ? (language === 'es' ? 'Desfijar' : 'Unpin')
+                        : (language === 'es' ? 'Fijar' : 'Pin')}
+                    >
+                      {itemPinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                    </button>
+                  </div>
                 );
               })}
             </div>
