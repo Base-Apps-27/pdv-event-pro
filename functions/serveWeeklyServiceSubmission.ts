@@ -10,36 +10,37 @@ Deno.serve(async (req) => {
         let formattedDate = "";
 
         try {
-            // Find next upcoming Sunday
-            const today = new Date();
-            const day = today.getDay(); // 0 = Sunday
-            const daysUntilSunday = day === 0 ? 0 : 7 - day; 
+            // --- FIND NEXT WEEKLY SERVICE ---
+            // Strategy: Fetch recent Sunday services sorted by date descending,
+            // then pick the first one whose date >= today (ET).
+            // This avoids timezone bugs and always finds the next upcoming service.
             
-            // If today is Sunday, do we show today? 
-            // If it's late in the day, maybe next Sunday? 
-            // For simplicity, let's show "Upcoming Sunday" as today if today is Sunday, or next Sunday.
-            // Adjust logic if needed. Let's stick to strict "Next Sunday" if today is passed?
-            // User requirement: "Upcoming Sunday".
+            // Get current date in America/New_York
+            const nowET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const todayETStr = nowET.toISOString().split('T')[0]; // YYYY-MM-DD in ET
             
-            const nextSunday = new Date(today);
-            nextSunday.setDate(today.getDate() + daysUntilSunday);
-            // Format YYYY-MM-DD
-            const dateStr = nextSunday.toISOString().split('T')[0];
+            // Fetch upcoming Sunday services (active, sorted by date ascending)
+            // We fetch services with date >= today to find the next one
+            const allSundayServices = await base44.asServiceRole.entities.Service.filter(
+                { day_of_week: 'Sunday', status: 'active' },
+                'date',  // sort ascending by date
+                20       // enough to find the next one
+            );
             
-            // Format for display (e.g. Domingo 12/03/26)
-            formattedDate = nextSunday.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'numeric', year: '2-digit' });
-            formattedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1); // Capitalize
-
-            // Fetch Service for this date
-            const services = await base44.asServiceRole.entities.Service.filter({ date: dateStr });
-            // Filter for active/valid services (similar to WeeklyServiceManager logic)
-            const validServices = services.filter(s => 
+            // Find the first service with date >= today (ET) that has segments
+            const validServices = allSundayServices.filter(s => 
+                s.date >= todayETStr &&
                 (s["9:30am"]?.length > 0 || s["11:30am"]?.length > 0) &&
-                (!s.segments || s.segments.length === 0) // Exclude custom services if any mix-up
+                (!s.segments || s.segments.length === 0)
             );
 
             if (validServices.length > 0) {
-                const service = validServices[0]; // Assume one main service per Sunday
+                const service = validServices[0]; // Next upcoming service
+                
+                // Format display date from the service's actual date
+                const svcDate = new Date(service.date + 'T12:00:00'); // noon to avoid TZ shift
+                formattedDate = svcDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'numeric', year: '2-digit' });
+                formattedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
                 
                 // Extract Message segments
                 const processTimeSlot = (slot) => {
