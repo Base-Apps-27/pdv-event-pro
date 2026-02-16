@@ -74,7 +74,7 @@ export default function DesktopSidebar({ user }) {
       {/* Slim icon rail — 72px wide, always visible */}
       <aside className="hidden lg:flex lg:flex-col w-[72px] bg-[#0D0D0D] fixed h-full z-50 print:hidden items-center py-4 overflow-visible">
         {/* Brand mark */}
-        <Link to={createPageUrl("Dashboard")} className="mb-6 group">
+        <Link to={createPageUrl(getLandingPage(user))} className="mb-6 group">
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110"
             style={{ background: GRADIENT }}
