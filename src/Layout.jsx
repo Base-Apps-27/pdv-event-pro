@@ -67,44 +67,37 @@ function LayoutContentInner({ children }) {
     }
   }, [loading, user, isPublicPage]);
 
-  // Permission-based redirects for authenticated users (2026-02-14)
-  // MyProgram is the default landing for anyone without explicit dashboard access.
-  // PublicProgramView requires access_live_view permission.
+  // Permission-based redirects for authenticated users (2026-02-16 simplified)
+  // Waterfall: Dashboard > Live View > MyProgram (universal).
+  // Users are only allowed to navigate to pages their permissions grant.
+  // If they land on a page they can't access, redirect to their landing page.
   useEffect(() => {
-    if (!user || loading) return;
-    const canViewDashboard = hasPermission(user, 'view_events') || hasPermission(user, 'view_services');
-    const canViewLive = hasPermission(user, 'access_live_view');
-    const currentPath = location.pathname;
+    if (!user || loading || isPublicPage) return;
 
-    // If user is on PublicProgramView but lacks live view permission, redirect to MyProgram
-    if (
-      (currentPath === createPageUrl('PublicProgramView') || currentPath === '/PublicProgramView') &&
-      !canViewLive && !canViewDashboard
-    ) {
-      navigate(createPageUrl('MyProgram'), { replace: true });
+    const currentPath = location.pathname;
+    const landing = getLandingPage(user);
+    const landingPath = createPageUrl(landing);
+    const canDashboard = hasDashboardAccess(user);
+    const canLiveView = hasPermission(user, 'access_live_view');
+
+    // Dashboard users: no redirect needed — nav gating handles page-level access
+    if (canDashboard) return;
+
+    // Live View users: allowed on PublicProgramView and MyProgram only
+    if (canLiveView) {
+      const allowedPaths = [
+        createPageUrl('PublicProgramView'), '/PublicProgramView',
+        createPageUrl('MyProgram'), '/MyProgram',
+      ];
+      if (!allowedPaths.includes(currentPath)) {
+        navigate(landingPath, { replace: true });
+      }
       return;
     }
 
-    if (!canViewDashboard && !isPublicPage) {
-      // Users with live view access can see PublicProgramView (now auth-gated)
-      if (canViewLive) {
-        const allowedPaths = [
-          createPageUrl('PublicProgramView'), '/PublicProgramView',
-          createPageUrl('MyProgram'), '/MyProgram',
-        ];
-        if (!allowedPaths.includes(currentPath)) {
-          navigate(createPageUrl('MyProgram'), { replace: true });
-        }
-      } else if (hasPermission(user, 'access_my_program')) {
-        if (currentPath !== createPageUrl('MyProgram') && currentPath !== '/MyProgram') {
-          navigate(createPageUrl('MyProgram'), { replace: true });
-        }
-      } else {
-        // Fallback: everyone authenticated gets MyProgram
-        if (currentPath !== createPageUrl('MyProgram') && currentPath !== '/MyProgram') {
-          navigate(createPageUrl('MyProgram'), { replace: true });
-        }
-      }
+    // Everyone else: MyProgram only
+    if (currentPath !== createPageUrl('MyProgram') && currentPath !== '/MyProgram') {
+      navigate(landingPath, { replace: true });
     }
   }, [user, location.pathname, loading, navigate, isPublicPage]);
 
