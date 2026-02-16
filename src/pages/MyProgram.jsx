@@ -22,6 +22,7 @@ import DepartmentPicker, { useDepartment } from '@/components/myprogram/Departme
 import SessionPicker from '@/components/myprogram/SessionPicker';
 import MyProgramTimeline from '@/components/myprogram/MyProgramTimeline';
 import MyProgramStandby from '@/components/myprogram/MyProgramStandby';
+import MyProgramStatusBar from '@/components/myprogram/MyProgramStatusBar';
 import StructuredVersesModal from '@/components/service/StructuredVersesModal';
 
 export default function MyProgram() {
@@ -32,7 +33,11 @@ export default function MyProgram() {
 
   const [department, setDepartment] = useDepartment();
   const [selectedSession, setSelectedSession] = useState(null);
+  const [userOverrodeSession, setUserOverrodeSession] = useState(false);
   const [verseModalData, setVerseModalData] = useState(null);
+
+  // Ref map for scrolling to specific segments
+  const segmentRefs = React.useRef({});
 
   const { contextType, contextId, event, service, programData, isLoading } = useActiveProgramCache();
 
@@ -51,12 +56,65 @@ export default function MyProgram() {
   // Session labels for picker
   const sessionLabels = useMemo(() => getSessionLabels(segments), [segments]);
 
-  // Auto-select first session if none selected
-  useEffect(() => {
-    if (sessionLabels.length > 0 && !selectedSession) {
-      setSelectedSession(sessionLabels[0].id);
+  // Auto-detect which session is active (for auto-switching between 9:30am / 11:30am)
+  // Only auto-switch if the user hasn't manually overridden their selection.
+  const autoDetectedSession = useMemo(() => {
+    if (sessionLabels.length <= 1) return sessionLabels[0]?.id || null;
+    if (!currentTime) return sessionLabels[0]?.id || null;
+
+    const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+    // Find the session whose segments are currently active or about to start
+    // Walk sessions in reverse order: pick the latest one whose first segment has started
+    for (let i = sessionLabels.length - 1; i >= 0; i--) {
+      const sessId = sessionLabels[i].id;
+      const sessSegments = segments.filter(s => s._sessionId === sessId);
+      if (sessSegments.length === 0) continue;
+      
+      // Find earliest start in this session
+      const earliest = sessSegments.reduce((min, s) => {
+        if (!s.start_time) return min;
+        const [h, m] = s.start_time.split(':').map(Number);
+        const t = h * 60 + m;
+        return t < min ? t : min;
+      }, Infinity);
+      
+      // If now is within 15 min before the session start or after it, select it
+      if (earliest !== Infinity && nowMin >= earliest - 15) {
+        return sessId;
+      }
     }
-  }, [sessionLabels, selectedSession]);
+
+    return sessionLabels[0]?.id || null;
+  }, [sessionLabels, segments, currentTime]);
+
+  // Auto-select session: use auto-detection unless user manually overrode
+  useEffect(() => {
+    if (sessionLabels.length === 0) return;
+    
+    if (!selectedSession) {
+      // First load — use auto-detected
+      setSelectedSession(autoDetectedSession || sessionLabels[0].id);
+      return;
+    }
+    
+    // Auto-switch only if user hasn't manually overridden
+    if (!userOverrodeSession && autoDetectedSession && autoDetectedSession !== selectedSession) {
+      setSelectedSession(autoDetectedSession);
+    }
+  }, [sessionLabels, autoDetectedSession, selectedSession, userOverrodeSession]);
+
+  // Reset override when context changes (different service/event loaded)
+  useEffect(() => {
+    setUserOverrodeSession(false);
+    setSelectedSession(null);
+  }, [contextId]);
+
+  // Manual session change handler
+  const handleSessionChange = React.useCallback((sessId) => {
+    setSelectedSession(sessId);
+    setUserOverrodeSession(true);
+  }, []);
 
   // Real-time subscriptions are now handled inside useActiveProgramCache.
   // No need for manual subscriptions here — the cache hook subscribes to
@@ -71,6 +129,27 @@ export default function MyProgram() {
     }
     return '';
   }, [contextType, service, segments, selectedSession]);
+
+  // Is today check for status bar
+  const isToday = useMemo(() => {
+    if (!sessionDate) return false;
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+    return sessionDate === todayStr;
+  }, [sessionDate]);
+
+  // Filtered segments for the selected session (for status bar)
+  const sessionSegments = useMemo(() => {
+    if (sessionLabels.length <= 1) return segments;
+    return segments.filter(s => s._sessionId === selectedSession);
+  }, [segments, selectedSession, sessionLabels]);
+
+  // Scroll to a segment by id
+  const handleScrollToSegment = React.useCallback((seg) => {
+    const el = segmentRefs.current[seg.id];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
 
   // Gradient style for brand header
   const gradientStyle = {
@@ -115,15 +194,23 @@ export default function MyProgram() {
 
       {/* Sticky Controls */}
       <div className="sticky top-0 z-40 bg-[#F0F1F3]/95 backdrop-blur-sm border-b border-white/20 shadow-sm transition-all">
-        <div className="max-w-2xl mx-auto px-4 py-4 space-y-3">
+        <div className="max-w-2xl mx-auto px-4 py-3 space-y-2.5">
           {/* Department Picker */}
           <DepartmentPicker value={department} onChange={setDepartment} />
 
-          {/* Session Picker (events with multiple sessions) */}
+          {/* Session Picker (events with multiple sessions, or services with time slots) */}
           <SessionPicker
             sessions={sessionLabels}
             value={selectedSession}
-            onChange={setSelectedSession}
+            onChange={handleSessionChange}
+          />
+
+          {/* Now / Next status bar */}
+          <MyProgramStatusBar
+            segments={sessionSegments}
+            currentTime={currentTime}
+            isToday={isToday}
+            onScrollTo={handleScrollToSegment}
           />
         </div>
       </div>
@@ -140,6 +227,7 @@ export default function MyProgram() {
           preServiceNotes={contextType === 'service' ? (programData?.program?.pre_service_notes || null) : null}
           selectedSession={selectedSession}
           onOpenVerses={setVerseModalData}
+          segmentRefs={segmentRefs}
         />
       </div>
 
