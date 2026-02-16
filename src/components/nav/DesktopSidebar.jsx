@@ -58,9 +58,12 @@ export default function DesktopSidebar({ user }) {
   const isPageActive = (matchPages) =>
     matchPages.some(p => location.pathname === createPageUrl(p));
 
-  const visiblePrimary = primaryNav.filter(
-    item => !item.permission || hasPermission(user, item.permission)
-  );
+  const visiblePrimary = primaryNav.filter(item => {
+    if (!item.permission) return true;
+    // Dashboard: either view_events or view_services qualifies
+    if (item.id === 'dashboard') return hasDashboardAccess(user);
+    return hasPermission(user, item.permission);
+  });
 
   const visibleSecondary = secondaryNav.filter(
     item => !item.permission || hasPermission(user, item.permission)
