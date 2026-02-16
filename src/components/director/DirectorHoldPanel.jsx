@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { getSegmentFlexibility, isRigidSegment } from '@/components/utils/segmentFlexibility';
+import { generateInstantCascadeOptions } from '@/components/director/cascadeMath';
 
 /**
  * DirectorHoldPanel - Shown when a segment is held
