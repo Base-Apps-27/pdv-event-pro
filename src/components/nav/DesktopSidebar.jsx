@@ -8,8 +8,10 @@ import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n";
 import { hasPermission, hasDashboardAccess, getLandingPage } from "@/components/utils/permissions";
 import { primaryNav, secondaryNav } from "@/components/nav/navItems";
-import { Calendar, Languages, MoreHorizontal, X, LogOut } from "lucide-react";
+import { Calendar, Languages, MoreHorizontal, X, LogOut, Pin, PinOff } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import useNavPins from "@/components/nav/useNavPins";
+import { secondaryNav as secondaryNavAll } from "@/components/nav/navItems";
 
 const GRADIENT = 'linear-gradient(180deg, #1F8A70 0%, #4DC15F 60%, #D9DF32 100%)';
 const GRADIENT_H = 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)';
@@ -65,6 +67,13 @@ export default function DesktopSidebar({ user }) {
     return hasPermission(user, item.permission);
   });
 
+  const { pinned, isPinned, togglePin, canPin } = useNavPins(user);
+
+  // Resolve pinned secondary items to full nav item objects (permission-gated)
+  const pinnedItems = pinned
+    .map(id => secondaryNavAll.find(s => s.id === id))
+    .filter(item => item && (!item.permission || hasPermission(user, item.permission)));
+
   const visibleSecondary = secondaryNav.filter(
     item => !item.permission || hasPermission(user, item.permission)
   );
@@ -100,6 +109,25 @@ export default function DesktopSidebar({ user }) {
               />
             );
           })}
+
+          {/* Pinned secondary items — surfaced into the rail */}
+          {pinnedItems.length > 0 && (
+            <>
+              <div className="w-6 h-px bg-gray-700 my-2" />
+              {pinnedItems.map(item => {
+                const active = isPageActive(item.matchPages);
+                return (
+                  <NavRailItem
+                    key={item.id}
+                    to={createPageUrl(item.page)}
+                    icon={item.icon}
+                    label={t(item.labelKey)}
+                    active={active}
+                  />
+                );
+              })}
+            </>
+          )}
 
           {/* More button — opens flyout */}
           {visibleSecondary.length > 0 && (
@@ -194,25 +222,49 @@ export default function DesktopSidebar({ user }) {
                   <X className="w-4 h-4" />
                 </button>
               </div>
+              {/* Pin hint */}
+              <p className="text-[10px] text-gray-600 mb-3">
+                {language === 'es'
+                  ? `Fija hasta 3 ítems en la barra lateral (${pinned.length}/3)`
+                  : `Pin up to 3 items to the sidebar (${pinned.length}/3)`}
+              </p>
               <nav className="space-y-1">
                 {visibleSecondary.map(item => {
                   const active = isPageActive(item.matchPages);
                   const Icon = item.icon;
+                  const itemPinned = isPinned(item.id);
                   return (
-                    <Link
-                      key={item.id}
-                      to={createPageUrl(item.page)}
-                      onClick={() => setMoreOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                        active
-                          ? 'text-white'
-                          : 'text-gray-400 hover:text-white hover:bg-white/5'
-                      }`}
-                      style={active ? { background: GRADIENT_H } : {}}
-                    >
-                      <Icon className="w-4 h-4 shrink-0" />
-                      <span>{t(item.labelKey)}</span>
-                    </Link>
+                    <div key={item.id} className="flex items-center group/pin">
+                      <Link
+                        to={createPageUrl(item.page)}
+                        onClick={() => setMoreOpen(false)}
+                        className={`flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                          active
+                            ? 'text-white'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                        style={active ? { background: GRADIENT_H } : {}}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span>{t(item.labelKey)}</span>
+                      </Link>
+                      <button
+                        onClick={() => togglePin(item.id)}
+                        disabled={!itemPinned && !canPin}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0
+                          ${itemPinned
+                            ? 'text-teal-400 hover:text-teal-300 hover:bg-teal-900/30'
+                            : canPin
+                              ? 'text-gray-600 opacity-0 group-hover/pin:opacity-100 hover:text-gray-300 hover:bg-white/5'
+                              : 'text-gray-700 opacity-0 group-hover/pin:opacity-50 cursor-not-allowed'
+                          }`}
+                        title={itemPinned
+                          ? (language === 'es' ? 'Desfijar' : 'Unpin')
+                          : (language === 'es' ? 'Fijar en barra' : 'Pin to sidebar')}
+                      >
+                        {itemPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
                   );
                 })}
               </nav>
