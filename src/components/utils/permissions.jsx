@@ -168,6 +168,39 @@ export function hasAllPermissions(user, permissionKeys) {
 }
 
 /**
+ * Determine the correct landing page for a user based on their permissions.
+ * Waterfall: Dashboard > Live View > MyProgram (universal fallback).
+ *
+ * "Dashboard access" = can view events OR services (the two main admin surfaces).
+ * "Live View access" = has access_live_view permission.
+ * Everyone else lands on MyProgram — zero extra permissions needed.
+ */
+export function getLandingPage(user) {
+  if (!user) return 'MyProgram';
+
+  // Tier 1: Dashboard (admin / editor roles)
+  if (hasPermission(user, 'view_events') || hasPermission(user, 'view_services')) {
+    return 'Dashboard';
+  }
+
+  // Tier 2: Live View (coordinators, live managers)
+  if (hasPermission(user, 'access_live_view')) {
+    return 'PublicProgramView';
+  }
+
+  // Tier 3: Universal fallback — MyProgram (everyone authenticated)
+  return 'MyProgram';
+}
+
+/**
+ * Check if a user has "dashboard-level" access (can see admin pages).
+ * Convenience wrapper used by nav gating and Layout redirects.
+ */
+export function hasDashboardAccess(user) {
+  return hasPermission(user, 'view_events') || hasPermission(user, 'view_services');
+}
+
+/**
  * Get all available permissions (for UI display)
  */
 export function getAllPermissionDefinitions() {
