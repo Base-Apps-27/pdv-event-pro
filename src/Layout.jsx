@@ -105,7 +105,7 @@ function LayoutContentInner({ children }) {
 
   // Public pages: show nav shell for authenticated users, bare shell for anonymous
   if (isPublicPage) {
-    if (user && isPublicWithNav && (hasPermission(user, 'view_events') || hasPermission(user, 'view_services'))) {
+    if (user && isPublicWithNav && hasDashboardAccess(user)) {
       // Authenticated admin/editor on a public page — show full nav
       return (
         <div className="min-h-screen bg-[#F0F1F3]">
