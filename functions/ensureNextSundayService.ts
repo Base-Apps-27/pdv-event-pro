@@ -15,6 +15,7 @@
  * 4. Mark it with origin: 'auto_created' for traceability
  * 
  * Decision: "Auto-create next Sunday service" (2026-02-16)
+ * Version: 1.0
  * Constitution: No destructive ops. Additive only.
  */
 
