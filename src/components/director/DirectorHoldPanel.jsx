@@ -109,8 +109,8 @@ export default function DirectorHoldPanel({
       setReconciledSegments(defaults);
       setStep('reconcile');
     } else {
-      // No phantoms, go directly to cascade
-      await fetchCascadeOptions();
+      // No phantoms, generate instant options and go to cascade
+      buildInstantOptions();
     }
   };
   
