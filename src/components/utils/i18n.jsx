@@ -80,13 +80,7 @@ const translations = {
     'btn.print': 'Imprimir',
     'btn.saving': 'Guardando...',
 
-    // Voice
-    'voice.dictate': 'Dictar',
-    'voice.use_keyboard_mic': 'Usa el micrófono del teclado del dispositivo',
-    'voice.listening': 'Escuchando...',
-    'voice.voice': 'Voz',
-    'voice.mic_title': 'Micrófono',
-    'voice.start_dictation': 'Activar dictado nativo',
+
     
     // Status
     'status.planning': 'EN PLANIFICACIÓN',
@@ -556,13 +550,7 @@ const translations = {
     'btn.print': 'Print',
     'btn.saving': 'Saving...',
 
-    // Voice
-    'voice.dictate': 'Dictate',
-    'voice.use_keyboard_mic': 'Use your keyboard microphone',
-    'voice.listening': 'Listening...',
-    'voice.voice': 'Voice',
-    'voice.mic_title': 'Microphone',
-    'voice.start_dictation': 'Activate native dictation',
+
     
     // Status
     'status.planning': 'PLANNING',
