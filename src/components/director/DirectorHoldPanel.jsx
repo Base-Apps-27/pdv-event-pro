@@ -45,7 +45,7 @@ export default function DirectorHoldPanel({
   const [reconciledSegments, setReconciledSegments] = useState([]);
   const [cascadeOptions, setCascadeOptions] = useState([]);
   const [selectedCascade, setSelectedCascade] = useState(null);
-  const [loadingCascade, setLoadingCascade] = useState(false);
+  const [loadingAI, setLoadingAI] = useState(false); // Only for async AI enrichment
   
   const getNowHHMM = () => {
     const now = new Date();
