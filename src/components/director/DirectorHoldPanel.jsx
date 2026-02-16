@@ -375,94 +375,115 @@ export default function DirectorHoldPanel({
           </div>
         )}
         
-        {/* Step 3: Cascade Options */}
+        {/* Step 3: Cascade Options (instant math + optional AI) */}
         {step === 'cascade' && (
           <div className="space-y-4">
-            {loadingCascade ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-8 h-8 text-teal-400 animate-spin" />
-                <span className="ml-3 text-slate-300">
-                  {language === 'es' ? 'Generando opciones...' : 'Generating options...'}
-                </span>
-              </div>
-            ) : (
-              <>
-                <p className="text-slate-300 text-sm">
-                  {language === 'es'
-                    ? 'Selecciona cómo rebalancear el tiempo restante:'
-                    : 'Select how to rebalance the remaining time:'}
-                </p>
-                
-                <RadioGroup
-                  value={selectedCascade?.toString()}
-                  onValueChange={(val) => setSelectedCascade(parseInt(val))}
-                  className="space-y-3"
+            <p className="text-slate-300 text-sm">
+              {language === 'es'
+                ? 'Selecciona cómo rebalancear el tiempo restante:'
+                : 'Select how to rebalance the remaining time:'}
+            </p>
+            
+            <RadioGroup
+              value={selectedCascade?.toString()}
+              onValueChange={(val) => setSelectedCascade(parseInt(val))}
+              className="space-y-3"
+            >
+              {cascadeOptions.map((option, idx) => (
+                <div
+                  key={idx}
+                  className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                    selectedCascade === idx 
+                      ? 'bg-teal-950/30 border-teal-500/50' 
+                      : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                  }`}
+                  onClick={() => setSelectedCascade(idx)}
                 >
-                  {cascadeOptions.map((option, idx) => (
-                    <div
-                      key={idx}
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                        selectedCascade === idx 
-                          ? 'bg-teal-950/30 border-teal-500/50' 
-                          : 'bg-slate-950 border-slate-800 hover:border-slate-700'
-                      }`}
-                      onClick={() => setSelectedCascade(idx)}
-                    >
-                      <div className="flex items-start gap-3">
-                        <RadioGroupItem value={idx.toString()} id={`cascade-${idx}`} className="mt-1 border-slate-600 text-teal-500" />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor={`cascade-${idx}`} className="text-white font-medium cursor-pointer">
-                              {language === 'es' ? option.label_es : option.label}
-                            </Label>
-                            {option.exceeds_hard_limit && (
-                              <Badge className="bg-red-600 text-white text-xs">
-                                <AlertTriangle className="w-3 h-3 mr-1" />
-                                {language === 'es' ? 'Excede límite' : 'Exceeds limit'}
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-slate-400 mt-1">
-                            {language === 'es' ? option.description_es : option.description}
-                          </p>
-                          <div className="flex gap-4 mt-2 text-xs">
-                            <span className="text-slate-400">
-                              {language === 'es' ? 'Fin proyectado:' : 'Projected end:'}{' '}
-                              <span className="text-white font-mono">{option.projected_session_end}</span>
-                            </span>
-                            <span className="text-green-400">
-                              {language === 'es' ? 'Recupera:' : 'Recovers:'} {option.recovery_min}m
-                            </span>
-                          </div>
+                  <div className="flex items-start gap-3">
+                    <RadioGroupItem value={idx.toString()} id={`cascade-${idx}`} className="mt-1 border-slate-600 text-teal-500" />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <Label htmlFor={`cascade-${idx}`} className="text-white font-medium cursor-pointer">
+                          {language === 'es' ? option.label_es : option.label}
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          {option.source === 'ai' && (
+                            <Badge className="bg-purple-600/30 text-purple-300 border border-purple-500/50 text-xs">
+                              IA
+                            </Badge>
+                          )}
+                          {option.exceeds_hard_limit && (
+                            <Badge className="bg-red-600 text-white text-xs">
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              {language === 'es' ? 'Excede límite' : 'Exceeds limit'}
+                            </Badge>
+                          )}
                         </div>
                       </div>
+                      <p className="text-sm text-slate-400 mt-1">
+                        {language === 'es' ? option.description_es : option.description}
+                      </p>
+                      <div className="flex gap-4 mt-2 text-xs">
+                        <span className="text-slate-400">
+                          {language === 'es' ? 'Fin proyectado:' : 'Projected end:'}{' '}
+                          <span className="text-white font-mono">{option.projected_session_end}</span>
+                        </span>
+                        {option.recovery_min > 0 && (
+                          <span className="text-green-400">
+                            {language === 'es' ? 'Recupera:' : 'Recovers:'} {option.recovery_min}m
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  ))}
-                </RadioGroup>
-                
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep(phantomSegments.length > 0 ? 'reconcile' : 'finalize')}
-                    className="border-slate-600 text-slate-300"
-                  >
-                    {language === 'es' ? 'Atrás' : 'Back'}
-                  </Button>
-                  <Button
-                    onClick={handleApplyCascade}
-                    disabled={selectedCascade === null || isLoading}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-1" />
-                    ) : (
-                      <Zap className="w-4 h-4 mr-1" />
-                    )}
-                    {language === 'es' ? 'Aplicar Cascade' : 'Apply Cascade'}
-                  </Button>
+                  </div>
                 </div>
-              </>
+              ))}
+            </RadioGroup>
+
+            {/* AI Enrichment Button — non-blocking, optional */}
+            {!cascadeOptions.some(o => o.source === 'ai') && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchAIOption}
+                disabled={loadingAI}
+                className="border-purple-700/50 text-purple-300 hover:bg-purple-950 hover:text-purple-200 w-full"
+              >
+                {loadingAI ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    {language === 'es' ? 'Generando sugerencia IA...' : 'Generating AI suggestion...'}
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 mr-2" />
+                    {language === 'es' ? 'Pedir sugerencia IA (opcional)' : 'Get AI suggestion (optional)'}
+                  </>
+                )}
+              </Button>
             )}
+            
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setStep(phantomSegments.length > 0 ? 'reconcile' : 'finalize')}
+                className="border-slate-600 text-slate-300"
+              >
+                {language === 'es' ? 'Atrás' : 'Back'}
+              </Button>
+              <Button
+                onClick={handleApplyCascade}
+                disabled={selectedCascade === null || isLoading}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                ) : (
+                  <Zap className="w-4 h-4 mr-1" />
+                )}
+                {language === 'es' ? 'Aplicar Cascade' : 'Apply Cascade'}
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
