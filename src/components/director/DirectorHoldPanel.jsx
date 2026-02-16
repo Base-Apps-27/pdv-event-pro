@@ -114,14 +114,44 @@ export default function DirectorHoldPanel({
     }
   };
   
-  const handleReconcileComplete = async () => {
-    await fetchCascadeOptions();
+  const handleReconcileComplete = () => {
+    buildInstantOptions();
   };
   
-  const fetchCascadeOptions = async () => {
-    setLoadingCascade(true);
-    setStep('cascade');
+  /**
+   * INSTANT CASCADE (2026-02-16): Generate math-based options client-side in <1ms.
+   * AI "Smart Rebalance" available as optional async enrichment via button.
+   */
+  const buildInstantOptions = () => {
+    const drift = calculateDrift();
+    const segsForCascade = remainingSegments.map(s => ({
+      id: s.id,
+      title: s.title,
+      segment_type: s.segment_type,
+      start_time: s.start_time,
+      end_time: s.end_time,
+      duration_min: s.duration_min,
+      live_status: s.live_status,
+    }));
     
+    const instantOptions = generateInstantCascadeOptions(
+      segsForCascade,
+      actualEndTime,
+      drift,
+      session.planned_end_time
+    );
+    
+    setCascadeOptions(instantOptions);
+    setSelectedCascade(instantOptions.length > 0 ? 0 : null);
+    setStep('cascade');
+  };
+
+  /**
+   * ASYNC AI ENRICHMENT: Fetches a "Smart Rebalance" option from the LLM.
+   * Non-blocking — director can act on instant options while this loads.
+   */
+  const fetchAIOption = async () => {
+    setLoadingAI(true);
     try {
       const response = await base44.functions.invoke('generateCascadeProposal', {
         session_id: session.id,
@@ -137,45 +167,25 @@ export default function DirectorHoldPanel({
           live_status: s.live_status
         })),
         session_planned_end_time: session.planned_end_time,
-        next_major_break_end_time: null, // TODO: Calculate from session data
+        next_major_break_end_time: null,
         cumulative_drift_min: calculateDrift(),
-        time_bank_min: 0, // TODO: Track time bank
+        time_bank_min: 0,
         reconciled_segments: reconciledSegments
       });
       
-      if (response.data?.options) {
-        setCascadeOptions(response.data.options);
-        if (response.data.options.length > 0) {
-          setSelectedCascade(0); // Select first option by default
-        }
+      if (response.data?.options?.length > 0) {
+        // Tag AI options and append to existing instant options
+        const aiOptions = response.data.options.map(opt => ({ ...opt, source: 'ai' }));
+        setCascadeOptions(prev => [...prev, ...aiOptions]);
+        toast.success(language === 'es' 
+          ? `${aiOptions.length} opción(es) IA disponibles` 
+          : `${aiOptions.length} AI option(s) ready`);
       }
     } catch (err) {
-      console.error('Failed to generate cascade options:', err);
-      toast.error(language === 'es' ? 'Error al generar opciones' : 'Failed to generate options');
-      
-      // Provide fallback "shift all" option
-      setCascadeOptions([{
-        label: 'Shift All (Fallback)',
-        label_es: 'Desplazar Todo (Respaldo)',
-        description: 'Simply shift all remaining segments by the overrun amount',
-        description_es: 'Simplemente desplazar todos los segmentos restantes por el tiempo de exceso',
-        segments: remainingSegments.map((s, i) => {
-          const overrun = calculateDrift();
-          return {
-            id: s.id,
-            new_start_time: addMinutes(s.start_time, overrun),
-            new_end_time: addMinutes(s.end_time, overrun),
-            new_duration_min: s.duration_min,
-            delta_min: 0
-          };
-        }),
-        projected_session_end: addMinutes(session.planned_end_time, calculateDrift()),
-        exceeds_hard_limit: false,
-        recovery_min: 0
-      }]);
-      setSelectedCascade(0);
+      console.error('AI cascade generation failed (non-critical):', err);
+      toast.error(language === 'es' ? 'IA no disponible — usa las opciones instantáneas' : 'AI unavailable — use instant options');
     } finally {
-      setLoadingCascade(false);
+      setLoadingAI(false);
     }
   };
   
