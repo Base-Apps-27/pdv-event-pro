@@ -12,7 +12,7 @@ export const primaryNav = [
     labelKey: 'nav.dashboard',
     icon: LayoutDashboard,
     page: 'Dashboard',
-    permission: null, // everyone with dashboard access
+    permission: 'view_events', // requires dashboard-level access (view_events OR view_services checked at render)
     matchPages: ['Dashboard'],
   },
   {
