@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/components/utils/i18n";
 import { validateAIActions, formatValidationForDisplay } from "@/components/utils/segmentValidation";
 import AIProposalReview from "@/components/event/AIProposalReview";
-import VoiceInputButton from "@/components/event/VoiceInputButton";
+
 import EventClarificationPicker from "@/components/event/EventClarificationPicker";
 import AIFileUploadZone from "@/components/event/AIFileUploadZone";
 import { fuzzySearchEvents } from "@/components/utils/eventFuzzySearch";
@@ -757,22 +757,11 @@ If user mentions a past event and you're uncertain which one they mean (< 80% co
                 className="resize-none"
               />
 
-              {/* Voice + Submit Controls */}
-              <div className="flex flex-col sm:flex-row gap-2">
-                <VoiceInputButton 
-                  textareaRef={textareaRef}
-                  onTranscriptionComplete={() => {
-                    // Update userInput state when voice completes
-                    if (textareaRef.current) {
-                      setUserInput(textareaRef.current.value);
-                    }
-                  }}
-                />
+              <div className="flex justify-end">
                 <Button 
                   onClick={() => analyzeRequest()} 
                   disabled={!userInput.trim() || isProcessing}
                   style={tealStyle}
-                  className="flex-1"
                 >
                   {isProcessing ? (
                     <>
