@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, MapPin, Utensils, Music, Monitor, Users, Radio, Zap, LayoutGrid } from "lucide-react";
+import { Calendar, List, ListChecks, ChevronUp, ChevronDown, Languages, Mic, Utensils, Music, Monitor, Users, Radio, Zap, LayoutGrid } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import HospitalityTasksViewModal from "@/components/service/HospitalityTasksViewModal";
