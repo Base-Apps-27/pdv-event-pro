@@ -21,9 +21,11 @@ export default function MobileNav({ user }) {
   const isPageActive = (matchPages) =>
     matchPages.some(p => location.pathname === createPageUrl(p));
 
-  const visiblePrimary = primaryNav.filter(
-    item => !item.permission || hasPermission(user, item.permission)
-  );
+  const visiblePrimary = primaryNav.filter(item => {
+    if (!item.permission) return true;
+    if (item.id === 'dashboard') return hasDashboardAccess(user);
+    return hasPermission(user, item.permission);
+  });
 
   const visibleSecondary = secondaryNav.filter(
     item => !item.permission || hasPermission(user, item.permission)
