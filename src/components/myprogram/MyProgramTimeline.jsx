@@ -20,7 +20,7 @@ function parseTimeToMinutes(timeStr) {
 
 import MyProgramPreSessionCard from './MyProgramPreSessionCard';
 
-export default function MyProgramTimeline({ segments, sessionFilter, department, currentTime, sessionDate, preSessionDetails, preServiceNotes, selectedSession, onOpenVerses }) {
+export default function MyProgramTimeline({ segments, sessionFilter, department, currentTime, sessionDate, preSessionDetails, preServiceNotes, selectedSession, onOpenVerses, segmentRefs }) {
   const { t } = useLanguage();
   const nowRef = useRef(null);
   const hasScrolled = useRef(false);
@@ -136,7 +136,11 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
         {segmentsWithStatus.map((seg, idx) => (
         <div
           key={seg.id}
-          ref={seg._status === 'now' ? nowRef : undefined}
+          ref={(el) => {
+            // Wire up both the "now" auto-scroll ref and the parent's segmentRefs map
+            if (seg._status === 'now') nowRef.current = el;
+            if (segmentRefs) segmentRefs.current[seg.id] = el;
+          }}
           className="relative mb-7"
         >
           {/* Timeline Dot */}
