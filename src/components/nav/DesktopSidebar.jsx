@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n";
-import { hasPermission } from "@/components/utils/permissions";
+import { hasPermission, hasDashboardAccess, getLandingPage } from "@/components/utils/permissions";
 import { primaryNav, secondaryNav } from "@/components/nav/navItems";
 import { Calendar, Languages, MoreHorizontal, X, LogOut } from "lucide-react";
 import { base44 } from "@/api/base44Client";
