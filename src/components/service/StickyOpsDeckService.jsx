@@ -108,28 +108,20 @@ export default function StickyOpsDeckService({
 
   const activeAction = isServiceDay
     ? (upcomingActions[0] || pastActions[0])
-    : upcomingActions[0] || pastActions[0]; // Preview: show first available if not service day (or just fallback)
+    : upcomingActions[0] || pastActions[0];
 
-  // SERVICE OVER GUARD: Only applies on service day
-  if (isServiceDay && upcomingActions.length === 0 && pastActions.length > 0) {
-    const lastActionTime = pastActions[0].time.getTime();
-    const minutesSinceLast = (currentTime.getTime() - lastActionTime) / 60000;
-    if (minutesSinceLast > 30) return null;
-  }
-
+  // HOOKS MUST run unconditionally — no early returns above this line.
   const concurrentCount = useMemo(() => {
     if (!activeAction) return 0;
     const isPastRef = activeAction.time.getTime() <= currentTime.getTime();
     const list = isPastRef ? pastActions : upcomingActions;
     return list.filter(a => 
-      Math.abs(a.time.getTime() - activeAction.time.getTime()) < 300000 // Within 5 minutes
+      Math.abs(a.time.getTime() - activeAction.time.getTime()) < 300000
     ).length;
   }, [activeAction, pastActions, upcomingActions, currentTime]);
 
-  if (!activeAction) return null;
-
-  const isPast = isServiceDay ? activeAction.time.getTime() <= currentTime.getTime() : false;
-  const diffMs = isServiceDay ? Math.abs(activeAction.time.getTime() - currentTime.getTime()) : 0;
+  const isPast = activeAction && isServiceDay ? activeAction.time.getTime() <= currentTime.getTime() : false;
+  const diffMs = activeAction && isServiceDay ? Math.abs(activeAction.time.getTime() - currentTime.getTime()) : 0;
   const diffMin = isServiceDay ? Math.floor(diffMs / 60000) : 0;
   const isUrgent = isServiceDay && !isPast && diffMin < 5;
 
@@ -139,6 +131,17 @@ export default function StickyOpsDeckService({
       setViewState('bar');
     }
   }, [isUrgent]);
+
+  // --- All hooks called above. Safe to do conditional returns below. ---
+
+  // SERVICE OVER GUARD: Only applies on service day
+  if (isServiceDay && upcomingActions.length === 0 && pastActions.length > 0) {
+    const lastActionTime = pastActions[0].time.getTime();
+    const minutesSinceLast = (currentTime.getTime() - lastActionTime) / 60000;
+    if (minutesSinceLast > 30) return null;
+  }
+
+  if (!activeAction) return null;
 
   const moreCount = Math.max(0, concurrentCount - 1);
   const bgClass = 'bg-slate-100/95 backdrop-blur-xl';
