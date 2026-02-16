@@ -123,8 +123,8 @@ function LayoutContentInner({ children }) {
   // Private pages block access if not authenticated
   if (!user) return null;
 
-  // Minimal shell for users without dashboard permissions
-  if (!hasPermission(user, 'view_events') && !hasPermission(user, 'view_services')) {
+  // Minimal shell for users without dashboard permissions (Live View + MyProgram-only users)
+  if (!hasDashboardAccess(user)) {
     return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
   }
 
