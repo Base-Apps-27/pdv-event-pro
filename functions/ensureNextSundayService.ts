@@ -1,0 +1,141 @@
+/**
+ * ensureNextSundayService
+ * 
+ * Scheduled function that runs weekly to guarantee a Service record
+ * exists for next Sunday. Solves the lazy-creation problem where
+ * services only exist after someone opens WeeklyServiceManager.
+ * 
+ * Without this, surfaces like the Speaker Submission Form
+ * (serveWeeklyServiceSubmission) can't find a service to link to.
+ * 
+ * Logic:
+ * 1. Calculate next Sunday date in America/New_York
+ * 2. Check if an active Service record already exists for that date
+ * 3. If not, instantiate one from the blueprint (or hardcoded fallback)
+ * 4. Mark it with origin: 'auto_created' for traceability
+ * 
+ * Decision: "Auto-create next Sunday service" (2026-02-16)
+ * Constitution: No destructive ops. Additive only.
+ */
+
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+// Hardcoded fallback blueprint (matches weeklyBlueprint.js)
+const FALLBACK_BLUEPRINT = {
+  "9:30am": [
+    { type: "worship", title: "Equipo de A&A", duration: 35, fields: ["leader", "songs", "ministry_leader"], data: {}, actions: [], sub_assignments: [{ label: "Ministración de Sanidad y Milagros", person_field_name: "ministry_leader", duration_min: 5 }], songs: [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }], requires_translation: false, default_translator_source: "manual" },
+    { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter"], data: {}, actions: [], sub_assignments: [], requires_translation: false, default_translator_source: "manual" },
+    { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse"], data: {}, actions: [], sub_assignments: [], requires_translation: false, default_translator_source: "manual" },
+    { type: "message", title: "Mensaje", duration: 45, fields: ["preacher", "title", "verse"], data: {}, actions: [{ label: "Pianista Sube", timing: "before_end", offset_min: 10, department: "Alabanza" }, { label: "Equipo de A&A sube para cerrar", timing: "before_end", offset_min: 5, department: "Alabanza" }], sub_assignments: [{ label: "Cierre", person_field_name: "cierre_leader", duration_min: 5 }], requires_translation: false, default_translator_source: "manual" }
+  ],
+  "11:30am": [
+    { type: "worship", title: "Equipo de A&A", duration: 35, fields: ["leader", "songs", "ministry_leader", "translator"], data: {}, actions: [], sub_assignments: [{ label: "Ministración de Sanidad y Milagros", person_field_name: "ministry_leader", duration_min: 5 }], songs: [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }], requires_translation: true, default_translator_source: "manual" },
+    { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter", "translator"], data: {}, actions: [], sub_assignments: [], requires_translation: true, default_translator_source: "worship_segment_translator" },
+    { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse", "translator"], data: {}, actions: [], sub_assignments: [], requires_translation: true, default_translator_source: "worship_segment_translator" },
+    { type: "message", title: "Mensaje", duration: 45, fields: ["preacher", "title", "verse", "translator"], data: {}, actions: [{ label: "Pianista Sube", timing: "before_end", offset_min: 10, department: "Alabanza" }, { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }], sub_assignments: [{ label: "Cierre", person_field_name: "cierre_leader", duration_min: 5 }], requires_translation: true, default_translator_source: "manual" }
+  ]
+};
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+
+    // Auth: This is a scheduled job — verify admin caller
+    const user = await base44.auth.me();
+    if (user?.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+
+    // 1. Calculate next Sunday in America/New_York
+    const nowET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const day = nowET.getDay(); // 0 = Sunday
+    const daysUntilSunday = day === 0 ? 0 : 7 - day;
+    const nextSunday = new Date(nowET);
+    nextSunday.setDate(nowET.getDate() + daysUntilSunday);
+    const dateStr = `${nextSunday.getFullYear()}-${String(nextSunday.getMonth() + 1).padStart(2, '0')}-${String(nextSunday.getDate()).padStart(2, '0')}`;
+
+    console.log(`[ENSURE_SERVICE] Checking for service on ${dateStr}`);
+
+    // 2. Check if a service already exists for this date
+    const existing = await base44.asServiceRole.entities.Service.filter({ date: dateStr });
+    const weeklyServices = existing.filter(s =>
+      s.status !== 'blueprint' &&
+      (s["9:30am"]?.length > 0 || s["11:30am"]?.length > 0 || (!s.segments || s.segments.length === 0))
+    );
+
+    if (weeklyServices.length > 0) {
+      console.log(`[ENSURE_SERVICE] Service already exists for ${dateStr} (id: ${weeklyServices[0].id}). No action needed.`);
+      return Response.json({ 
+        status: 'already_exists', 
+        date: dateStr, 
+        service_id: weeklyServices[0].id 
+      });
+    }
+
+    // 3. Load blueprint from DB (or use hardcoded fallback)
+    const blueprints = await base44.asServiceRole.entities.Service.filter({ status: 'blueprint' });
+    const blueprint = blueprints[0] || null;
+
+    const source930 = blueprint?.["9:30am"] || FALLBACK_BLUEPRINT["9:30am"];
+    const source1130 = blueprint?.["11:30am"] || FALLBACK_BLUEPRINT["11:30am"];
+
+    // Deep-clone segments to avoid mutation, clear person-specific data
+    const cloneSegments = (segments) => segments.map(seg => {
+      const clone = JSON.parse(JSON.stringify(seg));
+      // Clear person-specific data fields (presenter, preacher, etc.) 
+      // but keep structural data (type, title, duration, actions, fields)
+      if (clone.data) {
+        // Keep only non-person fields
+        const persisted = {};
+        // These are structural fields that should carry over
+        const structuralKeys = ['message_title', 'title'];
+        for (const key of structuralKeys) {
+          if (clone.data[key]) persisted[key] = clone.data[key];
+        }
+        clone.data = persisted;
+      }
+      // Clear submission-related fields
+      clone.submitted_content = null;
+      clone.parsed_verse_data = null;
+      clone.submission_status = 'ignored';
+      clone.scripture_references = null;
+      clone.presentation_url = null;
+      clone.notes_url = null;
+      clone.content_is_slides_only = false;
+      return clone;
+    });
+
+    // 4. Create the service record
+    const newService = await base44.asServiceRole.entities.Service.create({
+      name: `Domingo - ${dateStr}`,
+      day_of_week: 'Sunday',
+      date: dateStr,
+      status: 'active',
+      origin: 'auto_created',
+      "9:30am": cloneSegments(source930),
+      "11:30am": cloneSegments(source1130),
+      coordinators: { "9:30am": "", "11:30am": "" },
+      ujieres: { "9:30am": "", "11:30am": "" },
+      sound: { "9:30am": "", "11:30am": "" },
+      luces: { "9:30am": "", "11:30am": "" },
+      fotografia: null,
+      receso_notes: { "9:30am": "" },
+      pre_service_notes: { "9:30am": "", "11:30am": "" },
+      selected_announcements: [],
+      segments: [],
+    });
+
+    console.log(`[ENSURE_SERVICE] Created service for ${dateStr} (id: ${newService.id})`);
+
+    return Response.json({ 
+      status: 'created', 
+      date: dateStr, 
+      service_id: newService.id,
+      blueprint_source: blueprint ? 'database' : 'fallback'
+    });
+
+  } catch (error) {
+    console.error('[ENSURE_SERVICE] Error:', error.message);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});
