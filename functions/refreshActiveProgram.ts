@@ -136,10 +136,11 @@ Deno.serve(async (req) => {
       return diffDays > -7 && diffDays <= 4;
     });
 
+    // Auto-detect: only today and tomorrow's services are candidates
     const relevantServices = selectorServices.filter(s => {
       const sDate = new Date(s.date);
       const diffDays = (sDate - today) / (1000 * 60 * 60 * 24);
-      return diffDays > -2 && diffDays <= 1;
+      return diffDays >= 0 && diffDays <= 1;
     });
 
     const selectorOptions = { events: selectorEvents, services: selectorServices };
