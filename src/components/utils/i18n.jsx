@@ -471,7 +471,9 @@ const translations = {
       'myprogram.selectSession': 'Seleccionar sesión',
       'myprogram.loading': 'Cargando programa...',
       'myprogram.countdown.startsIn': 'Inicia en',
-      'myprogram.countdown.endsIn': 'Termina en'
+      'myprogram.countdown.endsIn': 'Termina en',
+      'myprogram.thankYou': '¡Gracias por servir hoy!',
+      'myprogram.sessionFinalized': 'Sesión Finalizada'
   },
   en: {
     // Navigation
@@ -950,7 +952,9 @@ const translations = {
     'myprogram.selectSession': 'Select session',
     'myprogram.loading': 'Loading program...',
     'myprogram.countdown.startsIn': 'Starts in',
-    'myprogram.countdown.endsIn': 'Ends in'
+    'myprogram.countdown.endsIn': 'Ends in',
+    'myprogram.thankYou': 'Thank you for serving today!',
+    'myprogram.sessionFinalized': 'Session Finalized'
   }
 };
 
