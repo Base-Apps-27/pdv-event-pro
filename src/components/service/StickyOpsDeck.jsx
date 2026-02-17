@@ -24,8 +24,9 @@ import { normalizeName } from "@/components/utils/textNormalization";
  *
  * Current integration sites (keep this list updated):
  *   1. EventProgramView  — REFERENCE IMPLEMENTATION (full props)
- *   2. DirectorConsole    — must match EventProgramView's props
- *   3. ServiceProgramView — stream props empty (services lack StreamBlocks)
+ *   2. DirectorConsole    — must match EventProgramView's props (events + services)
+ *   3. ServiceProgramView — full props, resolvedStreamActions=[] (services lack StreamBlocks)
+ *   NOTE: StickyOpsDeckService was DELETED — services now use this component directly.
  *
  * RULES:
  *   • Any NEW prop added here MUST be propagated to ALL host surfaces.

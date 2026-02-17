@@ -273,6 +273,11 @@ export async function syncWeeklyToSessions(base44, serviceResult, serviceData) {
 // ═══════════════════════════════════════════════════════════════
 // LOAD: Session + Segment entities → Weekly Service JSON format
 // ═══════════════════════════════════════════════════════════════
+// @deprecated — This entity→JSON conversion exists only because the UI
+// still reads the weekly JSON shape. Once the UI reads Session/Segment
+// entities directly (via subscriptions + React Query), this function
+// and segmentEntityToWeeklyJSON() below become unnecessary.
+// Target removal: after weekday tabs UI reads entities directly.
 
 export async function loadWeeklyFromSessions(base44, serviceId, blueprint) {
   if (!serviceId) return null;
@@ -447,6 +452,9 @@ function buildSubAsignaciones(
  * Convert a Segment entity + its children back to weekly JSON format.
  * The output shape must be identical to what WeeklyServiceManager expects
  * as an element of the serviceData["9:30am"] or serviceData["11:30am"] array.
+ *
+ * @deprecated — Part of the entity→JSON read-back path. Will be removed
+ * once UI reads Session/Segment entities directly.
  */
 function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments, idx) {
   const songs = getNormalizedSongs(segment);

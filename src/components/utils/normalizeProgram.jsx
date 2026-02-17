@@ -322,9 +322,9 @@
  * │                                │ action.timing/offset_min/label/dept,   │
  * │                                │ date, session_id                       │
  * ├────────────────────────────────┼────────────────────────────────────────┤
- * │ StickyOpsDeckService           │ Same as StickyOpsDeck but also:        │
- * │                                │ type (for break detection),            │
- * │                                │ Permissive action parsing              │
+ * │ StickyOpsDeck (Services)       │ Same as StickyOpsDeck (Events).        │
+ * │ [UNIFIED — StickyOpsDeckSvc   │ Services now use StickyOpsDeck         │
+ * │  deleted in entity lift]      │ directly with resolvedStreamActions=[] │
  * ├────────────────────────────────┼────────────────────────────────────────┤
  * │ PublicProgramSegment           │ READS VIA getSegmentData() accessor:   │
  * │ [NOT YET ON ADAPTER]           │ title, type/segment_type, start_time,  │
@@ -665,7 +665,7 @@ function normalizeOneSegment(seg, source, defaults = {}) {
     data: seg.data || {},
 
     // ─── COMPATIBILITY: Preserve type field for break detection ───
-    // StickyOpsDeckService and LiveStatusCard filter on seg.type === 'break'
+    // StickyOpsDeck and LiveStatusCard filter on seg.type === 'break'
     type: seg.type || rawType,
 
     // ─── SOURCE TRACKING ───

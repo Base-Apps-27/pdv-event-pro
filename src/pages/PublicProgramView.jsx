@@ -918,6 +918,7 @@ export default function PublicProgramView() {
                 allSegments={allSegments} // Pass backend-generated flat list (includes Break)
                 sessions={sessions} // For resolving entity session IDs to slot names
                 liveAdjustments={liveAdjustments}
+                preSessionData={preSessionDetails.find(p => sessions[0] && p.session_id === sessions[0].id) || null}
                 currentTime={currentTime}
                 isSegmentCurrent={isSegmentCurrent}
                 isSegmentUpcoming={isSegmentUpcoming}

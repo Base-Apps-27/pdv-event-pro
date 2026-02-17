@@ -3,7 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import StickyOpsDeck from "@/components/service/StickyOpsDeck";
-import StickyOpsDeckService from "@/components/service/StickyOpsDeckService";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
@@ -31,6 +30,7 @@ export default function ServiceProgramView({
   allSegments = [], // Backend-provided flat list (includes generated breaks)
   sessions = [], // Session entities (for resolving entity session IDs to slot names)
   liveAdjustments = [],
+  preSessionData = null, // PreSessionDetails entity for the active session
   currentTime,
   isSegmentCurrent,
   isSegmentUpcoming,
@@ -164,14 +164,16 @@ export default function ServiceProgramView({
       <div className="space-y-6">
         {/* Sticky Ops Deck for Custom Services - PERMISSION-GATED */}
         {canAccessLiveOps && (
-        <StickyOpsDeckService 
+        <StickyOpsDeck
           segments={adjustedServiceData.segments || []}
+          preSessionData={preSessionData}
           sessionDate={adjustedServiceData.date}
           currentTime={currentTime}
           onScrollToSegment={scrollToSegment}
           onToggleChat={onToggleChat}
           chatUnreadCount={chatUnreadCount}
           chatOpen={chatOpen}
+          resolvedStreamActions={[]}
         />
         )}
 
@@ -267,14 +269,16 @@ export default function ServiceProgramView({
     <div className="space-y-6">
       {/* Sticky Ops Deck for Weekly Services - PERMISSION-GATED */}
       {canAccessLiveOps && (
-        <StickyOpsDeckService 
+        <StickyOpsDeck
           segments={adjustedAllSegments} // Use adjusted flat list (includes Break)
+          preSessionData={preSessionData}
           sessionDate={adjustedServiceData.date}
           currentTime={currentTime}
           onScrollToSegment={scrollToSegment}
           onToggleChat={onToggleChat}
           chatUnreadCount={chatUnreadCount}
           chatOpen={chatOpen}
+          resolvedStreamActions={[]}
         />
       )}
 

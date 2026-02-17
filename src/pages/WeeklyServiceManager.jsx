@@ -47,6 +47,18 @@ import { useWeeklyServiceHandlers } from "@/components/service/weekly/useWeeklyS
 import { syncWeeklyToSessions, loadWeeklyFromSessions } from "@/components/service/weeklySessionSync";
 import useStaleGuard from "@/components/utils/useStaleGuard";
 import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
+// Weekday definitions — ordered Mon→Sun matching ISO week. Labels in Spanish.
+const WEEKDAYS = [
+  { key: 'monday', label: 'Lun', fullLabel: 'Lunes', dayIndex: 1 },
+  { key: 'tuesday', label: 'Mar', fullLabel: 'Martes', dayIndex: 2 },
+  { key: 'wednesday', label: 'Mié', fullLabel: 'Miércoles', dayIndex: 3 },
+  { key: 'thursday', label: 'Jue', fullLabel: 'Jueves', dayIndex: 4 },
+  { key: 'friday', label: 'Vie', fullLabel: 'Viernes', dayIndex: 5 },
+  { key: 'saturday', label: 'Sáb', fullLabel: 'Sábado', dayIndex: 6 },
+  { key: 'sunday', label: 'Dom', fullLabel: 'Domingo', dayIndex: 0 },
+];
 
 export default function WeeklyServiceManager() {
   const navigate = useNavigate();
@@ -103,6 +115,10 @@ export default function WeeklyServiceManager() {
   const [showStaleWarning, setShowStaleWarning] = useState(false);
   const [staleInfo, setStaleInfo] = useState(null);
 
+  // ── Weekday tab state ──
+  // Defaults to sunday (the primary service day). Other days show if services exist.
+  const [activeDay, setActiveDay] = useState('sunday');
+
   // ── Queries ──
   const { data: blueprintData } = useQuery({
     queryKey: ['serviceBlueprint'],
@@ -111,6 +127,51 @@ export default function WeeklyServiceManager() {
       return blueprints[0] || null;
     }
   });
+
+  // Fetch services for the full week surrounding selectedDate to populate weekday tabs
+  const { data: weekServices = [] } = useQuery({
+    queryKey: ['weekServices', selectedDate],
+    queryFn: async () => {
+      // Compute the week range (Mon–Sun) containing selectedDate
+      const sel = new Date(selectedDate + 'T12:00:00');
+      const dayOfWeek = sel.getDay(); // 0=Sun
+      const monday = new Date(sel);
+      monday.setDate(sel.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+
+      // Build date strings for each day
+      const dates = [];
+      for (let d = new Date(monday); d <= sunday; d.setDate(d.getDate() + 1)) {
+        const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        dates.push(ds);
+      }
+
+      // Fetch services for each date in parallel
+      const results = await Promise.all(
+        dates.map(async (dt) => {
+          const svcs = await base44.entities.Service.filter({ date: dt });
+          return svcs.filter(s => s.status !== 'blueprint').map(s => ({ ...s, _weekDate: dt }));
+        })
+      );
+      return results.flat();
+    },
+    enabled: !!selectedDate,
+    staleTime: 60000,
+  });
+
+  // Derive which weekdays have services
+  const activeDays = React.useMemo(() => {
+    const daySet = new Set(['sunday']); // Always show Sunday
+    weekServices.forEach(svc => {
+      if (!svc._weekDate) return;
+      const d = new Date(svc._weekDate + 'T12:00:00');
+      const dow = d.getDay();
+      const wd = WEEKDAYS.find(w => w.dayIndex === dow);
+      if (wd) daySet.add(wd.key);
+    });
+    return WEEKDAYS.filter(w => daySet.has(w.key));
+  }, [weekServices]);
 
   const { data: existingData, isLoading } = useQuery({
     queryKey: ['weeklyService', selectedDate],
@@ -400,6 +461,30 @@ export default function WeeklyServiceManager() {
     }
   }, [existingData, selectedDate, blueprintData]);
 
+  // ── Real-time entity subscriptions ──
+  // Subscribe to Session/Segment changes so external edits (director, live adjustments)
+  // push updates without requiring page reload.
+  useEffect(() => {
+    if (!existingData?.id) return;
+    const serviceId = existingData.id;
+
+    const unsubSession = base44.entities.Session.subscribe((event) => {
+      if (event.data?.service_id === serviceId) {
+        queryClient.invalidateQueries(['weeklyService', selectedDate]);
+      }
+    });
+    const unsubSegment = base44.entities.Segment.subscribe((event) => {
+      if (event.data?.service_id === serviceId) {
+        queryClient.invalidateQueries(['weeklyService', selectedDate]);
+      }
+    });
+
+    return () => {
+      if (typeof unsubSession === 'function') unsubSession();
+      if (typeof unsubSegment === 'function') unsubSegment();
+    };
+  }, [existingData?.id, selectedDate, queryClient]);
+
   // ── Side effects ──
   // Track unsaved changes
   useEffect(() => {
@@ -583,33 +668,87 @@ export default function WeeklyServiceManager() {
         </CardContent>
       </Card>
 
-      {/* Two service columns */}
-      <div className="grid md:grid-cols-2 gap-6 print:hidden">
-        <ServiceTimeSlotColumn
-          timeSlot="9:30am" serviceData={serviceData}
-          expandedSegments={expandedSegments} toggleSegmentExpanded={toggleSegmentExpanded}
-          handleMoveSegment={handlers.handleMoveSegment} removeSpecialSegment={handlers.removeSpecialSegment}
-          updateSegmentField={handlers.updateSegmentField} debouncedSave={handlers.debouncedSave}
-          setServiceData={setServiceData} handleOpenVerseParser={handlers.handleOpenVerseParser}
-          calculateServiceTimes={handlers.calculateServiceTimes}
-          copySegmentTo1130={handlers.copySegmentTo1130}
-          copyPreServiceNotesTo1130={handlers.copyPreServiceNotesTo1130}
-          copyTeamTo1130={handlers.copyTeamTo1130}
-          onOpenSpecialDialog={(ts) => { setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: ts })); setShowSpecialDialog(true); }}
-          canEdit={hasPermission(user, 'edit_services')}
-        />
-        <ServiceTimeSlotColumn
-          timeSlot="11:30am" serviceData={serviceData}
-          expandedSegments={expandedSegments} toggleSegmentExpanded={toggleSegmentExpanded}
-          handleMoveSegment={handlers.handleMoveSegment} removeSpecialSegment={handlers.removeSpecialSegment}
-          updateSegmentField={handlers.updateSegmentField} debouncedSave={handlers.debouncedSave}
-          setServiceData={setServiceData} handleOpenVerseParser={handlers.handleOpenVerseParser}
-          calculateServiceTimes={handlers.calculateServiceTimes}
-          copy930To1130={handlers.copy930To1130}
-          onOpenSpecialDialog={(ts) => { setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: ts })); setShowSpecialDialog(true); }}
-          canEdit={hasPermission(user, 'edit_services')}
-        />
-      </div>
+      {/* Weekday tabs + service session columns */}
+      <Tabs value={activeDay} onValueChange={setActiveDay} className="print:hidden">
+        {/* Weekday tab bar — shows all days that have services */}
+        {activeDays.length > 1 && (
+          <TabsList className="mb-4 h-10 bg-gray-200">
+            {activeDays.map(day => (
+              <TabsTrigger
+                key={day.key}
+                value={day.key}
+                className="px-4 py-1.5 text-sm font-bold data-[state=active]:bg-pdv-teal data-[state=active]:text-white"
+              >
+                <span className="hidden sm:inline">{day.fullLabel}</span>
+                <span className="sm:hidden">{day.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        )}
+
+        {/* Sunday (default) — current 9:30am / 11:30am columns */}
+        <TabsContent value="sunday" className="mt-0">
+          <div className="overflow-x-auto -mx-2 px-2">
+            <div className="grid md:grid-cols-2 gap-6 min-w-[640px]">
+              <ServiceTimeSlotColumn
+                timeSlot="9:30am" serviceData={serviceData}
+                expandedSegments={expandedSegments} toggleSegmentExpanded={toggleSegmentExpanded}
+                handleMoveSegment={handlers.handleMoveSegment} removeSpecialSegment={handlers.removeSpecialSegment}
+                updateSegmentField={handlers.updateSegmentField} debouncedSave={handlers.debouncedSave}
+                setServiceData={setServiceData} handleOpenVerseParser={handlers.handleOpenVerseParser}
+                calculateServiceTimes={handlers.calculateServiceTimes}
+                copySegmentTo1130={handlers.copySegmentTo1130}
+                copyPreServiceNotesTo1130={handlers.copyPreServiceNotesTo1130}
+                copyTeamTo1130={handlers.copyTeamTo1130}
+                onOpenSpecialDialog={(ts) => { setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: ts })); setShowSpecialDialog(true); }}
+                canEdit={hasPermission(user, 'edit_services')}
+              />
+              <ServiceTimeSlotColumn
+                timeSlot="11:30am" serviceData={serviceData}
+                expandedSegments={expandedSegments} toggleSegmentExpanded={toggleSegmentExpanded}
+                handleMoveSegment={handlers.handleMoveSegment} removeSpecialSegment={handlers.removeSpecialSegment}
+                updateSegmentField={handlers.updateSegmentField} debouncedSave={handlers.debouncedSave}
+                setServiceData={setServiceData} handleOpenVerseParser={handlers.handleOpenVerseParser}
+                calculateServiceTimes={handlers.calculateServiceTimes}
+                copy930To1130={handlers.copy930To1130}
+                onOpenSpecialDialog={(ts) => { setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: ts })); setShowSpecialDialog(true); }}
+                canEdit={hasPermission(user, 'edit_services')}
+              />
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Other weekdays — render their service sessions as horizontally scrollable columns */}
+        {activeDays.filter(d => d.key !== 'sunday').map(day => {
+          const dayServices = weekServices.filter(svc => {
+            if (!svc._weekDate) return false;
+            const d = new Date(svc._weekDate + 'T12:00:00');
+            return d.getDay() === day.dayIndex;
+          });
+          return (
+            <TabsContent key={day.key} value={day.key} className="mt-0">
+              {dayServices.length === 0 ? (
+                <Card className="p-8 text-center bg-white border-2 border-gray-300">
+                  <p className="text-gray-500">No hay servicios programados para {day.fullLabel}</p>
+                </Card>
+              ) : (
+                <div className="overflow-x-auto -mx-2 px-2">
+                  <div className="flex gap-6 min-w-[640px]">
+                    {dayServices.map(svc => (
+                      <Card key={svc.id} className="flex-1 min-w-[320px] p-4 border-2 border-gray-300 bg-white">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">{svc.name || day.fullLabel}</h3>
+                        <p className="text-sm text-gray-500 mb-1">Fecha: {svc.date}</p>
+                        {svc.time && <p className="text-sm text-gray-500">Hora: {svc.time}</p>}
+                        <Badge variant="outline" className="mt-2 text-xs">{svc.status || 'active'}</Badge>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          );
+        })}
+      </Tabs>
 
       {/* Announcements */}
       <WeeklyAnnouncementSection

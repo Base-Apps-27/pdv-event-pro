@@ -7,20 +7,20 @@
 export const LIVE_VIEW_CAPABILITIES = {
   weekly: {
     timeAdjustment: true,
-    timeAdjustmentMode: "time_slot", // Uses time_slot adjustments (9:30am, 11:30am)
+    timeAdjustmentMode: "session", // Per-session offsets (entity-backed via Session entities)
     sessionFiltering: false,
     viewModeToggle: false,
     liveStatusCard: true,
-    realTimeSync: false, // No real-time for JSON-based services
+    realTimeSync: true, // Entity-backed via Session/Segment entities
   },
-  
+
   custom: {
     timeAdjustment: true,
-    timeAdjustmentMode: "global", // Global service offset
+    timeAdjustmentMode: "session", // Per-session offsets (entity-backed)
     sessionFiltering: false,
     viewModeToggle: false,
     liveStatusCard: true,
-    realTimeSync: false, // No real-time for JSON-based services
+    realTimeSync: true, // Entity-backed via Session/Segment entities
   },
   
   event: {
