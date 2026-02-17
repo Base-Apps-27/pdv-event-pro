@@ -28,11 +28,12 @@
  *   }
  */
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 
 export default function useStaleGuard() {
   const baselineRef = useRef({ updated_date: null, captured_at: null });
+  const onStaleCallbackRef = useRef(null);
 
   /**
    * Capture the baseline timestamp when form opens.
@@ -97,5 +98,35 @@ export default function useStaleGuard() {
     };
   }, []);
 
-  return { captureBaseline, checkStale, updateBaseline };
+  /**
+   * Subscribe to real-time entity changes for proactive stale detection.
+   * When the entity is updated by someone else, the onStale callback fires
+   * immediately instead of waiting until save time.
+   *
+   * @param {string} entityName — e.g. "Session", "Service"
+   * @param {string} entityId — the entity record ID to watch
+   * @param {Function} onStale — callback({serverDate, baselineDate}) when stale detected
+   * @returns {Function} unsubscribe
+   */
+  const subscribeToChanges = useCallback((entityName, entityId, onStale) => {
+    if (!entityName || !entityId || !base44.entities[entityName]) return () => {};
+    onStaleCallbackRef.current = onStale;
+
+    const unsub = base44.entities[entityName].subscribe((event) => {
+      if (event.id !== entityId) return;
+      const baseline = baselineRef.current.updated_date;
+      const serverDate = event.data?.updated_date;
+      if (baseline && serverDate && new Date(serverDate) > new Date(baseline)) {
+        onStaleCallbackRef.current?.({
+          serverDate,
+          baselineDate: baseline,
+          modifiedBy: event.data?.updated_by || null,
+        });
+      }
+    });
+
+    return typeof unsub === 'function' ? unsub : () => {};
+  }, []);
+
+  return { captureBaseline, checkStale, updateBaseline, subscribeToChanges };
 }

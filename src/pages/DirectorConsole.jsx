@@ -76,7 +76,14 @@ export default function DirectorConsole() {
   const queryClient = useQueryClient();
   
   // P2-3: Memoized URL params (2026-02-12)
-  const sessionId = useMemo(() => new URLSearchParams(window.location.search).get('sessionId'), []);
+  // Supports both event sessions (?sessionId=) and service sessions (?serviceSessionId=)
+  const sessionId = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('sessionId') || params.get('serviceSessionId');
+  }, []);
+  const isServiceSession = useMemo(() => {
+    return new URLSearchParams(window.location.search).has('serviceSessionId');
+  }, []);
   
   // P1-1: Isolated clock tick to avoid full-page re-renders (2026-02-12)
   const currentTime = useClockTick(1000);
@@ -100,7 +107,7 @@ export default function DirectorConsole() {
     refetchInterval: 5000, // Poll every 5 seconds for ownership changes
   });
   
-  // Fetch event data (for context)
+  // Fetch event data (for context) — only for event sessions
   const { data: event } = useQuery({
     queryKey: ['event', session?.event_id],
     queryFn: async () => {
@@ -108,7 +115,18 @@ export default function DirectorConsole() {
       const events = await base44.entities.Event.filter({ id: session.event_id });
       return events[0] || null;
     },
-    enabled: !!session?.event_id,
+    enabled: !!session?.event_id && !isServiceSession,
+  });
+
+  // Fetch service data (for context) — only for service sessions
+  const { data: service } = useQuery({
+    queryKey: ['service', session?.service_id],
+    queryFn: async () => {
+      if (!session?.service_id) return null;
+      const services = await base44.entities.Service.filter({ id: session.service_id });
+      return services[0] || null;
+    },
+    enabled: !!session?.service_id && isServiceSession,
   });
   
   // Fetch segments for this session
@@ -148,10 +166,11 @@ export default function DirectorConsole() {
   }, [sessionId, refetchSession]);
   
   // FIX #1 (2026-02-14): Fetch StreamBlocks for this session so Director sees stream cues in OpsDeck
+  // Service sessions don't have StreamBlocks (yet)
   const { data: directorStreamBlocks = [] } = useQuery({
     queryKey: ['directorStreamBlocks', sessionId],
     queryFn: () => base44.entities.StreamBlock.filter({ session_id: sessionId }, 'order'),
-    enabled: !!sessionId && !!session?.has_livestream,
+    enabled: !!sessionId && !!session?.has_livestream && !isServiceSession,
     refetchInterval: 5000
   });
 
@@ -298,9 +317,9 @@ export default function DirectorConsole() {
       />
       
       {/* Director Ping Feed - Shows incoming @Director pings */}
-      {session?.event_id && (
+      {(session?.event_id || session?.service_id) && (
         <DirectorPingFeed
-          eventId={session.event_id}
+          eventId={session.event_id || session.service_id}
           currentUser={currentUser}
           language={language}
         />
@@ -381,7 +400,8 @@ export default function DirectorConsole() {
       )}
       
       {/* LiveOperationsChat - Same component as Live View */}
-      {currentUser && hasPermission(currentUser, 'view_live_chat') && session?.event_id && event && (
+      {/* Event context */}
+      {currentUser && hasPermission(currentUser, 'view_live_chat') && session?.event_id && event && !isServiceSession && (
         <LiveOperationsChat
           currentUser={currentUser}
           contextType="event"
@@ -391,7 +411,21 @@ export default function DirectorConsole() {
           isOpen={chatOpen}
           onToggle={setChatOpen}
           onUnreadCountChange={setChatUnreadCount}
-          hideTrigger={true} // StickyOpsDeck handles the trigger
+          hideTrigger={true}
+        />
+      )}
+      {/* Service context */}
+      {currentUser && hasPermission(currentUser, 'view_live_chat') && session?.service_id && service && isServiceSession && (
+        <LiveOperationsChat
+          currentUser={currentUser}
+          contextType="service"
+          contextId={session.service_id}
+          contextDate={service.date}
+          contextName={service.name}
+          isOpen={chatOpen}
+          onToggle={setChatOpen}
+          onUnreadCountChange={setChatUnreadCount}
+          hideTrigger={true}
         />
       )}
     </div>

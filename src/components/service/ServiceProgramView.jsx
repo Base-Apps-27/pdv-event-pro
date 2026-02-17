@@ -3,7 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
 import LiveStatusCard from "@/components/service/LiveStatusCard";
 import StickyOpsDeck from "@/components/service/StickyOpsDeck";
-import StickyOpsDeckService from "@/components/service/StickyOpsDeckService";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
@@ -29,7 +28,9 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
 export default function ServiceProgramView({
   actualServiceData,
   allSegments = [], // Backend-provided flat list (includes generated breaks)
+  sessions = [], // Session entities (for resolving entity session IDs to slot names)
   liveAdjustments = [],
+  preSessionData = null, // PreSessionDetails entity for the active session
   currentTime,
   isSegmentCurrent,
   isSegmentUpcoming,
@@ -99,13 +100,23 @@ export default function ServiceProgramView({
     }
 
     // For Weekly Services, process 'allSegments' prop to apply adjustments by slot
-    // We map session_id to time_slot
+    // We map session_id to time_slot (supports both JSON-sourced synthetic IDs and entity UUIDs)
+    const sessionNameMap = new Map();
+    if (sessions?.length > 0) {
+      sessions.forEach(s => { if (s.id && s.name) sessionNameMap.set(s.id, s.name); });
+    }
+
     return allSegments.map(seg => {
       let offsetMinutes = 0;
       let slot = null;
 
-      // Map generated session IDs to slots
-      if (seg.session_id === 'slot-9-30') slot = '9:30am';
+      // Entity-sourced: resolve real session UUID to slot name
+      const resolvedName = sessionNameMap.get(seg.session_id);
+      if (resolvedName) {
+        slot = resolvedName; // e.g. "9:30am" or "11:30am"
+      }
+      // JSON-sourced: map synthetic session IDs to slots
+      else if (seg.session_id === 'slot-9-30') slot = '9:30am';
       else if (seg.session_id === 'slot-11-30') slot = '11:30am';
       else if (seg.session_id === 'slot-break') slot = '9:30am'; // Break shifts with morning service
 
@@ -120,7 +131,7 @@ export default function ServiceProgramView({
         end_time: addMinutesToTime(seg.end_time, offsetMinutes)
       };
     });
-  }, [allSegments, adjustedServiceData, liveAdjustments, actualServiceData]);
+  }, [allSegments, adjustedServiceData, liveAdjustments, actualServiceData, sessions]);
 
   // If no service data, show empty state
   if (!adjustedServiceData) {
@@ -153,14 +164,16 @@ export default function ServiceProgramView({
       <div className="space-y-6">
         {/* Sticky Ops Deck for Custom Services - PERMISSION-GATED */}
         {canAccessLiveOps && (
-        <StickyOpsDeckService 
+        <StickyOpsDeck
           segments={adjustedServiceData.segments || []}
+          preSessionData={preSessionData}
           sessionDate={adjustedServiceData.date}
           currentTime={currentTime}
           onScrollToSegment={scrollToSegment}
           onToggleChat={onToggleChat}
           chatUnreadCount={chatUnreadCount}
           chatOpen={chatOpen}
+          resolvedStreamActions={[]}
         />
         )}
 
@@ -256,14 +269,16 @@ export default function ServiceProgramView({
     <div className="space-y-6">
       {/* Sticky Ops Deck for Weekly Services - PERMISSION-GATED */}
       {canAccessLiveOps && (
-        <StickyOpsDeckService 
+        <StickyOpsDeck
           segments={adjustedAllSegments} // Use adjusted flat list (includes Break)
+          preSessionData={preSessionData}
           sessionDate={adjustedServiceData.date}
           currentTime={currentTime}
           onScrollToSegment={scrollToSegment}
           onToggleChat={onToggleChat}
           chatUnreadCount={chatUnreadCount}
           chatOpen={chatOpen}
+          resolvedStreamActions={[]}
         />
       )}
 

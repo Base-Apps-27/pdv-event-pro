@@ -8,35 +8,46 @@ import { addMinutesToTime } from './liveStatusHelpers';
 /**
  * Applies live timing adjustments to segments based on adjustment type
  * ONE function handles weekly (time_slot), custom (global), and event (session) adjustments
- * 
+ *
  * @param {Array} segments - Normalized segments to adjust
  * @param {Array} adjustments - LiveTimeAdjustment records
  * @param {string} serviceType - "weekly" | "custom" | "event"
  * @param {string} timeSlot - For weekly services: "9:30am" | "11:30am"
  * @param {string} sessionId - For events: session ID to match
+ * @param {Array} sessions - Session entities (for resolving entity-sourced session IDs)
  * @returns {Array} Adjusted segments with _adjusted flag and _offset value
  */
-export function applyLiveAdjustments(segments, adjustments, serviceType, timeSlot = null, sessionId = null) {
+export function applyLiveAdjustments(segments, adjustments, serviceType, timeSlot = null, sessionId = null, sessions = []) {
   if (!adjustments?.length) return segments;
-  
+
+  // Build session name lookup for entity-sourced segments
+  const sessionNameMap = new Map();
+  if (sessions?.length > 0) {
+    sessions.forEach(s => { if (s.id && s.name) sessionNameMap.set(s.id, s.name); });
+  }
+
   return segments.map(segment => {
     // Find applicable adjustment for this segment
     const applicable = adjustments.find(adj => {
-      // Weekly: match time_slot
+      // Weekly: match time_slot (supports both JSON-sourced and entity-sourced)
       if (serviceType === 'weekly' && adj.adjustment_type === 'time_slot') {
+        // Entity-sourced: resolve segment's session_id to session name
+        const segSessionName = sessionNameMap.get(segment.session_id);
+        if (segSessionName) return adj.time_slot === segSessionName;
+        // JSON-sourced: use the passed timeSlot parameter
         return adj.time_slot === timeSlot;
       }
-      
+
       // Custom: global offset (applies to all segments)
       if (serviceType === 'custom' && adj.adjustment_type === 'global') {
         return true;
       }
-      
+
       // Event: match session
       if (serviceType === 'event' && adj.adjustment_type === 'session') {
         return segment.session_id === adj.session_id || segment.session_id === sessionId;
       }
-      
+
       return false;
     });
     

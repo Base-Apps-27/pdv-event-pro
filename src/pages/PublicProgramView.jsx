@@ -230,6 +230,11 @@ export default function PublicProgramView() {
       base44.entities.SegmentAction.subscribe(() => debouncedInvalidateExplicit())
     );
 
+    // PreSessionDetails apply to both events and services
+    unsubscribers.push(
+      base44.entities.PreSessionDetails.subscribe(() => debouncedInvalidateExplicit())
+    );
+
     if (viewType === 'service' && selectedServiceId) {
       unsubscribers.push(
         base44.entities.Service.subscribe(() => debouncedInvalidateExplicit())
@@ -238,9 +243,6 @@ export default function PublicProgramView() {
     if (viewType === 'event' && selectedEventId) {
       unsubscribers.push(
         base44.entities.Event.subscribe(() => debouncedInvalidateExplicit())
-      );
-      unsubscribers.push(
-        base44.entities.PreSessionDetails.subscribe(() => debouncedInvalidateExplicit())
       );
       unsubscribers.push(
         base44.entities.StreamBlock.subscribe(() => {
@@ -916,7 +918,9 @@ export default function PublicProgramView() {
               <ServiceProgramView
                 actualServiceData={actualServiceData}
                 allSegments={allSegments} // Pass backend-generated flat list (includes Break)
+                sessions={sessions} // For resolving entity session IDs to slot names
                 liveAdjustments={liveAdjustments}
+                preSessionData={preSessionDetails.find(p => sessions[0] && p.session_id === sessions[0].id) || null}
                 currentTime={currentTime}
                 isSegmentCurrent={isSegmentCurrent}
                 isSegmentUpcoming={isSegmentUpcoming}

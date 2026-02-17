@@ -198,7 +198,7 @@ export function normalizeServiceSegments(serviceData) {
     });
   };
 
-  // Weekly services
+  // Weekly services (JSON path — also works during dual-write transition)
   if (serviceData['9:30am']) {
     processSlot(serviceData['9:30am'], '9:30am', '09:30');
   }
@@ -206,7 +206,7 @@ export function normalizeServiceSegments(serviceData) {
     processSlot(serviceData['11:30am'], '11:30am', '11:30');
   }
   // Custom services
-  if (serviceData.segments && serviceData.segments.length > 0) {
+  if (serviceData.segments && serviceData.segments.length > 0 && result.length === 0) {
     processSlot(serviceData.segments, 'custom', serviceData.time || '10:00');
   }
 
@@ -219,7 +219,7 @@ export function normalizeServiceSegments(serviceData) {
  * Service slots (9:30am, 11:30am, custom) pass through as-is.
  */
 function generateShortLabel(sessionName, sessionDate, startTime, language) {
-  // Service slot names — already short
+  // Service slot names — already short (handles both JSON and entity-sourced names)
   if (['9:30am', '11:30am', 'custom'].includes(sessionName)) return sessionName;
 
   // If we have a date, build "Day AM/PM" from it

@@ -322,9 +322,9 @@
  * │                                │ action.timing/offset_min/label/dept,   │
  * │                                │ date, session_id                       │
  * ├────────────────────────────────┼────────────────────────────────────────┤
- * │ StickyOpsDeckService           │ Same as StickyOpsDeck but also:        │
- * │                                │ type (for break detection),            │
- * │                                │ Permissive action parsing              │
+ * │ StickyOpsDeck (Services)       │ Same as StickyOpsDeck (Events).        │
+ * │ [UNIFIED — StickyOpsDeckSvc   │ Services now use StickyOpsDeck         │
+ * │  deleted in entity lift]      │ directly with resolvedStreamActions=[] │
  * ├────────────────────────────────┼────────────────────────────────────────┤
  * │ PublicProgramSegment           │ READS VIA getSegmentData() accessor:   │
  * │ [NOT YET ON ADAPTER]           │ title, type/segment_type, start_time,  │
@@ -665,7 +665,7 @@ function normalizeOneSegment(seg, source, defaults = {}) {
     data: seg.data || {},
 
     // ─── COMPATIBILITY: Preserve type field for break detection ───
-    // StickyOpsDeckService and LiveStatusCard filter on seg.type === 'break'
+    // StickyOpsDeck and LiveStatusCard filter on seg.type === 'break'
     type: seg.type || rawType,
 
     // ─── SOURCE TRACKING ───
@@ -711,18 +711,26 @@ export function normalizeSegments(segments, source = 'event', options = {}) {
  * Returns a NEW array — does not mutate inputs.
  *
  * Adjustment mapping:
- *   - Weekly services: session_id 'slot-9-30' → time_slot '9:30am'
- *   - Weekly services: session_id 'slot-11-30' → time_slot '11:30am'
- *   - Weekly services: session_id 'slot-break' → follows 9:30am offset
+ *   - Weekly services (JSON): session_id 'slot-9-30' → time_slot '9:30am'
+ *   - Weekly services (JSON): session_id 'slot-11-30' → time_slot '11:30am'
+ *   - Weekly services (JSON): session_id 'slot-break' → follows 9:30am offset
+ *   - Weekly services (entity): session_id is real UUID → resolve via sessions array
  *   - Custom services: adjustment_type 'global' applies to all
  *   - Events: not handled here (events use LiveDirectorPanel)
  *
  * @param {Array} segments - Normalized segments
  * @param {Array} liveAdjustments - LiveTimeAdjustment records
+ * @param {Array} sessions - Session entities (for resolving real session IDs to names)
  * @returns {Array} Adjusted segments (new array)
  */
-export function applyTimeAdjustments(segments, liveAdjustments = []) {
+export function applyTimeAdjustments(segments, liveAdjustments = [], sessions = []) {
   if (!liveAdjustments || liveAdjustments.length === 0) return segments;
+
+  // Build session name lookup for entity-sourced segments
+  const sessionNameMap = new Map();
+  if (sessions && sessions.length > 0) {
+    sessions.forEach(s => { if (s.id && s.name) sessionNameMap.set(s.id, s.name); });
+  }
 
   const addMinutes = (timeStr, minutes) => {
     if (!timeStr || !minutes) return timeStr;
@@ -734,8 +742,15 @@ export function applyTimeAdjustments(segments, liveAdjustments = []) {
   return segments.map(seg => {
     let offsetMinutes = 0;
 
-    // Weekly service slot mapping (synthetic session IDs from backend)
-    if (seg.session_id === 'slot-9-30') {
+    // Resolve session name: entity-sourced segments have real UUIDs,
+    // JSON-sourced segments have synthetic IDs like 'slot-9-30'
+    const sessionName = sessionNameMap.get(seg.session_id) || null;
+
+    if (sessionName) {
+      // Entity-sourced: resolve via session name
+      const adj = liveAdjustments.find(a => a.time_slot === sessionName);
+      if (adj) offsetMinutes = adj.offset_minutes || 0;
+    } else if (seg.session_id === 'slot-9-30') {
       const adj = liveAdjustments.find(a => a.time_slot === '9:30am');
       if (adj) offsetMinutes = adj.offset_minutes || 0;
     } else if (seg.session_id === 'slot-11-30') {
@@ -775,6 +790,10 @@ export function detectSourceType(programData) {
   if (program._isEvent) return 'event';
   if (program.segments && program.segments.length > 0) return 'custom_service';
   if (program['9:30am'] || program['11:30am']) return 'weekly_service';
+  // Entity-sourced weekly: sessions have names like "9:30am" / "11:30am"
+  if (programData.sessions && programData.sessions.some(s =>
+    s.name === '9:30am' || s.name === '11:30am'
+  )) return 'weekly_service';
   return 'custom_service'; // Fallback
 }
 
@@ -809,8 +828,8 @@ export function normalizeProgramData(programData) {
     { sessions, serviceDate }
   );
 
-  // Step 2: Apply live time adjustments
-  const adjusted = applyTimeAdjustments(normalized, liveAdjustments);
+  // Step 2: Apply live time adjustments (pass sessions for entity ID resolution)
+  const adjusted = applyTimeAdjustments(normalized, liveAdjustments, sessions);
 
   return {
     segments: adjusted,
