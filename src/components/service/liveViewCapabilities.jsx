@@ -40,5 +40,7 @@ export const LIVE_VIEW_CAPABILITIES = {
  * @returns {Object} Capability configuration
  */
 export function getCapabilities(serviceType) {
+  // 'one_off' is the explicit service_type; map to 'custom' capabilities
+  if (serviceType === 'one_off') return LIVE_VIEW_CAPABILITIES.custom;
   return LIVE_VIEW_CAPABILITIES[serviceType] || LIVE_VIEW_CAPABILITIES.custom;
 }

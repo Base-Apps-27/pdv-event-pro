@@ -58,14 +58,124 @@ export function normalizeEventSegments(programData) {
 
 /**
  * Normalize segments from service program data.
- * Services embed segments in arrays: '9:30am', '11:30am', or 'segments'.
- * 
- * @param {Object} serviceData - The raw service object
+ *
+ * Supports two data paths:
+ *   1. Entity-sourced: programData has sessions[] + segments[] (Session/Segment entities)
+ *   2. JSON-sourced (legacy): serviceData has '9:30am'[], '11:30am'[], or 'segments'[]
+ *
+ * @param {Object} serviceData - The raw service/program object
  * @returns {Array} Normalized segments
  */
 export function normalizeServiceSegments(serviceData) {
   if (!serviceData) return [];
 
+  // ── Entity-first path: sessions + segments from backend ──
+  // When getPublicProgramData returns entity-sourced data, programData.sessions
+  // and programData.segments are real Session/Segment entities.
+  if (serviceData.sessions && serviceData.sessions.length > 0 &&
+      serviceData.segments && serviceData.segments.length > 0) {
+    return normalizeEntitySourcedSegments(serviceData);
+  }
+
+  // ── JSON fallback: read from embedded arrays ──
+  return normalizeJsonSourcedSegments(serviceData);
+}
+
+/**
+ * Entity-sourced normalization: sessions and segments are real entities.
+ * Segment entities already have start_time, end_time, duration_min, etc.
+ */
+function normalizeEntitySourcedSegments(programData) {
+  const sessions = programData.sessions || [];
+  const segments = programData.segments || [];
+  const serviceDate = programData.program?.date || programData.date || '';
+
+  const sessionMap = {};
+  sessions.forEach(s => { sessionMap[s.id] = s; });
+
+  return segments
+    .filter(seg => seg.show_in_general !== false)
+    .map(seg => {
+      const session = sessionMap[seg.session_id] || {};
+      const slotLabel = session.name || 'custom';
+
+      // Resolve translation mode from session name
+      const rawTransMode = seg.translation_mode || '';
+      const resolvedTransMode = rawTransMode
+        || (slotLabel === '11:30am' ? 'InPerson' : 'RemoteBooth');
+
+      return {
+        id: seg.id,
+        title: seg.title || 'Untitled',
+        segment_type: seg.segment_type || 'Especial',
+        start_time: seg.start_time || null,
+        end_time: seg.end_time || null,
+        duration_min: seg.duration_min || 0,
+        presenter: seg.presenter || '',
+        leader: seg.presenter || '', // Entity segments unify to presenter
+        description_details: seg.description_details || seg.description || '',
+        projection_notes: seg.projection_notes || '',
+        sound_notes: seg.sound_notes || '',
+        ushers_notes: seg.ushers_notes || '',
+        translation_notes: seg.translation_notes || '',
+        stage_decor_notes: seg.stage_decor_notes || '',
+        livestream_notes: seg.livestream_notes || '',
+        other_notes: seg.other_notes || '',
+        coordinator_notes: seg.coordinator_notes || '',
+        prep_instructions: seg.prep_instructions || '',
+        microphone_assignments: seg.microphone_assignments || '',
+        segment_actions: seg.segment_actions || [],
+        songs: seg.songs || [],
+        has_video: seg.has_video || false,
+        video_name: seg.video_name || '',
+        video_url: seg.video_url || '',
+        requires_translation: seg.requires_translation || false,
+        translator_name: seg.translator_name || '',
+        translation_mode: resolvedTransMode,
+        parsed_verse_data: seg.parsed_verse_data || null,
+        scripture_references: seg.scripture_references || '',
+        message_title: seg.message_title || '',
+        major_break: seg.major_break || false,
+        sub_assignments: seg.sub_assignments || [],
+        breakout_rooms: seg.breakout_rooms || [],
+        presentation_url: seg.presentation_url || '',
+        notes_url: seg.notes_url || '',
+        content_is_slides_only: seg.content_is_slides_only || false,
+        show_in_livestream: seg.show_in_livestream !== undefined ? seg.show_in_livestream : true,
+        submitted_content: seg.submitted_content || '',
+        submission_status: seg.submission_status || '',
+        // Enriched data object for getSegmentData compatibility
+        data: {
+          presenter: seg.presenter || '',
+          preacher: seg.presenter || '',
+          leader: seg.presenter || '',
+          message_title: seg.message_title || '',
+          messageTitle: seg.message_title || '',
+          translator: seg.translator_name || '',
+        },
+        _slotLabel: slotLabel,
+        _sessionName: slotLabel,
+        _sessionDate: session.date || serviceDate,
+        _sessionId: session.id || slotLabel,
+        _source: 'service',
+        order: seg.order || 0,
+      };
+    })
+    .sort((a, b) => {
+      // Sort by session order, then segment order
+      const sA = sessionMap[a._sessionId];
+      const sB = sessionMap[b._sessionId];
+      const sOrdA = sA?.order ?? 0;
+      const sOrdB = sB?.order ?? 0;
+      if (sOrdA !== sOrdB) return sOrdA - sOrdB;
+      return (a.order || 0) - (b.order || 0);
+    });
+}
+
+/**
+ * JSON-sourced normalization (legacy): reads from '9:30am'[], '11:30am'[], 'segments'[].
+ */
+function normalizeJsonSourcedSegments(serviceData) {
   const result = [];
 
   const processSlot = (segments, slotLabel, baseTime) => {
@@ -96,43 +206,26 @@ export function normalizeServiceSegments(serviceData) {
       if (seg.start_time) {
         const [h, m] = seg.start_time.split(':').map(Number);
         currentH = h; currentM = m;
-        // Recalculate end
         const d2 = new Date();
         d2.setHours(h, m + duration, 0, 0);
         currentH = d2.getHours();
         currentM = d2.getMinutes();
       }
 
-      // Resolve translation mode: explicit value wins, then slot-level default.
-      // 11:30am service translation is always InPerson (on-stage);
-      // 9:30am defaults to RemoteBooth when unspecified.
       const rawTransMode = seg.data?.translation_mode || seg.translation_mode || '';
       const resolvedTransMode = rawTransMode
         || (slotLabel === '11:30am' ? 'InPerson' : 'RemoteBooth');
 
-      // Service segments store content fields with different keys than Event Segments:
-      //   preacher  → data.preacher  (Events use "presenter" for Plenaria)
-      //   title     → data.title     (message title, NOT the segment block title)
-      //   leader    → data.leader    (worship leader)
-      // We must map these carefully so MyProgram cards render them.
       const segData = seg.data || {};
-
-      // Presenter: services use data.presenter OR data.preacher for Plenaria
       const presenter = segData.presenter || seg.presenter
         || segData.preacher || seg.preacher || '';
-
-      // Message title: weekly services store it as data.title or data.messageTitle
-      // Custom services may use seg.messageTitle or seg.message_title
-      // IMPORTANT: data.title is the *message* title, NOT the block title (that's seg.title)
       const messageTitle = segData.messageTitle || segData.title
         || seg.messageTitle || segData.message_title || seg.message_title || '';
-
-      // Leader (worship): data.leader
       const leader = segData.leader || seg.leader || '';
 
       result.push({
         id: seg.id || `${slotLabel}-${idx}`,
-        title: seg.title || 'Untitled', // Block title lives at root only
+        title: seg.title || 'Untitled',
         segment_type: seg.type || seg.segment_type || segData.type || 'Especial',
         start_time: startTime,
         end_time: endTime,
@@ -165,20 +258,15 @@ export function normalizeServiceSegments(serviceData) {
         major_break: seg.major_break || false,
         sub_assignments: (seg.sub_assignments || []).map(sa => ({
           ...sa,
-          // Resolve the person name from data using person_field_name
           _resolvedPerson: sa.person_field_name
             ? (segData[sa.person_field_name] || seg[sa.person_field_name] || '')
             : '',
         })),
         breakout_rooms: seg.breakout_rooms || segData.breakout_rooms || [],
-        // Presentation / notes URLs
         presentation_url: seg.presentation_url || segData.presentation_url || '',
         notes_url: seg.notes_url || segData.notes_url || '',
         content_is_slides_only: seg.content_is_slides_only || segData.content_is_slides_only || false,
-        // Sub-assignment fields passthrough
         show_in_livestream: seg.show_in_livestream !== undefined ? seg.show_in_livestream : true,
-        // Enriched data object for getSegmentData compatibility
-        // Merge resolved values back so getData() finds them in data.*
         data: {
           ...segData,
           presenter: presenter || segData.presenter || '',
@@ -198,14 +286,14 @@ export function normalizeServiceSegments(serviceData) {
     });
   };
 
-  // Weekly services (JSON path — also works during dual-write transition)
+  // Weekly services (JSON path)
   if (serviceData['9:30am']) {
     processSlot(serviceData['9:30am'], '9:30am', '09:30');
   }
   if (serviceData['11:30am']) {
     processSlot(serviceData['11:30am'], '11:30am', '11:30');
   }
-  // Custom services
+  // Custom / one-off services
   if (serviceData.segments && serviceData.segments.length > 0 && result.length === 0) {
     processSlot(serviceData.segments, 'custom', serviceData.time || '10:00');
   }

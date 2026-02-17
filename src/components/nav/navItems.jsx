@@ -33,11 +33,11 @@ export const primaryNav = [
   },
   {
     id: 'services',
-    labelKey: 'nav.services',
+    labelKey: 'nav.weeklyServices',
     icon: Clock,
     page: 'WeeklyServiceManager',
     permission: 'view_services',
-    matchPages: ['WeeklyServiceManager', 'CustomServicesManager', 'CustomServiceBuilder'],
+    matchPages: ['WeeklyServiceManager'],
   },
 ];
 
@@ -53,7 +53,7 @@ export const secondaryNav = [
   },
   {
     id: 'custom-services',
-    labelKey: 'nav.customServices',
+    labelKey: 'nav.oneOffServices',
     icon: Plus,
     page: 'CustomServicesManager',
     permission: 'view_services',

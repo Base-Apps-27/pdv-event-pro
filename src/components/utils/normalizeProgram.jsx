@@ -788,6 +788,10 @@ export function detectSourceType(programData) {
   if (!programData?.program) return 'event';
   const program = programData.program;
   if (program._isEvent) return 'event';
+  // Explicit service_type field (preferred)
+  if (program.service_type === 'weekly') return 'weekly_service';
+  if (program.service_type === 'one_off') return 'custom_service';
+  // Structural fallback for legacy data without service_type
   if (program.segments && program.segments.length > 0) return 'custom_service';
   if (program['9:30am'] || program['11:30am']) return 'weekly_service';
   // Entity-sourced weekly: sessions have names like "9:30am" / "11:30am"

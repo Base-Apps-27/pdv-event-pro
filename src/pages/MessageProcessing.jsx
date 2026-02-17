@@ -107,22 +107,49 @@ export default function MessageProcessingPage() {
                 status: 'active'
             });
 
-            // Extract segments from services
+            // Extract segments from services — entity-first, JSON fallback
             const serviceSegments = [];
+            const seenEntityIds = new Set();
+
+            // Entity path: check for Segment entities linked to these services via Sessions
+            for (const service of recentServices) {
+                const sessions = await base44.entities.Session.filter({ service_id: service.id });
+                if (sessions.length > 0) {
+                    for (const session of sessions) {
+                        const segs = await base44.entities.Segment.filter({ session_id: session.id }, 'order');
+                        segs.forEach((seg, idx) => {
+                            if (seg.submission_status === 'pending' || seg.submission_status === 'processed') {
+                                seenEntityIds.add(service.id);
+                                serviceSegments.push({
+                                    id: seg.id,
+                                    title: `${service.name || service.date} - ${session.name} - ${seg.title}`,
+                                    presenter: seg.presenter,
+                                    submitted_content: seg.submitted_content,
+                                    submission_status: seg.submission_status,
+                                    updated_date: seg.updated_date || service.updated_date,
+                                    // Not a JSON service segment — use standard entity path
+                                    isServiceSegment: false,
+                                });
+                            }
+                        });
+                    }
+                }
+            }
+
+            // JSON fallback: for services without Session entities
             recentServices.forEach(service => {
+                if (seenEntityIds.has(service.id)) return; // Already handled via entity path
                 ['9:30am', '11:30am'].forEach(slot => {
                     if (service[slot]) {
                         service[slot].forEach((seg, idx) => {
                             if (seg.submission_status === 'pending' || seg.submission_status === 'processed') {
-                                // Normalize to look like a Segment entity for the UI
                                 serviceSegments.push({
                                     id: `weekly_service|${service.id}|${slot}|${idx}|message`,
                                     title: `${service.name || service.date} - ${slot} - ${seg.title}`,
                                     presenter: seg.data?.presenter || seg.data?.preacher || seg.data?.leader,
                                     submitted_content: seg.submitted_content,
                                     submission_status: seg.submission_status,
-                                    updated_date: service.updated_date, // Use service update time
-                                    // Internal flags for mutation
+                                    updated_date: service.updated_date,
                                     isServiceSegment: true,
                                     serviceId: service.id,
                                     timeSlot: slot,

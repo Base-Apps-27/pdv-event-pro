@@ -37,12 +37,15 @@ import { resolveBlockTime } from '@/components/utils/streamTiming';
 import { resolveStreamActions } from '@/components/utils/resolveStreamActions';
 
 /**
- * DirectorConsole - Phase 2 Core
- * 
+ * DirectorConsole — Events Only
+ *
  * Main page for Live Director mode during events.
  * Provides real-time segment timing control with hold/finalize/cascade flow.
- * 
- * URL: /DirectorConsole?sessionId=xxx
+ *
+ * Services do NOT use Director Console. They use the start-time offset
+ * feature (LiveTimeAdjustmentModal) accessible from PublicProgramView.
+ *
+ * URL: /DirectorConsole?sessionId=xxx  (event sessions only)
  * 
  * ============================================================================
  * ARCHITECTURE DECISION: Shared Live Ops Components (2026-02-11)
@@ -75,14 +78,10 @@ export default function DirectorConsole() {
   const { t, language } = useLanguage();
   const queryClient = useQueryClient();
   
-  // P2-3: Memoized URL params (2026-02-12)
-  // Supports both event sessions (?sessionId=) and service sessions (?serviceSessionId=)
+  // DirectorConsole is for EVENT sessions only.
+  // Services use the start-time offset feature (LiveTimeAdjustmentModal), not Director Console.
   const sessionId = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('sessionId') || params.get('serviceSessionId');
-  }, []);
-  const isServiceSession = useMemo(() => {
-    return new URLSearchParams(window.location.search).has('serviceSessionId');
+    return new URLSearchParams(window.location.search).get('sessionId');
   }, []);
   
   // P1-1: Isolated clock tick to avoid full-page re-renders (2026-02-12)
@@ -107,7 +106,7 @@ export default function DirectorConsole() {
     refetchInterval: 5000, // Poll every 5 seconds for ownership changes
   });
   
-  // Fetch event data (for context) — only for event sessions
+  // Fetch event data (for context)
   const { data: event } = useQuery({
     queryKey: ['event', session?.event_id],
     queryFn: async () => {
@@ -115,18 +114,7 @@ export default function DirectorConsole() {
       const events = await base44.entities.Event.filter({ id: session.event_id });
       return events[0] || null;
     },
-    enabled: !!session?.event_id && !isServiceSession,
-  });
-
-  // Fetch service data (for context) — only for service sessions
-  const { data: service } = useQuery({
-    queryKey: ['service', session?.service_id],
-    queryFn: async () => {
-      if (!session?.service_id) return null;
-      const services = await base44.entities.Service.filter({ id: session.service_id });
-      return services[0] || null;
-    },
-    enabled: !!session?.service_id && isServiceSession,
+    enabled: !!session?.event_id,
   });
   
   // Fetch segments for this session
@@ -170,7 +158,7 @@ export default function DirectorConsole() {
   const { data: directorStreamBlocks = [] } = useQuery({
     queryKey: ['directorStreamBlocks', sessionId],
     queryFn: () => base44.entities.StreamBlock.filter({ session_id: sessionId }, 'order'),
-    enabled: !!sessionId && !!session?.has_livestream && !isServiceSession,
+    enabled: !!sessionId && !!session?.has_livestream,
     refetchInterval: 5000
   });
 
@@ -317,9 +305,9 @@ export default function DirectorConsole() {
       />
       
       {/* Director Ping Feed - Shows incoming @Director pings */}
-      {(session?.event_id || session?.service_id) && (
+      {session?.event_id && (
         <DirectorPingFeed
-          eventId={session.event_id || session.service_id}
+          eventId={session.event_id}
           currentUser={currentUser}
           language={language}
         />
@@ -400,28 +388,13 @@ export default function DirectorConsole() {
       )}
       
       {/* LiveOperationsChat - Same component as Live View */}
-      {/* Event context */}
-      {currentUser && hasPermission(currentUser, 'view_live_chat') && session?.event_id && event && !isServiceSession && (
+      {currentUser && hasPermission(currentUser, 'view_live_chat') && session?.event_id && event && (
         <LiveOperationsChat
           currentUser={currentUser}
           contextType="event"
           contextId={session.event_id}
           contextDate={event.end_date}
           contextName={event.name}
-          isOpen={chatOpen}
-          onToggle={setChatOpen}
-          onUnreadCountChange={setChatUnreadCount}
-          hideTrigger={true}
-        />
-      )}
-      {/* Service context */}
-      {currentUser && hasPermission(currentUser, 'view_live_chat') && session?.service_id && service && isServiceSession && (
-        <LiveOperationsChat
-          currentUser={currentUser}
-          contextType="service"
-          contextId={session.service_id}
-          contextDate={service.date}
-          contextName={service.name}
           isOpen={chatOpen}
           onToggle={setChatOpen}
           onUnreadCountChange={setChatUnreadCount}

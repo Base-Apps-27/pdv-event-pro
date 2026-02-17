@@ -145,7 +145,8 @@ export function useWeeklyServiceHandlers({
         print_settings_page2: printSettingsPage2,
         day_of_week: 'Sunday',
         name: `Domingo - ${selectedDate}`,
-        status: 'active'
+        status: 'active',
+        service_type: 'weekly'
       };
       
       saveServiceMutation.mutate(dataToSave, {
