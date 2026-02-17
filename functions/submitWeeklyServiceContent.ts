@@ -333,6 +333,61 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Service.update(serviceId, updatePayload);
         console.log("[INLINE_PROCESS] Service updated successfully");
 
+        // Entity Lift: also update Segment entity (dual-write)
+        try {
+            const sessions = await base44.asServiceRole.entities.Session.filter({
+                service_id: serviceId
+            });
+            const targetSession = sessions.find(s => s.name === timeSlot);
+            if (targetSession) {
+                const sessionSegments = await base44.asServiceRole.entities.Segment.filter(
+                    { session_id: targetSession.id }, 'order'
+                );
+                const targetSegmentEntity = sessionSegments[segmentIdx];
+                if (targetSegmentEntity) {
+                    await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, {
+                        submitted_content: content,
+                        parsed_verse_data: parsedData,
+                        submission_status: 'processed',
+                        scripture_references: scriptureReferences,
+                        presentation_url: presentation_url || "",
+                        notes_url: notes_url || "",
+                        content_is_slides_only: !!content_is_slides_only,
+                        projection_notes: projectionNotes,
+                        message_title: (title && title.trim() !== "") ? title.trim() : targetSegmentEntity.message_title,
+                    });
+                }
+
+                // apply_to_both: update other session's entity too
+                if (apply_to_both_services && timeSlot === '9:30am') {
+                    const otherSession = sessions.find(s => s.name === '11:30am');
+                    if (otherSession) {
+                        const otherSegs = await base44.asServiceRole.entities.Segment.filter(
+                            { session_id: otherSession.id }, 'order'
+                        );
+                        const otherTarget = otherSegs.find(seg => {
+                            const t = (seg.segment_type || '').toLowerCase();
+                            return ['plenaria', 'message', 'predica', 'mensaje'].includes(t);
+                        });
+                        if (otherTarget) {
+                            await base44.asServiceRole.entities.Segment.update(otherTarget.id, {
+                                submitted_content: content,
+                                parsed_verse_data: parsedData,
+                                submission_status: 'processed',
+                                scripture_references: scriptureReferences,
+                                presentation_url: presentation_url || "",
+                                notes_url: notes_url || "",
+                                content_is_slides_only: !!content_is_slides_only,
+                                message_title: (title && title.trim() !== "") ? title.trim() : otherTarget.message_title,
+                            });
+                        }
+                    }
+                }
+            }
+        } catch (entityErr) {
+            console.error("[ENTITY_LIFT] Segment entity update failed (non-blocking):", entityErr.message);
+        }
+
         // Create Version Record for audit trail — already processed, no automation needed
         // The entity automation may still fire but processNewSubmissionVersion will see
         // processing_status='processed' and the safety net will skip it too.

@@ -29,6 +29,7 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
 export default function ServiceProgramView({
   actualServiceData,
   allSegments = [], // Backend-provided flat list (includes generated breaks)
+  sessions = [], // Session entities (for resolving entity session IDs to slot names)
   liveAdjustments = [],
   currentTime,
   isSegmentCurrent,
@@ -99,13 +100,23 @@ export default function ServiceProgramView({
     }
 
     // For Weekly Services, process 'allSegments' prop to apply adjustments by slot
-    // We map session_id to time_slot
+    // We map session_id to time_slot (supports both JSON-sourced synthetic IDs and entity UUIDs)
+    const sessionNameMap = new Map();
+    if (sessions?.length > 0) {
+      sessions.forEach(s => { if (s.id && s.name) sessionNameMap.set(s.id, s.name); });
+    }
+
     return allSegments.map(seg => {
       let offsetMinutes = 0;
       let slot = null;
 
-      // Map generated session IDs to slots
-      if (seg.session_id === 'slot-9-30') slot = '9:30am';
+      // Entity-sourced: resolve real session UUID to slot name
+      const resolvedName = sessionNameMap.get(seg.session_id);
+      if (resolvedName) {
+        slot = resolvedName; // e.g. "9:30am" or "11:30am"
+      }
+      // JSON-sourced: map synthetic session IDs to slots
+      else if (seg.session_id === 'slot-9-30') slot = '9:30am';
       else if (seg.session_id === 'slot-11-30') slot = '11:30am';
       else if (seg.session_id === 'slot-break') slot = '9:30am'; // Break shifts with morning service
 
@@ -120,7 +131,7 @@ export default function ServiceProgramView({
         end_time: addMinutesToTime(seg.end_time, offsetMinutes)
       };
     });
-  }, [allSegments, adjustedServiceData, liveAdjustments, actualServiceData]);
+  }, [allSegments, adjustedServiceData, liveAdjustments, actualServiceData, sessions]);
 
   // If no service data, show empty state
   if (!adjustedServiceData) {

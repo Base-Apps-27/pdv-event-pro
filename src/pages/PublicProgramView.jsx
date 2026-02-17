@@ -916,6 +916,7 @@ export default function PublicProgramView() {
               <ServiceProgramView
                 actualServiceData={actualServiceData}
                 allSegments={allSegments} // Pass backend-generated flat list (includes Break)
+                sessions={sessions} // For resolving entity session IDs to slot names
                 liveAdjustments={liveAdjustments}
                 currentTime={currentTime}
                 isSegmentCurrent={isSegmentCurrent}

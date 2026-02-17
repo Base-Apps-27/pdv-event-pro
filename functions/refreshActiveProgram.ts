@@ -384,16 +384,108 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       base44.asServiceRole.entities.Session.filter({ service_id: targetProgram.id })
     );
     if (directSessions.length > 0) {
-      sessions = directSessions;
-      // Bulk fetch segments for all sessions
-      const allSegs = [];
-      for (const s of sessions) {
-        const segs = await withRetry(() =>
-          base44.asServiceRole.entities.Segment.filter({ session_id: s.id })
-        );
-        allSegs.push(...segs);
+      sessions = directSessions.sort((a, b) => (a.order || 0) - (b.order || 0));
+      const sessionIds = sessions.map(s => s.id);
+
+      // Bulk fetch segments, preSessionDetails for all sessions (batched)
+      const BATCH = 10;
+      let allSegs = [];
+      let allPreSessionDetails = [];
+
+      for (let i = 0; i < sessionIds.length; i += BATCH) {
+        const batch = sessionIds.slice(i, i + BATCH);
+        const batchResults = await Promise.all(batch.map(sid =>
+          Promise.all([
+            withRetry(() => base44.asServiceRole.entities.Segment.filter({ session_id: sid }, 'order')),
+            withRetry(() => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: sid })),
+          ])
+        ));
+        for (const [segs, details] of batchResults) {
+          allSegs.push(...segs);
+          allPreSessionDetails.push(...details);
+        }
       }
-      segments = allSegs.filter(s => s.show_in_general).sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      preSessionDetails = allPreSessionDetails;
+
+      // Sort by session order first, then segment order (matches event path pattern)
+      const sessionsMap = new Map(sessions.map((s, i) => [s.id, i]));
+      segments = allSegs
+        .filter(s => s.show_in_general !== false)
+        .sort((a, b) => {
+          const aIdx = sessionsMap.get(a.session_id) ?? 999;
+          const bIdx = sessionsMap.get(b.session_id) ?? 999;
+          if (aIdx !== bIdx) return aIdx - bIdx;
+          return (a.order || 0) - (b.order || 0);
+        });
+
+      // Bulk fetch SegmentActions for all segments (matches event path pattern)
+      if (segments.length > 0) {
+        const segmentIds = segments.map(s => s.id).filter(Boolean);
+        const allActions = [];
+        for (let i = 0; i < segmentIds.length; i += BATCH) {
+          const batch = segmentIds.slice(i, i + BATCH);
+          const batchResults = await Promise.all(
+            batch.map(segId => withRetry(() => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId })))
+          );
+          allActions.push(...batchResults.flat());
+        }
+
+        const actionsBySegment = groupBy(allActions, a => a.segment_id);
+        segments = segments.map(s => {
+          const linked = actionsBySegment[s.id] || [];
+          const embedded = s.segment_actions || [];
+          return { ...s, actions: [...embedded, ...linked].sort((a, b) => (a.order || 0) - (b.order || 0)) };
+        });
+      }
+
+      // Break segment injection between sessions (matches JSON fallback behavior)
+      if (sessions.length >= 2) {
+        const segsBySession = groupBy(segments, seg => seg.session_id);
+        const firstSession = sessions[0];
+        const secondSession = sessions[1];
+        const firstSessionSegs = (segsBySession[firstSession.id] || []).sort((a, b) => (a.order || 0) - (b.order || 0));
+        const secondSessionSegs = (segsBySession[secondSession.id] || []).sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        if (firstSessionSegs.length > 0 && secondSessionSegs.length > 0) {
+          const lastSeg = firstSessionSegs[firstSessionSegs.length - 1];
+          const firstNextSeg = secondSessionSegs[0];
+
+          if (lastSeg.end_time && firstNextSeg.start_time && lastSeg.end_time < firstNextSeg.start_time) {
+            const [endH, endM] = lastSeg.end_time.split(':').map(Number);
+            const [startH, startM] = firstNextSeg.start_time.split(':').map(Number);
+            const diffMin = (startH * 60 + startM) - (endH * 60 + endM);
+            if (diffMin > 0) {
+              const notes = targetProgram.receso_notes?.["11:00am"] || targetProgram.receso_notes?.["11:00"] || "";
+              const breakSegment = {
+                id: 'generated-break-inter-service',
+                start_time: lastSeg.end_time,
+                end_time: firstNextSeg.start_time,
+                duration_min: diffMin,
+                title: 'Receso',
+                segment_type: 'Receso',
+                session_id: 'slot-break',
+                description: notes,
+                actions: [
+                  { id: 'break-reset', label: 'STAGE RESET', department: 'Stage & Decor', timing: 'after_start', offset_min: 0, order: 1 },
+                  { id: 'break-sound', label: 'AUDIO CHECK', department: 'Sound', timing: 'after_start', offset_min: 10, order: 2 },
+                ],
+              };
+
+              // Insert break at the boundary between first and second session segments
+              const insertIdx = segments.findIndex(s => s.session_id === secondSession.id);
+              if (insertIdx !== -1) {
+                segments.splice(insertIdx, 0, breakSegment);
+              } else {
+                segments.push(breakSegment);
+              }
+            }
+          }
+        }
+      }
+
+      // Inject pre-session details as actions (reuse existing helper)
+      injectPreSessionActions(segments, sessions, preSessionDetails);
     }
     // Weekly service: process 9:30am/11:30am slots into flat segments
     else if (targetProgram["9:30am"] || targetProgram["11:30am"]) {
@@ -461,8 +553,9 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       segments = targetProgram.segments;
     }
 
-    // Inject pre_service_notes for weekly services
-    if (targetProgram.pre_service_notes) {
+    // Inject pre_service_notes for weekly services (JSON fallback only —
+    // when sessions exist, PreSessionDetails handles this via injectPreSessionActions above)
+    if (targetProgram.pre_service_notes && sessions.length === 0) {
       const injectNotes = (slotKey, slotSessionId) => {
         const notes = targetProgram.pre_service_notes[slotKey];
         if (!notes) return;
@@ -495,7 +588,7 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       segments,
       rooms,
       eventDays: [],
-      preSessionDetails: [],
+      preSessionDetails,
       liveAdjustments,
       streamBlocks: [],
     };

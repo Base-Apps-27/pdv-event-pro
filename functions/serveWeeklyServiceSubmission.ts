@@ -36,37 +36,65 @@ Deno.serve(async (req) => {
 
             if (validServices.length > 0) {
                 const service = validServices[0]; // Next upcoming service
-                
+
                 // Format display date from the service's actual date
                 const svcDate = new Date(service.date + 'T12:00:00'); // noon to avoid TZ shift
                 formattedDate = svcDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'numeric', year: '2-digit' });
                 formattedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
-                
-                // Extract Message segments
-                const processTimeSlot = (slot) => {
-                    if (!service[slot]) return;
-                    service[slot].forEach((seg, idx) => {
-                        // Normalize type check
-                        const type = (seg.type || "").toLowerCase();
-                        if (type === 'message' || type === 'plenaria' || type === 'predica' || type === 'mensaje') {
-                            
-                            // Composite ID: weekly_service|{serviceId}|{timeSlot}|{segmentIdx}|message
-                            const compositeId = `weekly_service|${service.id}|${slot}|${idx}|message`;
-                            
-                            let presenter = seg.data?.preacher || seg.data?.presenter || seg.data?.leader || "Sin asignar";
-                            
-                            options.push({
-                                id: compositeId,
-                                label: `${slot} - ${presenter}`,
-                                group: formattedDate,
-                                title: seg.message_title || seg.data?.message_title || seg.data?.title || ""
-                            });
-                        }
-                    });
-                };
 
-                processTimeSlot("9:30am");
-                processTimeSlot("11:30am");
+                // Entity-first resolution: try Session + Segment entities
+                const sessions = await base44.asServiceRole.entities.Session.filter({
+                    service_id: service.id
+                });
+
+                if (sessions.length > 0) {
+                    // Entity path
+                    for (const session of sessions.sort((a, b) => (a.order || 0) - (b.order || 0))) {
+                        const segments = await base44.asServiceRole.entities.Segment.filter(
+                            { session_id: session.id }, 'order'
+                        );
+                        segments.forEach((seg, idx) => {
+                            const type = (seg.segment_type || "").toLowerCase();
+                            if (['plenaria', 'message', 'predica', 'mensaje'].includes(type)) {
+                                // KEEP same composite ID format for backward compat
+                                const compositeId = `weekly_service|${service.id}|${session.name}|${idx}|message`;
+                                const presenter = seg.presenter || "Sin asignar";
+                                options.push({
+                                    id: compositeId,
+                                    label: `${session.name} - ${presenter}`,
+                                    group: formattedDate,
+                                    title: seg.message_title || ""
+                                });
+                            }
+                        });
+                    }
+                } else {
+                    // Fallback: JSON path (existing processTimeSlot logic)
+                    const processTimeSlot = (slot) => {
+                        if (!service[slot]) return;
+                        service[slot].forEach((seg, idx) => {
+                            // Normalize type check
+                            const type = (seg.type || "").toLowerCase();
+                            if (type === 'message' || type === 'plenaria' || type === 'predica' || type === 'mensaje') {
+
+                                // Composite ID: weekly_service|{serviceId}|{timeSlot}|{segmentIdx}|message
+                                const compositeId = `weekly_service|${service.id}|${slot}|${idx}|message`;
+
+                                let presenter = seg.data?.preacher || seg.data?.presenter || seg.data?.leader || "Sin asignar";
+
+                                options.push({
+                                    id: compositeId,
+                                    label: `${slot} - ${presenter}`,
+                                    group: formattedDate,
+                                    title: seg.message_title || seg.data?.message_title || seg.data?.title || ""
+                                });
+                            }
+                        });
+                    };
+
+                    processTimeSlot("9:30am");
+                    processTimeSlot("11:30am");
+                }
             } else {
                 serviceError = "No se encontraron servicios programados para el próximo domingo.";
             }

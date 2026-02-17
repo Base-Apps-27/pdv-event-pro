@@ -212,6 +212,44 @@ Deno.serve(async (req) => {
 
             await base44.asServiceRole.entities.Service.update(serviceId, { [timeSlot]: currentArray });
 
+            // Entity Lift: also update Segment entity (dual-write)
+            try {
+                const sessions = await base44.asServiceRole.entities.Session.filter({
+                    service_id: serviceId
+                });
+                const targetSession = sessions.find(s => s.name === timeSlot);
+                if (targetSession) {
+                    const sessionSegments = await base44.asServiceRole.entities.Segment.filter(
+                        { session_id: targetSession.id }, 'order'
+                    );
+                    const targetSegmentEntity = sessionSegments[segmentIdx];
+                    if (targetSegmentEntity) {
+                        const entityUpdate = {
+                            submitted_content: submission.content,
+                            parsed_verse_data: parsedData,
+                            submission_status: 'processed',
+                            scripture_references: scriptureReferences,
+                            presentation_url: submission.presentation_url || "",
+                            notes_url: submission.notes_url || "",
+                            content_is_slides_only: !!submission.content_is_slides_only,
+                            message_title: (submission.title && submission.title.trim() !== "") ? submission.title.trim() : targetSegmentEntity.message_title,
+                        };
+
+                        // If Slides Only and content exists, append to projection notes
+                        if (isSlidesOnly && submission.content && submission.content.trim()) {
+                            const currentNotes = targetSegmentEntity.projection_notes || "";
+                            if (!currentNotes.includes(submission.content.trim())) {
+                                entityUpdate.projection_notes = (currentNotes ? currentNotes + "\n\n" : "") + `[Nota del Orador]: ${submission.content.trim()}`;
+                            }
+                        }
+
+                        await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, entityUpdate);
+                    }
+                }
+            } catch (entityErr) {
+                console.error("[ENTITY_LIFT] Segment entity update failed (non-blocking):", entityErr.message);
+            }
+
         } else {
             // Event Segment path — primary use case for this automation
             console.log(`[EVENT] Processing event submission ${submissionId} for segment ${segmentId}`);

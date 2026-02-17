@@ -408,14 +408,91 @@ Deno.serve(async (req) => {
 
             // Fetch segments from found sessions (sequential with retry)
             if (sessions.length > 0) {
+                 // Sort sessions by order (matching event path pattern)
+                 sessions.sort((a, b) => (a.order || 0) - (b.order || 0));
+
                  const sessionIds = sessions.map(s => s.id);
                  const allResults = [];
                  for (const sid of sessionIds) {
                      const segs = await withRetry(() => base44.asServiceRole.entities.Segment.filter({ session_id: sid }, undefined, undefined, undefined, dataEnv));
                      allResults.push(...segs);
                  }
-                 segments = allResults.filter(s => s.show_in_general).sort((a, b) => (a.order || 0) - (b.order || 0));
-            } 
+
+                 // A. Sort by session order, then segment order (matching event path)
+                 const sessionOrderMap = new Map(sessions.map((s, i) => [s.id, i]));
+                 segments = allResults
+                     .filter(s => s.show_in_general)
+                     .sort((a, b) => {
+                         const aSessionIdx = sessionOrderMap.get(a.session_id) ?? 999;
+                         const bSessionIdx = sessionOrderMap.get(b.session_id) ?? 999;
+                         if (aSessionIdx !== bSessionIdx) return aSessionIdx - bSessionIdx;
+                         return (a.order || 0) - (b.order || 0);
+                     });
+
+                 // B. Inject break segment between service sessions if there's a time gap
+                 if (sessions.length >= 2) {
+                     const enrichedSegments = [];
+                     for (let sIdx = 0; sIdx < sessions.length; sIdx++) {
+                         const currentSession = sessions[sIdx];
+                         const currentSessionSegments = segments.filter(seg => seg.session_id === currentSession.id);
+                         enrichedSegments.push(...currentSessionSegments);
+
+                         // Check for gap between this session and the next
+                         if (sIdx < sessions.length - 1) {
+                             const nextSession = sessions[sIdx + 1];
+                             const nextSessionSegments = segments.filter(seg => seg.session_id === nextSession.id);
+
+                             if (currentSessionSegments.length > 0 && nextSessionSegments.length > 0) {
+                                 const lastSeg = currentSessionSegments[currentSessionSegments.length - 1];
+                                 const firstNextSeg = nextSessionSegments[0];
+
+                                 if (lastSeg.end_time && firstNextSeg.start_time && lastSeg.end_time < firstNextSeg.start_time) {
+                                     const [endH, endM] = lastSeg.end_time.split(':').map(Number);
+                                     const [startH, startM] = firstNextSeg.start_time.split(':').map(Number);
+                                     const diffMin = (startH * 60 + startM) - (endH * 60 + endM);
+
+                                     if (diffMin > 0) {
+                                         const notes = targetProgram.receso_notes?.["11:00am"] ||
+                                                      targetProgram.receso_notes?.["11:00"] ||
+                                                      targetProgram.receso_notes?.["11:00 AM"] || "";
+
+                                         enrichedSegments.push({
+                                             id: 'generated-break-inter-service',
+                                             start_time: lastSeg.end_time,
+                                             end_time: firstNextSeg.start_time,
+                                             duration_min: diffMin,
+                                             title: 'Receso',
+                                             segment_type: 'Receso',
+                                             session_id: 'slot-break',
+                                             description: notes,
+                                             presenter: notes ? 'Coordinador' : '',
+                                             actions: [
+                                                 {
+                                                     id: 'break-reset',
+                                                     label: 'STAGE RESET',
+                                                     department: 'Stage & Decor',
+                                                     timing: 'after_start',
+                                                     offset_min: 0,
+                                                     order: 1
+                                                 },
+                                                 {
+                                                     id: 'break-sound',
+                                                     label: 'AUDIO CHECK',
+                                                     department: 'Sound',
+                                                     timing: 'after_start',
+                                                     offset_min: 10,
+                                                     order: 2
+                                                 }
+                                             ]
+                                         });
+                                     }
+                                 }
+                             }
+                         }
+                     }
+                     segments = enrichedSegments;
+                 }
+            }
             // Fallback: Embedded Segments (Custom Services)
             // CRITICAL FIX: Only use 'segments' if it actually has content. 
             // Weekly services might have an empty 'segments' array default, which would mask the 9:30am data if we didn't check length.
@@ -643,9 +720,9 @@ Deno.serve(async (req) => {
                 });
             }
 
-            // FALLBACK: Inject pre_service_notes for Weekly Services (if no sessions / PreSessionDetails)
-            // This ensures "General Notes" or manual pre-service instructions show up on the TV Display
-            if (targetProgram.pre_service_notes) {
+            // FALLBACK: Inject pre_service_notes for Weekly Services (JSON-only path)
+            // Only when NO session entities exist — when sessions exist, PreSessionDetails handles this above
+            if (targetProgram.pre_service_notes && sessions.length === 0) {
                 const injectServiceNotes = (slotKey, slotSessionId) => {
                     const notes = targetProgram.pre_service_notes[slotKey];
                     if (!notes) return;

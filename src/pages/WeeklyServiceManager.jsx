@@ -44,6 +44,7 @@ import WeeklyServiceDialogs from "@/components/service/weekly/WeeklyServiceDialo
 import { ServiceDataContext, UpdatersContext } from "@/components/service/WeeklyServiceInputs";
 import { WEEKLY_BLUEPRINT } from "@/components/service/weekly/weeklyBlueprint";
 import { useWeeklyServiceHandlers } from "@/components/service/weekly/useWeeklyServiceHandlers";
+import { syncWeeklyToSessions, loadWeeklyFromSessions } from "@/components/service/weeklySessionSync";
 import useStaleGuard from "@/components/utils/useStaleGuard";
 import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
 
@@ -120,14 +121,32 @@ export default function WeeklyServiceManager() {
         (s["9:30am"]?.length > 0 || s["11:30am"]?.length > 0) &&
         (!s.segments || s.segments.length === 0)
       );
+      let service = null;
       if (weeklyCandidates.length > 0) {
-        return weeklyCandidates.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0))[0];
+        service = weeklyCandidates.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0))[0];
+      } else {
+        const emptyCandidates = services.filter(s => !s.segments || s.segments.length === 0);
+        if (emptyCandidates.length > 0) {
+          service = emptyCandidates.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0))[0];
+        } else {
+          service = services[0];
+        }
       }
-      const emptyCandidates = services.filter(s => !s.segments || s.segments.length === 0);
-      if (emptyCandidates.length > 0) {
-        return emptyCandidates.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0))[0];
+
+      // Entity Lift: try loading from Session/Segment entities
+      if (service?.id) {
+        try {
+          const entityData = await loadWeeklyFromSessions(base44, service.id, blueprintData || WEEKLY_BLUEPRINT);
+          if (entityData) {
+            // Merge entity-sourced segment/team data onto the Service metadata
+            return { ...service, ...entityData, _fromEntities: true };
+          }
+        } catch (err) {
+          console.warn("[ENTITY_LIFT] Entity load failed, falling back to JSON:", err.message);
+        }
       }
-      return services[0];
+
+      return service;
     },
     enabled: !!selectedDate
   });
@@ -179,6 +198,11 @@ export default function WeeklyServiceManager() {
       setHasUnsavedChanges(false);
       const backupKey = `service_backup_${selectedDate}`;
       safeSetItem(backupKey, JSON.stringify({ data: result, timestamp: new Date().toISOString() }));
+
+      // Entity Lift: sync to Session/Segment/PreSessionDetails entities (fire-and-forget)
+      syncWeeklyToSessions(base44, result, result).catch(err => {
+        console.error("[WEEKLY_SYNC] Entity sync failed (non-blocking):", err.message);
+      });
     },
     onError: (error) => {
       toast.error('Error al guardar: ' + error.message);
