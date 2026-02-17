@@ -177,13 +177,13 @@ export default function CustomServiceBuilder() {
         return;
       }
     }
-    saveServiceMutation.mutate({ ...serviceData, status: 'active' });
+    saveServiceMutation.mutate({ ...serviceData, status: 'active', service_type: 'one_off' });
   };
 
   const forceSaveService = () => {
     setShowStaleWarning(false);
     setStaleInfo(null);
-    saveServiceMutation.mutate({ ...serviceData, status: 'active' });
+    saveServiceMutation.mutate({ ...serviceData, status: 'active', service_type: 'one_off' });
   };
 
   // ── Side effects ──

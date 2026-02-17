@@ -23,15 +23,18 @@ export default function CustomServicesManager() {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
 
-  // Fetch all custom services (those with 'segments' array populated)
-  // Phase 7: Added staleTime to reduce unnecessary refetches
+  // Fetch one-off / custom services
+  // Supports both new service_type field and legacy structural detection
   const { data: allServices = [], isLoading } = useQuery({
     queryKey: ['customServices'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const services = await base44.entities.Service.filter({ status: 'active' }, '-date');
-      // Filter to only custom services (those with segments array and not WeeklyServiceManager format)
-      return services.filter(s => s.segments && s.segments.length > 0);
+      return services.filter(s =>
+        s.service_type === 'one_off' ||
+        // Legacy fallback: has segments array but no service_type set
+        (!s.service_type && s.segments && s.segments.length > 0)
+      );
     },
   });
 

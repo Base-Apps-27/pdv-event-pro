@@ -48,6 +48,7 @@ import { syncWeeklyToSessions, loadWeeklyFromSessions } from "@/components/servi
 import useStaleGuard from "@/components/utils/useStaleGuard";
 import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import WeekdayServicePanel from "@/components/service/weekly/WeekdayServicePanel";
 
 // Weekday definitions — ordered Mon→Sun matching ISO week. Labels in Spanish.
 const WEEKDAYS = [
@@ -147,11 +148,13 @@ export default function WeeklyServiceManager() {
         dates.push(ds);
       }
 
-      // Fetch services for each date in parallel
+      // Fetch weekly services for each date (exclude blueprints and one-off services)
       const results = await Promise.all(
         dates.map(async (dt) => {
           const svcs = await base44.entities.Service.filter({ date: dt });
-          return svcs.filter(s => s.status !== 'blueprint').map(s => ({ ...s, _weekDate: dt }));
+          return svcs
+            .filter(s => s.status !== 'blueprint' && s.service_type !== 'one_off')
+            .map(s => ({ ...s, _weekDate: dt }));
         })
       );
       return results.flat();
@@ -178,19 +181,30 @@ export default function WeeklyServiceManager() {
     queryFn: async () => {
       const services = await base44.entities.Service.filter({ date: selectedDate });
       if (!services || services.length === 0) return null;
-      const weeklyCandidates = services.filter(s =>
-        (s["9:30am"]?.length > 0 || s["11:30am"]?.length > 0) &&
-        (!s.segments || s.segments.length === 0)
-      );
+
+      // Prefer services with explicit service_type: 'weekly'
+      let weeklyCandidates = services.filter(s => s.service_type === 'weekly');
+
+      // Legacy fallback: structural detection for services without service_type
+      if (weeklyCandidates.length === 0) {
+        weeklyCandidates = services.filter(s =>
+          !s.service_type &&
+          (s["9:30am"]?.length > 0 || s["11:30am"]?.length > 0) &&
+          (!s.segments || s.segments.length === 0)
+        );
+      }
+
       let service = null;
       if (weeklyCandidates.length > 0) {
         service = weeklyCandidates.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0))[0];
       } else {
-        const emptyCandidates = services.filter(s => !s.segments || s.segments.length === 0);
+        // Last resort: any service on this date that isn't one_off
+        const emptyCandidates = services.filter(s =>
+          s.service_type !== 'one_off' &&
+          (!s.segments || s.segments.length === 0)
+        );
         if (emptyCandidates.length > 0) {
           service = emptyCandidates.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0))[0];
-        } else {
-          service = services[0];
         }
       }
 
@@ -718,7 +732,7 @@ export default function WeeklyServiceManager() {
           </div>
         </TabsContent>
 
-        {/* Other weekdays — render their service sessions as horizontally scrollable columns */}
+        {/* Other weekdays — render their service sessions with full segment display */}
         {activeDays.filter(d => d.key !== 'sunday').map(day => {
           const dayServices = weekServices.filter(svc => {
             if (!svc._weekDate) return false;
@@ -735,12 +749,7 @@ export default function WeeklyServiceManager() {
                 <div className="overflow-x-auto -mx-2 px-2">
                   <div className="flex gap-6 min-w-[640px]">
                     {dayServices.map(svc => (
-                      <Card key={svc.id} className="flex-1 min-w-[320px] p-4 border-2 border-gray-300 bg-white">
-                        <h3 className="text-lg font-bold text-gray-900 mb-2">{svc.name || day.fullLabel}</h3>
-                        <p className="text-sm text-gray-500 mb-1">Fecha: {svc.date}</p>
-                        {svc.time && <p className="text-sm text-gray-500">Hora: {svc.time}</p>}
-                        <Badge variant="outline" className="mt-2 text-xs">{svc.status || 'active'}</Badge>
-                      </Card>
+                      <WeekdayServicePanel key={svc.id} service={svc} />
                     ))}
                   </div>
                 </div>
