@@ -264,12 +264,14 @@ function buildHeader(serviceData, logoDataUrl, scale) {
 }
 
 function buildWeeklyTeamInfo(serviceData, scale) {
+  // Entity Lift: pick team from first available slot
+  const firstSlot = (serviceData._slotNames || ["9:30am"])[0];
   const teams = [
-    { label: 'Coordinador', value: serviceData.coordinators?.["9:30am"] || serviceData.coordinators?.["11:30am"] },
-    { label: 'Ujier', value: serviceData.ujieres?.["9:30am"] },
-    { label: 'Sonido', value: serviceData.sound?.["9:30am"] },
-    { label: 'Luces', value: serviceData.luces?.["9:30am"] },
-    { label: 'Foto', value: serviceData.fotografia?.["9:30am"] }
+    { label: 'Coordinador', value: serviceData.coordinators?.[firstSlot] },
+    { label: 'Ujier', value: serviceData.ujieres?.[firstSlot] },
+    { label: 'Sonido', value: serviceData.sound?.[firstSlot] },
+    { label: 'Luces', value: serviceData.luces?.[firstSlot] },
+    { label: 'Foto', value: serviceData.fotografia?.[firstSlot] }
   ].filter(t => t.value);
 
   if (teams.length === 0) return null;
