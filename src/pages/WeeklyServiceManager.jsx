@@ -42,7 +42,9 @@ import SpecialSegmentDialog from "@/components/service/SpecialSegmentDialog";
 import ServiceTimeSlotColumn from "@/components/service/ServiceTimeSlotColumn";
 import WeeklyServiceDialogs from "@/components/service/weekly/WeeklyServiceDialogs";
 import { ServiceDataContext, UpdatersContext } from "@/components/service/WeeklyServiceInputs";
-import { WEEKLY_BLUEPRINT } from "@/components/service/weekly/weeklyBlueprint";
+// Blueprint Revamp (2026-02-18): DB blueprint (status='blueprint') is the single source of truth.
+// No hardcoded WEEKLY_BLUEPRINT constant. If DB blueprint is missing, segments use their own
+// data as-is — no phantom actions/fields injected from a stale constant.
 import { useWeeklyServiceHandlers } from "@/components/service/weekly/useWeeklyServiceHandlers";
 import { syncWeeklyToSessions, loadWeeklyFromSessions } from "@/components/service/weeklySessionSync";
 import { useServiceSchedules } from "@/components/service/weekly/useServiceSchedules";
@@ -245,7 +247,7 @@ export default function WeeklyServiceManager() {
       // Entity Lift: try loading from Session/Segment entities
       if (service?.id) {
         try {
-          const entityData = await loadWeeklyFromSessions(base44, service.id, blueprintData || WEEKLY_BLUEPRINT);
+          const entityData = await loadWeeklyFromSessions(base44, service.id, blueprintData);
           if (entityData) {
             // Merge entity-sourced segment/team data onto the Service metadata
             return { ...service, ...entityData, _fromEntities: true };
@@ -361,7 +363,7 @@ export default function WeeklyServiceManager() {
     serviceData, setServiceData, selectedDate, selectedAnnouncements,
     printSettingsPage1, printSettingsPage2, saveServiceMutation,
     updateAnnouncementMutation, fixedAnnouncements, dynamicAnnouncements,
-    blueprintData, BLUEPRINT: WEEKLY_BLUEPRINT,
+    blueprintData,
     setSavingField, setVerseParserOpen, setVerseParserContext, verseParserContext,
     setShowSpecialDialog, setSpecialSegmentDetails, specialSegmentDetails,
     setOptimizingAnnouncement, setPrintSettingsPage1, setPrintSettingsPage2,
@@ -378,8 +380,12 @@ export default function WeeklyServiceManager() {
       // merge needed. This eliminates the last piece of the dual-write system.
       // Blueprint merge is ONLY for legacy JSON-only services that haven't been re-saved
       // through the entity sync pipeline yet.
+      // Blueprint Revamp (2026-02-18): Simplified merge.
+      // Entity-sourced segments (_entityId present) are trusted as-is — they carry their own
+      // ui_fields, ui_sub_assignments, and segment_actions. No blueprint overlay.
+      // Legacy JSON-only segments (no _entityId) get fields populated from DB blueprint IF available,
+      // but NEVER get phantom actions injected. Actions only come from what the user entered.
       const mergeSegmentsWithBlueprint = (existingSegments, timeSlot) => {
-        const activeBlueprint = blueprintData || { "9:30am": WEEKLY_BLUEPRINT["9:30am"], "11:30am": WEEKLY_BLUEPRINT["11:30am"] };
         const normalizeType = (t) => {
           if (!t) return "";
           const lower = t.toLowerCase();
@@ -390,9 +396,8 @@ export default function WeeklyServiceManager() {
           return lower;
         };
         return existingSegments.map((savedSeg, idx) => {
-          // Entity Lift: If segment already has fields from entity, skip blueprint matching
+          // Entity-sourced segments: trust as-is, add minimal sub_assignment defaults only
           if (savedSeg.fields && savedSeg.fields.length > 0 && savedSeg._entityId) {
-            // Entity-sourced segment — trust it as-is, only add minimal defaults
             const savedType = normalizeType(savedSeg.type);
             let subAssignments = savedSeg.sub_assignments || [];
             if (subAssignments.length === 0) {
@@ -402,35 +407,33 @@ export default function WeeklyServiceManager() {
             return { ...savedSeg, sub_assignments: subAssignments };
           }
 
-          // Legacy path: blueprint matching for JSON-only data
+          // Legacy JSON-only: only populate missing fields from DB blueprint.
+          // CRITICAL: Do NOT overlay actions or translation settings from blueprint.
+          // Those must come from user input only.
           const savedType = normalizeType(savedSeg.type);
-          let blueprintSeg = activeBlueprint[timeSlot]?.[idx];
-          if (!blueprintSeg || normalizeType(blueprintSeg.type) !== savedType) {
-            blueprintSeg = activeBlueprint[timeSlot]?.find(b => normalizeType(b.type) === savedType);
-          }
-          if (!blueprintSeg) {
-            const hardcoded = WEEKLY_BLUEPRINT[timeSlot]?.[idx];
-            if (hardcoded && normalizeType(hardcoded.type) === savedType) {
-              blueprintSeg = hardcoded;
-            } else {
-              blueprintSeg = WEEKLY_BLUEPRINT[timeSlot]?.find(b => normalizeType(b.type) === savedType);
+          if (blueprintData) {
+            let blueprintSeg = blueprintData[timeSlot]?.[idx];
+            if (!blueprintSeg || normalizeType(blueprintSeg.type) !== savedType) {
+              blueprintSeg = blueprintData[timeSlot]?.find(b => normalizeType(b.type) === savedType);
+            }
+            if (blueprintSeg) {
+              // Only fill in structural UI metadata (fields, sub_assignments) — never actions
+              const mergedFields = (savedSeg.fields && savedSeg.fields.length > 0) ? savedSeg.fields : (blueprintSeg.fields || []);
+              let subAssignments = savedSeg.sub_assignments || blueprintSeg.sub_assignments || [];
+              if (!subAssignments || subAssignments.length === 0) {
+                if (savedType === 'worship') subAssignments = [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }];
+                else if (savedType === 'message') subAssignments = [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }];
+              }
+              return {
+                ...savedSeg,
+                fields: mergedFields,
+                sub_assignments: subAssignments,
+                // Preserve user's own actions — do NOT inject blueprint actions
+              };
             }
           }
-          if (blueprintSeg) {
-            let subAssignments = blueprintSeg.sub_assignments || savedSeg.sub_assignments || [];
-            if (!subAssignments || subAssignments.length === 0) {
-              if (savedType === 'worship') subAssignments = [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }];
-              else if (savedType === 'message') subAssignments = [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }];
-            }
-            return {
-              ...savedSeg,
-              fields: blueprintSeg.fields || savedSeg.fields,
-              sub_assignments: subAssignments,
-              actions: blueprintSeg.actions || savedSeg.actions || [],
-              requires_translation: blueprintSeg.requires_translation !== undefined ? blueprintSeg.requires_translation : savedSeg.requires_translation,
-              default_translator_source: blueprintSeg.default_translator_source || savedSeg.default_translator_source || "manual",
-            };
-          }
+
+          // No blueprint available: assign default field sets so the UI renders inputs
           if (!savedSeg.fields || savedSeg.fields.length === 0) {
             let defaultFields = [];
             if (savedType === 'worship') defaultFields = ["leader", "songs", "ministry_leader"];
@@ -438,14 +441,6 @@ export default function WeeklyServiceManager() {
             else if (savedType === 'offering') defaultFields = ["presenter", "verse"];
             else if (savedType === 'message') defaultFields = ["preacher", "title", "verse"];
             if (defaultFields.length > 0) return { ...savedSeg, fields: defaultFields };
-          }
-          if (savedSeg.type === 'special') {
-            const cleanedActions = (savedSeg.actions || []).filter(action => {
-              const label = (action.label || '').toLowerCase();
-              if (label.includes('pianista sube') || label.includes('equipo de a&a sube')) return false;
-              return true;
-            });
-            if (cleanedActions.length !== (savedSeg.actions || []).length) return { ...savedSeg, actions: cleanedActions };
           }
           return savedSeg;
         });
@@ -463,8 +458,8 @@ export default function WeeklyServiceManager() {
         } else {
           // Slot is empty (new slot added to ServiceSchedule after service was created).
           // Seed it from the blueprint so users get the standard segment structure.
-          const activeBlueprint = blueprintData || { "9:30am": WEEKLY_BLUEPRINT["9:30am"], "11:30am": WEEKLY_BLUEPRINT["11:30am"] };
-          const bpSegments = activeBlueprint[name] || activeBlueprint["9:30am"] || WEEKLY_BLUEPRINT["9:30am"] || [];
+          const activeBlueprint = blueprintData;
+          const bpSegments = blueprintData?.[name] || blueprintData?.["9:30am"] || [];
           loadedData[name] = bpSegments.map(seg => {
             const segmentCopy = {
               type: seg.type, title: seg.title, duration: seg.duration,
@@ -546,7 +541,7 @@ export default function WeeklyServiceManager() {
       initData.receso_notes = { [sundaySlotNames[0]]: "" };
       initData.pre_service_notes = { ...emptySlotObj };
       sundaySlotNames.forEach(name => {
-        const bpSegments = activeBlueprint[name] || activeBlueprint["9:30am"] || [];
+        const bpSegments = blueprintData?.[name] || blueprintData?.["9:30am"] || [];
         initData[name] = mapBlueprintToSegments(bpSegments);
       });
       setServiceData(initData);
