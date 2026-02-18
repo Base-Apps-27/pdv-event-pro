@@ -135,7 +135,7 @@ function buildServiceProgramDocument(serviceData, logoDataUrl, globalScale) {
                 margin: [0, 4, 0, 2]
               },
               {
-                text: `${serviceData.day_of_week} ${formatDate(serviceData.date)}${serviceData.time ? ` • ${serviceData.time}` : ''}`.toUpperCase(),
+                text: `${serviceData.day_of_week || ''} ${formatDate(serviceData.date)}${serviceData.time ? ` • ${serviceData.time}` : ''}`.toUpperCase(),
                 fontSize: 10 * globalScale,
                 bold: true,
                 alignment: 'center',
