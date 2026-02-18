@@ -74,8 +74,20 @@ Deno.serve(async (req) => {
     }
 
     // 3. Load blueprint from DB (or use hardcoded fallback)
-    const blueprints = await base44.asServiceRole.entities.Service.filter({ status: 'blueprint' });
+    // Also load ServiceSchedule for dynamic slot names (Entity Lift)
+    const [blueprints, schedules] = await Promise.all([
+      base44.asServiceRole.entities.Service.filter({ status: 'blueprint' }),
+      base44.asServiceRole.entities.ServiceSchedule.filter({ day_of_week: 'Sunday', is_active: true }),
+    ]);
     const blueprint = blueprints[0] || null;
+    
+    // Entity Lift: derive slot names from ServiceSchedule, fallback to legacy
+    let slotNames = ["9:30am", "11:30am"];
+    if (schedules.length > 0 && schedules[0].sessions?.length > 0) {
+      slotNames = schedules[0].sessions
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map(s => s.name);
+    }
 
     const source930 = blueprint?.["9:30am"] || FALLBACK_BLUEPRINT["9:30am"];
     const source1130 = blueprint?.["11:30am"] || FALLBACK_BLUEPRINT["11:30am"];
