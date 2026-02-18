@@ -133,15 +133,10 @@ export async function syncWeeklyToSessions(base44, serviceResult, serviceData) {
       continue;
     }
 
-    // ── 4. Delete existing segments ──
-    const existingSegs = await base44.entities.Segment.filter({
-      session_id: session.id,
-    });
-    if (existingSegs.length > 0) {
-      await Promise.all(existingSegs.map((s) => base44.entities.Segment.delete(s.id)));
-    }
-
-    // ── 5. Build new segment entities ──
+    // ── 4. Build new segment entities BEFORE deleting old ones ──
+    // Create-before-delete pattern: ensures segments always exist even if
+    // the process fails partway through. Orphaned old segments are harmless
+    // (cleaned up at the end), but zero segments is a data loss scenario.
     const newSegments = [];
     let currentTime = parse(slot.time, "HH:mm", new Date());
 
@@ -222,8 +217,17 @@ export async function syncWeeklyToSessions(base44, serviceResult, serviceData) {
       );
     }
 
+    // ── 5. Snapshot old segment IDs for cleanup AFTER new ones are created ──
+    const existingSegs = await base44.entities.Segment.filter({
+      session_id: session.id,
+    });
+    const oldSegmentIds = existingSegs.map((s) => s.id);
+
     // ── 6. Bulk create: parents first, then children with parent IDs ──
-    const parentSegments = newSegments.filter((s) => !s._isSubAsignacion);
+    // Clean internal markers before sending to DB
+    const parentSegments = newSegments
+      .filter((s) => !s._isSubAsignacion)
+      .map(({ _isSubAsignacion, _parentOrder, ...rest }) => rest);
     const subSegments = newSegments.filter((s) => s._isSubAsignacion);
 
     const createdParents = await base44.entities.Segment.bulkCreate(
@@ -239,23 +243,29 @@ export async function syncWeeklyToSessions(base44, serviceResult, serviceData) {
       let prevParentMarker = null;
 
       const subSegmentsWithParent = subSegments.map((sub) => {
-        const cleaned = { ...sub };
-        delete cleaned._isSubAsignacion;
+        const { _isSubAsignacion, _parentOrder, ...cleaned } = sub;
 
         // Track which parent this sub belongs to via _parentOrder marker
-        if (sub._parentOrder !== prevParentMarker) {
+        if (_parentOrder !== prevParentMarker) {
           if (prevParentMarker !== null) currentAlabanzaIdx++;
-          prevParentMarker = sub._parentOrder;
+          prevParentMarker = _parentOrder;
         }
 
         if (currentAlabanzaIdx < alabanzaParents.length) {
           cleaned.parent_segment_id = alabanzaParents[currentAlabanzaIdx].id;
         }
-        delete cleaned._parentOrder;
         return cleaned;
       });
 
       await base44.entities.Segment.bulkCreate(subSegmentsWithParent);
+    }
+
+    // ── 7. Delete OLD segments now that new ones are safely created ──
+    // Create-before-delete: if steps 6 failed, old segments remain intact.
+    if (oldSegmentIds.length > 0) {
+      await Promise.all(
+        oldSegmentIds.map((id) => base44.entities.Segment.delete(id))
+      );
     }
 
     // Update session planned_end_time

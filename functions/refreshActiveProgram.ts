@@ -439,49 +439,10 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
         });
       }
 
-      // Break segment injection between sessions (matches JSON fallback behavior)
+      // Break segment injection between sessions (uses shared helper)
       if (sessions.length >= 2) {
-        const segsBySession = groupBy(segments, seg => seg.session_id);
-        const firstSession = sessions[0];
-        const secondSession = sessions[1];
-        const firstSessionSegs = (segsBySession[firstSession.id] || []).sort((a, b) => (a.order || 0) - (b.order || 0));
-        const secondSessionSegs = (segsBySession[secondSession.id] || []).sort((a, b) => (a.order || 0) - (b.order || 0));
-
-        if (firstSessionSegs.length > 0 && secondSessionSegs.length > 0) {
-          const lastSeg = firstSessionSegs[firstSessionSegs.length - 1];
-          const firstNextSeg = secondSessionSegs[0];
-
-          if (lastSeg.end_time && firstNextSeg.start_time && lastSeg.end_time < firstNextSeg.start_time) {
-            const [endH, endM] = lastSeg.end_time.split(':').map(Number);
-            const [startH, startM] = firstNextSeg.start_time.split(':').map(Number);
-            const diffMin = (startH * 60 + startM) - (endH * 60 + endM);
-            if (diffMin > 0) {
-              const notes = targetProgram.receso_notes?.["11:00am"] || targetProgram.receso_notes?.["11:00"] || "";
-              const breakSegment = {
-                id: 'generated-break-inter-service',
-                start_time: lastSeg.end_time,
-                end_time: firstNextSeg.start_time,
-                duration_min: diffMin,
-                title: 'Receso',
-                segment_type: 'Receso',
-                session_id: 'slot-break',
-                description: notes,
-                actions: [
-                  { id: 'break-reset', label: 'STAGE RESET', department: 'Stage & Decor', timing: 'after_start', offset_min: 0, order: 1 },
-                  { id: 'break-sound', label: 'AUDIO CHECK', department: 'Sound', timing: 'after_start', offset_min: 10, order: 2 },
-                ],
-              };
-
-              // Insert break at the boundary between first and second session segments
-              const insertIdx = segments.findIndex(s => s.session_id === secondSession.id);
-              if (insertIdx !== -1) {
-                segments.splice(insertIdx, 0, breakSegment);
-              } else {
-                segments.push(breakSegment);
-              }
-            }
-          }
-        }
+        const recesoNotes = targetProgram.receso_notes?.["11:00am"] || targetProgram.receso_notes?.["11:00"] || "";
+        injectInterSessionBreak(segments, sessions[0].id, sessions[1].id, recesoNotes);
       }
 
       // Inject pre-session details as actions (reuse existing helper)
@@ -518,35 +479,13 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       const segs930 = processSlot(targetProgram["9:30am"], 9, 30);
       const segs1130 = processSlot(targetProgram["11:30am"], 11, 30);
 
-      let breakSegment = null;
-      if (segs930.length > 0 && segs1130.length > 0) {
-        const lastSeg = segs930[segs930.length - 1];
-        const firstNextSeg = segs1130[0];
-        if (lastSeg.end_time < firstNextSeg.start_time) {
-          const [endH, endM] = lastSeg.end_time.split(':').map(Number);
-          const [startH, startM] = firstNextSeg.start_time.split(':').map(Number);
-          const diffMin = (startH * 60 + startM) - (endH * 60 + endM);
-          if (diffMin > 0) {
-            const notes = targetProgram.receso_notes?.["11:00am"] || targetProgram.receso_notes?.["11:00"] || "";
-            breakSegment = {
-              id: 'generated-break-inter-service',
-              start_time: lastSeg.end_time,
-              end_time: firstNextSeg.start_time,
-              duration_min: diffMin,
-              title: 'Receso',
-              segment_type: 'Receso',
-              session_id: 'slot-break',
-              description: notes,
-              actions: [
-                { id: 'break-reset', label: 'STAGE RESET', department: 'Stage & Decor', timing: 'after_start', offset_min: 0, order: 1 },
-                { id: 'break-sound', label: 'AUDIO CHECK', department: 'Sound', timing: 'after_start', offset_min: 10, order: 2 },
-              ],
-            };
-          }
-        }
-      }
+      segments = [...segs930, ...segs1130];
 
-      segments = [...segs930, ...(breakSegment ? [breakSegment] : []), ...segs1130];
+      // Break injection between slots (uses shared helper — same logic as entity path)
+      if (segs930.length > 0 && segs1130.length > 0) {
+        const recesoNotes = targetProgram.receso_notes?.["11:00am"] || targetProgram.receso_notes?.["11:00"] || "";
+        injectInterSessionBreak(segments, "slot-9-30", "slot-11-30", recesoNotes);
+      }
     }
     // Custom service with embedded segments
     else if (targetProgram.segments && Array.isArray(targetProgram.segments) && targetProgram.segments.length > 0) {
@@ -592,6 +531,46 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       liveAdjustments,
       streamBlocks: [],
     };
+  }
+}
+
+// ─── Break injection between sessions (shared by entity + JSON paths) ───
+// Consolidated to prevent drift between the two code paths (audit Risk #3).
+function injectInterSessionBreak(segments, firstSessionId, secondSessionId, recesoNotes) {
+  const firstSegs = segments.filter(s => s.session_id === firstSessionId).sort((a, b) => (a.order || 0) - (b.order || 0));
+  const secondSegs = segments.filter(s => s.session_id === secondSessionId).sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  if (firstSegs.length === 0 || secondSegs.length === 0) return;
+
+  const lastSeg = firstSegs[firstSegs.length - 1];
+  const firstNextSeg = secondSegs[0];
+  if (!lastSeg.end_time || !firstNextSeg.start_time || lastSeg.end_time >= firstNextSeg.start_time) return;
+
+  const [endH, endM] = lastSeg.end_time.split(':').map(Number);
+  const [startH, startM] = firstNextSeg.start_time.split(':').map(Number);
+  const diffMin = (startH * 60 + startM) - (endH * 60 + endM);
+  if (diffMin <= 0) return;
+
+  const breakSegment = {
+    id: 'generated-break-inter-service',
+    start_time: lastSeg.end_time,
+    end_time: firstNextSeg.start_time,
+    duration_min: diffMin,
+    title: 'Receso',
+    segment_type: 'Receso',
+    session_id: 'slot-break',
+    description: recesoNotes || "",
+    actions: [
+      { id: 'break-reset', label: 'STAGE RESET', department: 'Stage & Decor', timing: 'after_start', offset_min: 0, order: 1 },
+      { id: 'break-sound', label: 'AUDIO CHECK', department: 'Sound', timing: 'after_start', offset_min: 10, order: 2 },
+    ],
+  };
+
+  const insertIdx = segments.findIndex(s => s.session_id === secondSessionId);
+  if (insertIdx !== -1) {
+    segments.splice(insertIdx, 0, breakSegment);
+  } else {
+    segments.push(breakSegment);
   }
 }
 

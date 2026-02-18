@@ -476,24 +476,35 @@ export default function WeeklyServiceManager() {
   }, [existingData, selectedDate, blueprintData]);
 
   // ── Real-time entity subscriptions ──
-  // Subscribe to Session/Segment changes so external edits (director, live adjustments)
+  // Subscribe to Session/Segment changes so external edits (live adjustments)
   // push updates without requiring page reload.
+  // Debounced with 2s settle window to prevent invalidation storm during
+  // syncWeeklyToSessions (which fires 16+ events from delete-all + create-all).
   useEffect(() => {
     if (!existingData?.id) return;
     const serviceId = existingData.id;
+    let settleTimer = null;
+
+    const debouncedInvalidate = () => {
+      if (settleTimer) clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => {
+        queryClient.invalidateQueries(['weeklyService', selectedDate]);
+      }, 2000);
+    };
 
     const unsubSession = base44.entities.Session.subscribe((event) => {
       if (event.data?.service_id === serviceId) {
-        queryClient.invalidateQueries(['weeklyService', selectedDate]);
+        debouncedInvalidate();
       }
     });
     const unsubSegment = base44.entities.Segment.subscribe((event) => {
       if (event.data?.service_id === serviceId) {
-        queryClient.invalidateQueries(['weeklyService', selectedDate]);
+        debouncedInvalidate();
       }
     });
 
     return () => {
+      if (settleTimer) clearTimeout(settleTimer);
       if (typeof unsubSession === 'function') unsubSession();
       if (typeof unsubSegment === 'function') unsubSegment();
     };
