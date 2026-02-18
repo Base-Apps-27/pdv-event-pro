@@ -678,7 +678,10 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
 }
 
 function buildReceso(serviceData, scale) {
-  if (!serviceData.receso_notes?.["9:30am"]) return null;
+  // Entity Lift: dynamic receso from first slot
+  const firstSlot = (serviceData._slotNames || ["9:30am"])[0];
+  const recesoNote = serviceData.receso_notes?.[firstSlot];
+  if (!recesoNote) return null;
 
   return {
     stack: [
@@ -688,8 +691,8 @@ function buildReceso(serviceData, scale) {
       },
       {
         text: [
-          { text: '11:00 A.M. — 11:30 A.M. • RECESO  ', bold: true, color: BRAND.BLACK },
-          { text: `(${serviceData.receso_notes["9:30am"]})`, italics: true, color: BRAND.GRAY, fontSize: 9 * scale }
+          { text: 'RECESO  ', bold: true, color: BRAND.BLACK },
+          { text: `(${recesoNote})`, italics: true, color: BRAND.GRAY, fontSize: 9 * scale }
         ],
         alignment: 'center',
         fontSize: 11 * scale
