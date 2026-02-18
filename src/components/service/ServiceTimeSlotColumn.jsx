@@ -188,8 +188,8 @@ export default function ServiceTimeSlotColumn({
         })}
       </div>
 
-      {/* Receso (9:30 only) */}
-      {is930 && (
+      {/* Receso (first slot only) */}
+      {isFirstSlot && (
         <Card className="bg-gray-100 border-2 border-gray-400">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
