@@ -89,6 +89,10 @@ export default function SundaySlotColumns({
   if (isMobile) {
     return (
       <Tabs value={activeSlotTab} onValueChange={setActiveSlotTab}>
+        <style>{`
+          [data-slot-tab][data-state="active"] { background-color: #1F8A70 !important; color: #ffffff !important; }
+          [data-slot-tab][data-state="active"] .badge-slot-dur { color: rgba(255,255,255,0.8) !important; border-color: rgba(255,255,255,0.4) !important; }
+        `}</style>
         <TabsList className="w-full h-11 bg-gray-200 mb-3">
           {sundaySlotNames.map((name, idx) => {
             const segments = serviceData[name] || [];
@@ -97,10 +101,11 @@ export default function SundaySlotColumns({
               <TabsTrigger
                 key={name}
                 value={name}
-                className="flex-1 px-2 py-1.5 text-sm font-bold data-[state=active]:bg-pdv-teal data-[state=active]:text-white"
+                className="flex-1 px-2 py-1.5 text-sm font-bold text-gray-700"
+                data-slot-tab="true"
               >
                 {name.replace('am', ' AM').replace('pm', ' PM')}
-                <Badge variant="outline" className="ml-1 text-[9px]">{totalMin}m</Badge>
+                <Badge variant="outline" className="ml-1 text-[9px] text-gray-600 border-gray-400 badge-slot-dur">{totalMin}m</Badge>
               </TabsTrigger>
             );
           })}
