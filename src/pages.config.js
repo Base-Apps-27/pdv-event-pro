@@ -54,6 +54,7 @@ import CustomServiceBuilder from './pages/CustomServiceBuilder';
 import CustomServicesManager from './pages/CustomServicesManager';
 import Dashboard from './pages/Dashboard';
 import DataSeeder from './pages/DataSeeder';
+import DependencyTracker from './pages/DependencyTracker';
 import DetailedProgram from './pages/DetailedProgram';
 import DirectorConsole from './pages/DirectorConsole';
 import EventDetail from './pages/EventDetail';
@@ -85,7 +86,6 @@ import UserManagement from './pages/UserManagement';
 import UshersView from './pages/UshersView';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import DependencyTracker from './pages/DependencyTracker';
 import __Layout from './Layout.jsx';
 
 
@@ -97,6 +97,7 @@ export const PAGES = {
     "CustomServicesManager": CustomServicesManager,
     "Dashboard": Dashboard,
     "DataSeeder": DataSeeder,
+    "DependencyTracker": DependencyTracker,
     "DetailedProgram": DetailedProgram,
     "DirectorConsole": DirectorConsole,
     "EventDetail": EventDetail,
@@ -128,7 +129,6 @@ export const PAGES = {
     "UshersView": UshersView,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "DependencyTracker": DependencyTracker,
 }
 
 export const pagesConfig = {

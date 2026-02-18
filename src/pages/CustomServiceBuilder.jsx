@@ -44,6 +44,8 @@ import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
 import { getCompressionLevel } from "@/components/utils/compressionLevel";
 import { CUSTOM_SERVICE_PRINT_CSS } from "@/components/print/customServicePrintStyles";
 import { syncToSession } from "@/components/service/sessionSync";
+// Entity Lift L1.1: Load segments from Session/Segment entities when available
+import { loadCustomFromSession } from "@/components/service/customSessionSync";
 import SegmentTimelineCard from "@/components/service/custom-builder/SegmentTimelineCard";
 import useStaleGuard from "@/components/utils/useStaleGuard";
 import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
