@@ -137,7 +137,7 @@ export default function ServiceScheduleManager() {
           <h2 className="text-2xl font-bold text-gray-900 uppercase">Horarios Recurrentes</h2>
           <p className="text-sm text-gray-500">Define qué días hay servicios y cuántas sesiones tiene cada día</p>
         </div>
-        <Button onClick={openNew} className="bg-pdv-teal text-white hover:bg-pdv-teal/90">
+        <Button onClick={openNew} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} className="hover:opacity-90">
           <Plus className="w-4 h-4 mr-2" />
           Nuevo Horario
         </Button>
@@ -314,7 +314,7 @@ export default function ServiceScheduleManager() {
                   <Button variant="outline" onClick={() => { setShowDialog(false); setEditingSchedule(null); }}>
                     Cancelar
                   </Button>
-                  <Button onClick={handleSave} disabled={saveMutation.isPending} className="bg-pdv-teal text-white">
+                  <Button onClick={handleSave} disabled={saveMutation.isPending} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} className="hover:opacity-90">
                     {saveMutation.isPending ? 'Guardando...' : 'Guardar'}
                   </Button>
                 </div>

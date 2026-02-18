@@ -154,7 +154,8 @@ export default function BlueprintSegmentEditor({ segment, index, total, onChange
                     <Badge
                       key={f.value}
                       variant={active ? "default" : "outline"}
-                      className={`cursor-pointer text-xs ${active ? "bg-pdv-teal text-white" : "hover:bg-gray-100"}`}
+                      className={`cursor-pointer text-xs ${active ? "hover:opacity-90" : "text-gray-700 hover:bg-gray-100"}`}
+                      style={active ? { backgroundColor: '#1F8A70', color: '#ffffff' } : {}}
                       onClick={() => toggleField(f.value)}
                     >
                       {f.label}

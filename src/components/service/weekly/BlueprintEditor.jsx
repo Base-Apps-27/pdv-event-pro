@@ -200,7 +200,8 @@ export default function BlueprintEditor() {
         <Button
           onClick={handleSave}
           disabled={!dirty || saveMutation.isPending}
-          className="bg-pdv-teal text-white hover:bg-pdv-teal/90"
+          style={{ backgroundColor: '#1F8A70', color: '#ffffff' }}
+          className="hover:opacity-90"
         >
           {saveMutation.isPending ? (
             <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Guardando...</>
@@ -241,13 +242,18 @@ export default function BlueprintEditor() {
                 <TabsTrigger
                   key={name}
                   value={name}
-                  className={`px-4 py-1 text-sm font-bold data-[state=active]:bg-pdv-teal data-[state=active]:text-white ${isEmpty ? 'text-amber-600' : ''}`}
+                  className={`px-4 py-1 text-sm font-bold text-gray-700 data-[state=active]:text-white ${isEmpty ? 'text-amber-600' : ''}`}
+                  style={{ '--tw-ring-color': 'transparent' }}
+                  data-active-style="true"
                 >
+                  <style>{`
+                    [data-active-style][data-state="active"] { background-color: #1F8A70 !important; color: #ffffff !important; }
+                  `}</style>
                   {name}
                   {isEmpty ? (
                     <Badge variant="outline" className="ml-2 text-[10px] border-amber-400 text-amber-600">vacío</Badge>
                   ) : (
-                    <Badge variant="outline" className="ml-2 text-[10px]">
+                    <Badge variant="outline" className="ml-2 text-[10px] text-gray-600 border-gray-400">
                       {totalDuration(name)} min
                     </Badge>
                   )}
