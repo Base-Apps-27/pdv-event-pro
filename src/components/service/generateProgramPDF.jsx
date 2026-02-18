@@ -97,7 +97,7 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
        titleParts.push({ text: '  ', fontSize: 10 * globalScale });
      }
 
-     titleParts.push({ text: seg.title.toUpperCase(), bold: true, color: BRAND.BLACK, fontSize: 10.5 * globalScale });
+     titleParts.push({ text: (seg.title || '').toUpperCase(), bold: true, color: BRAND.BLACK, fontSize: 10.5 * globalScale });
 
      // Segment type tag (WORSHIP, WELCOME, OFFERING, etc.)
      const segmentType = seg.segment_type || seg.type;

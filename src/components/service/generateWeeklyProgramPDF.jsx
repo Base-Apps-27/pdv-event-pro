@@ -324,7 +324,7 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
     items.push({
       text: [
         { text: timeStr, bold: true, color: slotColor || BRAND.RED, fontSize: 10 * scale },
-        { text: '  ' + seg.title.toUpperCase(), bold: true, color: BRAND.BLACK, fontSize: 10.5 * scale },
+        { text: '  ' + (seg.title || '').toUpperCase(), bold: true, color: BRAND.BLACK, fontSize: 10.5 * scale },
         seg.type ? { text: `  ${seg.type.toUpperCase()}  `, color: '#374151', background: '#F3F4F6', fontSize: 7 * scale, bold: true } : '',
         { text: ` (${seg.duration} min)`, color: BRAND.GRAY, fontSize: 9 * scale }
       ],
