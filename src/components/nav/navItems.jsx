@@ -92,6 +92,14 @@ export const secondaryNav = [
     matchPages: ['Templates'],
   },
   {
+    id: 'service-config',
+    labelKey: 'nav.serviceConfig',
+    icon: Settings,
+    page: 'ServiceBlueprints',
+    permission: 'manage_users',
+    matchPages: ['ServiceBlueprints'],
+  },
+  {
     id: 'importer',
     labelKey: 'nav.importer',
     icon: Sparkles,
