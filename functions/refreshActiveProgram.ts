@@ -415,9 +415,17 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       }
 
       streamBlocks = allStreamBlocks;
-
       preSessionDetails = allPreSessionDetails;
-      // streamBlocks already set above from bulk fetch
+
+      // FIX (2026-02-18): If sessions exist but yield zero entity segments,
+      // fall through to JSON fallback below. This happens when a custom service
+      // has a Session entity (from sync) but segments are still stored as JSON
+      // on the Service object (entity segments not yet created).
+      if (allSegs.length === 0) {
+        console.log('[refreshActiveProgram] Sessions exist but no entity segments found, falling through to JSON fallback');
+        // Reset sessions so JSON path is used for segment rendering
+        // Keep preSessionDetails and streamBlocks as they may still be relevant
+      } else {
 
       // Sort by session order first, then segment order (matches event path pattern)
       const sessionsMap = new Map(sessions.map((s, i) => [s.id, i]));
