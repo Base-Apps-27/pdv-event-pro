@@ -1,9 +1,10 @@
 // Shared navigation structure — single source of truth for desktop + mobile
 // Each section has a label key, icon, and items. Permission gating happens at render time.
-// Sidebar redesign 2026-02-14: consolidated from ~16 items to ~8 visible, grouped into
-// primary quick-access items and a secondary "more" tray.
+// 2026-02-14: consolidated into primary rail + secondary "More" tray.
+// 2026-02-18: slimmed secondary from 12→6 items. Admin tools moved to separate adminNav
+//   to prevent "More" tray overflow on mobile. Merged roles into users matchPages.
 
-import { LayoutDashboard, Calendar, Bell, Clock, Plus, FileText, Users, Settings, MapPin, Copy, Sparkles, Shield, FileCode, Wrench } from "lucide-react";
+import { LayoutDashboard, Calendar, Bell, Clock, Plus, FileText, Users, MapPin, Copy, Sparkles, Shield, FileCode, Wrench } from "lucide-react";
 
 // PRIMARY: always visible in rail / bottom bar (max 5-6)
 export const primaryNav = [
@@ -41,7 +42,7 @@ export const primaryNav = [
   },
 ];
 
-// SECONDARY: accessible from "more" tray or settings area
+// SECONDARY: user-facing items shown in "More" tray (max ~6 items for clean mobile UX)
 export const secondaryNav = [
   {
     id: 'myprogram',
@@ -91,6 +92,20 @@ export const secondaryNav = [
     permission: 'view_templates',
     matchPages: ['Templates'],
   },
+];
+
+// ADMIN: tools that require manage_users permission. Shown in a collapsible
+// section below secondaryNav in the "More" tray. Keeps the main list short.
+export const adminNav = [
+  {
+    id: 'users',
+    labelKey: 'nav.userManagement',
+    icon: Shield,
+    page: 'UserManagement',
+    permission: 'manage_users',
+    // Merged: roles page accessible from user management, no separate nav entry needed
+    matchPages: ['UserManagement', 'RolePermissionManager'],
+  },
   {
     id: 'service-config',
     labelKey: 'nav.serviceConfig',
@@ -106,22 +121,6 @@ export const secondaryNav = [
     page: 'ScheduleImporter',
     permission: 'access_importer',
     matchPages: ['ScheduleImporter'],
-  },
-  {
-    id: 'users',
-    labelKey: 'nav.userManagement',
-    icon: Shield,
-    page: 'UserManagement',
-    permission: 'manage_users',
-    matchPages: ['UserManagement', 'RolePermissionManager'],
-  },
-  {
-    id: 'roles',
-    labelKey: 'nav.roles',
-    icon: Shield,
-    page: 'RolePermissionManager',
-    permission: 'manage_users',
-    matchPages: ['RolePermissionManager'],
   },
   {
     id: 'messages',
