@@ -562,7 +562,8 @@ export default function WeeklyServiceManager() {
       saveServiceMutation.mutate({
         ...serviceData, selected_announcements: selectedAnnouncements,
         print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
-        day_of_week: 'Sunday', name: `Domingo - ${selectedDate}`, status: 'active'
+        day_of_week: 'Sunday', name: `Domingo - ${selectedDate}`, status: 'active',
+        service_type: 'weekly'
       });
     }, 1000);
     return () => clearTimeout(handler);
