@@ -462,19 +462,22 @@ export default function WeeklyServiceManager() {
         }
         return segmentCopy;
       });
-      setServiceData({
-        date: selectedDate,
-        "9:30am": mapBlueprintToSegments(activeBlueprint["9:30am"]),
-        "11:30am": mapBlueprintToSegments(activeBlueprint["11:30am"]),
-        coordinators: { "9:30am": "", "11:30am": "" },
-        ujieres: { "9:30am": "", "11:30am": "" },
-        sound: { "9:30am": "", "11:30am": "" },
-        luces: { "9:30am": "", "11:30am": "" },
-        fotografia: { "9:30am": "", "11:30am": "" },
-        receso_notes: { "9:30am": "" },
-        pre_service_notes: { "9:30am": "", "11:30am": "" },
-        selected_announcements: []
+      // Phase 2: Build initial data dynamically from ServiceSchedule slots
+      const initData = { date: selectedDate, selected_announcements: [] };
+      const emptySlotObj = {};
+      sundaySlotNames.forEach(name => { emptySlotObj[name] = ""; });
+      initData.coordinators = { ...emptySlotObj };
+      initData.ujieres = { ...emptySlotObj };
+      initData.sound = { ...emptySlotObj };
+      initData.luces = { ...emptySlotObj };
+      initData.fotografia = { ...emptySlotObj };
+      initData.receso_notes = { [sundaySlotNames[0]]: "" };
+      initData.pre_service_notes = { ...emptySlotObj };
+      sundaySlotNames.forEach(name => {
+        const bpSegments = activeBlueprint[name] || activeBlueprint["9:30am"] || [];
+        initData[name] = mapBlueprintToSegments(bpSegments);
       });
+      setServiceData(initData);
       setLastSavedData(null);
       setSelectedAnnouncements([]);
       setPrintSettingsPage1(null);
