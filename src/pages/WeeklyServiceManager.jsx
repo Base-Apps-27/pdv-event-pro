@@ -49,7 +49,9 @@ import { useServiceSchedules } from "@/components/service/weekly/useServiceSched
 import useStaleGuard from "@/components/utils/useStaleGuard";
 import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import WeekdayServicePanel from "@/components/service/weekly/WeekdayServicePanel";
+import ServiceScheduleManager from "@/components/service/weekly/ServiceScheduleManager";
 
 // Weekday definitions — ordered Mon→Sun matching ISO week. Labels in Spanish.
 const WEEKDAYS = [
