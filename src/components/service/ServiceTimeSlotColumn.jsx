@@ -181,7 +181,7 @@ export default function ServiceTimeSlotColumn({
               debouncedSave={debouncedSave}
               setServiceData={setServiceData}
               handleOpenVerseParser={handleOpenVerseParser}
-              copySegmentTo1130={is930 ? copySegmentTo1130 : null}
+              copySegmentTo1130={isFirstSlot ? copySegmentTo1130 : null}
             />
           );
         })}
