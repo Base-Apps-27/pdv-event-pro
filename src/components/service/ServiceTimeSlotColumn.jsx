@@ -65,6 +65,7 @@ export default function ServiceTimeSlotColumn({
   copy930To1130,
   onOpenSpecialDialog,
   canEdit,
+  style,
 }) {
   // Phase 2: Dynamic — first slot gets red accent, others get blue
   const isFirstSlot = !!copySegmentTo1130; // First slot has copy-to-next buttons
@@ -73,7 +74,7 @@ export default function ServiceTimeSlotColumn({
   const segments = serviceData[timeSlot] || [];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" style={style}>
       {/* Header */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
