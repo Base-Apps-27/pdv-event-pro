@@ -21,7 +21,9 @@ import { getSegmentData, getNormalizedSongs } from "@/components/utils/segmentDa
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
 
-const TIME_SLOTS = [
+// Phase 2: Default TIME_SLOTS used only as fallback when no schedule is provided.
+// Callers should pass timeSlots from useServiceSchedules when available.
+const DEFAULT_TIME_SLOTS = [
   { name: "9:30am", time: "09:30", order: 1, color: "green" },
   { name: "11:30am", time: "11:30", order: 2, color: "blue" },
 ];
@@ -56,13 +58,19 @@ function normalizeSegmentType(rawType) {
 // SYNC: Weekly Service JSON → Session + Segment + PreSessionDetails
 // ═══════════════════════════════════════════════════════════════
 
-export async function syncWeeklyToSessions(base44, serviceResult, serviceData) {
+/**
+ * Phase 2: accepts optional timeSlots array from useServiceSchedules.
+ * Format: [{ name: "9:30am", time: "09:30", order: 1, color: "green" }]
+ * Falls back to DEFAULT_TIME_SLOTS if not provided.
+ */
+export async function syncWeeklyToSessions(base44, serviceResult, serviceData, timeSlots) {
   if (!serviceResult?.id) return;
 
   const serviceId = serviceResult.id;
   const date = serviceResult.date || serviceData?.date;
+  const slots = (timeSlots && timeSlots.length > 0) ? timeSlots : DEFAULT_TIME_SLOTS;
 
-  for (const slot of TIME_SLOTS) {
+  for (const slot of slots) {
     const segments = serviceData?.[slot.name];
     if (!segments || !Array.isArray(segments) || segments.length === 0) continue;
 
