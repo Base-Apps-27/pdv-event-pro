@@ -55,25 +55,30 @@ export default function DesktopSidebar({ user }) {
   const { language, setLanguage, t } = useLanguage();
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   const isPageActive = (matchPages) =>
     matchPages.some(p => location.pathname === createPageUrl(p));
 
   const visiblePrimary = primaryNav.filter(item => {
     if (!item.permission) return true;
-    // Dashboard: either view_events or view_services qualifies
     if (item.id === 'dashboard') return hasDashboardAccess(user);
     return hasPermission(user, item.permission);
   });
 
+  // All pinnable items = secondary + admin
+  const allSecondaryItems = [...secondaryNav, ...adminNav];
   const { pinned, isPinned, togglePin, canPin } = useNavPins(user);
 
-  // Resolve pinned secondary items to full nav item objects (permission-gated)
   const pinnedItems = pinned
-    .map(id => secondaryNavAll.find(s => s.id === id))
+    .map(id => allSecondaryItems.find(s => s.id === id))
     .filter(item => item && (!item.permission || hasPermission(user, item.permission)));
 
   const visibleSecondary = secondaryNav.filter(
+    item => !item.permission || hasPermission(user, item.permission)
+  );
+
+  const visibleAdmin = adminNav.filter(
     item => !item.permission || hasPermission(user, item.permission)
   );
 
