@@ -84,10 +84,50 @@ export default function ServiceProgramView({
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   };
 
-  // ── Discover dynamic slot keys from service data ──
-  // Pattern: keys matching "9:30am", "11:30am", "7:00pm", etc. with non-empty arrays
-  const slotKeys = useMemo(() => {
-    if (!actualServiceData) return [];
+  // ═══════════════════════════════════════════════════════════════════
+  // ENTITY LIFT: Determine data source — entities vs JSON fallback
+  // ═══════════════════════════════════════════════════════════════════
+  // Entity path: sessions[] + allSegments[] from getPublicProgramData
+  // JSON path: actualServiceData["9:30am"][] / .segments[]
+  const useEntityPath = sessions.length > 0 && allSegments.length > 0;
+
+  // ── Entity-sourced: group segments by session for slot rendering ──
+  const entitySessionSlots = useMemo(() => {
+    if (!useEntityPath) return [];
+    return sessions
+      .slice()
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map((session, idx) => {
+        const segs = allSegments
+          .filter(s => s.session_id === session.id)
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
+        return {
+          sessionId: session.id,
+          name: session.name || `Session ${idx + 1}`,
+          session,
+          segments: segs,
+          colorIdx: idx,
+        };
+      })
+      .filter(slot => slot.segments.length > 0);
+  }, [useEntityPath, sessions, allSegments]);
+
+  // ── Detect service type from entity or JSON data ──
+  const isCustomService = useMemo(() => {
+    if (useEntityPath) {
+      // Entity path: check if any session name DOESN'T match time-slot pattern
+      // Weekly sessions have names like "9:30am", "11:30am"
+      // Custom sessions have descriptive names
+      return entitySessionSlots.length > 0 &&
+        entitySessionSlots.every(slot => !/^\d+:\d+[ap]m$/i.test(slot.name));
+    }
+    // JSON fallback: check for segments array
+    return actualServiceData?.segments && actualServiceData.segments.length > 0;
+  }, [useEntityPath, entitySessionSlots, actualServiceData]);
+
+  // ── JSON fallback: Discover dynamic slot keys from service data ──
+  const jsonSlotKeys = useMemo(() => {
+    if (useEntityPath || !actualServiceData) return [];
     return Object.keys(actualServiceData)
       .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(actualServiceData[k]) && actualServiceData[k].length > 0)
       .sort((a, b) => {
@@ -95,85 +135,100 @@ export default function ServiceProgramView({
         const pb = parseSlotName(b);
         return (pa?.totalMinutes || 0) - (pb?.totalMinutes || 0);
       });
-  }, [actualServiceData]);
+  }, [useEntityPath, actualServiceData]);
 
-  // ── Apply live time adjustments to each dynamic slot ──
-  const adjustedServiceData = useMemo(() => {
-    if (!actualServiceData) return null;
-    const adjusted = { ...actualServiceData };
-
-    const applyTimeOffset = (segments, timeSlot, globalOffset = null) => {
-      let offsetMinutes = 0;
-      if (globalOffset !== null) {
-        offsetMinutes = globalOffset;
-      } else {
-        const adjustment = liveAdjustments.find(a => a.time_slot === timeSlot);
-        if (!adjustment || adjustment.offset_minutes === 0) return segments;
-        offsetMinutes = adjustment.offset_minutes;
-      }
-      return segments.map(seg => ({
-        ...seg,
-        start_time: addMinutesToTime(seg.start_time, offsetMinutes),
-        end_time: addMinutesToTime(seg.end_time, offsetMinutes)
-      }));
-    };
-
-    // Dynamic: apply adjustments to all discovered slot keys
-    slotKeys.forEach(slotKey => {
-      if (adjusted[slotKey]) {
-        adjusted[slotKey] = applyTimeOffset(adjusted[slotKey], slotKey);
-      }
-    });
-
-    // Custom services: global adjustment
-    if (adjusted.segments) {
-      const globalAdj = liveAdjustments.find(a => a.adjustment_type === 'global');
-      if (globalAdj && globalAdj.offset_minutes !== 0) {
-        adjusted.segments = applyTimeOffset(adjusted.segments, null, globalAdj.offset_minutes);
-      }
-    }
-
-    return adjusted;
-  }, [actualServiceData, liveAdjustments, slotKeys]);
-
-  // ── Adjust flat list for StickyOpsDeck/LiveCard ──
+  // ── Apply live time adjustments ──
   const adjustedAllSegments = useMemo(() => {
-    if (actualServiceData?.segments && actualServiceData.segments.length > 0) {
-      return adjustedServiceData?.segments || [];
-    }
-
     const sessionNameMap = new Map();
     if (sessions?.length > 0) {
       sessions.forEach(s => { if (s.id && s.name) sessionNameMap.set(s.id, s.name); });
     }
 
-    return allSegments.map(seg => {
-      let offsetMinutes = 0;
-      let slot = null;
+    // For entity path or flat allSegments list
+    if (useEntityPath || allSegments.length > 0) {
+      return allSegments.map(seg => {
+        let offsetMinutes = 0;
+        let slot = null;
 
-      const resolvedName = sessionNameMap.get(seg.session_id);
-      if (resolvedName) {
-        slot = resolvedName;
-      }
-      // JSON-sourced: map synthetic session IDs to slots (legacy compat)
-      else if (seg.session_id === 'slot-9-30') slot = '9:30am';
-      else if (seg.session_id === 'slot-11-30') slot = '11:30am';
-      else if (seg.session_id === 'slot-break') slot = slotKeys[0] || '9:30am';
+        const resolvedName = sessionNameMap.get(seg.session_id);
+        if (resolvedName) {
+          slot = resolvedName;
+        }
+        // JSON-sourced synthetic session IDs (legacy compat)
+        else if (seg.session_id === 'slot-9-30') slot = '9:30am';
+        else if (seg.session_id === 'slot-11-30') slot = '11:30am';
+        else if (seg.session_id === 'slot-break') slot = jsonSlotKeys[0] || '9:30am';
 
-      if (slot) {
-        const adjustment = liveAdjustments.find(a => a.time_slot === slot);
-        if (adjustment) offsetMinutes = adjustment.offset_minutes;
-      }
+        if (slot) {
+          const adjustment = liveAdjustments.find(a => a.time_slot === slot);
+          if (adjustment) offsetMinutes = adjustment.offset_minutes || 0;
+        } else {
+          // Custom service: check for global adjustment
+          const globalAdj = liveAdjustments.find(a => a.adjustment_type === 'global');
+          if (globalAdj) offsetMinutes = globalAdj.offset_minutes || 0;
+        }
 
-      return {
+        if (offsetMinutes === 0) return seg;
+        return {
+          ...seg,
+          start_time: addMinutesToTime(seg.start_time, offsetMinutes),
+          end_time: addMinutesToTime(seg.end_time, offsetMinutes)
+        };
+      });
+    }
+
+    // JSON-only custom service fallback
+    if (actualServiceData?.segments) {
+      const globalAdj = liveAdjustments.find(a => a.adjustment_type === 'global');
+      const offset = globalAdj?.offset_minutes || 0;
+      if (offset === 0) return actualServiceData.segments;
+      return actualServiceData.segments.map(seg => ({
         ...seg,
-        start_time: addMinutesToTime(seg.start_time, offsetMinutes),
-        end_time: addMinutesToTime(seg.end_time, offsetMinutes)
-      };
+        start_time: addMinutesToTime(seg.start_time, offset),
+        end_time: addMinutesToTime(seg.end_time, offset)
+      }));
+    }
+
+    return [];
+  }, [useEntityPath, allSegments, sessions, liveAdjustments, actualServiceData, jsonSlotKeys]);
+
+  // ── Entity path: build adjusted slot data for weekly rendering ──
+  const adjustedEntitySlots = useMemo(() => {
+    if (!useEntityPath || isCustomService) return [];
+    return entitySessionSlots.map(slot => {
+      const adjustment = liveAdjustments.find(a => a.time_slot === slot.name);
+      const offset = adjustment?.offset_minutes || 0;
+      const adjustedSegs = offset === 0 ? slot.segments : slot.segments.map(seg => ({
+        ...seg,
+        start_time: addMinutesToTime(seg.start_time, offset),
+        end_time: addMinutesToTime(seg.end_time, offset)
+      }));
+      return { ...slot, segments: adjustedSegs, adjustment };
     });
-  }, [allSegments, adjustedServiceData, liveAdjustments, actualServiceData, sessions, slotKeys]);
+  }, [useEntityPath, isCustomService, entitySessionSlots, liveAdjustments]);
 
-  if (!adjustedServiceData) {
+  // ── JSON fallback: apply time adjustments to slot arrays ──
+  const adjustedJsonSlots = useMemo(() => {
+    if (useEntityPath || !actualServiceData) return {};
+    const result = {};
+    jsonSlotKeys.forEach(slotKey => {
+      const segs = actualServiceData[slotKey];
+      if (!segs) return;
+      const adjustment = liveAdjustments.find(a => a.time_slot === slotKey);
+      const offset = adjustment?.offset_minutes || 0;
+      result[slotKey] = offset === 0 ? segs : segs.map(seg => ({
+        ...seg,
+        start_time: addMinutesToTime(seg.start_time, offset),
+        end_time: addMinutesToTime(seg.end_time, offset)
+      }));
+    });
+    return result;
+  }, [useEntityPath, actualServiceData, jsonSlotKeys, liveAdjustments]);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // EMPTY STATE
+  // ═══════════════════════════════════════════════════════════════════
+  if (!actualServiceData) {
     return (
       <Card className="p-12 text-center bg-white border-2 border-gray-300">
         <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -182,10 +237,11 @@ export default function ServiceProgramView({
     );
   }
 
-  const isCustomService = adjustedServiceData.segments && adjustedServiceData.segments.length > 0;
-  const isWeeklyService = slotKeys.length > 0;
+  const hasEntityWeeklySlots = adjustedEntitySlots.length > 0;
+  const hasJsonWeeklySlots = jsonSlotKeys.length > 0;
+  const hasCustomSegments = isCustomService && adjustedAllSegments.length > 0;
 
-  if (!isCustomService && !isWeeklyService) {
+  if (!hasEntityWeeklySlots && !hasJsonWeeklySlots && !hasCustomSegments) {
     return (
       <Card className="p-12 text-center bg-white border-2 border-gray-300">
         <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -194,15 +250,17 @@ export default function ServiceProgramView({
     );
   }
 
-  // ── Custom Service rendering (unchanged logic) ──
+  // ═══════════════════════════════════════════════════════════════════
+  // CUSTOM SERVICE RENDERING (entity-sourced or JSON)
+  // ═══════════════════════════════════════════════════════════════════
   if (isCustomService) {
     return (
       <div className="space-y-6">
         {canAccessLiveOps && (
           <StickyOpsDeck
-            segments={adjustedServiceData.segments || []}
+            segments={adjustedAllSegments}
             preSessionData={preSessionData}
-            sessionDate={adjustedServiceData.date}
+            sessionDate={actualServiceData.date}
             currentTime={currentTime}
             onScrollToSegment={scrollToSegment}
             onToggleChat={onToggleChat}
@@ -213,10 +271,10 @@ export default function ServiceProgramView({
         )}
 
         <LiveStatusCard
-          segments={adjustedServiceData.segments || []}
+          segments={adjustedAllSegments}
           currentTime={currentTime}
           onScrollTo={scrollToSegment}
-          serviceDate={adjustedServiceData.date}
+          serviceDate={actualServiceData.date}
         />
 
         <div className="bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 border-l-pdv-teal">
@@ -224,37 +282,37 @@ export default function ServiceProgramView({
             {(() => {
               const globalAdj = liveAdjustments.find(a => a.adjustment_type === 'global');
               if (globalAdj && globalAdj.offset_minutes !== 0) {
-                const serviceTime = adjustedServiceData.time || "10:00";
+                const serviceTime = actualServiceData.time || "10:00";
                 const [h, m] = serviceTime.split(':').map(Number);
                 const date = new Date();
                 date.setHours(h, m + globalAdj.offset_minutes, 0, 0);
                 const adjustedTimeStr = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
                 return (
                   <h3 className="text-xl sm:text-2xl font-bold uppercase text-pdv-teal break-words mb-1">
-                    {adjustedServiceData.name} <span className="text-amber-600 text-lg">(inicio: {formatTimeToEST(adjustedTimeStr)})</span>
+                    {actualServiceData.name} <span className="text-amber-600 text-lg">(inicio: {formatTimeToEST(adjustedTimeStr)})</span>
                   </h3>
                 );
               }
-              return <h3 className="text-xl sm:text-2xl font-bold uppercase text-pdv-teal break-words">{adjustedServiceData.name}</h3>;
+              return <h3 className="text-xl sm:text-2xl font-bold uppercase text-pdv-teal break-words">{actualServiceData.name}</h3>;
             })()}
-            {adjustedServiceData.description && (
-              <p className="text-xs sm:text-sm text-gray-600 mt-2">{adjustedServiceData.description}</p>
+            {actualServiceData.description && (
+              <p className="text-xs sm:text-sm text-gray-600 mt-2">{actualServiceData.description}</p>
             )}
-            <TeamInfoRow serviceData={adjustedServiceData} slotKey={null} />
+            <TeamInfoRow serviceData={actualServiceData} slotKey={null} />
           </div>
           <div className="space-y-0">
-            {adjustedServiceData.segments.filter(seg => seg.type !== 'break').map((segment, idx) => (
+            {adjustedAllSegments.filter(seg => (seg.type || seg.segment_type) !== 'break' && (seg.type || seg.segment_type) !== 'Break').map((segment, idx) => (
               <PublicProgramSegment
                 key={segment.id || idx}
                 segment={segment}
                 isCurrent={isSegmentCurrent(segment)}
-                isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, adjustedServiceData.segments)}
+                isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, adjustedAllSegments)}
                 viewMode="simple"
                 isExpanded={true}
                 alwaysExpanded={true}
                 onToggleExpand={toggleSegmentExpanded}
                 onOpenVerses={onOpenVerses}
-                allSegments={adjustedServiceData.segments}
+                allSegments={adjustedAllSegments}
               />
             ))}
           </div>
@@ -263,14 +321,29 @@ export default function ServiceProgramView({
     );
   }
 
-  // ── Weekly Service: DYNAMIC SLOT RENDERING ──
+  // ═══════════════════════════════════════════════════════════════════
+  // WEEKLY SERVICE RENDERING
+  // Entity-first: render from sessions + segments entities
+  // JSON fallback: render from actualServiceData["9:30am"][] etc.
+  // ═══════════════════════════════════════════════════════════════════
+
+  // Choose slot source: entity or JSON
+  const weeklySlots = hasEntityWeeklySlots ? adjustedEntitySlots : jsonSlotKeys.map((slotKey, idx) => ({
+    sessionId: `json-${slotKey}`,
+    name: slotKey,
+    session: null,
+    segments: adjustedJsonSlots[slotKey] || [],
+    colorIdx: idx,
+    adjustment: liveAdjustments.find(a => a.time_slot === slotKey),
+  }));
+
   return (
     <div className="space-y-6">
       {canAccessLiveOps && (
         <StickyOpsDeck
           segments={adjustedAllSegments}
           preSessionData={preSessionData}
-          sessionDate={adjustedServiceData.date}
+          sessionDate={actualServiceData.date}
           currentTime={currentTime}
           onScrollToSegment={scrollToSegment}
           onToggleChat={onToggleChat}
@@ -284,35 +357,46 @@ export default function ServiceProgramView({
         segments={adjustedAllSegments}
         currentTime={currentTime}
         onScrollTo={scrollToSegment}
-        serviceDate={adjustedServiceData.date}
+        serviceDate={actualServiceData.date}
       />
 
-      {slotKeys.map((slotKey, slotIdx) => {
-        const slotSegments = adjustedServiceData[slotKey];
-        if (!slotSegments || slotSegments.length === 0) return null;
+      {weeklySlots.map((slot, slotIdx) => {
+        if (!slot.segments || slot.segments.length === 0) return null;
 
-        const parsed = parseSlotName(slotKey);
-        const colors = SLOT_COLORS[slotIdx % SLOT_COLORS.length];
-        const adjustment = liveAdjustments.find(a => a.time_slot === slotKey);
+        const parsed = parseSlotName(slot.name);
+        const colors = SLOT_COLORS[slot.colorIdx % SLOT_COLORS.length];
+        const adjustment = slot.adjustment;
+
+        // Entity path: read team info from Session entity
+        const sessionTeamInfo = slot.session ? {
+          coordinators: slot.session.coordinators,
+          ushers: slot.session.ushers_team,
+          sound: slot.session.sound_team,
+          tech: slot.session.tech_team,
+          photography: slot.session.photography_team,
+        } : null;
+
+        // Entity path: read pre-service notes from PreSessionDetails (passed via preSessionData)
+        // JSON path: read from actualServiceData.pre_service_notes
+        const preServiceNotes = slot.session
+          ? null // PreSessionDetails are handled by StickyOpsDeck
+          : actualServiceData.pre_service_notes?.[slot.name];
 
         return (
-          <React.Fragment key={slotKey}>
+          <React.Fragment key={slot.sessionId}>
             {/* Receso between slots (not before the first) */}
             {slotIdx > 0 && (() => {
-              const prevSlotKey = slotKeys[slotIdx - 1];
-              const prevParsed = parseSlotName(prevSlotKey);
-              const prevSegs = adjustedServiceData[prevSlotKey];
-              // Calculate gap: last segment end of prev slot → first segment start of this slot
+              const prevSlot = weeklySlots[slotIdx - 1];
+              const prevSegs = prevSlot?.segments;
               const prevEnd = prevSegs?.[prevSegs.length - 1]?.end_time;
-              const thisStart = slotSegments[0]?.start_time;
+              const thisStart = slot.segments[0]?.start_time;
               let gapMin = 0;
               if (prevEnd && thisStart) {
                 const [eh, em] = prevEnd.split(':').map(Number);
                 const [sh, sm] = thisStart.split(':').map(Number);
                 gapMin = (sh * 60 + sm) - (eh * 60 + em);
               }
-              // Show receso if gap > 0 or if notes exist for the first slot key
-              const recesoNotes = adjustedServiceData.receso_notes?.[slotKeys[0]] || '';
+              const recesoNotes = actualServiceData.receso_notes?.[weeklySlots[0]?.name] || '';
               if (gapMin > 0 || recesoNotes) {
                 return (
                   <div className="bg-gray-100 rounded-lg p-4 text-center border border-gray-300">
@@ -342,36 +426,43 @@ export default function ServiceProgramView({
                       </h3>
                     );
                   }
-                  return <h3 className={`text-2xl font-bold uppercase mb-1 ${colors.text}`}>{parsed?.display || slotKey}</h3>;
+                  return <h3 className={`text-2xl font-bold uppercase mb-1 ${colors.text}`}>{parsed?.display || slot.name}</h3>;
                 })()}
 
-                {/* Pre-service notes */}
-                {adjustedServiceData.pre_service_notes?.[slotKey] && (
+                {/* Pre-service notes (JSON path only — entity path uses PreSessionDetails) */}
+                {preServiceNotes && (
                   <div className="bg-black border-l-4 border-yellow-400 p-2 mt-2 rounded-r">
                     <p className="text-sm text-white font-bold whitespace-pre-wrap line-clamp-3">
-                      {adjustedServiceData.pre_service_notes[slotKey]}
+                      {preServiceNotes}
                     </p>
                   </div>
                 )}
 
-                {/* Team info */}
-                <TeamInfoRow serviceData={adjustedServiceData} slotKey={slotKey} />
+                {/* Team info — entity path reads from Session, JSON path reads from Service */}
+                {sessionTeamInfo ? (
+                  <SessionTeamInfoRow teamInfo={sessionTeamInfo} />
+                ) : (
+                  <TeamInfoRow serviceData={actualServiceData} slotKey={slot.name} />
+                )}
               </div>
 
               {/* Segments */}
               <div className="space-y-0">
-                {slotSegments.filter(seg => seg.type !== 'break').map((segment, idx) => (
+                {slot.segments.filter(seg => {
+                  const t = seg.type || seg.segment_type || '';
+                  return t !== 'break' && t !== 'Break' && t !== 'Receso';
+                }).map((segment, idx) => (
                   <PublicProgramSegment
-                    key={segment.id || `${slotKey}-${idx}`}
+                    key={segment.id || `${slot.name}-${idx}`}
                     segment={segment}
                     isCurrent={isSegmentCurrent(segment)}
-                    isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, slotSegments)}
+                    isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, slot.segments)}
                     viewMode="simple"
                     isExpanded={true}
                     alwaysExpanded={true}
                     onToggleExpand={toggleSegmentExpanded}
                     onOpenVerses={onOpenVerses}
-                    allSegments={slotSegments}
+                    allSegments={slot.segments}
                   />
                 ))}
               </div>
