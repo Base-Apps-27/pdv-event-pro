@@ -475,8 +475,9 @@ function buildSubAsignaciones(
  * The output shape must be identical to what WeeklyServiceManager expects
  * as an element of the serviceData["9:30am"] or serviceData["11:30am"] array.
  *
- * @deprecated — Part of the entity→JSON read-back path. Will be removed
- * once UI reads Session/Segment entities directly.
+ * Entity Lift Phase: Now reads ui_fields and ui_sub_assignments from entity
+ * instead of blueprint matching. Blueprint is used ONLY as fallback for
+ * segments created before these fields were stored (pre-migration data).
  */
 function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments, idx) {
   const songs = getNormalizedSongs(segment);
@@ -530,21 +531,32 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
         }))
       : undefined;
 
-  // Match to blueprint segment for fields/sub_assignments metadata
-  const blueprintSeg = findMatchingBlueprintSegment(
-    segType,
-    blueprintSlotSegments,
-    idx
-  );
+  // Entity Lift: Read ui_fields and ui_sub_assignments from entity first.
+  // Fall back to blueprint matching ONLY for pre-migration segments that
+  // don't have these fields stored yet.
+  let fields = segment.ui_fields;
+  let sub_assignments = segment.ui_sub_assignments;
+
+  if (!fields || fields.length === 0) {
+    // Legacy fallback: blueprint matching (will be removed after all data is re-saved)
+    const blueprintSeg = findMatchingBlueprintSegment(
+      segType,
+      blueprintSlotSegments,
+      idx
+    );
+    fields = blueprintSeg?.fields || [];
+    sub_assignments = sub_assignments || blueprintSeg?.sub_assignments || [];
+  }
+  if (!sub_assignments) sub_assignments = [];
 
   return {
     title: segment.title || "",
     type: segType,
     duration: segment.duration_min || 0,
-    fields: blueprintSeg?.fields || [],
+    fields,
     data,
     actions: segment.segment_actions || [],
-    sub_assignments: blueprintSeg?.sub_assignments || [],
+    sub_assignments,
     sub_asignaciones,
     requires_translation: !!segment.requires_translation,
     default_translator_source: segment.default_translator_source || "manual",
