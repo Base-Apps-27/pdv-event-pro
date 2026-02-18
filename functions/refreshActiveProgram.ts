@@ -557,7 +557,7 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       }
     }
     // Custom service with embedded segments
-    else if (targetProgram.segments && Array.isArray(targetProgram.segments) && targetProgram.segments.length > 0) {
+    else if (!entitySegmentsResolved && targetProgram.segments && Array.isArray(targetProgram.segments) && targetProgram.segments.length > 0) {
       segments = targetProgram.segments;
     }
 
