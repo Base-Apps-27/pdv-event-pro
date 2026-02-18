@@ -66,8 +66,10 @@ export default function ServiceTimeSlotColumn({
   onOpenSpecialDialog,
   canEdit,
 }) {
+  // Phase 2: Dynamic — first slot gets red accent, others get blue
   const is930 = timeSlot === "9:30am";
-  const accentColor = is930 ? "red" : "blue";
+  const isFirstSlot = is930 || !!copySegmentTo1130; // First slot has copy-to-next buttons
+  const accentColor = isFirstSlot ? "red" : "blue";
   const timingInfo = calculateServiceTimes(timeSlot);
   const segments = serviceData[timeSlot] || [];
 
