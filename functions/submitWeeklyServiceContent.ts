@@ -389,29 +389,39 @@ Deno.serve(async (req) => {
                     });
                 }
 
-                // apply_to_both: update other session's entity too
-                if (apply_to_both_services && timeSlot === '9:30am') {
-                    const otherSession = sessions.find(s => s.name === '11:30am');
-                    if (otherSession) {
-                        const otherSegs = await base44.asServiceRole.entities.Segment.filter(
-                            { session_id: otherSession.id }, 'order'
-                        );
-                        const otherTarget = otherSegs.find(seg => {
+                // Dynamic mirror: update sibling session Segment entities
+                for (const mirrorId of effectiveMirrors) {
+                    const mirrorParts = mirrorId.split('|');
+                    if (mirrorParts.length < 5) continue;
+                    const [, mirrorSvcId, mirrorSlotName, mirrorIdxStr] = mirrorParts;
+                    if (mirrorSvcId !== serviceId) continue;
+
+                    const mirrorSession = sessions.find(s => s.name === mirrorSlotName);
+                    if (!mirrorSession) continue;
+
+                    const mirrorSegs = await base44.asServiceRole.entities.Segment.filter(
+                        { session_id: mirrorSession.id }, 'order'
+                    );
+                    // Try exact index, fall back to first message-type
+                    const mirrorSegIdx = parseInt(mirrorIdxStr);
+                    let mirrorTarget = mirrorSegs[mirrorSegIdx];
+                    if (!mirrorTarget || !['plenaria', 'message', 'predica', 'mensaje'].includes((mirrorTarget.segment_type || '').toLowerCase())) {
+                        mirrorTarget = mirrorSegs.find(seg => {
                             const t = (seg.segment_type || '').toLowerCase();
                             return ['plenaria', 'message', 'predica', 'mensaje'].includes(t);
                         });
-                        if (otherTarget) {
-                            await base44.asServiceRole.entities.Segment.update(otherTarget.id, {
-                                submitted_content: content,
-                                parsed_verse_data: parsedData,
-                                submission_status: 'processed',
-                                scripture_references: scriptureReferences,
-                                presentation_url: presentation_url || "",
-                                notes_url: notes_url || "",
-                                content_is_slides_only: !!content_is_slides_only,
-                                message_title: (title && title.trim() !== "") ? title.trim() : otherTarget.message_title,
-                            });
-                        }
+                    }
+                    if (mirrorTarget) {
+                        await base44.asServiceRole.entities.Segment.update(mirrorTarget.id, {
+                            submitted_content: content,
+                            parsed_verse_data: parsedData,
+                            submission_status: 'processed',
+                            scripture_references: scriptureReferences,
+                            presentation_url: presentation_url || "",
+                            notes_url: notes_url || "",
+                            content_is_slides_only: !!content_is_slides_only,
+                            message_title: (title && title.trim() !== "") ? title.trim() : mirrorTarget.message_title,
+                        });
                     }
                 }
             }
