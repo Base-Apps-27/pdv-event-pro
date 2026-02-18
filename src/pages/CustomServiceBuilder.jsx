@@ -195,7 +195,8 @@ export default function CustomServiceBuilder() {
   useEffect(() => {
     if (!hasUnsavedChanges || !serviceId) return;
     setAutoSaveStatus("saving");
-    const timer = setTimeout(() => saveServiceMutation.mutate({ ...serviceData, status: 'active' }), 3000);
+    // Phase 3: Auto-save must include service_type to maintain one_off discrimination
+    const timer = setTimeout(() => saveServiceMutation.mutate({ ...serviceData, status: 'active', service_type: 'one_off' }), 3000);
     return () => clearTimeout(timer);
   }, [serviceData, hasUnsavedChanges, serviceId]);
 
