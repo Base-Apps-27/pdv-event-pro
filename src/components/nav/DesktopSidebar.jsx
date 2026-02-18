@@ -272,6 +272,61 @@ export default function DesktopSidebar({ user }) {
                   );
                 })}
               </nav>
+
+              {/* Admin tools — collapsible section */}
+              {visibleAdmin.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-gray-800">
+                  <button
+                    onClick={() => setAdminOpen(prev => !prev)}
+                    className="flex items-center justify-between w-full px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-gray-300 transition-colors"
+                  >
+                    <span>{language === 'es' ? 'Admin' : 'Admin'}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${adminOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {adminOpen && (
+                    <nav className="space-y-1 mt-1">
+                      {visibleAdmin.map(item => {
+                        const active = isPageActive(item.matchPages);
+                        const Icon = item.icon;
+                        const itemPinned = isPinned(item.id);
+                        return (
+                          <div key={item.id} className="flex items-center group/pin">
+                            <Link
+                              to={createPageUrl(item.page)}
+                              onClick={() => setMoreOpen(false)}
+                              className={`flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                active
+                                  ? 'text-white'
+                                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                              }`}
+                              style={active ? { background: GRADIENT_H } : {}}
+                            >
+                              <Icon className="w-4 h-4 shrink-0" />
+                              <span>{t(item.labelKey)}</span>
+                            </Link>
+                            <button
+                              onClick={() => togglePin(item.id)}
+                              disabled={!itemPinned && !canPin}
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0
+                                ${itemPinned
+                                  ? 'text-teal-400 hover:text-teal-300 hover:bg-teal-900/30'
+                                  : canPin
+                                    ? 'text-gray-600 opacity-0 group-hover/pin:opacity-100 hover:text-gray-300 hover:bg-white/5'
+                                    : 'text-gray-700 opacity-0 group-hover/pin:opacity-50 cursor-not-allowed'
+                                }`}
+                              title={itemPinned
+                                ? (language === 'es' ? 'Desfijar' : 'Unpin')
+                                : (language === 'es' ? 'Fijar en barra' : 'Pin to sidebar')}
+                            >
+                              {itemPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </nav>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Brand footer in flyout */}
