@@ -87,10 +87,10 @@ export function useWeeklyServiceHandlers({
         [service]: newServiceArray
       };
       
-      // Auto-propagate translator from worship to other segments in 11:30am
-      if (field === 'translator' && service === '11:30am' && newSegment.type === 'worship') {
+      // Auto-propagate translator from worship to other segments (for non-first slots with translation)
+      if (field === 'translator' && service !== firstSlot && newSegment.type === 'worship') {
         const worshipTranslator = value;
-        updated['11:30am'] = updated['11:30am'].map((seg, idx) => {
+        updated[service] = updated[service].map((seg, idx) => {
           if (idx !== segmentIndex && seg.default_translator_source === 'worship_segment_translator' && !seg.data?.translator) {
             return {
               ...seg,
