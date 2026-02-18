@@ -175,26 +175,23 @@ export async function generateWeeklyProgramPDF(serviceData) {
         margin: [0, 0, 0, 12] 
       },
 
-      // 2-Column Content
-      {
-        columns: [
-          {
+      // Entity Lift: Dynamic column generation from slot names
+      (() => {
+        const pdfSlots = serviceData._slotNames || ["9:30am", "11:30am"];
+        const SLOT_COLORS = [BRAND.RED, BRAND.BLUE, BRAND.TEAL, '#9333EA']; // color per column
+        const columns = [];
+        pdfSlots.forEach((slotName, idx) => {
+          if (idx > 0) columns.push({ width: 24, text: '' }); // Gutter
+          columns.push({
             width: '*',
             stack: [
-              { text: '9:30 A.M.', fontSize: 14 * globalScale, bold: true, color: BRAND.RED, margin: [0, 0, 0, 8] },
-              ...buildWeeklySegments(serviceData["9:30am"], "9:30am", globalScale, serviceData.pre_service_notes?.["9:30am"])
+              { text: slotName.replace('am', ' A.M.').replace('pm', ' P.M.').toUpperCase(), fontSize: 14 * globalScale, bold: true, color: SLOT_COLORS[idx % SLOT_COLORS.length], margin: [0, 0, 0, 8] },
+              ...buildWeeklySegments(serviceData[slotName], slotName, globalScale, serviceData.pre_service_notes?.[slotName])
             ]
-          },
-          { width: 24, text: '' }, // Gutter
-          {
-            width: '*',
-            stack: [
-              { text: '11:30 A.M.', fontSize: 14 * globalScale, bold: true, color: BRAND.BLUE, margin: [0, 0, 0, 8] },
-              ...buildWeeklySegments(serviceData["11:30am"], "11:30am", globalScale, serviceData.pre_service_notes?.["11:30am"])
-            ]
-          }
-        ]
-      },
+          });
+        });
+        return { columns };
+      })(),
 
       // Receso (Bottom)
       buildReceso(serviceData, globalScale)
