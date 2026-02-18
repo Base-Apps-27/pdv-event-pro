@@ -849,12 +849,10 @@ export default function WeeklyServiceManager() {
                   <p className="text-gray-500">No hay servicios programados para {day.fullLabel}</p>
                 </Card>
               ) : (
-                <div className="overflow-x-auto -mx-2 px-2">
-                  <div className="flex gap-6 min-w-[640px]">
-                    {dayServices.map(svc => (
-                      <WeekdayServicePanel key={svc.id} service={svc} />
-                    ))}
-                  </div>
+                <div className="space-y-4">
+                  {dayServices.map(svc => (
+                    <WeekdayServicePanel key={svc.id} service={svc} />
+                  ))}
                 </div>
               )}
             </TabsContent>
