@@ -423,9 +423,12 @@ Deno.serve(async (req) => {
                  // has a Session entity (from sync) but segments are still stored as JSON
                  // on the Service object (entity segments not yet created).
                  if (allResults.length === 0) {
-                     // Reset sessions — the JSON fallback path handles rendering
-                     // (ServiceProgramView uses JSON when allSegments is empty)
-                     console.log('[getPublicProgramData] Sessions exist but no entity segments found, falling through to JSON fallback');
+                     // FIX (2026-02-18): Reset sessions to empty so ServiceProgramView
+                     // detects JSON fallback path (useEntityPath = sessions.length > 0 && allSegments.length > 0).
+                     // Without this, sessions=[1] + allSegments=[8 JSON segs] causes useEntityPath=true,
+                     // but JSON segments lack session_id → entitySessionSlots finds zero matches → empty UI.
+                     console.log('[getPublicProgramData] Sessions exist but no entity segments found, resetting sessions for JSON fallback');
+                     sessions = [];
                  } else {
 
                  // A. Sort by session order, then segment order (matching event path)
