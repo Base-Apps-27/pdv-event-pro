@@ -282,7 +282,8 @@ export default function WeeklyServiceManager() {
       safeSetItem(backupKey, JSON.stringify({ data: result, timestamp: new Date().toISOString() }));
 
       // Entity Lift: sync to Session/Segment/PreSessionDetails entities (fire-and-forget)
-      syncWeeklyToSessions(base44, result, result).catch(err => {
+      // Phase 2: pass dynamic time slots from ServiceSchedule
+      syncWeeklyToSessions(base44, result, result, sundaySlots).catch(err => {
         console.error("[WEEKLY_SYNC] Entity sync failed (non-blocking):", err.message);
       });
     },
