@@ -798,8 +798,8 @@ export default function WeeklyServiceManager() {
         {/* Sunday (default) — dynamic columns from ServiceSchedule */}
         <TabsContent value="sunday" className="mt-0">
           <div className="overflow-x-auto -mx-2 px-2">
-            {/* Phase 2: grid cols adapt to number of slots */}
-            <div className={`grid gap-6 min-w-[640px] ${sundaySlotNames.length === 1 ? 'grid-cols-1 max-w-2xl' : sundaySlotNames.length === 2 ? 'md:grid-cols-2' : `grid-cols-${Math.min(sundaySlotNames.length, 4)}`}`}>
+            {/* Horizontal scroll container: each column is fixed-width so adding slots scrolls, not shrinks */}
+            <div className="flex gap-6" style={{ minWidth: `${sundaySlotNames.length * 520}px` }}>
               {sundaySlotNames.map((slotName, slotIdx) => {
                 const isFirst = slotIdx === 0;
                 const isLast = slotIdx === sundaySlotNames.length - 1;
@@ -807,6 +807,7 @@ export default function WeeklyServiceManager() {
                   <ServiceTimeSlotColumn
                     key={slotName}
                     timeSlot={slotName}
+                    style={{ minWidth: 480, flex: '1 0 480px' }}
                     serviceData={serviceData}
                     expandedSegments={expandedSegments}
                     toggleSegmentExpanded={toggleSegmentExpanded}
