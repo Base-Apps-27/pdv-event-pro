@@ -307,7 +307,13 @@ export function useWeeklyServiceHandlers({
     });
 
     // Phase 2: Reset all dynamic slots from ServiceSchedule
+    // Blueprint Revamp: if no DB blueprint, reset produces empty slots (user must re-add)
     const initialData = { ...serviceData };
+    if (!activeBlueprint) {
+      toast.error("No se encontró el blueprint en la base de datos. No se puede restablecer.");
+      setSavingField(null);
+      return;
+    }
     slotNames.forEach(name => {
       const bpSegments = activeBlueprint[name] || activeBlueprint[firstSlot] || [];
       initialData[name] = mapBpSegments(bpSegments);
