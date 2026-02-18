@@ -562,6 +562,8 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
     duration: segment.duration_min || 0,
     fields,
     data,
+    // BUG FIX (audit): Root-level songs for UI compatibility (SongInputRow reads segment.songs)
+    songs: rootSongs,
     actions: segment.segment_actions || [],
     sub_assignments,
     sub_asignaciones,
