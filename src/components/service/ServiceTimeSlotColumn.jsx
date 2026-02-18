@@ -198,7 +198,7 @@ export default function ServiceTimeSlotColumn({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 pt-2">
-            <RecesoNotesInput />
+            <RecesoNotesInput slotName={timeSlot} />
           </CardContent>
         </Card>
       )}
