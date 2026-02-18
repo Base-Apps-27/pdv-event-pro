@@ -25,6 +25,7 @@ const translations = {
     'nav.serviceConfig': 'Config. Servicios',
     'nav.collapseMenu': 'Colapsar Menú',
     'nav.expandMenu': 'Expandir',
+    'nav.dependencies': 'Dependencias',
 
     // Sections
     'section.main': 'Panel Principal',
@@ -500,6 +501,7 @@ const translations = {
     'nav.serviceConfig': 'Service Config',
     'nav.collapseMenu': 'Collapse Menu',
     'nav.expandMenu': 'Expand',
+    'nav.dependencies': 'Dependencies',
 
     // Sections
     'section.main': 'Main Panel',

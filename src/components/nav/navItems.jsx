@@ -138,4 +138,12 @@ export const adminNav = [
     permission: 'manage_users',
     matchPages: ['SchemaGuide'],
   },
+  {
+    id: 'dependencies',
+    labelKey: 'nav.dependencies',
+    icon: FileCode,
+    page: 'DependencyTracker',
+    permission: 'manage_users',
+    matchPages: ['DependencyTracker'],
+  },
 ];
