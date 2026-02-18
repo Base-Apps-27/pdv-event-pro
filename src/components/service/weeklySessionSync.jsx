@@ -519,6 +519,12 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
     if (data[key] === null || data[key] === undefined) delete data[key];
   });
 
+  // BUG FIX (2026-02-18 audit): Songs must also live at the ROOT of the segment
+  // object, not just inside `data.songs`. The UI (ServiceTimeSlotColumn line 382,
+  // SongInputRow) reads from `segment.songs`, not `segment.data.songs`.
+  // Without this, worship segments loaded from entities show blank song rows.
+  const rootSongs = songs.length > 0 ? songs : undefined;
+
   // Build sub_asignaciones from child segments
   const sub_asignaciones =
     childSegments.length > 0
