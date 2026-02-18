@@ -72,6 +72,12 @@ export default function WeeklyServiceManager() {
   // P1-4: Replaced duplicate user fetch with shared hook (2026-02-12)
   const { user } = useCurrentUser();
 
+  // Phase 2: Dynamic session slots from ServiceSchedule entity
+  const { getTimeSlotsForDay, getSessionsForDay, getActiveDays: getScheduledDays } = useServiceSchedules();
+  const sundaySlots = React.useMemo(() => getTimeSlotsForDay("Sunday"), [getTimeSlotsForDay]);
+  // Slot names for the current Sunday, e.g. ["9:30am", "11:30am"]
+  const sundaySlotNames = React.useMemo(() => sundaySlots.map(s => s.name), [sundaySlots]);
+
   // ── Core state ──
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
