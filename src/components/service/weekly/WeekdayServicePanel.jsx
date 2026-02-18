@@ -73,13 +73,16 @@ export default function WeekdayServicePanel({ service }) {
     return service.segments;
   }, [service.segments]);
 
-  const hasEntityData = sessions.length > 0;
+  // FIX (2026-02-18): Sessions can exist (from sync) but have zero entity segments.
+  // In that case, fall through to JSON fallback if the Service has embedded segments.
+  const hasEntitySegments = allSegments.length > 0;
+  const hasEntityData = sessions.length > 0 && hasEntitySegments;
   const hasJsonFallback = !hasEntityData && jsonSegments.length > 0;
   const isLoading = sessionsLoading || (hasEntityData && segsLoading);
 
   if (isLoading) {
     return (
-      <Card className="flex-1 min-w-[320px] p-6 border-2 border-gray-200 bg-white">
+      <Card className="flex-1 min-w-0 w-full p-6 border-2 border-gray-200 bg-white">
         <div className="flex items-center justify-center gap-2 text-gray-400 py-8">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span className="text-sm">Cargando...</span>
@@ -91,7 +94,7 @@ export default function WeekdayServicePanel({ service }) {
   // ── Empty state: no entities AND no JSON segments ──
   if (!hasEntityData && !hasJsonFallback) {
     return (
-      <Card className="flex-1 min-w-[320px] p-4 border-2 border-gray-200 bg-white">
+      <Card className="flex-1 min-w-0 w-full p-4 border-2 border-gray-200 bg-white">
         <h3 className="text-lg font-bold text-gray-900 mb-2">{service.name || 'Servicio'}</h3>
         <p className="text-sm text-gray-500 mb-1">Fecha: {service.date}</p>
         {service.time && <p className="text-sm text-gray-500 mb-2">Hora: {service.time}</p>}
@@ -115,7 +118,7 @@ export default function WeekdayServicePanel({ service }) {
   // Renders Service.segments[] directly when no entity sync has occurred.
   if (hasJsonFallback) {
     return (
-      <Card className="flex-1 min-w-[400px] border-2 border-gray-200 bg-white">
+      <Card className="flex-1 min-w-0 w-full border-2 border-gray-200 bg-white">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-bold text-gray-900">
@@ -176,7 +179,7 @@ export default function WeekdayServicePanel({ service }) {
 
   // ── Entity rendering (primary path) ──
   return (
-    <Card className="flex-1 min-w-[400px] border-2 border-gray-200 bg-white">
+    <Card className="flex-1 min-w-0 w-full border-2 border-gray-200 bg-white">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-lg font-bold text-gray-900">

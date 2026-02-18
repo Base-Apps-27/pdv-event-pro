@@ -681,7 +681,7 @@ export default function WeeklyServiceManager() {
       {/* Screen UI — Header */}
       <div className="flex justify-between items-center print:hidden">
         <div>
-          <h1 className="text-5xl text-gray-900 uppercase tracking-tight">Servicios Dominicales</h1>
+          <h1 className="text-5xl text-gray-900 uppercase tracking-tight">Servicios Semanales</h1>
           <p className="text-gray-500 mt-1">{t('dashboard.services.subtitle')}</p>
           {existingData?.id && (
             <div className="flex items-center gap-2 mt-1">
