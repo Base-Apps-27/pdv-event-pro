@@ -329,6 +329,7 @@ export default function WeeklyServiceManager() {
   });
 
   // ── Handlers (extracted hook) ──
+  // Phase 2: pass sundaySlotNames so copy handlers know source/target
   const handlers = useWeeklyServiceHandlers({
     serviceData, setServiceData, selectedDate, selectedAnnouncements,
     printSettingsPage1, printSettingsPage2, saveServiceMutation,
@@ -339,6 +340,7 @@ export default function WeeklyServiceManager() {
     setOptimizingAnnouncement, setPrintSettingsPage1, setPrintSettingsPage2,
     setEditingAnnouncement, setAnnouncementForm, setShowAnnouncementDialog,
     setShowResetConfirm, editingAnnouncement, createAnnouncementMutation,
+    slotNames: sundaySlotNames,
   });
 
   // ── Initialize service data from DB or blueprint ──
