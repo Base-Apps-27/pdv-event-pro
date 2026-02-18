@@ -140,8 +140,12 @@ export function PreServiceNotesInput({ service }) {
 }
 
 // Receso Notes Input with local state
-export function RecesoNotesInput() {
-  const currentGlobalValue = useContext(ServiceDataContext)?.receso_notes?.["9:30am"] || "";
+// Entity Lift: accepts slotName prop (defaults to first slot key in receso_notes)
+export function RecesoNotesInput({ slotName }) {
+  const serviceData = useContext(ServiceDataContext);
+  // Resolve slot: use prop if provided, else first key in receso_notes, else "9:30am"
+  const resolvedSlot = slotName || (serviceData?.receso_notes ? Object.keys(serviceData.receso_notes)[0] : "9:30am");
+  const currentGlobalValue = serviceData?.receso_notes?.[resolvedSlot] || "";
   const setServiceData = useContext(UpdatersContext)?.setServiceData;
   const [localValue, setLocalValue] = useState("");
   
@@ -153,7 +157,7 @@ export function RecesoNotesInput() {
         ...prev,
         receso_notes: { 
           ...prev.receso_notes, 
-          "9:30am": val 
+          [resolvedSlot]: val 
         }
       }));
     },
