@@ -313,14 +313,17 @@ export default function WeeklyServicePrintView({
           </div>
         </div>
 
-        <div className="print-receso">
-          11:00 A.M. — 11:30 A.M. • RECESO
-          {serviceData?.receso_notes?.["9:30am"] && (
-            <span style={{ fontSize: '9pt', fontWeight: 400, marginLeft: '8pt', fontStyle: 'italic', color: '#6b7280' }}>
-              ({serviceData.receso_notes["9:30am"]})
-            </span>
-          )}
-        </div>
+        {/* Entity Lift: Only show receso if there are 2+ slots (break between them) */}
+        {slots.length >= 2 && (
+          <div className="print-receso">
+            RECESO
+            {serviceData?.receso_notes?.[firstSlot] && (
+              <span style={{ fontSize: '9pt', fontWeight: 400, marginLeft: '8pt', fontStyle: 'italic', color: '#6b7280' }}>
+                ({serviceData.receso_notes[firstSlot]})
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* PAGE 2: Announcements */}
