@@ -190,7 +190,29 @@ function PrintSegment({ segment, segmentTime, showTranslationLine = false }) {
  * Calculates segment time for a given time slot and index.
  */
 function calculateSegmentTime(segments, timeSlotStr, idx) {
-  let currentTime = parse(timeSlotStr, "h:mma", new Date());
+  // Normalize slot name to parseable time: "9:30am" → "9:30am", "11:30am" → "11:30am"
+  // Also handle edge cases like "7:00pm", "10:00am" etc.
+  let currentTime;
+  try {
+    currentTime = parse(timeSlotStr, "h:mma", new Date());
+    // Validate parse result
+    if (isNaN(currentTime.getTime())) throw new Error("Invalid");
+  } catch {
+    // Fallback: try extracting HH:MM from the string
+    const match = timeSlotStr.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
+    if (match) {
+      let hours = parseInt(match[1]);
+      const minutes = parseInt(match[2]);
+      const period = (match[3] || 'am').toLowerCase();
+      if (period === 'pm' && hours < 12) hours += 12;
+      if (period === 'am' && hours === 12) hours = 0;
+      currentTime = new Date();
+      currentTime.setHours(hours, minutes, 0, 0);
+    } else {
+      // Last resort: return placeholder
+      return "--:--";
+    }
+  }
   for (let i = 0; i < idx; i++) {
     if (segments[i].type !== 'break' && segments[i].type !== 'ministry') {
       currentTime = addMinutes(currentTime, segments[i].duration || 0);
