@@ -10,14 +10,18 @@ import { formatTimeToEST } from "@/components/utils/timeFormat";
 /**
  * ServiceProgramView Component
  * 
- * DYNAMIC SLOT RENDERING (2026-02-18):
- * Renders weekly service slots by discovering keys dynamically from the service
- * data object (regex: /^\d+:\d+[ap]m$/i) instead of hardcoding "9:30am"/"11:30am".
- * This supports any number of time slots configured in ServiceSchedule.
+ * ENTITY LIFT (2026-02-18): Unified rendering for weekly and custom services.
+ *
+ * DATA PATHS (priority order):
+ *   1. Entity-sourced: sessions[] + allSegments[] from Session/Segment entities
+ *      (returned by getPublicProgramData when entities exist)
+ *   2. JSON fallback: actualServiceData["9:30am"][] / .segments[]
+ *      (legacy path — only used when no Session entities exist)
  *
  * CRITICAL BEHAVIOR:
  * - Services ALWAYS display all details (alwaysExpanded=true)
- * - Receso is rendered between consecutive slots if receso_notes exist or gap > 0
+ * - Receso is rendered between consecutive sessions if there's a time gap
+ * - Entity-sourced segments already have start_time/end_time from the sync layer
  */
 
 // Color palette for dynamic slots — cycles through for 3+ slots
