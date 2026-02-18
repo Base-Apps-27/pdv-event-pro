@@ -379,6 +379,10 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       })
     );
 
+    // BUG FIX (audit): allSlotSegments must be declared at function scope 
+    // so pre_service_notes injection can reference it regardless of which branch ran.
+    let allSlotSegments = [];
+    
     // Check for linked sessions
     const directSessions = await withRetry(() =>
       base44.asServiceRole.entities.Session.filter({ service_id: targetProgram.id })
