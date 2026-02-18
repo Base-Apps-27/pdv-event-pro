@@ -17,9 +17,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Save, Loader2, AlertTriangle } from "lucide-react";
+import { Plus, Save, Loader2, AlertTriangle, Copy } from "lucide-react";
 import { toast } from "sonner";
 import BlueprintSegmentEditor from "./BlueprintSegmentEditor";
+import { useServiceSchedules } from "./useServiceSchedules";
 
 export default function BlueprintEditor() {
   const queryClient = useQueryClient();
@@ -36,24 +37,41 @@ export default function BlueprintEditor() {
   const [slots, setSlots] = useState({});
   const [dirty, setDirty] = useState(false);
 
-  // Discover slot names from the blueprint (e.g. "9:30am", "11:30am")
+  // Phase 2: Pull configured slot names from ServiceSchedule entity
+  const { getTimeSlotsForDay } = useServiceSchedules();
+  const scheduledSlotNames = useMemo(() => {
+    return getTimeSlotsForDay("Sunday").map(s => s.name);
+  }, [getTimeSlotsForDay]);
+
+  // Discover slot names: union of blueprint keys + scheduled slots
+  // This ensures new slots appear in the editor even if the blueprint doesn't have them yet.
   const slotNames = useMemo(() => {
-    if (!blueprint) return [];
-    // Find keys that are arrays of segment objects
-    return Object.keys(blueprint).filter(key => {
+    if (!blueprint) return scheduledSlotNames.length > 0 ? scheduledSlotNames : [];
+    const blueprintKeys = Object.keys(blueprint).filter(key => {
       const val = blueprint[key];
       return Array.isArray(val) && val.length > 0 && typeof val[0] === 'object' && val[0].type;
-    }).sort();
-  }, [blueprint]);
+    });
+    const merged = new Set([...blueprintKeys, ...scheduledSlotNames]);
+    return Array.from(merged).sort();
+  }, [blueprint, scheduledSlotNames]);
+
+  // Track which slots are missing from the DB blueprint (need seeding)
+  const missingSlots = useMemo(() => {
+    if (!blueprint) return [];
+    return slotNames.filter(name => {
+      const val = blueprint[name];
+      return !Array.isArray(val) || val.length === 0;
+    });
+  }, [blueprint, slotNames]);
 
   const [activeSlot, setActiveSlot] = useState("");
 
   // Initialize local state when blueprint loads
   useEffect(() => {
-    if (!blueprint || slotNames.length === 0) return;
+    if (slotNames.length === 0) return;
     const initial = {};
     slotNames.forEach(name => {
-      initial[name] = JSON.parse(JSON.stringify(blueprint[name] || []));
+      initial[name] = JSON.parse(JSON.stringify(blueprint?.[name] || []));
     });
     setSlots(initial);
     setDirty(false);
@@ -135,6 +153,21 @@ export default function BlueprintEditor() {
     setDirty(true);
   };
 
+  // Seed an empty slot by cloning segments from an existing slot
+  const seedSlotFrom = (targetSlot, sourceSlot) => {
+    const source = slots[sourceSlot];
+    if (!source || source.length === 0) {
+      toast.error(`El slot ${sourceSlot} no tiene segmentos para copiar.`);
+      return;
+    }
+    setSlots(prev => ({
+      ...prev,
+      [targetSlot]: JSON.parse(JSON.stringify(source)),
+    }));
+    setDirty(true);
+    toast.success(`Segmentos copiados de ${sourceSlot} a ${targetSlot}`);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -184,49 +217,102 @@ export default function BlueprintEditor() {
         </div>
       )}
 
+      {/* Alert for new slots missing blueprint segments */}
+      {missingSlots.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-800 space-y-2">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>
+              {missingSlots.length === 1
+                ? `El slot "${missingSlots[0]}" es nuevo y no tiene segmentos predeterminados.`
+                : `Los slots ${missingSlots.map(s => `"${s}"`).join(', ')} son nuevos y no tienen segmentos predeterminados.`}
+            </span>
+          </div>
+          <p className="text-xs text-blue-600">Usa la pestaña correspondiente para copiar segmentos desde un slot existente o agregarlos manualmente.</p>
+        </div>
+      )}
+
       {slotNames.length > 0 && (
         <Tabs value={activeSlot} onValueChange={setActiveSlot}>
           <TabsList className="h-9 bg-gray-200">
-            {slotNames.map(name => (
-              <TabsTrigger
-                key={name}
-                value={name}
-                className="px-4 py-1 text-sm font-bold data-[state=active]:bg-pdv-teal data-[state=active]:text-white"
-              >
-                {name}
-                <Badge variant="outline" className="ml-2 text-[10px]">
-                  {totalDuration(name)} min
-                </Badge>
-              </TabsTrigger>
-            ))}
+            {slotNames.map(name => {
+              const isEmpty = !slots[name] || slots[name].length === 0;
+              return (
+                <TabsTrigger
+                  key={name}
+                  value={name}
+                  className={`px-4 py-1 text-sm font-bold data-[state=active]:bg-pdv-teal data-[state=active]:text-white ${isEmpty ? 'text-amber-600' : ''}`}
+                >
+                  {name}
+                  {isEmpty ? (
+                    <Badge variant="outline" className="ml-2 text-[10px] border-amber-400 text-amber-600">vacío</Badge>
+                  ) : (
+                    <Badge variant="outline" className="ml-2 text-[10px]">
+                      {totalDuration(name)} min
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
 
-          {slotNames.map(slotName => (
-            <TabsContent key={slotName} value={slotName} className="mt-3">
-              <div className="space-y-3">
-                {(slots[slotName] || []).map((seg, idx) => (
-                  <BlueprintSegmentEditor
-                    key={`${slotName}-${idx}`}
-                    segment={seg}
-                    index={idx}
-                    total={(slots[slotName] || []).length}
-                    onChange={(i, updated) => updateSegment(slotName, i, updated)}
-                    onRemove={(i) => removeSegment(slotName, i)}
-                    onMove={(i, dir) => moveSegment(slotName, i, dir)}
-                  />
-                ))}
+          {slotNames.map(slotName => {
+            const slotSegments = slots[slotName] || [];
+            const isEmpty = slotSegments.length === 0;
+            const otherSlots = slotNames.filter(n => n !== slotName && (slots[n] || []).length > 0);
 
-                <Button
-                  variant="outline"
-                  onClick={() => addSegment(slotName)}
-                  className="w-full border-dashed border-2 border-gray-300 text-gray-500 hover:border-pdv-teal hover:text-pdv-teal"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Agregar Segmento a {slotName}
-                </Button>
-              </div>
-            </TabsContent>
-          ))}
+            return (
+              <TabsContent key={slotName} value={slotName} className="mt-3">
+                <div className="space-y-3">
+                  {/* Empty slot: show seeding options */}
+                  {isEmpty && otherSlots.length > 0 && (
+                    <div className="bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg p-6 text-center space-y-3">
+                      <p className="text-sm text-blue-700 font-medium">
+                        Este slot no tiene segmentos predeterminados.
+                      </p>
+                      <p className="text-xs text-blue-500">Copia la estructura desde un slot existente:</p>
+                      <div className="flex gap-2 justify-center flex-wrap">
+                        {otherSlots.map(source => (
+                          <Button
+                            key={source}
+                            size="sm"
+                            variant="outline"
+                            className="border-blue-400 text-blue-700 hover:bg-blue-100"
+                            onClick={() => seedSlotFrom(slotName, source)}
+                          >
+                            <Copy className="w-3 h-3 mr-1" />
+                            Copiar de {source}
+                          </Button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-blue-400">— o agrega segmentos manualmente abajo —</p>
+                    </div>
+                  )}
+
+                  {slotSegments.map((seg, idx) => (
+                    <BlueprintSegmentEditor
+                      key={`${slotName}-${idx}`}
+                      segment={seg}
+                      index={idx}
+                      total={slotSegments.length}
+                      onChange={(i, updated) => updateSegment(slotName, i, updated)}
+                      onRemove={(i) => removeSegment(slotName, i)}
+                      onMove={(i, dir) => moveSegment(slotName, i, dir)}
+                    />
+                  ))}
+
+                  <Button
+                    variant="outline"
+                    onClick={() => addSegment(slotName)}
+                    className="w-full border-dashed border-2 border-gray-300 text-gray-500 hover:border-pdv-teal hover:text-pdv-teal"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Segmento a {slotName}
+                  </Button>
+                </div>
+              </TabsContent>
+            );
+          })}
         </Tabs>
       )}
     </div>
