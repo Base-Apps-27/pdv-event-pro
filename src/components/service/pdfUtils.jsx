@@ -22,11 +22,43 @@ export const BRAND = {
   PINK: '#DB2777'
 };
 
+/**
+ * Safe date formatting — guards against Invalid Date from malformed strings.
+ * Returns empty string instead of throwing RangeError.
+ */
 export function formatDate(dateStr) {
   if (!dateStr) return '';
   const date = new Date(dateStr + 'T12:00:00');
+  if (isNaN(date.getTime())) return '';
   const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   return `${date.getDate()} de ${months[date.getMonth()]}, ${date.getFullYear()}`;
+}
+
+/**
+ * Safe time-slot parser — converts slot names like "9:30am", "11:30am", "7:00pm"
+ * into a valid Date object. Returns midnight fallback if unparseable.
+ *
+ * Centralised here so every PDF generator and time-math caller shares one
+ * bulletproof implementation — no more RangeError: Invalid time value.
+ */
+export function safeParseTimeSlot(timeSlot) {
+  if (!timeSlot || typeof timeSlot !== 'string') {
+    const d = new Date(); d.setHours(0, 0, 0, 0); return d;
+  }
+
+  // Strategy 1: regex extraction (most reliable — no date-fns dependency)
+  const match = timeSlot.match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/i);
+  if (match) {
+    let h = parseInt(match[1], 10);
+    const m = parseInt(match[2], 10);
+    const period = (match[3] || '').toLowerCase();
+    if (period === 'pm' && h < 12) h += 12;
+    if (period === 'am' && h === 12) h = 0;
+    const d = new Date(); d.setHours(h, m, 0, 0); return d;
+  }
+
+  // Strategy 2: fallback — midnight
+  const d = new Date(); d.setHours(0, 0, 0, 0); return d;
 }
 
 export function parseHtmlToPdfMake(html, globalScale = 1) {
