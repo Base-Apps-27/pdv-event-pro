@@ -125,13 +125,13 @@ export default function ServiceTimeSlotColumn({
             <Clock className="w-4 h-4" />
             PRE-SERVICIO
             <Badge variant="outline" className="ml-auto text-xs text-gray-600 border-gray-500">Antes de iniciar</Badge>
-            {is930 && (
+            {copyPreServiceNotesTo1130 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={copyPreServiceNotesTo1130}
                 className="print:hidden h-7 px-2 hover:bg-blue-50"
-                title="Copiar a 11:30"
+                title="Copiar a siguiente"
               >
                 <ArrowRight className="w-4 h-4 text-blue-600" />
               </Button>
