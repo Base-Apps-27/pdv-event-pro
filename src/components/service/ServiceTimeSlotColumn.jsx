@@ -83,14 +83,14 @@ export default function ServiceTimeSlotColumn({
           </h2>
           {canEdit && (
             <div className="flex gap-2">
-              {!is930 && (
+              {copy930To1130 && (
                 <Button
                   size="sm"
                   onClick={copy930To1130}
                   className="print:hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold border-2 border-blue-600"
                 >
                   <ChevronsRight className="w-4 h-4 mr-2" />
-                  Copiar Todo de 9:30
+                  Copiar Todo
                 </Button>
               )}
               <Button
