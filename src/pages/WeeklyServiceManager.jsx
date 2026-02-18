@@ -54,6 +54,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import WeekdayServicePanel from "@/components/service/weekly/WeekdayServicePanel";
 import ServiceScheduleManager from "@/components/service/weekly/ServiceScheduleManager";
+import SundaySlotColumns from "@/components/service/weekly/SundaySlotColumns";
 
 // Weekday definitions — ordered Mon→Sun matching ISO week. Labels in Spanish.
 const WEEKDAYS = [
