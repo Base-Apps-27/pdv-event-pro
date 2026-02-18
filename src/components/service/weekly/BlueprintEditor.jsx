@@ -248,12 +248,13 @@ export default function BlueprintEditor() {
                 >
                   <style>{`
                     [data-active-style][data-state="active"] { background-color: #1F8A70 !important; color: #ffffff !important; }
+                    [data-active-style][data-state="active"] .badge-duration { color: rgba(255,255,255,0.8) !important; border-color: rgba(255,255,255,0.4) !important; }
                   `}</style>
                   {name}
                   {isEmpty ? (
                     <Badge variant="outline" className="ml-2 text-[10px] border-amber-400 text-amber-600">vacío</Badge>
                   ) : (
-                    <Badge variant="outline" className="ml-2 text-[10px] text-gray-600 border-gray-400">
+                    <Badge variant="outline" className="ml-2 text-[10px] text-gray-600 border-gray-400 badge-duration">
                       {totalDuration(name)} min
                     </Badge>
                   )}
