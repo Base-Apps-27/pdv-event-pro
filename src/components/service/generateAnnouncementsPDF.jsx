@@ -131,7 +131,7 @@ export async function generateAnnouncementsPDF(announcements, serviceDataOrDate)
                 margin: [0, 4, 0, 2]
               },
               {
-                text: formatDate(serviceDate).toUpperCase(),
+                text: (formatDate(serviceDate) || '').toUpperCase(),
                 fontSize: 10 * globalScale,
                 bold: true,
                 alignment: 'center',
