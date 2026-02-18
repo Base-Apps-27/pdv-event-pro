@@ -418,6 +418,16 @@ Deno.serve(async (req) => {
                      allResults.push(...segs);
                  }
 
+                 // FIX (2026-02-18): If sessions exist but yield zero entity segments,
+                 // fall through to JSON fallback below. This happens when a custom service
+                 // has a Session entity (from sync) but segments are still stored as JSON
+                 // on the Service object (entity segments not yet created).
+                 if (allResults.length === 0) {
+                     // Reset sessions — the JSON fallback path handles rendering
+                     // (ServiceProgramView uses JSON when allSegments is empty)
+                     console.log('[getPublicProgramData] Sessions exist but no entity segments found, falling through to JSON fallback');
+                 } else {
+
                  // A. Sort by session order, then segment order (matching event path)
                  const sessionOrderMap = new Map(sessions.map((s, i) => [s.id, i]));
                  segments = allResults
