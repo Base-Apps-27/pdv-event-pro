@@ -846,6 +846,16 @@ export default function WeeklyServiceManager() {
         language="es"
       />
 
+      {/* Schedule Manager Dialog */}
+      <Dialog open={showScheduleManager} onOpenChange={setShowScheduleManager}>
+        <DialogContent className="max-w-3xl bg-white max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Configurar Horarios</DialogTitle>
+          </DialogHeader>
+          <ServiceScheduleManager />
+        </DialogContent>
+      </Dialog>
+
       {/* All remaining dialogs */}
       <WeeklyServiceDialogs
         deleteConfirmId={deleteConfirmId} setDeleteConfirmId={setDeleteConfirmId}
