@@ -675,6 +675,11 @@ export default function WeeklyServiceManager() {
             <Settings className="w-4 h-4" />
           </Button>
           {hasPermission(user, 'edit_services') && (
+            <Button onClick={() => setShowScheduleManager(true)} variant="outline" className="border-2 border-purple-400 bg-white text-purple-600 hover:bg-purple-50 font-semibold px-2" title="Configurar Horarios / Sesiones">
+              <Wrench className="w-4 h-4" />
+            </Button>
+          )}
+          {hasPermission(user, 'edit_services') && (
             <Button onClick={() => setShowResetConfirm(true)} variant="destructive" className="border-2 border-red-600 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-semibold px-2" title="Restablecer diseño original">
               <Wand2 className="w-4 h-4" />
             </Button>
