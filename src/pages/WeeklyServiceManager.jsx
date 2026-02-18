@@ -360,6 +360,11 @@ export default function WeeklyServiceManager() {
   // ── Initialize service data from DB or blueprint ──
   useEffect(() => {
     if (existingData) {
+      // Entity Lift FINAL: When data came from Session/Segment entities (_fromEntities),
+      // segments already carry their own fields/sub_assignments/actions — no blueprint
+      // merge needed. This eliminates the last piece of the dual-write system.
+      // Blueprint merge is ONLY for legacy JSON-only services that haven't been re-saved
+      // through the entity sync pipeline yet.
       const mergeSegmentsWithBlueprint = (existingSegments, timeSlot) => {
         const activeBlueprint = blueprintData || { "9:30am": WEEKLY_BLUEPRINT["9:30am"], "11:30am": WEEKLY_BLUEPRINT["11:30am"] };
         const normalizeType = (t) => {
@@ -372,6 +377,19 @@ export default function WeeklyServiceManager() {
           return lower;
         };
         return existingSegments.map((savedSeg, idx) => {
+          // Entity Lift: If segment already has fields from entity, skip blueprint matching
+          if (savedSeg.fields && savedSeg.fields.length > 0 && savedSeg._entityId) {
+            // Entity-sourced segment — trust it as-is, only add minimal defaults
+            const savedType = normalizeType(savedSeg.type);
+            let subAssignments = savedSeg.sub_assignments || [];
+            if (subAssignments.length === 0) {
+              if (savedType === 'worship') subAssignments = [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }];
+              else if (savedType === 'message') subAssignments = [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }];
+            }
+            return { ...savedSeg, sub_assignments: subAssignments };
+          }
+
+          // Legacy path: blueprint matching for JSON-only data
           const savedType = normalizeType(savedSeg.type);
           let blueprintSeg = activeBlueprint[timeSlot]?.[idx];
           if (!blueprintSeg || normalizeType(blueprintSeg.type) !== savedType) {
