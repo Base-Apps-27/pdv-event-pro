@@ -79,7 +79,7 @@ export default function ServiceTimeSlotColumn({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <h2 className={`text-3xl text-${accentColor}-600`}>
-            {is930 ? "9:30 a.m." : "11:30 a.m."}
+            {timeSlot.replace('am', ' a.m.').replace('pm', ' p.m.')}
           </h2>
           {canEdit && (
             <div className="flex gap-2">
