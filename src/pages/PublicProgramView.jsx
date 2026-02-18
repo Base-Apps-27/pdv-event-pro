@@ -447,15 +447,26 @@ export default function PublicProgramView() {
   const activeSession = viewType === "event" ? filteredSessions[0] : null; // Simplified for now
   
   // Prepare segments list for notifications
+  // BUG FIX (2026-02-18): Dynamic slot discovery instead of hardcoded "9:30am"/"11:30am".
+  // Uses allSegments (backend flat list) when available, falls back to regex key discovery.
   const segmentsForNotifications = React.useMemo(() => {
     let list = [];
     if (viewType === "service" && actualServiceData) {
-      if (actualServiceData.segments) {
+      if (actualServiceData.segments && actualServiceData.segments.length > 0) {
         list = actualServiceData.segments;
+      } else if (allSegments.length > 0) {
+        // Prefer backend-provided flat list (entity-sourced, includes all slots + break)
+        list = allSegments;
       } else {
-        const morning = (actualServiceData["9:30am"] || []).map(s => ({ ...s, start_time: s.start_time || s.data?.start_time, title: s.title || s.data?.title }));
-        const afternoon = (actualServiceData["11:30am"] || []).map(s => ({ ...s, start_time: s.start_time || s.data?.start_time, title: s.title || s.data?.title }));
-        list = [...morning, ...afternoon];
+        // JSON fallback: discover slot keys dynamically
+        const slotKeys = Object.keys(actualServiceData).filter(
+          k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(actualServiceData[k])
+        );
+        slotKeys.forEach(key => {
+          list = [...list, ...(actualServiceData[key] || []).map(s => ({
+            ...s, start_time: s.start_time || s.data?.start_time, title: s.title || s.data?.title
+          }))];
+        });
       }
     } else if (viewType === "event") {
       list = allSegments;
