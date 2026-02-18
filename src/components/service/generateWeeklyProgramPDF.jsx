@@ -186,7 +186,7 @@ export async function generateWeeklyProgramPDF(serviceData) {
             width: '*',
             stack: [
               { text: slotName.replace('am', ' A.M.').replace('pm', ' P.M.').toUpperCase(), fontSize: 14 * globalScale, bold: true, color: SLOT_COLORS[idx % SLOT_COLORS.length], margin: [0, 0, 0, 8] },
-              ...buildWeeklySegments(serviceData[slotName], slotName, globalScale, serviceData.pre_service_notes?.[slotName])
+              ...buildWeeklySegments(serviceData[slotName], slotName, globalScale, serviceData.pre_service_notes?.[slotName], SLOT_COLORS[idx % SLOT_COLORS.length])
             ]
           });
         });
