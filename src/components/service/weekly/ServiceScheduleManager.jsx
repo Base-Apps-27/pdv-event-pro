@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Clock, Calendar, GripVertical } from "lucide-react";
 import { toast } from "sonner";
+import BlueprintEditor from "./BlueprintEditor";
 
 const DAYS_ES = {
   Sunday: "Domingo", Monday: "Lunes", Tuesday: "Martes",
@@ -189,6 +190,11 @@ export default function ServiceScheduleManager() {
           ))}
         </div>
       )}
+
+      {/* Blueprint Editor — same admin surface */}
+      <div className="border-t pt-6 mt-6">
+        <BlueprintEditor />
+      </div>
 
       {/* Edit/Create Dialog */}
       <Dialog open={showDialog} onOpenChange={(open) => { if (!open) { setShowDialog(false); setEditingSchedule(null); } }}>
