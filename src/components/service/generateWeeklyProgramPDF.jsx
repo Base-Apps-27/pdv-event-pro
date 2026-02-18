@@ -110,9 +110,10 @@ export function estimateWeeklyOptimalScale(serviceData) {
     return units;
   };
 
-  const load930 = countContent(serviceData["9:30am"], serviceData.pre_service_notes?.["9:30am"]);
-  const load1130 = countContent(serviceData["11:30am"], serviceData.pre_service_notes?.["11:30am"]);
-  const maxLoad = Math.max(load930, load1130);
+  // Entity Lift: dynamic slots from serviceData._slotNames or legacy fallback
+  const slotNames = serviceData._slotNames || ["9:30am", "11:30am"];
+  const loads = slotNames.map(name => countContent(serviceData[name], serviceData.pre_service_notes?.[name]));
+  const maxLoad = Math.max(...loads, 0);
 
   // Continuous Scaling Formula (Aggressive Mode)
   // Target: 50 units per column. Lowering to ensure fit.
