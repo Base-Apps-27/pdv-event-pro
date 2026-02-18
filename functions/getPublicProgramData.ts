@@ -506,15 +506,16 @@ Deno.serve(async (req) => {
                  }
             } // end: allResults.length > 0 branch
             }
+            // FIX (2026-02-18 v2): Changed from else-if to if(!entitySegmentsResolved).
+            // When sessions exist but have no entity segments, sessions is reset to []
+            // but the else-if chain would skip these branches. Using a flag ensures
+            // JSON fallback branches execute for pre-Entity-Lift services.
             // Fallback: Embedded Segments (Custom Services)
-            // CRITICAL FIX: Only use 'segments' if it actually has content. 
-            // Weekly services might have an empty 'segments' array default, which would mask the 9:30am data if we didn't check length.
-            else if (targetProgram.segments && Array.isArray(targetProgram.segments) && targetProgram.segments.length > 0) {
+            if (!entitySegmentsResolved && targetProgram.segments && Array.isArray(targetProgram.segments) && targetProgram.segments.length > 0) {
                 segments = targetProgram.segments;
             }
             // Fallback: Standard Weekly Service Time Slots (9:30am / 11:30am)
-            // Normalize these into a flat 'segments' array with calculated start times for the TV display
-            else if (targetProgram["9:30am"] || targetProgram["11:30am"]) {
+            else if (!entitySegmentsResolved && (targetProgram["9:30am"] || targetProgram["11:30am"])) {
                 const processSlot = (slotSegments, startHour, startMin) => {
                     if (!Array.isArray(slotSegments)) return [];
                     
