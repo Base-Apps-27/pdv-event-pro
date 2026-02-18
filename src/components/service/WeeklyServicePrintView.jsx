@@ -286,41 +286,30 @@ export default function WeeklyServicePrintView({
 
         <div className="print-body-content">
           <div className="print-two-columns">
-            {/* Left Column: 9:30 AM */}
-            <div className="print-service-column left">
-              <div className="print-service-time">9:30 A.M.</div>
-              {serviceData?.pre_service_notes?.["9:30am"] && (
-                <div className="print-segment">
-                  <div className="print-note-general-info">{serviceData.pre_service_notes["9:30am"]}</div>
+            {/* Entity Lift: Dynamic columns from ServiceSchedule slots */}
+            {slots.map((slotName, slotIdx) => {
+              const slotSegments = serviceData[slotName] || [];
+              const filteredSegs = slotSegments.filter(s => s.type !== 'break');
+              const showTranslation = slotIdx > 0; // non-first slots show translation lines
+              return (
+                <div key={slotName} className={`print-service-column ${slotIdx === 0 ? 'left' : 'right'}`}>
+                  <div className="print-service-time">{slotName.replace('am', ' A.M.').replace('pm', ' P.M.').toUpperCase()}</div>
+                  {serviceData?.pre_service_notes?.[slotName] && (
+                    <div className="print-segment">
+                      <div className="print-note-general-info">{serviceData.pre_service_notes[slotName]}</div>
+                    </div>
+                  )}
+                  {filteredSegs.map((segment, idx) => (
+                    <PrintSegment
+                      key={idx}
+                      segment={segment}
+                      segmentTime={calculateSegmentTime(slotSegments, slotName, idx)}
+                      showTranslationLine={showTranslation}
+                    />
+                  ))}
                 </div>
-              )}
-              {filteredSegments930.map((segment, idx) => (
-                <PrintSegment
-                  key={idx}
-                  segment={segment}
-                  segmentTime={calculateSegmentTime(segments930, "9:30am", idx)}
-                  showTranslationLine={false}
-                />
-              ))}
-            </div>
-
-            {/* Right Column: 11:30 AM */}
-            <div className="print-service-column right">
-              <div className="print-service-time">11:30 A.M.</div>
-              {serviceData?.pre_service_notes?.["11:30am"] && (
-                <div className="print-segment">
-                  <div className="print-note-general-info">{serviceData.pre_service_notes["11:30am"]}</div>
-                </div>
-              )}
-              {filteredSegments1130.map((segment, idx) => (
-                <PrintSegment
-                  key={idx}
-                  segment={segment}
-                  segmentTime={calculateSegmentTime(segments1130, "11:30am", idx)}
-                  showTranslationLine={true}
-                />
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
 
