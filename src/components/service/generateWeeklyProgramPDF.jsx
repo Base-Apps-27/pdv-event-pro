@@ -291,7 +291,7 @@ function buildWeeklyTeamInfo(serviceData, scale) {
   };
 }
 
-function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
+function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColor) {
   const items = [];
 
   // Pre-service Note
