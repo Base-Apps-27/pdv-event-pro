@@ -225,9 +225,13 @@ export async function generateWeeklyProgramPDF(serviceData) {
 
 function buildHeader(serviceData, logoDataUrl, scale) {
   // Use centralized formatDate if available, otherwise manual format matches style
-  const dateStr = serviceData.date 
-    ? format(new Date(serviceData.date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })
-    : '';
+  let dateStr = '';
+  if (serviceData.date) {
+    const parsed = new Date(serviceData.date + 'T12:00:00');
+    if (!isNaN(parsed.getTime())) {
+      dateStr = format(parsed, "d 'de' MMMM, yyyy", { locale: es });
+    }
+  }
 
   return {
     columns: [
