@@ -210,7 +210,7 @@ export default function WeeklyServicePrintView({
   isQuickPrint = false,
   slotNames, // Entity Lift: dynamic slot names from ServiceSchedule
 }) {
-  if (!serviceData) return null;
+  if (!serviceData || !selectedDate) return null;
 
   const defaultPrintSettings = {
     globalScale: 1.0,
