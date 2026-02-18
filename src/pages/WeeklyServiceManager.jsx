@@ -177,9 +177,16 @@ export default function WeeklyServiceManager() {
     staleTime: 60000,
   });
 
-  // Derive which weekdays have services
+  // Derive which weekdays have tabs — union of ServiceSchedule days + actual services
   const activeDays = React.useMemo(() => {
     const daySet = new Set(['sunday']); // Always show Sunday
+    // Add days from ServiceSchedule entity (e.g., Wednesday if configured)
+    const dayNameToKey = { Sunday: 'sunday', Monday: 'monday', Tuesday: 'tuesday', Wednesday: 'wednesday', Thursday: 'thursday', Friday: 'friday', Saturday: 'saturday' };
+    scheduledDays.forEach(day => {
+      const key = dayNameToKey[day];
+      if (key) daySet.add(key);
+    });
+    // Also add days that have actual service records this week
     weekServices.forEach(svc => {
       if (!svc._weekDate) return;
       const d = new Date(svc._weekDate + 'T12:00:00');
@@ -188,7 +195,7 @@ export default function WeeklyServiceManager() {
       if (wd) daySet.add(wd.key);
     });
     return WEEKDAYS.filter(w => daySet.has(w.key));
-  }, [weekServices]);
+  }, [weekServices, scheduledDays]);
 
   const { data: existingData, isLoading } = useQuery({
     queryKey: ['weeklyService', selectedDate],
