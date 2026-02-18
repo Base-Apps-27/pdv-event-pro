@@ -281,56 +281,82 @@ Deno.serve(async (req) => {
 
         currentArray[segmentIdx] = updatedSegment;
 
-        // --- APPLY TO BOTH SERVICES ---
-        // If speaker selected 9:30am and checked "apply to both", also update 11:30am
-        // Find the matching message segment in the other time slot by type match
+        // --- APPLY TO SIBLING SESSIONS (Dynamic) ---
+        // mirror_target_ids: array of composite IDs from the form's dynamic checkboxes
+        // Legacy backward compat: apply_to_both_services maps to 9:30am → 11:30am
         const updatePayload = { [timeSlot]: currentArray };
 
-        if (apply_to_both_services && timeSlot === '9:30am') {
-            const otherSlot = '11:30am';
-            const otherArray = [...(service[otherSlot] || [])];
-            // Find the first message-type segment in 11:30am
-            const otherIdx = otherArray.findIndex(seg => {
-                const t = (seg.type || '').toLowerCase();
-                return ['message', 'plenaria', 'predica', 'mensaje'].includes(t);
-            });
+        // Build effective mirror list
+        const effectiveMirrors = [...mirror_target_ids];
+        if (apply_to_both_services && timeSlot === '9:30am' && effectiveMirrors.length === 0) {
+            // Legacy compat: construct the old 11:30am mirror ID
+            effectiveMirrors.push(segment_id.replace('|9:30am|', '|11:30am|'));
+        }
 
-            if (otherIdx !== -1) {
-                console.log(`[APPLY_BOTH] Piping submission to ${otherSlot} segment index ${otherIdx}`);
-                const otherSegment = otherArray[otherIdx];
-                let otherProjectionNotes = otherSegment.projection_notes || "";
-                if (content_is_slides_only && content && content.trim() && !otherProjectionNotes.includes(content.trim())) {
-                    otherProjectionNotes = (otherProjectionNotes ? otherProjectionNotes + "\n\n" : "") + `[Nota del Orador]: ${content.trim()}`;
-                }
-
-                const otherUpdated = {
-                    ...otherSegment,
-                    submitted_content: content,
-                    parsed_verse_data: parsedData,
-                    submission_status: 'processed',
-                    scripture_references: scriptureReferences,
-                    presentation_url: presentation_url || "",
-                    notes_url: notes_url || "",
-                    content_is_slides_only: !!content_is_slides_only,
-                    projection_notes: content_is_slides_only ? otherProjectionNotes : (otherSegment.projection_notes || "")
-                };
-                if (title && title.trim() !== "") {
-                    otherUpdated.message_title = title.trim();
-                    otherUpdated.data = { ...otherUpdated.data, message_title: title.trim() };
-                }
-                otherUpdated.data = {
-                    ...otherUpdated.data,
-                    verse: scriptureReferences,
-                    scripture_references: scriptureReferences,
-                    presentation_url: presentation_url || "",
-                    notes_url: notes_url || "",
-                    content_is_slides_only: !!content_is_slides_only
-                };
-                otherArray[otherIdx] = otherUpdated;
-                updatePayload[otherSlot] = otherArray;
-            } else {
-                console.warn("[APPLY_BOTH] No message segment found in 11:30am slot");
+        for (const mirrorId of effectiveMirrors) {
+            // Parse the mirror composite ID
+            const mirrorParts = mirrorId.split('|');
+            if (mirrorParts.length < 5) {
+                console.warn("[MIRROR] Invalid mirror target ID:", mirrorId);
+                continue;
             }
+            const [, mirrorServiceId, mirrorSlot, mirrorIdxStr] = mirrorParts;
+            
+            // Only mirror within the same service
+            if (mirrorServiceId !== serviceId) {
+                console.warn("[MIRROR] Cross-service mirroring not supported:", mirrorId);
+                continue;
+            }
+
+            const mirrorIdx = parseInt(mirrorIdxStr);
+            const otherArray = [...(service[mirrorSlot] || [])];
+            
+            // Prefer exact index match, fall back to first message-type segment
+            let targetIdx = mirrorIdx;
+            if (!otherArray[targetIdx] || !['message', 'plenaria', 'predica', 'mensaje'].includes((otherArray[targetIdx]?.type || '').toLowerCase())) {
+                targetIdx = otherArray.findIndex(seg => {
+                    const t = (seg.type || '').toLowerCase();
+                    return ['message', 'plenaria', 'predica', 'mensaje'].includes(t);
+                });
+            }
+
+            if (targetIdx === -1 || !otherArray[targetIdx]) {
+                console.warn(`[MIRROR] No message segment found in ${mirrorSlot}`);
+                continue;
+            }
+
+            console.log(`[MIRROR] Piping submission to ${mirrorSlot} segment index ${targetIdx}`);
+            const otherSegment = otherArray[targetIdx];
+            let otherProjectionNotes = otherSegment.projection_notes || "";
+            if (content_is_slides_only && content && content.trim() && !otherProjectionNotes.includes(content.trim())) {
+                otherProjectionNotes = (otherProjectionNotes ? otherProjectionNotes + "\n\n" : "") + `[Nota del Orador]: ${content.trim()}`;
+            }
+
+            const otherUpdated = {
+                ...otherSegment,
+                submitted_content: content,
+                parsed_verse_data: parsedData,
+                submission_status: 'processed',
+                scripture_references: scriptureReferences,
+                presentation_url: presentation_url || "",
+                notes_url: notes_url || "",
+                content_is_slides_only: !!content_is_slides_only,
+                projection_notes: content_is_slides_only ? otherProjectionNotes : (otherSegment.projection_notes || "")
+            };
+            if (title && title.trim() !== "") {
+                otherUpdated.message_title = title.trim();
+                otherUpdated.data = { ...otherUpdated.data, message_title: title.trim() };
+            }
+            otherUpdated.data = {
+                ...otherUpdated.data,
+                verse: scriptureReferences,
+                scripture_references: scriptureReferences,
+                presentation_url: presentation_url || "",
+                notes_url: notes_url || "",
+                content_is_slides_only: !!content_is_slides_only
+            };
+            otherArray[targetIdx] = otherUpdated;
+            updatePayload[mirrorSlot] = otherArray;
         }
 
         // Single atomic Service update with fully processed data
