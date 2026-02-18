@@ -414,12 +414,22 @@ export default function PublicProgramView() {
 
     const newData = { ...rawServiceData };
     
-    if (newData["9:30am"]) {
-      newData["9:30am"] = calculateTimedSegments(newData["9:30am"], "09:30");
-    }
-    if (newData["11:30am"]) {
-      newData["11:30am"] = calculateTimedSegments(newData["11:30am"], "11:30");
-    }
+    // BUG FIX (audit): Calculate timed segments for ALL dynamic slot keys,
+    // not just hardcoded "9:30am"/"11:30am". Parse start time from slot name.
+    const slotKeys = Object.keys(newData).filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(newData[k]));
+    slotKeys.forEach(slotKey => {
+      // Parse "9:30am" → "09:30", "11:30am" → "11:30", "7:00pm" → "19:00"
+      const match = slotKey.match(/^(\d+):(\d+)(am|pm)$/i);
+      if (match) {
+        let h = parseInt(match[1]);
+        const m = match[2];
+        const period = match[3].toLowerCase();
+        if (period === 'pm' && h < 12) h += 12;
+        if (period === 'am' && h === 12) h = 0;
+        const startStr = `${String(h).padStart(2, '0')}:${m}`;
+        newData[slotKey] = calculateTimedSegments(newData[slotKey], startStr);
+      }
+    });
     // Calculate times for Custom Services (segments array)
     if (newData.segments && newData.segments.length > 0) {
       // Use service time as start, default to 10:00 if missing
