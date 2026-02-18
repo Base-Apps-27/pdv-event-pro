@@ -449,7 +449,12 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       // Break segment injection between sessions (uses shared helper)
       // Entity Lift: inject between each consecutive pair of sessions, not just first two
       if (sessions.length >= 2) {
-        const recesoNotes = targetProgram.receso_notes?.["9:30am"] || targetProgram.receso_notes?.["11:00am"] || targetProgram.receso_notes?.["11:00"] || "";
+        // BUG FIX (audit): receso_notes key is dynamic — use first slot name from session,
+        // not hardcoded "9:30am". Fall back to first key in receso_notes object.
+        const firstSlotName = sessions[0]?.name || "9:30am";
+        const recesoNotes = targetProgram.receso_notes?.[firstSlotName] 
+          || (targetProgram.receso_notes ? Object.values(targetProgram.receso_notes)[0] : "") 
+          || "";
         injectInterSessionBreak(segments, sessions[0].id, sessions[1].id, recesoNotes);
       }
 
