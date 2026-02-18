@@ -7,11 +7,10 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n";
 import { hasPermission, hasDashboardAccess, getLandingPage } from "@/components/utils/permissions";
-import { primaryNav, secondaryNav } from "@/components/nav/navItems";
-import { Calendar, Languages, MoreHorizontal, X, LogOut, Pin, PinOff } from "lucide-react";
+import { primaryNav, secondaryNav, adminNav } from "@/components/nav/navItems";
+import { Calendar, Languages, MoreHorizontal, X, LogOut, Pin, PinOff, ChevronDown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import useNavPins from "@/components/nav/useNavPins";
-import { secondaryNav as secondaryNavAll } from "@/components/nav/navItems";
 
 const GRADIENT = 'linear-gradient(180deg, #1F8A70 0%, #4DC15F 60%, #D9DF32 100%)';
 const GRADIENT_H = 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)';
