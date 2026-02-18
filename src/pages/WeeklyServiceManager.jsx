@@ -77,6 +77,11 @@ export default function WeeklyServiceManager() {
   const sundaySlots = React.useMemo(() => getTimeSlotsForDay("Sunday"), [getTimeSlotsForDay]);
   // Slot names for the current Sunday, e.g. ["9:30am", "11:30am"]
   const sundaySlotNames = React.useMemo(() => sundaySlots.map(s => s.name), [sundaySlots]);
+  // Days that have active ServiceSchedule records (drives weekday tabs)
+  const scheduledDays = React.useMemo(() => getScheduledDays(), [getScheduledDays]);
+
+  // Schedule management dialog state
+  const [showScheduleManager, setShowScheduleManager] = useState(false);
 
   // ── Core state ──
   const [selectedDate, setSelectedDate] = useState(() => {
