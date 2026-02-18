@@ -11,7 +11,7 @@
 import pdfMake from 'pdfmake/build/pdfmake';
 import { getLogoDataUrl } from './pdfLogoData';
 import { es } from "date-fns/locale";
-import { addMinutes, parse, format } from "date-fns";
+import { addMinutes, format } from "date-fns";
 import { BRAND, formatDate, safeParseTimeSlot } from './pdfUtils';
 
 // Font setup now handled in pdfUtils (imported indirectly or assumed set)
