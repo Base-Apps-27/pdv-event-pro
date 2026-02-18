@@ -109,19 +109,48 @@ export default function CustomServiceBuilder() {
   const selectedAnnouncementsForPrint = allAnnouncements.filter(a => serviceData.selected_announcements?.includes(a.id));
 
   // ── Load existing service ──
+  // Entity Lift L1.1: Try loading segments from Session/Segment entities first.
+  // Falls back to Service.segments[] JSON if no entities exist.
+  // This ensures services saved before syncToSession was wired still load correctly.
   useEffect(() => {
-    if (existingService) {
+    if (!existingService) return;
+
+    const loadServiceData = async () => {
       const sanitizedService = normalizeServiceTeams(existingService);
-      if (sanitizedService.segments) {
-        sanitizedService.segments = sanitizedService.segments.map(s => ({ ...s, _uiId: s._uiId || generateUiId() }));
-      }
       if (!sanitizedService.selected_announcements) sanitizedService.selected_announcements = [];
+
+      // L1.1: Try entity path first
+      let usedEntityPath = false;
+      try {
+        const entityData = await loadCustomFromSession(base44, existingService.id);
+        if (entityData && entityData.segments && entityData.segments.length > 0) {
+          // Entity-sourced segments: assign _uiId for UI keying
+          sanitizedService.segments = entityData.segments.map(s => ({
+            ...s,
+            _uiId: s._uiId || generateUiId(),
+          }));
+          usedEntityPath = true;
+          console.info('[ENTITY_LIFT L1.1] Loaded', entityData.segments.length, 'segments from entities for service', existingService.id);
+        }
+      } catch (err) {
+        console.warn('[ENTITY_LIFT L1.1] Entity load failed, falling back to JSON:', err.message);
+      }
+
+      // JSON fallback: use Service.segments[] if entity path didn't produce data
+      if (!usedEntityPath && sanitizedService.segments) {
+        sanitizedService.segments = sanitizedService.segments.map(s => ({
+          ...s,
+          _uiId: s._uiId || generateUiId(),
+        }));
+      }
+
       setServiceData(sanitizedService);
       setLastSavedData(JSON.parse(JSON.stringify(sanitizedService)));
       setHasUnsavedChanges(false);
       // Phase 5: Capture baseline for stale detection
       captureBaseline(existingService.updated_date);
 
+      // Local backup recovery
       const backupKey = `service_backup_${existingService.id}`;
       const backup = safeGetItem(backupKey);
       if (backup) {
@@ -134,7 +163,9 @@ export default function CustomServiceBuilder() {
           }
         } catch (error) { console.error('[BACKUP RECOVERY ERROR]', error.message); }
       }
-    }
+    };
+
+    loadServiceData();
   }, [existingService]);
 
   // Auto-populate day of week
