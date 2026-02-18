@@ -111,7 +111,7 @@ export default function ServiceTimeSlotColumn({
             {timingInfo.isOverage && ` (+${timingInfo.overageAmount} min)`}
           </Badge>
           <span>Termina: {timingInfo.endTime}</span>
-          <span className="text-xs text-gray-500">(Meta: {is930 ? "11:00am" : "1:00pm"})</span>
+          <span className="text-xs text-gray-500">(Meta: 90 min)</span>
           {timingInfo.isOverage && (
             <Badge className="bg-amber-600 text-white text-xs">⚠ Sobrepasa</Badge>
           )}
