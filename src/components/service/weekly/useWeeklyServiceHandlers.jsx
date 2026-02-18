@@ -271,7 +271,7 @@ export function useWeeklyServiceHandlers({
     setSavingField('reset-blueprint');
     
     // Use database blueprint if available, fallback to hardcoded
-    const activeBlueprint = blueprintData || { "9:30am": BLUEPRINT["9:30am"], "11:30am": BLUEPRINT["11:30am"] };
+    const activeBlueprint = blueprintData || BLUEPRINT;
     
     // Helper to get default fields if blueprint is corrupted/missing them
     const getDefaultFields = (type) => {
@@ -283,60 +283,36 @@ export function useWeeklyServiceHandlers({
       return [];
     };
 
-    const initialData = {
-      ...serviceData, // Keep ID, date, name, etc.
-      "9:30am": activeBlueprint["9:30am"].map(seg => {
-        const fields = seg.fields && seg.fields.length > 0 ? seg.fields : getDefaultFields(seg.type);
-        const segmentCopy = {
-          type: seg.type,
-          title: seg.title,
-          duration: seg.duration,
-          fields: [...fields],
-          data: {},
-          actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
-          sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
-          requires_translation: seg.requires_translation || false,
-          default_translator_source: seg.default_translator_source || "manual"
-        };
-        
-        if (seg.type === "worship") {
-          segmentCopy.songs = [
-            { title: "", lead: "", key: "" },
-            { title: "", lead: "", key: "" },
-            { title: "", lead: "", key: "" },
-            { title: "", lead: "", key: "" }
-          ];
-        }
-        
-        return segmentCopy;
-      }),
-      "11:30am": activeBlueprint["11:30am"].map(seg => {
-        const fields = seg.fields && seg.fields.length > 0 ? seg.fields : getDefaultFields(seg.type);
-        const segmentCopy = {
-          type: seg.type,
-          title: seg.title,
-          duration: seg.duration,
-          fields: [...fields],
-          data: {},
-          actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
-          sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
-          requires_translation: seg.requires_translation || false,
-          default_translator_source: seg.default_translator_source || "manual"
-        };
-        
-        if (seg.type === "worship") {
-          segmentCopy.songs = [
-            { title: "", lead: "", key: "" },
-            { title: "", lead: "", key: "" },
-            { title: "", lead: "", key: "" },
-            { title: "", lead: "", key: "" }
-          ];
-        }
-        
-        return segmentCopy;
-      }),
-      // Preserve team info and notes
-    };
+    const mapBpSegments = (bpSegments) => (bpSegments || []).map(seg => {
+      const fields = seg.fields && seg.fields.length > 0 ? seg.fields : getDefaultFields(seg.type);
+      const segmentCopy = {
+        type: seg.type,
+        title: seg.title,
+        duration: seg.duration,
+        fields: [...fields],
+        data: {},
+        actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
+        sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
+        requires_translation: seg.requires_translation || false,
+        default_translator_source: seg.default_translator_source || "manual"
+      };
+      if (seg.type === "worship") {
+        segmentCopy.songs = [
+          { title: "", lead: "", key: "" },
+          { title: "", lead: "", key: "" },
+          { title: "", lead: "", key: "" },
+          { title: "", lead: "", key: "" }
+        ];
+      }
+      return segmentCopy;
+    });
+
+    // Phase 2: Reset all dynamic slots from ServiceSchedule
+    const initialData = { ...serviceData };
+    slotNames.forEach(name => {
+      const bpSegments = activeBlueprint[name] || activeBlueprint[firstSlot] || [];
+      initialData[name] = mapBpSegments(bpSegments);
+    });
 
     setServiceData(initialData);
     
