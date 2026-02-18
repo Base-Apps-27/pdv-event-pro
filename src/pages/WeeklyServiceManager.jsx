@@ -45,6 +45,7 @@ import { ServiceDataContext, UpdatersContext } from "@/components/service/Weekly
 import { WEEKLY_BLUEPRINT } from "@/components/service/weekly/weeklyBlueprint";
 import { useWeeklyServiceHandlers } from "@/components/service/weekly/useWeeklyServiceHandlers";
 import { syncWeeklyToSessions, loadWeeklyFromSessions } from "@/components/service/weeklySessionSync";
+import { useServiceSchedules } from "@/components/service/weekly/useServiceSchedules";
 import useStaleGuard from "@/components/utils/useStaleGuard";
 import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
