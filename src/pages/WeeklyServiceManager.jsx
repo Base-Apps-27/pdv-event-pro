@@ -443,7 +443,30 @@ export default function WeeklyServiceManager() {
       const defaultPreNotes = {};
       sundaySlotNames.forEach(name => { defaultPreNotes[name] = ""; });
       sundaySlotNames.forEach(name => {
-        loadedData[name] = mergeSegmentsWithBlueprint(existingData[name] || [], name);
+        const existingSlotSegments = existingData[name] || [];
+        if (existingSlotSegments.length > 0) {
+          // Slot has data — merge with blueprint for fields/sub_assignments
+          loadedData[name] = mergeSegmentsWithBlueprint(existingSlotSegments, name);
+        } else {
+          // Slot is empty (new slot added to ServiceSchedule after service was created).
+          // Seed it from the blueprint so users get the standard segment structure.
+          const activeBlueprint = blueprintData || { "9:30am": WEEKLY_BLUEPRINT["9:30am"], "11:30am": WEEKLY_BLUEPRINT["11:30am"] };
+          const bpSegments = activeBlueprint[name] || activeBlueprint["9:30am"] || WEEKLY_BLUEPRINT["9:30am"] || [];
+          loadedData[name] = bpSegments.map(seg => {
+            const segmentCopy = {
+              type: seg.type, title: seg.title, duration: seg.duration,
+              fields: [...(seg.fields || [])], data: {},
+              actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
+              sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
+              requires_translation: seg.requires_translation || false,
+              default_translator_source: seg.default_translator_source || "manual"
+            };
+            if (seg.type === "worship") {
+              segmentCopy.songs = [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }];
+            }
+            return segmentCopy;
+          });
+        }
       });
       loadedData.pre_service_notes = existingData.pre_service_notes || defaultPreNotes;
       loadedData.receso_notes = existingData.receso_notes || { [sundaySlotNames[0]]: "" };
