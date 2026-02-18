@@ -176,6 +176,7 @@ export async function syncWeeklyToSessions(base44, serviceResult, serviceData, t
         translator_name: getData("translator") || "",
         requires_translation:
           !!getData("translator") || !!segData.requires_translation,
+        default_translator_source: segData.default_translator_source || "manual",
         description_details:
           getData("description_details") || getData("description") || "",
         coordinator_notes: getData("coordinator_notes") || "",
@@ -210,6 +211,9 @@ export async function syncWeeklyToSessions(base44, serviceResult, serviceData, t
         number_of_songs: flatSongs._count || 0,
         ...flatSongs._fields,
         show_in_general: true,
+        // Entity Lift: Persist UI metadata to eliminate blueprint matching on read
+        ui_fields: segData.fields || [],
+        ui_sub_assignments: segData.sub_assignments || [],
       };
 
       newSegments.push(parentSegmentData);
