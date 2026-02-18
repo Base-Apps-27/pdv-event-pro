@@ -238,26 +238,28 @@ export function useWeeklyServiceHandlers({
   };
 
   const copyPreServiceNotesTo1130 = () => {
+    if (slotNames.length < 2) return;
     setSavingField('copy-preservice');
     setServiceData(prev => {
       if (!prev) return prev;
       const updated = { ...prev };
-      updated.pre_service_notes["11:30am"] = updated.pre_service_notes["9:30am"];
+      if (updated.pre_service_notes) updated.pre_service_notes[secondSlot] = updated.pre_service_notes[firstSlot] || "";
       return updated;
     });
     debouncedSave('copy-preservice');
   };
 
   const copyTeamTo1130 = () => {
+    if (slotNames.length < 2) return;
     setSavingField('copy-team');
     setServiceData(prev => {
       if (!prev) return prev;
       const updated = { ...prev };
-      updated.coordinators["11:30am"] = updated.coordinators["9:30am"];
-      updated.ujieres["11:30am"] = updated.ujieres["9:30am"];
-      updated.sound["11:30am"] = updated.sound["9:30am"];
-      updated.luces["11:30am"] = updated.luces["9:30am"];
-      updated.fotografia["11:30am"] = updated.fotografia["9:30am"];
+      if (updated.coordinators) updated.coordinators[secondSlot] = updated.coordinators[firstSlot] || "";
+      if (updated.ujieres) updated.ujieres[secondSlot] = updated.ujieres[firstSlot] || "";
+      if (updated.sound) updated.sound[secondSlot] = updated.sound[firstSlot] || "";
+      if (updated.luces) updated.luces[secondSlot] = updated.luces[firstSlot] || "";
+      if (updated.fotografia) updated.fotografia[secondSlot] = updated.fotografia[firstSlot] || "";
       return updated;
     });
     debouncedSave('copy-team');
