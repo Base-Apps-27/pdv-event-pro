@@ -387,10 +387,12 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       sessions = directSessions.sort((a, b) => (a.order || 0) - (b.order || 0));
       const sessionIds = sessions.map(s => s.id);
 
-      // Bulk fetch segments, preSessionDetails for all sessions (batched)
+      // Bulk fetch segments, preSessionDetails, streamBlocks for all sessions (batched)
+      // Phase 4 Entity Lift: Added StreamBlock fetch to service path (previously event-only)
       const BATCH = 10;
       let allSegs = [];
       let allPreSessionDetails = [];
+      let allStreamBlocks = [];
 
       for (let i = 0; i < sessionIds.length; i += BATCH) {
         const batch = sessionIds.slice(i, i + BATCH);
@@ -398,13 +400,17 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
           Promise.all([
             withRetry(() => base44.asServiceRole.entities.Segment.filter({ session_id: sid }, 'order')),
             withRetry(() => base44.asServiceRole.entities.PreSessionDetails.filter({ session_id: sid })),
+            withRetry(() => base44.asServiceRole.entities.StreamBlock.filter({ session_id: sid }, 'order')),
           ])
         ));
-        for (const [segs, details] of batchResults) {
+        for (const [segs, details, blocks] of batchResults) {
           allSegs.push(...segs);
           allPreSessionDetails.push(...details);
+          allStreamBlocks.push(...blocks);
         }
       }
+
+      streamBlocks = allStreamBlocks;
 
       preSessionDetails = allPreSessionDetails;
 
