@@ -797,39 +797,17 @@ export default function WeeklyServiceManager() {
 
         {/* Sunday (default) — dynamic columns from ServiceSchedule */}
         <TabsContent value="sunday" className="mt-0">
-          <div className="overflow-x-auto -mx-2 px-2">
-            {/* Horizontal scroll container: each column is fixed-width so adding slots scrolls, not shrinks */}
-            <div className="flex gap-6" style={{ minWidth: `${sundaySlotNames.length * 520}px` }}>
-              {sundaySlotNames.map((slotName, slotIdx) => {
-                const isFirst = slotIdx === 0;
-                const isLast = slotIdx === sundaySlotNames.length - 1;
-                return (
-                  <ServiceTimeSlotColumn
-                    key={slotName}
-                    timeSlot={slotName}
-                    style={{ minWidth: 480, flex: '1 0 480px' }}
-                    serviceData={serviceData}
-                    expandedSegments={expandedSegments}
-                    toggleSegmentExpanded={toggleSegmentExpanded}
-                    handleMoveSegment={handlers.handleMoveSegment}
-                    removeSpecialSegment={handlers.removeSpecialSegment}
-                    updateSegmentField={handlers.updateSegmentField}
-                    debouncedSave={handlers.debouncedSave}
-                    setServiceData={setServiceData}
-                    handleOpenVerseParser={handlers.handleOpenVerseParser}
-                    calculateServiceTimes={handlers.calculateServiceTimes}
-                    // First slot gets copy-to-next helpers, others get copy-from-first
-                    copySegmentTo1130={isFirst && sundaySlotNames.length > 1 ? handlers.copySegmentTo1130 : null}
-                    copyPreServiceNotesTo1130={isFirst && sundaySlotNames.length > 1 ? handlers.copyPreServiceNotesTo1130 : null}
-                    copyTeamTo1130={isFirst && sundaySlotNames.length > 1 ? handlers.copyTeamTo1130 : null}
-                    copy930To1130={!isFirst ? handlers.copy930To1130 : null}
-                    onOpenSpecialDialog={(ts) => { setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: ts })); setShowSpecialDialog(true); }}
-                    canEdit={hasPermission(user, 'edit_services')}
-                  />
-                );
-              })}
-            </div>
-          </div>
+          <SundaySlotColumns
+            sundaySlotNames={sundaySlotNames}
+            serviceData={serviceData}
+            expandedSegments={expandedSegments}
+            toggleSegmentExpanded={toggleSegmentExpanded}
+            handlers={handlers}
+            setServiceData={setServiceData}
+            setSpecialSegmentDetails={setSpecialSegmentDetails}
+            setShowSpecialDialog={setShowSpecialDialog}
+            canEdit={hasPermission(user, 'edit_services')}
+          />
         </TabsContent>
 
         {/* Other weekdays — render their service sessions with full segment display */}
