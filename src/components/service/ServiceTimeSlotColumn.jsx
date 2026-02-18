@@ -205,17 +205,17 @@ export default function ServiceTimeSlotColumn({
       )}
 
       {/* Team Section */}
-      <Card className={`${is930 ? 'bg-green-50 border-green-300' : 'bg-blue-50 border-blue-300'} border-2 print:hidden`}>
+      <Card className={`${isFirstSlot ? 'bg-green-50 border-green-300' : 'bg-blue-50 border-blue-300'} border-2 print:hidden`}>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center justify-between">
             EQUIPO {timeSlot}
-            {is930 && (
+            {copyTeamTo1130 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={copyTeamTo1130}
                 className="h-7 px-2 hover:bg-blue-50"
-                title="Copiar a 11:30"
+                title="Copiar a siguiente"
               >
                 <ArrowRight className="w-4 h-4 text-blue-600" />
               </Button>
