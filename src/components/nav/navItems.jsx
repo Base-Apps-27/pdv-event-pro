@@ -94,7 +94,7 @@ export const secondaryNav = [
   {
     id: 'service-config',
     labelKey: 'nav.serviceConfig',
-    icon: Settings,
+    icon: Wrench,
     page: 'ServiceBlueprints',
     permission: 'manage_users',
     matchPages: ['ServiceBlueprints'],
