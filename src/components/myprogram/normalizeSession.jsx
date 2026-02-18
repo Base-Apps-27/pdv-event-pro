@@ -286,13 +286,32 @@ function normalizeJsonSourcedSegments(serviceData) {
     });
   };
 
-  // Weekly services (JSON path)
-  if (serviceData['9:30am']) {
-    processSlot(serviceData['9:30am'], '9:30am', '09:30');
-  }
-  if (serviceData['11:30am']) {
-    processSlot(serviceData['11:30am'], '11:30am', '11:30');
-  }
+  // Weekly services (JSON path): Dynamic slot discovery instead of hardcoded keys.
+  // Pattern: keys matching "9:30am", "11:30am", "7:00pm", etc.
+  const slotKeys = Object.keys(serviceData)
+    .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(serviceData[k]) && serviceData[k].length > 0)
+    .sort((a, b) => {
+      const pa = a.match(/^(\d+):(\d+)(am|pm)$/i);
+      const pb = b.match(/^(\d+):(\d+)(am|pm)$/i);
+      if (!pa || !pb) return 0;
+      let ha = parseInt(pa[1]); if (pa[3].toLowerCase() === 'pm' && ha < 12) ha += 12; if (pa[3].toLowerCase() === 'am' && ha === 12) ha = 0;
+      let hb = parseInt(pb[1]); if (pb[3].toLowerCase() === 'pm' && hb < 12) hb += 12; if (pb[3].toLowerCase() === 'am' && hb === 12) hb = 0;
+      return (ha * 60 + parseInt(pa[2])) - (hb * 60 + parseInt(pb[2]));
+    });
+
+  slotKeys.forEach(slotKey => {
+    const match = slotKey.match(/^(\d+):(\d+)(am|pm)$/i);
+    if (match) {
+      let h = parseInt(match[1]);
+      const m = match[2];
+      const period = match[3].toLowerCase();
+      if (period === 'pm' && h < 12) h += 12;
+      if (period === 'am' && h === 12) h = 0;
+      const baseTime = `${String(h).padStart(2, '0')}:${m}`;
+      processSlot(serviceData[slotKey], slotKey, baseTime);
+    }
+  });
+
   // Custom / one-off services
   if (serviceData.segments && serviceData.segments.length > 0 && result.length === 0) {
     processSlot(serviceData.segments, 'custom', serviceData.time || '10:00');
