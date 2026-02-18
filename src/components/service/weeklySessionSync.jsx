@@ -509,6 +509,7 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
   };
 
   // Include songs array if present
+  // Songs must be in BOTH data.songs (for PDF/entity path) AND root (for UI ServiceTimeSlotColumn)
   if (songs.length > 0) {
     data.songs = songs;
   }
