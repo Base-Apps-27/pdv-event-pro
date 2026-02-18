@@ -387,12 +387,17 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
     const directSessions = await withRetry(() =>
       base44.asServiceRole.entities.Session.filter({ service_id: targetProgram.id })
     );
+    // FIX (2026-02-18 v2): Use a flag to track whether entity segments were found.
+    // Previous approach used else-if chain which prevented JSON fallback from executing
+    // after sessions were reset to []. Now: fetch entity segments first, and if none found,
+    // let execution continue to the JSON fallback branches below (no else-if gating).
+    let entitySegmentsResolved = false;
+    
     if (directSessions.length > 0) {
       sessions = directSessions.sort((a, b) => (a.order || 0) - (b.order || 0));
       const sessionIds = sessions.map(s => s.id);
 
       // Bulk fetch segments, preSessionDetails, streamBlocks for all sessions (batched)
-      // Phase 4 Entity Lift: Added StreamBlock fetch to service path (previously event-only)
       const BATCH = 10;
       let allSegs = [];
       let allPreSessionDetails = [];
@@ -417,17 +422,15 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       streamBlocks = allStreamBlocks;
       preSessionDetails = allPreSessionDetails;
 
-      // FIX (2026-02-18): If sessions exist but yield zero entity segments,
-      // fall through to JSON fallback below. This happens when a custom service
-      // has a Session entity (from sync) but segments are still stored as JSON
-      // on the Service object (entity segments not yet created).
       if (allSegs.length === 0) {
-        // FIX (2026-02-18): Reset sessions to empty so ServiceProgramView
-        // detects JSON fallback path (useEntityPath = sessions.length > 0 && allSegments.length > 0).
-        // Without this, sessions=[1] + segments=[] causes entity path with zero slots → empty UI.
+        // Pre-Entity-Lift service: Session exists but no Segment entities.
+        // Reset sessions so frontend uses JSON fallback. Mark as unresolved
+        // so the code continues to the JSON fallback branches below.
         console.log('[refreshActiveProgram] Sessions exist but no entity segments found, resetting sessions for JSON fallback');
         sessions = [];
+        entitySegmentsResolved = false;
       } else {
+        entitySegmentsResolved = true;
 
       // Sort by session order first, then segment order (matches event path pattern)
       const sessionsMap = new Map(sessions.map((s, i) => [s.id, i]));
