@@ -318,8 +318,7 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote) {
     // Header: Time + Title + Duration
     items.push({
       text: [
-        // Entity Lift: dynamic color — first slot red, others blue
-        { text: timeStr, bold: true, color: (() => { const slots = (typeof globalScale !== 'undefined') ? [] : []; return timeSlot; })() === timeSlot ? (BRAND.RED) : BRAND.BLUE, fontSize: 10 * scale },
+        { text: timeStr, bold: true, color: slotColor || BRAND.RED, fontSize: 10 * scale },
         { text: '  ' + seg.title.toUpperCase(), bold: true, color: BRAND.BLACK, fontSize: 10.5 * scale },
         seg.type ? { text: `  ${seg.type.toUpperCase()}  `, color: '#374151', background: '#F3F4F6', fontSize: 7 * scale, bold: true } : '',
         { text: ` (${seg.duration} min)`, color: BRAND.GRAY, fontSize: 9 * scale }
