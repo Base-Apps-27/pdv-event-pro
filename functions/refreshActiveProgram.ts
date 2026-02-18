@@ -486,8 +486,8 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
     // Weekly service: process time-slot arrays into flat segments
     // BUG FIX (audit): Dynamically detect slot keys instead of hardcoding 9:30am/11:30am.
     // This handles ServiceSchedule-configured slots like "7:00pm", "10:00am", etc.
-    else if (targetProgram["9:30am"] || targetProgram["11:30am"] || 
-             Object.keys(targetProgram).some(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(targetProgram[k]) && targetProgram[k].length > 0)) {
+    if (!entitySegmentsResolved && (targetProgram["9:30am"] || targetProgram["11:30am"] || 
+             Object.keys(targetProgram).some(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(targetProgram[k]) && targetProgram[k].length > 0))) {
       const processSlot = (slotSegments, startHour, startMin) => {
         if (!Array.isArray(slotSegments)) return [];
         let currentMinutes = startHour * 60 + startMin;
