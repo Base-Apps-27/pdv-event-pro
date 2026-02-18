@@ -3,7 +3,7 @@
 // Sidebar redesign 2026-02-14: consolidated from ~16 items to ~8 visible, grouped into
 // primary quick-access items and a secondary "more" tray.
 
-import { LayoutDashboard, Calendar, Bell, Clock, Plus, FileText, Users, Settings, MapPin, Copy, Sparkles, Shield, FileCode } from "lucide-react";
+import { LayoutDashboard, Calendar, Bell, Clock, Plus, FileText, Users, Settings, MapPin, Copy, Sparkles, Shield, FileCode, Wrench } from "lucide-react";
 
 // PRIMARY: always visible in rail / bottom bar (max 5-6)
 export const primaryNav = [
