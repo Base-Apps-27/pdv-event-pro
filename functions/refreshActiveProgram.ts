@@ -563,8 +563,14 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
           firstSeg.actions.sort((a, b) => (a.order || 0) - (b.order || 0));
         }
       };
-      injectNotes("9:30am", "slot-9-30");
-      injectNotes("11:30am", "slot-11-30");
+      // BUG FIX (audit): Dynamic slot injection instead of hardcoded 9:30am/11:30am
+      if (allSlotSegments && allSlotSegments.length > 0) {
+        allSlotSegments.forEach(slot => injectNotes(slot.key, slot.sessionId));
+      } else {
+        // Legacy fallback
+        injectNotes("9:30am", "slot-9-30");
+        injectNotes("11:30am", "slot-11-30");
+      }
     }
 
     // Phase 4 Entity Lift: streamBlocks now populated for entity-backed services
