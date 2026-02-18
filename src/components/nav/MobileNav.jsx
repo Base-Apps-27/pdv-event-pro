@@ -18,6 +18,7 @@ export default function MobileNav({ user }) {
   const { language, setLanguage, t } = useLanguage();
   const location = useLocation();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   const isPageActive = (matchPages) =>
     matchPages.some(p => location.pathname === createPageUrl(p));
@@ -28,14 +29,19 @@ export default function MobileNav({ user }) {
     return hasPermission(user, item.permission);
   });
 
+  // All pinnable items = secondary + admin
+  const allSecondaryItems = [...secondaryNav, ...adminNav];
   const { pinned, isPinned, togglePin, canPin } = useNavPins(user);
 
-  // Resolve pinned items (permission-gated)
   const pinnedItems = pinned
-    .map(id => secondaryNavAll.find(s => s.id === id))
+    .map(id => allSecondaryItems.find(s => s.id === id))
     .filter(item => item && (!item.permission || hasPermission(user, item.permission)));
 
   const visibleSecondary = secondaryNav.filter(
+    item => !item.permission || hasPermission(user, item.permission)
+  );
+
+  const visibleAdmin = adminNav.filter(
     item => !item.permission || hasPermission(user, item.permission)
   );
 
