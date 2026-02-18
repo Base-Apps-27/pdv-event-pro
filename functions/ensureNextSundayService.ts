@@ -107,11 +107,15 @@ Deno.serve(async (req) => {
     });
 
     // 4. Create the service record
+    // service_type: 'weekly' ensures the new discrimination logic in
+    // WeeklyServiceManager (line 186) finds this service on the fast path
+    // instead of falling through to legacy structural detection.
     const newService = await base44.asServiceRole.entities.Service.create({
       name: `Domingo - ${dateStr}`,
       day_of_week: 'Sunday',
       date: dateStr,
       status: 'active',
+      service_type: 'weekly',
       origin: 'auto_created',
       "9:30am": cloneSegments(source930),
       "11:30am": cloneSegments(source1130),
