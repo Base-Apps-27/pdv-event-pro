@@ -1,15 +1,18 @@
 /**
  * WeekdayServicePanel — renders a non-Sunday weekly service.
  *
- * Loads Session + Segment entities for the given service and displays
- * sessions as horizontal columns, each with an ordered segment list.
+ * Entity Lift L1.4: Reads Session + Segment entities first.
+ * Falls back to Service.segments[] JSON if no entities exist
+ * (pre-sync data or failed sync). Read-only overview with
+ * "Edit" link to CustomServiceBuilder.
  *
- * For now this is a read-only overview with an "Edit" link that navigates
- * to the full editor (CustomServiceBuilder) for in-depth changes.
- * Inline editing of individual fields can be added incrementally.
+ * Data paths (prioritized):
+ *   1. Session/Segment entities (canonical, from syncToSession)
+ *   2. Service.segments[] JSON (fallback for pre-sync services)
+ *   3. Empty state with edit button
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,15 +21,29 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Clock, User, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { getSegmentData } from '@/components/utils/segmentDataUtils';
 
 function formatDuration(min) {
   if (!min) return '';
   return `${min} min`;
 }
 
+/**
+ * Resolves the primary person from a JSON segment based on its type.
+ * Weekly/custom JSON segments store people in data.leader, data.preacher, data.presenter.
+ */
+function resolvePresenter(seg) {
+  const getData = (field) => getSegmentData(seg, field);
+  const typeL = (seg.type || seg.segment_type || '').toLowerCase();
+  if (typeL === 'worship' || typeL === 'alabanza') return getData('leader') || getData('presenter') || '';
+  if (typeL === 'message' || typeL === 'plenaria' || typeL === 'predica') return getData('preacher') || getData('presenter') || '';
+  return getData('presenter') || '';
+}
+
 export default function WeekdayServicePanel({ service }) {
   const navigate = useNavigate();
 
+  // ── Entity path: Session + Segment entities ──
   const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
     queryKey: ['weekdayServiceSessions', service.id],
     queryFn: async () => {
@@ -49,7 +66,16 @@ export default function WeekdayServicePanel({ service }) {
     staleTime: 30000,
   });
 
-  const isLoading = sessionsLoading || segsLoading;
+  // ── L1.4 Fallback: Service.segments[] JSON ──
+  // Used when no Session/Segment entities exist (pre-sync or failed sync).
+  const jsonSegments = useMemo(() => {
+    if (!service.segments || !Array.isArray(service.segments)) return [];
+    return service.segments;
+  }, [service.segments]);
+
+  const hasEntityData = sessions.length > 0;
+  const hasJsonFallback = !hasEntityData && jsonSegments.length > 0;
+  const isLoading = sessionsLoading || (hasEntityData && segsLoading);
 
   if (isLoading) {
     return (
@@ -62,8 +88,8 @@ export default function WeekdayServicePanel({ service }) {
     );
   }
 
-  // If no sessions exist yet, show service info with an edit button
-  if (sessions.length === 0) {
+  // ── Empty state: no entities AND no JSON segments ──
+  if (!hasEntityData && !hasJsonFallback) {
     return (
       <Card className="flex-1 min-w-[320px] p-4 border-2 border-gray-200 bg-white">
         <h3 className="text-lg font-bold text-gray-900 mb-2">{service.name || 'Servicio'}</h3>
@@ -85,7 +111,70 @@ export default function WeekdayServicePanel({ service }) {
     );
   }
 
-  // Render sessions as columns
+  // ── JSON Fallback rendering ──
+  // Renders Service.segments[] directly when no entity sync has occurred.
+  if (hasJsonFallback) {
+    return (
+      <Card className="flex-1 min-w-[400px] border-2 border-gray-200 bg-white">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-lg font-bold text-gray-900">
+              {service.name || 'Servicio'}
+            </CardTitle>
+            <p className="text-xs text-gray-500">{service.date}{service.time ? ` · ${service.time}` : ''}</p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs gap-1"
+            onClick={() => navigate(createPageUrl('CustomServiceBuilder') + `?id=${service.id}`)}
+          >
+            <ExternalLink className="w-3 h-3" />
+            Editar
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="min-w-[250px]">
+            <div className="flex items-center gap-2 mb-2 pb-1 border-b border-gray-200">
+              <Clock className="w-3.5 h-3.5 text-gray-400" />
+              <span className="text-sm font-semibold text-gray-700">
+                {service.time || 'Programa'}
+              </span>
+              <Badge variant="outline" className="text-[10px] ml-auto bg-amber-50 border-amber-200 text-amber-700">
+                {jsonSegments.length} segmentos
+              </Badge>
+            </div>
+            <div className="space-y-1.5">
+              {jsonSegments.map((seg, idx) => {
+                const presenter = resolvePresenter(seg);
+                return (
+                  <div
+                    key={seg._uiId || `json-seg-${idx}`}
+                    className="flex items-center gap-2 p-2 rounded bg-gray-50 border border-gray-100 text-xs"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-800 truncate">{seg.title || 'Sin título'}</p>
+                      {presenter && (
+                        <p className="text-gray-500 flex items-center gap-1 mt-0.5">
+                          <User className="w-3 h-3" />
+                          {presenter}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-gray-400 whitespace-nowrap">
+                      {formatDuration(seg.duration)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ── Entity rendering (primary path) ──
   return (
     <Card className="flex-1 min-w-[400px] border-2 border-gray-200 bg-white">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
