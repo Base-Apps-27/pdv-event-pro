@@ -527,6 +527,7 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       injectNotes("11:30am", "slot-11-30");
     }
 
+    // Phase 4 Entity Lift: streamBlocks now populated for entity-backed services
     return {
       event: null,
       program: { ...targetProgram, _isEvent: false },
@@ -536,7 +537,7 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       eventDays: [],
       preSessionDetails,
       liveAdjustments,
-      streamBlocks: [],
+      streamBlocks,
     };
   }
 }
