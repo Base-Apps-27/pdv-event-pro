@@ -492,15 +492,46 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
         });
       };
 
-      const segs930 = processSlot(targetProgram["9:30am"], 9, 30);
-      const segs1130 = processSlot(targetProgram["11:30am"], 11, 30);
+      // BUG FIX (audit): Dynamically discover and process all time-slot keys
+      const slotKeys = Object.keys(targetProgram)
+        .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(targetProgram[k]) && targetProgram[k].length > 0)
+        .sort((a, b) => {
+          // Sort chronologically by parsing time
+          const parseTime = (s) => {
+            const m = s.match(/^(\d+):(\d+)(am|pm)$/i);
+            if (!m) return 0;
+            let h = parseInt(m[1]);
+            if (m[3].toLowerCase() === 'pm' && h < 12) h += 12;
+            if (m[3].toLowerCase() === 'am' && h === 12) h = 0;
+            return h * 60 + parseInt(m[2]);
+          };
+          return parseTime(a) - parseTime(b);
+        });
 
-      segments = [...segs930, ...segs1130];
+      const allSlotSegments = [];
+      slotKeys.forEach(slotKey => {
+        const match = slotKey.match(/^(\d+):(\d+)(am|pm)$/i);
+        if (!match) return;
+        let h = parseInt(match[1]);
+        const m = parseInt(match[2]);
+        if (match[3].toLowerCase() === 'pm' && h < 12) h += 12;
+        if (match[3].toLowerCase() === 'am' && h === 12) h = 0;
+        const slotSegs = processSlot(targetProgram[slotKey], h, m);
+        allSlotSegments.push({ key: slotKey, segs: slotSegs, sessionId: `slot-${h}-${m}` });
+      });
 
-      // Break injection between slots (uses shared helper — same logic as entity path)
-      if (segs930.length > 0 && segs1130.length > 0) {
-        const recesoNotes = targetProgram.receso_notes?.["11:00am"] || targetProgram.receso_notes?.["11:00"] || "";
-        injectInterSessionBreak(segments, "slot-9-30", "slot-11-30", recesoNotes);
+      segments = allSlotSegments.flatMap(s => s.segs);
+
+      // Break injection between consecutive slots
+      for (let i = 0; i < allSlotSegments.length - 1; i++) {
+        const curr = allSlotSegments[i];
+        const next = allSlotSegments[i + 1];
+        if (curr.segs.length > 0 && next.segs.length > 0) {
+          const recesoNotes = targetProgram.receso_notes?.[curr.key] 
+            || (targetProgram.receso_notes ? Object.values(targetProgram.receso_notes)[0] : "") 
+            || "";
+          injectInterSessionBreak(segments, curr.sessionId, next.sessionId, recesoNotes);
+        }
       }
     }
     // Custom service with embedded segments
