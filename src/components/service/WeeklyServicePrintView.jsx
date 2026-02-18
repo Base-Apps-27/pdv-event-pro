@@ -208,6 +208,7 @@ export default function WeeklyServicePrintView({
   printSettingsPage1,
   printSettingsPage2,
   isQuickPrint = false,
+  slotNames, // Entity Lift: dynamic slot names from ServiceSchedule
 }) {
   if (!serviceData) return null;
 
@@ -221,10 +222,10 @@ export default function WeeklyServicePrintView({
   const activePrintSettingsPage1 = isQuickPrint ? defaultPrintSettings : (printSettingsPage1 || defaultPrintSettings);
   const activePrintSettingsPage2 = isQuickPrint ? defaultPrintSettings : (printSettingsPage2 || defaultPrintSettings);
 
-  const segments930 = serviceData["9:30am"] || [];
-  const segments1130 = serviceData["11:30am"] || [];
-  const filteredSegments930 = segments930.filter(s => s.type !== 'break');
-  const filteredSegments1130 = segments1130.filter(s => s.type !== 'break');
+  // Entity Lift: Dynamic slots. Falls back to legacy hardcoded if not provided.
+  const slots = (slotNames && slotNames.length > 0) ? slotNames : ["9:30am", "11:30am"];
+  const firstSlot = slots[0];
+  const secondSlot = slots.length > 1 ? slots[1] : null;
 
   return (
     <div className="hidden print:block">
