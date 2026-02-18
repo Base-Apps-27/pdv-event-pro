@@ -43,7 +43,12 @@ export function useWeeklyServiceHandlers({
   setShowResetConfirm,
   editingAnnouncement,
   createAnnouncementMutation,
+  // Phase 2: dynamic slot names from ServiceSchedule
+  slotNames = ["9:30am", "11:30am"],
 }) {
+  // Phase 2: derive first and second slot for copy operations
+  const firstSlot = slotNames[0] || "9:30am";
+  const secondSlot = slotNames[1] || "11:30am";
   // Ref to always have current serviceData for debounced saves
   const serviceDataRef = useRef(null);
   const saveTimeoutRef = useRef(null);
