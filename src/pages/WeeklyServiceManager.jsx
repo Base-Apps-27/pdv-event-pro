@@ -25,7 +25,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Loader2, Eye, Wand2, ExternalLink, Settings, Download, Wrench } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Eye, Wand2, ExternalLink, Settings, Download, Wrench, MoreVertical } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { createPageUrl } from "@/utils";
 import { format as formatDate } from "date-fns";
@@ -52,6 +52,7 @@ import useStaleGuard from "@/components/utils/useStaleGuard";
 import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import WeekdayServicePanel from "@/components/service/weekly/WeekdayServicePanel";
 import ServiceScheduleManager from "@/components/service/weekly/ServiceScheduleManager";
 import SundaySlotColumns from "@/components/service/weekly/SundaySlotColumns";
@@ -701,13 +702,15 @@ export default function WeeklyServiceManager() {
             )}
           </div>
         </div>
-        <div className="flex gap-3 items-center">
+        {/* Toolbar: PDFs + Live View top-level, secondary actions in overflow menu */}
+        <div className="flex gap-2 items-center">
           {savingField && (
             <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
               <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin text-pdv-teal" />
               <span className="hidden md:inline">{t('btn.saving')}</span>
             </div>
           )}
+          {/* Primary actions — always visible */}
           <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${selectedDate}`)} variant="outline" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2">
             <Eye className="w-3 h-3 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">{t('btn.live_view')}</span>
           </Button>
@@ -717,22 +720,38 @@ export default function WeeklyServiceManager() {
           <Button onClick={handlers.handleDownloadAnnouncementsPDF} style={greenStyle} className="font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2" title="Descargar PDF Anuncios">
             <Download className="w-3 h-3 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">PDF Anuncios</span>
           </Button>
-          <Button onClick={() => window.open('/api/functions/serveWeeklyServiceSubmission', '_blank')} variant="outline" className="border-2 border-purple-400 text-purple-600 hover:bg-purple-50 font-semibold px-2" title="Link para Oradores (Mensaje)">
-            <ExternalLink className="w-4 h-4 md:mr-2" /><span className="hidden md:inline">Link Mensaje</span>
-          </Button>
-          <Button onClick={() => setShowPrintSettings(true)} variant="outline" className="border-2 border-gray-400 bg-white text-gray-900 hover:bg-gray-100 font-semibold px-2" title="Ajustes de Impresión">
-            <Settings className="w-4 h-4" />
-          </Button>
-          {hasPermission(user, 'edit_services') && (
-            <Button onClick={() => setShowScheduleManager(true)} variant="outline" className="border-2 border-purple-400 bg-white text-purple-600 hover:bg-purple-50 font-semibold px-2" title="Configurar Horarios / Sesiones">
-              <Wrench className="w-4 h-4" />
-            </Button>
-          )}
-          {hasPermission(user, 'edit_services') && (
-            <Button onClick={() => setShowResetConfirm(true)} variant="destructive" className="border-2 border-red-600 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-semibold px-2" title="Restablecer diseño original">
-              <Wand2 className="w-4 h-4" />
-            </Button>
-          )}
+
+          {/* Overflow menu — secondary actions */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="border-2 border-gray-300 bg-white text-gray-600 hover:bg-gray-100 h-9 w-9">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => window.open('/api/functions/serveWeeklyServiceSubmission', '_blank')} className="gap-2">
+                <ExternalLink className="w-4 h-4 text-purple-500" />
+                <span>Link para Oradores</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowPrintSettings(true)} className="gap-2">
+                <Settings className="w-4 h-4 text-gray-500" />
+                <span>Ajustes de Impresión</span>
+              </DropdownMenuItem>
+              {hasPermission(user, 'edit_services') && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowScheduleManager(true)} className="gap-2">
+                    <Wrench className="w-4 h-4 text-purple-500" />
+                    <span>Configurar Horarios</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowResetConfirm(true)} className="gap-2 text-red-600 focus:text-red-600">
+                    <Wand2 className="w-4 h-4" />
+                    <span>Restablecer Blueprint</span>
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
