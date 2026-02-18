@@ -145,7 +145,7 @@ export default function ServiceTimeSlotColumn({
 
       {/* Segments */}
       <div className="space-y-4">
-        {segments.filter(seg => is930 ? seg.type !== 'break' : true).map((segment, idx) => {
+        {segments.filter(seg => isFirstSlot ? seg.type !== 'break' : true).map((segment, idx) => {
           const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
 
           if (segment.type === "special") {
