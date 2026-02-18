@@ -167,6 +167,9 @@ export default function CustomServiceBuilder() {
     onError: (error) => { setAutoSaveStatus("error"); toast.error('Error al guardar: ' + error.message); }
   });
 
+  // Determine service_type: preserve existing type if editing, default to 'one_off' for new
+  const resolvedServiceType = existingService?.service_type || 'one_off';
+
   const handleSave = async () => {
     // Phase 5: Check for concurrent edits before manual save
     if (serviceId) {
@@ -177,13 +180,13 @@ export default function CustomServiceBuilder() {
         return;
       }
     }
-    saveServiceMutation.mutate({ ...serviceData, status: 'active', service_type: 'one_off' });
+    saveServiceMutation.mutate({ ...serviceData, status: 'active', service_type: resolvedServiceType });
   };
 
   const forceSaveService = () => {
     setShowStaleWarning(false);
     setStaleInfo(null);
-    saveServiceMutation.mutate({ ...serviceData, status: 'active', service_type: 'one_off' });
+    saveServiceMutation.mutate({ ...serviceData, status: 'active', service_type: resolvedServiceType });
   };
 
   // ── Side effects ──

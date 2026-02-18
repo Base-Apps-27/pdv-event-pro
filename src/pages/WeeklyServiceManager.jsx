@@ -162,12 +162,25 @@ export default function WeeklyServiceManager() {
         dates.push(ds);
       }
 
-      // Fetch weekly services for each date (exclude blueprints and one-off services)
+      // Fetch services for each date in the week.
+      // Exclude blueprints. Include one_off services (they show as read-only weekday tabs).
+      // Exclude weekly services on non-Sunday days (they're managed by the Sunday tab).
       const results = await Promise.all(
         dates.map(async (dt) => {
           const svcs = await base44.entities.Service.filter({ date: dt });
           return svcs
-            .filter(s => s.status !== 'blueprint' && s.service_type !== 'one_off')
+            .filter(s => s.status !== 'blueprint')
+            .filter(s => {
+              // Always include one_off / custom services on any day
+              if (s.service_type === 'one_off') return true;
+              // For weekly services, only include on their primary tab day (Sunday)
+              // to avoid double-showing them as weekday panels
+              if (s.service_type === 'weekly') return false;
+              // Legacy services without service_type: include if they have segments
+              // (custom-style) or if on a non-Sunday day
+              if (s.segments && s.segments.length > 0) return true;
+              return false;
+            })
             .map(s => ({ ...s, _weekDate: dt }));
         })
       );
