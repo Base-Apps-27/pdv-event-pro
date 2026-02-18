@@ -598,7 +598,25 @@ Return ONLY valid JSON:
       .filter(seg => seg.type !== 'break' && seg.type !== 'ministry')
       .reduce((sum, seg) => sum + (seg.duration || 0), 0);
     
-    const startTime = parse(timeSlot, "h:mma", new Date());
+    // Phase 2: Parse slot name flexibly (handles "9:30am", "11:30am", "7:00pm", etc.)
+    let startTime;
+    try {
+      startTime = parse(timeSlot, "h:mma", new Date());
+    } catch {
+      // Fallback: try with period format "h:mm a" or default to midnight
+      try {
+        startTime = parse(timeSlot.replace(/am/i, ' AM').replace(/pm/i, ' PM'), "h:mm a", new Date());
+      } catch {
+        startTime = new Date();
+        startTime.setHours(0, 0, 0, 0);
+      }
+    }
+    // Guard against Invalid Date
+    if (isNaN(startTime.getTime())) {
+      startTime = new Date();
+      startTime.setHours(0, 0, 0, 0);
+    }
+
     const endTime = addMinutes(startTime, totalDuration);
     const targetDuration = 90;
     const isOverage = totalDuration > targetDuration;
