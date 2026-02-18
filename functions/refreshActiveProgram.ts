@@ -472,6 +472,7 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
 
       // Inject pre-session details as actions (reuse existing helper)
       injectPreSessionActions(segments, sessions, preSessionDetails);
+    } // end: allSegs.length > 0 branch
     }
     // Weekly service: process time-slot arrays into flat segments
     // BUG FIX (audit): Dynamically detect slot keys instead of hardcoding 9:30am/11:30am.
