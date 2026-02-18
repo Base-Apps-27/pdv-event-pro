@@ -626,6 +626,7 @@ export default function WeeklyServiceManager() {
         selectedAnnouncements={selectedAnnouncements}
         printSettingsPage1={printSettingsPage1} printSettingsPage2={printSettingsPage2}
         isQuickPrint={isQuickPrint}
+        slotNames={sundaySlotNames}
       />
 
       {/* Screen UI — Header */}
