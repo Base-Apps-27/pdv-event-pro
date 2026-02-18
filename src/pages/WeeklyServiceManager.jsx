@@ -723,34 +723,38 @@ export default function WeeklyServiceManager() {
           </TabsList>
         )}
 
-        {/* Sunday (default) — current 9:30am / 11:30am columns */}
+        {/* Sunday (default) — dynamic columns from ServiceSchedule */}
         <TabsContent value="sunday" className="mt-0">
           <div className="overflow-x-auto -mx-2 px-2">
-            <div className="grid md:grid-cols-2 gap-6 min-w-[640px]">
-              <ServiceTimeSlotColumn
-                timeSlot="9:30am" serviceData={serviceData}
-                expandedSegments={expandedSegments} toggleSegmentExpanded={toggleSegmentExpanded}
-                handleMoveSegment={handlers.handleMoveSegment} removeSpecialSegment={handlers.removeSpecialSegment}
-                updateSegmentField={handlers.updateSegmentField} debouncedSave={handlers.debouncedSave}
-                setServiceData={setServiceData} handleOpenVerseParser={handlers.handleOpenVerseParser}
-                calculateServiceTimes={handlers.calculateServiceTimes}
-                copySegmentTo1130={handlers.copySegmentTo1130}
-                copyPreServiceNotesTo1130={handlers.copyPreServiceNotesTo1130}
-                copyTeamTo1130={handlers.copyTeamTo1130}
-                onOpenSpecialDialog={(ts) => { setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: ts })); setShowSpecialDialog(true); }}
-                canEdit={hasPermission(user, 'edit_services')}
-              />
-              <ServiceTimeSlotColumn
-                timeSlot="11:30am" serviceData={serviceData}
-                expandedSegments={expandedSegments} toggleSegmentExpanded={toggleSegmentExpanded}
-                handleMoveSegment={handlers.handleMoveSegment} removeSpecialSegment={handlers.removeSpecialSegment}
-                updateSegmentField={handlers.updateSegmentField} debouncedSave={handlers.debouncedSave}
-                setServiceData={setServiceData} handleOpenVerseParser={handlers.handleOpenVerseParser}
-                calculateServiceTimes={handlers.calculateServiceTimes}
-                copy930To1130={handlers.copy930To1130}
-                onOpenSpecialDialog={(ts) => { setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: ts })); setShowSpecialDialog(true); }}
-                canEdit={hasPermission(user, 'edit_services')}
-              />
+            {/* Phase 2: grid cols adapt to number of slots */}
+            <div className={`grid gap-6 min-w-[640px] ${sundaySlotNames.length === 1 ? 'grid-cols-1 max-w-2xl' : sundaySlotNames.length === 2 ? 'md:grid-cols-2' : `grid-cols-${Math.min(sundaySlotNames.length, 4)}`}`}>
+              {sundaySlotNames.map((slotName, slotIdx) => {
+                const isFirst = slotIdx === 0;
+                const isLast = slotIdx === sundaySlotNames.length - 1;
+                return (
+                  <ServiceTimeSlotColumn
+                    key={slotName}
+                    timeSlot={slotName}
+                    serviceData={serviceData}
+                    expandedSegments={expandedSegments}
+                    toggleSegmentExpanded={toggleSegmentExpanded}
+                    handleMoveSegment={handlers.handleMoveSegment}
+                    removeSpecialSegment={handlers.removeSpecialSegment}
+                    updateSegmentField={handlers.updateSegmentField}
+                    debouncedSave={handlers.debouncedSave}
+                    setServiceData={setServiceData}
+                    handleOpenVerseParser={handlers.handleOpenVerseParser}
+                    calculateServiceTimes={handlers.calculateServiceTimes}
+                    // First slot gets copy-to-next helpers, others get copy-from-first
+                    copySegmentTo1130={isFirst && sundaySlotNames.length > 1 ? handlers.copySegmentTo1130 : null}
+                    copyPreServiceNotesTo1130={isFirst && sundaySlotNames.length > 1 ? handlers.copyPreServiceNotesTo1130 : null}
+                    copyTeamTo1130={isFirst && sundaySlotNames.length > 1 ? handlers.copyTeamTo1130 : null}
+                    copy930To1130={!isFirst ? handlers.copy930To1130 : null}
+                    onOpenSpecialDialog={(ts) => { setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: ts })); setShowSpecialDialog(true); }}
+                    canEdit={hasPermission(user, 'edit_services')}
+                  />
+                );
+              })}
             </div>
           </div>
         </TabsContent>
