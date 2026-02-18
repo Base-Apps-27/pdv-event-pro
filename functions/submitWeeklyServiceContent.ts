@@ -165,7 +165,12 @@ Deno.serve(async (req) => {
 
     try {
         const base44 = createClientFromRequest(req);
-        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, apply_to_both_services, idempotencyKey } = await req.json();
+        const body = await req.json();
+        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, idempotencyKey } = body;
+        // Dynamic mirror targets: array of composite IDs to also receive this submission
+        // Backward compat: legacy apply_to_both_services boolean still works
+        const mirror_target_ids = body.mirror_target_ids || [];
+        const apply_to_both_services = body.apply_to_both_services || false;
 
         if (!segment_id || !content) {
             return Response.json({ error: "Missing required fields" }, { status: 400, headers: corsHeaders });
