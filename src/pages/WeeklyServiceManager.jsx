@@ -458,7 +458,6 @@ export default function WeeklyServiceManager() {
         } else {
           // Slot is empty (new slot added to ServiceSchedule after service was created).
           // Seed it from the blueprint so users get the standard segment structure.
-          const activeBlueprint = blueprintData;
           const bpSegments = blueprintData?.[name] || blueprintData?.["9:30am"] || [];
           loadedData[name] = bpSegments.map(seg => {
             const segmentCopy = {
@@ -514,7 +513,6 @@ export default function WeeklyServiceManager() {
         }
       }
     } else {
-      const activeBlueprint = blueprintData || { "9:30am": WEEKLY_BLUEPRINT["9:30am"], "11:30am": WEEKLY_BLUEPRINT["11:30am"] };
       const mapBlueprintToSegments = (segments) => segments.map(seg => {
         const segmentCopy = {
           type: seg.type, title: seg.title, duration: seg.duration,

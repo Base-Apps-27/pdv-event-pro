@@ -25,7 +25,6 @@ export function useWeeklyServiceHandlers({
   fixedAnnouncements,
   dynamicAnnouncements,
   blueprintData,
-  BLUEPRINT,
   // Setters for state owned by parent
   setSavingField,
   setVerseParserOpen,
@@ -270,8 +269,8 @@ export function useWeeklyServiceHandlers({
 
     setSavingField('reset-blueprint');
     
-    // Use database blueprint if available, fallback to hardcoded
-    const activeBlueprint = blueprintData || BLUEPRINT;
+    // Blueprint Revamp (2026-02-18): DB blueprint only. No hardcoded fallback.
+    const activeBlueprint = blueprintData;
     
     // Helper to get default fields if blueprint is corrupted/missing them
     const getDefaultFields = (type) => {
