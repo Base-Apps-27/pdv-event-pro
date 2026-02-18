@@ -227,70 +227,66 @@ export async function generateAnnouncementsPDF(announcements, serviceDataOrDate)
   return pdfMake.createPdf(docDefinition, {});
 }
 
+/**
+ * Dynamic welcome presenter info for announcements PDF header.
+ * 2026-02-18: Refactored from hardcoded 9:30am/11:30am to use _slotNames.
+ * Discovers welcome/bienvenida segments across all configured time slots.
+ */
 function getWelcomePresenterInfo(serviceData, scale, BRAND) {
   if (!serviceData) return [];
+  
+  const slotNames = serviceData._slotNames || ["9:30am", "11:30am"];
+  const clean = (name) => name ? name.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '') : '';
   
   const findWelcome = (segments) => segments?.find(s => 
     (s.title?.toLowerCase().includes('bienvenida') && s.title?.toLowerCase().includes('anuncios')) ||
     (s.type === 'welcome')
   );
-  
-  const seg930 = findWelcome(serviceData["9:30am"]);
-  const seg1130 = findWelcome(serviceData["11:30am"]);
-  
-  const p9 = seg930?.data?.presenter;
-  const t9 = seg930?.data?.translator;
-  const p11 = seg1130?.data?.presenter;
-  const t11 = seg1130?.data?.translator;
-  
+
+  // Collect presenter info from each slot
+  const slotPresenters = slotNames.map(name => {
+    const seg = findWelcome(serviceData[name]);
+    return {
+      name,
+      presenter: clean(seg?.data?.presenter),
+      translator: seg?.data?.translator || ''
+    };
+  }).filter(s => s.presenter);
+
+  if (slotPresenters.length === 0) return [];
+
   const items = [];
-  const clean = (name) => name ? name.replace(/\s*(?:trad|traduc|traducción|translation)[\s:.-].*$/i, '') : '';
-  
-  const p9Clean = clean(p9);
-  const p11Clean = clean(p11);
-  
-  if (p9Clean || p11Clean) {
-    if (p9Clean === p11Clean && t9 === t11) {
-      // Same presenter/translator for both
-      if (p9Clean) {
-        let text = `BIENVENIDA: ${p9Clean}`;
-        if (t9) text += ` / TRAD: ${t9}`;
-        items.push({ 
-          text: text.toUpperCase(), 
-          fontSize: 9 * scale, 
-          color: BRAND.BLACK, 
-          bold: true, 
-          alignment: 'center', 
-          margin: [0, 2, 0, 0] 
-        });
-      }
-    } else {
-      // Different
-      if (p9Clean) {
-        let text = `9:30 AM: ${p9Clean}`;
-        if (t9) text += ` (Trad: ${t9})`;
-        items.push({ 
-          text: text.toUpperCase(), 
-          fontSize: 8.5 * scale, 
-          color: BRAND.BLACK, 
-          bold: true, 
-          alignment: 'center', 
-          margin: [0, 1, 0, 0] 
-        });
-      }
-      if (p11Clean) {
-        let text = `11:30 AM: ${p11Clean}`;
-        if (t11) text += ` (Trad: ${t11})`;
-        items.push({ 
-          text: text.toUpperCase(), 
-          fontSize: 8.5 * scale, 
-          color: BRAND.BLACK, 
-          bold: true, 
-          alignment: 'center', 
-          margin: [0, 1, 0, 0] 
-        });
-      }
-    }
+  // Check if all presenters + translators are the same → show single line
+  const allSame = slotPresenters.every(s => 
+    s.presenter === slotPresenters[0].presenter && s.translator === slotPresenters[0].translator
+  );
+
+  if (allSame) {
+    let text = `BIENVENIDA: ${slotPresenters[0].presenter}`;
+    if (slotPresenters[0].translator) text += ` / TRAD: ${slotPresenters[0].translator}`;
+    items.push({ 
+      text: text.toUpperCase(), 
+      fontSize: 9 * scale, 
+      color: BRAND.BLACK, 
+      bold: true, 
+      alignment: 'center', 
+      margin: [0, 2, 0, 0] 
+    });
+  } else {
+    // Different presenters per slot — show each
+    slotPresenters.forEach(sp => {
+      const displayName = sp.name.replace('am', ' AM').replace('pm', ' PM').toUpperCase();
+      let text = `${displayName}: ${sp.presenter}`;
+      if (sp.translator) text += ` (Trad: ${sp.translator})`;
+      items.push({ 
+        text: text.toUpperCase(), 
+        fontSize: 8.5 * scale, 
+        color: BRAND.BLACK, 
+        bold: true, 
+        alignment: 'center', 
+        margin: [0, 1, 0, 0] 
+      });
+    });
   }
   
   return items;
