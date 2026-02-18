@@ -502,6 +502,7 @@ Deno.serve(async (req) => {
                      }
                      segments = enrichedSegments;
                  }
+            } // end: allResults.length > 0 branch
             }
             // Fallback: Embedded Segments (Custom Services)
             // CRITICAL FIX: Only use 'segments' if it actually has content. 
