@@ -557,7 +557,9 @@ Return ONLY valid JSON:
   const handleDownloadProgramPDF = async () => {
     const toastId = toast.loading('Generando PDF del Programa...');
     try {
-      const pdf = await generateWeeklyProgramPDF(serviceData);
+      // Entity Lift: inject _slotNames so PDF generator uses dynamic columns
+      const pdfData = { ...serviceData, _slotNames: slotNames };
+      const pdf = await generateWeeklyProgramPDF(pdfData);
       pdf.download(`Programa-Domingo-${serviceData.date}.pdf`);
       toast.success('PDF descargado', { id: toastId });
     } catch (error) {
