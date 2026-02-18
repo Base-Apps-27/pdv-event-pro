@@ -119,28 +119,34 @@ Deno.serve(async (req) => {
     });
 
     // 4. Create the service record
-    // service_type: 'weekly' ensures the new discrimination logic in
-    // WeeklyServiceManager (line 186) finds this service on the fast path
-    // instead of falling through to legacy structural detection.
-    const newService = await base44.asServiceRole.entities.Service.create({
+    // Entity Lift: Build slot data dynamically from ServiceSchedule slot names
+    const servicePayload = {
       name: `Domingo - ${dateStr}`,
       day_of_week: 'Sunday',
       date: dateStr,
       status: 'active',
       service_type: 'weekly',
       origin: 'auto_created',
-      "9:30am": cloneSegments(source930),
-      "11:30am": cloneSegments(source1130),
-      coordinators: { "9:30am": "", "11:30am": "" },
-      ujieres: { "9:30am": "", "11:30am": "" },
-      sound: { "9:30am": "", "11:30am": "" },
-      luces: { "9:30am": "", "11:30am": "" },
-      fotografia: null,
-      receso_notes: { "9:30am": "" },
-      pre_service_notes: { "9:30am": "", "11:30am": "" },
       selected_announcements: [],
       segments: [],
+    };
+    // Build empty team objects and slot segment arrays dynamically
+    const emptySlotObj = {};
+    slotNames.forEach(name => { emptySlotObj[name] = ""; });
+    servicePayload.coordinators = { ...emptySlotObj };
+    servicePayload.ujieres = { ...emptySlotObj };
+    servicePayload.sound = { ...emptySlotObj };
+    servicePayload.luces = { ...emptySlotObj };
+    servicePayload.fotografia = null;
+    servicePayload.receso_notes = { [slotNames[0]]: "" };
+    servicePayload.pre_service_notes = { ...emptySlotObj };
+    slotNames.forEach(name => {
+      // Use matching blueprint slot or fall back to first slot's blueprint
+      const source = blueprint?.[name] || FALLBACK_BLUEPRINT[name] || FALLBACK_BLUEPRINT["9:30am"];
+      servicePayload[name] = cloneSegments(source);
     });
+
+    const newService = await base44.asServiceRole.entities.Service.create(servicePayload);
 
     console.log(`[ENSURE_SERVICE] Created service for ${dateStr} (id: ${newService.id})`);
 
