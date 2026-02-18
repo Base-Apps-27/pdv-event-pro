@@ -479,6 +479,10 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       injectPreSessionActions(segments, sessions, preSessionDetails);
     } // end: allSegs.length > 0 branch
     }
+    // FIX (2026-02-18 v2): Changed from else-if to if(!entitySegmentsResolved).
+    // When sessions exist but have no entity segments, sessions is reset to []
+    // but the else-if chain would skip these branches (the if(directSessions.length > 0) 
+    // block already ran). Using a flag ensures JSON fallback branches execute.
     // Weekly service: process time-slot arrays into flat segments
     // BUG FIX (audit): Dynamically detect slot keys instead of hardcoding 9:30am/11:30am.
     // This handles ServiceSchedule-configured slots like "7:00pm", "10:00am", etc.
