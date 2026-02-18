@@ -447,10 +447,9 @@ Deno.serve(async (req) => {
             processing_status: 'processed'
         });
 
-        // Audit trail — mirrored 11:30am submission (if applied)
-        if (apply_to_both_services && timeSlot === '9:30am') {
-            const mirrorId = segment_id.replace('|9:30am|', '|11:30am|');
-            console.log("[APPLY_BOTH] Creating audit trail for mirrored 11:30am submission");
+        // Audit trail — mirrored submissions (dynamic)
+        for (const mirrorId of effectiveMirrors) {
+            console.log(`[MIRROR] Creating audit trail for mirrored submission: ${mirrorId}`);
             await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
                 segment_id: mirrorId,
                 content: content,
