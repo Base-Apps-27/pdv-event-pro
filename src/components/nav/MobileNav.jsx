@@ -196,6 +196,61 @@ export default function MobileNav({ user }) {
                   </div>
                 );
               })}
+
+              {/* Admin tools — collapsible section */}
+              {visibleAdmin.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <button
+                    onClick={() => setAdminOpen(prev => !prev)}
+                    className="flex items-center justify-between w-full px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-widest"
+                  >
+                    <span>Admin</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${adminOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {adminOpen && (
+                    <div className="space-y-1 mt-1">
+                      {visibleAdmin.map(item => {
+                        const active = isPageActive(item.matchPages);
+                        const Icon = item.icon;
+                        const itemPinned = isPinned(item.id);
+                        return (
+                          <div key={item.id} className="flex items-center">
+                            <Link
+                              to={createPageUrl(item.page)}
+                              onClick={() => setSheetOpen(false)}
+                              className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                                active
+                                  ? 'text-white shadow-md'
+                                  : 'text-gray-700 hover:bg-gray-50'
+                              }`}
+                              style={active ? { background: GRADIENT_H } : {}}
+                            >
+                              <Icon className="w-5 h-5 shrink-0" />
+                              <span>{t(item.labelKey)}</span>
+                            </Link>
+                            <button
+                              onClick={() => togglePin(item.id)}
+                              disabled={!itemPinned && !canPin}
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0
+                                ${itemPinned
+                                  ? 'text-[#1F8A70]'
+                                  : canPin
+                                    ? 'text-gray-300 hover:text-gray-500'
+                                    : 'text-gray-200 cursor-not-allowed'
+                                }`}
+                              title={itemPinned
+                                ? (language === 'es' ? 'Desfijar' : 'Unpin')
+                                : (language === 'es' ? 'Fijar' : 'Pin')}
+                            >
+                              {itemPinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Footer actions */}
