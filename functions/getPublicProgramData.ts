@@ -393,14 +393,18 @@ Deno.serve(async (req) => {
             // 1. Linked Sessions (if service.event_id is set or it acts like an event)
             // 2. Embedded JSON `segments` field (legacy/simple)
 
+            // FIX (2026-02-18 v2): Use a flag to track whether entity segments were resolved.
+            // Previous approach used else-if chain which prevented JSON fallback from executing
+            // after sessions were reset to []. Now: fetch entity segments first, and if none found,
+            // let execution continue to the JSON fallback branches below (no else-if gating).
+            let entitySegmentsResolved = false;
+
             // Check if it's linked to an event (some services are just pointers to events)
             if (targetProgram.event_id) {
                 const linkedSessions = await withRetry(() => base44.asServiceRole.entities.Session.filter({ event_id: targetProgram.event_id }, undefined, undefined, undefined, dataEnv));
-                 // ... similar logic to Event ...
-                 // For brevity, let's assume if it has event_id, we fetch those sessions
                  sessions = linkedSessions;
             } 
-            // Also check for sessions linked directly to this service ID (uncommon but possible in schema)
+            // Also check for sessions linked directly to this service ID
             else {
                  const directSessions = await withRetry(() => base44.asServiceRole.entities.Session.filter({ service_id: targetProgram.id }, undefined, undefined, undefined, dataEnv));
                  if (directSessions.length > 0) sessions.push(...directSessions);
@@ -408,7 +412,6 @@ Deno.serve(async (req) => {
 
             // Fetch segments from found sessions (sequential with retry)
             if (sessions.length > 0) {
-                 // Sort sessions by order (matching event path pattern)
                  sessions.sort((a, b) => (a.order || 0) - (b.order || 0));
 
                  const sessionIds = sessions.map(s => s.id);
@@ -418,18 +421,14 @@ Deno.serve(async (req) => {
                      allResults.push(...segs);
                  }
 
-                 // FIX (2026-02-18): If sessions exist but yield zero entity segments,
-                 // fall through to JSON fallback below. This happens when a custom service
-                 // has a Session entity (from sync) but segments are still stored as JSON
-                 // on the Service object (entity segments not yet created).
                  if (allResults.length === 0) {
-                     // FIX (2026-02-18): Reset sessions to empty so ServiceProgramView
-                     // detects JSON fallback path (useEntityPath = sessions.length > 0 && allSegments.length > 0).
-                     // Without this, sessions=[1] + allSegments=[8 JSON segs] causes useEntityPath=true,
-                     // but JSON segments lack session_id → entitySessionSlots finds zero matches → empty UI.
+                     // Pre-Entity-Lift service: Session exists but no Segment entities.
+                     // Reset sessions so frontend uses JSON fallback. Mark as unresolved.
                      console.log('[getPublicProgramData] Sessions exist but no entity segments found, resetting sessions for JSON fallback');
                      sessions = [];
+                     entitySegmentsResolved = false;
                  } else {
+                     entitySegmentsResolved = true;
 
                  // A. Sort by session order, then segment order (matching event path)
                  const sessionOrderMap = new Map(sessions.map((s, i) => [s.id, i]));
