@@ -573,12 +573,13 @@ export default function WeeklyServiceManager() {
       saveServiceMutation.mutate({
         ...serviceData, selected_announcements: selectedAnnouncements,
         print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
-        day_of_week: 'Sunday', name: `Domingo - ${selectedDate}`, status: 'active',
+        day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
+        name: `Domingo - ${selectedDate}`, status: 'active',
         service_type: 'weekly'
       });
     }, 1000);
     return () => clearTimeout(handler);
-  }, [serviceData, lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate]);
+  }, [serviceData, lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
 
   // ── Segment expand toggle (local UI) ──
   const toggleSegmentExpanded = (timeSlot, idx) => {
