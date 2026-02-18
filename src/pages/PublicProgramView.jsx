@@ -875,26 +875,29 @@ export default function PublicProgramView() {
                         </Button>
                       ) : (
                         <>
-                          {actualServiceData["9:30am"] && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => openAdjustmentModal("9:30am")}
-                              className="bg-red-600 hover:bg-red-700 text-white border-none text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
-                            >
-                              {t('adjustments.timeSlot930am')}
-                            </Button>
-                          )}
-                          {actualServiceData["11:30am"] && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => openAdjustmentModal("11:30am")}
-                              className="bg-blue-600 hover:bg-blue-700 text-white border-none text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
-                            >
-                              {t('adjustments.timeSlot1130am')}
-                            </Button>
-                          )}
+                          {/* BUG FIX (audit): Dynamic slot buttons instead of hardcoded 9:30am/11:30am.
+                              Sessions carry the slot name (e.g. "9:30am") — iterate them.
+                              Fallback: check legacy JSON keys on the service object. */}
+                          {(() => {
+                            // Prefer entity-sourced sessions (slot names are dynamic)
+                            const slotButtons = sessions.length > 0
+                              ? sessions.map((s, i) => ({ name: s.name, color: i === 0 ? 'red' : 'blue' }))
+                              : [
+                                  actualServiceData["9:30am"] && { name: "9:30am", color: "red" },
+                                  actualServiceData["11:30am"] && { name: "11:30am", color: "blue" },
+                                ].filter(Boolean);
+                            return slotButtons.map(slot => (
+                              <Button
+                                key={slot.name}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openAdjustmentModal(slot.name)}
+                                className={`bg-${slot.color}-600 hover:bg-${slot.color}-700 text-white border-none text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2`}
+                              >
+                                {slot.name.replace('am', ' AM').replace('pm', ' PM')}
+                              </Button>
+                            ));
+                          })()}
                         </>
                       )}
                       {/* History button */}
