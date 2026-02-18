@@ -475,7 +475,7 @@ export default function ServiceProgramView({
 }
 
 /**
- * TeamInfoRow — renders compact team info for a given slot key.
+ * TeamInfoRow — renders compact team info for a given slot key (JSON path).
  * If slotKey is null (custom services), picks the first non-empty value from any slot.
  */
 function TeamInfoRow({ serviceData, slotKey }) {
@@ -494,6 +494,40 @@ function TeamInfoRow({ serviceData, slotKey }) {
     <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs text-gray-700">
       {TEAM_FIELDS.map((field, idx) => {
         const val = getValue(field.key);
+        if (!val) return null;
+        return (
+          <React.Fragment key={field.key}>
+            {idx > 0 && <span className="text-gray-400">|</span>}
+            <span><strong>{field.icon} {field.label}:</strong> {normalizeName(val)}</span>
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * SessionTeamInfoRow — renders compact team info from a Session entity (entity path).
+ * Entity Lift: reads directly from Session fields instead of Service JSON objects.
+ */
+function SessionTeamInfoRow({ teamInfo }) {
+  if (!teamInfo) return null;
+
+  const SESSION_TEAM_FIELDS = [
+    { key: 'coordinators', icon: '👤', label: 'Coord' },
+    { key: 'ushers', icon: '🚪', label: 'Ujieres' },
+    { key: 'sound', icon: '🔊', label: 'Sonido' },
+    { key: 'tech', icon: '💡', label: 'Luces' },
+    { key: 'photography', icon: '📸', label: 'Foto' },
+  ];
+
+  const hasAny = SESSION_TEAM_FIELDS.some(f => teamInfo[f.key]);
+  if (!hasAny) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 mt-2 text-[10px] sm:text-xs text-gray-700">
+      {SESSION_TEAM_FIELDS.map((field, idx) => {
+        const val = teamInfo[field.key];
         if (!val) return null;
         return (
           <React.Fragment key={field.key}>
