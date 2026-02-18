@@ -413,6 +413,7 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       streamBlocks = allStreamBlocks;
 
       preSessionDetails = allPreSessionDetails;
+      // streamBlocks already set above from bulk fetch
 
       // Sort by session order first, then segment order (matches event path pattern)
       const sessionsMap = new Map(sessions.map((s, i) => [s.id, i]));
