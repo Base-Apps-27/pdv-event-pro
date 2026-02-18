@@ -213,12 +213,13 @@ export function useWeeklyServiceHandlers({
   };
 
   const copySegmentTo1130 = (segmentIndex) => {
+    if (slotNames.length < 2) return;
     setSavingField(`copy-segment-${segmentIndex}`);
     setServiceData(prev => {
       if (!prev) return prev;
 
       const updated = { ...prev };
-      const sourceSeg = updated["9:30am"][segmentIndex];
+      const sourceSeg = (updated[firstSlot] || [])[segmentIndex];
 
       if (sourceSeg) {
         const copiedSegment = {
@@ -227,7 +228,8 @@ export function useWeeklyServiceHandlers({
           actions: sourceSeg.actions ? sourceSeg.actions.map(a => ({ ...a })) : [],
           songs: sourceSeg.songs ? sourceSeg.songs.map(s => ({ ...s })) : undefined,
         };
-        updated["11:30am"][segmentIndex] = copiedSegment;
+        if (!updated[secondSlot]) updated[secondSlot] = [];
+        updated[secondSlot][segmentIndex] = copiedSegment;
       }
 
       return updated;
