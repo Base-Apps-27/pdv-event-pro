@@ -798,6 +798,9 @@ export default function WeeklyServiceManager() {
       </Card>
 
       {/* Weekday tabs + service session columns */}
+      <style>{`
+        [data-weekday-tab][data-state="active"] { background-color: #1F8A70 !important; color: #ffffff !important; }
+      `}</style>
       <Tabs value={activeDay} onValueChange={setActiveDay} className="print:hidden">
         {/* Weekday tab bar — shows all days that have services */}
         {activeDays.length > 1 && (
