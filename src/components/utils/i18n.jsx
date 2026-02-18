@@ -22,6 +22,7 @@ const translations = {
     'nav.userManagement': 'Gestión de Usuarios',
     'nav.roles': 'Roles y Permisos',
     'nav.messages': 'Procesar Mensajes',
+    'nav.serviceConfig': 'Config. Servicios',
     'nav.collapseMenu': 'Colapsar Menú',
     'nav.expandMenu': 'Expandir',
 
@@ -496,6 +497,7 @@ const translations = {
     'nav.userManagement': 'User Management',
     'nav.roles': 'Roles & Permissions',
     'nav.messages': 'Process Messages',
+    'nav.serviceConfig': 'Service Config',
     'nav.collapseMenu': 'Collapse Menu',
     'nav.expandMenu': 'Expand',
 
