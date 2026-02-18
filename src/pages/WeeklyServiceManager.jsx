@@ -406,14 +406,16 @@ export default function WeeklyServiceManager() {
         });
       };
 
-      const loadedData = {
-        ...existingData,
-        "9:30am": mergeSegmentsWithBlueprint(existingData["9:30am"] || [], "9:30am"),
-        "11:30am": mergeSegmentsWithBlueprint(existingData["11:30am"] || [], "11:30am"),
-        pre_service_notes: existingData.pre_service_notes || { "9:30am": "", "11:30am": "" },
-        receso_notes: existingData.receso_notes || { "9:30am": "" },
-        selected_announcements: existingData.selected_announcements || []
-      };
+      // Phase 2: merge segments dynamically for all configured slots
+      const loadedData = { ...existingData };
+      const defaultPreNotes = {};
+      sundaySlotNames.forEach(name => { defaultPreNotes[name] = ""; });
+      sundaySlotNames.forEach(name => {
+        loadedData[name] = mergeSegmentsWithBlueprint(existingData[name] || [], name);
+      });
+      loadedData.pre_service_notes = existingData.pre_service_notes || defaultPreNotes;
+      loadedData.receso_notes = existingData.receso_notes || { [sundaySlotNames[0]]: "" };
+      loadedData.selected_announcements = existingData.selected_announcements || [];
       setServiceData(loadedData);
       setLastSavedData(JSON.parse(JSON.stringify(loadedData)));
       setSelectedAnnouncements(existingData.selected_announcements || []);
