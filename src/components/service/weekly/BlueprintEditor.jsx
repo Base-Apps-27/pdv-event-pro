@@ -311,7 +311,7 @@ export default function BlueprintEditor() {
                   <Button
                     variant="outline"
                     onClick={() => addSegment(slotName)}
-                    className="w-full border-dashed border-2 border-gray-300 text-gray-500 hover:border-pdv-teal hover:text-pdv-teal"
+                    className="w-full border-dashed border-2 border-gray-300 text-gray-600 hover:border-[#1F8A70] hover:text-[#1F8A70]"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Agregar Segmento a {slotName}
