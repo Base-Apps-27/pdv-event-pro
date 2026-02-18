@@ -806,7 +806,9 @@ export default function WeeklyServiceManager() {
               <TabsTrigger
                 key={day.key}
                 value={day.key}
-                className="px-4 py-1.5 text-sm font-bold data-[state=active]:bg-pdv-teal data-[state=active]:text-white"
+                className="px-4 py-1.5 text-sm font-bold text-gray-700"
+                style={{}}
+                data-weekday-tab="true"
               >
                 <span className="hidden sm:inline">{day.fullLabel}</span>
                 <span className="sm:hidden">{day.label}</span>
