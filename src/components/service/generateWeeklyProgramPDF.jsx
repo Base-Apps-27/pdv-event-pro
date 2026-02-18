@@ -308,7 +308,29 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
 
   if (!segments) return items;
 
+  // Parse slot name flexibly — handles "9:30am", "11:30am", "7:00pm", etc.
+  // Guard against Invalid Date from date-fns parse() when format doesn't match exactly.
   let currentTime = parse(timeSlot, "h:mma", new Date());
+  if (isNaN(currentTime.getTime())) {
+    // Retry with space before meridiem (e.g. "9:30 am")
+    currentTime = parse(timeSlot.replace(/am/i, ' AM').replace(/pm/i, ' PM'), "h:mm a", new Date());
+  }
+  if (isNaN(currentTime.getTime())) {
+    // Last resort: extract hours/minutes manually from the slot name
+    const manualMatch = timeSlot.match(/^(\d+):(\d+)\s*(am|pm)?$/i);
+    if (manualMatch) {
+      let h = parseInt(manualMatch[1]);
+      const m = parseInt(manualMatch[2]);
+      const period = (manualMatch[3] || '').toLowerCase();
+      if (period === 'pm' && h < 12) h += 12;
+      if (period === 'am' && h === 12) h = 0;
+      currentTime = new Date();
+      currentTime.setHours(h, m, 0, 0);
+    } else {
+      currentTime = new Date();
+      currentTime.setHours(0, 0, 0, 0);
+    }
+  }
 
   segments.filter(s => s.type !== 'break').forEach((seg, idx) => {
     // Calculate time
