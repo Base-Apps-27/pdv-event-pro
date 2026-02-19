@@ -10,9 +10,10 @@ import StreamBlockForm from "./StreamBlockForm";
 import AIStreamHelper from "./AIStreamHelper";
 import { toast } from "sonner";
 
-export default function StreamBlockList({ sessionId, segments, sessionDate, user }) {
+export default function StreamBlockList({ sessionId, session, segments, sessionDate, user }) {
   const [showForm, setShowForm] = useState(false);
   const [editingBlock, setEditingBlock] = useState(null);
+  const [showAIHelper, setShowAIHelper] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch StreamBlocks for this session
