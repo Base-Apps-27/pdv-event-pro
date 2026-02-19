@@ -267,6 +267,13 @@ Determine if QUERY or ACTION. For actions, propose changes using these types:
 - create_segments: New segments. Use temp_session_ref to link to new sessions. MUST come AFTER create_sessions.
 - update_sessions / update_segments / update_event: Modify existing records.
 
+## SESSION NAMING (CRITICAL)
+Every session MUST have a "name" field. Derive it from the document:
+- "SECCIÓN 1 VIERNES 13 DE MARZO" → name: "Sección 1 — Viernes 13 de marzo"
+- "SESSION 2 SATURDAY" → name: "Session 2 — Saturday"
+- If no section label, use: "Sesión 1", "Sesión 2", etc.
+NEVER leave name empty or null.
+
 ## SEGMENT TYPE ENUM
 Alabanza, Plenaria, Bienvenida, Ofrenda, Video, Anuncio, Dinámica, Break, TechOnly, Oración, Especial, Cierre, MC, Ministración, Receso, Almuerzo, Artes, Breakout, Panel
 
