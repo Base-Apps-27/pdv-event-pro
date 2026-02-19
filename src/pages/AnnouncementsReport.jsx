@@ -107,17 +107,28 @@ export default function AnnouncementsReport() {
   // CRUD for AnnouncementItem
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.AnnouncementItem.create(data),
-    onSuccess: () => { queryClient.invalidateQueries(['announcements-unified']); setShowDialog(false); }
+    onSuccess: (result) => {
+      queryClient.invalidateQueries(['announcements-unified']);
+      setShowDialog(false);
+      logCreate('AnnouncementItem', result, null, user);
+    }
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({id, data}) => base44.entities.AnnouncementItem.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries(['announcements-unified']); setShowDialog(false); }
+    mutationFn: ({id, data, prev}) => base44.entities.AnnouncementItem.update(id, data).then(r => ({ result: r, prev })),
+    onSuccess: ({ result, prev }) => {
+      queryClient.invalidateQueries(['announcements-unified']);
+      setShowDialog(false);
+      if (prev) logUpdate('AnnouncementItem', result.id, prev, result, null, user);
+    }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.AnnouncementItem.update(id, { is_active: false }), // Soft delete
-    onSuccess: () => { queryClient.invalidateQueries(['announcements-unified']); }
+    mutationFn: ({id}) => base44.entities.AnnouncementItem.update(id, { is_active: false }), // Soft delete
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['announcements-unified']);
+      if (variables.item) logDelete('AnnouncementItem', variables.item, null, user);
+    }
   });
 
   const openDialog = (item = null) => {
