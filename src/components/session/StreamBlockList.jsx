@@ -12,7 +12,7 @@ import { toast } from "sonner";
 // Universal log (2026-02-19): StreamBlock mutations now logged for full audit trail
 import { logCreate, logUpdate, logDelete } from "@/components/utils/editActionLogger";
 
-export default function StreamBlockList({ sessionId, session, segments, sessionDate, user }) {
+export default function StreamBlockList({ sessionId, session, segments, sessionDate, user, currentUser }) {
   const [showForm, setShowForm] = useState(false);
   const [editingBlock, setEditingBlock] = useState(null);
   const [showAIHelper, setShowAIHelper] = useState(false);
