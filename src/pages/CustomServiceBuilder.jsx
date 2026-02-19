@@ -187,6 +187,12 @@ export default function CustomServiceBuilder() {
       return await base44.entities.Service.create(sanitizedData);
     },
     onSuccess: async (result) => {
+      // Universal log (2026-02-19): log service save
+      if (serviceId && existingService) {
+        logUpdate('Service', result.id, existingService, result, null, user);
+      } else {
+        logCreate('Service', result, null, user);
+      }
       // SYNC TO SESSION/SEGMENTS for Live Control support
       try { await syncToSession(base44, result, serviceData.segments); } catch (err) { console.error("Failed to sync session data:", err); }
       queryClient.invalidateQueries(['customService']);
