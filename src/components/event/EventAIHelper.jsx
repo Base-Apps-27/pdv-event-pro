@@ -354,6 +354,10 @@ If uncertain which past event: {"type":"ask_event_clarification","message":"Whic
             const sessionData = action.create_data[i];
             const tempRef = sessionData.temp_session_ref || sessionData.name || `session_${i}`;
             const { temp_session_ref, ...cleanData } = sessionData;
+            // Ensure session always has a name (required field)
+            if (!cleanData.name) {
+              cleanData.name = `Sesión ${i + 1}`;
+            }
             const newSession = await base44.entities.Session.create({
               event_id: eventId,
               ...cleanData
