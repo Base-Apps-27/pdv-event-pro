@@ -72,8 +72,8 @@ export default function AIProposalReview({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Missing Fields Form */}
-          {hasErrors && validation?.fixableErrors?.length > 0 && (
+          {/* Missing Fields Form — show for fixable errors OR fixable warnings (e.g. session name) */}
+          {validation?.fixableErrors?.length > 0 && (
             <MissingFieldsForm
               fixableErrors={validation.fixableErrors}
               proposedActions={proposedActions}
