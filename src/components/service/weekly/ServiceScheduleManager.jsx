@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Clock, Calendar, GripVertical } from "lucide-react";
+import { AlertTriangle, Plus, Trash2, Clock, Calendar, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import BlueprintEditor from "./BlueprintEditor";
 
