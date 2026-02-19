@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import ActivityLog from './pages/ActivityLog';
 import AnnouncementsReport from './pages/AnnouncementsReport';
 import BuildMemory from './pages/BuildMemory';
 import Calendar from './pages/Calendar';
@@ -86,11 +87,11 @@ import UserManagement from './pages/UserManagement';
 import UshersView from './pages/UshersView';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import ActivityLog from './pages/ActivityLog';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "ActivityLog": ActivityLog,
     "AnnouncementsReport": AnnouncementsReport,
     "BuildMemory": BuildMemory,
     "Calendar": Calendar,
@@ -130,7 +131,6 @@ export const PAGES = {
     "UshersView": UshersView,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "ActivityLog": ActivityLog,
 }
 
 export const pagesConfig = {
