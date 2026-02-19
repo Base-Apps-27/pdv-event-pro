@@ -3,6 +3,9 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Calendar, Printer, Plus, Edit, Trash2, Tag, Eye, EyeOff } from "lucide-react";
+// Universal log (2026-02-19)
+import { logCreate, logUpdate, logDelete } from "@/components/utils/editActionLogger";
+import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
