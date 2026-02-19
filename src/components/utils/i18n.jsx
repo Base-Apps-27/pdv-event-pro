@@ -502,6 +502,7 @@ const translations = {
     'nav.collapseMenu': 'Collapse Menu',
     'nav.expandMenu': 'Expand',
     'nav.dependencies': 'Dependencies',
+    'nav.activityLog': 'Activity Log',
 
     // Sections
     'section.main': 'Main Panel',
