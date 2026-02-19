@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, AlertTriangle, Loader2, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import HelpTooltip from "@/components/utils/HelpTooltip";
 import StreamBlockItem from "./StreamBlockItem";
 import StreamBlockForm from "./StreamBlockForm";
+import AIStreamHelper from "./AIStreamHelper";
 import { toast } from "sonner";
 
 export default function StreamBlockList({ sessionId, segments, sessionDate, user }) {
