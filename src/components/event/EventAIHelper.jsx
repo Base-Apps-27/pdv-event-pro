@@ -356,6 +356,24 @@ If uncertain which past event: {"type":"ask_event_clarification","message":"Whic
       const normalizeRef = (s) => (s || '').trim().toLowerCase()
         .replace(/[\u2014\u2013\u2012\u2011\u2010—–-]+/g, '-') // normalize all dash types
         .replace(/\s+/g, ' ');
+
+      // CRITICAL: Pre-populate sessionRefMap with EXISTING sessions for this event.
+      // This covers the case where create_sessions ran in a previous invocation
+      // and the current invocation only has create_segments actions.
+      // Without this, sessionRefMap is empty and every segment gets session_id: null.
+      for (let i = 0; i < sessions.length; i++) {
+        const s = sessions[i];
+        const sid = s.id;
+        sessionRefMap[sid] = sid; // map real ID to itself
+        if (s.name) {
+          sessionRefMap[s.name] = sid;
+          sessionRefMap[normalizeRef(s.name)] = sid;
+        }
+        // Also index-based keys matching creation order
+        sessionRefMap[`session_${i}`] = sid;
+        createdSessionIds.push(sid);
+        console.log(`[AI_EXEC] Pre-populated existing session: name="${s.name}" → id=${sid}`);
+      }
       
       for (const action of actionsToExecute) {
         if (action.type === 'create_sessions') {
