@@ -7,6 +7,7 @@ import { useLanguage } from "@/components/utils/i18n";
 import { AlertCircle } from "lucide-react";
 
 const FIELD_LABELS = {
+  name: { es: "Nombre de la Sesión", en: "Session Name" },
   message_title: { es: "Título del Mensaje", en: "Message Title" },
   number_of_songs: { es: "Número de Canciones", en: "Number of Songs" },
   video_name: { es: "Nombre del Video", en: "Video Name" },
