@@ -512,7 +512,33 @@ Deno.serve(async (req) => {
             // JSON fallback branches execute for pre-Entity-Lift services.
             // Fallback: Embedded Segments (Custom Services)
             if (!entitySegmentsResolved && targetProgram.segments && Array.isArray(targetProgram.segments) && targetProgram.segments.length > 0) {
-                segments = targetProgram.segments;
+                // FIX (2026-02-19): Calculate start_time/end_time for custom service JSON segments.
+                // Raw JSON segments from Service.segments[] lack timing fields. The TV display
+                // (PublicCountdownDisplay) and normalizeProgram both require start_time/end_time
+                // to function. Use service.time as the base, defaulting to "19:00" if absent.
+                const serviceStartTime = targetProgram.time || "19:00";
+                const [baseH, baseM] = serviceStartTime.split(':').map(Number);
+                let curMin = baseH * 60 + baseM;
+
+                segments = targetProgram.segments.map((seg, idx) => {
+                    const startMin = curMin;
+                    const dur = seg.duration || 0;
+                    curMin += dur;
+                    const sH = Math.floor(startMin / 60);
+                    const sM = startMin % 60;
+                    const eH = Math.floor(curMin / 60);
+                    const eM = curMin % 60;
+                    return {
+                        ...seg,
+                        id: seg.id || seg._uiId || `custom-seg-${idx}`,
+                        start_time: `${String(sH).padStart(2,'0')}:${String(sM).padStart(2,'0')}`,
+                        end_time: `${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`,
+                        duration_min: dur,
+                        segment_type: seg.type || seg.segment_type || 'Especial',
+                        title: seg.title || seg.data?.title || 'Sin título',
+                        presenter: seg.presenter || seg.data?.presenter || seg.data?.leader || '',
+                    };
+                });
             }
             // Fallback: Standard Weekly Service Time Slots (9:30am / 11:30am)
             else if (!entitySegmentsResolved && (targetProgram["9:30am"] || targetProgram["11:30am"])) {
