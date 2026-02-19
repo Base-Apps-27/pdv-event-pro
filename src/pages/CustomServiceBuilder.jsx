@@ -44,6 +44,8 @@ import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
 import { getCompressionLevel } from "@/components/utils/compressionLevel";
 import { CUSTOM_SERVICE_PRINT_CSS } from "@/components/print/customServicePrintStyles";
 import { syncToSession } from "@/components/service/sessionSync";
+// Universal log (2026-02-19): Service creates/updates now logged for full audit trail
+import { logCreate, logUpdate } from "@/components/utils/editActionLogger";
 // Entity Lift L1.1: Load segments from Session/Segment entities when available
 import { loadCustomFromSession } from "@/components/service/customSessionSync";
 import SegmentTimelineCard from "@/components/service/custom-builder/SegmentTimelineCard";
