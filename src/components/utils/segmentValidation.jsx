@@ -55,10 +55,20 @@ export function validateAIActions(actions, context = {}, allowDraft = false) {
     actionIndex++;
 
     // Validate create_sessions
+    // 2026-02-19: Downgraded session.name from hard error to fixable so file
+    // imports can still proceed (admin fills name afterward). Without this,
+    // the Approve button is permanently disabled when the LLM omits names.
     if (action.type === 'create_sessions') {
       for (const [idx, sessionData] of (action.create_data || []).entries()) {
         if (!sessionData.name) {
-          errors.push(`Session ${idx + 1}: "name" is required`);
+          const warnMsg = `Session ${idx + 1}: "name" is recommended — admin should set it`;
+          warnings.push(warnMsg);
+          fixableErrors.push({
+            actionIndex: actionIndex - 1,
+            segmentIndex: idx,
+            field: 'name',
+            message: warnMsg
+          });
         }
         if (!sessionData.date) {
           // Downgraded: PDF docs often omit exact dates; admin will fix
