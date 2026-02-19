@@ -22,6 +22,7 @@ import { es } from "date-fns/locale";
 export default function AnnouncementsReport() {
   const { t } = useLanguage();
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
+  const { user } = useCurrentUser();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [showDialog, setShowDialog] = useState(false);
