@@ -31,6 +31,7 @@ export const SEGMENT_TYPE_REQUIRED_FIELDS = {
 
 // Map segment types to their missing fields for inline form display
 const FIELD_LABELS = {
+  name: "Nombre de Sesión / Session Name",
   message_title: "Mensaje Título / Message Title",
   number_of_songs: "Número de Canciones / Number of Songs",
   video_name: "Nombre del Video / Video Name",
