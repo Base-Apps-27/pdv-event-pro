@@ -27,31 +27,34 @@ export default function StreamBlockList({ sessionId, session, segments, sessionD
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.StreamBlock.create(data),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries(['streamBlocks', sessionId]);
       setShowForm(false);
       setEditingBlock(null);
       toast.success("Stream block created");
+      logCreate('StreamBlock', result, sessionId, currentUser || user);
     },
     onError: () => toast.error("Failed to create block")
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.StreamBlock.update(id, data),
-    onSuccess: () => {
+    mutationFn: ({ id, data, prev }) => base44.entities.StreamBlock.update(id, data).then(r => ({ result: r, prev })),
+    onSuccess: ({ result, prev }) => {
       queryClient.invalidateQueries(['streamBlocks', sessionId]);
       setShowForm(false);
       setEditingBlock(null);
       toast.success("Stream block updated");
+      if (prev) logUpdate('StreamBlock', prev.id, prev, result, sessionId, currentUser || user);
     },
     onError: () => toast.error("Failed to update block")
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.StreamBlock.delete(id),
-    onSuccess: () => {
+    mutationFn: ({ id }) => base44.entities.StreamBlock.delete(id),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['streamBlocks', sessionId]);
       toast.success("Block deleted");
+      if (variables.block) logDelete('StreamBlock', variables.block, sessionId, currentUser || user);
     }
   });
 
