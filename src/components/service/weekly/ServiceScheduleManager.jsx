@@ -301,13 +301,7 @@ export default function ServiceScheduleManager() {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => {
-                      if (confirm("¿Eliminar este horario?")) {
-                        deleteMutation.mutate(editingSchedule.id);
-                        setShowDialog(false);
-                        setEditingSchedule(null);
-                      }
-                    }}
+                    onClick={() => { setDeleteConfirmText(""); setShowDeleteConfirm(true); }}
                   >
                     <Trash2 className="w-4 h-4 mr-1" />
                     Eliminar
