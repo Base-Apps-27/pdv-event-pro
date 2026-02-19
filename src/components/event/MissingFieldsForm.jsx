@@ -58,7 +58,7 @@ export default function MissingFieldsForm({
                 return (
                   <div key={key} className="bg-white p-3 rounded border border-amber-200">
                     <p className="font-semibold text-amber-900 text-xs mb-2">
-                      {segmentLabel} ({segment?.segment_type})
+                      {segmentLabel}{segment?.segment_type ? ` (${segment.segment_type})` : ''}
                     </p>
 
                     <div className="space-y-2">
