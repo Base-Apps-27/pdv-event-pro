@@ -17,12 +17,18 @@ import { base44 } from "@/api/base44Client";
  * Generate a human-readable description of changes
  */
 function generateChangeDescription(entityType, actionType, fieldChanges, entityTitle) {
+  // UNIVERSAL LOG EXPANSION (2026-02-19): Added all new entity type labels.
   const entityNames = {
     Event: 'Evento',
     Session: 'Sesión',
     Segment: 'Segmento',
     EventDay: 'Día del Evento',
-    PreSessionDetails: 'Detalles Pre-Sesión'
+    PreSessionDetails: 'Detalles Pre-Sesión',
+    Service: 'Servicio',
+    ServiceSchedule: 'Horario Recurrente',
+    StreamBlock: 'Bloque de Stream',
+    AnnouncementItem: 'Anuncio',
+    AnnouncementSeries: 'Serie de Anuncios',
   };
   
   const actionNames = {
