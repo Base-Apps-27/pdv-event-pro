@@ -270,13 +270,22 @@ export async function getUndoableLogs(parentId = null, limit = 2) {
 
 /**
  * Entity SDK mapping for undo operations
+ * UNIVERSAL LOG EXPANSION (2026-02-19): Added Service, ServiceSchedule, StreamBlock,
+ * AnnouncementItem, AnnouncementSeries to enable platform-wide logging.
+ * All new entity types added here must also be covered in callers at their mutation sites.
  */
 const ENTITY_SDK_MAP = {
   Event: () => base44.entities.Event,
   Session: () => base44.entities.Session,
   Segment: () => base44.entities.Segment,
   EventDay: () => base44.entities.EventDay,
-  PreSessionDetails: () => base44.entities.PreSessionDetails
+  PreSessionDetails: () => base44.entities.PreSessionDetails,
+  // Expanded 2026-02-19 for universal log coverage:
+  Service: () => base44.entities.Service,
+  ServiceSchedule: () => base44.entities.ServiceSchedule,
+  StreamBlock: () => base44.entities.StreamBlock,
+  AnnouncementItem: () => base44.entities.AnnouncementItem,
+  AnnouncementSeries: () => base44.entities.AnnouncementSeries,
 };
 
 /**
