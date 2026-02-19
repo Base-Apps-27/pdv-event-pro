@@ -515,8 +515,11 @@ Deno.serve(async (req) => {
                 // FIX (2026-02-19): Calculate start_time/end_time for custom service JSON segments.
                 // Raw JSON segments from Service.segments[] lack timing fields. The TV display
                 // (PublicCountdownDisplay) and normalizeProgram both require start_time/end_time
-                // to function. Use service.time as the base, defaulting to "19:00" if absent.
-                const serviceStartTime = targetProgram.time || "19:00";
+                // to function. Use service.time first, then fall back to the linked session's
+                // planned_start_time (e.g. GRADUACIÓN DE ACADEMIA has no time but Session has 19:30),
+                // then default to "19:00".
+                const linkedSessionStartTime = sessions?.[0]?.planned_start_time || null;
+                const serviceStartTime = targetProgram.time || linkedSessionStartTime || "19:00";
                 const [baseH, baseM] = serviceStartTime.split(':').map(Number);
                 let curMin = baseH * 60 + baseM;
 
