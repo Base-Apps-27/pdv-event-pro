@@ -105,7 +105,7 @@ export default function StreamBlockList({ sessionId, session, segments, sessionD
 
   const handleDelete = (block) => {
     if (confirm(`Delete "${block.title}"?`)) {
-      deleteMutation.mutate(block.id);
+      deleteMutation.mutate({ id: block.id, block });
     }
   };
 
