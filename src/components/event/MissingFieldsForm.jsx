@@ -25,6 +25,7 @@ export default function MissingFieldsForm({
   isDraft
 }) {
   const { language } = useLanguage();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (!fixableErrors || fixableErrors.length === 0) return null;
 
@@ -40,15 +41,31 @@ export default function MissingFieldsForm({
 
   return (
     <div className="space-y-3">
-      <Card className="p-4 bg-amber-50 border-amber-200">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-          <div className="flex-1">
-            <h4 className="font-semibold text-amber-900 text-sm mb-3">
-              {language === 'es' ? 'Campos Requeridos Faltantes' : 'Missing Required Fields'}
+      <Card className="border-amber-200 overflow-hidden">
+        {/* Collapsible Header */}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full p-4 flex items-center gap-3 bg-amber-50 hover:bg-amber-100 transition-colors text-left"
+        >
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-amber-900 text-sm">
+              {language === 'es' ? 'Campos Opcionales' : 'Optional Fields'}
             </h4>
+            <p className="text-xs text-amber-700 mt-0.5">
+              {language === 'es' ? 'Expandir para completar' : 'Expand to fill in'}
+            </p>
+          </div>
+          {isExpanded ? (
+            <ChevronUp className="w-4 h-4 text-amber-600 flex-shrink-0" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-amber-600 flex-shrink-0" />
+          )}
+        </button>
 
-            <div className="space-y-4">
+        {/* Expandable Content */}
+        {isExpanded && (
+          <div className="p-4 bg-white border-t border-amber-200 space-y-4">
               {Object.entries(errorsBySegment).map(([key, errors]) => {
                 const [actionIndex, segmentIndex] = key.split('-').map(Number);
                 const action = proposedActions.actions?.[actionIndex];
