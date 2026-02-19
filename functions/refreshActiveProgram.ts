@@ -561,7 +561,11 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       // FIX (2026-02-19): Calculate start_time/end_time for custom service JSON segments.
       // Raw JSON segments from Service.segments[] lack timing fields. The TV display
       // (PublicCountdownDisplay) and normalizeProgram both require start_time/end_time.
-      const serviceStartTime = targetProgram.time || "19:00";
+      // Use service.time first, then fall back to the linked session's planned_start_time,
+      // then default to "19:00". This handles GRADUACIÓN DE ACADEMIA which has no service.time
+      // but has a Session with planned_start_time = "19:30".
+      const sessionStartTime = directSessions?.[0]?.planned_start_time || null;
+      const serviceStartTime = targetProgram.time || sessionStartTime || "19:00";
       const [baseH, baseM] = serviceStartTime.split(':').map(Number);
       let curMin = baseH * 60 + baseM;
 
