@@ -403,38 +403,61 @@ If uncertain which past event: {"type":"ask_event_clarification","message":"Whic
         }
         else if (action.type === 'create_segments') {
           for (const segmentData of action.create_data || []) {
-            let resolvedSessionId = segmentData.session_id;
+            // Collect all candidate references the LLM might have used
             const ref = segmentData.temp_session_ref;
+            const rawSessionId = segmentData.session_id;
+            // A "real" session ID is a 24-char hex string from MongoDB
+            const isRealId = rawSessionId && /^[a-f0-9]{24}$/i.test(rawSessionId);
+
+            let resolvedSessionId = null;
+
+            // 0) If session_id is already a real MongoDB ObjectId, use it directly
+            if (isRealId) {
+              resolvedSessionId = rawSessionId;
+            }
 
             // 1) Exact match on temp_session_ref
-            if (ref && sessionRefMap[ref]) {
+            if (!resolvedSessionId && ref && sessionRefMap[ref]) {
               resolvedSessionId = sessionRefMap[ref];
             }
-            // 2) Normalized match on temp_session_ref
+            // 2) Exact match on session_id as a temp ref key
+            if (!resolvedSessionId && rawSessionId && sessionRefMap[rawSessionId]) {
+              resolvedSessionId = sessionRefMap[rawSessionId];
+            }
+            // 3) Normalized match on temp_session_ref
             if (!resolvedSessionId && ref) {
               const normRef = normalizeRef(ref);
               if (sessionRefMap[normRef]) {
                 resolvedSessionId = sessionRefMap[normRef];
               }
             }
-            // 3) If session_id looks like a temp ref, resolve it
-            if (!resolvedSessionId && segmentData.session_id && sessionRefMap[segmentData.session_id]) {
-              resolvedSessionId = sessionRefMap[segmentData.session_id];
+            // 4) Normalized match on session_id
+            if (!resolvedSessionId && rawSessionId && !isRealId) {
+              const normSid = normalizeRef(rawSessionId);
+              if (sessionRefMap[normSid]) {
+                resolvedSessionId = sessionRefMap[normSid];
+              }
             }
-            // 4) Index-based fallback: extract "Sección N" or "Session N" number → use Nth created session
-            if (!resolvedSessionId && ref) {
-              const numMatch = ref.match(/(?:secci[oó]n|session|seccion)\s*(\d+)/i);
+            // 5) Index-based fallback: extract "Sección N" or "Session N" number
+            if (!resolvedSessionId) {
+              const refToSearch = ref || rawSessionId || '';
+              const numMatch = refToSearch.match(/(?:secci[oó]n|session|seccion|s)\s*(\d+)/i);
               if (numMatch) {
                 const idx = parseInt(numMatch[1]) - 1; // 0-based
                 if (idx >= 0 && idx < createdSessionIds.length) {
                   resolvedSessionId = createdSessionIds[idx];
-                  console.log(`[AI_EXEC] Segment ref="${ref}" resolved via index fallback → session index ${idx}`);
+                  console.log(`[AI_EXEC] Segment ref="${refToSearch}" resolved via index fallback → session index ${idx}`);
                 }
               }
             }
+            // 6) Last resort: if only one session was created, use it
+            if (!resolvedSessionId && createdSessionIds.length === 1) {
+              resolvedSessionId = createdSessionIds[0];
+              console.log(`[AI_EXEC] Single session fallback for segment "${segmentData.title}"`);
+            }
 
             if (!resolvedSessionId) {
-              console.warn(`[AI_EXEC] Could not resolve session for segment "${segmentData.title}", ref="${ref}". sessionRefMap keys:`, Object.keys(sessionRefMap));
+              console.warn(`[AI_EXEC] Could not resolve session for segment "${segmentData.title}", ref="${ref}", session_id="${rawSessionId}". sessionRefMap keys:`, Object.keys(sessionRefMap));
             }
 
             const { temp_session_ref, ...cleanSegData } = segmentData;
