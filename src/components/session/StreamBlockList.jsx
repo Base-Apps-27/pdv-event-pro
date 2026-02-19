@@ -9,6 +9,8 @@ import StreamBlockItem from "./StreamBlockItem";
 import StreamBlockForm from "./StreamBlockForm";
 import AIStreamHelper from "./AIStreamHelper";
 import { toast } from "sonner";
+// Universal log (2026-02-19): StreamBlock mutations now logged for full audit trail
+import { logCreate, logUpdate, logDelete } from "@/components/utils/editActionLogger";
 
 export default function StreamBlockList({ sessionId, session, segments, sessionDate, user }) {
   const [showForm, setShowForm] = useState(false);
