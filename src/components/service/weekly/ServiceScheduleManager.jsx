@@ -361,7 +361,7 @@ export default function ServiceScheduleManager() {
                 variant="destructive"
                 disabled={deleteConfirmText !== "ELIMINAR" || deleteMutation.isPending}
                 onClick={() => {
-                  deleteMutation.mutate(editingSchedule.id, {
+                  deleteMutation.mutate({ id: editingSchedule.id, schedule: editingSchedule }, {
                     onSuccess: () => {
                       setShowDeleteConfirm(false);
                       setDeleteConfirmText("");
