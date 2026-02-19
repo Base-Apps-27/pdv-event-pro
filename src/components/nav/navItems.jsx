@@ -146,4 +146,12 @@ export const adminNav = [
     permission: 'manage_users',
     matchPages: ['DependencyTracker'],
   },
+  {
+    id: 'activity-log',
+    labelKey: 'nav.activityLog',
+    icon: Activity,
+    page: 'ActivityLog',
+    permission: 'manage_users',
+    matchPages: ['ActivityLog'],
+  },
 ];
