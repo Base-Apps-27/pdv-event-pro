@@ -320,6 +320,56 @@ export default function ServiceScheduleManager() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation — requires typing the schedule name */}
+      <Dialog open={showDeleteConfirm} onOpenChange={(open) => { if (!open) { setShowDeleteConfirm(false); setDeleteConfirmText(""); } }}>
+        <DialogContent className="max-w-sm bg-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              Confirmar Eliminación
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-gray-700">
+              Esta acción eliminará el horario <strong>"{editingSchedule?.name}"</strong> de forma permanente. Esta acción no se puede deshacer.
+            </p>
+            <div className="space-y-1">
+              <Label className="text-sm text-gray-600">
+                Escribe <span className="font-mono font-bold text-gray-900">ELIMINAR</span> para confirmar:
+              </Label>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="ELIMINAR"
+                className="font-mono"
+                autoFocus
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}>
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={deleteConfirmText !== "ELIMINAR" || deleteMutation.isPending}
+                onClick={() => {
+                  deleteMutation.mutate(editingSchedule.id, {
+                    onSuccess: () => {
+                      setShowDeleteConfirm(false);
+                      setDeleteConfirmText("");
+                      setShowDialog(false);
+                      setEditingSchedule(null);
+                    }
+                  });
+                }}
+              >
+                {deleteMutation.isPending ? "Eliminando..." : "Eliminar Definitivamente"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
