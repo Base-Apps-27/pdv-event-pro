@@ -153,6 +153,15 @@ export default function StreamBlockList({ sessionId, session, segments, sessionD
         )}
       </div>
 
+      {/* AI Stream Helper */}
+      <AIStreamHelper
+        isOpen={showAIHelper}
+        onClose={() => setShowAIHelper(false)}
+        session={session || { id: sessionId }}
+        segments={segments || []}
+        onBlocksCreated={() => queryClient.invalidateQueries(['streamBlocks', sessionId])}
+      />
+
       {/* Editor Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden">
