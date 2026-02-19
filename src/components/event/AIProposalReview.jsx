@@ -107,26 +107,7 @@ export default function AIProposalReview({
                 </Card>
               )}
 
-              {hasWarnings && !hasErrors && (
-                <Card className="p-4 bg-amber-50 border-amber-200">
-                  <div className="flex items-start gap-3">
-                    <Info className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-amber-900 text-sm mb-2">
-                        {language === 'es' ? 'Advertencias' : 'Warnings'}
-                      </h4>
-                      <ul className="text-amber-800 text-xs space-y-1">
-                        {validation.warnings.map((warn, i) => (
-                          <li key={i} className="flex gap-2">
-                            <span className="text-amber-600">⚠</span>
-                            <span className="break-words">{warn}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </Card>
-              )}
+              {/* Warnings-only: suppressed — shown as compact note below instead */}
             </div>
           )}
 
@@ -142,25 +123,16 @@ export default function AIProposalReview({
             </Card>
           )}
 
-          {/* Warnings-only state — ready but with notes for admin */}
+          {/* Warnings-only state — compact single-line note, no list */}
           {!hasErrors && hasWarnings && (
-            <Card className="p-3 bg-amber-50 border-amber-200">
-              <div className="flex items-start gap-2 text-amber-900 text-sm">
-                <Info className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium">
-                    {language === 'es' 
-                      ? 'Listo para crear — algunos campos necesitan revisión después'
-                      : 'Ready to create — some fields need review afterward'}
-                  </p>
-                  <ul className="text-xs text-amber-800 mt-1 space-y-0.5">
-                    {validation.warnings.map((warn, i) => (
-                      <li key={i}>⚠ {warn}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </Card>
+            <div className="flex items-center gap-2 text-amber-700 text-xs bg-amber-50 border border-amber-200 rounded px-3 py-2">
+              <Info className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>
+                {language === 'es'
+                  ? `Listo para crear — ${validation.warnings.length} campo(s) opcionales pueden completarse después`
+                  : `Ready to create — ${validation.warnings.length} optional field(s) can be filled in afterward`}
+              </span>
+            </div>
           )}
 
           {/* Actions Summary */}

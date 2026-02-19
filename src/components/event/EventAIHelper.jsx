@@ -271,7 +271,13 @@ Determine if QUERY or ACTION. For actions, propose changes using these types:
 Alabanza, Plenaria, Bienvenida, Ofrenda, Video, Anuncio, Dinámica, Break, TechOnly, Oración, Especial, Cierre, MC, Ministración, Receso, Almuerzo, Artes, Breakout, Panel
 
 ## TYPE HINT → SEGMENT_TYPE MAPPING
-worship→Alabanza, sermon/message/plenaria→Plenaria, break→Break/Receso, lunch/dinner→Almuerzo, registration→TechOnly, arts/drama/dance→Artes, prayer→Oración, video→Video, announcements→Anuncio, MC→MC, offering→Ofrenda, welcome→Bienvenida, panel→Panel, closing→Cierre, special/other→Especial
+worship→Alabanza, sermon/message/plenaria→Plenaria, break→Break/Receso, lunch/dinner→Almuerzo, arts/drama/dance→Artes, prayer→Oración, video→Video, announcements→Anuncio, MC→MC, offering→Ofrenda, welcome→Bienvenida, panel→Panel, closing→Cierre, special/other→Especial
+
+## REGISTRATION HANDLING (IMPORTANT)
+"Registración" / "Registration" is NOT a segment. It is pre-session arrival/setup time.
+- Set the session's planned_start_time to the registration open time
+- Set the first actual program segment's start_time to when the program begins (after registration)
+- Do NOT create a segment for registration
 
 ## COLOR_CODE MAPPING
 worship→Alabanza/Ministración, preach→Plenaria, break→Break/Receso/Almuerzo, special→Artes/Especial, default→others. Almuerzo→major_break:true.
