@@ -104,7 +104,7 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
               items: {
                 type: "object",
                 properties: {
-                  name: { type: "string", description: "Session name (e.g. Sección 1 — Viernes PM)" },
+                  name: { type: "string", description: "Session name derived from section labels (e.g. 'Sección 1 — Viernes 13 de marzo'). MUST NOT be empty." },
                   date: { type: "string", description: "Date if found (YYYY-MM-DD)" },
                   start_time: { type: "string", description: "Earliest time in session (HH:MM 24h)" },
                   end_time: { type: "string", description: "Latest end time in session (HH:MM 24h)" },
