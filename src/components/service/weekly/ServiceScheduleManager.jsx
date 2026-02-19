@@ -34,6 +34,9 @@ export default function ServiceScheduleManager() {
   const queryClient = useQueryClient();
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
+  // Double-confirmation state for destructive delete
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const { data: schedules = [], isLoading } = useQuery({
     queryKey: ['serviceSchedules'],
