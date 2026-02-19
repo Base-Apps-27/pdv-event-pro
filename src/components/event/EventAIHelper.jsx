@@ -346,7 +346,16 @@ If uncertain which past event: {"type":"ask_event_clarification","message":"Whic
 
     try {
       let totalAffected = 0;
+      // Session reference map: multiple keys → real session ID
+      // Keys include: temp_session_ref, name, session_N (0-based and 1-based), normalized variants
       const sessionRefMap = {};
+      // Ordered list of created session IDs for index-based fallback
+      const createdSessionIds = [];
+
+      // Normalize helper: lowercase, collapse whitespace, strip dashes/accents for fuzzy match
+      const normalizeRef = (s) => (s || '').trim().toLowerCase()
+        .replace(/[\u2014\u2013\u2012\u2011\u2010—–-]+/g, '-') // normalize all dash types
+        .replace(/\s+/g, ' ');
       
       for (const action of actionsToExecute) {
         if (action.type === 'create_sessions') {
@@ -362,10 +371,23 @@ If uncertain which past event: {"type":"ask_event_clarification","message":"Whic
               event_id: eventId,
               ...cleanData
             });
-            sessionRefMap[tempRef] = newSession.id;
-            sessionRefMap[`session_${i}`] = newSession.id;
-            sessionRefMap[`session_${i + 1}`] = newSession.id;
-            if (sessionData.name) sessionRefMap[sessionData.name] = newSession.id;
+            const sid = newSession.id;
+            createdSessionIds.push(sid);
+
+            // Register all possible keys for this session
+            sessionRefMap[tempRef] = sid;
+            sessionRefMap[normalizeRef(tempRef)] = sid;
+            sessionRefMap[`session_${i}`] = sid;
+            if (sessionData.name) {
+              sessionRefMap[sessionData.name] = sid;
+              sessionRefMap[normalizeRef(sessionData.name)] = sid;
+            }
+            if (temp_session_ref && temp_session_ref !== tempRef) {
+              sessionRefMap[temp_session_ref] = sid;
+              sessionRefMap[normalizeRef(temp_session_ref)] = sid;
+            }
+
+            console.log(`[AI_EXEC] Session ${i} created: id=${sid}, keys=[${tempRef}]`);
             totalAffected++;
           }
         }
@@ -382,12 +404,39 @@ If uncertain which past event: {"type":"ask_event_clarification","message":"Whic
         else if (action.type === 'create_segments') {
           for (const segmentData of action.create_data || []) {
             let resolvedSessionId = segmentData.session_id;
-            if (segmentData.temp_session_ref && sessionRefMap[segmentData.temp_session_ref]) {
-              resolvedSessionId = sessionRefMap[segmentData.temp_session_ref];
+            const ref = segmentData.temp_session_ref;
+
+            // 1) Exact match on temp_session_ref
+            if (ref && sessionRefMap[ref]) {
+              resolvedSessionId = sessionRefMap[ref];
             }
-            if (resolvedSessionId && sessionRefMap[resolvedSessionId]) {
-              resolvedSessionId = sessionRefMap[resolvedSessionId];
+            // 2) Normalized match on temp_session_ref
+            if (!resolvedSessionId && ref) {
+              const normRef = normalizeRef(ref);
+              if (sessionRefMap[normRef]) {
+                resolvedSessionId = sessionRefMap[normRef];
+              }
             }
+            // 3) If session_id looks like a temp ref, resolve it
+            if (!resolvedSessionId && segmentData.session_id && sessionRefMap[segmentData.session_id]) {
+              resolvedSessionId = sessionRefMap[segmentData.session_id];
+            }
+            // 4) Index-based fallback: extract "Sección N" or "Session N" number → use Nth created session
+            if (!resolvedSessionId && ref) {
+              const numMatch = ref.match(/(?:secci[oó]n|session|seccion)\s*(\d+)/i);
+              if (numMatch) {
+                const idx = parseInt(numMatch[1]) - 1; // 0-based
+                if (idx >= 0 && idx < createdSessionIds.length) {
+                  resolvedSessionId = createdSessionIds[idx];
+                  console.log(`[AI_EXEC] Segment ref="${ref}" resolved via index fallback → session index ${idx}`);
+                }
+              }
+            }
+
+            if (!resolvedSessionId) {
+              console.warn(`[AI_EXEC] Could not resolve session for segment "${segmentData.title}", ref="${ref}". sessionRefMap keys:`, Object.keys(sessionRefMap));
+            }
+
             const { temp_session_ref, ...cleanSegData } = segmentData;
             const validTypes = ["Alabanza","Bienvenida","Ofrenda","Plenaria","Video","Anuncio","Dinámica","Break","TechOnly","Oración","Especial","Cierre","MC","Ministración","Receso","Almuerzo","Artes","Breakout","Panel"];
             if (cleanSegData.segment_type && !validTypes.includes(cleanSegData.segment_type)) {
