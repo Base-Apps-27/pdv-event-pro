@@ -35,6 +35,7 @@ const SESSION_COLORS = ["green", "blue", "red", "purple", "orange", "yellow", "p
 
 export default function ServiceScheduleManager() {
   const queryClient = useQueryClient();
+  const { user } = useCurrentUser();
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   // Double-confirmation state for destructive delete
