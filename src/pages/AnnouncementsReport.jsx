@@ -147,7 +147,7 @@ export default function AnnouncementsReport() {
       e.preventDefault();
       const data = { ...formData, priority: parseInt(formData.priority) };
       if (editingItem) {
-          updateMutation.mutate({ id: editingItem.id, data });
+          updateMutation.mutate({ id: editingItem.id, data, prev: editingItem });
       } else {
           createMutation.mutate(data);
       }
