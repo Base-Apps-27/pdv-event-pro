@@ -83,7 +83,7 @@ export default function StreamBlockList({ sessionId, session, segments, sessionD
 
   const handleSave = (data) => {
     if (editingBlock) {
-      updateMutation.mutate({ id: editingBlock.id, data });
+      updateMutation.mutate({ id: editingBlock.id, data, prev: editingBlock });
     } else {
       createMutation.mutate({
         ...data,
