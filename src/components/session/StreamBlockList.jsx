@@ -119,9 +119,14 @@ export default function StreamBlockList({ sessionId, session, segments, sessionD
             <HelpTooltip helpKey="stream.overview" />
           </div>
         </div>
-        <Button onClick={openNew} size="sm" className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-1" /> Add Block
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowAIHelper(true)} size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50">
+            <Sparkles className="w-4 h-4 mr-1" /> IA Stream
+          </Button>
+          <Button onClick={openNew} size="sm" className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4 mr-1" /> Add Block
+          </Button>
+        </div>
       </div>
 
       {/* Block List */}
