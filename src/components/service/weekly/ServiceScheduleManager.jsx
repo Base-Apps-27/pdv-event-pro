@@ -51,24 +51,27 @@ export default function ServiceScheduleManager() {
     mutationFn: async (data) => {
       if (data.id) {
         const { id, created_date, updated_date, created_by, ...updateData } = data;
-        return base44.entities.ServiceSchedule.update(id, updateData);
+        return base44.entities.ServiceSchedule.update(id, updateData).then(r => ({ result: r, prev: data, isUpdate: true }));
       }
-      return base44.entities.ServiceSchedule.create(data);
+      return base44.entities.ServiceSchedule.create(data).then(r => ({ result: r, isUpdate: false }));
     },
-    onSuccess: () => {
+    onSuccess: ({ result, prev, isUpdate }) => {
       queryClient.invalidateQueries(['serviceSchedules']);
       setShowDialog(false);
       setEditingSchedule(null);
       toast.success("Horario guardado");
+      if (isUpdate) logUpdate('ServiceSchedule', result.id, prev, result, null, user);
+      else logCreate('ServiceSchedule', result, null, user);
     },
     onError: (err) => toast.error("Error: " + err.message),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.ServiceSchedule.delete(id),
-    onSuccess: () => {
+    mutationFn: ({ id }) => base44.entities.ServiceSchedule.delete(id),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['serviceSchedules']);
       toast.success("Horario eliminado");
+      if (variables.schedule) logDelete('ServiceSchedule', variables.schedule, null, user);
     },
   });
 
