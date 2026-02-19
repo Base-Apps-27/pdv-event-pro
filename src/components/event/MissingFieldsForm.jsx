@@ -96,26 +96,25 @@ export default function MissingFieldsForm({
                   </div>
                 );
               })}
-            </div>
-
-            {/* Draft Checkbox */}
-            <div className="mt-4 pt-3 border-t border-amber-200 flex items-center gap-2">
-              <Checkbox
-                id="draft-checkbox"
-                checked={isDraft}
-                onCheckedChange={onDraftToggle}
-              />
-              <Label
-                htmlFor="draft-checkbox"
-                className="text-xs text-amber-800 font-medium cursor-pointer"
-              >
-                {language === 'es'
-                  ? 'Continuar como borrador (llenar campos más tarde)'
-                  : 'Continue as draft (fill fields later)'}
-              </Label>
-            </div>
           </div>
-        </div>
+
+          {/* Draft Checkbox */}
+          <div className="pt-3 border-t border-amber-200 flex items-center gap-2">
+            <Checkbox
+              id="draft-checkbox"
+              checked={isDraft}
+              onCheckedChange={onDraftToggle}
+            />
+            <Label
+              htmlFor="draft-checkbox"
+              className="text-xs text-amber-800 font-medium cursor-pointer"
+            >
+              {language === 'es'
+                ? 'Continuar como borrador (llenar campos más tarde)'
+                : 'Continue as draft (fill fields later)'}
+            </Label>
+          </div>
+        )}
       </Card>
     </div>
   );
