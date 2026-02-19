@@ -87,9 +87,18 @@ export default function ServiceProgramView({
   // ═══════════════════════════════════════════════════════════════════
   // ENTITY LIFT: Determine data source — entities vs JSON fallback
   // ═══════════════════════════════════════════════════════════════════
-  // Entity path: sessions[] + allSegments[] from getPublicProgramData
-  // JSON path: actualServiceData["9:30am"][] / .segments[]
-  const useEntityPath = sessions.length > 0 && allSegments.length > 0;
+  // Entity path: sessions[] + allSegments[] from Session/Segment entities.
+  // Segments MUST have session_id linking them to a real Session entity.
+  // FIX (2026-02-19): Raw JSON fallback segments (from targetProgram.segments)
+  // also appear in allSegments but lack session_id. We must distinguish:
+  //   - Entity segments: have session_id matching a real session.id
+  //   - JSON fallback segments: have no session_id or synthetic ones like "slot-X-Y"
+  const useEntityPath = useMemo(() => {
+    if (sessions.length === 0 || allSegments.length === 0) return false;
+    // Verify at least one segment actually links to a real session
+    const sessionIds = new Set(sessions.map(s => s.id));
+    return allSegments.some(seg => sessionIds.has(seg.session_id));
+  }, [sessions, allSegments]);
 
   // ── Entity-sourced: group segments by session for slot rendering ──
   const entitySessionSlots = useMemo(() => {
