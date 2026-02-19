@@ -65,7 +65,8 @@ export default function MissingFieldsForm({
 
         {/* Expandable Content */}
         {isExpanded && (
-          <div className="p-4 bg-white border-t border-amber-200 space-y-4">
+          <div className="p-4 bg-white border-t border-amber-200">
+            <div className="space-y-4 mb-4">
               {Object.entries(errorsBySegment).map(([key, errors]) => {
                 const [actionIndex, segmentIndex] = key.split('-').map(Number);
                 const action = proposedActions.actions?.[actionIndex];
@@ -96,23 +97,24 @@ export default function MissingFieldsForm({
                   </div>
                 );
               })}
-          </div>
+            </div>
 
-          {/* Draft Checkbox */}
-          <div className="pt-3 border-t border-amber-200 flex items-center gap-2">
-            <Checkbox
-              id="draft-checkbox"
-              checked={isDraft}
-              onCheckedChange={onDraftToggle}
-            />
-            <Label
-              htmlFor="draft-checkbox"
-              className="text-xs text-amber-800 font-medium cursor-pointer"
-            >
-              {language === 'es'
-                ? 'Continuar como borrador (llenar campos más tarde)'
-                : 'Continue as draft (fill fields later)'}
-            </Label>
+            {/* Draft Checkbox */}
+            <div className="pt-3 border-t border-amber-200 flex items-center gap-2">
+              <Checkbox
+                id="draft-checkbox"
+                checked={isDraft}
+                onCheckedChange={onDraftToggle}
+              />
+              <Label
+                htmlFor="draft-checkbox"
+                className="text-xs text-amber-800 font-medium cursor-pointer"
+              >
+                {language === 'es'
+                  ? 'Continuar como borrador (llenar campos más tarde)'
+                  : 'Continue as draft (fill fields later)'}
+              </Label>
+            </div>
           </div>
         )}
       </Card>
