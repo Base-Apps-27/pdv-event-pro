@@ -531,7 +531,6 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
     setProposedActions(null);
     setQueryResult(null);
     setExecutionStatus(null);
-    setValidation(null);
     setShowReview(false);
     setClarificationOptions(null);
     setShowClarification(false);
