@@ -210,7 +210,7 @@ export default function PublicProgramSegment({
   return (
     <div 
       id={domId}
-      className={`p-3 sm:p-4 transition-all duration-300 scroll-mt-24 ${getContainerStyles()}`}
+      className={`${timelineMode ? '' : 'p-3 sm:p-4'} transition-all duration-300 scroll-mt-24 ${getContainerStyles()}`}
     >
       {/* Live Director Status Badges (Hold/Skip/Shift) */}
       {segment.live_hold_status === 'held' && (
