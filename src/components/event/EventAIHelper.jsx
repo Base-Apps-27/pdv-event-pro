@@ -87,6 +87,7 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
   });
 
   // ── Step 1: Extract structured data from file (fast, no LLM vision) ──
+  // 2026-02-20: Strengthened schema descriptions to prevent session merging/skipping
   const extractFileData = async () => {
     if (!attachedFileUrl) return null;
     setProcessingStep("extracting");
@@ -98,37 +99,37 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
           properties: {
             sessions: {
               type: "array",
-              description: "ALL sessions/sections found in the document, in chronological order. A session is any distinct time block in the schedule (e.g. morning session, afternoon session, evening session). Look for section headers, day labels, time gaps, or meal breaks as session boundaries. Include EVERY session — do not merge or skip any. Typical event has 2-6 sessions per day.",
+              description: "CRITICAL: Extract ALL sessions/sections EXACTLY as labeled in the document. Look for explicit section headers like 'SECCIÓN 1', 'SECCIÓN 2', 'SESSION 1', etc. and create ONE session per labeled section. Do NOT merge sections. Do NOT create sessions for meal breaks (Almuerzo/Lunch) — those are segments within a session. If the document shows 4 sections (SECCIÓN 1, SECCIÓN 2, SECCIÓN 3, SECCIÓN 4), you MUST return exactly 4 sessions. Typical events have 1-2 sessions per day, 2-6 sessions total across multiple days.",
               items: {
                 type: "object",
                 properties: {
-                  name: { type: "string", description: "Session name derived from section labels (e.g. 'Sección 1 — Viernes 13 de marzo'). If no label exists, use 'Sesión N — Day/Date'. MUST NOT be empty." },
-                  date: { type: "string", description: "Date if found (YYYY-MM-DD)" },
-                  start_time: { type: "string", description: "Earliest time in session (HH:MM 24h)" },
-                  end_time: { type: "string", description: "Latest end time in session (HH:MM 24h)" },
+                  name: { type: "string", description: "EXACT session name from the document's section header (e.g. 'SECCIÓN 1 VIERNES 13 DE MARZO' → 'Sección 1 — Viernes 13 de marzo'). Copy the section label exactly, just clean up formatting. NEVER leave empty." },
+                  date: { type: "string", description: "Date in YYYY-MM-DD format extracted from the section header" },
+                  start_time: { type: "string", description: "First activity time in this section (HH:MM 24h). For registration sessions, use registration time." },
+                  end_time: { type: "string", description: "Last activity end time in this section (HH:MM 24h). Include meal breaks that end the session." },
                   segments: {
                     type: "array",
-                    description: "ALL time blocks within this session, in order. Include every item listed in the schedule.",
+                    description: "ALL schedule items listed under this section header, in chronological order. Include registration, breaks, meals, etc. as segments. Every line item with a time = one segment.",
                     items: {
                       type: "object",
                       properties: {
-                        title: { type: "string" },
+                        title: { type: "string", description: "Activity name as written in the document" },
                         type_hint: { type: "string", description: "Best guess: worship, sermon, break, lunch, registration, arts, drama, dance, prayer, video, announcements, MC, offering, welcome, panel, closing, special, other" },
-                        start_time: { type: "string", description: "HH:MM 24h if visible" },
-                        duration_min: { type: "number", description: "Duration in minutes if stated or calculable" },
-                        presenter: { type: "string", description: "Speaker/leader name if listed" },
-                        message_title: { type: "string", description: "Sermon/message title if this is a sermon" },
-                        notes: { type: "string", description: "Any extra details from the document" }
+                        start_time: { type: "string", description: "HH:MM 24h format" },
+                        duration_min: { type: "number", description: "Duration in minutes if stated (look for patterns like '60min', '10 mins', or calculate from time gaps)" },
+                        presenter: { type: "string", description: "Speaker/leader name if listed (e.g. 'A. Tere Paz', 'Laura Paz')" },
+                        message_title: { type: "string", description: "Message/sermon title if this is a sermon/plenaria (e.g. 'Autor de La Vida', 'Plenitud de Vida')" },
+                        notes: { type: "string", description: "Any parenthetical notes or extra details" }
                       }
                     }
                   }
                 }
               }
             },
-            event_name: { type: "string", description: "Event name if found in document" },
+            event_name: { type: "string", description: "Event name/title from document header" },
             event_dates: { type: "string", description: "Date range if found" },
             event_location: { type: "string", description: "Venue if found" },
-            raw_notes: { type: "string", description: "Any other important info from the document" }
+            raw_notes: { type: "string", description: "Any other important info" }
           }
         }
       });
