@@ -241,7 +241,7 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
       }
 
       const fileSection = hasExtractedData
-        ? `\n## EXTRACTED SCHEDULE DATA (from uploaded file)\n${JSON.stringify(extractedSchedule, null, 2)}\n\nCRITICAL: Map ALL ${extractedSchedule.sessions.length} sessions above to create_sessions_with_segments actions. Do NOT skip or merge any sessions. Each extracted session = one session in your output.`
+        ? `\n## EXTRACTED SCHEDULE DATA (from uploaded file)\n${JSON.stringify(extractedSchedule, null, 2)}\n\nCRITICAL RULES FOR FILE IMPORT:\n1. Create EXACTLY ${extractedSchedule.sessions.length} sessions — one for each session in the extracted data above.\n2. Do NOT merge sessions. Do NOT skip sessions. Do NOT create extra sessions.\n3. Each session's segments array should contain ALL segments from that session in the extracted data.\n4. "Almuerzo" (lunch) is a SEGMENT with segment_type "Almuerzo" and major_break:true — NOT a separate session.\n5. "Registration" entries become segments with segment_type "TechOnly" or can be omitted (session start_time captures this).`
         : attachedFileUrl
           ? `\n## ATTACHED FILE\nAnalyze the attached file and extract sessions/segments from it.`
           : '';
