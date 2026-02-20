@@ -130,6 +130,18 @@ export default function SessionEditorCard({
               onMove={(toSessionKey) => onMoveSegment(session._key, seg._key, toSessionKey)}
             />
           ))}
+          {/* Improvement #3: Add Segment button per session */}
+          <div className="px-3 py-1.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full h-7 text-xs text-gray-400 hover:text-gray-600 border border-dashed border-gray-200 hover:border-gray-300"
+              onClick={() => onAddSegment(session._key)}
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              {language === 'es' ? 'Agregar segmento' : 'Add segment'}
+            </Button>
+          </div>
         </div>
       )}
     </Card>
