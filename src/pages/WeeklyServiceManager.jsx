@@ -139,12 +139,16 @@ export default function WeeklyServiceManager() {
   const [activeDay, setActiveDay] = useState('sunday');
 
   // ── Queries ──
+  // SEGMENT-DISAPPEAR-FIX (2026-02-20): Added staleTime to prevent background
+  // refetches from producing new object references that cascade into re-renders
+  // and potential state corruption. Blueprint data rarely changes mid-session.
   const { data: blueprintData } = useQuery({
     queryKey: ['serviceBlueprint'],
     queryFn: async () => {
       const blueprints = await base44.entities.Service.filter({ status: 'blueprint' });
       return blueprints[0] || null;
-    }
+    },
+    staleTime: 10 * 60 * 1000, // 10 min — blueprint rarely changes
   });
 
   // Fetch services for the full week surrounding selectedDate to populate weekday tabs
