@@ -341,26 +341,17 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
   };
 
   /**
-   * executeActions — Two-phase execution (2026-02-20 rewrite)
+   * executeActions — Atomic session+segments execution (2026-02-20 v3)
    *
-   * Root cause of previous failures: The old code iterated actions sequentially.
-   * When the LLM placed create_sessions and create_segments as separate action
-   * objects, sessions were created one-at-a-time interleaved with segment
-   * creation attempts. The sessionRefMap was only partially populated when
-   * segments tried to resolve their session_id.
+   * ARCHITECTURE: The LLM now returns "create_sessions_with_segments" actions
+   * where each session object carries a "segments" array. This eliminates
+   * cross-referencing entirely:
+   *   1. Create session → get real ID
+   *   2. Create each child segment with that real ID
+   *   3. Move to next session
    *
-   * New architecture:
-   *   PHASE 1: Collect ALL create_sessions from ALL actions → create them ALL
-   *            → build a complete sessionRefMap before any segment is touched.
-   *   PHASE 2: Collect ALL create_segments → resolve each segment's session
-   *            using the now-complete ref map.
-   *   PHASE 3: Process updates (sessions, segments, event).
-   *
-   * Session resolution priority (Phase 2):
-   *   A) temp_session_ref exact match in refMap
-   *   B) Index extraction ("Sección 3" → createdSessionIds[2])
-   *   C) Single-session fallback (only 1 session → use it)
-   *   D) null — segment created anyway, logged for admin to fix
+   * Backward compat: Still handles legacy create_sessions / create_segments
+   * in case the LLM falls back to the old format.
    */
   const executeActions = async (actions = null, isDraft = false) => {
     const actionsToExecute = actions || proposedActions?.actions;
@@ -379,126 +370,95 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
     try {
       let totalAffected = 0;
 
-      // ── Separate all actions by type upfront ──
-      const allSessionCreates = [];  // { data, index }
-      const allSegmentCreates = [];  // { data }
-      const updateActions = [];      // update_sessions, update_segments, update_event
-
       for (const action of actionsToExecute) {
-        if (action.type === 'create_sessions') {
-          (action.create_data || []).forEach((sd, i) => {
-            allSessionCreates.push({ data: sd, index: i });
-          });
-        } else if (action.type === 'create_segments') {
-          (action.create_data || []).forEach((seg) => {
-            allSegmentCreates.push({ data: seg });
-          });
-        } else {
-          updateActions.push(action);
-        }
-      }
+        // ── PRIMARY PATH: Atomic session + segments ──
+        if (action.type === 'create_sessions_with_segments') {
+          for (let i = 0; i < (action.create_data || []).length; i++) {
+            const sessionData = action.create_data[i];
+            // Extract segments array from the session object
+            const { segments: childSegments, temp_session_ref, ...cleanSessionData } = sessionData;
 
-      console.log(`[AI_EXEC] Plan: ${allSessionCreates.length} sessions, ${allSegmentCreates.length} segments, ${updateActions.length} updates`);
+            if (!cleanSessionData.name) cleanSessionData.name = `Sesión ${i + 1}`;
 
-      // ── PHASE 1: Create ALL sessions, build complete ref map ──
-      const sessionRefMap = {};       // temp_session_ref | name | session_N → real ID
-      const createdSessionIds = [];   // ordered list of real IDs
+            // 1. Create the session
+            const newSession = await base44.entities.Session.create({
+              event_id: eventId,
+              order: cleanSessionData.order ?? (i + 1),
+              ...cleanSessionData
+            });
+            const sessionId = newSession.id;
+            console.log(`[AI_EXEC] Session[${i}] created: id=${sessionId}, name="${cleanSessionData.name}"`);
+            totalAffected++;
 
-      for (let i = 0; i < allSessionCreates.length; i++) {
-        const { data: sessionData } = allSessionCreates[i];
-        const tempRef = sessionData.temp_session_ref || sessionData.name || `session_${i}`;
-        const { temp_session_ref, ...cleanData } = sessionData;
-
-        if (!cleanData.name) cleanData.name = `Sesión ${i + 1}`;
-
-        const newSession = await base44.entities.Session.create({
-          event_id: eventId,
-          order: cleanData.order ?? (i + 1),
-          ...cleanData
-        });
-
-        const sid = newSession.id;
-        createdSessionIds.push(sid);
-
-        // Register every key variant the LLM might use to reference this session
-        sessionRefMap[tempRef] = sid;
-        sessionRefMap[`session_${i}`] = sid;
-        if (sessionData.name) sessionRefMap[sessionData.name] = sid;
-        if (temp_session_ref && temp_session_ref !== tempRef) {
-          sessionRefMap[temp_session_ref] = sid;
-        }
-
-        console.log(`[AI_EXEC] P1: Session[${i}] created → id=${sid}, ref="${tempRef}", name="${cleanData.name}"`);
-        totalAffected++;
-      }
-
-      console.log(`[AI_EXEC] P1 done. ${createdSessionIds.length} sessions. RefMap: [${Object.keys(sessionRefMap).join(', ')}]`);
-
-      // ── PHASE 2: Create ALL segments, resolve session links ──
-      for (let i = 0; i < allSegmentCreates.length; i++) {
-        const segmentData = allSegmentCreates[i].data;
-        const ref = segmentData.temp_session_ref;
-        const rawSessionId = segmentData.session_id;
-        const isRealId = rawSessionId && /^[a-f0-9]{24}$/i.test(rawSessionId);
-
-        let resolvedSessionId = null;
-
-        // A) Real MongoDB ObjectId — pass through
-        if (isRealId) {
-          resolvedSessionId = rawSessionId;
-        }
-
-        // B) Exact match on temp_session_ref in refMap
-        if (!resolvedSessionId && ref && sessionRefMap[ref]) {
-          resolvedSessionId = sessionRefMap[ref];
-        }
-
-        // C) Exact match on session_id as a ref key (LLM sometimes puts ref in session_id)
-        if (!resolvedSessionId && rawSessionId && !isRealId && sessionRefMap[rawSessionId]) {
-          resolvedSessionId = sessionRefMap[rawSessionId];
-        }
-
-        // D) Index extraction: "Sección 3" → createdSessionIds[2]
-        if (!resolvedSessionId) {
-          const candidate = ref || rawSessionId || '';
-          const numMatch = candidate.match(/(?:secci[oó]n|session|sesion|seccion|s)\s*(\d+)/i);
-          if (numMatch) {
-            const idx = parseInt(numMatch[1]) - 1;
-            if (idx >= 0 && idx < createdSessionIds.length) {
-              resolvedSessionId = createdSessionIds[idx];
+            // 2. Create each child segment with the real session ID — no ref resolution needed
+            if (childSegments?.length > 0) {
+              for (let j = 0; j < childSegments.length; j++) {
+                const { temp_session_ref: _ref, session_id: _sid, ...cleanSegData } = childSegments[j];
+                if (cleanSegData.segment_type && !VALID_SEGMENT_TYPES.includes(cleanSegData.segment_type)) {
+                  cleanSegData.segment_type = "Especial";
+                }
+                await base44.entities.Segment.create({
+                  session_id: sessionId,
+                  order: cleanSegData.order ?? (j + 1),
+                  ...cleanSegData
+                });
+                totalAffected++;
+              }
+              console.log(`[AI_EXEC] Session[${i}]: ${childSegments.length} segments created`);
             }
           }
         }
+        // ── LEGACY COMPAT: Separate create_sessions (without segments) ──
+        else if (action.type === 'create_sessions') {
+          for (let i = 0; i < (action.create_data || []).length; i++) {
+            const { temp_session_ref, segments: childSegments, ...cleanData } = action.create_data[i];
+            if (!cleanData.name) cleanData.name = `Sesión ${i + 1}`;
+            const newSession = await base44.entities.Session.create({
+              event_id: eventId,
+              order: cleanData.order ?? (i + 1),
+              ...cleanData
+            });
+            console.log(`[AI_EXEC] Legacy session[${i}] created: id=${newSession.id}`);
+            totalAffected++;
 
-        // E) Single session fallback
-        if (!resolvedSessionId && createdSessionIds.length === 1) {
-          resolvedSessionId = createdSessionIds[0];
+            // If segments were nested even in legacy format, handle them
+            if (childSegments?.length > 0) {
+              for (let j = 0; j < childSegments.length; j++) {
+                const { temp_session_ref: _r, session_id: _s, ...cleanSegData } = childSegments[j];
+                if (cleanSegData.segment_type && !VALID_SEGMENT_TYPES.includes(cleanSegData.segment_type)) {
+                  cleanSegData.segment_type = "Especial";
+                }
+                await base44.entities.Segment.create({
+                  session_id: newSession.id,
+                  order: cleanSegData.order ?? (j + 1),
+                  ...cleanSegData
+                });
+                totalAffected++;
+              }
+              console.log(`[AI_EXEC] Legacy session[${i}]: ${childSegments.length} inline segments created`);
+            }
+          }
         }
-
-        if (!resolvedSessionId) {
-          console.warn(`[AI_EXEC] P2: UNRESOLVED session for seg[${i}] "${segmentData.title}", ref="${ref}", sid="${rawSessionId}"`);
-        } else {
-          console.log(`[AI_EXEC] P2: seg[${i}] "${segmentData.title}" → session=${resolvedSessionId}`);
+        // ── LEGACY COMPAT: Standalone create_segments (orphan risk — log warning) ──
+        else if (action.type === 'create_segments') {
+          console.warn(`[AI_EXEC] Legacy create_segments detected — segments may be orphaned without session_id`);
+          for (const segmentData of action.create_data || []) {
+            const { temp_session_ref: _r, ...cleanSegData } = segmentData;
+            const rawSessionId = cleanSegData.session_id;
+            const isRealId = rawSessionId && /^[a-f0-9]{24}$/i.test(rawSessionId);
+            if (!isRealId) {
+              console.warn(`[AI_EXEC] Segment "${cleanSegData.title}" has non-ObjectId session_id="${rawSessionId}" — will be null`);
+              delete cleanSegData.session_id;
+            }
+            if (cleanSegData.segment_type && !VALID_SEGMENT_TYPES.includes(cleanSegData.segment_type)) {
+              cleanSegData.segment_type = "Especial";
+            }
+            await base44.entities.Segment.create(cleanSegData);
+            totalAffected++;
+          }
         }
-
-        // Strip temp fields, validate enum, create
-        const { temp_session_ref: _r, session_id: _s, ...cleanSegData } = segmentData;
-        if (cleanSegData.segment_type && !VALID_SEGMENT_TYPES.includes(cleanSegData.segment_type)) {
-          cleanSegData.segment_type = "Especial";
-        }
-
-        await base44.entities.Segment.create({
-          session_id: resolvedSessionId,
-          ...cleanSegData
-        });
-        totalAffected++;
-      }
-
-      console.log(`[AI_EXEC] P2 done. ${allSegmentCreates.length} segments created.`);
-
-      // ── PHASE 3: Process updates ──
-      for (const action of updateActions) {
-        if (action.type === 'update_sessions') {
+        // ── Updates ──
+        else if (action.type === 'update_sessions') {
           const targetIds = action.target_ids === 'all' 
             ? sessions.map(s => s.id) 
             : action.target_ids;
