@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sparkles, Send, CheckCircle2, Loader2, Undo2 } from "lucide-react";
+import { Sparkles, Send, CheckCircle2, Loader2, Undo2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/components/utils/i18n";
 import { validateAIActions, VALID_SEGMENT_TYPES } from "@/components/utils/segmentValidation";
