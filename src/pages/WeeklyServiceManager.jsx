@@ -309,6 +309,9 @@ export default function WeeklyServiceManager() {
       queryClient.invalidateQueries(['weeklyService', selectedDate]);
       setLastSaveTimestamp(new Date().toISOString());
       setHasUnsavedChanges(false);
+      // H-ARCH-4 FIX (2026-02-20): Update stale guard baseline after successful save
+      // so next concurrent-edit check compares against OUR latest save, not the original load.
+      if (result?.updated_date) captureServiceBaseline(result.updated_date);
       const backupKey = `service_backup_${selectedDate}`;
       safeSetItem(backupKey, JSON.stringify({ data: result, timestamp: new Date().toISOString() }));
 
