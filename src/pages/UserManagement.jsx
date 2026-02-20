@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Users, Search, Shield, Mail, Calendar, Edit2, Plus, Minus, CheckSquare, Square, UserCog } from "lucide-react";
 import { toast } from "sonner";
-import { getAllPermissionDefinitions } from "@/components/utils/permissions";
+import { getAllPermissionDefinitions, DEFAULT_ROLE_PERMISSIONS } from "@/components/utils/permissions";
 import { useLanguage } from "@/components/utils/i18n";
 
 export default function UserManagement() {
