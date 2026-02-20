@@ -577,8 +577,8 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
             </div>
           )}
 
-          {/* Input Area */}
-          {!proposedActions && !queryResult && executionStatus !== 'success' && (
+          {/* Input Area — hidden when AI returned results, editor is open, or execution succeeded */}
+          {!proposedActions && !queryResult && !showReview && executionStatus !== 'success' && (
             <div className="space-y-3">
               <AIFileUploadZone
                 onFileUploaded={(url) => setAttachedFileUrl(url)}
