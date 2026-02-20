@@ -604,8 +604,14 @@ export default function WeeklyServiceManager() {
       setPrintSettingsPage2(null);
       setHasUnsavedChanges(false);
       localStateInitializedRef.current = true;
-    }
-  }, [existingData, selectedDate, blueprintData]);
+      }
+      // SEGMENT-DISAPPEAR-FIX-v3 (2026-02-20): Removed blueprintData from deps.
+      // Blueprint is ONLY used as a fallback during initialization. It's not a
+      // state driver — changes to it should not re-trigger initialization.
+      // The initialization guard (localStateInitializedRef) protects against
+      // re-initialization on existingData refetches; removing blueprintData
+      // prevents spurious re-runs from background blueprint refetches.
+      }, [existingData, selectedDate]);
 
   // SONG-OVERWRITE-FIX-2 (2026-02-20): Real-time subscriptions DISABLED.
   // They caused queryClient.invalidateQueries → existingData refetch → 
