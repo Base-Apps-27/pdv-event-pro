@@ -446,9 +446,9 @@ export default function ServiceProgramView({
               return null;
             })()}
 
-            {/* Slot column */}
-            <div className={`bg-white rounded-lg border-2 border-gray-300 overflow-hidden border-l-4 ${colors.border}`}>
-              <div className={`bg-gradient-to-r ${colors.bg} to-white p-3 sm:p-4 border-b`}>
+            {/* Slot column — timeline aesthetic */}
+            <div className={`bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm`}>
+              <div className={`bg-gradient-to-r ${colors.bg} to-white p-3 sm:p-4 border-b border-l-4 ${colors.border} rounded-tl-2xl`}>
                 {/* Slot title with optional live adjustment indicator */}
                 {(() => {
                   if (adjustment && adjustment.offset_minutes !== 0 && parsed) {
@@ -482,25 +482,49 @@ export default function ServiceProgramView({
                 )}
               </div>
 
-              {/* Segments */}
-              <div className="space-y-0">
+              {/* Timeline-style Segments */}
+              <div className="relative pl-7 sm:pl-9 py-4 pr-3 sm:pr-4">
+                {/* Vertical Timeline Line */}
+                <div className="absolute left-3 sm:left-4 top-4 bottom-4 w-0.5 bg-gray-200" />
+
                 {slot.segments.filter(seg => {
                   const t = seg.type || seg.segment_type || '';
                   return t !== 'break' && t !== 'Break' && t !== 'Receso';
-                }).map((segment, idx) => (
-                  <PublicProgramSegment
-                    key={segment.id || `${slot.name}-${idx}`}
-                    segment={segment}
-                    isCurrent={isSegmentCurrent(segment)}
-                    isUpcoming={!isSegmentCurrent(segment) && isSegmentUpcoming(segment, slot.segments)}
-                    viewMode="simple"
-                    isExpanded={true}
-                    alwaysExpanded={true}
-                    onToggleExpand={toggleSegmentExpanded}
-                    onOpenVerses={onOpenVerses}
-                    allSegments={slot.segments}
-                  />
-                ))}
+                }).map((segment, idx) => {
+                  const isCurr = isSegmentCurrent(segment);
+                  const isUp = !isCurr && isSegmentUpcoming(segment, slot.segments);
+                  return (
+                    <div key={segment.id || `${slot.name}-${idx}`} className="relative mb-2">
+                      {/* Timeline Dot */}
+                      <div className={`
+                        absolute -left-[1.4rem] sm:-left-[1.6rem] top-5 
+                        w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 
+                        flex items-center justify-center z-10 transition-all duration-500
+                        ${isCurr
+                          ? 'bg-yellow-400 border-yellow-500 shadow-[0_0_0_4px_rgba(250,204,21,0.2)] scale-110' 
+                          : isUp
+                            ? 'bg-white border-blue-400'
+                            : 'bg-white border-gray-300'}
+                      `}>
+                        {isCurr && <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
+                        {isUp && <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />}
+                      </div>
+
+                      <PublicProgramSegment
+                        segment={segment}
+                        isCurrent={isCurr}
+                        isUpcoming={isUp}
+                        viewMode="simple"
+                        isExpanded={true}
+                        alwaysExpanded={true}
+                        onToggleExpand={toggleSegmentExpanded}
+                        onOpenVerses={onOpenVerses}
+                        allSegments={slot.segments}
+                        timelineMode={true}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </React.Fragment>
