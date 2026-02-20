@@ -51,8 +51,11 @@ import { loadCustomFromSession } from "@/components/service/customSessionSync";
 import SegmentTimelineCard from "@/components/service/custom-builder/SegmentTimelineCard";
 import useStaleGuard from "@/components/utils/useStaleGuard";
 import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
+import { useCurrentUser } from "@/components/utils/useCurrentUser";
 
 export default function CustomServiceBuilder() {
+  // CRIT-2 FIX: user was undefined, causing ReferenceError in logUpdate/logCreate
+  const { user } = useCurrentUser();
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
   const { t, language } = useLanguage();
   const navigate = useNavigate();
