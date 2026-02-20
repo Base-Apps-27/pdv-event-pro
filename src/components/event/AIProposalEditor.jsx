@@ -9,11 +9,11 @@
  * Output: cleaned actions ready for executeActions
  */
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/utils/i18n";
-import { CheckCircle2, Loader2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Loader2, AlertTriangle, Plus } from "lucide-react";
 import { VALID_SEGMENT_TYPES } from "@/components/utils/segmentValidation";
 import SessionEditorCard from "@/components/event/SessionEditorCard";
 
