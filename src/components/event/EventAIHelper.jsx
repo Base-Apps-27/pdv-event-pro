@@ -59,15 +59,14 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
     enabled: !!eventId
   });
 
-  const { data: segments = [] } = useQuery({
-    queryKey: ['allSegments'],
-    queryFn: () => base44.entities.Segment.list(),
-    enabled: !!eventId
+  // Improvement #7: Scoped segment query — only fetch segments for this event's sessions,
+  // not all segments in the entire app. Falls back gracefully if no sessions exist yet.
+  const sessionIds = sessions.map(s => s.id).filter(Boolean);
+  const { data: eventSegments = [] } = useQuery({
+    queryKey: ['eventSegments', eventId, sessionIds.join(',')],
+    queryFn: () => base44.entities.Segment.filter({ session_id: { $in: sessionIds } }),
+    enabled: !!eventId && sessionIds.length > 0
   });
-
-  const eventSegments = segments.filter(seg => 
-    sessions.some(s => s.id === seg.session_id)
-  );
 
   // Lightweight event index (last 2 years) — cached, non-blocking
   const { data: eventIndex = [] } = useQuery({
