@@ -329,7 +329,14 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
         const validationResult = validateAIActions(response.actions || []);
         setValidation(validationResult);
         setProposedActions(response);
-        if (!validationResult.isValid || validationResult.warnings.length > 0) {
+        
+        // Route to the right UI: schedule editor for create actions, old review for updates
+        const hasCreateActions = (response.actions || []).some(a =>
+          a.type === 'create_sessions_with_segments' || a.type === 'create_sessions' || a.type === 'create_segments'
+        );
+        if (hasCreateActions) {
+          setShowScheduleEditor(true);
+        } else {
           setShowReview(true);
         }
       }
