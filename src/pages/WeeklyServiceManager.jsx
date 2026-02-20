@@ -600,6 +600,7 @@ export default function WeeklyServiceManager() {
       setPrintSettingsPage1(null);
       setPrintSettingsPage2(null);
       setHasUnsavedChanges(false);
+      localStateInitializedRef.current = true;
     }
   }, [existingData, selectedDate, blueprintData]);
 
