@@ -578,6 +578,23 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
   // Submit is enabled if there's text OR a file attached
   const canSubmit = (userInput.trim().length > 0 || !!attachedFileUrl) && !isProcessing;
 
+  // When the editor is open, hide the parent dialog entirely — user sees only
+  // the ScheduleEditor overlay. Prevents the "blank parent behind editor" flash
+  // that made it look like processing failed and reverted to Submit. (2026-02-20)
+  if (showReview) {
+    return (
+      <>
+        <AIProposalEditor
+          isOpen={showReview}
+          proposedActions={proposedActions}
+          onApprove={(actions) => executeActions(actions, false)}
+          onCancel={() => { setShowReview(false); reset(); }}
+          isExecuting={executionStatus === 'executing'}
+        />
+      </>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -599,8 +616,8 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
             </div>
           )}
 
-          {/* Input Area — hidden when AI returned results, editor is open, or execution succeeded */}
-          {!proposedActions && !queryResult && !showReview && executionStatus !== 'success' && (
+          {/* Input Area — hidden when AI returned results or execution succeeded */}
+          {!proposedActions && !queryResult && executionStatus !== 'success' && (
             <div className="space-y-3">
               <AIFileUploadZone
                 onFileUploaded={(url) => setAttachedFileUrl(url)}
