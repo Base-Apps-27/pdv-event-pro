@@ -247,7 +247,13 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
           ? '"Create sessions and segments from the uploaded schedule"'
           : '"Analyze the attached file and create sessions and segments"';
 
-      // Step 2: Lean LLM prompt (cut from ~5000 tokens to ~1500)
+      // Step 2: Lean LLM prompt
+      // ARCHITECTURE NOTE (2026-02-20): For file imports with extracted data, we use
+      // "create_sessions_with_segments" action type — each session carries its own
+      // segments array, so executeActions creates the session, gets the real ID, and
+      // immediately creates its segments. No temp_session_ref cross-referencing needed.
+      // The old create_sessions + create_segments split caused chronic null session_id
+      // because the LLM inconsistently populated temp_session_ref on segments.
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `You are an AI assistant managing church event data. You can QUERY info or PROPOSE actions.
 
@@ -263,8 +269,7 @@ ${userInstruction}
 
 ## TASK
 Determine if QUERY or ACTION. For actions, propose changes using these types:
-- create_sessions: New sessions. Include temp_session_ref for cross-referencing.
-- create_segments: New segments. Use temp_session_ref to link to new sessions. MUST come AFTER create_sessions.
+- create_sessions_with_segments: PREFERRED for new sessions. Each session object has a "segments" array with its child segments. This is the ONLY way to create new sessions and segments.
 - update_sessions / update_segments / update_event: Modify existing records.
 
 ## SESSION NAMING (CRITICAL)
@@ -302,7 +307,12 @@ Full segment fields: requires_translation, translation_mode, translator_name, pr
 If uncertain which past event: {"type":"ask_event_clarification","message":"Which?","options":[{id,name,year}]}
 
 ## RESPONSE FORMAT (JSON)
-{"request_type":"query"|"action","type":"ask_event_clarification"(optional),"understood_request":"...","message":"...(if clarification)","options":[...],"query_result":{"summary":"...","details":[{"title":"...","info":"..."}]},"actions":[{"type":"create_sessions|update_sessions|create_segments|update_segments|update_event","description":"...","target_ids":["id"]|"all","create_data":[{...}],"changes":{...},"affected_count":N}],"warnings":[...],"requires_confirmation":true}`,
+For creating sessions with segments, use EXACTLY this structure:
+{"request_type":"action","understood_request":"...","actions":[{"type":"create_sessions_with_segments","description":"...","create_data":[{"name":"Session Name","date":"YYYY-MM-DD","planned_start_time":"HH:MM","planned_end_time":"HH:MM","session_color":"blue","order":1,"segments":[{"title":"...","segment_type":"...","start_time":"HH:MM","duration_min":30,"presenter":"...","order":1,"color_code":"default"}]}],"affected_count":N}],"warnings":[],"requires_confirmation":true}
+
+For queries: {"request_type":"query","understood_request":"...","query_result":{"summary":"...","details":[{"title":"...","info":"..."}]}}
+For updates: {"request_type":"action","actions":[{"type":"update_sessions|update_segments|update_event","target_ids":["id"]|"all","changes":{...}}]}
+For clarification: {"type":"ask_event_clarification","message":"Which?","options":[{id,name,year}]}`,
         ...(fileUrls ? { file_urls: fileUrls } : {}),
         response_json_schema: RESPONSE_SCHEMA
       });
