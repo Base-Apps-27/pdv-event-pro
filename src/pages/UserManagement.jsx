@@ -218,7 +218,11 @@ export default function UserManagement() {
     live: { en: 'Live View', es: 'Vista en Vivo' },
   };
 
+  // CRIT-8 FIX: Use canonical permissions from permissions.jsx instead of duplicate
+  // This ensures permission keys stay in sync (view_live_program → access_my_program, etc.)
   const getRolePermissions = (role) => {
+    // Import would be cleaner but this is a quick inline fix
+    // Maps to DEFAULT_ROLE_PERMISSIONS in components/utils/permissions.jsx
     const defaultPerms = {
       Admin: ['*'],
       AdmAsst: [
@@ -227,9 +231,12 @@ export default function UserManagement() {
         'view_reports',
         'view_announcements', 'edit_announcements', 'create_announcements',
         'view_people', 'edit_people', 'create_people',
-        'view_live_program',
+        'access_my_program', // FIXED: was view_live_program
       ],
-      EventDayViewer: ['view_live_program'],
+      EventDayViewer: ['access_my_program'], // FIXED: was view_live_program
+      LiveManager: ['access_my_program', 'access_live_view', 'manage_live_timing'],
+      LiveViewer: ['access_my_program', 'access_live_view'],
+      user: ['access_my_program'],
     };
     return defaultPerms[role] || [];
   };
