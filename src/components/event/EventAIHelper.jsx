@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Sparkles, Send, CheckCircle2, AlertCircle, Loader2, X, ChevronRight, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/components/utils/i18n";
-import { validateAIActions, formatValidationForDisplay } from "@/components/utils/segmentValidation";
+import { validateAIActions, formatValidationForDisplay, VALID_SEGMENT_TYPES } from "@/components/utils/segmentValidation";
 import AIProposalReview from "@/components/event/AIProposalReview";
 
 import EventClarificationPicker from "@/components/event/EventClarificationPicker";
