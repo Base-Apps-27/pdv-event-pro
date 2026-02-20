@@ -655,20 +655,27 @@ export default function WeeklyServiceManager() {
     });
   }, [selectedAnnouncements]);
 
-  // SONG-OVERWRITE-FIX-2 (2026-02-20): Central auto-save REMOVED.
-  // It created a parallel save path that raced with debouncedSave in handlers,
-  // causing query invalidation → existingData refetch → reinitialization of
-  // serviceData from server → local edits destroyed.
-  //
-  // All saves now flow exclusively through handlers.debouncedSave, which:
-  //   1. Uses serviceDataRef (always-current snapshot) to build the payload
-  //   2. Fires after 800ms debounce
-  //   3. Does NOT invalidate the query (local state is truth during editing)
-  //
-  // The old central auto-save watched serviceData changes and fired at 1000ms,
-  // but because saveServiceMutation.onSuccess called queryClient.invalidateQueries,
-  // it triggered a refetch of existingData, which re-ran the initialization useEffect,
-  // which overwrote serviceData with server data — destroying in-progress edits.
+  // SONG-OVERWRITE-FIX-2 (2026-02-20): Central auto-save retained but safe.
+  // The re-initialization guard (localStateInitializedRef) in the init useEffect
+  // prevents save-triggered query invalidation from overwriting local state.
+  // This auto-save is needed because most input components (TeamInput, SegmentTextInput,
+  // SegmentTextarea, SegmentAutocomplete, PreServiceNotesInput, RecesoNotesInput)
+  // commit into serviceData but do NOT call debouncedSave — they relied on this
+  // central watcher to persist their changes.
+  useEffect(() => {
+    if (!lastSavedData || !serviceData) return;
+    if (JSON.stringify(serviceData) === JSON.stringify(lastSavedData)) return;
+    const handler = setTimeout(() => {
+      saveServiceMutation.mutate({
+        ...serviceData, selected_announcements: selectedAnnouncements,
+        print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
+        day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
+        name: `Domingo - ${selectedDate}`, status: 'active',
+        service_type: 'weekly'
+      });
+    }, 2000); // Increased from 1000→2000ms to give more breathing room for rapid edits
+    return () => clearTimeout(handler);
+  }, [serviceData, lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
 
   // ── Segment expand toggle (local UI) ──
   const toggleSegmentExpanded = (timeSlot, idx) => {
