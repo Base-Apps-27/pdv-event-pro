@@ -457,7 +457,13 @@ export default function WeeklyServiceManager() {
             else if (savedType === 'welcome') defaultFields = ["presenter"];
             else if (savedType === 'offering') defaultFields = ["presenter", "verse"];
             else if (savedType === 'message') defaultFields = ["preacher", "title", "verse"];
-            if (defaultFields.length > 0) return { ...savedSeg, fields: defaultFields };
+            if (defaultFields.length > 0) {
+              let songs = savedSeg.songs;
+              if (savedType === 'worship' && (!songs || !Array.isArray(songs) || songs.length === 0)) {
+                songs = [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }];
+              }
+              return { ...savedSeg, fields: defaultFields, songs };
+            }
           }
           return savedSeg;
         });
