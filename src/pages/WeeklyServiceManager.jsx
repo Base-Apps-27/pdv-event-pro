@@ -535,6 +535,9 @@ export default function WeeklyServiceManager() {
       setHasUnsavedChanges(false);
       // Phase 5: Capture baseline for stale detection
       captureServiceBaseline(existingData.updated_date);
+      // SONG-OVERWRITE-FIX-2: Mark as initialized — subsequent existingData changes
+      // (from our own saves) will NOT re-run this initialization.
+      localStateInitializedRef.current = true;
 
       // Backup recovery toast
       const backupKey = `service_backup_${selectedDate}`;
