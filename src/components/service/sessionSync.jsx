@@ -153,33 +153,39 @@ export async function syncToSession(base44, serviceResult, segments) {
   
   const createdParents = await base44.entities.Segment.bulkCreate(parentSegments);
   
-  // Create mapping of original indices to created parent IDs
+  // H-BUG-3 FIX (2026-02-20): parentIdx must only increment for parent segments,
+  // not for ALL original segments. Previously, non-Alabanza segments caused index
+  // drift between `segments[]` and `createdParents[]`, misassigning sub-segments.
   let parentIdMap = {};
   let parentIdx = 0;
   for (let i = 0; i < segments.length; i++) {
-    if (segments[i].type === 'Alabanza') {
-      parentIdMap[i] = createdParents[parentIdx]?.id;
-    }
+    // Every original segment produces exactly one parent in createdParents
+    parentIdMap[i] = createdParents[parentIdx]?.id;
     parentIdx++;
   }
   
   // Recreate sub-segments with correct parent_segment_id references
   if (subSegments.length > 0) {
-    let segIdx = 0;
-    const subSegmentsWithParent = subSegments.map((sub) => {
-      // Find which parent this belongs to (iterate through original segments)
-      for (let i = 0; i < segments.length; i++) {
-        if (segments[i].type === 'Alabanza' && segments[i].sub_asignaciones?.length > 0) {
-          if (parentIdMap[i]) {
-            return {
-              ...sub,
-              parent_segment_id: parentIdMap[i],
-              _isSubAsignacion: undefined
-            };
-          }
-        }
+    // Track which Alabanza parent each sub-segment belongs to
+    // Sub-segments in newSegments appear immediately after their parent's entry.
+    // Build a reverse map: for each sub-segment, find its originating Alabanza index.
+    let subToParentMap = [];
+    for (let i = 0; i < segments.length; i++) {
+      if (segments[i].type === 'Alabanza' && segments[i].sub_asignaciones?.length > 0) {
+        segments[i].sub_asignaciones.forEach(() => {
+          subToParentMap.push(i); // This sub belongs to Alabanza at original index i
+        });
       }
-      return sub;
+    }
+    
+    const subSegmentsWithParent = subSegments.map((sub, idx) => {
+      const originalParentIdx = subToParentMap[idx];
+      const parentId = originalParentIdx !== undefined ? parentIdMap[originalParentIdx] : null;
+      return {
+        ...sub,
+        parent_segment_id: parentId || sub.parent_segment_id,
+        _isSubAsignacion: undefined
+      };
     });
     
     await base44.entities.Segment.bulkCreate(subSegmentsWithParent);
