@@ -1,5 +1,4 @@
 import React, { useMemo } from "react";
-import { Card } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
 import ServiceStatusBar from "@/components/service/ServiceStatusBar";
 import StickyOpsDeck from "@/components/service/StickyOpsDeck";
