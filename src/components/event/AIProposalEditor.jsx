@@ -175,6 +175,46 @@ export default function AIProposalEditor({
     });
   }, []);
 
+  // Improvement #2: Add a blank session to the end of the list
+  const addSession = useCallback(() => {
+    setSessions(prev => [...prev, {
+      _key: crypto.randomUUID(),
+      name: '',
+      date: '',
+      planned_start_time: '',
+      planned_end_time: '',
+      session_color: 'blue',
+      order: prev.length + 1,
+      is_translated_session: false,
+      presenter: '',
+      notes: '',
+      _extra: {},
+      segments: []
+    }]);
+  }, []);
+
+  // Improvement #3: Add a blank segment to a specific session
+  const addSegment = useCallback((sessionKey) => {
+    setSessions(prev => prev.map(s => {
+      if (s._key !== sessionKey) return s;
+      return {
+        ...s,
+        segments: [...s.segments, {
+          _key: crypto.randomUUID(),
+          title: '',
+          segment_type: 'Especial',
+          start_time: '',
+          duration_min: null,
+          presenter: '',
+          message_title: '',
+          color_code: 'default',
+          order: s.segments.length + 1,
+          _extra: {}
+        }]
+      };
+    }));
+  }, []);
+
   // ── Stats ──
   const totalSessions = sessions.length;
   const totalSegments = sessions.reduce((sum, s) => sum + s.segments.length, 0);
