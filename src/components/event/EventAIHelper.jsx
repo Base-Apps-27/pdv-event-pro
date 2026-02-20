@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/components/utils/i18n";
 import { validateAIActions, formatValidationForDisplay, VALID_SEGMENT_TYPES } from "@/components/utils/segmentValidation";
 import AIProposalReview from "@/components/event/AIProposalReview";
+import ScheduleEditor from "@/components/event/schedule-editor/ScheduleEditor";
 
 import EventClarificationPicker from "@/components/event/EventClarificationPicker";
 import AIFileUploadZone from "@/components/event/AIFileUploadZone";
