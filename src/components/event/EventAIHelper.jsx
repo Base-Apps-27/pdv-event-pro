@@ -21,7 +21,8 @@ import { Sparkles, Send, CheckCircle2, AlertCircle, Loader2, X, ChevronRight, Un
 import { toast } from "sonner";
 import { useLanguage } from "@/components/utils/i18n";
 import { validateAIActions, formatValidationForDisplay, VALID_SEGMENT_TYPES } from "@/components/utils/segmentValidation";
-import AIProposalEditor from "@/components/event/AIProposalEditor";
+import AIProposalReview from "@/components/event/AIProposalReview";
+import ScheduleEditor from "@/components/event/schedule-editor/ScheduleEditor";
 
 import EventClarificationPicker from "@/components/event/EventClarificationPicker";
 import AIFileUploadZone from "@/components/event/AIFileUploadZone";
@@ -41,6 +42,7 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
   const [executionStatus, setExecutionStatus] = useState(null);
   const [validation, setValidation] = useState(null);
   const [showReview, setShowReview] = useState(false);
+  const [showScheduleEditor, setShowScheduleEditor] = useState(false);
   const [clarificationOptions, setClarificationOptions] = useState(null);
   const [showClarification, setShowClarification] = useState(false);
   const [sourceEventData, setSourceEventData] = useState(null);
@@ -327,7 +329,14 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
         const validationResult = validateAIActions(response.actions || []);
         setValidation(validationResult);
         setProposedActions(response);
-        if (!validationResult.isValid || validationResult.warnings.length > 0) {
+        
+        // Route to the right UI: schedule editor for create actions, old review for updates
+        const hasCreateActions = (response.actions || []).some(a =>
+          a.type === 'create_sessions_with_segments' || a.type === 'create_sessions' || a.type === 'create_segments'
+        );
+        if (hasCreateActions) {
+          setShowScheduleEditor(true);
+        } else {
           setShowReview(true);
         }
       }
@@ -653,8 +662,8 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
             </div>
           )}
 
-          {/* Proposed Actions */}
-          {proposedActions && executionStatus !== 'success' && !showReview && (
+          {/* Proposed Actions — non-create (updates) go through old review */}
+          {proposedActions && executionStatus !== 'success' && !showReview && !showScheduleEditor && (
             <div className="space-y-4">
               <Card className="p-4 bg-blue-50 border-blue-200">
                 <h4 className="font-semibold text-blue-900 mb-2">
@@ -702,11 +711,21 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
           )}
         </div>
 
-        {/* Interactive Program Editor — replaces old AIProposalReview */}
-        <AIProposalEditor
+        {/* Schedule Editor — visual editor for create actions */}
+        <ScheduleEditor
+          isOpen={showScheduleEditor}
+          proposedActions={proposedActions}
+          onConfirm={executeActions}
+          onCancel={() => { setShowScheduleEditor(false); reset(); }}
+          isExecuting={executionStatus === 'executing'}
+        />
+
+        {/* Review Modal — for update actions (non-create) */}
+        <AIProposalReview
           isOpen={showReview}
           proposedActions={proposedActions}
-          onApprove={(actions) => executeActions(actions, false)}
+          validation={validation}
+          onApprove={executeActions}
           onCancel={() => { setShowReview(false); reset(); }}
           isExecuting={executionStatus === 'executing'}
         />
