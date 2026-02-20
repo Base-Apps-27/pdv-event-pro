@@ -139,19 +139,12 @@ export default function WeeklyServiceManager() {
   const [activeDay, setActiveDay] = useState('sunday');
 
   // ── Queries ──
-  // SEGMENT-DISAPPEAR-FIX-v2 (2026-02-20): staleTime: Infinity.
-  // This editor owns local state as source of truth once initialized.
-  // Background refetches provide zero benefit and only risk destabilizing
-  // local state via new object references in useEffect deps.
-  // Fresh data is fetched on: date change (new queryKey) or explicit
-  // invalidation from BlueprintEditor save (push model via setQueryData).
   const { data: blueprintData } = useQuery({
     queryKey: ['serviceBlueprint'],
     queryFn: async () => {
       const blueprints = await base44.entities.Service.filter({ status: 'blueprint' });
       return blueprints[0] || null;
     },
-    staleTime: Infinity,
   });
 
   // Fetch services for the full week surrounding selectedDate to populate weekday tabs
@@ -271,8 +264,7 @@ export default function WeeklyServiceManager() {
 
       return service;
     },
-    enabled: !!selectedDate,
-    staleTime: Infinity,
+    enabled: !!selectedDate
   });
 
   const { data: allAnnouncements = [] } = useQuery({
