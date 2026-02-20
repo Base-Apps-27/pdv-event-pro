@@ -336,6 +336,22 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
         setClarificationOptions(matches.length > 0 ? matches : response.options || []);
         setShowClarification(true);
       } else {
+        // Diagnostic: warn if LLM dropped sessions from extraction (2026-02-20)
+        if (hasExtractedData) {
+          const extractedCount = extractedSchedule.sessions.length;
+          const llmSessionCount = (response.actions || [])
+            .filter(a => a.type === 'create_sessions_with_segments' || a.type === 'create_sessions')
+            .reduce((sum, a) => sum + (a.create_data?.length || 0), 0);
+          if (llmSessionCount < extractedCount) {
+            console.warn(`[AI_SESSION_DROP] Extraction had ${extractedCount} sessions but LLM only returned ${llmSessionCount}. User can add missing ones in editor.`);
+            toast.warning(
+              language === 'es'
+                ? `Se detectaron ${extractedCount} sesiones pero la IA generó ${llmSessionCount}. Revisa y agrega las faltantes.`
+                : `${extractedCount} sessions detected but AI generated ${llmSessionCount}. Review and add missing ones.`
+            );
+          }
+        }
+
         // Always open the interactive editor so the user can see & edit
         // the full session/segment tree before confirming.
         setProposedActions(response);
