@@ -242,10 +242,11 @@ export default function CustomServiceBuilder() {
   useEffect(() => {
     if (!hasUnsavedChanges || !serviceId) return;
     setAutoSaveStatus("saving");
-    // Phase 3: Auto-save must include service_type to maintain one_off discrimination
-    const timer = setTimeout(() => saveServiceMutation.mutate({ ...serviceData, status: 'active', service_type: 'one_off' }), 3000);
+    // H-BUG-4 FIX: Use resolvedServiceType instead of hardcoded 'one_off'
+    // This preserves the original service_type (weekly vs one_off)
+    const timer = setTimeout(() => saveServiceMutation.mutate({ ...serviceData, status: 'active', service_type: resolvedServiceType }), 3000);
     return () => clearTimeout(timer);
-  }, [serviceData, hasUnsavedChanges, serviceId]);
+  }, [serviceData, hasUnsavedChanges, serviceId, resolvedServiceType]);
 
   useEffect(() => {
     const handleBeforeUnload = (e) => { if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = 'Tienes cambios sin guardar.'; return e.returnValue; } };
