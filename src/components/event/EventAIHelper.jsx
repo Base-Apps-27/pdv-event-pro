@@ -452,21 +452,22 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
             console.log(`[AI_EXEC] Legacy session[${i}] created: id=${newSession.id}`);
             totalAffected++;
 
-            // If segments were nested even in legacy format, handle them
+            // Legacy path: also uses bulkCreate for consistency (Improvement #1)
             if (childSegments?.length > 0) {
-              for (let j = 0; j < childSegments.length; j++) {
-                const { temp_session_ref: _r, session_id: _s, ...cleanSegData } = childSegments[j];
+              const bulkData = childSegments.map((seg, j) => {
+                const { temp_session_ref: _r, session_id: _s, ...cleanSegData } = seg;
                 if (cleanSegData.segment_type && !VALID_SEGMENT_TYPES.includes(cleanSegData.segment_type)) {
                   cleanSegData.segment_type = "Especial";
                 }
-                await base44.entities.Segment.create({
+                return {
                   session_id: newSession.id,
                   order: cleanSegData.order ?? (j + 1),
                   ...cleanSegData
-                });
-                totalAffected++;
-              }
-              console.log(`[AI_EXEC] Legacy session[${i}]: ${childSegments.length} inline segments created`);
+                };
+              });
+              await base44.entities.Segment.bulkCreate(bulkData);
+              totalAffected += bulkData.length;
+              console.log(`[AI_EXEC] Legacy session[${i}]: ${bulkData.length} inline segments bulk-created`);
             }
           }
         }
