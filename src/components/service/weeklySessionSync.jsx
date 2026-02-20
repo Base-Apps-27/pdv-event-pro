@@ -480,8 +480,18 @@ function buildSubAsignaciones(
  * segments created before these fields were stored (pre-migration data).
  */
 function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments, idx) {
-  const songs = getNormalizedSongs(segment);
+  let songs = getNormalizedSongs(segment);
   const segType = segment.segment_type || "Especial";
+
+  // SONG-SLOT FIX (2026-02-20): Worship segments must always have song slots
+  // for the UI (SongInputRow) to render input rows. getNormalizedSongs drops
+  // empty songs (no title), so after a blueprint reset the entity round-trip
+  // loses the empty slots. Re-create them based on number_of_songs or default 4.
+  const isWorship = segType === "Alabanza" || segType === "worship";
+  if (isWorship && songs.length === 0) {
+    const numSongs = segment.number_of_songs || 4;
+    songs = Array.from({ length: numSongs }, () => ({ title: "", lead: "", key: "" }));
+  }
 
   // Build data object with values in all possible field locations
   // (different code paths read from data.leader, data.preacher, data.presenter, etc.)
