@@ -435,8 +435,8 @@ export default function ServiceProgramView({
               const recesoNotes = actualServiceData.receso_notes?.[weeklySlots[0]?.name] || '';
               if (gapMin > 0 || recesoNotes) {
                 return (
-                  <div className="bg-gray-100 rounded-lg p-4 text-center border border-gray-300">
-                    <p className="font-bold text-gray-600">RECESO{gapMin > 0 ? ` (${gapMin} min)` : ''}</p>
+                  <div className="bg-gray-50 rounded-2xl p-4 text-center border-2 border-dashed border-gray-300">
+                    <p className="font-bold text-gray-500 text-sm uppercase tracking-wide">☕ RECESO{gapMin > 0 ? ` (${gapMin} min)` : ''}</p>
                     {recesoNotes && (
                       <p className="text-sm text-gray-600 mt-2">{recesoNotes}</p>
                     )}
