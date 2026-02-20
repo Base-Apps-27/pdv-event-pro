@@ -234,8 +234,14 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
       const hasExtractedData = extractedSchedule?.sessions?.length > 0;
       const fileUrls = (attachedFileUrl && !hasExtractedData) ? [attachedFileUrl] : undefined;
 
+      // Log extraction results for diagnostics (2026-02-20)
+      if (hasExtractedData) {
+        console.log(`[AI_FILE] Extraction found ${extractedSchedule.sessions.length} sessions:`,
+          extractedSchedule.sessions.map(s => `"${s.name}" (${s.segments?.length || 0} segs)`));
+      }
+
       const fileSection = hasExtractedData
-        ? `\n## EXTRACTED SCHEDULE DATA (from uploaded file)\n${JSON.stringify(extractedSchedule, null, 2)}\n\nMap this to create_sessions + create_segments actions. Use type_hint→segment_type mapping below.`
+        ? `\n## EXTRACTED SCHEDULE DATA (from uploaded file)\n${JSON.stringify(extractedSchedule, null, 2)}\n\nCRITICAL: Map ALL ${extractedSchedule.sessions.length} sessions above to create_sessions_with_segments actions. Do NOT skip or merge any sessions. Each extracted session = one session in your output.`
         : attachedFileUrl
           ? `\n## ATTACHED FILE\nAnalyze the attached file and extract sessions/segments from it.`
           : '';
