@@ -1,5 +1,19 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+/**
+ * CRIT-1 FIX: HTML escape function to prevent XSS attacks
+ * All user-controlled strings interpolated into HTML must be escaped
+ */
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
