@@ -514,11 +514,61 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
         }
       }
 
+      // Improvement #10: Auto-create EventDay records for each unique date in created sessions.
+      // Improvement #5: Auto-fill event start_date/end_date if empty.
+      const createActions = actionsToExecute.filter(a =>
+        a.type === 'create_sessions_with_segments' || a.type === 'create_sessions'
+      );
+      if (createActions.length > 0 && event) {
+        const allDates = createActions
+          .flatMap(a => (a.create_data || []).map(s => s.date))
+          .filter(Boolean)
+          .filter((v, i, arr) => arr.indexOf(v) === i) // unique
+          .sort();
+
+        // EventDay creation — only for dates that don't already have one
+        if (allDates.length > 0) {
+          try {
+            const existingDays = await base44.entities.EventDay.filter({ event_id: eventId });
+            const existingDates = new Set(existingDays.map(d => d.date));
+            const newDays = allDates
+              .filter(d => !existingDates.has(d))
+              .map(d => {
+                const dt = new Date(d + 'T12:00:00');
+                const dayNames = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+                return { event_id: eventId, date: d, day_of_week: dayNames[dt.getDay()] };
+              });
+            if (newDays.length > 0) {
+              await base44.entities.EventDay.bulkCreate(newDays);
+              console.log(`[AI_EXEC] Auto-created ${newDays.length} EventDay records`);
+            }
+          } catch (edErr) {
+            console.warn('[AI_EXEC] EventDay auto-creation failed (non-blocking):', edErr.message);
+          }
+        }
+
+        // Auto-fill event dates if empty
+        if (allDates.length > 0 && (!event.start_date || !event.end_date)) {
+          try {
+            const updates = {};
+            if (!event.start_date) updates.start_date = allDates[0];
+            if (!event.end_date) updates.end_date = allDates[allDates.length - 1];
+            if (Object.keys(updates).length > 0) {
+              await base44.entities.Event.update(event.id, updates);
+              console.log(`[AI_EXEC] Auto-filled event dates:`, updates);
+            }
+          } catch (dateErr) {
+            console.warn('[AI_EXEC] Event date auto-fill failed (non-blocking):', dateErr.message);
+          }
+        }
+      }
+
       setExecutionStatus('success');
       setShowReview(false);
       queryClient.invalidateQueries(['sessions', eventId]);
-      queryClient.invalidateQueries(['allSegments']);
+      queryClient.invalidateQueries({ queryKey: ['eventSegments', eventId] });
       queryClient.invalidateQueries(['event', eventId]);
+      queryClient.invalidateQueries(['eventDays', eventId]);
       
       const actionVerb = actionsToExecute.some(a => a.type.startsWith('create')) 
         ? (language === 'es' ? 'creados' : 'created')
