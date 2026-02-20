@@ -41,7 +41,8 @@ export default function PublicProgramSegment({
   onOpenVerseParser,
   getRoomName,
   slidePackLookup,
-  assetLookup
+  assetLookup,
+  timelineMode = false
 }) {
   // Language (for type label mapping)
   const { language, t } = useLanguage();
