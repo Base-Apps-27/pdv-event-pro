@@ -408,6 +408,10 @@ export default function WeeklyServiceManager() {
   useEffect(() => {
     // Guard: skip re-initialization if we've already loaded data for this date
     if (localStateInitializedRef.current) return;
+    // CRITICAL: Wait for blueprintData to load. If existingData doesn't exist,
+    // we MUST have blueprintData to populate segments. If blueprintData is null/undefined,
+    // defer initialization until it arrives.
+    if (!existingData && !blueprintData) return;
     if (existingData) {
       // Entity Lift FINAL: When data came from Session/Segment entities (_fromEntities),
       // segments already carry their own fields/sub_assignments/actions — no blueprint
@@ -605,13 +609,14 @@ export default function WeeklyServiceManager() {
       setHasUnsavedChanges(false);
       localStateInitializedRef.current = true;
       }
-      // SEGMENT-DISAPPEAR-FIX-v3 (2026-02-20): Removed blueprintData from deps.
-      // Blueprint is ONLY used as a fallback during initialization. It's not a
-      // state driver — changes to it should not re-trigger initialization.
-      // The initialization guard (localStateInitializedRef) protects against
-      // re-initialization on existingData refetches; removing blueprintData
-      // prevents spurious re-runs from background blueprint refetches.
-      }, [existingData, selectedDate]);
+      // SEGMENT-DISAPPEAR-FIX-v4 (2026-02-21): Re-added blueprintData to deps.
+      // On fresh load (existingData=null), the effect must wait for blueprintData
+      // to arrive before initializing. Removing it caused a race where the else block
+      // would run with undefined blueprintData, seeding empty segments.
+      // The initialization guard (localStateInitializedRef) ensures we only initialize
+      // once per date, so subsequent blueprintData changes won't re-trigger (it only
+      // fires when existingData OR blueprintData first become non-null).
+      }, [existingData, selectedDate, blueprintData]);
 
   // SONG-OVERWRITE-FIX-2 (2026-02-20): Real-time subscriptions DISABLED.
   // They caused queryClient.invalidateQueries → existingData refetch → 
