@@ -173,7 +173,7 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
   }
 
   function convertExtractionToActions(extracted) {
-    const sessions = (extracted.sessions || []).map((es, sIdx) => {
+    const rawSessions = (extracted.sessions || []).map((es, sIdx) => {
       const segments = [];
       let registrationTime = null;
 
@@ -209,10 +209,43 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
         session_color: 'blue',
         order: sIdx + 1,
         segments,
+        _registrationTime: registrationTime,
       };
     });
 
-    const totalSegs = sessions.reduce((s, sess) => s + sess.segments.length, 0);
+    // Post-process: If extraction created an orphan session that is ONLY a lunch/break
+    // (e.g., "ALMUERZO" between SECCIÓN 2 and SECCIÓN 3), merge its segments into the
+    // preceding session. A session is "orphan meal" if it has ≤2 segments and ALL are
+    // Almuerzo/Break/Receso type.
+    const MEAL_TYPES = new Set(['Almuerzo', 'Break', 'Receso']);
+    const sessions = [];
+    for (let i = 0; i < rawSessions.length; i++) {
+      const s = rawSessions[i];
+      const isMealOnly = s.segments.length > 0 && s.segments.length <= 2
+        && s.segments.every(seg => MEAL_TYPES.has(seg.segment_type));
+      if (isMealOnly && sessions.length > 0) {
+        // Merge into preceding session
+        const prev = sessions[sessions.length - 1];
+        for (const seg of s.segments) {
+          seg.order = prev.segments.length + 1;
+          prev.segments.push(seg);
+        }
+        // Extend preceding session end time
+        const lastMealSeg = s.segments[s.segments.length - 1];
+        const mealEnd = addMinutesHelper(lastMealSeg.start_time, lastMealSeg.duration_min);
+        if (mealEnd) prev.planned_end_time = mealEnd;
+        console.log(`[AI_FILE] Merged meal-only session "${s.name}" into "${prev.name}"`);
+      } else {
+        // Remove internal _registrationTime before pushing
+        const { _registrationTime, ...clean } = s;
+        sessions.push(clean);
+      }
+    }
+
+    // Re-number session order after possible merges
+    sessions.forEach((s, i) => { s.order = i + 1; });
+
+    const totalSegs = sessions.reduce((sum, sess) => sum + sess.segments.length, 0);
     return {
       request_type: 'action',
       understood_request: `Create ${sessions.length} sessions with ${totalSegs} segments from uploaded schedule`,
