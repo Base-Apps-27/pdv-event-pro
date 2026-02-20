@@ -98,7 +98,7 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
           properties: {
             sessions: {
               type: "array",
-              description: "All sessions/sections found in the document. Look for section headers like 'SECCIÓN 1', 'SESSION 2', etc.",
+              description: "All sessions/sections found in the document. Look for section headers like 'SECCIÓN 1', 'SESSION 2', etc. IMPORTANT: Items that appear BETWEEN section headers (like 'ALMUERZO' or 'LUNCH' between SECCIÓN 2 and SECCIÓN 3) belong to the PRECEDING section — include them as the last segment of that session.",
               items: {
                 type: "object",
                 properties: {
@@ -108,7 +108,7 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
                   end_time: { type: "string", description: "End time (HH:MM 24h)" },
                   segments: {
                     type: "array",
-                    description: "All time blocks within this session",
+                    description: "All time blocks within this session, including any items before the next section header (like Almuerzo/Lunch breaks)",
                     items: {
                       type: "object",
                       properties: {
