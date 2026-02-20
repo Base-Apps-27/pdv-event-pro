@@ -78,7 +78,10 @@ export default function ServiceTimeSlotColumn({
       {/* Header */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <h2 className={`text-3xl text-${accentColor}-600`}>
+          {/* H-BUG-7 FIX (2026-02-20): Static class map so Tailwind JIT can detect at build time */}
+          <h2 className={`text-3xl ${
+            { teal: 'text-teal-600', green: 'text-green-600', blue: 'text-blue-600', orange: 'text-orange-600', purple: 'text-purple-600' }[accentColor] || 'text-gray-600'
+          }`}>
             {timeSlot.replace('am', ' a.m.').replace('pm', ' p.m.')}
           </h2>
           {canEdit && (
