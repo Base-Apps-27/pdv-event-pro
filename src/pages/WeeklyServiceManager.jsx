@@ -651,23 +651,20 @@ export default function WeeklyServiceManager() {
     });
   }, [selectedAnnouncements]);
 
-  // Central auto-save (Phase 5: with stale guard for manual-save scenarios)
-  // Auto-save does NOT check staleness (would be disruptive).
-  // Staleness is only checked on the manual save path; auto-save is last-write-wins by design.
-  useEffect(() => {
-    if (!lastSavedData || !serviceData) return;
-    if (JSON.stringify(serviceData) === JSON.stringify(lastSavedData)) return;
-    const handler = setTimeout(() => {
-      saveServiceMutation.mutate({
-        ...serviceData, selected_announcements: selectedAnnouncements,
-        print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
-        day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
-        name: `Domingo - ${selectedDate}`, status: 'active',
-        service_type: 'weekly'
-      });
-    }, 1000);
-    return () => clearTimeout(handler);
-  }, [serviceData, lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
+  // SONG-OVERWRITE-FIX-2 (2026-02-20): Central auto-save REMOVED.
+  // It created a parallel save path that raced with debouncedSave in handlers,
+  // causing query invalidation → existingData refetch → reinitialization of
+  // serviceData from server → local edits destroyed.
+  //
+  // All saves now flow exclusively through handlers.debouncedSave, which:
+  //   1. Uses serviceDataRef (always-current snapshot) to build the payload
+  //   2. Fires after 800ms debounce
+  //   3. Does NOT invalidate the query (local state is truth during editing)
+  //
+  // The old central auto-save watched serviceData changes and fired at 1000ms,
+  // but because saveServiceMutation.onSuccess called queryClient.invalidateQueries,
+  // it triggered a refetch of existingData, which re-ran the initialization useEffect,
+  // which overwrote serviceData with server data — destroying in-progress edits.
 
   // ── Segment expand toggle (local UI) ──
   const toggleSegmentExpanded = (timeSlot, idx) => {
