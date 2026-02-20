@@ -100,6 +100,9 @@ export default function BlueprintEditor() {
       return base44.entities.Service.update(blueprint.id, updatedSlots);
     },
     onSuccess: () => {
+      // BLUEPRINT-INIT-GUARD-v2: Reset the init ref so the next fetch (from
+      // invalidation) re-populates local state with the saved data.
+      initializedBlueprintIdRef.current = null;
       queryClient.invalidateQueries(['serviceBlueprint']);
       setDirty(false);
       toast.success("Blueprint guardado correctamente");
