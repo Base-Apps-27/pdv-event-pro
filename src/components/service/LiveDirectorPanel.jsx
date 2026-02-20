@@ -167,7 +167,13 @@ function MobileSegmentCard({
           ) : (
             <div 
               className={`font-mono ${!isBlocked ? 'cursor-pointer' : ''}`}
-              onClick={() => !isBlocked && setEditingField('start') && setEditValue(actualStart || '')}
+              onClick={() => {
+                // H-BUG-1 FIX: && short-circuit prevented setEditValue from running
+                if (!isBlocked) {
+                  setEditingField('start');
+                  setEditValue(actualStart || '');
+                }
+              }}
             >
               <span className={actualStart ? 'text-white' : 'text-slate-600'}>{actualStart || '—'}</span>
               {startDiff !== null && startDiff !== 0 && (
