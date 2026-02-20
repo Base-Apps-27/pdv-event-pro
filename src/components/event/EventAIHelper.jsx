@@ -722,14 +722,8 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
           )}
         </div>
 
-        {/* Interactive Program Editor — replaces old AIProposalReview */}
-        <AIProposalEditor
-          isOpen={showReview}
-          proposedActions={proposedActions}
-          onApprove={(actions) => executeActions(actions, false)}
-          onCancel={() => { setShowReview(false); reset(); }}
-          isExecuting={executionStatus === 'executing'}
-        />
+        {/* Note: AIProposalEditor is rendered at the top level when showReview=true,
+            so the parent dialog is fully hidden and the user sees only the editor. */}
 
         {/* Event Clarification Picker */}
         <EventClarificationPicker
