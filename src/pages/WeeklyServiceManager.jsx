@@ -933,6 +933,7 @@ export default function WeeklyServiceManager() {
         deleteAnnouncementMutation={deleteAnnouncementMutation}
         showResetConfirm={showResetConfirm} setShowResetConfirm={setShowResetConfirm}
         executeResetToBlueprint={handlers.executeResetToBlueprint}
+        slotNames={sundaySlotNames}
         verseParserOpen={verseParserOpen} setVerseParserOpen={setVerseParserOpen}
         verseParserContext={verseParserContext} handleSaveParsedVerses={handlers.handleSaveParsedVerses}
         showPrintSettings={showPrintSettings} setShowPrintSettings={setShowPrintSettings}
