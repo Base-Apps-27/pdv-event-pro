@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'URL is required' }, { status: 400 });
     }
 
-    // Validate URL format (soft validation - warn but proceed)
+    // Validate URL format
     let parsedUrl;
     try {
       parsedUrl = new URL(url);
@@ -44,7 +44,29 @@ Deno.serve(async (req) => {
       });
     }
 
+    // H-SEC-4 FIX (2026-02-20): SSRF guard — block private/internal IPs and non-HTTP schemes.
+    const scheme = parsedUrl.protocol;
+    if (scheme !== 'http:' && scheme !== 'https:') {
+      return Response.json({ title: null, thumbnail: null, type: 'blocked', error: 'Only HTTP(S) URLs are allowed' });
+    }
     const hostname = parsedUrl.hostname.toLowerCase();
+    // Block private IPs, loopback, link-local, metadata endpoints
+    const blockedPatterns = [
+      /^localhost$/i,
+      /^127\./,
+      /^10\./,
+      /^172\.(1[6-9]|2\d|3[01])\./,
+      /^192\.168\./,
+      /^169\.254\./,           // AWS/cloud metadata link-local
+      /^0\./,                   // 0.0.0.0 range
+      /^\[::1\]$/,             // IPv6 loopback
+      /^\[fc/i, /^\[fd/i,     // IPv6 private
+      /^\[fe80/i,              // IPv6 link-local
+      /^metadata\.google\.internal$/i,
+    ];
+    if (blockedPatterns.some(p => p.test(hostname))) {
+      return Response.json({ title: null, thumbnail: null, type: 'blocked', error: 'Private/internal URLs are not allowed' });
+    }
 
     // YouTube detection
     if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
