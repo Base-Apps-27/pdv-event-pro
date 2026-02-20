@@ -296,12 +296,13 @@ worship→Alabanza, sermon/message/plenaria→Plenaria, break→Break/Receso, lu
 - Set the first actual program segment's start_time to when the program begins (after registration)
 - Do NOT create a segment for registration
 
-## ALMUERZO / LUNCH HANDLING (IMPORTANT)
-"Almuerzo" / "Lunch" / "Cena" / "Dinner" are long breaks, NOT separate sessions.
-- They MUST be the LAST segment of the session that precedes them (segment_type: "Almuerzo", major_break: true, color_code: "break").
-- Do NOT create a standalone session for a meal break.
-- The session's planned_end_time should extend to include the meal break duration.
-- The next session starts after the meal break ends.
+## ALMUERZO / LUNCH HANDLING (CRITICAL — MUST FOLLOW)
+"Almuerzo" / "Lunch" / "Cena" / "Dinner" are SEGMENTS, NOT sessions.
+- NEVER create a session with name containing "Almuerzo" or "Lunch" — this is WRONG.
+- Almuerzo MUST be a segment (segment_type: "Almuerzo", major_break: true, color_code: "break") as the LAST segment of the session that precedes it.
+- The session's planned_end_time should include the meal break.
+- The NEXT session starts after the meal ends (e.g., if lunch is 12:10-1:40, Session 3 starts at 1:45).
+- If extracted data incorrectly shows "Almuerzo" as a session, convert it to a segment in the preceding session.
 
 ## COLOR_CODE MAPPING
 worship→Alabanza/Ministración, preach→Plenaria, break→Break/Receso/Almuerzo, special→Artes/Especial, default→others. Almuerzo→major_break:true.
