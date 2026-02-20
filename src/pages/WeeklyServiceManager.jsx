@@ -435,10 +435,16 @@ export default function WeeklyServiceManager() {
                 if (savedType === 'worship') subAssignments = [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }];
                 else if (savedType === 'message') subAssignments = [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }];
               }
+              // SONG-SLOT FIX (2026-02-20): Ensure worship segments have song slots
+              let songs = savedSeg.songs;
+              if (savedType === 'worship' && (!songs || !Array.isArray(songs) || songs.length === 0)) {
+                songs = [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }];
+              }
               return {
                 ...savedSeg,
                 fields: mergedFields,
                 sub_assignments: subAssignments,
+                songs,
                 // Preserve user's own actions — do NOT inject blueprint actions
               };
             }
