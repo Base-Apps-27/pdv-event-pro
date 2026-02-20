@@ -318,14 +318,21 @@ export default function WeeklyServiceManager() {
         return await base44.entities.Service.create(data);
       }
     },
-    onSuccess: (result) => {
-      // SONG-OVERWRITE-FIX-2 (2026-02-20): Do NOT invalidate the query on save success.
-      // The local serviceData state is the source of truth while the user is editing.
-      // Invalidating causes a refetch of existingData → re-triggers the initialization
-      // useEffect → overwrites local state with server data → destroys in-progress edits.
-      //
-      // Instead, we update lastSavedData to match current local state (for change detection),
-      // update the stale guard baseline, and persist a local backup.
+    onSuccess: async (result) => {
+      // PHASE 1 FIX (2026-02-20): AWAIT entity sync + invalidate queries.
+      // Entity-first architecture requires Session/Segment to be primary source of truth.
+      // Sync MUST complete before cache refresh, else PublicProgramView loads stale JSON.
+      try {
+        await syncWeeklyToSessions(base44, result, result, sundaySlots);
+        // After entity sync succeeds, invalidate PublicProgramView caches so subscribers get fresh data
+        queryClient.invalidateQueries({ queryKey: ['activeProgram'] });
+        queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
+      } catch (err) {
+        console.error("[WEEKLY_SYNC] CRITICAL: Entity sync failed:", err.message);
+        toast.error('Error sincronizando entidades: ' + err.message);
+        return; // Do NOT mark as saved if entity sync fails
+      }
+
       setLastSaveTimestamp(new Date().toISOString());
       setHasUnsavedChanges(false);
       // Sync lastSavedData to current serviceData so change detection sees "no diff"
@@ -336,11 +343,6 @@ export default function WeeklyServiceManager() {
       if (result?.updated_date) captureServiceBaseline(result.updated_date);
       const backupKey = `service_backup_${selectedDate}`;
       safeSetItem(backupKey, JSON.stringify({ data: result, timestamp: new Date().toISOString() }));
-
-      // Entity Lift: sync to Session/Segment/PreSessionDetails entities (fire-and-forget)
-      syncWeeklyToSessions(base44, result, result, sundaySlots).catch(err => {
-        console.error("[WEEKLY_SYNC] Entity sync failed (non-blocking):", err.message);
-      });
     },
     onError: (error) => {
       toast.error('Error al guardar: ' + error.message);
