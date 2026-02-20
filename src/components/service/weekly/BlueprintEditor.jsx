@@ -99,11 +99,14 @@ export default function BlueprintEditor() {
       if (!blueprint?.id) throw new Error("No blueprint found");
       return base44.entities.Service.update(blueprint.id, updatedSlots);
     },
-    onSuccess: () => {
-      // BLUEPRINT-INIT-GUARD-v2: Reset the init ref so the next fetch (from
-      // invalidation) re-populates local state with the saved data.
+    onSuccess: (savedData) => {
+      // BLUEPRINT-PUSH-MODEL (2026-02-20): Push saved blueprint directly into
+      // the query cache instead of invalidating. This prevents a background
+      // refetch that could destabilize WeeklyServiceManager's local state.
+      // WeeklyServiceManager uses staleTime: Infinity, so setQueryData is the
+      // only way its blueprintData gets updated during a session.
       initializedBlueprintIdRef.current = null;
-      queryClient.invalidateQueries(['serviceBlueprint']);
+      queryClient.setQueryData(['serviceBlueprint'], savedData);
       setDirty(false);
       toast.success("Blueprint guardado correctamente");
     },
