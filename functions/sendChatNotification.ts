@@ -13,6 +13,18 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// H-SEC-5 FIX (2026-02-20): Escape HTML to prevent injection in email body.
+// senderName, contextName, messagePreview are user-controlled strings.
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
