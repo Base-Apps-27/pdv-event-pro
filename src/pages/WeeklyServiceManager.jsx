@@ -686,7 +686,7 @@ export default function WeeklyServiceManager() {
   // ── Render ──
   return (
     <ServiceDataContext.Provider value={serviceData}>
-      <UpdatersContext.Provider value={{ updateSegmentField: handlers.updateSegmentField, updateTeamField: handlers.updateTeamField, setServiceData }}>
+      <UpdatersContext.Provider value={{ updateSegmentField: handlers.updateSegmentField, updateTeamField: handlers.updateTeamField, setServiceData, debouncedSave: handlers.debouncedSave }}>
     <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
       <WeeklyServicePrintCSS printSettingsPage1={activePrintSettingsPage1} printSettingsPage2={activePrintSettingsPage2} />
 
