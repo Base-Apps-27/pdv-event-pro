@@ -21,8 +21,7 @@ import { Sparkles, Send, CheckCircle2, AlertCircle, Loader2, X, ChevronRight, Un
 import { toast } from "sonner";
 import { useLanguage } from "@/components/utils/i18n";
 import { validateAIActions, formatValidationForDisplay, VALID_SEGMENT_TYPES } from "@/components/utils/segmentValidation";
-import AIProposalReview from "@/components/event/AIProposalReview";
-import ScheduleEditor from "@/components/event/schedule-editor/ScheduleEditor";
+import AIProposalEditor from "@/components/event/AIProposalEditor";
 
 import EventClarificationPicker from "@/components/event/EventClarificationPicker";
 import AIFileUploadZone from "@/components/event/AIFileUploadZone";
@@ -42,7 +41,6 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
   const [executionStatus, setExecutionStatus] = useState(null);
   const [validation, setValidation] = useState(null);
   const [showReview, setShowReview] = useState(false);
-  const [showScheduleEditor, setShowScheduleEditor] = useState(false);
   const [clarificationOptions, setClarificationOptions] = useState(null);
   const [showClarification, setShowClarification] = useState(false);
   const [sourceEventData, setSourceEventData] = useState(null);
@@ -326,19 +324,10 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
         setClarificationOptions(matches.length > 0 ? matches : response.options || []);
         setShowClarification(true);
       } else {
-        const validationResult = validateAIActions(response.actions || []);
-        setValidation(validationResult);
+        // Always open the interactive editor so the user can see & edit
+        // the full session/segment tree before confirming.
         setProposedActions(response);
-        
-        // Route to the right UI: schedule editor for create actions, old review for updates
-        const hasCreateActions = (response.actions || []).some(a =>
-          a.type === 'create_sessions_with_segments' || a.type === 'create_sessions' || a.type === 'create_segments'
-        );
-        if (hasCreateActions) {
-          setShowScheduleEditor(true);
-        } else {
-          setShowReview(true);
-        }
+        setShowReview(true);
       }
     } catch (error) {
       console.error("AI analysis error:", error);
@@ -545,7 +534,6 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
     setExecutionStatus(null);
     setValidation(null);
     setShowReview(false);
-    setShowScheduleEditor(false);
     setClarificationOptions(null);
     setShowClarification(false);
     setSourceEventData(null);
@@ -663,30 +651,8 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
             </div>
           )}
 
-          {/* Proposed Actions — non-create (updates) go through old review */}
-          {proposedActions && executionStatus !== 'success' && !showReview && !showScheduleEditor && (
-            <div className="space-y-4">
-              <Card className="p-4 bg-blue-50 border-blue-200">
-                <h4 className="font-semibold text-blue-900 mb-2">
-                  {language === 'es' ? 'Entendí tu solicitud' : 'I understood your request'}:
-                </h4>
-                <p className="text-blue-800">{proposedActions.understood_request}</p>
-              </Card>
-
-              <Button 
-                onClick={() => setShowReview(true)}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-              >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                {language === 'es' ? 'Revisar Cambios' : 'Review Changes'}
-              </Button>
-
-              <Button variant="outline" onClick={reset} className="w-full">
-                <Undo2 className="w-4 h-4 mr-2" />
-                {language === 'es' ? 'Cancelar' : 'Cancel'}
-              </Button>
-            </div>
-          )}
+          {/* Note: Proposed actions now open the interactive editor directly (showReview=true).
+              No intermediate "Review Changes" button needed. */}
 
           {/* Success State */}
           {executionStatus === 'success' && (
@@ -712,21 +678,11 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
           )}
         </div>
 
-        {/* Schedule Editor — visual editor for create actions */}
-        <ScheduleEditor
-          isOpen={showScheduleEditor}
-          proposedActions={proposedActions}
-          onConfirm={executeActions}
-          onCancel={() => { setShowScheduleEditor(false); reset(); }}
-          isExecuting={executionStatus === 'executing'}
-        />
-
-        {/* Review Modal — for update actions (non-create) */}
-        <AIProposalReview
+        {/* Interactive Program Editor — replaces old AIProposalReview */}
+        <AIProposalEditor
           isOpen={showReview}
           proposedActions={proposedActions}
-          validation={validation}
-          onApprove={executeActions}
+          onApprove={(actions) => executeActions(actions, false)}
           onCancel={() => { setShowReview(false); reset(); }}
           isExecuting={executionStatus === 'executing'}
         />
