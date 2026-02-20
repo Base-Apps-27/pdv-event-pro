@@ -250,8 +250,7 @@ export default function Dashboard() {
                         </div>
                         <Button 
                           onClick={() => navigate(createPageUrl('EventDetail') + `?id=${event.id}`)}
-                          style={gradientStyle}
-                          className="w-full mt-4 text-white font-semibold"
+                          className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                         >
                           {t('btn.view_details')}
                           <ArrowRight className="w-4 h-4 ml-2" />
@@ -270,8 +269,7 @@ export default function Dashboard() {
                 <p className="text-gray-600 text-sm mb-4">{t('dashboard.create_first')}</p>
                 <Button 
                   onClick={() => navigate(createPageUrl('Events'))}
-                  style={gradientStyle}
-                  className="text-white font-semibold"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   {t('btn.create_event')}
