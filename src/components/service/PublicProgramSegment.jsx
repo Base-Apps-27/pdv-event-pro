@@ -148,7 +148,34 @@ export default function PublicProgramSegment({
 
   // VISUAL HIERARCHY LOGIC
   // Mobile-first: start compact (p-3 my-2), scale up on sm+ (sm:p-5 sm:my-4)
+  // timelineMode: MyProgram-inspired rounded cards with status-driven styling (Services Live View)
   const getContainerStyles = () => {
+    // Timeline mode: MyProgram-inspired card styles with rounded-2xl, status-driven colors
+    if (timelineMode) {
+      // Live Director overrides first
+      if (segment.live_status === 'skipped') {
+        return 'bg-gray-50 border border-gray-200 rounded-2xl opacity-50 p-4 sm:p-5';
+      }
+      if (segment.live_hold_status === 'held') {
+        return 'bg-amber-50 border-2 border-amber-500 rounded-2xl shadow-lg p-4 sm:p-5 animate-pulse';
+      }
+      if (segment.live_status === 'shifted') {
+        return 'bg-purple-50 border-2 border-purple-400 rounded-2xl shadow-sm p-4 sm:p-5';
+      }
+      // Status-driven (current > upcoming > type-based)
+      if (isCurrent) return 'bg-yellow-50/80 border-2 border-yellow-400 rounded-2xl shadow-lg p-4 sm:p-5 relative overflow-hidden';
+      if (isUpcoming) return 'bg-white border border-blue-200 border-l-4 border-l-blue-500 rounded-2xl shadow-sm p-4 sm:p-5';
+      // Type-based
+      if (isMessage) return 'bg-blue-50/60 border border-blue-200 rounded-2xl shadow-sm p-4 sm:p-5';
+      if (isPanel) return 'bg-amber-50/60 border border-amber-200 rounded-2xl shadow-sm p-4 sm:p-5';
+      if (isWorship) return 'bg-purple-50/60 border border-purple-200 rounded-2xl shadow-sm p-4 sm:p-5';
+      if (isArtes) return 'bg-rose-50/60 border border-rose-200 rounded-2xl shadow-sm p-4 sm:p-5';
+      if (isBreakSegment) return 'bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl opacity-80 p-4 sm:p-5';
+      // Default
+      return 'bg-white border border-gray-200 rounded-2xl p-4 sm:p-5';
+    }
+
+    // Original styles (Events Live View — unchanged)
     // 0. Live Director Status Overrides
     // Skipped segments are visually de-emphasized
     if (segment.live_status === 'skipped') {
