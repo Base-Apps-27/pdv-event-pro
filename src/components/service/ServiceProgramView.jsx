@@ -389,7 +389,7 @@ export default function ServiceProgramView({
         />
       )}
 
-      <LiveStatusCard
+      <ServiceStatusBar
         segments={adjustedAllSegments}
         currentTime={currentTime}
         onScrollTo={scrollToSegment}
