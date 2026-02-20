@@ -395,7 +395,16 @@ export default function WeeklyServiceManager() {
   });
 
   // ── Initialize service data from DB or blueprint ──
+  // SONG-OVERWRITE-FIX-2 (2026-02-20): Only initialize on first load for this date.
+  // Once we've initialized, local state is the source of truth.
+  // Reset the ref when selectedDate changes so new dates get fresh initialization.
+  React.useEffect(() => {
+    localStateInitializedRef.current = false;
+  }, [selectedDate]);
+
   useEffect(() => {
+    // Guard: skip re-initialization if we've already loaded data for this date
+    if (localStateInitializedRef.current) return;
     if (existingData) {
       // Entity Lift FINAL: When data came from Session/Segment entities (_fromEntities),
       // segments already carry their own fields/sub_assignments/actions — no blueprint
