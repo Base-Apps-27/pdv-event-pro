@@ -453,7 +453,13 @@ function StandardSegmentCard({
               <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
               <Input type="number" value={segment.duration || 0} onChange={(e) => {
                 const newDuration = parseInt(e.target.value) || 0;
-                setServiceData(prev => { const updated = { ...prev }; updated[timeSlot][idx].duration = newDuration; return updated; });
+                // CRIT-7 FIX (StandardSegmentCard): Deep-clone nested array to avoid state mutation
+                setServiceData(prev => {
+                  const updated = { ...prev };
+                  updated[timeSlot] = [...prev[timeSlot]];
+                  updated[timeSlot][idx] = { ...updated[timeSlot][idx], duration: newDuration };
+                  return updated;
+                });
                 debouncedSave(`${timeSlot}-${idx}-duration`);
               }} className="text-xs w-24" />
             </div>
