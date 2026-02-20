@@ -31,7 +31,8 @@ export default function SessionEditorCard({
   onDeleteSession,
   onUpdateSegment,
   onDeleteSegment,
-  onMoveSegment
+  onMoveSegment,
+  onAddSegment
 }) {
   const { language } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
