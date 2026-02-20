@@ -39,7 +39,6 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
   const [proposedActions, setProposedActions] = useState(null);
   const [queryResult, setQueryResult] = useState(null);
   const [executionStatus, setExecutionStatus] = useState(null);
-  const [validation, setValidation] = useState(null);
   const [showReview, setShowReview] = useState(false);
   const [clarificationOptions, setClarificationOptions] = useState(null);
   const [showClarification, setShowClarification] = useState(false);
