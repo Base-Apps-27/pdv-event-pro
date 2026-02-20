@@ -265,7 +265,12 @@ export function useWeeklyServiceHandlers({
     debouncedSave('copy-team');
   };
 
-  const executeResetToBlueprint = () => {
+  /**
+   * executeResetToBlueprint — RESET-SLOT-FIX (2026-02-20)
+   * Now accepts an optional array of slot names to reset.
+   * If omitted or empty, resets ALL slots (backward-compatible).
+   */
+  const executeResetToBlueprint = (slotsToReset) => {
     setShowResetConfirm(false);
 
     setSavingField('reset-blueprint');
@@ -307,15 +312,16 @@ export function useWeeklyServiceHandlers({
       return segmentCopy;
     });
 
-    // Phase 2: Reset all dynamic slots from ServiceSchedule
-    // Blueprint Revamp: if no DB blueprint, reset produces empty slots (user must re-add)
     const initialData = { ...serviceData };
     if (!activeBlueprint) {
       toast.error("No se encontró el blueprint en la base de datos. No se puede restablecer.");
       setSavingField(null);
       return;
     }
-    slotNames.forEach(name => {
+
+    // RESET-SLOT-FIX: Only reset the selected slots (or all if not specified)
+    const targetSlots = (slotsToReset && slotsToReset.length > 0) ? slotsToReset : slotNames;
+    targetSlots.forEach(name => {
       const bpSegments = activeBlueprint[name] || activeBlueprint[firstSlot] || [];
       initialData[name] = mapBpSegments(bpSegments);
     });
@@ -328,13 +334,18 @@ export function useWeeklyServiceHandlers({
       selected_announcements: selectedAnnouncements,
       day_of_week: 'Sunday',
       name: `Domingo - ${selectedDate}`,
-      status: 'active'
+      status: 'active',
+      service_type: 'weekly'
     };
     
+    const resetLabel = targetSlots.length < slotNames.length
+      ? `Horarios restablecidos: ${targetSlots.join(', ')}`
+      : "Servicio restablecido al diseño original";
+
     saveServiceMutation.mutate(dataToSave, {
       onSettled: () => setSavingField(null),
       onSuccess: () => {
-        toast.success("Servicio restablecido al diseño original");
+        toast.success(resetLabel);
       }
     });
   };
