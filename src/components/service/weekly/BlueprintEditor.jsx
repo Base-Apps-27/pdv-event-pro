@@ -66,25 +66,32 @@ export default function BlueprintEditor() {
 
   const [activeSlot, setActiveSlot] = useState("");
 
-  // BLUEPRINT-INIT-GUARD (2026-02-20): Only re-initialize local state when the
-  // blueprint entity itself changes (tracked by id + updated_date), NOT on every
-  // render. Without this guard, the useMemo for slotNames could produce a new
-  // array reference on re-render, causing this useEffect to fire and wipe locally-
-  // added segments before the user has a chance to save.
-  const blueprintFingerprint = blueprint ? `${blueprint.id}_${blueprint.updated_date}` : null;
+  // BLUEPRINT-INIT-GUARD-v2 (2026-02-20): Use a ref to track which blueprint id
+  // we've already initialized from. This prevents ALL re-initialization except when
+  // the actual blueprint record changes (different id) or after a successful save
+  // (which invalidates the query and bumps updated_date).
+  // Previous approach using blueprintFingerprint in deps still allowed spurious
+  // re-fires from React Query background refetches returning identical data with
+  // new object references.
+  const initializedBlueprintIdRef = React.useRef(null);
 
   useEffect(() => {
     if (slotNames.length === 0) return;
+    const currentId = blueprint?.id || null;
+    // Already initialized for this blueprint — skip
+    if (initializedBlueprintIdRef.current === currentId && currentId !== null) return;
+    
     const initial = {};
     slotNames.forEach(name => {
       initial[name] = JSON.parse(JSON.stringify(blueprint?.[name] || []));
     });
     setSlots(initial);
     setDirty(false);
+    initializedBlueprintIdRef.current = currentId;
     if (!activeSlot || !slotNames.includes(activeSlot)) {
       setActiveSlot(slotNames[0]);
     }
-  }, [blueprintFingerprint, slotNames.join(',')]);
+  }, [blueprint, slotNames]);
 
   // Save mutation
   const saveMutation = useMutation({
