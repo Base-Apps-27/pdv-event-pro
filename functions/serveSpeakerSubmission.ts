@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
             if (groupName !== currentGroup) {
                 if (currentGroup !== null) optionsHtml += '</optgroup>';
                 currentGroup = groupName;
-                optionsHtml += `<optgroup label="${currentGroup}">`;
+                optionsHtml += `<optgroup label="${escapeHtml(currentGroup)}">`;
             }
 
             // Simplified Label: Speaker • "Title" (or Segment Name)
@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
                 label += ` • ${opt.title}`;
             }
 
-            optionsHtml += `<option value="${opt.id}">${label}</option>`;
+            optionsHtml += `<option value="${escapeHtml(opt.id)}">${escapeHtml(label)}</option>`;
         });
         
         // Close last group
@@ -137,8 +137,8 @@ Deno.serve(async (req) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Versículos de su Mensaje | ${eventName}</title>
-  <meta property="og:title" content="Versículos de su Mensaje | ${eventName}" />
+  <title>Versículos de su Mensaje | ${escapeHtml(eventName)}</title>
+  <meta property="og:title" content="Versículos de su Mensaje | ${escapeHtml(eventName)}" />
   <meta property="og:description" content="Comparta sus notas o bosquejo para la proyección de versículos." />
   <meta property="og:type" content="website" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
