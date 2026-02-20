@@ -566,7 +566,7 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
       setExecutionStatus('success');
       setShowReview(false);
       queryClient.invalidateQueries(['sessions', eventId]);
-      queryClient.invalidateQueries({ queryKey: ['eventSegments', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['eventSegments', eventId], exact: false });
       queryClient.invalidateQueries(['event', eventId]);
       queryClient.invalidateQueries(['eventDays', eventId]);
       
