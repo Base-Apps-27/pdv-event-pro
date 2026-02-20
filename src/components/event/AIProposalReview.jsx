@@ -199,22 +199,33 @@ export default function AIProposalReview({
                           <p className="font-semibold text-gray-700 mb-1">
                             {language === 'es' ? 'Nuevos registros' : 'New records'}:
                           </p>
-                          <div className="bg-white p-2 rounded border border-gray-200 space-y-2 max-h-48 overflow-y-auto">
+                          <div className="bg-white p-2 rounded border border-gray-200 space-y-2 max-h-64 overflow-y-auto">
                             {action.create_data.map((item, itemIdx) => (
                               <div key={itemIdx} className="border-l-2 border-blue-300 pl-2 py-1">
                                 <p className="text-gray-700 font-semibold text-xs">
                                   {item.title || item.name || `Item ${itemIdx + 1}`}
                                 </p>
                                 <div className="text-gray-600 text-xs space-y-0.5 mt-1">
-                                  {Object.entries(item).map(([k, v]) => {
-                                    if (k === 'title' || k === 'name') return null;
-                                    return (
-                                      <div key={k}>
-                                        <span className="text-purple-600">{k}</span>: <span className="text-green-600">{String(v).substring(0, 50)}</span>
-                                      </div>
-                                    );
-                                  })}
+                                  {Object.entries(item).filter(([k]) => k !== 'title' && k !== 'name' && k !== 'segments').map(([k, v]) => (
+                                    <div key={k}>
+                                      <span className="text-purple-600">{k}</span>: <span className="text-green-600">{String(v).substring(0, 50)}</span>
+                                    </div>
+                                  ))}
                                 </div>
+                                {/* Nested segments for create_sessions_with_segments */}
+                                {item.segments?.length > 0 && (
+                                  <div className="mt-1.5 ml-2 space-y-1">
+                                    <p className="text-gray-500 text-[10px] uppercase tracking-wide">{item.segments.length} segments</p>
+                                    {item.segments.map((seg, sIdx) => (
+                                      <div key={sIdx} className="border-l-2 border-green-300 pl-2 py-0.5 text-[11px] text-gray-600">
+                                        <span className="font-medium text-gray-700">{seg.title || `Seg ${sIdx + 1}`}</span>
+                                        {seg.segment_type && <span className="ml-1 text-purple-500">({seg.segment_type})</span>}
+                                        {seg.start_time && <span className="ml-1 text-gray-400">{seg.start_time}</span>}
+                                        {seg.duration_min && <span className="ml-1 text-gray-400">{seg.duration_min}min</span>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
