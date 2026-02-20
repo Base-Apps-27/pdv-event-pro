@@ -314,6 +314,7 @@ Full segment fields: requires_translation, translation_mode, translator_name, pr
 If uncertain which past event: {"type":"ask_event_clarification","message":"Which?","options":[{id,name,year}]}
 
 ## RESPONSE FORMAT (JSON)
+ONLY create sessions that have real data. Do NOT create empty placeholder sessions.
 For creating sessions with segments, use EXACTLY this structure:
 {"request_type":"action","understood_request":"...","actions":[{"type":"create_sessions_with_segments","description":"...","create_data":[{"name":"Session Name","date":"YYYY-MM-DD","planned_start_time":"HH:MM","planned_end_time":"HH:MM","session_color":"blue","order":1,"segments":[{"title":"...","segment_type":"...","start_time":"HH:MM","duration_min":30,"presenter":"...","order":1,"color_code":"default"}]}],"affected_count":N}],"warnings":[],"requires_confirmation":true}
 
