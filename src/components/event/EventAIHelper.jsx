@@ -144,6 +144,89 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
     }
   };
 
+  // ── Direct extraction → actions conversion (bypasses LLM for reliability) ──
+  // When ExtractDataFromUploadedFile returns structured sessions, we map them
+  // deterministically to create_sessions_with_segments actions. This avoids
+  // LLM token-limit truncation that was dropping sessions 3+ (2026-02-20 fix).
+  const TYPE_HINT_TO_SEGMENT_TYPE = {
+    worship: 'Alabanza', sermon: 'Plenaria', message: 'Plenaria', plenaria: 'Plenaria',
+    break: 'Receso', lunch: 'Almuerzo', dinner: 'Almuerzo', cena: 'Almuerzo',
+    arts: 'Artes', drama: 'Artes', dance: 'Artes',
+    prayer: 'Oración', video: 'Video', announcements: 'Anuncio',
+    mc: 'MC', offering: 'Ofrenda', welcome: 'Bienvenida',
+    panel: 'Panel', closing: 'Cierre', special: 'Especial', other: 'Especial',
+    dynamic: 'Dinámica', dinamica: 'Dinámica', ministration: 'Ministración',
+  };
+  const SEGMENT_TYPE_TO_COLOR = {
+    Alabanza: 'worship', Ministración: 'worship',
+    Plenaria: 'preach',
+    Break: 'break', Receso: 'break', Almuerzo: 'break',
+    Artes: 'special', Especial: 'special',
+  };
+
+  function addMinutesHelper(timeStr, mins) {
+    if (!timeStr || !mins) return '';
+    const [h, m] = timeStr.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return '';
+    const total = h * 60 + m + mins;
+    return `${String(Math.floor(total / 60) % 24).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+  }
+
+  function convertExtractionToActions(extracted) {
+    const sessions = (extracted.sessions || []).map((es, sIdx) => {
+      const segments = [];
+      let registrationTime = null;
+
+      for (const seg of (es.segments || [])) {
+        const hint = (seg.type_hint || 'other').toLowerCase().trim();
+        // Registration is not a segment — track its time for session start
+        if (hint === 'registration') { registrationTime = seg.start_time; continue; }
+
+        const segType = TYPE_HINT_TO_SEGMENT_TYPE[hint] || 'Especial';
+        segments.push({
+          title: seg.title || '',
+          segment_type: segType,
+          start_time: seg.start_time || '',
+          duration_min: seg.duration_min || null,
+          presenter: seg.presenter || '',
+          message_title: seg.message_title || '',
+          color_code: SEGMENT_TYPE_TO_COLOR[segType] || 'default',
+          order: segments.length + 1,
+          major_break: segType === 'Almuerzo',
+          ...(seg.notes ? { other_notes: seg.notes } : {}),
+        });
+      }
+
+      const firstSegTime = segments[0]?.start_time;
+      const lastSeg = segments[segments.length - 1];
+      const calcEnd = lastSeg ? addMinutesHelper(lastSeg.start_time, lastSeg.duration_min) : '';
+
+      return {
+        name: es.name || `Sesión ${sIdx + 1}`,
+        date: es.date || '',
+        planned_start_time: registrationTime || es.start_time || firstSegTime || '',
+        planned_end_time: es.end_time || calcEnd || '',
+        session_color: 'blue',
+        order: sIdx + 1,
+        segments,
+      };
+    });
+
+    const totalSegs = sessions.reduce((s, sess) => s + sess.segments.length, 0);
+    return {
+      request_type: 'action',
+      understood_request: `Create ${sessions.length} sessions with ${totalSegs} segments from uploaded schedule`,
+      actions: [{
+        type: 'create_sessions_with_segments',
+        description: `Create ${sessions.length} sessions from uploaded schedule`,
+        create_data: sessions,
+        affected_count: sessions.length + totalSegs,
+      }],
+      warnings: [],
+      requires_confirmation: true,
+    };
+  }
+
   // ── Build compact context for LLM (trimmed vs old bloated version) ──
   const buildContext = () => ({
     event: event ? {
