@@ -139,16 +139,19 @@ export default function WeeklyServiceManager() {
   const [activeDay, setActiveDay] = useState('sunday');
 
   // ── Queries ──
-  // SEGMENT-DISAPPEAR-FIX (2026-02-20): Added staleTime to prevent background
-  // refetches from producing new object references that cascade into re-renders
-  // and potential state corruption. Blueprint data rarely changes mid-session.
+  // SEGMENT-DISAPPEAR-FIX-v2 (2026-02-20): staleTime: Infinity.
+  // This editor owns local state as source of truth once initialized.
+  // Background refetches provide zero benefit and only risk destabilizing
+  // local state via new object references in useEffect deps.
+  // Fresh data is fetched on: date change (new queryKey) or explicit
+  // invalidation from BlueprintEditor save (push model via setQueryData).
   const { data: blueprintData } = useQuery({
     queryKey: ['serviceBlueprint'],
     queryFn: async () => {
       const blueprints = await base44.entities.Service.filter({ status: 'blueprint' });
       return blueprints[0] || null;
     },
-    staleTime: 10 * 60 * 1000, // 10 min — blueprint rarely changes
+    staleTime: Infinity,
   });
 
   // Fetch services for the full week surrounding selectedDate to populate weekday tabs
@@ -218,6 +221,9 @@ export default function WeeklyServiceManager() {
     return WEEKDAYS.filter(w => daySet.has(w.key));
   }, [weekServices, scheduledDays]);
 
+  // SEGMENT-DISAPPEAR-FIX-v2 (2026-02-20): staleTime: Infinity.
+  // Same rationale as blueprintData — local state is source of truth once loaded.
+  // Only refetches when selectedDate changes (new queryKey) or after save invalidation.
   const { data: existingData, isLoading } = useQuery({
     queryKey: ['weeklyService', selectedDate],
     queryFn: async () => {
@@ -265,7 +271,8 @@ export default function WeeklyServiceManager() {
 
       return service;
     },
-    enabled: !!selectedDate
+    enabled: !!selectedDate,
+    staleTime: Infinity,
   });
 
   const { data: allAnnouncements = [] } = useQuery({
