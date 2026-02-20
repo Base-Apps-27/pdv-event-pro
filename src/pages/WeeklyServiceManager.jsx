@@ -139,12 +139,17 @@ export default function WeeklyServiceManager() {
   const [activeDay, setActiveDay] = useState('sunday');
 
   // ── Queries ──
+  // SEGMENT-DISAPPEAR-FIX-v4 (2026-02-21): Explicit staleTime: Infinity on blueprintData.
+  // Blueprint is a reference template — it does not change during a user session.
+  // Without staleTime, background refetches can momentarily set blueprintData to null,
+  // which triggers unwanted side effects during initialization.
   const { data: blueprintData } = useQuery({
     queryKey: ['serviceBlueprint'],
     queryFn: async () => {
       const blueprints = await base44.entities.Service.filter({ status: 'blueprint' });
       return blueprints[0] || null;
     },
+    staleTime: Infinity,
   });
 
   // Fetch services for the full week surrounding selectedDate to populate weekday tabs
@@ -408,10 +413,9 @@ export default function WeeklyServiceManager() {
   useEffect(() => {
     // Guard: skip re-initialization if we've already loaded data for this date
     if (localStateInitializedRef.current) return;
-    // CRITICAL: Wait for blueprintData to load. If existingData doesn't exist,
-    // we MUST have blueprintData to populate segments. If blueprintData is null/undefined,
-    // defer initialization until it arrives.
-    if (!existingData && !blueprintData) return;
+    // CRITICAL: For fresh loads (existingData=null), blueprintData MUST be available
+    // to seed segments. Only skip if blueprintData hasn't loaded yet.
+    if (!blueprintData) return;
     if (existingData) {
       // Entity Lift FINAL: When data came from Session/Segment entities (_fromEntities),
       // segments already carry their own fields/sub_assignments/actions — no blueprint
