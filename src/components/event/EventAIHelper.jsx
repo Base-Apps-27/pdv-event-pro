@@ -322,6 +322,24 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
           extractedSchedule.sessions.map(s => `"${s.name}" (${s.segments?.length || 0} segs)`));
       }
 
+      // DETERMINISTIC PATH (2026-02-20): When extraction succeeds and user didn't provide
+      // custom text instructions, skip the LLM entirely. This fixes the regression where
+      // the LLM was truncating/dropping sessions 3 and 4 from the extracted data.
+      // The LLM is only needed when:
+      //   a) extraction failed (vision fallback needed)
+      //   b) user typed additional instructions (e.g., "only import section 1")
+      const isFileOnlyImport = hasExtractedData && !finalInput.trim();
+      if (isFileOnlyImport) {
+        console.log(`[AI_FILE] Deterministic path: converting ${extractedSchedule.sessions.length} sessions directly (skipping LLM)`);
+        const directActions = convertExtractionToActions(extractedSchedule);
+        setProposedActions(directActions);
+        setShowReview(true);
+        setIsProcessing(false);
+        setProcessingStep("");
+        setAttachedFileUrl(null);
+        return;
+      }
+
       const fileSection = hasExtractedData
         ? `\n## EXTRACTED SCHEDULE DATA (from uploaded file)\n${JSON.stringify(extractedSchedule, null, 2)}\n\nIMPORTANT: Convert the extracted data above into create_sessions_with_segments actions. Each extracted session becomes one session. Almuerzo/Lunch items are segments (segment_type:"Almuerzo", major_break:true), NOT sessions.`
         : attachedFileUrl
@@ -330,11 +348,9 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
 
       const userInstruction = finalInput.trim()
         ? `"${finalInput}"`
-        : hasExtractedData
-          ? '"Create sessions and segments from the uploaded schedule"'
-          : '"Analyze the attached file and create sessions and segments"';
+        : '"Analyze the attached file and create sessions and segments"';
 
-      // Step 2: Lean LLM prompt
+      // Step 2: Lean LLM prompt (only reached when extraction failed OR user typed instructions)
       // ARCHITECTURE NOTE (2026-02-20): For file imports with extracted data, we use
       // "create_sessions_with_segments" action type — each session carries its own
       // segments array, so executeActions creates the session, gets the real ID, and
