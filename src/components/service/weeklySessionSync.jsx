@@ -161,14 +161,24 @@ export async function syncWeeklyToSessions(base44, serviceResult, serviceData, t
       const presenter = resolvePresenter(segData, getData);
 
       // Flatten songs array to song_N_* fields
-      const flatSongs = flattenSongs(getData("songs"));
+      const songsArray = getData("songs") || segData.songs;
+      const flatSongs = flattenSongs(songsArray);
+
+      // SONG-SLOT FIX (2026-02-20): Preserve the number of song SLOTS even when
+      // songs are all empty (e.g. right after blueprint reset). This lets the
+      // entity→JSON read path reconstruct empty rows for the UI.
+      const segTypeNorm = normalizeSegmentType(segData.type);
+      const isWorshipSeg = segTypeNorm === "Alabanza";
+      const songSlotCount = isWorshipSeg
+        ? Math.max(flatSongs._count, Array.isArray(songsArray) ? songsArray.length : 0, 4)
+        : flatSongs._count;
 
       const parentSegmentData = {
         session_id: session.id,
         service_id: serviceId,
         order: i + 1,
         title: segData.title || "",
-        segment_type: normalizeSegmentType(segData.type),
+        segment_type: segTypeNorm,
         start_time: startTimeStr,
         end_time: endTimeStr,
         duration_min: duration,
@@ -208,7 +218,7 @@ export async function syncWeeklyToSessions(base44, serviceResult, serviceData, t
           !!getData("content_is_slides_only") ||
           !!segData.content_is_slides_only,
         segment_actions: getData("actions") || segData.actions || [],
-        number_of_songs: flatSongs._count || 0,
+        number_of_songs: songSlotCount,
         ...flatSongs._fields,
         show_in_general: true,
         // Entity Lift: Persist UI metadata to eliminate blueprint matching on read
