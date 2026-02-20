@@ -21,8 +21,7 @@ import { Sparkles, Send, CheckCircle2, AlertCircle, Loader2, X, ChevronRight, Un
 import { toast } from "sonner";
 import { useLanguage } from "@/components/utils/i18n";
 import { validateAIActions, formatValidationForDisplay, VALID_SEGMENT_TYPES } from "@/components/utils/segmentValidation";
-import AIProposalReview from "@/components/event/AIProposalReview";
-import ScheduleEditor from "@/components/event/schedule-editor/ScheduleEditor";
+import AIProposalEditor from "@/components/event/AIProposalEditor";
 
 import EventClarificationPicker from "@/components/event/EventClarificationPicker";
 import AIFileUploadZone from "@/components/event/AIFileUploadZone";
@@ -42,7 +41,6 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
   const [executionStatus, setExecutionStatus] = useState(null);
   const [validation, setValidation] = useState(null);
   const [showReview, setShowReview] = useState(false);
-  const [showScheduleEditor, setShowScheduleEditor] = useState(false);
   const [clarificationOptions, setClarificationOptions] = useState(null);
   const [showClarification, setShowClarification] = useState(false);
   const [sourceEventData, setSourceEventData] = useState(null);
@@ -329,14 +327,7 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
         const validationResult = validateAIActions(response.actions || []);
         setValidation(validationResult);
         setProposedActions(response);
-        
-        // Route to the right UI: schedule editor for create actions, old review for updates
-        const hasCreateActions = (response.actions || []).some(a =>
-          a.type === 'create_sessions_with_segments' || a.type === 'create_sessions' || a.type === 'create_segments'
-        );
-        if (hasCreateActions) {
-          setShowScheduleEditor(true);
-        } else {
+        if (!validationResult.isValid || validationResult.warnings.length > 0) {
           setShowReview(true);
         }
       }
