@@ -252,10 +252,10 @@ export default function ServiceProgramView({
 
   if (!hasEntityWeeklySlots && !hasJsonWeeklySlots && !hasCustomSegments) {
     return (
-      <Card className="p-12 text-center bg-white border-2 border-gray-300">
+      <div className="p-12 text-center bg-white rounded-2xl border border-gray-200 shadow-sm">
         <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-600">Este servicio aún no tiene programa disponible</p>
-      </Card>
+      </div>
     );
   }
 
