@@ -331,23 +331,21 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
         setClarificationOptions(matches.length > 0 ? matches : response.options || []);
         setShowClarification(true);
       } else {
-        // Diagnostic: warn if LLM dropped real sessions from extraction (2026-02-20)
-        // Exclude meal-break "sessions" that the extraction may produce but the LLM
-        // correctly folds into the preceding session per ALMUERZO/LUNCH rules.
-        if (hasExtractedData) {
-          const mealPattern = /^(almuerzo|lunch|cena|dinner|comida|desayuno|breakfast)\b/i;
-          const realExtracted = extractedSchedule.sessions.filter(s => !mealPattern.test((s.name || '').trim()));
-          const extractedCount = realExtracted.length;
-          const llmSessionCount = (response.actions || [])
-            .filter(a => a.type === 'create_sessions_with_segments' || a.type === 'create_sessions')
-            .reduce((sum, a) => sum + (a.create_data?.length || 0), 0);
-          if (llmSessionCount < extractedCount) {
-            console.warn(`[AI_SESSION_DROP] Extraction had ${extractedCount} real sessions but LLM only returned ${llmSessionCount}. User can add missing ones in editor.`);
-            toast.warning(
-              language === 'es'
-                ? `Se detectaron ${extractedCount} sesiones pero la IA generó ${llmSessionCount}. Revisa y agrega las faltantes.`
-                : `${extractedCount} sessions detected but AI generated ${llmSessionCount}. Review and add missing ones.`
-            );
+        // Post-process: Filter out empty sessions (no name AND no segments)
+        // 2026-02-20: LLM sometimes generates placeholder sessions — remove them
+        if (response.actions) {
+          for (const action of response.actions) {
+            if (action.type === 'create_sessions_with_segments' && action.create_data) {
+              action.create_data = action.create_data.filter(session => {
+                const hasName = session.name && session.name.trim() && !session.name.match(/^(Nombre de sesión|Session Name|Sesión \d+)\.{0,3}$/i);
+                const hasSegments = session.segments && session.segments.length > 0;
+                if (!hasName && !hasSegments) {
+                  console.log(`[AI_FILTER] Removing empty session: "${session.name}"`);
+                  return false;
+                }
+                return true;
+              });
+            }
           }
         }
 
