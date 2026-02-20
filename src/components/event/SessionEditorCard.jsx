@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  ChevronDown, ChevronUp, Trash2, GripVertical
+  ChevronDown, ChevronUp, Trash2, Plus
 } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
 import SegmentEditorRow from "@/components/event/SegmentEditorRow";
