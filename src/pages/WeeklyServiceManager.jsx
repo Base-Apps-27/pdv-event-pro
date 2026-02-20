@@ -297,6 +297,11 @@ export default function WeeklyServiceManager() {
   });
 
   // ── Mutations ──
+  // SONG-OVERWRITE-FIX-2 (2026-02-20): Ref to track whether we've already initialized
+  // local state from DB. Once true, we skip re-initialization on subsequent existingData
+  // changes (caused by our own saves + query invalidation).
+  const localStateInitializedRef = React.useRef(false);
+
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
       if (existingData?.id) {
@@ -306,17 +311,25 @@ export default function WeeklyServiceManager() {
       }
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries(['weeklyService', selectedDate]);
+      // SONG-OVERWRITE-FIX-2 (2026-02-20): Do NOT invalidate the query on save success.
+      // The local serviceData state is the source of truth while the user is editing.
+      // Invalidating causes a refetch of existingData → re-triggers the initialization
+      // useEffect → overwrites local state with server data → destroys in-progress edits.
+      //
+      // Instead, we update lastSavedData to match current local state (for change detection),
+      // update the stale guard baseline, and persist a local backup.
       setLastSaveTimestamp(new Date().toISOString());
       setHasUnsavedChanges(false);
-      // H-ARCH-4 FIX (2026-02-20): Update stale guard baseline after successful save
-      // so next concurrent-edit check compares against OUR latest save, not the original load.
+      // Sync lastSavedData to current serviceData so change detection sees "no diff"
+      setLastSavedData(prev => {
+        const currentRef = serviceDataRef.current;
+        return currentRef ? JSON.parse(JSON.stringify(currentRef)) : prev;
+      });
       if (result?.updated_date) captureServiceBaseline(result.updated_date);
       const backupKey = `service_backup_${selectedDate}`;
       safeSetItem(backupKey, JSON.stringify({ data: result, timestamp: new Date().toISOString() }));
 
       // Entity Lift: sync to Session/Segment/PreSessionDetails entities (fire-and-forget)
-      // Phase 2: pass dynamic time slots from ServiceSchedule
       syncWeeklyToSessions(base44, result, result, sundaySlots).catch(err => {
         console.error("[WEEKLY_SYNC] Entity sync failed (non-blocking):", err.message);
       });
@@ -325,6 +338,10 @@ export default function WeeklyServiceManager() {
       toast.error('Error al guardar: ' + error.message);
     }
   });
+
+  // Ref to always have current serviceData for save operations
+  const serviceDataRef = React.useRef(serviceData);
+  React.useEffect(() => { serviceDataRef.current = serviceData; }, [serviceData]);
 
   // P0-2: Added onError toast handlers (2026-02-12)
   const createAnnouncementMutation = useMutation({
