@@ -762,20 +762,7 @@ export default function PublicProgramView() {
               })()}
           </div>
 
-          {/* TV View Link */}
-          {((viewType === 'event' && selectedEventId) || (viewType === 'service' && selectedServiceId)) && (
-            <Link 
-              to={viewType === 'event' 
-                ? `${createPageUrl('PublicCountdownDisplay')}?event_id=${selectedEventId}`
-                : `${createPageUrl('PublicCountdownDisplay')}?service_id=${selectedServiceId}`
-              }
-              target="_blank"
-              className="flex items-center justify-center w-12 h-12 rounded-lg bg-white border-2 border-gray-300 text-gray-500 hover:text-pdv-teal hover:border-pdv-teal transition-all shrink-0 shadow-sm"
-              title={t('public.tvViewTooltip')}
-            >
-              <Tv className="w-5 h-5" />
-            </Link>
-          )}
+
         </div>
 
         {((selectedEventId && selectedEvent) || (selectedServiceId && selectedService)) && (
