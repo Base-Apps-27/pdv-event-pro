@@ -52,27 +52,64 @@ export function validateAIActions(actions, context = {}, allowDraft = false) {
   const fixableErrors = []; // Errors that user can fix in form
   let actionIndex = 0;
 
+  // Helper: validate a single segment data object (reused for both action types)
+  const validateSegment = (segmentData, label, aIdx, sIdx) => {
+    if (!segmentData.title) {
+      warnings.push(`${label}: "title" not specified — admin should set it`);
+    }
+    if (segmentData.segment_type && !VALID_SEGMENT_TYPES.includes(segmentData.segment_type)) {
+      warnings.push(`${label}: Unrecognized segment_type "${segmentData.segment_type}" — will default to "Especial"`);
+    }
+    if (segmentData.segment_type && SEGMENT_TYPE_REQUIRED_FIELDS[segmentData.segment_type]) {
+      const required = SEGMENT_TYPE_REQUIRED_FIELDS[segmentData.segment_type];
+      for (const field of required) {
+        if (!segmentData[field]) {
+          const warnMsg = `${label} (${segmentData.segment_type}): "${field}" is recommended`;
+          warnings.push(warnMsg);
+          fixableErrors.push({ actionIndex: aIdx, segmentIndex: sIdx, field, message: warnMsg });
+        }
+      }
+    }
+    if (segmentData.requires_translation && segmentData.translation_mode) {
+      if (!VALID_TRANSLATION_MODES.includes(segmentData.translation_mode)) {
+        errors.push(`${label}: Invalid translation_mode "${segmentData.translation_mode}"`);
+      }
+    }
+  };
+
   for (const action of actions) {
     actionIndex++;
 
-    // Validate create_sessions
-    // 2026-02-19: Downgraded session.name from hard error to fixable so file
-    // imports can still proceed (admin fills name afterward). Without this,
-    // the Approve button is permanently disabled when the LLM omits names.
+    // ── PRIMARY: create_sessions_with_segments (atomic, 2026-02-20) ──
+    if (action.type === 'create_sessions_with_segments') {
+      for (const [idx, sessionData] of (action.create_data || []).entries()) {
+        if (!sessionData.name) {
+          const warnMsg = `Session ${idx + 1}: "name" is recommended — admin should set it`;
+          warnings.push(warnMsg);
+          fixableErrors.push({ actionIndex: actionIndex - 1, segmentIndex: idx, field: 'name', message: warnMsg });
+        }
+        if (!sessionData.date) {
+          warnings.push(`Session ${idx + 1}: "date" not specified — admin should set it`);
+        }
+        if (!sessionData.planned_start_time) {
+          warnings.push(`Session ${idx + 1}: "planned_start_time" not specified`);
+        }
+        // Validate nested segments
+        for (const [sIdx, seg] of (sessionData.segments || []).entries()) {
+          validateSegment(seg, `Session ${idx + 1} / Segment ${sIdx + 1}`, actionIndex - 1, sIdx);
+        }
+      }
+    }
+
+    // ── LEGACY: create_sessions (without nested segments) ──
     if (action.type === 'create_sessions') {
       for (const [idx, sessionData] of (action.create_data || []).entries()) {
         if (!sessionData.name) {
           const warnMsg = `Session ${idx + 1}: "name" is recommended — admin should set it`;
           warnings.push(warnMsg);
-          fixableErrors.push({
-            actionIndex: actionIndex - 1,
-            segmentIndex: idx,
-            field: 'name',
-            message: warnMsg
-          });
+          fixableErrors.push({ actionIndex: actionIndex - 1, segmentIndex: idx, field: 'name', message: warnMsg });
         }
         if (!sessionData.date) {
-          // Downgraded: PDF docs often omit exact dates; admin will fix
           warnings.push(`Session ${idx + 1}: "date" not specified — admin should set it`);
         }
         if (!sessionData.planned_start_time) {
@@ -81,55 +118,10 @@ export function validateAIActions(actions, context = {}, allowDraft = false) {
       }
     }
 
-    // Validate create_segments
+    // ── LEGACY: create_segments (standalone) ──
     if (action.type === 'create_segments') {
       for (const [idx, segmentData] of (action.create_data || []).entries()) {
-        if (!segmentData.title) {
-          // Downgraded: title can be set by admin later
-          warnings.push(`Segment ${idx + 1}: "title" not specified — admin should set it`);
-        }
-
-        // Validate segment_type enum — downgrade to warning if unrecognized
-        // (PDF parsing may produce unexpected labels; admin can fix)
-        if (segmentData.segment_type && !VALID_SEGMENT_TYPES.includes(segmentData.segment_type)) {
-          warnings.push(`Segment ${idx + 1}: Unrecognized segment_type "${segmentData.segment_type}" — will default to "Especial"`);
-        }
-
-        // Check type-specific required fields — track as fixable
-        // PDF-ingested segments often lack type-specific detail fields; treat as warnings,
-        // not hard errors, so admins can review and fill them in later.
-        if (segmentData.segment_type && SEGMENT_TYPE_REQUIRED_FIELDS[segmentData.segment_type]) {
-          const required = SEGMENT_TYPE_REQUIRED_FIELDS[segmentData.segment_type];
-          for (const field of required) {
-            if (!segmentData[field]) {
-              const warnMsg = `Segment ${idx + 1} (${segmentData.segment_type}): "${field}" is recommended for this segment type`;
-              warnings.push(warnMsg);
-              fixableErrors.push({
-                actionIndex,
-                segmentIndex: idx,
-                field,
-                message: warnMsg
-              });
-            }
-          }
-        }
-
-        // Validate translation fields
-        if (segmentData.requires_translation && segmentData.translation_mode) {
-          if (!VALID_TRANSLATION_MODES.includes(segmentData.translation_mode)) {
-            errors.push(`Segment ${idx + 1}: Invalid translation_mode "${segmentData.translation_mode}". Must be: ${VALID_TRANSLATION_MODES.join(", ")}`);
-          }
-        }
-
-        // Warn if translation_mode set but requires_translation is false
-        if (segmentData.translation_mode && !segmentData.requires_translation) {
-          warnings.push(`Segment ${idx + 1}: translation_mode set but requires_translation is false`);
-        }
-
-        // Warn if translator_name set but translation not enabled
-        if (segmentData.translator_name && !segmentData.requires_translation) {
-          warnings.push(`Segment ${idx + 1}: translator_name set but requires_translation is false`);
-        }
+        validateSegment(segmentData, `Segment ${idx + 1}`, actionIndex, idx);
       }
     }
 
