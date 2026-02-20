@@ -659,6 +659,12 @@ For clarification: {"type":"ask_event_clarification","message":"Which?","options
             <Sparkles className="w-5 h-5" style={{ color: '#1F8A70' }} />
             {language === 'es' ? 'Asistente IA para Eventos' : 'Event AI Assistant'}
           </DialogTitle>
+          {/* Improvement #8: a11y — DialogDescription to suppress aria-describedby warning */}
+          <DialogDescription className="sr-only">
+            {language === 'es'
+              ? 'Sube un archivo o escribe instrucciones para que la IA genere sesiones y segmentos.'
+              : 'Upload a file or type instructions for the AI to generate sessions and segments.'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
