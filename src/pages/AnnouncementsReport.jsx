@@ -201,7 +201,7 @@ export default function AnnouncementsReport() {
                             <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => openDialog(item)}>
                                 <Edit className="w-3 h-3" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500" onClick={() => deleteMutation.mutate(item.id)}>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500" onClick={() => deleteMutation.mutate({ id: item.source?.id || item.id, item: item.source || item })}>
                                 <Trash2 className="w-3 h-3" />
                             </Button>
                         </div>
