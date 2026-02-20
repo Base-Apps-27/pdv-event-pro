@@ -231,11 +231,16 @@ export default function AIProposalEditor({
   return (
     <Dialog open={isOpen} onOpenChange={onCancel}>
       <DialogContent className="max-w-4xl max-h-[92vh] flex flex-col p-0">
-        {/* Header */}
+        {/* Header — Improvement #8: Added DialogDescription for a11y */}
         <DialogHeader className="px-5 pt-5 pb-3 border-b flex-shrink-0">
           <DialogTitle className="text-base">
             {language === 'es' ? 'Revisar y Editar Programa' : 'Review & Edit Program'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {language === 'es'
+              ? 'Editor visual para revisar y modificar sesiones y segmentos propuestos por la IA antes de crearlos.'
+              : 'Visual editor to review and modify AI-proposed sessions and segments before creating them.'}
+          </DialogDescription>
           <div className="flex items-center gap-3 mt-1.5">
             <Badge variant="outline" className="text-xs">
               {totalSessions} {language === 'es' ? 'sesiones' : 'sessions'}
