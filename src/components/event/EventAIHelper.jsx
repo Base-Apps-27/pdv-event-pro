@@ -99,17 +99,17 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
           properties: {
             sessions: {
               type: "array",
-              description: "Sessions/sections found in the document, in chronological order",
+              description: "ALL sessions/sections found in the document, in chronological order. A session is any distinct time block in the schedule (e.g. morning session, afternoon session, evening session). Look for section headers, day labels, time gaps, or meal breaks as session boundaries. Include EVERY session — do not merge or skip any. Typical event has 2-6 sessions per day.",
               items: {
                 type: "object",
                 properties: {
-                  name: { type: "string", description: "Session name derived from section labels (e.g. 'Sección 1 — Viernes 13 de marzo'). MUST NOT be empty." },
+                  name: { type: "string", description: "Session name derived from section labels (e.g. 'Sección 1 — Viernes 13 de marzo'). If no label exists, use 'Sesión N — Day/Date'. MUST NOT be empty." },
                   date: { type: "string", description: "Date if found (YYYY-MM-DD)" },
                   start_time: { type: "string", description: "Earliest time in session (HH:MM 24h)" },
                   end_time: { type: "string", description: "Latest end time in session (HH:MM 24h)" },
                   segments: {
                     type: "array",
-                    description: "Time blocks within this session, in order",
+                    description: "ALL time blocks within this session, in order. Include every item listed in the schedule.",
                     items: {
                       type: "object",
                       properties: {
