@@ -330,6 +330,28 @@ If uncertain which past event: {"type":"ask_event_clarification","message":"Whic
     }
   };
 
+  /**
+   * executeActions — Two-phase execution (2026-02-20 rewrite)
+   *
+   * Root cause of previous failures: The old code iterated actions sequentially.
+   * When the LLM placed create_sessions and create_segments as separate action
+   * objects, sessions were created one-at-a-time interleaved with segment
+   * creation attempts. The sessionRefMap was only partially populated when
+   * segments tried to resolve their session_id.
+   *
+   * New architecture:
+   *   PHASE 1: Collect ALL create_sessions from ALL actions → create them ALL
+   *            → build a complete sessionRefMap before any segment is touched.
+   *   PHASE 2: Collect ALL create_segments → resolve each segment's session
+   *            using the now-complete ref map.
+   *   PHASE 3: Process updates (sessions, segments, event).
+   *
+   * Session resolution priority (Phase 2):
+   *   A) temp_session_ref exact match in refMap
+   *   B) Index extraction ("Sección 3" → createdSessionIds[2])
+   *   C) Single-session fallback (only 1 session → use it)
+   *   D) null — segment created anyway, logged for admin to fix
+   */
   const executeActions = async (actions = null, isDraft = false) => {
     const actionsToExecute = actions || proposedActions?.actions;
     if (!actionsToExecute?.length) return;
@@ -346,147 +368,132 @@ If uncertain which past event: {"type":"ask_event_clarification","message":"Whic
 
     try {
       let totalAffected = 0;
-      // Session reference map: multiple keys → real session ID
-      // Keys include: temp_session_ref, name, session_N (0-based and 1-based), normalized variants
-      const sessionRefMap = {};
-      // Ordered list of created session IDs for index-based fallback
-      const createdSessionIds = [];
 
-      // Normalize helper: lowercase, collapse whitespace, strip dashes/accents for fuzzy match
-      const normalizeRef = (s) => (s || '').trim().toLowerCase()
-        .replace(/[\u2014\u2013\u2012\u2011\u2010—–-]+/g, '-') // normalize all dash types
-        .replace(/\s+/g, ' ');
+      // ── Separate all actions by type upfront ──
+      const allSessionCreates = [];  // { data, index }
+      const allSegmentCreates = [];  // { data }
+      const updateActions = [];      // update_sessions, update_segments, update_event
 
-      // CRITICAL: Pre-populate sessionRefMap with EXISTING sessions for this event.
-      // This covers the case where create_sessions ran in a previous invocation
-      // and the current invocation only has create_segments actions.
-      // Without this, sessionRefMap is empty and every segment gets session_id: null.
-      for (let i = 0; i < sessions.length; i++) {
-        const s = sessions[i];
-        const sid = s.id;
-        sessionRefMap[sid] = sid; // map real ID to itself
-        if (s.name) {
-          sessionRefMap[s.name] = sid;
-          sessionRefMap[normalizeRef(s.name)] = sid;
-        }
-        // Also index-based keys matching creation order
-        sessionRefMap[`session_${i}`] = sid;
-        createdSessionIds.push(sid);
-        console.log(`[AI_EXEC] Pre-populated existing session: name="${s.name}" → id=${sid}`);
-      }
-      
       for (const action of actionsToExecute) {
         if (action.type === 'create_sessions') {
-          for (let i = 0; i < (action.create_data || []).length; i++) {
-            const sessionData = action.create_data[i];
-            const tempRef = sessionData.temp_session_ref || sessionData.name || `session_${i}`;
-            const { temp_session_ref, ...cleanData } = sessionData;
-            // Ensure session always has a name (required field)
-            if (!cleanData.name) {
-              cleanData.name = `Sesión ${i + 1}`;
-            }
-            const newSession = await base44.entities.Session.create({
-              event_id: eventId,
-              ...cleanData
-            });
-            const sid = newSession.id;
-            createdSessionIds.push(sid);
+          (action.create_data || []).forEach((sd, i) => {
+            allSessionCreates.push({ data: sd, index: i });
+          });
+        } else if (action.type === 'create_segments') {
+          (action.create_data || []).forEach((seg) => {
+            allSegmentCreates.push({ data: seg });
+          });
+        } else {
+          updateActions.push(action);
+        }
+      }
 
-            // Register all possible keys for this session
-            sessionRefMap[tempRef] = sid;
-            sessionRefMap[normalizeRef(tempRef)] = sid;
-            sessionRefMap[`session_${i}`] = sid;
-            if (sessionData.name) {
-              sessionRefMap[sessionData.name] = sid;
-              sessionRefMap[normalizeRef(sessionData.name)] = sid;
-            }
-            if (temp_session_ref && temp_session_ref !== tempRef) {
-              sessionRefMap[temp_session_ref] = sid;
-              sessionRefMap[normalizeRef(temp_session_ref)] = sid;
-            }
+      console.log(`[AI_EXEC] Plan: ${allSessionCreates.length} sessions, ${allSegmentCreates.length} segments, ${updateActions.length} updates`);
 
-            console.log(`[AI_EXEC] Session ${i} created: id=${sid}, keys=[${tempRef}]`);
-            totalAffected++;
+      // ── PHASE 1: Create ALL sessions, build complete ref map ──
+      const sessionRefMap = {};       // temp_session_ref | name | session_N → real ID
+      const createdSessionIds = [];   // ordered list of real IDs
+
+      for (let i = 0; i < allSessionCreates.length; i++) {
+        const { data: sessionData } = allSessionCreates[i];
+        const tempRef = sessionData.temp_session_ref || sessionData.name || `session_${i}`;
+        const { temp_session_ref, ...cleanData } = sessionData;
+
+        if (!cleanData.name) cleanData.name = `Sesión ${i + 1}`;
+
+        const newSession = await base44.entities.Session.create({
+          event_id: eventId,
+          order: cleanData.order ?? (i + 1),
+          ...cleanData
+        });
+
+        const sid = newSession.id;
+        createdSessionIds.push(sid);
+
+        // Register every key variant the LLM might use to reference this session
+        sessionRefMap[tempRef] = sid;
+        sessionRefMap[`session_${i}`] = sid;
+        if (sessionData.name) sessionRefMap[sessionData.name] = sid;
+        if (temp_session_ref && temp_session_ref !== tempRef) {
+          sessionRefMap[temp_session_ref] = sid;
+        }
+
+        console.log(`[AI_EXEC] P1: Session[${i}] created → id=${sid}, ref="${tempRef}", name="${cleanData.name}"`);
+        totalAffected++;
+      }
+
+      console.log(`[AI_EXEC] P1 done. ${createdSessionIds.length} sessions. RefMap: [${Object.keys(sessionRefMap).join(', ')}]`);
+
+      // ── PHASE 2: Create ALL segments, resolve session links ──
+      for (let i = 0; i < allSegmentCreates.length; i++) {
+        const segmentData = allSegmentCreates[i].data;
+        const ref = segmentData.temp_session_ref;
+        const rawSessionId = segmentData.session_id;
+        const isRealId = rawSessionId && /^[a-f0-9]{24}$/i.test(rawSessionId);
+
+        let resolvedSessionId = null;
+
+        // A) Real MongoDB ObjectId — pass through
+        if (isRealId) {
+          resolvedSessionId = rawSessionId;
+        }
+
+        // B) Exact match on temp_session_ref in refMap
+        if (!resolvedSessionId && ref && sessionRefMap[ref]) {
+          resolvedSessionId = sessionRefMap[ref];
+        }
+
+        // C) Exact match on session_id as a ref key (LLM sometimes puts ref in session_id)
+        if (!resolvedSessionId && rawSessionId && !isRealId && sessionRefMap[rawSessionId]) {
+          resolvedSessionId = sessionRefMap[rawSessionId];
+        }
+
+        // D) Index extraction: "Sección 3" → createdSessionIds[2]
+        if (!resolvedSessionId) {
+          const candidate = ref || rawSessionId || '';
+          const numMatch = candidate.match(/(?:secci[oó]n|session|sesion|seccion|s)\s*(\d+)/i);
+          if (numMatch) {
+            const idx = parseInt(numMatch[1]) - 1;
+            if (idx >= 0 && idx < createdSessionIds.length) {
+              resolvedSessionId = createdSessionIds[idx];
+            }
           }
         }
-        else if (action.type === 'update_sessions') {
+
+        // E) Single session fallback
+        if (!resolvedSessionId && createdSessionIds.length === 1) {
+          resolvedSessionId = createdSessionIds[0];
+        }
+
+        if (!resolvedSessionId) {
+          console.warn(`[AI_EXEC] P2: UNRESOLVED session for seg[${i}] "${segmentData.title}", ref="${ref}", sid="${rawSessionId}"`);
+        } else {
+          console.log(`[AI_EXEC] P2: seg[${i}] "${segmentData.title}" → session=${resolvedSessionId}`);
+        }
+
+        // Strip temp fields, validate enum, create
+        const { temp_session_ref: _r, session_id: _s, ...cleanSegData } = segmentData;
+        if (cleanSegData.segment_type && !VALID_SEGMENT_TYPES.includes(cleanSegData.segment_type)) {
+          cleanSegData.segment_type = "Especial";
+        }
+
+        await base44.entities.Segment.create({
+          session_id: resolvedSessionId,
+          ...cleanSegData
+        });
+        totalAffected++;
+      }
+
+      console.log(`[AI_EXEC] P2 done. ${allSegmentCreates.length} segments created.`);
+
+      // ── PHASE 3: Process updates ──
+      for (const action of updateActions) {
+        if (action.type === 'update_sessions') {
           const targetIds = action.target_ids === 'all' 
             ? sessions.map(s => s.id) 
             : action.target_ids;
-          if (targetIds.length === 0) throw new Error('No se encontraron sesiones para actualizar');
           for (const sessionId of targetIds) {
             await base44.entities.Session.update(sessionId, action.changes);
-            totalAffected++;
-          }
-        }
-        else if (action.type === 'create_segments') {
-          for (const segmentData of action.create_data || []) {
-            // Collect all candidate references the LLM might have used
-            const ref = segmentData.temp_session_ref;
-            const rawSessionId = segmentData.session_id;
-            // A "real" session ID is a 24-char hex string from MongoDB
-            const isRealId = rawSessionId && /^[a-f0-9]{24}$/i.test(rawSessionId);
-
-            let resolvedSessionId = null;
-
-            // 0) If session_id is already a real MongoDB ObjectId, use it directly
-            if (isRealId) {
-              resolvedSessionId = rawSessionId;
-            }
-
-            // 1) Exact match on temp_session_ref
-            if (!resolvedSessionId && ref && sessionRefMap[ref]) {
-              resolvedSessionId = sessionRefMap[ref];
-            }
-            // 2) Exact match on session_id as a temp ref key
-            if (!resolvedSessionId && rawSessionId && sessionRefMap[rawSessionId]) {
-              resolvedSessionId = sessionRefMap[rawSessionId];
-            }
-            // 3) Normalized match on temp_session_ref
-            if (!resolvedSessionId && ref) {
-              const normRef = normalizeRef(ref);
-              if (sessionRefMap[normRef]) {
-                resolvedSessionId = sessionRefMap[normRef];
-              }
-            }
-            // 4) Normalized match on session_id
-            if (!resolvedSessionId && rawSessionId && !isRealId) {
-              const normSid = normalizeRef(rawSessionId);
-              if (sessionRefMap[normSid]) {
-                resolvedSessionId = sessionRefMap[normSid];
-              }
-            }
-            // 5) Index-based fallback: extract "Sección N" or "Session N" number
-            if (!resolvedSessionId) {
-              const refToSearch = ref || rawSessionId || '';
-              const numMatch = refToSearch.match(/(?:secci[oó]n|session|seccion|s)\s*(\d+)/i);
-              if (numMatch) {
-                const idx = parseInt(numMatch[1]) - 1; // 0-based
-                if (idx >= 0 && idx < createdSessionIds.length) {
-                  resolvedSessionId = createdSessionIds[idx];
-                  console.log(`[AI_EXEC] Segment ref="${refToSearch}" resolved via index fallback → session index ${idx}`);
-                }
-              }
-            }
-            // 6) Last resort: if only one session was created, use it
-            if (!resolvedSessionId && createdSessionIds.length === 1) {
-              resolvedSessionId = createdSessionIds[0];
-              console.log(`[AI_EXEC] Single session fallback for segment "${segmentData.title}"`);
-            }
-
-            if (!resolvedSessionId) {
-              console.warn(`[AI_EXEC] Could not resolve session for segment "${segmentData.title}", ref="${ref}", session_id="${rawSessionId}". sessionRefMap keys:`, Object.keys(sessionRefMap));
-            }
-
-            const { temp_session_ref, ...cleanSegData } = segmentData;
-            const validTypes = ["Alabanza","Bienvenida","Ofrenda","Plenaria","Video","Anuncio","Dinámica","Break","TechOnly","Oración","Especial","Cierre","MC","Ministración","Receso","Almuerzo","Artes","Breakout","Panel"];
-            if (cleanSegData.segment_type && !validTypes.includes(cleanSegData.segment_type)) {
-              cleanSegData.segment_type = "Especial";
-            }
-            await base44.entities.Segment.create({
-              ...cleanSegData,
-              session_id: resolvedSessionId
-            });
             totalAffected++;
           }
         }
@@ -494,9 +501,8 @@ If uncertain which past event: {"type":"ask_event_clarification","message":"Whic
           const targetIds = action.target_ids === 'all'
             ? eventSegments.map(s => s.id)
             : action.target_ids;
-          if (targetIds.length === 0) throw new Error('No se encontraron segmentos para actualizar');
-          for (const segmentId of targetIds) {
-            await base44.entities.Segment.update(segmentId, action.changes);
+          for (const segId of targetIds) {
+            await base44.entities.Segment.update(segId, action.changes);
             totalAffected++;
           }
         }
