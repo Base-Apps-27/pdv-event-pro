@@ -404,7 +404,7 @@ Deno.serve(async (req) => {
     <div class="container-content">
         ${eventError ? `
             <div class="status-message status-error status-visible">
-                ${eventError}
+                ${escapeHtml(eventError)}
             </div>
         ` : ''}
 
