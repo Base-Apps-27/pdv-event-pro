@@ -61,11 +61,11 @@ export function SongInputRow({ service, segmentIndex, songIndex }) {
     3000
   );
   
-  useEffect(() => {
-    setLocalTitle(song.title);
-    setLocalLead(song.lead);
-    setLocalKey(song.key || "");
-  }, [song.title, song.lead, song.key]);
+  // SONG-OVERWRITE-FIX (2026-02-20): Separate sync effects per field so that
+  // committing one field doesn't overwrite the user's in-progress edits in another.
+  useEffect(() => { setLocalTitle(song.title); }, [song.title]);
+  useEffect(() => { setLocalLead(song.lead); }, [song.lead]);
+  useEffect(() => { setLocalKey(song.key || ""); }, [song.key]);
   
   return (
     <div className="grid grid-cols-12 gap-2">
