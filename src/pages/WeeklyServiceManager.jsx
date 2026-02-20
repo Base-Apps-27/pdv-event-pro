@@ -604,40 +604,14 @@ export default function WeeklyServiceManager() {
     }
   }, [existingData, selectedDate, blueprintData]);
 
-  // ── Real-time entity subscriptions ──
-  // Subscribe to Session/Segment changes so external edits (live adjustments)
-  // push updates without requiring page reload.
-  // Debounced with 2s settle window to prevent invalidation storm during
-  // syncWeeklyToSessions (which fires 16+ events from delete-all + create-all).
-  useEffect(() => {
-    if (!existingData?.id) return;
-    const serviceId = existingData.id;
-    let settleTimer = null;
-
-    const debouncedInvalidate = () => {
-      if (settleTimer) clearTimeout(settleTimer);
-      settleTimer = setTimeout(() => {
-        queryClient.invalidateQueries(['weeklyService', selectedDate]);
-      }, 2000);
-    };
-
-    const unsubSession = base44.entities.Session.subscribe((event) => {
-      if (event.data?.service_id === serviceId) {
-        debouncedInvalidate();
-      }
-    });
-    const unsubSegment = base44.entities.Segment.subscribe((event) => {
-      if (event.data?.service_id === serviceId) {
-        debouncedInvalidate();
-      }
-    });
-
-    return () => {
-      if (settleTimer) clearTimeout(settleTimer);
-      if (typeof unsubSession === 'function') unsubSession();
-      if (typeof unsubSegment === 'function') unsubSegment();
-    };
-  }, [existingData?.id, selectedDate, queryClient]);
+  // SONG-OVERWRITE-FIX-2 (2026-02-20): Real-time subscriptions DISABLED.
+  // They caused queryClient.invalidateQueries → existingData refetch → 
+  // re-triggered the initialization useEffect (before the guard was added).
+  // With the guard, they no longer destroy local state, but they also serve
+  // no useful purpose on this page since local state IS the source of truth.
+  // Live adjustments are handled by the PublicProgramView / LiveDirector surfaces.
+  // If we need to detect external edits in the future, we should show a
+  // notification instead of silently overwriting local state.
 
   // ── Side effects ──
   // Track unsaved changes
