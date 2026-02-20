@@ -277,20 +277,30 @@ Deno.serve(async (req) => {
         live_director_user_name: user.full_name || user.email
       }, `Takeover from ${previousDirector.userName}`);
 
-      // Send notification to previous director via LiveOperationsMessage
+      // H-BUG-2 FIX (2026-02-20): Send takeover notification scoped to EITHER event_id OR session_id.
+      // Previously only sent when event_id existed, silently skipping service-based sessions.
       if (previousDirector.userId) {
         try {
-          // Find the event_id from session to scope the message
           const eventId = session.event_id;
+          const serviceId = session.service_id;
+          // Build message payload — scope to event_id if present, otherwise session_id
+          const msgPayload = {
+            author_name: 'Sistema',
+            author_email: 'system@pdv.app',
+            content: `⚠️ ${user.full_name || user.email} ha tomado el control de Live Director.`,
+            message_type: 'text',
+            is_pinned: false
+          };
           if (eventId) {
-            await base44.asServiceRole.entities.LiveOperationsMessage.create({
-              event_id: eventId,
-              author_name: 'Sistema',
-              author_email: 'system@pdv.app',
-              content: `⚠️ ${user.full_name || user.email} ha tomado el control de Live Director.`,
-              message_type: 'text',
-              is_pinned: false
-            });
+            msgPayload.event_id = eventId;
+          } else if (serviceId) {
+            // For service-based sessions, use session_id as the scoping field
+            // LiveOperationsChat must filter by session_id for these messages
+            msgPayload.session_id = sessionId;
+          }
+          // Only create the message if we have a valid scope
+          if (eventId || serviceId) {
+            await base44.asServiceRole.entities.LiveOperationsMessage.create(msgPayload);
           }
         } catch (e) {
           // Non-critical, continue even if notification fails

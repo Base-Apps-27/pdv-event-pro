@@ -11,18 +11,19 @@ import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import TestResultsUI from "@/components/testing/TestResultsUI";
 import { toast } from "sonner";
+// D6 FIX (2026-02-20): Use safeLocalStorage to prevent crashes in Safari private mode
+import { safeGetJSON, safeSetJSON } from "@/components/utils/safeLocalStorage";
 
 export default function TestDashboard() {
   const [manualTests, setManualTests] = useState(() => {
-    const saved = localStorage.getItem('test_dashboard_manual');
-    return saved ? JSON.parse(saved) : {};
+    return safeGetJSON('test_dashboard_manual', {});
   });
   const [autoTests, setAutoTests] = useState({});
   const [runningTests, setRunningTests] = useState(false);
 
   // Save manual test state to localStorage
   useEffect(() => {
-    localStorage.setItem('test_dashboard_manual', JSON.stringify(manualTests));
+    safeSetJSON('test_dashboard_manual', manualTests);
   }, [manualTests]);
 
   const toggleManualTest = (id) => {
