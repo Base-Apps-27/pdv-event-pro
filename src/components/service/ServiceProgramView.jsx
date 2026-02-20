@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
-import LiveStatusCard from "@/components/service/LiveStatusCard";
+import ServiceStatusBar from "@/components/service/ServiceStatusBar";
 import StickyOpsDeck from "@/components/service/StickyOpsDeck";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import { normalizeName } from "@/components/utils/textNormalization";
