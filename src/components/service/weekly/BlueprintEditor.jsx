@@ -66,7 +66,13 @@ export default function BlueprintEditor() {
 
   const [activeSlot, setActiveSlot] = useState("");
 
-  // Initialize local state when blueprint loads
+  // BLUEPRINT-INIT-GUARD (2026-02-20): Only re-initialize local state when the
+  // blueprint entity itself changes (tracked by id + updated_date), NOT on every
+  // render. Without this guard, the useMemo for slotNames could produce a new
+  // array reference on re-render, causing this useEffect to fire and wipe locally-
+  // added segments before the user has a chance to save.
+  const blueprintFingerprint = blueprint ? `${blueprint.id}_${blueprint.updated_date}` : null;
+
   useEffect(() => {
     if (slotNames.length === 0) return;
     const initial = {};
@@ -78,7 +84,7 @@ export default function BlueprintEditor() {
     if (!activeSlot || !slotNames.includes(activeSlot)) {
       setActiveSlot(slotNames[0]);
     }
-  }, [blueprint, slotNames]);
+  }, [blueprintFingerprint, slotNames.join(',')]);
 
   // Save mutation
   const saveMutation = useMutation({
