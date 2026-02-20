@@ -87,7 +87,6 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
   });
 
   // ── Step 1: Extract structured data from file (fast, no LLM vision) ──
-  // 2026-02-20: Strengthened schema descriptions to prevent session merging/skipping
   const extractFileData = async () => {
     if (!attachedFileUrl) return null;
     setProcessingStep("extracting");
@@ -99,37 +98,37 @@ export default function EventAIHelper({ eventId, isOpen, onClose }) {
           properties: {
             sessions: {
               type: "array",
-              description: "CRITICAL: Extract ALL sessions/sections EXACTLY as labeled in the document. Look for explicit section headers like 'SECCIÓN 1', 'SECCIÓN 2', 'SESSION 1', etc. and create ONE session per labeled section. Do NOT merge sections. Do NOT create sessions for meal breaks (Almuerzo/Lunch) — those are segments within a session. If the document shows 4 sections (SECCIÓN 1, SECCIÓN 2, SECCIÓN 3, SECCIÓN 4), you MUST return exactly 4 sessions. Typical events have 1-2 sessions per day, 2-6 sessions total across multiple days.",
+              description: "All sessions/sections found in the document. Look for section headers like 'SECCIÓN 1', 'SESSION 2', etc.",
               items: {
                 type: "object",
                 properties: {
-                  name: { type: "string", description: "EXACT session name from the document's section header (e.g. 'SECCIÓN 1 VIERNES 13 DE MARZO' → 'Sección 1 — Viernes 13 de marzo'). Copy the section label exactly, just clean up formatting. NEVER leave empty." },
-                  date: { type: "string", description: "Date in YYYY-MM-DD format extracted from the section header" },
-                  start_time: { type: "string", description: "First activity time in this section (HH:MM 24h). For registration sessions, use registration time." },
-                  end_time: { type: "string", description: "Last activity end time in this section (HH:MM 24h). Include meal breaks that end the session." },
+                  name: { type: "string", description: "Session name from section header" },
+                  date: { type: "string", description: "Date if found (YYYY-MM-DD)" },
+                  start_time: { type: "string", description: "Start time (HH:MM 24h)" },
+                  end_time: { type: "string", description: "End time (HH:MM 24h)" },
                   segments: {
                     type: "array",
-                    description: "ALL schedule items listed under this section header, in chronological order. Include registration, breaks, meals, etc. as segments. Every line item with a time = one segment.",
+                    description: "All time blocks within this session",
                     items: {
                       type: "object",
                       properties: {
-                        title: { type: "string", description: "Activity name as written in the document" },
-                        type_hint: { type: "string", description: "Best guess: worship, sermon, break, lunch, registration, arts, drama, dance, prayer, video, announcements, MC, offering, welcome, panel, closing, special, other" },
-                        start_time: { type: "string", description: "HH:MM 24h format" },
-                        duration_min: { type: "number", description: "Duration in minutes if stated (look for patterns like '60min', '10 mins', or calculate from time gaps)" },
-                        presenter: { type: "string", description: "Speaker/leader name if listed (e.g. 'A. Tere Paz', 'Laura Paz')" },
-                        message_title: { type: "string", description: "Message/sermon title if this is a sermon/plenaria (e.g. 'Autor de La Vida', 'Plenitud de Vida')" },
-                        notes: { type: "string", description: "Any parenthetical notes or extra details" }
+                        title: { type: "string" },
+                        type_hint: { type: "string", description: "worship, sermon, break, lunch, registration, arts, prayer, video, announcements, MC, offering, welcome, panel, closing, special, other" },
+                        start_time: { type: "string" },
+                        duration_min: { type: "number" },
+                        presenter: { type: "string" },
+                        message_title: { type: "string" },
+                        notes: { type: "string" }
                       }
                     }
                   }
                 }
               }
             },
-            event_name: { type: "string", description: "Event name/title from document header" },
-            event_dates: { type: "string", description: "Date range if found" },
-            event_location: { type: "string", description: "Venue if found" },
-            raw_notes: { type: "string", description: "Any other important info" }
+            event_name: { type: "string" },
+            event_dates: { type: "string" },
+            event_location: { type: "string" },
+            raw_notes: { type: "string" }
           }
         }
       });
