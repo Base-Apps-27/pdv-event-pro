@@ -143,7 +143,9 @@ export default function AIProposalReview({
 
             {proposedActions.actions?.map((action, idx) => {
               const isExpanded = expandedActions[idx];
-              const displayType = action.type.replace('_', ' ').toUpperCase();
+              const displayType = action.type === 'create_sessions_with_segments'
+                ? (language === 'es' ? 'CREAR SESIONES + SEGMENTOS' : 'CREATE SESSIONS + SEGMENTS')
+                : action.type.replace('_', ' ').toUpperCase();
 
               return (
                 <Card key={idx} className="overflow-hidden border-gray-200">
