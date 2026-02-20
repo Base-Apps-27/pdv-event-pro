@@ -74,10 +74,10 @@ Deno.serve(async (req) => {
                   <h1 style="color: white; margin: 0; font-size: 20px;">🚨 Priority @Director Ping</h1>
                 </div>
                 <div style="background: #FEF2F2; padding: 20px; border: 1px solid #FECACA; border-top: none; border-radius: 0 0 8px 8px;">
-                  <p style="color: #991B1B; margin: 0 0 10px 0;"><strong>From:</strong> ${senderName}</p>
-                  <p style="color: #991B1B; margin: 0 0 10px 0;"><strong>Context:</strong> ${contextName || 'Event'}</p>
+                  <p style="color: #991B1B; margin: 0 0 10px 0;"><strong>From:</strong> ${escapeHtml(senderName)}</p>
+                  <p style="color: #991B1B; margin: 0 0 10px 0;"><strong>Context:</strong> ${escapeHtml(contextName) || 'Event'}</p>
                   <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #FECACA; margin-top: 15px;">
-                    <p style="color: #1F2937; margin: 0;">${messagePreview}</p>
+                    <p style="color: #1F2937; margin: 0;">${escapeHtml(messagePreview)}</p>
                   </div>
                   <p style="color: #6B7280; font-size: 12px; margin-top: 15px;">
                     This is a priority ping from the Live Operations Chat. Please check the Director Console.
