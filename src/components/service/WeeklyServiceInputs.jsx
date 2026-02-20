@@ -19,50 +19,56 @@ export const ServiceDataContext = createContext(null);
 export const UpdatersContext = createContext(null);
 
 // Song Input Row with local state
+// SONG-OVERWRITE-FIX (2026-02-20): Each field commits only its own value using
+// setServiceData functional updater to read latest state. This prevents saving
+// one field from overwriting another field's in-progress local edits.
 export function SongInputRow({ service, segmentIndex, songIndex }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
   const song = segment?.songs?.[songIndex] || { title: "", lead: "", key: "" };
-  const updateSegmentField = useContext(UpdatersContext)?.updateSegmentField;
+  const setServiceData = useContext(UpdatersContext)?.setServiceData;
+  const debouncedSave = useContext(UpdatersContext)?.debouncedSave;
   
   const [localTitle, setLocalTitle] = useState("");
   const [localLead, setLocalLead] = useState("");
   const [localKey, setLocalKey] = useState("");
+
+  // Helper: update a single song sub-field using functional updater (always reads latest state)
+  const commitSongField = useCallback((fieldName, val) => {
+    setServiceData(prev => {
+      const newServiceArray = [...(prev[service] || [])];
+      if (!newServiceArray[segmentIndex]) return prev;
+      const newSegment = { ...newServiceArray[segmentIndex] };
+      const newSongs = [...(newSegment.songs || [])];
+      newSongs[songIndex] = { ...newSongs[songIndex], [fieldName]: val };
+      newSegment.songs = newSongs;
+      newServiceArray[segmentIndex] = newSegment;
+      return { ...prev, [service]: newServiceArray };
+    });
+    if (debouncedSave) debouncedSave(`song-${service}-${segmentIndex}-${songIndex}-${fieldName}`);
+  }, [service, segmentIndex, songIndex, setServiceData, debouncedSave]);
   
   const commitTitle = useDebouncedCommit(
     localTitle,
     song.title,
-    (val) => {
-      const newSongs = [...(segment.songs || [])];
-      newSongs[songIndex] = { ...newSongs[songIndex], title: val };
-      updateSegmentField(service, segmentIndex, "songs", newSongs);
-    },
+    (val) => commitSongField('title', val),
     3000
   );
   
   const commitLead = useDebouncedCommit(
     localLead,
     song.lead,
-    (val) => {
-      const newSongs = [...(segment.songs || [])];
-      newSongs[songIndex] = { ...newSongs[songIndex], lead: val };
-      updateSegmentField(service, segmentIndex, "songs", newSongs);
-    },
+    (val) => commitSongField('lead', val),
     3000
   );
 
   const commitKey = useDebouncedCommit(
     localKey,
     song.key,
-    (val) => {
-      const newSongs = [...(segment.songs || [])];
-      newSongs[songIndex] = { ...newSongs[songIndex], key: val };
-      updateSegmentField(service, segmentIndex, "songs", newSongs);
-    },
+    (val) => commitSongField('key', val),
     3000
   );
   
-  // SONG-OVERWRITE-FIX (2026-02-20): Separate sync effects per field so that
-  // committing one field doesn't overwrite the user's in-progress edits in another.
+  // Separate sync effects per field so committing one doesn't overwrite another's local edits
   useEffect(() => { setLocalTitle(song.title); }, [song.title]);
   useEffect(() => { setLocalLead(song.lead); }, [song.lead]);
   useEffect(() => { setLocalKey(song.key || ""); }, [song.key]);
