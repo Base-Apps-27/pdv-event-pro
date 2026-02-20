@@ -241,13 +241,13 @@ export default function PublicProgramSegment({
         </div>
       )}
 
-      {/* Current/Upcoming Status Badges */}
-      {isCurrent && segment.live_status !== 'skipped' && (
+      {/* Current/Upcoming Status Badges — hidden in timelineMode (dots handle status) */}
+      {!timelineMode && isCurrent && segment.live_status !== 'skipped' && (
         <div className="mb-2">
           <Badge className="bg-yellow-500 text-white animate-pulse">EN CURSO AHORA</Badge>
         </div>
       )}
-      {isUpcoming && segment.live_status !== 'skipped' && (
+      {!timelineMode && isUpcoming && segment.live_status !== 'skipped' && (
         <div className="mb-2">
           <Badge className="bg-blue-500 text-white">PRÓXIMO (15 min)</Badge>
         </div>
