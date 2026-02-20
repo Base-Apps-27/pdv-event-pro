@@ -599,7 +599,8 @@ Deno.serve(async (req) => {
         });
 
     } catch (error) {
-        return new Response("<h1>Error Interno</h1><p>" + error.message + "</p>", { 
+        // CRIT-1 FIX: Escape error message in HTML response
+        return new Response("<h1>Error Interno</h1><p>" + escapeHtml(error.message) + "</p>", { 
             status: 500,
             headers: { 'Content-Type': 'text/html; charset=utf-8' }
         });
