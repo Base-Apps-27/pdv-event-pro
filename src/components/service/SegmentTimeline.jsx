@@ -2,7 +2,8 @@ import React from "react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { useLanguage } from "@/components/utils/i18n";
 import { getSegmentResponsibleDisplay, getSegmentSecondaryDisplay } from "@/components/utils/segmentTypeDisplay";
-import { Clock, Languages } from "lucide-react";
+import { Clock, Languages, Sparkles } from "lucide-react";
+import { normalizeName } from "@/components/utils/textNormalization";
 
 /**
  * SegmentTimeline — TV-optimized program column for PublicCountdownDisplay
@@ -10,13 +11,17 @@ import { Clock, Languages } from "lucide-react";
  * Displays a continuous day of segments with enriched metadata:
  * - Speaker/presenter with role-aware labels (Leader, Preacher, etc.)
  * - Message/plenaria title
+ * - Sub-assignments inline (e.g. Ministración within Alabanza)
  * - Translator indicator
  * - Visual break dividers for major breaks (Receso, Almuerzo) without hiding them
+ *
+ * Consumes whatever the Service editor provides — any future segment
+ * combination is accepted without TV-side filtering.
  */
-export default function SegmentTimeline({ 
-  segments = [], 
-  getTimeDate, 
-  className = "" 
+export default function SegmentTimeline({
+  segments = [],
+  getTimeDate,
+  className = ""
 }) {
   const { language, t } = useLanguage();
 
@@ -28,14 +33,33 @@ export default function SegmentTimeline({
     return ['receso', 'almuerzo', 'break'].includes(type) || seg.major_break;
   };
 
+  // Resolve sub-assignments from either entity path or JSON path.
+  // Entity path: _resolved_sub_assignments (resolved by refreshActiveProgram)
+  // JSON path: sub_assignments / ui_sub_assignments with person_field_name pointing into segment.data
+  const getSubAssignments = (segment) => {
+    // Entity-sourced: already resolved with presenter names
+    if (segment._resolved_sub_assignments && segment._resolved_sub_assignments.length > 0) {
+      return segment._resolved_sub_assignments.filter(sub => sub.presenter);
+    }
+    // JSON/normalized: resolve person from data sub-object
+    const subs = segment.sub_assignments || segment.ui_sub_assignments || [];
+    if (subs.length === 0) return [];
+    return subs.map(sub => ({
+      label: sub.label || sub.title || 'Sub-assignment',
+      presenter: sub.presenter
+        || (sub.person_field_name ? (segment.data?.[sub.person_field_name] || segment[sub.person_field_name] || '') : ''),
+      duration_min: sub.duration_min || sub.duration || 5,
+    })).filter(sub => sub.presenter);
+  };
+
   return (
     <div className={`flex flex-col h-full overflow-hidden light text-slate-900 ${className}`}>
       {/* List - no internal header, parent handles it */}
       <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
         {segments.map((segment, index) => {
           const startTime = getTimeDate(segment.start_time || segment.actual_start_time);
-          const timeStr = startTime 
-            ? formatTimeToEST(startTime.toTimeString().substring(0, 5)) 
+          const timeStr = startTime
+            ? formatTimeToEST(startTime.toTimeString().substring(0, 5))
             : "--:--";
 
           const isFirst = index === 0;
@@ -47,6 +71,9 @@ export default function SegmentTimeline({
 
           // Translator
           const translator = segment.translator || segment.translator_name || '';
+
+          // Sub-assignments (e.g. Ministración within Alabanza)
+          const subAssignments = getSubAssignments(segment);
 
           // Break divider: visual separator, not a full card
           if (isBreak) {
@@ -61,9 +88,9 @@ export default function SegmentTimeline({
               </div>
             );
           }
-            
+
           return (
-            <div 
+            <div
               key={segment.id || index}
               className={`
                 group flex items-start gap-2 p-2 rounded-xl transition-all
@@ -101,6 +128,16 @@ export default function SegmentTimeline({
                     {secondary.value}
                   </div>
                 )}
+
+                {/* Sub-assignments inline (e.g. Ministración: Person Name) */}
+                {subAssignments.length > 0 && subAssignments.map((sub, idx) => (
+                  <div key={idx} className="flex items-center gap-1 mt-0.5">
+                    <Sparkles className="w-2.5 h-2.5 text-purple-400 flex-shrink-0" />
+                    <span className={`text-[9px] truncate ${isFirst ? 'text-purple-600' : 'text-purple-400'}`}>
+                      <span className="font-semibold">{sub.label}:</span> {normalizeName(sub.presenter)}
+                    </span>
+                  </div>
+                ))}
 
                 {/* Translator badge — purple to match all other surfaces */}
                 {translator && (
