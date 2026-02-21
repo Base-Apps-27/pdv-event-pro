@@ -165,6 +165,22 @@ export default function BlueprintSegmentEditor({ segment, index, total, onChange
               </div>
             </div>
 
+            {/* Number of songs (worship only) */}
+            {segment.type === "worship" && (
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold">Cantidad de Canciones</Label>
+                <p className="text-[10px] text-gray-500">Cuántas filas de canciones aparecen por defecto en servicios nuevos</p>
+                <Input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={segment.number_of_songs || 4}
+                  onChange={(e) => update("number_of_songs", Math.max(1, Math.min(10, parseInt(e.target.value) || 4)))}
+                  className="text-sm h-8 w-20"
+                />
+              </div>
+            )}
+
             {/* Translation */}
             <div className="flex items-center gap-3">
               <Switch

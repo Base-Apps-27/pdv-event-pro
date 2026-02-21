@@ -316,12 +316,9 @@ export function useWeeklyServiceHandlers({
         default_translator_source: seg.default_translator_source || "manual"
       };
       if (seg.type === "worship") {
-        segmentCopy.songs = [
-          { title: "", lead: "", key: "" },
-          { title: "", lead: "", key: "" },
-          { title: "", lead: "", key: "" },
-          { title: "", lead: "", key: "" }
-        ];
+        const songCount = seg.number_of_songs || 4;
+        segmentCopy.songs = Array.from({ length: songCount }, () => ({ title: "", lead: "", key: "" }));
+        segmentCopy.number_of_songs = songCount;
       }
       return segmentCopy;
     });

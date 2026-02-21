@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, Plus, Trash2, Sparkles, ChevronUp, ChevronDown, ArrowRight, ChevronsRight, BookOpen } from "lucide-react";
+import { Clock, Plus, Minus, Trash2, Sparkles, ChevronUp, ChevronDown, ArrowRight, ChevronsRight, BookOpen } from "lucide-react";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import {
   ServiceDataContext,
+  UpdatersContext,
   SongInputRow,
   PreServiceNotesInput,
   RecesoNotesInput,
@@ -78,6 +79,48 @@ export default function ServiceTimeSlotColumn({
   const accentColor = SLOT_ACCENT_COLORS[slotIndex % SLOT_ACCENT_COLORS.length];
   const timingInfo = calculateServiceTimes(timeSlot);
   const segments = serviceData[timeSlot] || [];
+  const { pushFn } = useContext(UpdatersContext) || {};
+
+  // Add/remove song slots for worship segments
+  const addSongSlot = useCallback((segIdx) => {
+    const entityId = serviceData?.[timeSlot]?.[segIdx]?._entityId;
+    let updatedSongs = null;
+    setServiceData(prev => {
+      const arr = [...(prev[timeSlot] || [])];
+      if (!arr[segIdx]) return prev;
+      const seg = { ...arr[segIdx] };
+      const songs = [...(seg.songs || [])];
+      if (songs.length >= 10) return prev;
+      songs.push({ title: "", lead: "", key: "" });
+      seg.songs = songs;
+      arr[segIdx] = seg;
+      updatedSongs = songs;
+      return { ...prev, [timeSlot]: arr };
+    });
+    if (pushFn && entityId && updatedSongs) {
+      pushFn("songs", { entityId, songs: updatedSongs });
+    }
+  }, [timeSlot, setServiceData, pushFn, serviceData]);
+
+  const removeSongSlot = useCallback((segIdx) => {
+    const entityId = serviceData?.[timeSlot]?.[segIdx]?._entityId;
+    let updatedSongs = null;
+    setServiceData(prev => {
+      const arr = [...(prev[timeSlot] || [])];
+      if (!arr[segIdx]) return prev;
+      const seg = { ...arr[segIdx] };
+      const songs = [...(seg.songs || [])];
+      if (songs.length <= 1) return prev;
+      songs.pop();
+      seg.songs = songs;
+      arr[segIdx] = seg;
+      updatedSongs = songs;
+      return { ...prev, [timeSlot]: arr };
+    });
+    if (pushFn && entityId && updatedSongs) {
+      pushFn("songs", { entityId, songs: updatedSongs });
+    }
+  }, [timeSlot, setServiceData, pushFn, serviceData]);
 
   return (
     <div className="space-y-4" style={style}>
@@ -397,7 +440,20 @@ function StandardSegmentCard({
         {/* Songs */}
         {segment.songs && (
           <div className="space-y-1">
-            <Label className="text-xs font-semibold text-gray-700">Canciones</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold text-gray-700">Canciones</Label>
+              {canEdit && (
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-gray-400">{segment.songs.length}</span>
+                  <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => removeSongSlot(idx)} disabled={segment.songs.length <= 1} title="Quitar canción">
+                    <Minus className="w-3 h-3" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => addSongSlot(idx)} disabled={segment.songs.length >= 10} title="Agregar canción">
+                    <Plus className="w-3 h-3" />
+                  </Button>
+                </div>
+              )}
+            </div>
             {segment.songs.map((_, sIdx) => (
               <SongInputRow key={sIdx} service={timeSlot} segmentIndex={idx} songIndex={sIdx} />
             ))}

@@ -111,7 +111,7 @@ export function pushSegmentSongs(base44, segmentEntityId, songs) {
   const flat = flattenSongs(songs);
   const payload = {
     ...flat._fields,
-    number_of_songs: Math.max(flat._count, Array.isArray(songs) ? songs.length : 0, 4),
+    number_of_songs: Math.max(flat._count, Array.isArray(songs) ? songs.length : 0),
   };
   return base44.entities.Segment.update(segmentEntityId, payload)
     .catch((err) => console.error("[FIELD_PUSH] Song update failed:", err.message));
@@ -290,10 +290,12 @@ export async function syncWeeklyToSessions(base44, serviceResult, serviceData, t
       // SONG-SLOT FIX (2026-02-20): Preserve the number of song SLOTS even when
       // songs are all empty (e.g. right after blueprint reset). This lets the
       // entity→JSON read path reconstruct empty rows for the UI.
+      // Uses configured number_of_songs from JSON (set by blueprint or per-service edit).
       const segTypeNorm = normalizeSegmentType(segData.type);
       const isWorshipSeg = segTypeNorm === "Alabanza";
+      const configuredCount = segData.number_of_songs || 0;
       const songSlotCount = isWorshipSeg
-        ? Math.max(flatSongs._count, Array.isArray(songsArray) ? songsArray.length : 0, 4)
+        ? Math.max(flatSongs._count, Array.isArray(songsArray) ? songsArray.length : 0, configuredCount)
         : flatSongs._count;
 
       const parentSegmentData = {
@@ -718,6 +720,8 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
     data,
     // BUG FIX (audit): Root-level songs for UI compatibility (SongInputRow reads segment.songs)
     songs: rootSongs,
+    // Preserve configured song count for round-trip (editable per-service)
+    number_of_songs: segment.number_of_songs || (rootSongs ? rootSongs.length : undefined),
     actions: segment.segment_actions || [],
     sub_assignments,
     sub_asignaciones,
