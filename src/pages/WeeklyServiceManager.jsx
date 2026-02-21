@@ -783,13 +783,12 @@ export default function WeeklyServiceManager() {
       localStateInitializedRef.current = true;
       }
       // SEGMENT-DISAPPEAR-FIX-v4 (2026-02-21): Re-added blueprintData to deps.
-      // On fresh load (existingData=null), the effect must wait for blueprintData
-      // to arrive before initializing. Removing it caused a race where the else block
-      // would run with undefined blueprintData, seeding empty segments.
-      // The initialization guard (localStateInitializedRef) ensures we only initialize
-      // once per date, so subsequent blueprintData changes won't re-trigger (it only
-      // fires when existingData OR blueprintData first become non-null).
-      }, [existingData, selectedDate, blueprintData]);
+      // RACE FIX v2 (2026-02-21): Added isLoading to deps. The isLoading guard
+      // prevents initialization while the query is running, but the effect must
+      // re-trigger when the query completes (isLoading: true → false). Without
+      // isLoading in deps, the effect bails during the query and never re-runs
+      // when the query settles, leaving serviceData stuck at null.
+      }, [existingData, selectedDate, blueprintData, isLoading]);
 
   // MULTI-ADMIN REAL-TIME (2026-02-21): Subscribe to entity changes for collaboration.
   // When another admin saves (entities change), we detect it and either auto-reload

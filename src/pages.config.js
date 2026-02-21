@@ -67,6 +67,7 @@ import MyProgram from './pages/MyProgram';
 import People from './pages/People';
 import ProjectionView from './pages/ProjectionView';
 import PublicCountdownDisplay from './pages/PublicCountdownDisplay';
+import PublicProgramView from './pages/PublicProgramView';
 import Reports from './pages/Reports';
 import RolePermissionManager from './pages/RolePermissionManager';
 import Rooms from './pages/Rooms';
@@ -80,13 +81,12 @@ import Services from './pages/Services';
 import SessionDetail from './pages/SessionDetail';
 import SoundView from './pages/SoundView';
 import Teams from './pages/Teams';
+import Templates from './pages/Templates';
 import TestDashboard from './pages/TestDashboard';
 import UserManagement from './pages/UserManagement';
 import UshersView from './pages/UshersView';
-import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import Templates from './pages/Templates';
-import PublicProgramView from './pages/PublicProgramView';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
+import WeeklyServiceReport from './pages/WeeklyServiceReport';
 import __Layout from './Layout.jsx';
 
 
@@ -111,6 +111,7 @@ export const PAGES = {
     "People": People,
     "ProjectionView": ProjectionView,
     "PublicCountdownDisplay": PublicCountdownDisplay,
+    "PublicProgramView": PublicProgramView,
     "Reports": Reports,
     "RolePermissionManager": RolePermissionManager,
     "Rooms": Rooms,
@@ -124,13 +125,12 @@ export const PAGES = {
     "SessionDetail": SessionDetail,
     "SoundView": SoundView,
     "Teams": Teams,
+    "Templates": Templates,
     "TestDashboard": TestDashboard,
     "UserManagement": UserManagement,
     "UshersView": UshersView,
-    "WeeklyServiceReport": WeeklyServiceReport,
-    "Templates": Templates,
-    "PublicProgramView": PublicProgramView,
     "WeeklyServiceManager": WeeklyServiceManager,
+    "WeeklyServiceReport": WeeklyServiceReport,
 }
 
 export const pagesConfig = {
