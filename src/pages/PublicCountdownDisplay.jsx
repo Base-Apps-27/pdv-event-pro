@@ -9,6 +9,7 @@ import { normalizeProgramData } from "@/components/utils/normalizeProgram";
 import { Loader2, Layout, Radio } from "lucide-react";
 import StandbyScreen from "@/components/service/StandbyScreen";
 import StreamSidecarTimeline from "@/components/live/StreamSidecarTimeline";
+import TeamServersDisplay from "@/components/service/TeamServersDisplay";
 import { normalizeStreamBlocks } from "@/components/utils/normalizeStreamBlocks";
 import useActiveProgramCache from "@/components/myprogram/useActiveProgramCache";
 
@@ -61,6 +62,18 @@ export default function PublicCountdownDisplay() {
     const sessions = programData?.sessions || [];
     return sessions.some((s) => s.has_livestream) && streamBlocks.length > 0;
   }, [programData?.sessions, streamBlocks]);
+
+  // Derive the active session for team display
+  const activeSession = useMemo(() => {
+    const sessions = programData?.sessions || [];
+    if (sessions.length === 0) return null;
+    // Use the first session if single-session program, otherwise find session containing current segment
+    if (sessions.length === 1) return sessions[0];
+    if (currentSegment?.session_id) {
+      return sessions.find(s => s.id === currentSegment.session_id) || sessions[0];
+    }
+    return sessions[0];
+  }, [programData?.sessions, currentSegment]);
 
   // Derive serviceDate from program
   const serviceDate = useMemo(() => {
@@ -267,36 +280,44 @@ export default function PublicCountdownDisplay() {
             </div>
           </div>
 
-          {/* Col 2: Program Timeline */}
-          <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
-            <div className="bg-slate-100/80 px-3 py-1.5 border-b border-slate-200">
-              <div className="flex items-center justify-between">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
-                  <Layout className="w-3 h-3" />
-                  Room Program
-                </div>
-                {upcomingSegments.length > 0 && (
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                    A Continuación
+          {/* Col 2: Program Timeline + Team Servers */}
+          <div className="flex flex-col gap-2 overflow-hidden h-full">
+            {/* Room Program — raised bottom via gap */}
+            <div className="flex-1 flex flex-col gap-0 overflow-hidden bg-white/80 rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm min-h-0">
+              <div className="bg-slate-100/80 px-3 py-1.5 border-b border-slate-200 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                    <Layout className="w-3 h-3" />
+                    Room Program
                   </div>
-                )}
+                  {upcomingSegments.length > 0 && (
+                    <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                      A Continuación
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex-1 relative p-1.5 min-h-0">
+                <div className="absolute inset-0 p-1.5 overflow-y-auto">
+                  {upcomingSegments.length > 0 ? (
+                    <SegmentTimeline
+                      segments={upcomingSegments}
+                      getTimeDate={getTimeDate}
+                      serviceDate={serviceDate}
+                      className="h-full"
+                    />
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-slate-400 italic text-xs">
+                      {t("live.endOfProgram")}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="flex-1 relative p-1.5">
-              <div className="absolute inset-0 p-1.5">
-                {upcomingSegments.length > 0 ? (
-                  <SegmentTimeline
-                    segments={upcomingSegments}
-                    getTimeDate={getTimeDate}
-                    serviceDate={serviceDate}
-                    className="h-full"
-                  />
-                ) : (
-                  <div className="h-full flex items-center justify-center text-slate-400 italic text-xs">
-                    {t("live.endOfProgram")}
-                  </div>
-                )}
-              </div>
+
+            {/* Servidores Box */}
+            <div className="flex-shrink-0">
+              <TeamServersDisplay session={activeSession} />
             </div>
           </div>
 
