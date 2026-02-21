@@ -57,6 +57,40 @@ import WeekdayServicePanel from "@/components/service/weekly/WeekdayServicePanel
 import ServiceScheduleManager from "@/components/service/weekly/ServiceScheduleManager";
 import SundaySlotColumns from "@/components/service/weekly/SundaySlotColumns";
 
+/**
+ * extractServiceMetadata — strips entity-managed fields from save payload.
+ * Session/Segment entities (via syncWeeklyToSessions) are the SOLE source of
+ * truth for segment data, team assignments, and pre-service notes.
+ * The Service entity only stores lightweight metadata.
+ *
+ * Old JSON slot arrays are NOT cleared from existing records — they remain as
+ * a read-only fallback for legacy services that haven't been entity-synced yet.
+ */
+function extractServiceMetadata(data, slotNames) {
+  const metadata = { ...data };
+
+  // Team fields — live on Session entities
+  delete metadata.coordinators;
+  delete metadata.ujieres;
+  delete metadata.sound;
+  delete metadata.luces;
+  delete metadata.fotografia;
+
+  // Pre-service notes — live on PreSessionDetails entities
+  delete metadata.pre_service_notes;
+
+  // Dynamic slot arrays — live on Segment entities
+  for (const name of slotNames) {
+    delete metadata[name];
+  }
+
+  // Internal UI markers (never persist)
+  delete metadata._fromEntities;
+  delete metadata._slotNames;
+
+  return metadata;
+}
+
 // Weekday definitions — ordered Mon→Sun matching ISO week. Labels in Spanish.
 const WEEKDAYS = [
   { key: 'monday', label: 'Lun', fullLabel: 'Lunes', dayIndex: 1 },
@@ -312,18 +346,25 @@ export default function WeeklyServiceManager() {
 
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
+      // DUAL-WRITE ELIMINATION (2026-02-21): Only persist service metadata.
+      // Segment data, team assignments, and pre-service notes are written
+      // exclusively to Session/Segment/PreSessionDetails entities via
+      // syncWeeklyToSessions in onSuccess. Old JSON on existing records is
+      // preserved as a read-only fallback for legacy (pre-entity-lift) services.
+      const metadata = extractServiceMetadata(data, sundaySlotNames);
       if (existingData?.id) {
-        return await base44.entities.Service.update(existingData.id, data);
+        return await base44.entities.Service.update(existingData.id, metadata);
       } else {
-        return await base44.entities.Service.create(data);
+        return await base44.entities.Service.create(metadata);
       }
     },
     onSuccess: async (result) => {
-      // PHASE 1 FIX (2026-02-20): AWAIT entity sync + invalidate queries.
-      // Entity-first architecture requires Session/Segment to be primary source of truth.
-      // Sync MUST complete before cache refresh, else PublicProgramView loads stale JSON.
+      // Entity sync: write segment/team data to Session/Segment entities.
+      // This is now the SOLE write path — Service entity only has metadata.
+      // Use serviceDataRef.current (local state) for segment data, not the
+      // metadata-only API result.
       try {
-        await syncWeeklyToSessions(base44, result, result, sundaySlots);
+        await syncWeeklyToSessions(base44, result, serviceDataRef.current, sundaySlots);
         // After entity sync succeeds, invalidate PublicProgramView caches so subscribers get fresh data
         queryClient.invalidateQueries({ queryKey: ['activeProgram'] });
         queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
@@ -341,8 +382,9 @@ export default function WeeklyServiceManager() {
         return currentRef ? JSON.parse(JSON.stringify(currentRef)) : prev;
       });
       if (result?.updated_date) captureServiceBaseline(result.updated_date);
+      // Backup uses local state (full segment data), not the metadata-only API result
       const backupKey = `service_backup_${selectedDate}`;
-      safeSetItem(backupKey, JSON.stringify({ data: result, timestamp: new Date().toISOString() }));
+      safeSetItem(backupKey, JSON.stringify({ data: serviceDataRef.current, timestamp: new Date().toISOString() }));
     },
     onError: (error) => {
       toast.error('Error al guardar: ' + error.message);

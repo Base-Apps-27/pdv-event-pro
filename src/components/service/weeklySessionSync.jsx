@@ -1,17 +1,23 @@
 /**
  * weeklySessionSync.jsx
- * Service Segment Entity Lift: Bidirectional sync between weekly service
- * JSON format and Session/Segment entities.
+ * SOLE write path for weekly service segment data.
+ *
+ * As of 2026-02-21, the Service entity only stores lightweight metadata
+ * (date, name, status, service_type, receso_notes, selected_announcements, etc.).
+ * All segment data, team assignments, and pre-service notes are written
+ * EXCLUSIVELY through this module to Session/Segment/PreSessionDetails entities.
+ * The old dual-write (JSON on Service + entities) has been eliminated.
  *
  * WRITE: syncWeeklyToSessions() — creates/updates Session + Segment + PreSessionDetails
- *        entities from weekly service JSON state. Called fire-and-forget after save.
+ *        entities from the UI's in-memory service data. Called in saveServiceMutation.onSuccess.
  *
  * READ:  loadWeeklyFromSessions() — loads Session + Segment entities and transforms
- *        back to the weekly JSON format that the UI expects.
+ *        back to the weekly JSON format that the UI expects. JSON fallback on the
+ *        Service entity is retained read-only for legacy (pre-entity-lift) services.
  *
  * Guards:
  *   - Skips segment recreation if session.live_adjustment_enabled is true
- *   - Returns null from load if no sessions exist (signals JSON fallback)
+ *   - Returns null from load if no sessions exist (signals JSON fallback for legacy data)
  */
 
 import { addMinutes, parse, format } from "date-fns";
