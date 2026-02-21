@@ -78,7 +78,10 @@ export function normalizeServiceSegments(serviceData) {
   }
 
   // ── JSON fallback: read from embedded arrays ──
-  return normalizeJsonSourcedSegments(serviceData);
+  // If serviceData has a .program sub-object (cache snapshot shape), extract the
+  // raw Service entity for JSON discovery. Otherwise, serviceData IS the service.
+  const program = serviceData.program || serviceData;
+  return normalizeJsonSourcedSegments(program);
 }
 
 /**

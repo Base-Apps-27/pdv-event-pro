@@ -783,48 +783,52 @@ Deno.serve(async (req) => {
             }
 
             // FALLBACK: Inject pre_service_notes for Weekly Services (JSON-only path)
-            // Only when NO session entities exist — when sessions exist, PreSessionDetails handles this above
+            // Only when NO session entities exist — when sessions exist, PreSessionDetails handles this above.
+            // NOTE: The dynamic injection at lines 646-663 (inside the weekly slot processing block)
+            // handles all discovered slot keys. This block catches any remaining cases where
+            // the weekly slot block was skipped (e.g., custom services with pre_service_notes).
             if (targetProgram.pre_service_notes && sessions.length === 0) {
-                const injectServiceNotes = (slotKey, slotSessionId) => {
+                // Discover all slot session IDs present in segments
+                const slotSessionIds = new Set(segments.map(s => s.session_id).filter(Boolean));
+                slotSessionIds.forEach(slotSessionId => {
+                    // Reverse-map session_id "slot-H-M" → slot key "H:MMam/pm"
+                    const parts = slotSessionId.replace('slot-', '').split('-');
+                    if (parts.length !== 2) return;
+                    let h = parseInt(parts[0]);
+                    const m = parts[1];
+                    const period = h >= 12 ? 'pm' : 'am';
+                    if (h > 12) h -= 12;
+                    if (h === 0) h = 12;
+                    const slotKey = `${h}:${m}${period}`;
+
                     const notes = targetProgram.pre_service_notes[slotKey];
                     if (!notes) return;
-                    
-                    // Find first segment of this slot (using the artificial session_id assigned earlier)
+
                     const slotSegments = segments.filter(s => s.session_id === slotSessionId);
                     if (slotSegments.length === 0) return;
-                    
-                    // Sort by start time to find the absolute first
+
                     slotSegments.sort((a, b) => {
                        const [ah, am] = (a.start_time || "00:00").split(':').map(Number);
                        const [bh, bm] = (b.start_time || "00:00").split(':').map(Number);
                        return (ah * 60 + am) - (bh * 60 + bm);
                     });
-                    
+
                     const firstSeg = slotSegments[0];
-                    
-                    // Create an artificial action
-                    const action = {
-                        id: `pre-note-${slotKey}-${targetProgram.id}`,
-                        label: 'GENERAL NOTES', // Standard label for pre-service notes
-                        department: 'Coordinador',
-                        timing: 'before_start',
-                        offset_min: 30, // Default to 30 min before
-                        notes: notes,
-                        order: -99
-                    };
-                    
-                    // Avoid duplicates if already injected
                     if (!firstSeg.actions) firstSeg.actions = [];
-                    if (!firstSeg.actions.find(a => a.id === action.id)) {
-                        firstSeg.actions.push(action);
-                        // Re-sort actions by order/timing
+                    const actionId = `pre-note-${slotKey}-${targetProgram.id}`;
+                    if (!firstSeg.actions.find(a => a.id === actionId)) {
+                        firstSeg.actions.push({
+                            id: actionId,
+                            label: 'GENERAL NOTES',
+                            department: 'Coordinador',
+                            timing: 'before_start',
+                            offset_min: 30,
+                            notes: notes,
+                            order: -99
+                        });
                         firstSeg.actions.sort((a, b) => (a.order || 0) - (b.order || 0));
                     }
-                };
-
-                // Try to inject for standard slots
-                injectServiceNotes("9:30am", "slot-9-30");
-                injectServiceNotes("11:30am", "slot-11-30");
+                });
             }
 
             // Fetch Rooms & Adjustments (Parallelized above)

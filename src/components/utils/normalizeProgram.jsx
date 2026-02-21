@@ -551,11 +551,12 @@ function normalizeOneSegment(seg, source, defaults = {}) {
 
     // ─── PEOPLE ───
     // Events: presenter at root, no leader/preacher split
-    // Services: data.leader, data.preacher, data.presenter, data.translator
+    // Services (JSON): data.leader, data.preacher, data.presenter, data.translator
+    // Services (Entity): ALL roles stored as 'presenter' — reverse-map by type
     // Custom:  dual-write to root AND data
     presenter: getField(seg, 'presenter'),
-    leader: getField(seg, 'leader'),
-    preacher: getField(seg, 'preacher'),
+    leader: getField(seg, 'leader') || (canonicalType === 'Alabanza' ? getField(seg, 'presenter') : ''),
+    preacher: getField(seg, 'preacher') || (canonicalType === 'Plenaria' ? getField(seg, 'presenter') : ''),
     translator: getField(seg, 'translator') || getField(seg, 'translator_name'),
 
     // ─── CONTENT ───
@@ -662,7 +663,19 @@ function normalizeOneSegment(seg, source, defaults = {}) {
     // ─── COMPATIBILITY: Preserve data sub-object for getSegmentData() ───
     // PublicProgramSegment reads via getSegmentData() which checks data first
     // for content fields. We preserve this so Phase 2 wiring is seamless.
-    data: seg.data || {},
+    // FIX: Entity segments have no data sub-object. Populate with reverse-mapped
+    // fields so getSegmentData() consumers (PublicProgramSegment, LiveStatusCard)
+    // find content fields in the expected location.
+    data: {
+      ...(seg.data || {}),
+      presenter: getField(seg, 'presenter') || (seg.data?.presenter || ''),
+      leader: getField(seg, 'leader') || (canonicalType === 'Alabanza' ? getField(seg, 'presenter') : '') || (seg.data?.leader || ''),
+      preacher: getField(seg, 'preacher') || (canonicalType === 'Plenaria' ? getField(seg, 'presenter') : '') || (seg.data?.preacher || ''),
+      messageTitle: getField(seg, 'message_title') || getField(seg, 'messageTitle') || (seg.data?.messageTitle || ''),
+      message_title: getField(seg, 'message_title') || getField(seg, 'messageTitle') || (seg.data?.message_title || ''),
+      verse: getField(seg, 'scripture_references') || getField(seg, 'verse') || (seg.data?.verse || ''),
+      translator: getField(seg, 'translator') || getField(seg, 'translator_name') || (seg.data?.translator || ''),
+    },
 
     // ─── COMPATIBILITY: Preserve type field for break detection ───
     // StickyOpsDeck and LiveStatusCard filter on seg.type === 'break'
