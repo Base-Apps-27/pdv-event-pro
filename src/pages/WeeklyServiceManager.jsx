@@ -829,14 +829,56 @@ export default function WeeklyServiceManager() {
     setHasUnsavedChanges(JSON.stringify(serviceData) !== JSON.stringify(lastSavedData));
   }, [serviceData, lastSavedData]);
 
-  // Warn before leaving
+  // Continuous localStorage backup (5s debounce). Since per-field pushes don't
+  // trigger full sync immediately, we keep a rolling backup so the recovery toast
+  // can offer data from even very recent edits if the browser crashes.
   useEffect(() => {
+    if (!serviceData || !selectedDate) return;
+    const timer = setTimeout(() => {
+      const backupKey = `service_backup_${selectedDate}`;
+      safeSetItem(backupKey, JSON.stringify({ data: serviceData, timestamp: new Date().toISOString() }));
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [serviceData, selectedDate]);
+
+  // Warn before leaving + flush unsaved changes on exit/tab-switch.
+  // visibilitychange fires reliably on tab switch and mobile app backgrounding.
+  // beforeunload fires on navigation/close (not guaranteed on mobile).
+  // Both trigger an immediate full sync if there are uncommitted changes.
+  useEffect(() => {
+    const flushOnExit = () => {
+      if (!hasUnsavedChangesRef.current || entitySyncInProgressRef.current) return;
+      if (!serviceDataRef.current || !lastSavedDataRef.current) return;
+      if (JSON.stringify(serviceDataRef.current) === JSON.stringify(lastSavedDataRef.current)) return;
+      // Fire full sync immediately — don't wait for 30s safety net
+      const payload = {
+        ...serviceDataRef.current,
+        selected_announcements: selectedAnnouncements,
+        print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
+        day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
+        name: `Domingo - ${selectedDate}`, status: 'active',
+        service_type: 'weekly'
+      };
+      saveServiceMutation.mutate(payload);
+    };
     const handleBeforeUnload = (e) => {
-      if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = 'Tienes cambios sin guardar.'; return e.returnValue; }
+      flushOnExit();
+      if (hasUnsavedChangesRef.current) {
+        e.preventDefault();
+        e.returnValue = 'Tienes cambios sin guardar.';
+        return e.returnValue;
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flushOnExit();
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasUnsavedChanges]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
 
   // Auto-select announcements
   useEffect(() => {
