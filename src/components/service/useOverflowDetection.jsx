@@ -5,7 +5,8 @@
  */
 
 /**
- * Estimates whether the two-column service program will overflow a single printed page.
+ * Estimates whether the multi-column service program will overflow a single printed page.
+ * Dynamic: discovers slot keys from serviceData instead of assuming "9:30am"/"11:30am".
  * @param {Object} serviceData — full service data object
  * @returns {{ hasOverflow: boolean, level: string, label?: string, color?: string }}
  */
@@ -21,20 +22,24 @@ export function calculateServiceProgramOverflow(serviceData) {
     };
   };
 
-  const count930 = countSlot("9:30am");
-  const count1130 = countSlot("11:30am");
+  // Dynamic slot discovery
+  const slotKeys = Object.keys(serviceData)
+    .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(serviceData[k]));
 
-  // Estimate page units (1 unit ≈ 1 line of content)
-  const units930 = count930.segments * 4 + count930.songs * 1.2 + count930.notes * 2;
-  const units1130 = count1130.segments * 4 + count1130.songs * 1.2 + count1130.notes * 2;
-
-  // Each column can fit ~50 units comfortably
+  // Estimate page units per slot (1 unit ≈ 1 line of content)
   const maxUnitsPerColumn = 50;
+  let maxUnits = 0;
 
-  if (units930 > maxUnitsPerColumn || units1130 > maxUnitsPerColumn) {
+  for (const slot of slotKeys) {
+    const c = countSlot(slot);
+    const units = c.segments * 4 + c.songs * 1.2 + c.notes * 2;
+    if (units > maxUnits) maxUnits = units;
+  }
+
+  if (maxUnits > maxUnitsPerColumn) {
     return { hasOverflow: true, level: 'high', label: 'Sobrecarga Detectada', color: 'bg-red-100 text-red-800 border-red-300' };
   }
-  if (units930 > maxUnitsPerColumn * 0.85 || units1130 > maxUnitsPerColumn * 0.85) {
+  if (maxUnits > maxUnitsPerColumn * 0.85) {
     return { hasOverflow: true, level: 'medium', label: 'Riesgo Moderado', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' };
   }
 

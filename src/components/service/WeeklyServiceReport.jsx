@@ -479,30 +479,50 @@ export default function WeeklyServiceReport({ date }) {
       <div className="hidden print:block text-center mb-6">
         <div className="w-20 h-1 mx-auto mb-4 bg-gradient-to-r from-pdv-teal via-pdv-green to-pdv-yellow" />
         <h1 className="text-3xl font-bold uppercase mb-1">Orden de Servicio</h1>
-        <p className="text-xl text-blue-600">Domingo {date}</p>
+        <p className="text-xl text-blue-600">{serviceData.day_of_week || 'Domingo'} {date}</p>
       </div>
 
-      {/* Services Grid */}
+      {/* Services Grid — dynamic slot discovery */}
       {isCustomService ? (
         renderCustomService()
       ) : (
-        <div className="grid md:grid-cols-2 gap-8">
-          {renderService("9:30am", "#DC2626")}
-          {renderService("11:30am", "#2563EB")}
-        </div>
+        (() => {
+          const REPORT_COLORS = ['#DC2626', '#2563EB', '#9333EA', '#D97706', '#16A34A'];
+          const slotKeys = Object.keys(serviceData)
+            .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(serviceData[k]))
+            .sort((a, b) => {
+              const pa = a.match(/^(\d+):(\d+)(am|pm)$/i);
+              const pb = b.match(/^(\d+):(\d+)(am|pm)$/i);
+              if (!pa || !pb) return 0;
+              let ha = parseInt(pa[1]); if (pa[3].toLowerCase() === 'pm' && ha < 12) ha += 12;
+              let hb = parseInt(pb[1]); if (pb[3].toLowerCase() === 'pm' && hb < 12) hb += 12;
+              return (ha * 60 + parseInt(pa[2])) - (hb * 60 + parseInt(pb[2]));
+            });
+          return (
+            <div className={`grid md:grid-cols-${Math.min(slotKeys.length, 3)} gap-8`}>
+              {slotKeys.map((slot, idx) => renderService(slot, REPORT_COLORS[idx % REPORT_COLORS.length]))}
+            </div>
+          );
+        })()
       )}
 
-      {/* Receso Block */}
-      {serviceData.receso_notes?.["9:30am"] && (
-        <Card className="bg-gray-100 border-gray-300">
-          <CardHeader>
-            <CardTitle className="text-lg text-gray-600">RECESO (30 min)</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-gray-700">
-            {serviceData.receso_notes["9:30am"]}
-          </CardContent>
-        </Card>
-      )}
+      {/* Receso Block — dynamic first-slot lookup */}
+      {(() => {
+        const firstSlotKey = Object.keys(serviceData)
+          .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(serviceData[k]))[0];
+        const recesoNote = firstSlotKey && serviceData.receso_notes?.[firstSlotKey];
+        if (!recesoNote) return null;
+        return (
+          <Card className="bg-gray-100 border-gray-300">
+            <CardHeader>
+              <CardTitle className="text-lg text-gray-600">RECESO</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-gray-700">
+              {recesoNote}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Announcements Section */}
       {(announcementsToShow.length > 0 || eventsToShow.length > 0) && (

@@ -162,10 +162,20 @@ export default function ServiceProgramView({
         if (resolvedName) {
           slot = resolvedName;
         }
-        // JSON-sourced synthetic session IDs (legacy compat)
-        else if (seg.session_id === 'slot-9-30') slot = '9:30am';
-        else if (seg.session_id === 'slot-11-30') slot = '11:30am';
-        else if (seg.session_id === 'slot-break') slot = jsonSlotKeys[0] || '9:30am';
+        // JSON-sourced synthetic session IDs (legacy compat): "slot-9-30" → "9:30am"
+        else if (seg.session_id === 'slot-break') {
+          slot = jsonSlotKeys[0] || null;
+        } else if (seg.session_id && seg.session_id.startsWith('slot-')) {
+          // Parse "slot-9-30" → "9:30am", "slot-11-30" → "11:30am", "slot-18-00" → "6:00pm"
+          const parts = seg.session_id.replace('slot-', '').split('-');
+          if (parts.length === 2) {
+            let h = parseInt(parts[0]), m = parts[1];
+            const period = h >= 12 ? 'pm' : 'am';
+            if (h > 12) h -= 12;
+            if (h === 0) h = 12;
+            slot = `${h}:${m}${period}`;
+          }
+        }
 
         if (slot) {
           const adjustment = liveAdjustments.find(a => a.time_slot === slot);

@@ -106,12 +106,9 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
 
   // Resolve pre-service notes for current session (weekly services)
   const resolvedPreServiceNote = useMemo(() => {
-    if (!preServiceNotes) return null;
-    // Map session IDs to slot keys
-    if (selectedSession === '9:30am') return preServiceNotes['9:30am'] || null;
-    if (selectedSession === '11:30am') return preServiceNotes['11:30am'] || null;
-    // Custom services don't have slot-based notes
-    return null;
+    if (!preServiceNotes || !selectedSession) return null;
+    // Dynamic lookup: selectedSession is the slot name (e.g. "9:30am", "6:00pm")
+    return preServiceNotes[selectedSession] || null;
   }, [preServiceNotes, selectedSession]);
 
   return (
