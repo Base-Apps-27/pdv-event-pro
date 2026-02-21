@@ -153,7 +153,7 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
     
     // Translator - with mode distinction (InPerson vs RemoteBooth)
     const translator = seg.data?.translator || seg.translator || seg.translator_name;
-    const translationMode = seg.translation_mode || seg.data?.translation_mode;
+    const translationMode = seg.translation_mode || seg.data?.translation_mode || 'RemoteBooth';
     if (translator || seg.requires_translation) {
       const isRemoteBooth = translationMode === 'RemoteBooth';
       if (translator) {
