@@ -26,21 +26,16 @@ export function normalizeServiceData(serviceData, serviceType) {
   
   switch (serviceType) {
     case 'weekly':
-      // Extract from time slots
-      if (serviceData['9:30am']) {
-        segments.push(...serviceData['9:30am'].map(seg => ({
-          ...seg,
-          timeSlot: '9:30am',
-          date: contextDate
-        })));
-      }
-      if (serviceData['11:30am']) {
-        segments.push(...serviceData['11:30am'].map(seg => ({
-          ...seg,
-          timeSlot: '11:30am',
-          date: contextDate
-        })));
-      }
+      // Extract from all time-slot keys (dynamic — not limited to 9:30am/11:30am)
+      Object.keys(serviceData)
+        .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(serviceData[k]))
+        .forEach(slotKey => {
+          segments.push(...serviceData[slotKey].map(seg => ({
+            ...seg,
+            timeSlot: slotKey,
+            date: contextDate
+          })));
+        });
       break;
       
     case 'custom':

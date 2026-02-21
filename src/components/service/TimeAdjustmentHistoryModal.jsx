@@ -66,10 +66,8 @@ export default function TimeAdjustmentHistoryModal({
                         <Badge 
                           variant="outline" 
                           className={
-                            log.time_slot === '9:30am' 
-                              ? 'bg-red-50 border-red-300 text-red-700' 
-                              : log.time_slot === '11:30am'
-                              ? 'bg-blue-50 border-blue-300 text-blue-700'
+                            /^\d+:\d+[ap]m$/i.test(log.time_slot)
+                              ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
                               : 'bg-gray-50 border-gray-300 text-gray-700'
                           }
                         >

@@ -139,7 +139,7 @@ export default function MessageProcessingPage() {
             // JSON fallback: for services without Session entities
             recentServices.forEach(service => {
                 if (seenEntityIds.has(service.id)) return; // Already handled via entity path
-                ['9:30am', '11:30am'].forEach(slot => {
+                Object.keys(service).filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(service[k])).forEach(slot => {
                     if (service[slot]) {
                         service[slot].forEach((seg, idx) => {
                             if (seg.submission_status === 'pending' || seg.submission_status === 'processed') {
