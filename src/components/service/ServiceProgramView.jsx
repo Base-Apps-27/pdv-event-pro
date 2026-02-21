@@ -441,7 +441,8 @@ export default function ServiceProgramView({
                 const [sh, sm] = thisStart.split(':').map(Number);
                 gapMin = (sh * 60 + sm) - (eh * 60 + em);
               }
-              const recesoNotes = actualServiceData.receso_notes?.[weeklySlots[0]?.name] || '';
+              // Receso notes keyed by the PREVIOUS slot name (break "after" that slot)
+              const recesoNotes = actualServiceData.receso_notes?.[prevSlot?.name] || '';
               if (gapMin > 0 || recesoNotes) {
                 return (
                   <div className="bg-gray-50 rounded-2xl p-4 text-center border-2 border-dashed border-gray-300">

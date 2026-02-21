@@ -291,7 +291,7 @@ export default function WeeklyServicePrintView({
           </div>
           <div className="print-title">
             <h1>Orden de Servicio</h1>
-            <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
+            <p>{serviceData?.day_of_week || 'Domingo'} {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
             <div className="print-team-info">
               <span><span className="print-team-label">Coordinador:</span> {serviceData?.coordinators?.[firstSlot] || (secondSlot && serviceData?.coordinators?.[secondSlot]) || "—"}</span>
               <span style={{ color: '#9ca3af' }}>/</span>
@@ -335,17 +335,20 @@ export default function WeeklyServicePrintView({
           </div>
         </div>
 
-        {/* Entity Lift: Only show receso if there are 2+ slots (break between them) */}
-        {slots.length >= 2 && (
-          <div className="print-receso">
-            RECESO
-            {serviceData?.receso_notes?.[firstSlot] && (
-              <span style={{ fontSize: '9pt', fontWeight: 400, marginLeft: '8pt', fontStyle: 'italic', color: '#6b7280' }}>
-                ({serviceData.receso_notes[firstSlot]})
-              </span>
-            )}
-          </div>
-        )}
+        {/* Receso blocks between consecutive slots */}
+        {slots.length >= 2 && slots.slice(0, -1).map((slotName, idx) => {
+          const note = serviceData?.receso_notes?.[slotName];
+          return (
+            <div key={`receso-${slotName}`} className="print-receso">
+              RECESO{slots.length > 2 ? ` (${slotName} → ${slots[idx + 1]})` : ''}
+              {note && (
+                <span style={{ fontSize: '9pt', fontWeight: 400, marginLeft: '8pt', fontStyle: 'italic', color: '#6b7280' }}>
+                  ({note})
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* PAGE 2: Announcements */}
@@ -357,7 +360,7 @@ export default function WeeklyServicePrintView({
             </div>
             <div style={{ textAlign: 'center' }}>
               <div className="print-announcements-title">ANUNCIOS</div>
-              <p>Domingo {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
+              <p>{serviceData?.day_of_week || 'Domingo'} {formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</p>
             </div>
           </div>
 

@@ -683,25 +683,35 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
 }
 
 function buildReceso(serviceData, scale) {
-  // Entity Lift: dynamic receso from first slot
-  const firstSlot = (serviceData._slotNames || ["9:30am"])[0];
-  const recesoNote = serviceData.receso_notes?.[firstSlot];
-  if (!recesoNote) return null;
+  // Dynamic: render a receso block for each non-last slot that has break notes
+  const pdfSlots = serviceData._slotNames || ["9:30am", "11:30am"];
+  const blocks = [];
 
-  return {
-    stack: [
-      { 
-        canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 1, lineColor: BRAND.LIGHT_GRAY }],
-        margin: [0, 10, 0, 10]
-      },
-      {
-        text: [
-          { text: 'RECESO  ', bold: true, color: BRAND.BLACK },
-          { text: `(${recesoNote})`, italics: true, color: BRAND.GRAY, fontSize: 9 * scale }
-        ],
-        alignment: 'center',
-        fontSize: 11 * scale
-      }
-    ]
-  };
+  pdfSlots.slice(0, -1).forEach((slotName, idx) => {
+    const recesoNote = serviceData.receso_notes?.[slotName];
+    if (!recesoNote) return;
+
+    const label = pdfSlots.length > 2
+      ? `RECESO (${slotName} → ${pdfSlots[idx + 1]})  `
+      : 'RECESO  ';
+
+    blocks.push({
+      stack: [
+        {
+          canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 1, lineColor: BRAND.LIGHT_GRAY }],
+          margin: [0, 10, 0, 10]
+        },
+        {
+          text: [
+            { text: label, bold: true, color: BRAND.BLACK },
+            { text: `(${recesoNote})`, italics: true, color: BRAND.GRAY, fontSize: 9 * scale }
+          ],
+          alignment: 'center',
+          fontSize: 11 * scale
+        }
+      ]
+    });
+  });
+
+  return blocks.length > 0 ? { stack: blocks.flatMap(b => b.stack) } : null;
 }

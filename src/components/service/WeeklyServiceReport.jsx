@@ -506,22 +506,34 @@ export default function WeeklyServiceReport({ date }) {
         })()
       )}
 
-      {/* Receso Block — dynamic first-slot lookup */}
+      {/* Receso Blocks — between each consecutive slot pair */}
       {(() => {
-        const firstSlotKey = Object.keys(serviceData)
-          .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(serviceData[k]))[0];
-        const recesoNote = firstSlotKey && serviceData.receso_notes?.[firstSlotKey];
-        if (!recesoNote) return null;
-        return (
-          <Card className="bg-gray-100 border-gray-300">
-            <CardHeader>
-              <CardTitle className="text-lg text-gray-600">RECESO</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-gray-700">
-              {recesoNote}
-            </CardContent>
-          </Card>
-        );
+        const reportSlotKeys = Object.keys(serviceData)
+          .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(serviceData[k]))
+          .sort((a, b) => {
+            const pa = a.match(/^(\d+):(\d+)(am|pm)$/i);
+            const pb = b.match(/^(\d+):(\d+)(am|pm)$/i);
+            if (!pa || !pb) return 0;
+            let ha = parseInt(pa[1]); if (pa[3].toLowerCase() === 'pm' && ha < 12) ha += 12;
+            let hb = parseInt(pb[1]); if (pb[3].toLowerCase() === 'pm' && hb < 12) hb += 12;
+            return (ha * 60 + parseInt(pa[2])) - (hb * 60 + parseInt(pb[2]));
+          });
+        return reportSlotKeys.slice(0, -1).map((slotKey, idx) => {
+          const recesoNote = serviceData.receso_notes?.[slotKey];
+          if (!recesoNote) return null;
+          return (
+            <Card key={`receso-${slotKey}`} className="bg-gray-100 border-gray-300">
+              <CardHeader>
+                <CardTitle className="text-lg text-gray-600">
+                  RECESO{reportSlotKeys.length > 2 ? ` (${slotKey} → ${reportSlotKeys[idx + 1]})` : ''}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-gray-700">
+                {recesoNote}
+              </CardContent>
+            </Card>
+          );
+        });
       })()}
 
       {/* Announcements Section */}
