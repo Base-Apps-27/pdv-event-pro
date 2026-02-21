@@ -21,15 +21,15 @@ import {
 
 /**
  * ServiceTimeSlotColumn — Extracted from WeeklyServiceManager (Phase 3A).
- * Renders one complete time-slot column (9:30am or 11:30am) including:
+ * Renders one complete time-slot column for any configured session slot:
  *   - Header with time, add-special button, copy-all button
  *   - Pre-service notes
  *   - Segment cards (standard + special)
- *   - Receso (9:30 only)
+ *   - Receso (first slot only)
  *   - Team section
  *
  * Props:
- *   timeSlot              — "9:30am" | "11:30am"
+ *   timeSlot              — dynamic slot name from ServiceSchedule
  *   serviceData           — full service state
  *   expandedSegments      — object tracking expanded segment keys
  *   toggleSegmentExpanded — callback(timeSlot, idx)
@@ -40,10 +40,11 @@ import {
  *   setServiceData        — state setter
  *   handleOpenVerseParser — callback(timeSlot, idx)
  *   calculateServiceTimes — callback(timeSlot) => timing info
- *   copySegmentTo1130     — callback(idx)            [9:30 only]
- *   copyPreServiceNotesTo1130 — callback()           [9:30 only]
- *   copyTeamTo1130        — callback()               [9:30 only]
- *   copy930To1130         — callback()               [11:30 only]
+ *   copySegmentToNextSlot     — callback(idx)            [first slot only]
+ *   copyPreServiceNotesToNextSlot — callback()           [first slot only]
+ *   copyTeamToNextSlot        — callback()               [first slot only]
+ *   copyAllToNextSlot         — callback()               [second+ slots only]
+ *   nextSlotName              — string name of target slot for copy labels
  *   onOpenSpecialDialog   — callback(timeSlot)
  *   canEdit               — boolean permission
  */
@@ -59,16 +60,17 @@ export default function ServiceTimeSlotColumn({
   setServiceData,
   handleOpenVerseParser,
   calculateServiceTimes,
-  copySegmentTo1130,
-  copyPreServiceNotesTo1130,
-  copyTeamTo1130,
-  copy930To1130,
+  copySegmentToNextSlot,
+  copyPreServiceNotesToNextSlot,
+  copyTeamToNextSlot,
+  copyAllToNextSlot,
+  nextSlotName,
   onOpenSpecialDialog,
   canEdit,
   style,
 }) {
   // Phase 2: Dynamic — first slot gets red accent, others get blue
-  const isFirstSlot = !!copySegmentTo1130; // First slot has copy-to-next buttons
+  const isFirstSlot = !!copySegmentToNextSlot; // First slot has copy-to-next buttons
   const accentColor = isFirstSlot ? "red" : "blue";
   const timingInfo = calculateServiceTimes(timeSlot);
   const segments = serviceData[timeSlot] || [];
@@ -86,10 +88,10 @@ export default function ServiceTimeSlotColumn({
           </h2>
           {canEdit && (
             <div className="flex gap-2">
-              {copy930To1130 && (
+              {copyAllToNextSlot && (
                 <Button
                   size="sm"
-                  onClick={copy930To1130}
+                  onClick={copyAllToNextSlot}
                   className="print:hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold border-2 border-blue-600"
                 >
                   <ChevronsRight className="w-4 h-4 mr-2" />
@@ -128,11 +130,11 @@ export default function ServiceTimeSlotColumn({
             <Clock className="w-4 h-4" />
             PRE-SERVICIO
             <Badge variant="outline" className="ml-auto text-xs text-gray-600 border-gray-500">Antes de iniciar</Badge>
-            {copyPreServiceNotesTo1130 && (
+            {copyPreServiceNotesToNextSlot && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={copyPreServiceNotesTo1130}
+                onClick={copyPreServiceNotesToNextSlot}
                 className="print:hidden h-7 px-2 hover:bg-blue-50"
                 title="Copiar a siguiente"
               >
@@ -185,7 +187,7 @@ export default function ServiceTimeSlotColumn({
               debouncedSave={debouncedSave}
               setServiceData={setServiceData}
               handleOpenVerseParser={handleOpenVerseParser}
-              copySegmentTo1130={isFirstSlot ? copySegmentTo1130 : null}
+              copySegmentToNextSlot={isFirstSlot ? copySegmentToNextSlot : null}
             />
           );
         })}
@@ -212,11 +214,11 @@ export default function ServiceTimeSlotColumn({
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center justify-between">
             EQUIPO {timeSlot}
-            {copyTeamTo1130 && (
+            {copyTeamToNextSlot && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={copyTeamTo1130}
+                onClick={copyTeamToNextSlot}
                 className="h-7 px-2 hover:bg-blue-50"
                 title="Copiar a siguiente"
               >
@@ -314,7 +316,7 @@ function SpecialSegmentCard({
 function StandardSegmentCard({
   timeSlot, segment, idx, isExpanded, serviceData, accentColor,
   toggleSegmentExpanded, handleMoveSegment, updateSegmentField,
-  debouncedSave, setServiceData, handleOpenVerseParser, copySegmentTo1130,
+  debouncedSave, setServiceData, handleOpenVerseParser, copySegmentToNextSlot,
 }) {
   const filteredSegments = serviceData[timeSlot]?.filter(s => s.type !== 'break') || [];
   const totalFiltered = filteredSegments.length;
@@ -334,8 +336,8 @@ function StandardSegmentCard({
           <Clock className={`w-4 h-4 text-${accentColor}-600`} />
           {segment.title}
           <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
-          {copySegmentTo1130 && (
-            <Button variant="ghost" size="sm" onClick={() => copySegmentTo1130(idx)} className="print:hidden h-7 px-2 hover:bg-blue-50" title="Copiar a 11:30">
+          {copySegmentToNextSlot && (
+            <Button variant="ghost" size="sm" onClick={() => copySegmentToNextSlot(idx)} className="print:hidden h-7 px-2 hover:bg-blue-50" title={nextSlotName ? `Copiar a ${nextSlotName}` : "Copiar a siguiente"}>
               <ArrowRight className="w-4 h-4 text-blue-600" />
             </Button>
           )}

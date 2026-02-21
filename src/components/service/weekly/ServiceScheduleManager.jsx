@@ -158,7 +158,7 @@ export default function ServiceScheduleManager() {
       ) : sortedSchedules.length === 0 ? (
         <Card className="border-dashed border-2 border-gray-300 p-8 text-center">
           <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-4">No hay horarios configurados. El sistema usará los horarios predeterminados (Domingo 9:30am / 11:30am).</p>
+          <p className="text-gray-500 mb-4">No hay horarios configurados. El sistema usará los horarios predeterminados del servidor.</p>
           <Button onClick={openNew} variant="outline">
             <Plus className="w-4 h-4 mr-2" />
             Configurar Primer Horario

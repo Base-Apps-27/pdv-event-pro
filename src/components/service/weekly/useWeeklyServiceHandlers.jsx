@@ -55,9 +55,9 @@ export function useWeeklyServiceHandlers({
   // without entity IDs, making per-field push inoperative.
   requestImmediateSync,
 }) {
-  // Phase 2: derive first and second slot for copy operations
-  const firstSlot = slotNames[0] || "9:30am";
-  const secondSlot = slotNames[1] || "11:30am";
+  // Phase 2: derive first and second slot for copy operations (dynamic)
+  const firstSlot = slotNames[0];
+  const secondSlot = slotNames[1];
 
   // Update handlers: state mutation + per-field entity push
   const updateSegmentField = (service, segmentIndex, field, value) => {
@@ -205,7 +205,7 @@ export function useWeeklyServiceHandlers({
     };
   };
 
-  const copy930To1130 = () => {
+  const copyAllToNextSlot = () => {
     if (slotNames.length < 2) return;
     setServiceData(prev => {
       if (!prev) return prev;
@@ -232,7 +232,7 @@ export function useWeeklyServiceHandlers({
     });
   };
 
-  const copySegmentTo1130 = (segmentIndex) => {
+  const copySegmentToNextSlot = (segmentIndex) => {
     if (slotNames.length < 2) return;
     setServiceData(prev => {
       if (!prev) return prev;
@@ -253,7 +253,7 @@ export function useWeeklyServiceHandlers({
     });
   };
 
-  const copyPreServiceNotesTo1130 = () => {
+  const copyPreServiceNotesToNextSlot = () => {
     if (slotNames.length < 2) return;
     setServiceData(prev => {
       if (!prev) return prev;
@@ -263,7 +263,7 @@ export function useWeeklyServiceHandlers({
     });
   };
 
-  const copyTeamTo1130 = () => {
+  const copyTeamToNextSlot = () => {
     if (slotNames.length < 2) return;
     setServiceData(prev => {
       if (!prev) return prev;
@@ -385,7 +385,7 @@ export function useWeeklyServiceHandlers({
 
     setShowSpecialDialog(false);
     setSpecialSegmentDetails({
-      timeSlot: "9:30am", title: "", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
+      timeSlot: firstSlot || "", title: "", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
     });
   };
 
@@ -539,7 +539,7 @@ Return ONLY valid JSON:
       // Entity Lift: inject _slotNames so PDF generator uses dynamic columns
       const pdfData = { ...serviceData, _slotNames: slotNames };
       const pdf = await generateWeeklyProgramPDF(pdfData);
-      pdf.download(`Programa-Domingo-${serviceData.date}.pdf`);
+      pdf.download(`Programa-${serviceData.day_of_week || 'Servicio'}-${serviceData.date}.pdf`);
       toast.success('PDF descargado', { id: toastId });
     } catch (error) {
       console.error(error);
@@ -559,7 +559,7 @@ Return ONLY valid JSON:
       }
 
       const pdf = await generateAnnouncementsPDF(selectedForPrint, serviceData);
-      pdf.download(`Anuncios-Domingo-${serviceData.date}.pdf`);
+      pdf.download(`Anuncios-${serviceData.day_of_week || 'Servicio'}-${serviceData.date}.pdf`);
       toast.success('PDF descargado', { id: toastId });
     } catch (error) {
       console.error(error);
@@ -605,10 +605,10 @@ Return ONLY valid JSON:
     handleSaveParsedVerses,
     debouncedSave,
     // Copy handlers
-    copy930To1130,
-    copySegmentTo1130,
-    copyPreServiceNotesTo1130,
-    copyTeamTo1130,
+    copyAllToNextSlot,
+    copySegmentToNextSlot,
+    copyPreServiceNotesToNextSlot,
+    copyTeamToNextSlot,
     // Blueprint reset
     executeResetToBlueprint,
     // Special segment handlers

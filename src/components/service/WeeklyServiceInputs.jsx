@@ -170,8 +170,9 @@ export function PreServiceNotesInput({ service }) {
 // so we push via the "serviceField" type. The safety-net full sync also covers this.
 export function RecesoNotesInput({ slotName }) {
   const serviceData = useContext(ServiceDataContext);
-  // Resolve slot: use prop if provided, else first key in receso_notes, else "9:30am"
-  const resolvedSlot = slotName || (serviceData?.receso_notes ? Object.keys(serviceData.receso_notes)[0] : "9:30am");
+  // Resolve slot: use prop if provided, else first key in receso_notes
+  const resolvedSlot = slotName || (serviceData?.receso_notes ? Object.keys(serviceData.receso_notes)[0] : null);
+  if (!resolvedSlot) return null;
   const currentGlobalValue = serviceData?.receso_notes?.[resolvedSlot] || "";
   const setServiceData = useContext(UpdatersContext)?.setServiceData;
   const pushFn = useContext(UpdatersContext)?.pushFn;

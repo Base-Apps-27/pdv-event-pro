@@ -151,7 +151,7 @@ export default function WeeklyServiceManager() {
   // ── Dialog / UI state ──
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
   const [specialSegmentDetails, setSpecialSegmentDetails] = useState({
-    timeSlot: "9:30am", title: "", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
+    timeSlot: "", title: "", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
   });
   const [showAnnouncementDialog, setShowAnnouncementDialog] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
@@ -272,11 +272,12 @@ export default function WeeklyServiceManager() {
       // Prefer services with explicit service_type: 'weekly'
       let weeklyCandidates = services.filter(s => s.service_type === 'weekly');
 
-      // Legacy fallback: structural detection for services without service_type
+      // Legacy fallback: structural detection for services without service_type.
+      // Checks for any key that looks like a time-slot array (e.g. "9:30am", "1:00pm").
       if (weeklyCandidates.length === 0) {
         weeklyCandidates = services.filter(s =>
           !s.service_type &&
-          (s["9:30am"]?.length > 0 || s["11:30am"]?.length > 0) &&
+          Object.keys(s).some(key => /^\d{1,2}:\d{2}(am|pm)$/i.test(key) && Array.isArray(s[key]) && s[key].length > 0) &&
           (!s.segments || s.segments.length === 0)
         );
       }
@@ -672,7 +673,7 @@ export default function WeeklyServiceManager() {
         } else {
           // Slot is empty (new slot added to ServiceSchedule after service was created).
           // Seed it from the blueprint so users get the standard segment structure.
-          const bpSegments = blueprintData?.[name] || blueprintData?.["9:30am"] || [];
+          const bpSegments = blueprintData?.[name] || blueprintData?.[sundaySlotNames[0]] || [];
           loadedData[name] = bpSegments.map(seg => {
             const segmentCopy = {
               type: seg.type, title: seg.title, duration: seg.duration,
@@ -756,7 +757,7 @@ export default function WeeklyServiceManager() {
       initData.receso_notes = { [sundaySlotNames[0]]: "" };
       initData.pre_service_notes = { ...emptySlotObj };
       sundaySlotNames.forEach(name => {
-        const bpSegments = blueprintData?.[name] || blueprintData?.["9:30am"] || [];
+        const bpSegments = blueprintData?.[name] || blueprintData?.[sundaySlotNames[0]] || [];
         initData[name] = mapBlueprintToSegments(bpSegments);
       });
       setServiceData(initData);
@@ -851,6 +852,11 @@ export default function WeeklyServiceManager() {
     return () => clearTimeout(timer);
   }, [serviceData, selectedDate]);
 
+  // Dynamic day label for service naming (used in save payloads and PDF filenames)
+  const activeDayMeta = WEEKDAYS.find(w => w.key === activeDay);
+  const activeDayLabel = activeDayMeta?.fullLabel || 'Domingo';
+  const activeDayEnglish = activeDay.charAt(0).toUpperCase() + activeDay.slice(1);
+
   // Warn before leaving + flush unsaved changes on exit/tab-switch.
   // visibilitychange fires reliably on tab switch and mobile app backgrounding.
   // beforeunload fires on navigation/close (not guaranteed on mobile).
@@ -865,8 +871,8 @@ export default function WeeklyServiceManager() {
         ...serviceDataRef.current,
         selected_announcements: selectedAnnouncements,
         print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
-        day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
-        name: `Domingo - ${selectedDate}`, status: 'active',
+        day_of_week: activeDayEnglish,
+        name: `${activeDayLabel} - ${selectedDate}`, status: 'active',
         service_type: 'weekly'
       };
       saveServiceMutation.mutate(payload);
@@ -927,8 +933,8 @@ export default function WeeklyServiceManager() {
   const buildSavePayload = () => ({
     ...serviceData, selected_announcements: selectedAnnouncements,
     print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
-    day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
-    name: `Domingo - ${selectedDate}`, status: 'active',
+    day_of_week: activeDayEnglish,
+    name: `${activeDayLabel} - ${selectedDate}`, status: 'active',
     service_type: 'weekly'
   });
 
@@ -1206,6 +1212,7 @@ export default function WeeklyServiceManager() {
         open={showSpecialDialog} onOpenChange={setShowSpecialDialog}
         details={specialSegmentDetails} setDetails={setSpecialSegmentDetails}
         serviceSegments={serviceData[specialSegmentDetails.timeSlot]}
+        slotHasTranslation={(serviceData?.[specialSegmentDetails.timeSlot] || []).some(seg => seg.requires_translation)}
         onAdd={handlers.addSpecialSegment} tealStyle={tealStyle}
       />
 
