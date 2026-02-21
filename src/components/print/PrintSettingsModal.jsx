@@ -200,8 +200,19 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
 
   // LOGIC SEPARATION:
   const isCustomService = Array.isArray(serviceData?.segments) && serviceData.segments.length > 0;
-  // If not custom, check if it has weekly structure (even if empty initially)
-  const isWeeklyService = !isCustomService && (serviceData?.['9:30am'] !== undefined || serviceData?.['11:30am'] !== undefined);
+  // Dynamic weekly slot detection — discover any time-slot key (e.g. "9:30am", "6:00pm")
+  const weeklySlotKeys = !isCustomService && serviceData
+    ? Object.keys(serviceData).filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(serviceData[k]))
+        .sort((a, b) => {
+          const pa = a.match(/^(\d+):(\d+)(am|pm)$/i);
+          const pb = b.match(/^(\d+):(\d+)(am|pm)$/i);
+          if (!pa || !pb) return 0;
+          let ha = parseInt(pa[1]); if (pa[3].toLowerCase() === 'pm' && ha < 12) ha += 12;
+          let hb = parseInt(pb[1]); if (pb[3].toLowerCase() === 'pm' && hb < 12) hb += 12;
+          return (ha * 60 + parseInt(pa[2])) - (hb * 60 + parseInt(pb[2]));
+        })
+    : [];
+  const isWeeklyService = weeklySlotKeys.length > 0;
 
   // RENDERER: CUSTOM SERVICE (Single Column)
   function renderCustomPreview() {
@@ -437,40 +448,58 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
         {/* HEADER - Standard */}
         <div className="absolute bg-white" style={{ top: `${marginTopPx}px`, left: `${marginLeftPx}px`, right: `${marginRightPx}px`, height: `${HEADER_H}px`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: '20px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1a1a1a', lineHeight: 1.2 }}>Orden de Servicio</div>
-          <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '2px' }}>Domingo {selectedDateFormatted}</div>
+          <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '2px' }}>{serviceData?.day_of_week || 'Domingo'} {selectedDateFormatted}</div>
           <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {serviceData?.coordinators?.['9:30am'] && <span><strong>Coord:</strong> {serviceData.coordinators['9:30am']}</span>}
-            {serviceData?.ujieres?.['9:30am'] && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Ujier:</strong> {serviceData.ujieres['9:30am']}</span></>)}
-            {serviceData?.sound?.['9:30am'] && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Sonido:</strong> {serviceData.sound['9:30am']}</span></>)}
-            {serviceData?.luces?.['9:30am'] && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Luces:</strong> {serviceData.luces['9:30am']}</span></>)}
-            {serviceData?.fotografia?.['9:30am'] && (<><span style={{ color: '#9ca3af' }}>/</span><span><strong>Foto:</strong> {serviceData.fotografia['9:30am']}</span></>)}
+            {(() => {
+              const firstSlot = weeklySlotKeys[0];
+              if (!firstSlot) return null;
+              const teamFields = [
+                { key: 'coordinators', label: 'Coord' },
+                { key: 'ujieres', label: 'Ujier' },
+                { key: 'sound', label: 'Sonido' },
+                { key: 'luces', label: 'Luces' },
+                { key: 'fotografia', label: 'Foto' },
+              ];
+              return teamFields.map((f, idx) => {
+                const val = serviceData?.[f.key]?.[firstSlot];
+                if (!val) return null;
+                return (
+                  <React.Fragment key={f.key}>
+                    {idx > 0 && <span style={{ color: '#9ca3af' }}>/</span>}
+                    <span><strong>{f.label}:</strong> {val}</span>
+                  </React.Fragment>
+                );
+              });
+            })()}
           </div>
         </div>
 
-        {/* BODY - Standard 2 Columns */}
+        {/* BODY - Dynamic Columns from weeklySlotKeys */}
         <div ref={page1BodyRef} className="absolute overflow-hidden" style={{ top: `${marginTopPx + HEADER_H}px`, left: `${marginLeftPx}px`, right: `${marginRightPx}px`, bottom: `${marginBottomPx + FOOTER_H}px` }}>
           <div style={{ width: '100%' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4 }}>
-              {/* 9:30 AM Column */}
-              <div>
-                <div style={{ fontSize: `${BASE_TITLE * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#dc2626', marginBottom: '16px', paddingBottom: '8px', borderBottom: '4px solid #1f2937', textTransform: 'uppercase' }}>9:30 A.M.</div>
-                {serviceData?.pre_service_notes?.['9:30am'] && <div style={{ marginBottom: '16px', color: '#14532d', background: '#f0fdf4', padding: '4px' }}>{serviceData.pre_service_notes['9:30am']}</div>}
-                {renderSegments(serviceData?.['9:30am'])}
-              </div>
-              {/* 11:30 AM Column */}
-              <div>
-                <div style={{ fontSize: `${BASE_TITLE * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#2563eb', marginBottom: '16px', paddingBottom: '8px', borderBottom: '4px solid #1f2937', textTransform: 'uppercase' }}>11:30 A.M.</div>
-                {serviceData?.pre_service_notes?.['11:30am'] && <div style={{ marginBottom: '16px', color: '#14532d', background: '#f0fdf4', padding: '4px' }}>{serviceData.pre_service_notes['11:30am']}</div>}
-                {renderSegments(serviceData?.['11:30am'])}
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${weeklySlotKeys.length}, 1fr)`, gap: '40px', fontSize: `${BASE_BODY * page1Settings.bodyFontScale}px`, lineHeight: 1.4 }}>
+              {(() => {
+                const COLUMN_COLORS = ['#dc2626', '#2563eb', '#9333ea', '#d97706', '#16a34a'];
+                return weeklySlotKeys.map((slotKey, idx) => (
+                  <div key={slotKey}>
+                    <div style={{ fontSize: `${BASE_TITLE * page1Settings.titleFontScale}px`, fontWeight: '700', color: COLUMN_COLORS[idx % COLUMN_COLORS.length], marginBottom: '16px', paddingBottom: '8px', borderBottom: '4px solid #1f2937', textTransform: 'uppercase' }}>{slotKey.replace('am', ' A.M.').replace('pm', ' P.M.')}</div>
+                    {serviceData?.pre_service_notes?.[slotKey] && <div style={{ marginBottom: '16px', color: '#14532d', background: '#f0fdf4', padding: '4px' }}>{serviceData.pre_service_notes[slotKey]}</div>}
+                    {renderSegments(serviceData?.[slotKey])}
+                  </div>
+                ));
+              })()}
             </div>
-            {/* Receso */}
-            {serviceData?.receso_notes?.['9:30am'] && (
-              <div style={{ margin: '16px 0 0 0', padding: '12px', background: '#f3f4f6', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: `${BASE_TITLE * 0.85 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#6b7280', marginBottom: '4px', textTransform: 'uppercase' }}>RECESO (30 min)</div>
-                <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280' }}>{serviceData.receso_notes['9:30am']}</div>
-              </div>
-            )}
+            {/* Receso — shown if any slot has receso notes */}
+            {(() => {
+              const recesoNote = weeklySlotKeys.length > 0 && serviceData?.receso_notes?.[weeklySlotKeys[0]];
+              if (!recesoNote) return null;
+              return (
+                <div style={{ margin: '16px 0 0 0', padding: '12px', background: '#f3f4f6', borderRadius: '8px', textAlign: 'center' }}>
+                  <div style={{ fontSize: `${BASE_TITLE * 0.85 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#6b7280', marginBottom: '4px', textTransform: 'uppercase' }}>RECESO</div>
+                  <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280' }}>{recesoNote}</div>
+                </div>
+              );
+            })()}
           </div>
         </div>
         {/* Footer */}
@@ -534,7 +563,7 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
             Anuncios
           </div>
           <div style={{ fontSize: '22px', color: '#4b5563', marginTop: '4px' }}>
-            Domingo {selectedDateFormatted}
+            {serviceData?.day_of_week || 'Domingo'} {selectedDateFormatted}
           </div>
         </div>
 

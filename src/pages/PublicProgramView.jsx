@@ -886,13 +886,21 @@ export default function PublicProgramView() {
                               Sessions carry the slot name (e.g. "9:30am") — iterate them.
                               Fallback: check legacy JSON keys on the service object. */}
                           {(() => {
+                            const SLOT_BTN_COLORS = ['red', 'blue', 'purple', 'amber', 'green'];
                             // Prefer entity-sourced sessions (slot names are dynamic)
                             const slotButtons = sessions.length > 0
-                              ? sessions.map((s, i) => ({ name: s.name, color: i === 0 ? 'red' : 'blue' }))
-                              : [
-                                  actualServiceData["9:30am"] && { name: "9:30am", color: "red" },
-                                  actualServiceData["11:30am"] && { name: "11:30am", color: "blue" },
-                                ].filter(Boolean);
+                              ? sessions.map((s, i) => ({ name: s.name, color: SLOT_BTN_COLORS[i % SLOT_BTN_COLORS.length] }))
+                              : Object.keys(actualServiceData || {})
+                                  .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(actualServiceData[k]))
+                                  .sort((a, b) => {
+                                    const pa = a.match(/^(\d+):(\d+)(am|pm)$/i);
+                                    const pb = b.match(/^(\d+):(\d+)(am|pm)$/i);
+                                    if (!pa || !pb) return 0;
+                                    let ha = parseInt(pa[1]); if (pa[3].toLowerCase() === 'pm' && ha < 12) ha += 12;
+                                    let hb = parseInt(pb[1]); if (pb[3].toLowerCase() === 'pm' && hb < 12) hb += 12;
+                                    return (ha * 60 + parseInt(pa[2])) - (hb * 60 + parseInt(pb[2]));
+                                  })
+                                  .map((name, i) => ({ name, color: SLOT_BTN_COLORS[i % SLOT_BTN_COLORS.length] }));
                             return slotButtons.map(slot => (
                               <Button
                                 key={slot.name}

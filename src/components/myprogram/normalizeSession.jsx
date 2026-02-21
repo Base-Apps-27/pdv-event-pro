@@ -99,10 +99,10 @@ function normalizeEntitySourcedSegments(programData) {
       const session = sessionMap[seg.session_id] || {};
       const slotLabel = session.name || 'custom';
 
-      // Resolve translation mode from session name
+      // Resolve translation mode — entity segments should carry explicit mode;
+      // fallback to 'RemoteBooth' (safe default) if not set.
       const rawTransMode = seg.translation_mode || '';
-      const resolvedTransMode = rawTransMode
-        || (slotLabel === '11:30am' ? 'InPerson' : 'RemoteBooth');
+      const resolvedTransMode = rawTransMode || 'RemoteBooth';
 
       return {
         id: seg.id,
@@ -213,8 +213,7 @@ function normalizeJsonSourcedSegments(serviceData) {
       }
 
       const rawTransMode = seg.data?.translation_mode || seg.translation_mode || '';
-      const resolvedTransMode = rawTransMode
-        || (slotLabel === '11:30am' ? 'InPerson' : 'RemoteBooth');
+      const resolvedTransMode = rawTransMode || 'RemoteBooth';
 
       const segData = seg.data || {};
       const presenter = segData.presenter || seg.presenter
@@ -326,8 +325,8 @@ function normalizeJsonSourcedSegments(serviceData) {
  * Service slots (9:30am, 11:30am, custom) pass through as-is.
  */
 function generateShortLabel(sessionName, sessionDate, startTime, language) {
-  // Service slot names — already short (handles both JSON and entity-sourced names)
-  if (['9:30am', '11:30am', 'custom'].includes(sessionName)) return sessionName;
+  // Service slot names — already short (e.g. "9:30am", "6:00pm", "custom")
+  if (sessionName === 'custom' || /^\d+:\d+[ap]m$/i.test(sessionName)) return sessionName;
 
   // If we have a date, build "Day AM/PM" from it
   if (sessionDate) {
