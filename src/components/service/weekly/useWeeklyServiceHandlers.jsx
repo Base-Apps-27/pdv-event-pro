@@ -2,17 +2,15 @@
  * useWeeklyServiceHandlers.js
  * All handler functions for WeeklyServiceManager.
  *
- * SINGLE SAVE PATH (2026-02-21): Handlers ONLY update local state via
- * setServiceData. Persistence is handled exclusively by the auto-save
- * useEffect in WeeklyServiceManager (2s debounce → saveServiceMutation →
- * syncWeeklyToSessions). This eliminates the race condition where multiple
- * concurrent saves caused syncWeeklyToSessions to run in parallel,
- * triggering the delete-all-recreate pattern to destroy segments.
+ * PER-FIELD PUSH (2026-02-21): Handlers update local state AND push the
+ * changed field directly to the entity. This replaces the monolithic
+ * blur-triggered full sync that was causing data loss when admins typed
+ * faster than the sync could complete. The full syncWeeklyToSessions
+ * is retained only as a 30-second safety net for structural changes.
  *
- * Previously there were THREE concurrent save paths:
- *   1. Auto-save (2s debounce in parent)
- *   2. debouncedSave (800ms debounce here) — REMOVED
- *   3. Direct saveServiceMutation.mutate() in handlers — REMOVED
+ * Each handler receives a pushFn callback through its options. After
+ * updating serviceData, it fires pushFn with the entity push details.
+ * pushFn is fire-and-forget (non-blocking) — the UI never waits for it.
  */
 
 import { useCallback, useRef, useEffect } from "react";
@@ -49,24 +47,30 @@ export function useWeeklyServiceHandlers({
   createAnnouncementMutation,
   // Phase 2: dynamic slot names from ServiceSchedule
   slotNames = ["9:30am", "11:30am"],
+  // Per-field push: fire-and-forget entity push callback
+  // Signature: pushFn(type, { entityId, sessionId, field, value, songs })
+  pushFn,
 }) {
   // Phase 2: derive first and second slot for copy operations
   const firstSlot = slotNames[0] || "9:30am";
   const secondSlot = slotNames[1] || "11:30am";
 
-  // Update handlers (pure state mutation, no saves)
+  // Update handlers: state mutation + per-field entity push
   const updateSegmentField = (service, segmentIndex, field, value) => {
+    // Read entity ID before setState (stable across renders, set during init)
+    const entityId = serviceData?.[service]?.[segmentIndex]?._entityId;
+
     setServiceData(prev => {
       // Deep clone the service array we are modifying to ensure immutability
       const newServiceArray = [...(prev[service] || [])];
-      
+
       // Clone the specific segment we are updating
       if (!newServiceArray[segmentIndex]) return prev;
       const newSegment = { ...newServiceArray[segmentIndex] };
-      
+
       // Define fields that sit at the root of the segment object
       const rootFields = ['songs', 'presentation_url', 'notes_url', 'content_is_slides_only'];
-      
+
       if (rootFields.includes(field)) {
         newSegment[field] = value;
       } else {
@@ -75,15 +79,15 @@ export function useWeeklyServiceHandlers({
           [field]: value
         };
       }
-      
+
       // Place the updated segment back into the new array
       newServiceArray[segmentIndex] = newSegment;
-      
-      const updated = { 
+
+      const updated = {
         ...prev,
         [service]: newServiceArray
       };
-      
+
       // Auto-propagate translator from worship to other segments (for non-first slots with translation)
       if (field === 'translator' && service !== firstSlot && newSegment.type === 'worship') {
         const worshipTranslator = value;
@@ -100,16 +104,30 @@ export function useWeeklyServiceHandlers({
           return seg;
         });
       }
-      
+
       return updated;
     });
+
+    // Per-field push: fire-and-forget entity update
+    if (pushFn && entityId) {
+      pushFn("segment", { entityId, field, value });
+    }
   };
 
   const updateTeamField = (field, service, value) => {
+    // Read session ID for this slot (from first segment's metadata)
+    const sessionId = serviceData?._sessionIds?.[service]
+      || serviceData?.[service]?.[0]?._sessionId;
+
     setServiceData(prev => ({
       ...prev,
       [field]: { ...prev[field], [service]: value }
     }));
+
+    // Per-field push: fire-and-forget Session entity update
+    if (pushFn && sessionId) {
+      pushFn("team", { sessionId, field, value });
+    }
   };
 
   const handleOpenVerseParser = (timeSlot, segmentIdx) => {

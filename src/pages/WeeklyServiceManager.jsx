@@ -46,7 +46,13 @@ import { ServiceDataContext, UpdatersContext } from "@/components/service/Weekly
 // No hardcoded WEEKLY_BLUEPRINT constant. If DB blueprint is missing, segments use their own
 // data as-is — no phantom actions/fields injected from a stale constant.
 import { useWeeklyServiceHandlers } from "@/components/service/weekly/useWeeklyServiceHandlers";
-import { syncWeeklyToSessions, loadWeeklyFromSessions } from "@/components/service/weeklySessionSync";
+import {
+  syncWeeklyToSessions, loadWeeklyFromSessions,
+  pushSegmentField as pushSegmentFieldToEntity,
+  pushSegmentSongs as pushSegmentSongsToEntity,
+  pushSessionTeamField as pushSessionTeamFieldToEntity,
+  pushPreSessionNotes as pushPreSessionNotesToEntity,
+} from "@/components/service/weeklySessionSync";
 import { useServiceSchedules } from "@/components/service/weekly/useServiceSchedules";
 import useStaleGuard from "@/components/utils/useStaleGuard";
 import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
@@ -87,6 +93,7 @@ function extractServiceMetadata(data, slotNames) {
   // Internal UI markers (never persist)
   delete metadata._fromEntities;
   delete metadata._slotNames;
+  delete metadata._sessionIds;
 
   return metadata;
 }
@@ -361,66 +368,124 @@ export default function WeeklyServiceManager() {
   React.useEffect(() => { hasUnsavedChangesRef.current = hasUnsavedChanges; }, [hasUnsavedChanges]);
   const lastSavedDataRef = React.useRef(lastSavedData);
   React.useEffect(() => { lastSavedDataRef.current = lastSavedData; }, [lastSavedData]);
-  const blurSaveTimerRef = React.useRef(null);
+  // NOTE: blurSaveTimerRef removed — blur no longer triggers full sync.
 
   // Ref to always have current serviceData for save operations.
   // Defined BEFORE the mutation so onSuccess can reference it.
   const serviceDataRef = React.useRef(serviceData);
   React.useEffect(() => { serviceDataRef.current = serviceData; }, [serviceData]);
 
-  // SAVE PIPELINE (2026-02-21): Entity sync → Service.update → automation → cache refresh.
-  // Entities are written FIRST so that when Service.update triggers the refreshActiveProgram
-  // automation, it reads fresh segment data → display surfaces (TV, MyProgram, LiveView) update.
+  // PER-FIELD PUSH (2026-02-21): Fire-and-forget entity updates for individual fields.
+  // Tracks active pushes so the subscription handler doesn't treat our own Session
+  // updates as external changes.
+  const fieldPushActiveRef = React.useRef(0);
+
+  const pushFn = React.useCallback((type, opts) => {
+    fieldPushActiveRef.current++;
+    const done = () => setTimeout(() => { fieldPushActiveRef.current = Math.max(0, fieldPushActiveRef.current - 1); }, 500);
+    let promise;
+    if (type === "segment") {
+      promise = pushSegmentFieldToEntity(base44, opts.entityId, opts.field, opts.value);
+    } else if (type === "songs") {
+      promise = pushSegmentSongsToEntity(base44, opts.entityId, opts.songs);
+    } else if (type === "team") {
+      promise = pushSessionTeamFieldToEntity(base44, opts.sessionId, opts.field, opts.value);
+    } else if (type === "preNotes") {
+      promise = pushPreSessionNotesToEntity(base44, opts.sessionId, opts.value);
+    } else if (type === "serviceField" && existingData?.id) {
+      // Service-level fields (e.g., receso_notes): merge into existing value
+      const currentData = serviceDataRef.current;
+      const mergedValue = type === "serviceField" && opts.field === "receso_notes"
+        ? { ...(currentData?.receso_notes || {}), [opts.slotName]: opts.value }
+        : opts.value;
+      promise = base44.entities.Service.update(existingData.id, { [opts.field]: mergedValue })
+        .catch(err => console.error("[FIELD_PUSH] Service field update failed:", opts.field, err.message));
+    } else {
+      promise = Promise.resolve();
+    }
+    promise.then(done, done);
+  }, [existingData?.id]);
+
+  // SAVE PIPELINE (2026-02-21): Safety-net full sync. Per-field pushes handle
+  // individual field changes immediately. This full sync runs on a 30-second timer
+  // to catch structural changes (add/remove/reorder segments) and update Service
+  // metadata (triggers refreshActiveProgram → display surface updates).
+  //
+  // RACE FIX (2026-02-21): Snapshots serviceData at sync START time, not completion
+  // time. This prevents marking fields as "saved" that were committed to serviceData
+  // AFTER the sync started but were never actually sent to the server.
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
       // Serialization guard: skip if a save is already running.
       if (entitySyncInProgressRef.current) {
-        console.warn("[WEEKLY_SYNC] Skipping overlapping save — will retry on next blur");
+        console.warn("[WEEKLY_SYNC] Skipping overlapping save — will retry on next cycle");
         return null;
       }
       entitySyncInProgressRef.current = true;
       ownSaveInProgressRef.current = true;
 
+      // RACE FIX: Snapshot what we're ACTUALLY syncing right now.
+      // onSuccess will use this as the new baseline, not serviceDataRef.current
+      // (which may have accumulated new field commits during the async sync).
+      const syncedSnapshot = JSON.parse(JSON.stringify(serviceDataRef.current));
+
       try {
         const metadata = extractServiceMetadata(data, sundaySlotNames);
         let serviceResult;
+        let syncResult = null;
 
         if (existingData?.id) {
-          // EXISTING SERVICE: Sync entities FIRST, then update Service metadata.
-          // This ensures segments are in the DB before the Service entity automation
-          // triggers refreshActiveProgram → cache rebuild → display surface updates.
-          await syncWeeklyToSessions(base44, existingData, serviceDataRef.current, sundaySlots);
+          syncResult = await syncWeeklyToSessions(base44, existingData, syncedSnapshot, sundaySlots);
           serviceResult = await base44.entities.Service.update(existingData.id, metadata);
         } else {
-          // NEW SERVICE: Create Service first (to get ID), then sync entities,
-          // then touch Service again to re-trigger automation with fresh segments.
           serviceResult = await base44.entities.Service.create(metadata);
-          await syncWeeklyToSessions(base44, serviceResult, serviceDataRef.current, sundaySlots);
+          syncResult = await syncWeeklyToSessions(base44, serviceResult, syncedSnapshot, sundaySlots);
           serviceResult = await base44.entities.Service.update(serviceResult.id, { status: 'active' });
         }
 
-        return serviceResult;
+        return { serviceResult, syncResult, syncedSnapshot };
       } finally {
         entitySyncInProgressRef.current = false;
-        // Keep ownSaveInProgressRef true briefly so subscription events from our
-        // own save settle before we start listening for external changes again.
         setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
       }
     },
     onSuccess: (result) => {
       if (!result) return; // Skipped save (serialization guard)
+      const { serviceResult, syncResult, syncedSnapshot } = result;
 
       queryClient.invalidateQueries({ queryKey: ['activeProgram'] });
       queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
 
       setLastSaveTimestamp(new Date().toISOString());
-      setHasUnsavedChanges(false);
       setExternalChangeAvailable(false);
-      setLastSavedData(prev => {
-        const currentRef = serviceDataRef.current;
-        return currentRef ? JSON.parse(JSON.stringify(currentRef)) : prev;
-      });
-      if (result?.updated_date) captureServiceBaseline(result.updated_date);
+
+      // RACE FIX: Use the snapshot of what was ACTUALLY synced as the new baseline.
+      // If the admin committed new fields during the async sync, those changes will
+      // still differ from lastSavedData and trigger the next safety-net cycle.
+      setLastSavedData(syncedSnapshot);
+
+      // Update entity IDs in serviceData from the sync result so per-field pushes
+      // continue working after the delete-all-recreate cycle.
+      if (syncResult?.entityIdMap) {
+        setServiceData(prev => {
+          if (!prev) return prev;
+          const updated = { ...prev };
+          for (const [slot, ids] of Object.entries(syncResult.entityIdMap)) {
+            if (!updated[slot] || !Array.isArray(ids)) continue;
+            updated[slot] = updated[slot].map((seg, i) => ({
+              ...seg,
+              _entityId: ids[i]?.entityId || seg._entityId,
+              _sessionId: ids[i]?.sessionId || seg._sessionId,
+            }));
+          }
+          if (syncResult.sessionIdMap) {
+            updated._sessionIds = { ...(updated._sessionIds || {}), ...syncResult.sessionIdMap };
+          }
+          return updated;
+        });
+      }
+
+      if (serviceResult?.updated_date) captureServiceBaseline(serviceResult.updated_date);
       const backupKey = `service_backup_${selectedDate}`;
       safeSetItem(backupKey, JSON.stringify({ data: serviceDataRef.current, timestamp: new Date().toISOString() }));
     },
@@ -466,10 +531,8 @@ export default function WeeklyServiceManager() {
   });
 
   // ── Handlers (extracted hook) ──
-  // SINGLE SAVE PATH (2026-02-21): handlers only update state via setServiceData.
-  // Persistence is handled by the auto-save useEffect below (2s debounce).
-  // saveServiceMutation, setSavingField, selectedDate, printSettings are no
-  // longer passed — handlers don't trigger saves directly.
+  // PER-FIELD PUSH (2026-02-21): handlers update state AND push changed fields
+  // to entities via pushFn. Safety-net full sync handles structural changes.
   const handlers = useWeeklyServiceHandlers({
     serviceData, setServiceData, selectedAnnouncements,
     updateAnnouncementMutation, fixedAnnouncements, dynamicAnnouncements,
@@ -480,6 +543,7 @@ export default function WeeklyServiceManager() {
     setEditingAnnouncement, setAnnouncementForm, setShowAnnouncementDialog,
     setShowResetConfirm, editingAnnouncement, createAnnouncementMutation,
     slotNames: sundaySlotNames,
+    pushFn,
   });
 
   // ── Initialize service data from DB or blueprint ──
@@ -712,11 +776,12 @@ export default function WeeklyServiceManager() {
     const externalDebounce = { timer: null };
 
     const handleExternalChange = () => {
-      if (ownSaveInProgressRef.current) return; // Our own save, ignore
+      // Ignore our own saves and per-field pushes
+      if (ownSaveInProgressRef.current || fieldPushActiveRef.current > 0) return;
 
       if (externalDebounce.timer) clearTimeout(externalDebounce.timer);
       externalDebounce.timer = setTimeout(() => {
-        if (ownSaveInProgressRef.current) return; // Check again after debounce
+        if (ownSaveInProgressRef.current || fieldPushActiveRef.current > 0) return;
 
         if (!hasUnsavedChangesRef.current) {
           // No local changes — auto-reload seamlessly
@@ -799,9 +864,14 @@ export default function WeeklyServiceManager() {
     });
   }, [selectedAnnouncements]);
 
-  // SAVE ON BLUR (2026-02-21): Primary save trigger is when user leaves a field (blur event).
-  // The onBlur handler on the main container calls this function.
-  // Safety-net auto-save at 15s catches edge cases (drag-drop, programmatic state changes).
+  // PER-FIELD PUSH (2026-02-21): Primary save trigger is now per-field entity pushes
+  // that fire on each input commit (blur or 3-second debounce). The full sync below
+  // is a SAFETY NET for structural changes (add/remove/reorder segments), Service
+  // metadata updates, and triggering refreshActiveProgram for display surfaces.
+  //
+  // The old blur-triggered full sync has been REMOVED because it caused data loss:
+  // while the heavy sync was running, fields committed during the async window
+  // were marked as "saved" in lastSavedData but never actually sent to the server.
   const buildSavePayload = () => ({
     ...serviceData, selected_announcements: selectedAnnouncements,
     print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
@@ -810,23 +880,15 @@ export default function WeeklyServiceManager() {
     service_type: 'weekly'
   });
 
-  // Blur handler: save when any input field loses focus (500ms debounce for focus transitions)
-  const handleFormBlur = () => {
-    if (blurSaveTimerRef.current) clearTimeout(blurSaveTimerRef.current);
-    blurSaveTimerRef.current = setTimeout(() => {
-      if (!serviceData || !lastSavedData) return;
-      if (JSON.stringify(serviceData) === JSON.stringify(lastSavedData)) return;
-      saveServiceMutation.mutate(buildSavePayload());
-    }, 500);
-  };
-
-  // Safety-net auto-save: catches changes from non-blur interactions (buttons, drag-drop)
+  // Safety-net full sync: runs 30 seconds after last change. Handles structural
+  // changes, Service metadata, and triggers display surface refresh via Service.update.
+  // Per-field pushes handle individual field values immediately on commit.
   useEffect(() => {
     if (!lastSavedData || !serviceData) return;
     if (JSON.stringify(serviceData) === JSON.stringify(lastSavedData)) return;
     const handler = setTimeout(() => {
       saveServiceMutation.mutate(buildSavePayload());
-    }, 15000);
+    }, 30000);
     return () => clearTimeout(handler);
   }, [serviceData, lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
 
@@ -847,8 +909,8 @@ export default function WeeklyServiceManager() {
   // ── Render ──
   return (
     <ServiceDataContext.Provider value={serviceData}>
-      <UpdatersContext.Provider value={{ updateSegmentField: handlers.updateSegmentField, updateTeamField: handlers.updateTeamField, setServiceData }}>
-    <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen" onBlur={handleFormBlur}>
+      <UpdatersContext.Provider value={{ updateSegmentField: handlers.updateSegmentField, updateTeamField: handlers.updateTeamField, setServiceData, pushFn }}>
+    <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
       <WeeklyServicePrintCSS printSettingsPage1={activePrintSettingsPage1} printSettingsPage2={activePrintSettingsPage2} />
 
       <WeeklyServicePrintView
