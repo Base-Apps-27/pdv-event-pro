@@ -198,35 +198,35 @@ export default function PublicCountdownDisplay() {
 
   // ── Active program display ──
   return (
-    <div className="w-full h-screen bg-slate-50 p-3 md:p-4 flex flex-col items-center overflow-hidden relative light">
+    <div className="w-full h-screen bg-slate-50 p-1.5 md:p-2 flex flex-col items-center overflow-hidden relative light">
       {/* Top Gradient */}
-      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
+      <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
 
       {/* Header: title + clock */}
-      <div className="w-full flex items-center justify-between px-4 py-3 z-20 relative mb-2">
+      <div className="w-full flex items-center justify-between px-2 py-1.5 z-20 relative mb-1">
         <div className="flex-1 text-center min-w-0">
           <h1
-            className={`text-2xl md:text-4xl font-black uppercase tracking-tight ${gradientText} drop-shadow-sm leading-tight`}
+            className={`text-xl md:text-2xl font-black uppercase tracking-tight ${gradientText} drop-shadow-sm leading-tight`}
           >
             {service.name}
           </h1>
         </div>
-        <div className="flex-shrink-0 ml-4">
-          <div className="text-xl md:text-3xl text-slate-800 font-mono font-bold tracking-tight bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex-shrink-0 ml-3">
+          <div className="text-lg md:text-xl text-slate-800 font-mono font-bold tracking-tight bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg border border-slate-200 shadow-sm">
             {formatTimeToEST(currentTime.toTimeString().substring(0, 5))}
           </div>
         </div>
       </div>
 
       {/* Bento grid: 2-col or 3-col when livestream sidecar is present */}
-      <div className="w-full flex-1 overflow-hidden px-2 z-10">
+      <div className="w-full flex-1 overflow-hidden px-1 z-10">
         <div
-          className="w-full h-full grid gap-3"
+          className="w-full h-full grid gap-2"
           style={{ gridTemplateColumns: hasLivestreamSession ? '1fr 1fr minmax(200px, 0.5fr)' : '1fr 1fr' }}
         >
           {/* Col 1: Countdown + Coordinator Actions */}
-          <div className="flex flex-col gap-3 overflow-visible min-w-0">
-            <div className="pt-5">
+          <div className="flex flex-col gap-2 overflow-visible min-w-0">
+            <div className="pt-2">
               {currentSegment ? (
                 <CountdownBlock
                   segment={currentSegment}
@@ -248,8 +248,8 @@ export default function PublicCountdownDisplay() {
                   className="w-full"
                 />
               ) : (
-                <div className="bg-white rounded-3xl border-4 border-slate-200 p-6 flex items-center justify-center min-h-[200px]">
-                  <p className="text-slate-400 italic text-sm">
+                <div className="bg-white rounded-2xl border-2 border-slate-200 p-4 flex items-center justify-center min-h-[120px]">
+                  <p className="text-slate-400 italic text-xs">
                     No active segment
                   </p>
                 </div>
@@ -268,15 +268,15 @@ export default function PublicCountdownDisplay() {
           </div>
 
           {/* Col 2: Program Timeline */}
-          <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-2xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
-            <div className="bg-slate-100/80 px-4 py-3 border-b border-slate-200">
-              <div className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                <Layout className="w-4 h-4" />
+          <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
+            <div className="bg-slate-100/80 px-3 py-1.5 border-b border-slate-200">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                <Layout className="w-3 h-3" />
                 Room Program
               </div>
             </div>
-            <div className="flex-1 relative p-2">
-              <div className="absolute inset-0 p-2">
+            <div className="flex-1 relative p-1.5">
+              <div className="absolute inset-0 p-1.5">
                 {upcomingSegments.length > 0 ? (
                   <SegmentTimeline
                     segments={upcomingSegments}
@@ -285,7 +285,7 @@ export default function PublicCountdownDisplay() {
                     className="h-full"
                   />
                 ) : (
-                  <div className="h-full flex items-center justify-center text-slate-400 italic">
+                  <div className="h-full flex items-center justify-center text-slate-400 italic text-xs">
                     {t("live.endOfProgram")}
                   </div>
                 )}
@@ -298,7 +298,7 @@ export default function PublicCountdownDisplay() {
             const sess = (programData?.sessions || []).find((s) => s.has_livestream);
             if (!sess) return null;
             return (
-              <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-2xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
+              <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
                 <StreamSidecarTimeline
                   session={sess}
                   segments={segments.filter((s) => s.session_id === sess.id)}
