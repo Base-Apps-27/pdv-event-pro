@@ -50,6 +50,10 @@ export function useWeeklyServiceHandlers({
   // Per-field push: fire-and-forget entity push callback
   // Signature: pushFn(type, { entityId, sessionId, field, value, songs })
   pushFn,
+  // IMMEDIATE-SYNC (2026-02-21): Callback to request a fast full sync after
+  // structural changes (reset, add/remove segment) that create segments
+  // without entity IDs, making per-field push inoperative.
+  requestImmediateSync,
 }) {
   // Phase 2: derive first and second slot for copy operations
   const firstSlot = slotNames[0] || "9:30am";
@@ -165,18 +169,59 @@ export function useWeeklyServiceHandlers({
     setVerseParserContext({ timeSlot: null, segmentIdx: null });
   };
 
-  // Copy handlers — state-only, auto-save handles persistence
+  // ── CONTENT-ONLY COPY (2026-02-21) ──────────────────────────────────
+  // Copy operations transfer ONLY user-entered text content (data, songs)
+  // from source segments onto target segments. Structural metadata is
+  // preserved on the target: type, title, duration, fields, sub_assignments,
+  // actions, _entityId, _sessionId, requires_translation, default_translator_source.
+  // This prevents: (a) entity ID leaks causing cross-slot entity writes,
+  // (b) blueprint structural metadata being overwritten, (c) slot-specific
+  // actions and translation config being lost.
+
+  /** Merge source text content onto an existing target segment. */
+  const copyContentToTarget = (sourceSeg, targetSeg) => {
+    // Extract source text data — exclude data.actions (structural, not content)
+    const { actions: _srcActions, ...sourceTextData } = (sourceSeg.data || {});
+    return {
+      ...targetSeg,                          // keep ALL target structure + entity IDs
+      data: {
+        ...targetSeg.data,                   // preserve target data.actions etc.
+        ...sourceTextData,                   // overlay source text fields
+      },
+      songs: sourceSeg.songs
+        ? sourceSeg.songs.map(s => ({ ...s }))
+        : targetSeg.songs,
+    };
+  };
+
+  /** Fallback: clone source segment for positions with no target, stripping entity refs. */
+  const cloneSegmentWithoutEntityRefs = (seg) => {
+    const { _entityId, _sessionId, ...rest } = seg;
+    return {
+      ...rest,
+      data: { ...seg.data },
+      actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
+      songs: seg.songs ? seg.songs.map(s => ({ ...s })) : undefined,
+    };
+  };
+
   const copy930To1130 = () => {
     if (slotNames.length < 2) return;
     setServiceData(prev => {
       if (!prev) return prev;
       const updated = { ...prev };
-      updated[secondSlot] = (updated[firstSlot] || []).map(seg => ({
-        ...seg,
-        data: { ...seg.data },
-        actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
-        songs: seg.songs ? seg.songs.map(s => ({ ...s })) : undefined,
-      }));
+      const sourceSegments = updated[firstSlot] || [];
+      const targetSegments = updated[secondSlot] || [];
+
+      updated[secondSlot] = sourceSegments.map((sourceSeg, idx) => {
+        const targetSeg = targetSegments[idx];
+        if (targetSeg) {
+          return copyContentToTarget(sourceSeg, targetSeg);
+        }
+        // No target at this position (e.g. extra special segment) — clone without entity refs
+        return cloneSegmentWithoutEntityRefs(sourceSeg);
+      });
+
       if (updated.pre_service_notes) updated.pre_service_notes[secondSlot] = updated.pre_service_notes[firstSlot] || "";
       if (updated.coordinators) updated.coordinators[secondSlot] = updated.coordinators[firstSlot] || "";
       if (updated.ujieres) updated.ujieres[secondSlot] = updated.ujieres[firstSlot] || "";
@@ -193,14 +238,16 @@ export function useWeeklyServiceHandlers({
       if (!prev) return prev;
       const updated = { ...prev };
       const sourceSeg = (updated[firstSlot] || [])[segmentIndex];
-      if (sourceSeg) {
-        if (!updated[secondSlot]) updated[secondSlot] = [];
-        updated[secondSlot][segmentIndex] = {
-          ...sourceSeg,
-          data: { ...sourceSeg.data },
-          actions: sourceSeg.actions ? sourceSeg.actions.map(a => ({ ...a })) : [],
-          songs: sourceSeg.songs ? sourceSeg.songs.map(s => ({ ...s })) : undefined,
-        };
+      if (!sourceSeg) return prev;
+
+      if (!updated[secondSlot]) updated[secondSlot] = [];
+      updated[secondSlot] = [...updated[secondSlot]];
+      const targetSeg = updated[secondSlot][segmentIndex];
+
+      if (targetSeg) {
+        updated[secondSlot][segmentIndex] = copyContentToTarget(sourceSeg, targetSeg);
+      } else {
+        updated[secondSlot][segmentIndex] = cloneSegmentWithoutEntityRefs(sourceSeg);
       }
       return updated;
     });
@@ -284,13 +331,24 @@ export function useWeeklyServiceHandlers({
     // RESET-SLOT-FIX: Only reset the selected slots (or all if not specified)
     const targetSlots = (slotsToReset && slotsToReset.length > 0) ? slotsToReset : slotNames;
     targetSlots.forEach(name => {
-      const bpSegments = activeBlueprint[name] || activeBlueprint[firstSlot] || [];
+      let bpSegments = activeBlueprint[name];
+      if (!bpSegments || bpSegments.length === 0) {
+        // Slot has no dedicated blueprint definition — warn and fall back to first slot
+        if (name !== firstSlot) {
+          toast.info(`Blueprint para "${name}" no encontrado. Usando segmentos de ${firstSlot}.`);
+        }
+        bpSegments = activeBlueprint[firstSlot] || [];
+      }
       initialData[name] = mapBpSegments(bpSegments);
     });
 
     setServiceData(initialData);
 
-    // Toast immediately — auto-save will persist within 2s
+    // IMMEDIATE-SYNC (2026-02-21): Reset creates fresh segments without _entityId,
+    // so per-field push is dead until the next full sync assigns new entity IDs.
+    // Request an immediate sync (2s) instead of waiting for the 30s safety net.
+    if (requestImmediateSync) requestImmediateSync();
+
     const resetLabel = targetSlots.length < slotNames.length
       ? `Horarios restablecidos: ${targetSlots.join(', ')}`
       : "Servicio restablecido al diseño original";
@@ -321,6 +379,9 @@ export function useWeeklyServiceHandlers({
       updated[specialSegmentDetails.timeSlot] = targetArray;
       return updated;
     });
+
+    // New segment has no _entityId — request immediate sync
+    if (requestImmediateSync) requestImmediateSync();
 
     setShowSpecialDialog(false);
     setSpecialSegmentDetails({

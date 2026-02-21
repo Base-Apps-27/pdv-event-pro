@@ -533,6 +533,15 @@ export default function WeeklyServiceManager() {
   // ── Handlers (extracted hook) ──
   // PER-FIELD PUSH (2026-02-21): handlers update state AND push changed fields
   // to entities via pushFn. Safety-net full sync handles structural changes.
+
+  // IMMEDIATE-SYNC (2026-02-21): After structural changes (reset, add/remove
+  // segment), per-field push is dead because new segments have no _entityId.
+  // This ref tells the safety-net to use a short delay instead of 30 seconds.
+  const immediateSyncRequestRef = React.useRef(false);
+  const requestImmediateSync = React.useCallback(() => {
+    immediateSyncRequestRef.current = true;
+  }, []);
+
   const handlers = useWeeklyServiceHandlers({
     serviceData, setServiceData, selectedAnnouncements,
     updateAnnouncementMutation, fixedAnnouncements, dynamicAnnouncements,
@@ -544,6 +553,7 @@ export default function WeeklyServiceManager() {
     setShowResetConfirm, editingAnnouncement, createAnnouncementMutation,
     slotNames: sundaySlotNames,
     pushFn,
+    requestImmediateSync,
   });
 
   // ── Initialize service data from DB or blueprint ──
@@ -922,15 +932,20 @@ export default function WeeklyServiceManager() {
     service_type: 'weekly'
   });
 
-  // Safety-net full sync: runs 30 seconds after last change. Handles structural
-  // changes, Service metadata, and triggers display surface refresh via Service.update.
+  // Safety-net full sync: runs 30 seconds after last change (or 2 seconds if
+  // an immediate sync was requested, e.g. after blueprint reset). Handles
+  // structural changes, Service metadata, and triggers display surface refresh.
   // Per-field pushes handle individual field values immediately on commit.
   useEffect(() => {
     if (!lastSavedData || !serviceData) return;
     if (JSON.stringify(serviceData) === JSON.stringify(lastSavedData)) return;
+    // IMMEDIATE-SYNC (2026-02-21): Use short delay after structural changes
+    // (reset, add/remove segment) so new entity IDs are assigned quickly.
+    const delay = immediateSyncRequestRef.current ? 2000 : 30000;
+    immediateSyncRequestRef.current = false;
     const handler = setTimeout(() => {
       saveServiceMutation.mutate(buildSavePayload());
-    }, 30000);
+    }, delay);
     return () => clearTimeout(handler);
   }, [serviceData, lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
 
