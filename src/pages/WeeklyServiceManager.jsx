@@ -388,26 +388,31 @@ export default function WeeklyServiceManager() {
     fieldPushActiveRef.current++;
     const done = () => setTimeout(() => { fieldPushActiveRef.current = Math.max(0, fieldPushActiveRef.current - 1); }, 500);
     let promise;
-    if (type === "segment") {
-      promise = pushSegmentFieldToEntity(base44, opts.entityId, opts.field, opts.value);
-    } else if (type === "songs") {
-      promise = pushSegmentSongsToEntity(base44, opts.entityId, opts.songs);
-    } else if (type === "team") {
-      promise = pushSessionTeamFieldToEntity(base44, opts.sessionId, opts.field, opts.value);
-    } else if (type === "preNotes") {
-      promise = pushPreSessionNotesToEntity(base44, opts.sessionId, opts.value);
-    } else if (type === "serviceField" && existingData?.id) {
-      // Service-level fields (e.g., receso_notes): merge into existing value
-      const currentData = serviceDataRef.current;
-      const mergedValue = type === "serviceField" && opts.field === "receso_notes"
-        ? { ...(currentData?.receso_notes || {}), [opts.slotName]: opts.value }
-        : opts.value;
-      promise = base44.entities.Service.update(existingData.id, { [opts.field]: mergedValue })
-        .catch(err => console.error("[FIELD_PUSH] Service field update failed:", opts.field, err.message));
-    } else {
-      promise = Promise.resolve();
+    try {
+      if (type === "segment") {
+        promise = pushSegmentFieldToEntity(base44, opts.entityId, opts.field, opts.value);
+      } else if (type === "songs") {
+        promise = pushSegmentSongsToEntity(base44, opts.entityId, opts.songs);
+      } else if (type === "team") {
+        promise = pushSessionTeamFieldToEntity(base44, opts.sessionId, opts.field, opts.value);
+      } else if (type === "preNotes") {
+        promise = pushPreSessionNotesToEntity(base44, opts.sessionId, opts.value);
+      } else if (type === "serviceField" && existingData?.id) {
+        // Service-level fields (e.g., receso_notes): merge into existing value
+        const currentData = serviceDataRef.current;
+        const mergedValue = type === "serviceField" && opts.field === "receso_notes"
+          ? { ...(currentData?.receso_notes || {}), [opts.slotName]: opts.value }
+          : opts.value;
+        promise = base44.entities.Service.update(existingData.id, { [opts.field]: mergedValue })
+          .catch(err => console.error("[FIELD_PUSH] Service field update failed:", opts.field, err.message));
+      } else {
+        promise = Promise.resolve();
+      }
+      promise.then(done, done);
+    } catch (err) {
+      console.error("[FIELD_PUSH] Synchronous error in pushFn:", err.message);
+      done();
     }
-    promise.then(done, done);
   }, [existingData?.id]);
 
   // SAVE PIPELINE (2026-02-21): Safety-net full sync. Per-field pushes handle

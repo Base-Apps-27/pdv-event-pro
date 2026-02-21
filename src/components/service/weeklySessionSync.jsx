@@ -681,18 +681,29 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
   // Without this, worship segments loaded from entities show blank song rows.
   const rootSongs = songs.length > 0 ? songs : undefined;
 
-  // Build sub_asignaciones from child segments
-  const sub_asignaciones =
-    childSegments.length > 0
-      ? childSegments.map((child) => ({
-          title: child.title,
-          label: child.title,
-          presenter: child.presenter || "",
-          duration: child.duration_min || 5,
-          person_field_name: "ministry_leader",
-          duration_min: child.duration_min || 5,
-        }))
-      : undefined;
+  // Build sub_asignaciones from child segments and inject presenter data
+  // back into the parent's data object so the UI inputs can display it.
+  // The UI reads from segment.data[person_field_name] (e.g., data.ministry_leader).
+  let sub_asignaciones;
+  if (childSegments.length > 0) {
+    // Read sub_assignments config to get person_field_name mappings
+    const subConfig = segment.ui_sub_assignments || [];
+    sub_asignaciones = childSegments.map((child, ci) => {
+      const fieldName = subConfig[ci]?.person_field_name || "ministry_leader";
+      // Inject child presenter back into parent data for UI round-trip
+      if (child.presenter) {
+        data[fieldName] = child.presenter;
+      }
+      return {
+        title: child.title,
+        label: child.title,
+        presenter: child.presenter || "",
+        duration: child.duration_min || 5,
+        person_field_name: fieldName,
+        duration_min: child.duration_min || 5,
+      };
+    });
+  }
 
   // Entity Lift: Read ui_fields and ui_sub_assignments from entity first.
   // Fall back to blueprint matching ONLY for pre-migration segments that
