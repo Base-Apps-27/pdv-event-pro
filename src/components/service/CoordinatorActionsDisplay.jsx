@@ -126,101 +126,134 @@ export default function CoordinatorActionsDisplay({
         </h3>
       </div>
 
-      {/* Actions Grid (Horizontal or Vertical) */}
-      <div className={`flex-1 overflow-y-auto ${layout === 'vertical' ? 'flex flex-col space-y-2' : `grid grid-cols-1 md:grid-cols-2 gap-2 auto-rows-min ${
-        upcomingActions.length === 1 ? 'lg:grid-cols-1' :
-        upcomingActions.length === 2 ? 'lg:grid-cols-2' :
-        upcomingActions.length === 3 ? 'lg:grid-cols-3' :
-        'lg:grid-cols-4'
-      }`}`}>
-        {/* If > 4 items (Grid), show 3 items + overflow card. Vertical shows up to 6. */}
-        {upcomingActions.slice(0, layout === 'vertical' ? 6 : (upcomingActions.length > 4 ? 3 : 4)).map((action) => {
-          const now = currentTime.getTime();
-          const timeUntil = action.time.getTime() - now;
-          const minutesUntil = Math.ceil(timeUntil / 60000);
-          const isUrgent = timeUntil > 0 && timeUntil < 5 * 60000; // < 5 min
-
+      {/* Hero + Grid Layout: First action prominent, rest compact below */}
+      <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+        {upcomingActions.length > 0 && (() => {
+          const heroAction = upcomingActions[0];
+          const secondaryActions = upcomingActions.slice(1, 4); // Show up to 3 more
+          
           return (
-          <div
-            key={action.id}
-            className={`flex flex-col p-2 rounded-xl transition-colors h-full ${
-              isUrgent
-                ? 'bg-amber-50 border border-amber-300'
-                : 'bg-slate-50 border border-slate-200'
-            }`}
-          >
-            <div className="flex items-start gap-2 mb-1">
-              {/* Time Block (Left) */}
-              <div className="flex flex-col items-center min-w-[45px] flex-shrink-0">
-                <div className={`text-xl font-black font-mono leading-none tracking-tight ${
-                  isUrgent ? 'text-amber-600' : 'text-pdv-teal'
-                }`}>
-                  {minutesUntil > 0 ? `${minutesUntil}m` : 'NOW'}
-                </div>
-                <div className="text-[9px] font-bold text-slate-400 mt-0.5">
-                  {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
-                </div>
-              </div>
+            <>
+              {/* HERO ACTION — Full-width, prominent */}
+              {(() => {
+                const action = heroAction;
+                const now = currentTime.getTime();
+                const timeUntil = action.time.getTime() - now;
+                const minutesUntil = Math.ceil(timeUntil / 60000);
+                const isUrgent = timeUntil > 0 && timeUntil < 5 * 60000;
 
-              {/* Main Content (Right) */}
-              <div className="flex-1 min-w-0">
-                 <div className="flex justify-between items-start gap-2">
-                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight leading-none mb-0.5">
-                      {action.label}
-                    </h4>
-                      {isUrgent && <AlertCircle className="w-3 h-3 text-amber-600 animate-pulse flex-shrink-0" />}
-                   </div>
-
-                   {/* Meta Row: Badge + Dept + UpNext */}
-                   <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[9px] mb-1">
-                      <span className={`font-bold uppercase tracking-wider px-1.5 py-0.5 rounded text-[8px] ${
-                        action.isPrep
-                          ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                          : 'bg-blue-100 text-blue-700 border border-blue-200'
+                return (
+                  <div
+                    key={action.id}
+                    className={`flex items-start gap-3 p-3 rounded-xl border-2 ${
+                      isUrgent
+                        ? 'bg-amber-50 border-amber-400 shadow-amber-200/50 shadow-lg'
+                        : 'bg-gradient-to-br from-white to-slate-50 border-pdv-teal/40 shadow-lg'
+                    }`}
+                  >
+                    {/* Time Block */}
+                    <div className="flex flex-col items-center min-w-[60px] flex-shrink-0">
+                      <div className={`text-3xl font-black font-mono leading-none tracking-tight ${
+                        isUrgent ? 'text-amber-600' : 'text-pdv-teal'
                       }`}>
-                        {action.isPrep ? t('live.preparation') : t('live.during')}
-                      </span>
-                      
-                      <span className="text-slate-600 font-medium">
-                        {action.type}
-                      </span>
+                        {minutesUntil > 0 ? `${minutesUntil}m` : 'NOW'}
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 mt-1">
+                        {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
+                      </div>
+                    </div>
 
-                      {action.isNext && (
-                         <span className="font-bold text-slate-900">
-                           {t('live.upNext')}
-                         </span>
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-2 mb-1">
+                        <h4 className="text-sm font-bold text-slate-900 uppercase tracking-tight leading-tight">
+                          {action.label}
+                        </h4>
+                        {isUrgent && <AlertCircle className="w-4 h-4 text-amber-600 animate-pulse flex-shrink-0" />}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] mb-1">
+                        <span className={`font-bold uppercase tracking-wider px-2 py-0.5 rounded text-[9px] ${
+                          action.isPrep
+                            ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                            : 'bg-blue-100 text-blue-700 border border-blue-200'
+                        }`}>
+                          {action.isPrep ? t('live.preparation') : t('live.during')}
+                        </span>
+                        <span className="text-slate-600 font-medium">{action.type}</span>
+                      </div>
+
+                      {action.notes && (
+                        <div className="p-2 bg-white/80 rounded text-[10px] text-slate-700 leading-tight border border-slate-200 mt-1">
+                          {action.notes}
+                        </div>
                       )}
-                   </div>
-                </div>
-              </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
-              {/* Instructions/Notes */}
-              {action.notes && (
-                <div className="mb-1">
-                   <div className="p-1.5 bg-white rounded text-[9px] text-slate-800 font-medium leading-tight whitespace-pre-wrap break-words border border-slate-200 shadow-sm">
-                      {action.notes}
-                   </div>
+              {/* SECONDARY ACTIONS — Compact grid (2-3 columns) */}
+              {secondaryActions.length > 0 && (
+                <div className={`grid gap-2 ${
+                  secondaryActions.length === 1 ? 'grid-cols-1' :
+                  secondaryActions.length === 2 ? 'grid-cols-2' :
+                  'grid-cols-3'
+                }`}>
+                  {secondaryActions.map((action) => {
+                    const now = currentTime.getTime();
+                    const timeUntil = action.time.getTime() - now;
+                    const minutesUntil = Math.ceil(timeUntil / 60000);
+                    const isUrgent = timeUntil > 0 && timeUntil < 5 * 60000;
+
+                    return (
+                      <div
+                        key={action.id}
+                        className={`flex flex-col p-2 rounded-lg border ${
+                          isUrgent
+                            ? 'bg-amber-50 border-amber-300'
+                            : 'bg-slate-50 border-slate-200'
+                        }`}
+                      >
+                        {/* Time + Alert */}
+                        <div className="flex items-center justify-between mb-1">
+                          <div className={`text-lg font-black font-mono leading-none ${
+                            isUrgent ? 'text-amber-600' : 'text-pdv-teal'
+                          }`}>
+                            {minutesUntil > 0 ? `${minutesUntil}m` : 'NOW'}
+                          </div>
+                          {isUrgent && <AlertCircle className="w-3 h-3 text-amber-600 animate-pulse" />}
+                        </div>
+
+                        {/* Label */}
+                        <h4 className="text-[10px] font-bold text-slate-900 uppercase leading-tight mb-1 line-clamp-2">
+                          {action.label}
+                        </h4>
+
+                        {/* Meta */}
+                        <div className="flex items-center gap-1 text-[8px]">
+                          <span className={`font-bold uppercase px-1 py-0.5 rounded ${
+                            action.isPrep ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            {action.isPrep ? 'PREP' : 'LIVE'}
+                          </span>
+                          <span className="text-slate-500 truncate">{action.type}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
-              {/* Footer: Segment Context */}
-              <div className="mt-auto pt-1 border-t border-black/5 text-[9px] text-slate-400 font-medium uppercase tracking-wide truncate">
-                 {action.segmentTitle}
-              </div>
-            </div>
+              {/* Overflow indicator */}
+              {upcomingActions.length > 4 && (
+                <div className="text-center py-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                  +{upcomingActions.length - 4} more in app
+                </div>
+              )}
+            </>
           );
-        })}
-
-        {/* Overflow Card - Takes the 4th slot if we have > 4 items (Grid only) */}
-        {layout === 'grid' && upcomingActions.length > 4 && (
-          <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-800 text-white border border-slate-700 h-full text-center">
-            <div className="text-2xl font-black mb-0.5">+{upcomingActions.length - 3}</div>
-            <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2">More Actions</div>
-            <div className="text-[8px] bg-slate-700 px-2 py-1 rounded text-slate-300">
-              Check App
-            </div>
-          </div>
-        )}
+        })()}
       </div>
     </div>
   );
