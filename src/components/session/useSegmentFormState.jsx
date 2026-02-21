@@ -35,7 +35,7 @@ function buildFormData(segment, suggestedStartTime) {
     order: segment?.order || 1,
     message_title: segment?.message_title || "",
     scripture_references: segment?.scripture_references || "",
-    number_of_songs: segment?.number_of_songs || 3,
+    number_of_songs: segment?.number_of_songs || 4,
     song_1_title: segment?.song_1_title || "",
     song_1_lead: segment?.song_1_lead || "",
     song_2_title: segment?.song_2_title || "",
