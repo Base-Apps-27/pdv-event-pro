@@ -148,13 +148,15 @@ export default function PublicCountdownDisplay() {
         }) || null;
 
       // Timeline includes breaks (rendered as dividers by SegmentTimeline)
+      // No hard limit — the timeline container is scrollable and naturally
+      // shrinks as past segments drop off. A two-service setup (9:30am+11:30am)
+      // can have 11+ segments; a fixed slice(0,8) was cutting off the tail.
       const upcoming = validSegments
         .filter((s) => {
           if (s === current) return false;
           const start = getTimeDate(s._effectiveStart, s.date);
           return start && start > currentTime;
-        })
-        .slice(0, 8);
+        });
 
       let preLaunch = null;
       if (!current && next) {

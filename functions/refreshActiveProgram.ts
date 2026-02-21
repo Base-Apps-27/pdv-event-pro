@@ -320,13 +320,24 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       preSessionDetails = allPreSessionDetails;
       streamBlocks = allStreamBlocks;
 
-      // Process segments: filter, add date, sort
+      // Process segments: resolve children onto parents, filter, add date, sort
       const orderMap = new Map(sessions.map((s, i) => [s.id, i]));
       const sessionDateMap = new Map(sessions.map(s => [s.id, s.date]));
 
+      // Resolve child segments (e.g. Ministración) onto their parents
+      // so the TV display can render them inline without separate entries.
+      const childByParent = groupBy(
+        allSegments.filter(s => s.parent_segment_id),
+        s => s.parent_segment_id
+      );
+
       segments = allSegments
         .filter(seg => seg.show_in_general !== false && !seg.parent_segment_id)
-        .map(seg => ({ ...seg, date: sessionDateMap.get(seg.session_id) || null }))
+        .map(seg => ({
+          ...seg,
+          date: sessionDateMap.get(seg.session_id) || null,
+          _resolved_sub_assignments: resolveChildrenAsSubAssignments(childByParent[seg.id]),
+        }))
         .sort((a, b) => {
           const aIdx = orderMap.get(a.session_id) ?? 999;
           const bIdx = orderMap.get(b.session_id) ?? 999;
@@ -432,14 +443,21 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       } else {
         entitySegmentsResolved = true;
 
+      // Resolve child segments onto parents for inline sub-assignment display
+      const svcChildByParent = groupBy(
+        allSegs.filter(s => s.parent_segment_id),
+        s => s.parent_segment_id
+      );
+
       // Sort by session order first, then segment order (matches event path pattern)
       const sessionsMap = new Map(sessions.map((s, i) => [s.id, i]));
       segments = allSegs
-        // CHILD SEGMENT FILTER (2026-02-21): Exclude sub-segments (e.g. Ministración within Alabanza).
-        // Child segments have parent_segment_id set and should NOT appear in the flat
-        // display list — they are internal sub-assignments, not top-level timeline entries.
-        // Showing them causes: (a) wrong "current segment" on TV, (b) duplicate entries in timeline.
+        // Exclude sub-segments from flat list — they're resolved onto parents above.
         .filter(s => s.show_in_general !== false && !s.parent_segment_id)
+        .map(seg => ({
+          ...seg,
+          _resolved_sub_assignments: resolveChildrenAsSubAssignments(svcChildByParent[seg.id]),
+        }))
         .sort((a, b) => {
           const aIdx = sessionsMap.get(a.session_id) ?? 999;
           const bIdx = sessionsMap.get(b.session_id) ?? 999;
@@ -743,4 +761,20 @@ function injectPreSessionActions(segments, sessions, preSessionDetails) {
       firstSeg.actions = [...firstSeg.actions, ...newActions];
     }
   });
+}
+
+// ─── Resolve child segments onto parent as sub-assignments ───
+// Child segments (e.g. Ministración within Alabanza) are filtered from
+// the flat timeline but their data needs to appear inline on the parent.
+// Returns a resolved array with label + presenter for display.
+function resolveChildrenAsSubAssignments(children) {
+  if (!children || children.length === 0) return [];
+  return children
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .map(child => ({
+      label: child.title || 'Sub-assignment',
+      presenter: child.presenter || '',
+      duration_min: child.duration_min || 5,
+      segment_type: child.segment_type || 'Ministración',
+    }));
 }
