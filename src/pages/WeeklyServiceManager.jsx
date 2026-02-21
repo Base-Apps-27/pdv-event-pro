@@ -292,8 +292,14 @@ export default function WeeklyServiceManager() {
       if (service?.id) {
         try {
           const entityData = await loadWeeklyFromSessions(base44, service.id, blueprintData);
-          if (entityData) {
-            // Merge entity-sourced segment/team data onto the Service metadata
+          // Guard: only use entity data if it actually contains segments.
+          // Sessions can exist without segments (e.g., session was created but
+          // segment bulk-create failed mid-sync). Without this check, an empty
+          // entity result would override valid legacy JSON with nothing.
+          const hasSegments = entityData && Object.values(entityData).some(
+            val => Array.isArray(val) && val.length > 0
+          );
+          if (hasSegments) {
             return { ...service, ...entityData, _fromEntities: true };
           }
         } catch (err) {
