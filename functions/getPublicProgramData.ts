@@ -546,105 +546,118 @@ Deno.serve(async (req) => {
                     };
                 });
             }
-            // Fallback: Standard Weekly Service Time Slots (9:30am / 11:30am)
-            else if (!entitySegmentsResolved && (targetProgram["9:30am"] || targetProgram["11:30am"])) {
-                const processSlot = (slotSegments, startHour, startMin) => {
+            // Fallback: Standard Weekly Service Time Slots (dynamic slot detection)
+            // BUG FIX (2026-02-21): Replaced hardcoded "9:30am"/"11:30am" with dynamic
+            // slot key detection. Handles any ServiceSchedule-configured slot names.
+            else if (!entitySegmentsResolved && Object.keys(targetProgram).some(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(targetProgram[k]) && targetProgram[k].length > 0)) {
+                const processSlot = (slotSegments, startHour, startMin, slotKey) => {
                     if (!Array.isArray(slotSegments)) return [];
-                    
                     let currentMinutes = startHour * 60 + startMin;
-                    
                     return slotSegments.map((seg, idx) => {
-                        // Calculate start time HH:MM
                         const h = Math.floor(currentMinutes / 60);
                         const m = currentMinutes % 60;
                         const startTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-                        
-                        // Add duration to advance cursor
                         const dur = seg.duration || 0;
                         currentMinutes += dur;
-                        
-                        // Calculate end time
                         const endH = Math.floor(currentMinutes / 60);
                         const endM = currentMinutes % 60;
                         const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
-
                         return {
                             ...seg,
-                            id: seg.id || `generated-${startHour}-${idx}`, // Ensure ID exists
-                            start_time: startTime, // Computed
+                            id: seg.id || `generated-${startHour}-${idx}`,
+                            start_time: startTime,
                             end_time: endTime,
                             duration_min: dur,
                             title: seg.title || seg.data?.title || 'Untitled',
                             presenter: seg.presenter || seg.data?.presenter || '',
                             segment_type: seg.type || 'Generic',
-                            session_id: `slot-${startHour}-${startMin}` // Artificial session grouping
+                            session_id: `slot-${startHour}-${startMin}`,
                         };
                     });
                 };
 
-                const segs930 = processSlot(targetProgram["9:30am"], 9, 30);
-                const segs1130 = processSlot(targetProgram["11:30am"], 11, 30);
-                
-                // Check for implicit break between services (e.g. 11:00 AM to 11:30 AM)
-                let breakSegment = null;
-                if (segs930.length > 0 && segs1130.length > 0) {
-                    const lastSeg = segs930[segs930.length - 1];
-                    const firstNextSeg = segs1130[0];
-                    
-                    // Only insert if there is a time gap
-                    if (lastSeg.end_time < firstNextSeg.start_time) {
-                        // Calculate duration
-                        const [endH, endM] = lastSeg.end_time.split(':').map(Number);
-                        const [startH, startM] = firstNextSeg.start_time.split(':').map(Number);
-                        const diffMin = (startH * 60 + startM) - (endH * 60 + endM);
-                        
-                        if (diffMin > 0) {
-                            // Try to find matching notes from receso_notes (keyed by time, e.g. "11:00am" or "11:00")
-                            // We normalize keys to match HH:MM or HH:MMam/pm if possible, but for now simple lookup
-                            const notes = targetProgram.receso_notes?.["11:00am"] || 
-                                         targetProgram.receso_notes?.["11:00"] || 
-                                         targetProgram.receso_notes?.["11:00 AM"] || "";
+                // Discover and sort all time-slot keys chronologically
+                const slotKeys = Object.keys(targetProgram)
+                    .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(targetProgram[k]) && targetProgram[k].length > 0)
+                    .sort((a, b) => {
+                        const parseSlot = (s) => {
+                            const mm = s.match(/^(\d+):(\d+)(am|pm)$/i);
+                            if (!mm) return 0;
+                            let h = parseInt(mm[1]);
+                            if (mm[3].toLowerCase() === 'pm' && h < 12) h += 12;
+                            if (mm[3].toLowerCase() === 'am' && h === 12) h = 0;
+                            return h * 60 + parseInt(mm[2]);
+                        };
+                        return parseSlot(a) - parseSlot(b);
+                    });
 
-                            // Define standard actions for the break itself
-                            const breakActions = [
-                                {
-                                    id: 'break-reset',
-                                    label: 'STAGE RESET',
-                                    department: 'Stage & Decor',
-                                    timing: 'after_start',
-                                    offset_min: 0,
-                                    order: 1
-                                },
-                                {
-                                    id: 'break-sound',
-                                    label: 'AUDIO CHECK',
-                                    department: 'Sound',
-                                    timing: 'after_start',
-                                    offset_min: 10, // 10 min into break
-                                    order: 2
+                const allSlotSegs = slotKeys.map(slotKey => {
+                    const mm = slotKey.match(/^(\d+):(\d+)(am|pm)$/i);
+                    if (!mm) return { slotKey, segs: [], h: 0, m: 0 };
+                    let h = parseInt(mm[1]);
+                    const m = parseInt(mm[2]);
+                    if (mm[3].toLowerCase() === 'pm' && h < 12) h += 12;
+                    if (mm[3].toLowerCase() === 'am' && h === 12) h = 0;
+                    return { slotKey, segs: processSlot(targetProgram[slotKey], h, m, slotKey), h, m };
+                });
+
+                segments = [];
+                for (let i = 0; i < allSlotSegs.length; i++) {
+                    segments.push(...allSlotSegs[i].segs);
+                    if (i < allSlotSegs.length - 1) {
+                        const curr = allSlotSegs[i];
+                        const next = allSlotSegs[i + 1];
+                        if (curr.segs.length > 0 && next.segs.length > 0) {
+                            const lastSeg = curr.segs[curr.segs.length - 1];
+                            const firstNextSeg = next.segs[0];
+                            if (lastSeg.end_time < firstNextSeg.start_time) {
+                                const [endH, endM] = lastSeg.end_time.split(':').map(Number);
+                                const [startH, startM] = firstNextSeg.start_time.split(':').map(Number);
+                                const diffMin = (startH * 60 + startM) - (endH * 60 + endM);
+                                if (diffMin > 0) {
+                                    // receso_notes keyed by the FIRST slot name (matches weeklySessionSync write path)
+                                    const notes = targetProgram.receso_notes?.[curr.slotKey]
+                                        || (targetProgram.receso_notes ? Object.values(targetProgram.receso_notes)[0] : "")
+                                        || "";
+                                    segments.push({
+                                        id: `generated-break-inter-service`,
+                                        start_time: lastSeg.end_time,
+                                        end_time: firstNextSeg.start_time,
+                                        duration_min: diffMin,
+                                        title: 'Receso',
+                                        segment_type: 'Receso',
+                                        session_id: 'slot-break',
+                                        description: notes,
+                                        presenter: notes ? 'Coordinador' : '',
+                                        actions: [
+                                            { id: 'break-reset', label: 'STAGE RESET', department: 'Stage & Decor', timing: 'after_start', offset_min: 0, order: 1 },
+                                            { id: 'break-sound', label: 'AUDIO CHECK', department: 'Sound', timing: 'after_start', offset_min: 10, order: 2 },
+                                        ],
+                                    });
                                 }
-                            ];
-
-                            breakSegment = {
-                                id: `generated-break-inter-service`,
-                                start_time: lastSeg.end_time,
-                                end_time: firstNextSeg.start_time,
-                                duration_min: diffMin,
-                                title: 'Receso', // Standard title
-                                segment_type: 'Receso', // Matches UI check for isBreakSegment
-                                session_id: 'slot-break',
-                                description: notes,
-                                presenter: notes ? 'Coordinador' : '', // Hint at who manages it if notes exist
-                                actions: breakActions
-                            };
-
-                            // Removed automatic injection of Pre-Service actions (Doors/Prayer/Countdown) per user request
-
+                            }
                         }
                     }
                 }
 
-                segments = [...segs930, ...(breakSegment ? [breakSegment] : []), ...segs1130];
+                // Inject pre_service_notes (dynamic slot keys — BUG FIX 2026-02-21)
+                if (targetProgram.pre_service_notes && sessions.length === 0) {
+                    allSlotSegs.forEach(({ slotKey, h, m }) => {
+                        const notes = targetProgram.pre_service_notes[slotKey];
+                        if (!notes) return;
+                        const slotSessionId = `slot-${h}-${m}`;
+                        const slotSegments = segments.filter(s => s.session_id === slotSessionId);
+                        if (slotSegments.length === 0) return;
+                        slotSegments.sort((a, b) => (a.start_time || "").localeCompare(b.start_time || ""));
+                        const firstSeg = slotSegments[0];
+                        if (!firstSeg.actions) firstSeg.actions = [];
+                        const actionId = `pre-note-${slotKey}-${targetProgram.id}`;
+                        if (!firstSeg.actions.find(a => a.id === actionId)) {
+                            firstSeg.actions.push({ id: actionId, label: 'GENERAL NOTES', department: 'Coordinador', timing: 'before_start', offset_min: 30, notes, order: -99 });
+                            firstSeg.actions.sort((a, b) => (a.order || 0) - (b.order || 0));
+                        }
+                    });
+                }
             }
 
             // Fetch Linked Segment Actions for Services too (sequential with retry)
