@@ -197,7 +197,7 @@ export default function CustomServiceBuilder() {
         logCreate('Service', result, null, user);
       }
       // SYNC TO SESSION/SEGMENTS for Live Control support
-      try { await syncToSession(base44, result, serviceData.segments); } catch (err) { console.error("Failed to sync session data:", err); }
+      try { await syncToSession(base44, result, serviceData.segments); } catch (err) { console.error("Failed to sync session data:", err); toast.warning("Datos guardados, pero sincronización de sesión falló. Intente guardar de nuevo."); }
       queryClient.invalidateQueries(['customService']);
       queryClient.invalidateQueries(['services']);
       setLastSavedData(JSON.parse(JSON.stringify(serviceData)));

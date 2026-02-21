@@ -459,7 +459,7 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
     // InPerson = on stage with speaker, RemoteBooth = headphones for audience
     // NOTE: Using » symbol instead of emojis for PDF font compatibility
     if (seg.requires_translation && seg.data?.translator) {
-      const isRemoteBooth = seg.translation_mode === 'RemoteBooth';
+      const isRemoteBooth = (seg.translation_mode || 'RemoteBooth') === 'RemoteBooth';
       items.push({
         text: [
           { text: isRemoteBooth ? '» Trad-Cabina: ' : '» Trad-Tarima: ', fontSize: 8.5 * scale, color: isRemoteBooth ? '#0891B2' : '#7C3AED', italics: true },

@@ -65,7 +65,7 @@
  * │ SOURCE 2: WEEKLY SERVICE SEGMENTS (Service entity, embedded JSON)      │
  * │                                                                        │
  * │ Authoring: WeeklyServiceManager                                        │
- * │ Storage:   Service entity → "9:30am"[] and "11:30am"[] arrays         │
+ * │ Storage:   Service entity → time-slot keyed arrays (e.g. "9:30am"[])  │
  * │                                                                        │
  * │ Structure per segment:                                                 │
  * │   {                                                                    │
@@ -711,9 +711,8 @@ export function normalizeSegments(segments, source = 'event', options = {}) {
  * Returns a NEW array — does not mutate inputs.
  *
  * Adjustment mapping:
- *   - Weekly services (JSON): session_id 'slot-9-30' → time_slot '9:30am'
- *   - Weekly services (JSON): session_id 'slot-11-30' → time_slot '11:30am'
- *   - Weekly services (JSON): session_id 'slot-break' → follows 9:30am offset
+ *   - Weekly services (JSON): session_id 'slot-H-MM' → time_slot 'H:MMam/pm' (dynamic)
+ *   - Weekly services (JSON): session_id 'slot-break' → follows first slot's offset
  *   - Weekly services (entity): session_id is real UUID → resolve via sessions array
  *   - Custom services: adjustment_type 'global' applies to all
  *   - Events: not handled here (events use LiveDirectorPanel)
@@ -750,16 +749,22 @@ export function applyTimeAdjustments(segments, liveAdjustments = [], sessions = 
       // Entity-sourced: resolve via session name
       const adj = liveAdjustments.find(a => a.time_slot === sessionName);
       if (adj) offsetMinutes = adj.offset_minutes || 0;
-    } else if (seg.session_id === 'slot-9-30') {
-      const adj = liveAdjustments.find(a => a.time_slot === '9:30am');
-      if (adj) offsetMinutes = adj.offset_minutes || 0;
-    } else if (seg.session_id === 'slot-11-30') {
-      const adj = liveAdjustments.find(a => a.time_slot === '11:30am');
-      if (adj) offsetMinutes = adj.offset_minutes || 0;
     } else if (seg.session_id === 'slot-break') {
-      // Break follows morning service adjustment
-      const adj = liveAdjustments.find(a => a.time_slot === '9:30am');
-      if (adj) offsetMinutes = adj.offset_minutes || 0;
+      // Break follows the first slot's adjustment
+      const firstAdj = liveAdjustments.find(a => a.time_slot && /^\d+:\d+[ap]m$/i.test(a.time_slot));
+      if (firstAdj) offsetMinutes = firstAdj.offset_minutes || 0;
+    } else if (seg.session_id && seg.session_id.startsWith('slot-')) {
+      // Parse synthetic ID "slot-H-MM" → time slot name (e.g. "slot-9-30" → "9:30am")
+      const parts = seg.session_id.replace('slot-', '').split('-');
+      if (parts.length === 2) {
+        let h = parseInt(parts[0]), m = parts[1];
+        const period = h >= 12 ? 'pm' : 'am';
+        if (h > 12) h -= 12;
+        if (h === 0) h = 12;
+        const slotName = `${h}:${m}${period}`;
+        const adj = liveAdjustments.find(a => a.time_slot === slotName);
+        if (adj) offsetMinutes = adj.offset_minutes || 0;
+      }
     } else {
       // Custom service or event: check for global adjustment
       const globalAdj = liveAdjustments.find(a => a.adjustment_type === 'global');
@@ -793,10 +798,12 @@ export function detectSourceType(programData) {
   if (program.service_type === 'one_off') return 'custom_service';
   // Structural fallback for legacy data without service_type
   if (program.segments && program.segments.length > 0) return 'custom_service';
-  if (program['9:30am'] || program['11:30am']) return 'weekly_service';
-  // Entity-sourced weekly: sessions have names like "9:30am" / "11:30am"
+  // JSON-sourced weekly: keys matching time-slot pattern (e.g. "9:30am", "11:30am", "6:00pm")
+  const hasSlotKeys = Object.keys(program).some(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(program[k]));
+  if (hasSlotKeys) return 'weekly_service';
+  // Entity-sourced weekly: sessions have time-slot names
   if (programData.sessions && programData.sessions.some(s =>
-    s.name === '9:30am' || s.name === '11:30am'
+    s.name && /^\d+:\d+[ap]m$/i.test(s.name)
   )) return 'weekly_service';
   return 'custom_service'; // Fallback
 }

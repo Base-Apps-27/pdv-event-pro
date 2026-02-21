@@ -47,12 +47,17 @@ export default function SundaySlotColumns({
   }, [sundaySlotNames, activeSlotTab]);
 
   const renderColumn = (slotName, slotIdx) => {
-    const isFirst = slotIdx === 0;
     const isLast = slotIdx === sundaySlotNames.length - 1;
+    const hasNextSlot = !isLast && sundaySlotNames.length > 1;
+    const nextSlot = hasNextSlot ? sundaySlotNames[slotIdx + 1] : null;
+    const hasPrevSlot = slotIdx > 0;
+    const prevSlot = hasPrevSlot ? sundaySlotNames[slotIdx - 1] : null;
+
     return (
       <ServiceTimeSlotColumn
         key={slotName}
         timeSlot={slotName}
+        slotIndex={slotIdx}
         style={isMobile ? {} : { minWidth: 480, flex: '1 0 480px' }}
         serviceData={serviceData}
         expandedSegments={expandedSegments}
@@ -64,11 +69,11 @@ export default function SundaySlotColumns({
         setServiceData={setServiceData}
         handleOpenVerseParser={handlers.handleOpenVerseParser}
         calculateServiceTimes={handlers.calculateServiceTimes}
-        copySegmentToNextSlot={isFirst && sundaySlotNames.length > 1 ? handlers.copySegmentToNextSlot : null}
-        copyPreServiceNotesToNextSlot={isFirst && sundaySlotNames.length > 1 ? handlers.copyPreServiceNotesToNextSlot : null}
-        copyTeamToNextSlot={isFirst && sundaySlotNames.length > 1 ? handlers.copyTeamToNextSlot : null}
-        copyAllToNextSlot={!isFirst ? handlers.copyAllToNextSlot : null}
-        nextSlotName={isFirst && sundaySlotNames.length > 1 ? sundaySlotNames[1] : null}
+        copySegmentToNextSlot={hasNextSlot ? (segIdx) => handlers.copySegmentToNextSlot(slotName, nextSlot, segIdx) : null}
+        copyPreServiceNotesToNextSlot={hasNextSlot ? () => handlers.copyPreServiceNotesToNextSlot(slotName, nextSlot) : null}
+        copyTeamToNextSlot={hasNextSlot ? () => handlers.copyTeamToNextSlot(slotName, nextSlot) : null}
+        copyAllToNextSlot={hasPrevSlot ? () => handlers.copyAllToNextSlot(prevSlot, slotName) : null}
+        nextSlotName={nextSlot}
         isLastSlot={isLast}
         onOpenSpecialDialog={(ts) => {
           setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: ts }));
