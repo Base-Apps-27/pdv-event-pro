@@ -48,7 +48,10 @@ export default function MyProgram() {
       return normalizeEventSegments(programData);
     }
     if (contextType === 'service') {
-      return normalizeServiceSegments(programData.program || programData);
+      // Pass full programData (cache snapshot) — normalizeServiceSegments checks
+      // for entity-sourced sessions+segments at root first, then falls back to
+      // JSON path using programData.program (the raw Service entity).
+      return normalizeServiceSegments(programData);
     }
     return [];
   }, [programData, contextType]);

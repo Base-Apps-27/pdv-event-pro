@@ -512,6 +512,8 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
             duration_min: dur,
             title: seg.title || seg.data?.title || 'Untitled',
             presenter: seg.presenter || seg.data?.presenter || '',
+            leader: seg.leader || seg.data?.leader || '',
+            preacher: seg.preacher || seg.data?.preacher || '',
             segment_type: seg.type || 'Generic',
             session_id: `slot-${startHour}-${startMin}`,
           };
@@ -593,6 +595,8 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
           segment_type: seg.type || seg.segment_type || 'Especial',
           title: seg.title || seg.data?.title || 'Sin título',
           presenter: seg.presenter || seg.data?.presenter || seg.data?.leader || '',
+          leader: seg.leader || seg.data?.leader || '',
+          preacher: seg.preacher || seg.data?.preacher || '',
         };
       });
     }
@@ -621,13 +625,24 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
           firstSeg.actions.sort((a, b) => (a.order || 0) - (b.order || 0));
         }
       };
-      // BUG FIX (audit): Dynamic slot injection instead of hardcoded 9:30am/11:30am
+      // Dynamic slot injection — uses allSlotSegments populated by the weekly slot processing block.
+      // If allSlotSegments is empty (custom service or no slot keys), discover session IDs from segments.
       if (allSlotSegments && allSlotSegments.length > 0) {
         allSlotSegments.forEach(slot => injectNotes(slot.key, slot.sessionId));
       } else {
-        // Legacy fallback
-        injectNotes("9:30am", "slot-9-30");
-        injectNotes("11:30am", "slot-11-30");
+        // Fallback: discover slot keys from existing segment session IDs
+        const slotSessionIds = new Set(segments.map(s => s.session_id).filter(Boolean));
+        slotSessionIds.forEach(slotSessionId => {
+          const parts = (slotSessionId || '').replace('slot-', '').split('-');
+          if (parts.length !== 2) return;
+          let h = parseInt(parts[0]);
+          const m = parts[1];
+          const period = h >= 12 ? 'pm' : 'am';
+          if (h > 12) h -= 12;
+          if (h === 0) h = 12;
+          const slotKey = `${h}:${m}${period}`;
+          injectNotes(slotKey, slotSessionId);
+        });
       }
     }
 
