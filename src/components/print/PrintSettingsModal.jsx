@@ -489,17 +489,19 @@ export default function PrintSettingsModal({ open, onOpenChange, settingsPage1, 
                 ));
               })()}
             </div>
-            {/* Receso — shown if any slot has receso notes */}
-            {(() => {
-              const recesoNote = weeklySlotKeys.length > 0 && serviceData?.receso_notes?.[weeklySlotKeys[0]];
+            {/* Receso blocks between consecutive slots */}
+            {weeklySlotKeys.slice(0, -1).map((slotKey, idx) => {
+              const recesoNote = serviceData?.receso_notes?.[slotKey];
               if (!recesoNote) return null;
               return (
-                <div style={{ margin: '16px 0 0 0', padding: '12px', background: '#f3f4f6', borderRadius: '8px', textAlign: 'center' }}>
-                  <div style={{ fontSize: `${BASE_TITLE * 0.85 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#6b7280', marginBottom: '4px', textTransform: 'uppercase' }}>RECESO</div>
+                <div key={`receso-${slotKey}`} style={{ margin: '16px 0 0 0', padding: '12px', background: '#f3f4f6', borderRadius: '8px', textAlign: 'center' }}>
+                  <div style={{ fontSize: `${BASE_TITLE * 0.85 * page1Settings.titleFontScale}px`, fontWeight: '700', color: '#6b7280', marginBottom: '4px', textTransform: 'uppercase' }}>
+                    RECESO{weeklySlotKeys.length > 2 ? ` (${slotKey} → ${weeklySlotKeys[idx + 1]})` : ''}
+                  </div>
                   <div style={{ fontSize: `${BASE_BODY * 0.86 * page1Settings.bodyFontScale}px`, color: '#6b7280' }}>{recesoNote}</div>
                 </div>
               );
-            })()}
+            })}
           </div>
         </div>
         {/* Footer */}

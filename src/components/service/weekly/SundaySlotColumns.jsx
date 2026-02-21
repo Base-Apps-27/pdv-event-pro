@@ -48,6 +48,7 @@ export default function SundaySlotColumns({
 
   const renderColumn = (slotName, slotIdx) => {
     const isFirst = slotIdx === 0;
+    const isLast = slotIdx === sundaySlotNames.length - 1;
     return (
       <ServiceTimeSlotColumn
         key={slotName}
@@ -68,6 +69,7 @@ export default function SundaySlotColumns({
         copyTeamToNextSlot={isFirst && sundaySlotNames.length > 1 ? handlers.copyTeamToNextSlot : null}
         copyAllToNextSlot={!isFirst ? handlers.copyAllToNextSlot : null}
         nextSlotName={isFirst && sundaySlotNames.length > 1 ? sundaySlotNames[1] : null}
+        isLastSlot={isLast}
         onOpenSpecialDialog={(ts) => {
           setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: ts }));
           setShowSpecialDialog(true);

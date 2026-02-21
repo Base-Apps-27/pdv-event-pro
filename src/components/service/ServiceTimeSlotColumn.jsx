@@ -25,7 +25,7 @@ import {
  *   - Header with time, add-special button, copy-all button
  *   - Pre-service notes
  *   - Segment cards (standard + special)
- *   - Receso (first slot only)
+ *   - Receso (every slot except the last)
  *   - Team section
  *
  * Props:
@@ -45,6 +45,7 @@ import {
  *   copyTeamToNextSlot        — callback()               [first slot only]
  *   copyAllToNextSlot         — callback()               [second+ slots only]
  *   nextSlotName              — string name of target slot for copy labels
+ *   isLastSlot                — boolean: true if this is the last slot (no receso after)
  *   onOpenSpecialDialog   — callback(timeSlot)
  *   canEdit               — boolean permission
  */
@@ -65,13 +66,15 @@ export default function ServiceTimeSlotColumn({
   copyTeamToNextSlot,
   copyAllToNextSlot,
   nextSlotName,
+  isLastSlot = false,
   onOpenSpecialDialog,
   canEdit,
   style,
 }) {
   // Phase 2: Dynamic — first slot gets red accent, others get blue
   const isFirstSlot = !!copySegmentToNextSlot; // First slot has copy-to-next buttons
-  const accentColor = isFirstSlot ? "red" : "blue";
+  const SLOT_ACCENT_COLORS = ['red', 'blue', 'purple', 'amber', 'green'];
+  const accentColor = isFirstSlot ? SLOT_ACCENT_COLORS[0] : SLOT_ACCENT_COLORS[1];
   const timingInfo = calculateServiceTimes(timeSlot);
   const segments = serviceData[timeSlot] || [];
 
@@ -150,7 +153,7 @@ export default function ServiceTimeSlotColumn({
 
       {/* Segments */}
       <div className="space-y-4">
-        {segments.filter(seg => isFirstSlot ? seg.type !== 'break' : true).map((segment, idx) => {
+        {segments.filter(seg => seg.type !== 'break').map((segment, idx) => {
           const isExpanded = expandedSegments[`${timeSlot}-${idx}`];
 
           if (segment.type === "special") {
@@ -193,14 +196,13 @@ export default function ServiceTimeSlotColumn({
         })}
       </div>
 
-      {/* Receso (first slot only) */}
-      {isFirstSlot && (
+      {/* Receso — shown after every slot except the last (break between consecutive slots) */}
+      {!isLastSlot && (
         <Card className="bg-gray-100 border-2 border-gray-400">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2 text-gray-600">
               <Clock className="w-4 h-4" />
               RECESO
-              <Badge variant="outline" className="ml-auto text-xs text-gray-500 border-gray-400">30 min</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 pt-2">

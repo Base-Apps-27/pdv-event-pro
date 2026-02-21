@@ -263,8 +263,11 @@ export default function WeeklyServiceManager() {
   // SEGMENT-DISAPPEAR-FIX-v2 (2026-02-20): staleTime: Infinity.
   // Same rationale as blueprintData — local state is source of truth once loaded.
   // Only refetches when selectedDate changes (new queryKey) or after save invalidation.
+  // FIX (2026-02-21): Query must wait for blueprintData to avoid race condition.
+  // Without this, loadWeeklyFromSessions executes with undefined blueprint, causing
+  // the initialization effect to bail and serviceData to stay null ("Cargando..." forever).
   const { data: existingData, isLoading } = useQuery({
-    queryKey: ['weeklyService', selectedDate],
+    queryKey: ['weeklyService', selectedDate, !!blueprintData],
     queryFn: async () => {
       const services = await base44.entities.Service.filter({ date: selectedDate });
       if (!services || services.length === 0) return null;
@@ -317,7 +320,7 @@ export default function WeeklyServiceManager() {
 
       return service;
     },
-    enabled: !!selectedDate
+    enabled: !!selectedDate && !!blueprintData
   });
 
   const { data: allAnnouncements = [] } = useQuery({
@@ -691,7 +694,10 @@ export default function WeeklyServiceManager() {
         }
       });
       loadedData.pre_service_notes = existingData.pre_service_notes || defaultPreNotes;
-      loadedData.receso_notes = existingData.receso_notes || { [sundaySlotNames[0]]: "" };
+      // Initialize receso_notes for all non-last slots (break between each consecutive pair)
+      const defaultRecesoNotes = {};
+      sundaySlotNames.slice(0, -1).forEach(s => { defaultRecesoNotes[s] = ""; });
+      loadedData.receso_notes = { ...defaultRecesoNotes, ...(existingData.receso_notes || {}) };
       loadedData.selected_announcements = existingData.selected_announcements || [];
       setServiceData(loadedData);
       setLastSavedData(JSON.parse(JSON.stringify(loadedData)));
@@ -754,7 +760,10 @@ export default function WeeklyServiceManager() {
       initData.sound = { ...emptySlotObj };
       initData.luces = { ...emptySlotObj };
       initData.fotografia = { ...emptySlotObj };
-      initData.receso_notes = { [sundaySlotNames[0]]: "" };
+      // Break notes for each non-last slot (break between consecutive pairs)
+      const initRecesoNotes = {};
+      sundaySlotNames.slice(0, -1).forEach(s => { initRecesoNotes[s] = ""; });
+      initData.receso_notes = initRecesoNotes;
       initData.pre_service_notes = { ...emptySlotObj };
       sundaySlotNames.forEach(name => {
         const bpSegments = blueprintData?.[name] || blueprintData?.[sundaySlotNames[0]] || [];
