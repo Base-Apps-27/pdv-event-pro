@@ -345,18 +345,23 @@ export default function WeeklyServiceManager() {
   });
 
   // ── Mutations ──
-  // SONG-OVERWRITE-FIX-2 (2026-02-20): Ref to track whether we've already initialized
-  // local state from DB. Once true, we skip re-initialization on subsequent existingData
-  // changes (caused by our own saves + query invalidation).
   const localStateInitializedRef = React.useRef(false);
+
+  // ENTITY SYNC SERIALIZATION (2026-02-21): Prevents concurrent syncWeeklyToSessions.
+  // The delete-all-recreate pattern in syncWeeklyToSessions is NOT safe for concurrent
+  // execution: two parallel syncs both snapshot old IDs → both create new → both delete
+  // "old" (which now includes the other's new segments) → data loss.
+  // If a sync is already running, the auto-save skips and retries after it completes.
+  const entitySyncInProgressRef = React.useRef(false);
+
+  // Ref to always have current serviceData for save operations.
+  // Defined BEFORE the mutation so onSuccess can reference it.
+  const serviceDataRef = React.useRef(serviceData);
+  React.useEffect(() => { serviceDataRef.current = serviceData; }, [serviceData]);
 
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
-      // DUAL-WRITE ELIMINATION (2026-02-21): Only persist service metadata.
-      // Segment data, team assignments, and pre-service notes are written
-      // exclusively to Session/Segment/PreSessionDetails entities via
-      // syncWeeklyToSessions in onSuccess. Old JSON on existing records is
-      // preserved as a read-only fallback for legacy (pre-entity-lift) services.
+      // Only persist service metadata. Segment data goes to entities via syncWeeklyToSessions.
       const metadata = extractServiceMetadata(data, sundaySlotNames);
       if (existingData?.id) {
         return await base44.entities.Service.update(existingData.id, metadata);
@@ -365,30 +370,33 @@ export default function WeeklyServiceManager() {
       }
     },
     onSuccess: async (result) => {
-      // Entity sync: write segment/team data to Session/Segment entities.
-      // This is now the SOLE write path — Service entity only has metadata.
-      // Use serviceDataRef.current (local state) for segment data, not the
-      // metadata-only API result.
+      // Serialize entity syncs — skip if one is already running.
+      // The auto-save will retry after the in-flight sync completes.
+      if (entitySyncInProgressRef.current) {
+        console.warn("[WEEKLY_SYNC] Skipping overlapping entity sync — will retry via auto-save");
+        return;
+      }
+
+      entitySyncInProgressRef.current = true;
       try {
         await syncWeeklyToSessions(base44, result, serviceDataRef.current, sundaySlots);
-        // After entity sync succeeds, invalidate PublicProgramView caches so subscribers get fresh data
         queryClient.invalidateQueries({ queryKey: ['activeProgram'] });
         queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
       } catch (err) {
         console.error("[WEEKLY_SYNC] CRITICAL: Entity sync failed:", err.message);
         toast.error('Error sincronizando entidades: ' + err.message);
         return; // Do NOT mark as saved if entity sync fails
+      } finally {
+        entitySyncInProgressRef.current = false;
       }
 
       setLastSaveTimestamp(new Date().toISOString());
       setHasUnsavedChanges(false);
-      // Sync lastSavedData to current serviceData so change detection sees "no diff"
       setLastSavedData(prev => {
         const currentRef = serviceDataRef.current;
         return currentRef ? JSON.parse(JSON.stringify(currentRef)) : prev;
       });
       if (result?.updated_date) captureServiceBaseline(result.updated_date);
-      // Backup uses local state (full segment data), not the metadata-only API result
       const backupKey = `service_backup_${selectedDate}`;
       safeSetItem(backupKey, JSON.stringify({ data: serviceDataRef.current, timestamp: new Date().toISOString() }));
     },
@@ -396,10 +404,6 @@ export default function WeeklyServiceManager() {
       toast.error('Error al guardar: ' + error.message);
     }
   });
-
-  // Ref to always have current serviceData for save operations
-  const serviceDataRef = React.useRef(serviceData);
-  React.useEffect(() => { serviceDataRef.current = serviceData; }, [serviceData]);
 
   // P0-2: Added onError toast handlers (2026-02-12)
   const createAnnouncementMutation = useMutation({
@@ -438,13 +442,15 @@ export default function WeeklyServiceManager() {
   });
 
   // ── Handlers (extracted hook) ──
-  // Phase 2: pass sundaySlotNames so copy handlers know source/target
+  // SINGLE SAVE PATH (2026-02-21): handlers only update state via setServiceData.
+  // Persistence is handled by the auto-save useEffect below (2s debounce).
+  // saveServiceMutation, setSavingField, selectedDate, printSettings are no
+  // longer passed — handlers don't trigger saves directly.
   const handlers = useWeeklyServiceHandlers({
-    serviceData, setServiceData, selectedDate, selectedAnnouncements,
-    printSettingsPage1, printSettingsPage2, saveServiceMutation,
+    serviceData, setServiceData, selectedAnnouncements,
     updateAnnouncementMutation, fixedAnnouncements, dynamicAnnouncements,
     blueprintData,
-    setSavingField, setVerseParserOpen, setVerseParserContext, verseParserContext,
+    setVerseParserOpen, setVerseParserContext, verseParserContext,
     setShowSpecialDialog, setSpecialSegmentDetails, specialSegmentDetails,
     setOptimizingAnnouncement, setPrintSettingsPage1, setPrintSettingsPage2,
     setEditingAnnouncement, setAnnouncementForm, setShowAnnouncementDialog,
@@ -723,17 +729,16 @@ export default function WeeklyServiceManager() {
     });
   }, [selectedAnnouncements]);
 
-  // SONG-OVERWRITE-FIX-2 (2026-02-20): Central auto-save retained but safe.
-  // The re-initialization guard (localStateInitializedRef) in the init useEffect
-  // prevents save-triggered query invalidation from overwriting local state.
-  // This auto-save is needed because most input components (TeamInput, SegmentTextInput,
-  // SegmentTextarea, SegmentAutocomplete, PreServiceNotesInput, RecesoNotesInput)
-  // commit into serviceData but do NOT call debouncedSave — they relied on this
-  // central watcher to persist their changes.
+  // SINGLE SAVE PATH (2026-02-21): This is the ONLY place that calls saveServiceMutation.
+  // All handlers update serviceData state only. This auto-save detects the diff and persists.
+  // The entitySyncInProgressRef guard prevents the save from firing while a previous
+  // syncWeeklyToSessions is still running (the onSuccess skip + this retry covers the gap).
   useEffect(() => {
     if (!lastSavedData || !serviceData) return;
     if (JSON.stringify(serviceData) === JSON.stringify(lastSavedData)) return;
     const handler = setTimeout(() => {
+      // Back off if entity sync is still running — will retry on next cycle
+      if (entitySyncInProgressRef.current) return;
       saveServiceMutation.mutate({
         ...serviceData, selected_announcements: selectedAnnouncements,
         print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
@@ -741,7 +746,7 @@ export default function WeeklyServiceManager() {
         name: `Domingo - ${selectedDate}`, status: 'active',
         service_type: 'weekly'
       });
-    }, 2000); // Increased from 1000→2000ms to give more breathing room for rapid edits
+    }, 2000);
     return () => clearTimeout(handler);
   }, [serviceData, lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
 
@@ -762,7 +767,7 @@ export default function WeeklyServiceManager() {
   // ── Render ──
   return (
     <ServiceDataContext.Provider value={serviceData}>
-      <UpdatersContext.Provider value={{ updateSegmentField: handlers.updateSegmentField, updateTeamField: handlers.updateTeamField, setServiceData, debouncedSave: handlers.debouncedSave }}>
+      <UpdatersContext.Provider value={{ updateSegmentField: handlers.updateSegmentField, updateTeamField: handlers.updateTeamField, setServiceData }}>
     <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
       <WeeklyServicePrintCSS printSettingsPage1={activePrintSettingsPage1} printSettingsPage2={activePrintSettingsPage2} />
 
