@@ -24,6 +24,7 @@ export default function SpecialSegmentDialog({
   details,
   setDetails,
   serviceSegments,
+  slotHasTranslation,
   onAdd,
   tealStyle,
 }) {
@@ -53,7 +54,7 @@ export default function SpecialSegmentDialog({
                 className="text-sm"
               />
             </div>
-            {details.timeSlot === "11:30am" && (
+            {slotHasTranslation && (
               <div className="space-y-2">
                 <Label className="text-sm">Traductor</Label>
                 <AutocompleteInput

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Edit, Trash2, FileText, Copy, Calendar, ArrowRight, Loader2 } from "lucide-react";
@@ -14,7 +14,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DuplicateEventDialog from "@/components/event/DuplicateEventDialog";
-import ServiceTemplatesTab from "@/components/templates/ServiceTemplatesTab";
 import { useLanguage } from "@/components/utils/i18n";
 
 const SEGMENT_TYPES = [
@@ -157,7 +156,28 @@ export default function Templates() {
         </TabsList>
 
         <TabsContent value="services">
-          <ServiceTemplatesTab />
+          {/* ServiceTemplatesTab deprecated (2026-02-21): Blueprint editing consolidated
+              into the "Configurar Horarios" workflow (ServiceScheduleManager + BlueprintEditor).
+              Both editors wrote to the same Service entity, causing conflicts. */}
+          <Card className="border-2 border-dashed border-gray-300 bg-gray-50">
+            <CardContent className="py-12 text-center space-y-4">
+              <FileText className="w-12 h-12 text-gray-400 mx-auto" />
+              <div>
+                <h3 className="text-lg font-bold text-gray-800">Blueprint de Servicios</h3>
+                <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
+                  La configuración de blueprints se ha movido a la página de Configuración de Servicios para evitar conflictos de datos.
+                </p>
+              </div>
+              <Button
+                onClick={() => window.location.href = createPageUrl("ServiceBlueprints")}
+                style={{ backgroundColor: '#1F8A70', color: '#ffffff' }}
+                className="hover:opacity-90"
+              >
+                <ArrowRight className="w-4 h-4 mr-2" />
+                Ir a Configuración de Servicios
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="events">

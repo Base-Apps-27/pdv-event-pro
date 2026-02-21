@@ -37,7 +37,7 @@ export default function SundaySlotColumns({
   canEdit,
 }) {
   const isMobile = useIsMobile();
-  const [activeSlotTab, setActiveSlotTab] = useState(sundaySlotNames[0] || "9:30am");
+  const [activeSlotTab, setActiveSlotTab] = useState(sundaySlotNames[0] || "");
 
   // Keep active tab in sync if slot names change
   useEffect(() => {
@@ -63,10 +63,11 @@ export default function SundaySlotColumns({
         setServiceData={setServiceData}
         handleOpenVerseParser={handlers.handleOpenVerseParser}
         calculateServiceTimes={handlers.calculateServiceTimes}
-        copySegmentTo1130={isFirst && sundaySlotNames.length > 1 ? handlers.copySegmentTo1130 : null}
-        copyPreServiceNotesTo1130={isFirst && sundaySlotNames.length > 1 ? handlers.copyPreServiceNotesTo1130 : null}
-        copyTeamTo1130={isFirst && sundaySlotNames.length > 1 ? handlers.copyTeamTo1130 : null}
-        copy930To1130={!isFirst ? handlers.copy930To1130 : null}
+        copySegmentToNextSlot={isFirst && sundaySlotNames.length > 1 ? handlers.copySegmentToNextSlot : null}
+        copyPreServiceNotesToNextSlot={isFirst && sundaySlotNames.length > 1 ? handlers.copyPreServiceNotesToNextSlot : null}
+        copyTeamToNextSlot={isFirst && sundaySlotNames.length > 1 ? handlers.copyTeamToNextSlot : null}
+        copyAllToNextSlot={!isFirst ? handlers.copyAllToNextSlot : null}
+        nextSlotName={isFirst && sundaySlotNames.length > 1 ? sundaySlotNames[1] : null}
         onOpenSpecialDialog={(ts) => {
           setSpecialSegmentDetails(prev => ({ ...prev, timeSlot: ts }));
           setShowSpecialDialog(true);

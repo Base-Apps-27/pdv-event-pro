@@ -151,7 +151,7 @@ export default function WeeklyServiceManager() {
   // ── Dialog / UI state ──
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
   const [specialSegmentDetails, setSpecialSegmentDetails] = useState({
-    timeSlot: "9:30am", title: "", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
+    timeSlot: "", title: "", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
   });
   const [showAnnouncementDialog, setShowAnnouncementDialog] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
@@ -272,11 +272,12 @@ export default function WeeklyServiceManager() {
       // Prefer services with explicit service_type: 'weekly'
       let weeklyCandidates = services.filter(s => s.service_type === 'weekly');
 
-      // Legacy fallback: structural detection for services without service_type
+      // Legacy fallback: structural detection for services without service_type.
+      // Checks for any key that looks like a time-slot array (e.g. "9:30am", "1:00pm").
       if (weeklyCandidates.length === 0) {
         weeklyCandidates = services.filter(s =>
           !s.service_type &&
-          (s["9:30am"]?.length > 0 || s["11:30am"]?.length > 0) &&
+          Object.keys(s).some(key => /^\d{1,2}:\d{2}(am|pm)$/i.test(key) && Array.isArray(s[key]) && s[key].length > 0) &&
           (!s.segments || s.segments.length === 0)
         );
       }
@@ -533,6 +534,15 @@ export default function WeeklyServiceManager() {
   // ── Handlers (extracted hook) ──
   // PER-FIELD PUSH (2026-02-21): handlers update state AND push changed fields
   // to entities via pushFn. Safety-net full sync handles structural changes.
+
+  // IMMEDIATE-SYNC (2026-02-21): After structural changes (reset, add/remove
+  // segment), per-field push is dead because new segments have no _entityId.
+  // This ref tells the safety-net to use a short delay instead of 30 seconds.
+  const immediateSyncRequestRef = React.useRef(false);
+  const requestImmediateSync = React.useCallback(() => {
+    immediateSyncRequestRef.current = true;
+  }, []);
+
   const handlers = useWeeklyServiceHandlers({
     serviceData, setServiceData, selectedAnnouncements,
     updateAnnouncementMutation, fixedAnnouncements, dynamicAnnouncements,
@@ -544,6 +554,7 @@ export default function WeeklyServiceManager() {
     setShowResetConfirm, editingAnnouncement, createAnnouncementMutation,
     slotNames: sundaySlotNames,
     pushFn,
+    requestImmediateSync,
   });
 
   // ── Initialize service data from DB or blueprint ──
@@ -662,7 +673,7 @@ export default function WeeklyServiceManager() {
         } else {
           // Slot is empty (new slot added to ServiceSchedule after service was created).
           // Seed it from the blueprint so users get the standard segment structure.
-          const bpSegments = blueprintData?.[name] || blueprintData?.["9:30am"] || [];
+          const bpSegments = blueprintData?.[name] || blueprintData?.[sundaySlotNames[0]] || [];
           loadedData[name] = bpSegments.map(seg => {
             const segmentCopy = {
               type: seg.type, title: seg.title, duration: seg.duration,
@@ -746,7 +757,7 @@ export default function WeeklyServiceManager() {
       initData.receso_notes = { [sundaySlotNames[0]]: "" };
       initData.pre_service_notes = { ...emptySlotObj };
       sundaySlotNames.forEach(name => {
-        const bpSegments = blueprintData?.[name] || blueprintData?.["9:30am"] || [];
+        const bpSegments = blueprintData?.[name] || blueprintData?.[sundaySlotNames[0]] || [];
         initData[name] = mapBlueprintToSegments(bpSegments);
       });
       setServiceData(initData);
@@ -841,6 +852,11 @@ export default function WeeklyServiceManager() {
     return () => clearTimeout(timer);
   }, [serviceData, selectedDate]);
 
+  // Dynamic day label for service naming (used in save payloads and PDF filenames)
+  const activeDayMeta = WEEKDAYS.find(w => w.key === activeDay);
+  const activeDayLabel = activeDayMeta?.fullLabel || 'Domingo';
+  const activeDayEnglish = activeDay.charAt(0).toUpperCase() + activeDay.slice(1);
+
   // Warn before leaving + flush unsaved changes on exit/tab-switch.
   // visibilitychange fires reliably on tab switch and mobile app backgrounding.
   // beforeunload fires on navigation/close (not guaranteed on mobile).
@@ -855,8 +871,8 @@ export default function WeeklyServiceManager() {
         ...serviceDataRef.current,
         selected_announcements: selectedAnnouncements,
         print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
-        day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
-        name: `Domingo - ${selectedDate}`, status: 'active',
+        day_of_week: activeDayEnglish,
+        name: `${activeDayLabel} - ${selectedDate}`, status: 'active',
         service_type: 'weekly'
       };
       saveServiceMutation.mutate(payload);
@@ -917,20 +933,25 @@ export default function WeeklyServiceManager() {
   const buildSavePayload = () => ({
     ...serviceData, selected_announcements: selectedAnnouncements,
     print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
-    day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
-    name: `Domingo - ${selectedDate}`, status: 'active',
+    day_of_week: activeDayEnglish,
+    name: `${activeDayLabel} - ${selectedDate}`, status: 'active',
     service_type: 'weekly'
   });
 
-  // Safety-net full sync: runs 30 seconds after last change. Handles structural
-  // changes, Service metadata, and triggers display surface refresh via Service.update.
+  // Safety-net full sync: runs 30 seconds after last change (or 2 seconds if
+  // an immediate sync was requested, e.g. after blueprint reset). Handles
+  // structural changes, Service metadata, and triggers display surface refresh.
   // Per-field pushes handle individual field values immediately on commit.
   useEffect(() => {
     if (!lastSavedData || !serviceData) return;
     if (JSON.stringify(serviceData) === JSON.stringify(lastSavedData)) return;
+    // IMMEDIATE-SYNC (2026-02-21): Use short delay after structural changes
+    // (reset, add/remove segment) so new entity IDs are assigned quickly.
+    const delay = immediateSyncRequestRef.current ? 2000 : 30000;
+    immediateSyncRequestRef.current = false;
     const handler = setTimeout(() => {
       saveServiceMutation.mutate(buildSavePayload());
-    }, 30000);
+    }, delay);
     return () => clearTimeout(handler);
   }, [serviceData, lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
 
@@ -1191,6 +1212,7 @@ export default function WeeklyServiceManager() {
         open={showSpecialDialog} onOpenChange={setShowSpecialDialog}
         details={specialSegmentDetails} setDetails={setSpecialSegmentDetails}
         serviceSegments={serviceData[specialSegmentDetails.timeSlot]}
+        slotHasTranslation={(serviceData?.[specialSegmentDetails.timeSlot] || []).some(seg => seg.requires_translation)}
         onAdd={handlers.addSpecialSegment} tealStyle={tealStyle}
       />
 
