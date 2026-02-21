@@ -132,6 +132,13 @@ export default function CoordinatorActionsDisplay({
           const heroAction = upcomingActions[0];
           const secondaryActions = upcomingActions.slice(1, 4); // Show up to 3 more
           
+          // Clustering logic: detect which secondary actions are within ±2 min of hero
+          const heroTime = heroAction.time.getTime();
+          const clusterWindow = 2 * 60 * 1000; // 2 minutes in ms
+          const clusteredSecondaryIds = secondaryActions
+            .filter(a => Math.abs(a.time.getTime() - heroTime) <= clusterWindow)
+            .map(a => a.id);
+          
           return (
             <>
               {/* HERO ACTION — Full-width, prominent */}
@@ -201,24 +208,39 @@ export default function CoordinatorActionsDisplay({
                     const timeUntil = action.time.getTime() - now;
                     const minutesUntil = Math.ceil(timeUntil / 60000);
                     const isUrgent = timeUntil > 0 && timeUntil < 5 * 60000;
+                    const isClusteredWithHero = clusteredSecondaryIds.includes(action.id);
+                    
+                    // Determine hero urgency state
+                    const heroTimeUntil = heroAction.time.getTime() - now;
+                    const heroIsUrgent = heroTimeUntil > 0 && heroTimeUntil < 5 * 60000;
+                    
+                    // Cascade urgency: if clustered with urgent hero, inherit urgency
+                    const effectiveUrgency = isUrgent || (isClusteredWithHero && heroIsUrgent);
 
                     return (
                       <div
                         key={action.id}
-                        className={`flex flex-col p-1.5 rounded border ${
-                          isUrgent
-                            ? 'bg-amber-50 border-amber-300'
-                            : 'bg-slate-50 border-slate-200'
+                        className={`relative flex flex-col p-1.5 rounded ${
+                          effectiveUrgency
+                            ? 'bg-amber-50 border-2 border-amber-400'
+                            : isClusteredWithHero
+                            ? 'bg-slate-50 border-2 border-pdv-teal/60'
+                            : 'bg-slate-50 border border-slate-200'
                         }`}
                       >
+                        {/* Cluster badge - shows when grouped with hero */}
+                        {isClusteredWithHero && (
+                          <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-500 border border-white animate-pulse" />
+                        )}
+                        
                         {/* Time + Alert */}
                         <div className="flex items-center justify-between mb-0.5">
                           <div className={`text-base font-black font-mono leading-none ${
-                            isUrgent ? 'text-amber-600' : 'text-pdv-teal'
+                            effectiveUrgency ? 'text-amber-600' : 'text-pdv-teal'
                           }`}>
                             {minutesUntil > 0 ? `${minutesUntil}m` : 'NOW'}
                           </div>
-                          {isUrgent && <AlertCircle className="w-2.5 h-2.5 text-amber-600 animate-pulse" />}
+                          {effectiveUrgency && <AlertCircle className="w-2.5 h-2.5 text-amber-600 animate-pulse" />}
                         </div>
 
                         {/* Label */}
