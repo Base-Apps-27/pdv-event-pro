@@ -546,6 +546,8 @@ Deno.serve(async (req) => {
                         segment_type: seg.type || seg.segment_type || 'Especial',
                         title: seg.title || seg.data?.title || 'Sin título',
                         presenter: seg.presenter || seg.data?.presenter || seg.data?.leader || '',
+                        leader: seg.leader || seg.data?.leader || '',
+                        preacher: seg.preacher || seg.data?.preacher || '',
                     };
                 });
             }
@@ -573,6 +575,8 @@ Deno.serve(async (req) => {
                             duration_min: dur,
                             title: seg.title || seg.data?.title || 'Untitled',
                             presenter: seg.presenter || seg.data?.presenter || '',
+                            leader: seg.leader || seg.data?.leader || '',
+                            preacher: seg.preacher || seg.data?.preacher || '',
                             segment_type: seg.type || 'Generic',
                             session_id: `slot-${startHour}-${startMin}`,
                         };
