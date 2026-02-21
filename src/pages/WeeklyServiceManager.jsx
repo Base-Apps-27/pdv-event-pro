@@ -574,6 +574,11 @@ export default function WeeklyServiceManager() {
     // CRITICAL: For fresh loads (existingData=null), blueprintData MUST be available
     // to seed segments. Only skip if blueprintData hasn't loaded yet.
     if (!blueprintData) return;
+    // RACE FIX (2026-02-21): Wait for existingData query to complete before initializing.
+    // Without this, the effect runs when blueprintData loads (enabling the query) but
+    // before the query completes, causing existingData=undefined to trigger blueprint
+    // initialization instead of loading the real saved data.
+    if (isLoading) return;
     if (existingData) {
       // Entity Lift FINAL: When data came from Session/Segment entities (_fromEntities),
       // segments already carry their own fields/sub_assignments/actions — no blueprint
