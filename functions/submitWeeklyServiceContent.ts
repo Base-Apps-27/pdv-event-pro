@@ -207,230 +207,183 @@ Deno.serve(async (req) => {
         const [_, serviceId, timeSlot, segmentIdxStr, type] = parts;
         const segmentIdx = parseInt(segmentIdxStr);
 
-        // Fetch Service
+        // Fetch Service (needed for fallback path + audit)
         const service = await base44.asServiceRole.entities.Service.get(serviceId);
         if (!service) return Response.json({ error: "Service not found" }, { status: 404, headers: corsHeaders });
 
-        const segment = service[timeSlot]?.[segmentIdx];
-        
-        // Strict Validation
+        // ENTITY-FIRST SEGMENT RESOLUTION (2026-02-21)
+        // Entity-backed services (post-syncWeeklyToSessions) no longer store segment data
+        // in Service JSON slots — extractServiceMetadata strips them before save.
+        // Primary path: resolve Segment entity via Session.
+        // Legacy path: Service JSON slot (pre-entity-lift services only).
+        const PLENARIA_TYPES = ['plenaria', 'message', 'predica', 'mensaje'];
+        let targetSegmentEntity = null;
+        let allSessionsForService = null;
+
+        try {
+            allSessionsForService = await base44.asServiceRole.entities.Session.filter({ service_id: serviceId });
+            const targetSession = allSessionsForService.find(s => s.name === timeSlot);
+            if (targetSession) {
+                const segs = await base44.asServiceRole.entities.Segment.filter({ session_id: targetSession.id }, 'order');
+                // Try exact position first (composite ID embeds the Plenaria's index in session segments)
+                const candidate = segs[segmentIdx];
+                if (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase())) {
+                    targetSegmentEntity = candidate;
+                } else {
+                    // Position mismatch (segment reorder since form was loaded) — use first Plenaria
+                    targetSegmentEntity = segs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
+                }
+            }
+        } catch (entityLookupErr) {
+            console.warn("[ENTITY_FIRST] Session/Segment lookup failed, falling back to Service JSON:", entityLookupErr.message);
+        }
+
+        // Resolve segment for validation (entity path or legacy JSON fallback)
+        const segment = targetSegmentEntity || service[timeSlot]?.[segmentIdx];
         if (!segment) return Response.json({ error: "Segment not found in service" }, { status: 404, headers: corsHeaders });
-        const segType = (segment.type || "").toLowerCase();
-        const allowedTypes = ['message', 'plenaria', 'predica', 'mensaje'];
-        
-        if (!allowedTypes.includes(segType)) {
+        const segType = (targetSegmentEntity?.segment_type || segment.type || "").toLowerCase();
+        if (!PLENARIA_TYPES.includes(segType)) {
             return Response.json({ error: "Invalid segment type. Only messages accept submissions." }, { status: 400, headers: corsHeaders });
         }
 
         // --- INLINE PROCESSING: Parse verses right here, no automation dependency ---
         let parsedData = { type: 'empty', sections: [] };
         let scriptureReferences = '';
-        
-        // Build fully processed segment update (content + parsed verses + title + status=processed)
-        const currentArray = [...(service[timeSlot] || [])];
-        const currentSegment = currentArray[segmentIdx];
-        
-        let projectionNotes = currentSegment.projection_notes || "";
+
+        // Resolve base projection_notes from entity or JSON fallback
+        let projectionNotes = targetSegmentEntity?.projection_notes || service[timeSlot]?.[segmentIdx]?.projection_notes || "";
 
         if (!content_is_slides_only) {
             console.log("[INLINE_PROCESS] Parsing scripture references...");
-            parsedData = parseScriptureReferences(content);
+            parsedData = parseScriptureReferences(content || "");
             if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
                 scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
             }
             console.log(`[INLINE_PROCESS] Parsed ${parsedData.sections.length} verse references`);
         } else {
             console.log("[INLINE_PROCESS] Slides Only mode - Skipping verse parsing.");
-            // If content is present in Slides Only mode, treat it as a projection note
             if (content && content.trim()) {
-                // Append to existing notes to avoid overwriting admin instructions
-                // Check if already exists to avoid duplication on re-submit
                 if (!projectionNotes.includes(content.trim())) {
                     projectionNotes = (projectionNotes ? projectionNotes + "\n\n" : "") + `[Nota del Orador]: ${content.trim()}`;
                 }
             }
         }
 
-        const updatedSegment = {
-            ...currentSegment,
-            submitted_content: content,
+        // Shared update payload for both entity and JSON paths
+        const commonFields = {
+            submitted_content: content || "",
             parsed_verse_data: parsedData,
-            submission_status: 'processed',  // Immediately processed, no 'pending' limbo
+            submission_status: 'processed',
             scripture_references: scriptureReferences,
             presentation_url: presentation_url || "",
             notes_url: notes_url || "",
             content_is_slides_only: !!content_is_slides_only,
-            projection_notes: projectionNotes // Update projection notes
+            projection_notes: projectionNotes,
+            ...(title?.trim() ? { message_title: title.trim() } : {}),
         };
 
-        // Update title if provided (message_title, not block title)
-        if (title && title.trim() !== "") {
-            updatedSegment.message_title = title.trim();
-            updatedSegment.data = {
-                ...updatedSegment.data,
-                message_title: title.trim()
-                // Explicitly NOT updating data.title to preserve block name
-            };
-        }
-
-        // Map verses to all potential fields for downstream consumers
-        updatedSegment.data = {
-            ...updatedSegment.data,
-            verse: scriptureReferences,
-            scripture_references: scriptureReferences,
-            presentation_url: presentation_url || "",
-            notes_url: notes_url || "",
-            content_is_slides_only: !!content_is_slides_only
-        };
-
-        currentArray[segmentIdx] = updatedSegment;
-
-        // --- APPLY TO SIBLING SESSIONS (Dynamic) ---
-        // mirror_target_ids: array of composite IDs from the form's dynamic checkboxes
-        // Legacy backward compat: apply_to_both_services maps to 9:30am → 11:30am
-        const updatePayload = { [timeSlot]: currentArray };
-
-        // Build effective mirror list
+        // Build effective mirror list (dynamic from form checkboxes + legacy backward compat)
         const effectiveMirrors = [...mirror_target_ids];
         if (apply_to_both_services && timeSlot === '9:30am' && effectiveMirrors.length === 0) {
-            // Legacy compat: construct the old 11:30am mirror ID
             effectiveMirrors.push(segment_id.replace('|9:30am|', '|11:30am|'));
         }
 
-        for (const mirrorId of effectiveMirrors) {
-            // Parse the mirror composite ID
-            const mirrorParts = mirrorId.split('|');
-            if (mirrorParts.length < 5) {
-                console.warn("[MIRROR] Invalid mirror target ID:", mirrorId);
-                continue;
-            }
-            const [, mirrorServiceId, mirrorSlot, mirrorIdxStr] = mirrorParts;
-            
-            // Only mirror within the same service
-            if (mirrorServiceId !== serviceId) {
-                console.warn("[MIRROR] Cross-service mirroring not supported:", mirrorId);
-                continue;
-            }
+        if (targetSegmentEntity) {
+            // ── PRIMARY PATH: Entity-backed service ──
+            // Write directly to Segment entity. No Service JSON write needed.
+            console.log("[ENTITY_FIRST] Writing to Segment entity (primary path)");
+            await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, commonFields);
+            console.log("[ENTITY_FIRST] Segment entity updated successfully");
 
-            const mirrorIdx = parseInt(mirrorIdxStr);
-            const otherArray = [...(service[mirrorSlot] || [])];
-            
-            // Prefer exact index match, fall back to first message-type segment
-            let targetIdx = mirrorIdx;
-            if (!otherArray[targetIdx] || !['message', 'plenaria', 'predica', 'mensaje'].includes((otherArray[targetIdx]?.type || '').toLowerCase())) {
-                targetIdx = otherArray.findIndex(seg => {
-                    const t = (seg.type || '').toLowerCase();
-                    return ['message', 'plenaria', 'predica', 'mensaje'].includes(t);
-                });
+            // Handle entity mirrors (sibling sessions in same service)
+            for (const mirrorId of effectiveMirrors) {
+                const mirrorParts = mirrorId.split('|');
+                if (mirrorParts.length < 5) { console.warn("[MIRROR] Invalid mirror ID:", mirrorId); continue; }
+                const [, mirrorSvcId, mirrorSlotName, mirrorIdxStr] = mirrorParts;
+                if (mirrorSvcId !== serviceId) { console.warn("[MIRROR] Cross-service mirror skipped"); continue; }
+                try {
+                    const sessions = allSessionsForService || await base44.asServiceRole.entities.Session.filter({ service_id: serviceId });
+                    const mirrorSession = sessions.find(s => s.name === mirrorSlotName);
+                    if (!mirrorSession) continue;
+                    const mirrorSegs = await base44.asServiceRole.entities.Segment.filter({ session_id: mirrorSession.id }, 'order');
+                    const mirrorIdx = parseInt(mirrorIdxStr);
+                    let mirrorTarget = mirrorSegs[mirrorIdx];
+                    if (!mirrorTarget || !PLENARIA_TYPES.includes((mirrorTarget.segment_type || '').toLowerCase())) {
+                        mirrorTarget = mirrorSegs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase()));
+                    }
+                    if (mirrorTarget) {
+                        let mirrorProjNotes = mirrorTarget.projection_notes || "";
+                        if (content_is_slides_only && content?.trim() && !mirrorProjNotes.includes(content.trim())) {
+                            mirrorProjNotes = (mirrorProjNotes ? mirrorProjNotes + "\n\n" : "") + `[Nota del Orador]: ${content.trim()}`;
+                        }
+                        await base44.asServiceRole.entities.Segment.update(mirrorTarget.id, {
+                            ...commonFields,
+                            projection_notes: content_is_slides_only ? mirrorProjNotes : (mirrorTarget.projection_notes || ""),
+                        });
+                        console.log(`[MIRROR] Entity mirror updated: ${mirrorSlotName}`);
+                    }
+                } catch (mirrorErr) {
+                    console.error("[MIRROR] Mirror entity update failed:", mirrorErr.message);
+                }
             }
-
-            if (targetIdx === -1 || !otherArray[targetIdx]) {
-                console.warn(`[MIRROR] No message segment found in ${mirrorSlot}`);
-                continue;
-            }
-
-            console.log(`[MIRROR] Piping submission to ${mirrorSlot} segment index ${targetIdx}`);
-            const otherSegment = otherArray[targetIdx];
-            let otherProjectionNotes = otherSegment.projection_notes || "";
-            if (content_is_slides_only && content && content.trim() && !otherProjectionNotes.includes(content.trim())) {
-                otherProjectionNotes = (otherProjectionNotes ? otherProjectionNotes + "\n\n" : "") + `[Nota del Orador]: ${content.trim()}`;
-            }
-
-            const otherUpdated = {
-                ...otherSegment,
-                submitted_content: content,
-                parsed_verse_data: parsedData,
-                submission_status: 'processed',
-                scripture_references: scriptureReferences,
-                presentation_url: presentation_url || "",
-                notes_url: notes_url || "",
-                content_is_slides_only: !!content_is_slides_only,
-                projection_notes: content_is_slides_only ? otherProjectionNotes : (otherSegment.projection_notes || "")
+        } else {
+            // ── LEGACY PATH: Pre-entity-lift service — write to Service JSON slot ──
+            console.log("[LEGACY_PATH] No entity segment found, writing to Service JSON slot");
+            const currentArray = [...(service[timeSlot] || [])];
+            const currentSegment = currentArray[segmentIdx] || {};
+            const updatedSegment = {
+                ...currentSegment,
+                ...commonFields,
+                data: {
+                    ...(currentSegment.data || {}),
+                    verse: scriptureReferences,
+                    scripture_references: scriptureReferences,
+                    presentation_url: presentation_url || "",
+                    notes_url: notes_url || "",
+                    content_is_slides_only: !!content_is_slides_only,
+                    ...(title?.trim() ? { message_title: title.trim() } : {}),
+                },
             };
-            if (title && title.trim() !== "") {
-                otherUpdated.message_title = title.trim();
-                otherUpdated.data = { ...otherUpdated.data, message_title: title.trim() };
-            }
-            otherUpdated.data = {
-                ...otherUpdated.data,
-                verse: scriptureReferences,
-                scripture_references: scriptureReferences,
-                presentation_url: presentation_url || "",
-                notes_url: notes_url || "",
-                content_is_slides_only: !!content_is_slides_only
-            };
-            otherArray[targetIdx] = otherUpdated;
-            updatePayload[mirrorSlot] = otherArray;
-        }
+            currentArray[segmentIdx] = updatedSegment;
+            const updatePayload = { [timeSlot]: currentArray };
 
-        // Single atomic Service update with fully processed data
-        console.log("[INLINE_PROCESS] Updating Service with processed data...");
-        await base44.asServiceRole.entities.Service.update(serviceId, updatePayload);
-        console.log("[INLINE_PROCESS] Service updated successfully");
-
-        // Entity Lift: also update Segment entity (dual-write)
-        try {
-            const sessions = await base44.asServiceRole.entities.Session.filter({
-                service_id: serviceId
-            });
-            const targetSession = sessions.find(s => s.name === timeSlot);
-            if (targetSession) {
-                const sessionSegments = await base44.asServiceRole.entities.Segment.filter(
-                    { session_id: targetSession.id }, 'order'
-                );
-                const targetSegmentEntity = sessionSegments[segmentIdx];
-                if (targetSegmentEntity) {
-                    await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, {
-                        submitted_content: content,
-                        parsed_verse_data: parsedData,
-                        submission_status: 'processed',
+            for (const mirrorId of effectiveMirrors) {
+                const mirrorParts = mirrorId.split('|');
+                if (mirrorParts.length < 5) { console.warn("[MIRROR] Invalid mirror ID:", mirrorId); continue; }
+                const [, mirrorServiceId, mirrorSlot, mirrorIdxStr] = mirrorParts;
+                if (mirrorServiceId !== serviceId) { console.warn("[MIRROR] Cross-service mirror skipped"); continue; }
+                const mirrorIdx = parseInt(mirrorIdxStr);
+                const otherArray = [...(service[mirrorSlot] || [])];
+                let targetIdx = mirrorIdx;
+                if (!otherArray[targetIdx] || !PLENARIA_TYPES.includes((otherArray[targetIdx]?.type || '').toLowerCase())) {
+                    targetIdx = otherArray.findIndex(s => PLENARIA_TYPES.includes((s.type || '').toLowerCase()));
+                }
+                if (targetIdx === -1 || !otherArray[targetIdx]) { console.warn(`[MIRROR] No message segment in ${mirrorSlot}`); continue; }
+                const otherSegment = otherArray[targetIdx];
+                let otherProjNotes = otherSegment.projection_notes || "";
+                if (content_is_slides_only && content?.trim() && !otherProjNotes.includes(content.trim())) {
+                    otherProjNotes = (otherProjNotes ? otherProjNotes + "\n\n" : "") + `[Nota del Orador]: ${content.trim()}`;
+                }
+                otherArray[targetIdx] = {
+                    ...otherSegment,
+                    ...commonFields,
+                    projection_notes: content_is_slides_only ? otherProjNotes : (otherSegment.projection_notes || ""),
+                    data: {
+                        ...(otherSegment.data || {}),
+                        verse: scriptureReferences,
                         scripture_references: scriptureReferences,
                         presentation_url: presentation_url || "",
                         notes_url: notes_url || "",
                         content_is_slides_only: !!content_is_slides_only,
-                        projection_notes: projectionNotes,
-                        message_title: (title && title.trim() !== "") ? title.trim() : targetSegmentEntity.message_title,
-                    });
-                }
-
-                // Dynamic mirror: update sibling session Segment entities
-                for (const mirrorId of effectiveMirrors) {
-                    const mirrorParts = mirrorId.split('|');
-                    if (mirrorParts.length < 5) continue;
-                    const [, mirrorSvcId, mirrorSlotName, mirrorIdxStr] = mirrorParts;
-                    if (mirrorSvcId !== serviceId) continue;
-
-                    const mirrorSession = sessions.find(s => s.name === mirrorSlotName);
-                    if (!mirrorSession) continue;
-
-                    const mirrorSegs = await base44.asServiceRole.entities.Segment.filter(
-                        { session_id: mirrorSession.id }, 'order'
-                    );
-                    // Try exact index, fall back to first message-type
-                    const mirrorSegIdx = parseInt(mirrorIdxStr);
-                    let mirrorTarget = mirrorSegs[mirrorSegIdx];
-                    if (!mirrorTarget || !['plenaria', 'message', 'predica', 'mensaje'].includes((mirrorTarget.segment_type || '').toLowerCase())) {
-                        mirrorTarget = mirrorSegs.find(seg => {
-                            const t = (seg.segment_type || '').toLowerCase();
-                            return ['plenaria', 'message', 'predica', 'mensaje'].includes(t);
-                        });
-                    }
-                    if (mirrorTarget) {
-                        await base44.asServiceRole.entities.Segment.update(mirrorTarget.id, {
-                            submitted_content: content,
-                            parsed_verse_data: parsedData,
-                            submission_status: 'processed',
-                            scripture_references: scriptureReferences,
-                            presentation_url: presentation_url || "",
-                            notes_url: notes_url || "",
-                            content_is_slides_only: !!content_is_slides_only,
-                            message_title: (title && title.trim() !== "") ? title.trim() : mirrorTarget.message_title,
-                        });
-                    }
-                }
+                        ...(title?.trim() ? { message_title: title.trim() } : {}),
+                    },
+                };
+                updatePayload[mirrorSlot] = otherArray;
             }
-        } catch (entityErr) {
-            console.error("[ENTITY_LIFT] Segment entity update failed (non-blocking):", entityErr.message);
+
+            console.log("[LEGACY_PATH] Updating Service JSON...");
+            await base44.asServiceRole.entities.Service.update(serviceId, updatePayload);
+            console.log("[LEGACY_PATH] Service JSON updated successfully");
         }
 
         // Create Version Record for audit trail — already processed, no automation needed
