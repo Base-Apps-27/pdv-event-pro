@@ -23,23 +23,23 @@ export default function TeamServersDisplay({ session }) {
   if (teams.length === 0) return null;
 
   return (
-    <div className="w-full bg-white/80 rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm">
+    <div className="w-full bg-white/80 rounded-lg border border-slate-200 shadow-sm backdrop-blur-sm">
       {/* Header */}
-      <div className="bg-slate-100/80 px-2 py-1 border-b border-slate-200">
-        <div className="text-[9px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1">
-          <Users className="w-3 h-3" />
+      <div className="bg-slate-100/80 px-1.5 py-0.5 border-b border-slate-200">
+        <div className="text-[7px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-0.5">
+          <Users className="w-2.5 h-2.5" />
           Servidores
         </div>
       </div>
 
-      {/* Team Grid */}
-      <div className="p-1.5 grid grid-cols-2 gap-1">
+      {/* Team Grid - 3 cols for compact display */}
+      <div className="p-1 grid grid-cols-3 gap-0.5">
         {teams.map((team, idx) => (
-          <div key={idx} className="bg-slate-50/80 rounded px-1.5 py-1 border border-slate-200">
-            <div className="text-[7px] font-bold uppercase tracking-wide text-slate-500 mb-0.5">
+          <div key={idx} className="bg-slate-50/80 rounded px-1 py-0.5 border border-slate-200">
+            <div className="text-[6px] font-bold uppercase tracking-wide text-slate-500 leading-tight">
               {team.label}
             </div>
-            <div className="text-[9px] text-slate-900 leading-tight font-medium">
+            <div className="text-[7px] text-slate-900 leading-tight font-medium truncate">
               {team.value}
             </div>
           </div>
