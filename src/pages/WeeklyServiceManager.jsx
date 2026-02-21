@@ -25,7 +25,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Loader2, Eye, Wand2, ExternalLink, Settings, Download, Wrench, MoreVertical } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Eye, Wand2, ExternalLink, Settings, Download, Wrench, MoreVertical, RefreshCw, Users } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { createPageUrl } from "@/utils";
 import { format as formatDate } from "date-fns";
@@ -354,44 +354,68 @@ export default function WeeklyServiceManager() {
   // If a sync is already running, the auto-save skips and retries after it completes.
   const entitySyncInProgressRef = React.useRef(false);
 
+  // MULTI-ADMIN (2026-02-21): Track own saves to filter subscription events.
+  const ownSaveInProgressRef = React.useRef(false);
+  const [externalChangeAvailable, setExternalChangeAvailable] = React.useState(false);
+  const hasUnsavedChangesRef = React.useRef(false);
+  React.useEffect(() => { hasUnsavedChangesRef.current = hasUnsavedChanges; }, [hasUnsavedChanges]);
+  const lastSavedDataRef = React.useRef(lastSavedData);
+  React.useEffect(() => { lastSavedDataRef.current = lastSavedData; }, [lastSavedData]);
+  const blurSaveTimerRef = React.useRef(null);
+
   // Ref to always have current serviceData for save operations.
   // Defined BEFORE the mutation so onSuccess can reference it.
   const serviceDataRef = React.useRef(serviceData);
   React.useEffect(() => { serviceDataRef.current = serviceData; }, [serviceData]);
 
+  // SAVE PIPELINE (2026-02-21): Entity sync → Service.update → automation → cache refresh.
+  // Entities are written FIRST so that when Service.update triggers the refreshActiveProgram
+  // automation, it reads fresh segment data → display surfaces (TV, MyProgram, LiveView) update.
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
-      // Only persist service metadata. Segment data goes to entities via syncWeeklyToSessions.
-      const metadata = extractServiceMetadata(data, sundaySlotNames);
-      if (existingData?.id) {
-        return await base44.entities.Service.update(existingData.id, metadata);
-      } else {
-        return await base44.entities.Service.create(metadata);
-      }
-    },
-    onSuccess: async (result) => {
-      // Serialize entity syncs — skip if one is already running.
-      // The auto-save will retry after the in-flight sync completes.
+      // Serialization guard: skip if a save is already running.
       if (entitySyncInProgressRef.current) {
-        console.warn("[WEEKLY_SYNC] Skipping overlapping entity sync — will retry via auto-save");
-        return;
+        console.warn("[WEEKLY_SYNC] Skipping overlapping save — will retry on next blur");
+        return null;
       }
-
       entitySyncInProgressRef.current = true;
+      ownSaveInProgressRef.current = true;
+
       try {
-        await syncWeeklyToSessions(base44, result, serviceDataRef.current, sundaySlots);
-        queryClient.invalidateQueries({ queryKey: ['activeProgram'] });
-        queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
-      } catch (err) {
-        console.error("[WEEKLY_SYNC] CRITICAL: Entity sync failed:", err.message);
-        toast.error('Error sincronizando entidades: ' + err.message);
-        return; // Do NOT mark as saved if entity sync fails
+        const metadata = extractServiceMetadata(data, sundaySlotNames);
+        let serviceResult;
+
+        if (existingData?.id) {
+          // EXISTING SERVICE: Sync entities FIRST, then update Service metadata.
+          // This ensures segments are in the DB before the Service entity automation
+          // triggers refreshActiveProgram → cache rebuild → display surface updates.
+          await syncWeeklyToSessions(base44, existingData, serviceDataRef.current, sundaySlots);
+          serviceResult = await base44.entities.Service.update(existingData.id, metadata);
+        } else {
+          // NEW SERVICE: Create Service first (to get ID), then sync entities,
+          // then touch Service again to re-trigger automation with fresh segments.
+          serviceResult = await base44.entities.Service.create(metadata);
+          await syncWeeklyToSessions(base44, serviceResult, serviceDataRef.current, sundaySlots);
+          serviceResult = await base44.entities.Service.update(serviceResult.id, { status: 'active' });
+        }
+
+        return serviceResult;
       } finally {
         entitySyncInProgressRef.current = false;
+        // Keep ownSaveInProgressRef true briefly so subscription events from our
+        // own save settle before we start listening for external changes again.
+        setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
       }
+    },
+    onSuccess: (result) => {
+      if (!result) return; // Skipped save (serialization guard)
+
+      queryClient.invalidateQueries({ queryKey: ['activeProgram'] });
+      queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
 
       setLastSaveTimestamp(new Date().toISOString());
       setHasUnsavedChanges(false);
+      setExternalChangeAvailable(false);
       setLastSavedData(prev => {
         const currentRef = serviceDataRef.current;
         return currentRef ? JSON.parse(JSON.stringify(currentRef)) : prev;
@@ -678,14 +702,60 @@ export default function WeeklyServiceManager() {
       // fires when existingData OR blueprintData first become non-null).
       }, [existingData, selectedDate, blueprintData]);
 
-  // SONG-OVERWRITE-FIX-2 (2026-02-20): Real-time subscriptions DISABLED.
-  // They caused queryClient.invalidateQueries → existingData refetch → 
-  // re-triggered the initialization useEffect (before the guard was added).
-  // With the guard, they no longer destroy local state, but they also serve
-  // no useful purpose on this page since local state IS the source of truth.
-  // Live adjustments are handled by the PublicProgramView / LiveDirector surfaces.
-  // If we need to detect external edits in the future, we should show a
-  // notification instead of silently overwriting local state.
+  // MULTI-ADMIN REAL-TIME (2026-02-21): Subscribe to entity changes for collaboration.
+  // When another admin saves (entities change), we detect it and either auto-reload
+  // (if no local unsaved changes) or show a banner (if user has unsaved changes).
+  // Uses ownSaveInProgressRef to filter out our own save events.
+  useEffect(() => {
+    if (!existingData?.id) return;
+
+    const externalDebounce = { timer: null };
+
+    const handleExternalChange = () => {
+      if (ownSaveInProgressRef.current) return; // Our own save, ignore
+
+      if (externalDebounce.timer) clearTimeout(externalDebounce.timer);
+      externalDebounce.timer = setTimeout(() => {
+        if (ownSaveInProgressRef.current) return; // Check again after debounce
+
+        if (!hasUnsavedChangesRef.current) {
+          // No local changes — auto-reload seamlessly
+          localStateInitializedRef.current = false;
+          queryClient.invalidateQueries({ queryKey: ['weeklyService', selectedDate] });
+          toast.info('Programa actualizado por otro administrador');
+        } else {
+          // Has local changes — show banner, let user decide
+          setExternalChangeAvailable(true);
+          toast.warning('Otro administrador actualizó el programa');
+        }
+      }, 1500); // Debounce: wait for entity sync to complete (multiple entities change in rapid succession)
+    };
+
+    const unsubs = [
+      base44.entities.Service.subscribe((event) => {
+        if (event.id !== existingData.id) return;
+        handleExternalChange();
+      }),
+      base44.entities.Session.subscribe((event) => {
+        // Filter: only react to sessions belonging to our service
+        if (event.data?.service_id && event.data.service_id !== existingData.id) return;
+        handleExternalChange();
+      }),
+    ];
+
+    return () => {
+      if (externalDebounce.timer) clearTimeout(externalDebounce.timer);
+      unsubs.forEach(u => typeof u === 'function' && u());
+    };
+  }, [existingData?.id, selectedDate, queryClient]);
+
+  // Reload handler for the external change banner
+  const handleExternalReload = React.useCallback(() => {
+    localStateInitializedRef.current = false;
+    setExternalChangeAvailable(false);
+    queryClient.invalidateQueries({ queryKey: ['weeklyService', selectedDate] });
+    toast.info('Recargando programa...');
+  }, [selectedDate, queryClient]);
 
   // ── Side effects ──
   // Track unsaved changes
@@ -729,24 +799,34 @@ export default function WeeklyServiceManager() {
     });
   }, [selectedAnnouncements]);
 
-  // SINGLE SAVE PATH (2026-02-21): This is the ONLY place that calls saveServiceMutation.
-  // All handlers update serviceData state only. This auto-save detects the diff and persists.
-  // The entitySyncInProgressRef guard prevents the save from firing while a previous
-  // syncWeeklyToSessions is still running (the onSuccess skip + this retry covers the gap).
+  // SAVE ON BLUR (2026-02-21): Primary save trigger is when user leaves a field (blur event).
+  // The onBlur handler on the main container calls this function.
+  // Safety-net auto-save at 15s catches edge cases (drag-drop, programmatic state changes).
+  const buildSavePayload = () => ({
+    ...serviceData, selected_announcements: selectedAnnouncements,
+    print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
+    day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
+    name: `Domingo - ${selectedDate}`, status: 'active',
+    service_type: 'weekly'
+  });
+
+  // Blur handler: save when any input field loses focus (500ms debounce for focus transitions)
+  const handleFormBlur = () => {
+    if (blurSaveTimerRef.current) clearTimeout(blurSaveTimerRef.current);
+    blurSaveTimerRef.current = setTimeout(() => {
+      if (!serviceData || !lastSavedData) return;
+      if (JSON.stringify(serviceData) === JSON.stringify(lastSavedData)) return;
+      saveServiceMutation.mutate(buildSavePayload());
+    }, 500);
+  };
+
+  // Safety-net auto-save: catches changes from non-blur interactions (buttons, drag-drop)
   useEffect(() => {
     if (!lastSavedData || !serviceData) return;
     if (JSON.stringify(serviceData) === JSON.stringify(lastSavedData)) return;
     const handler = setTimeout(() => {
-      // Back off if entity sync is still running — will retry on next cycle
-      if (entitySyncInProgressRef.current) return;
-      saveServiceMutation.mutate({
-        ...serviceData, selected_announcements: selectedAnnouncements,
-        print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
-        day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
-        name: `Domingo - ${selectedDate}`, status: 'active',
-        service_type: 'weekly'
-      });
-    }, 2000);
+      saveServiceMutation.mutate(buildSavePayload());
+    }, 15000);
     return () => clearTimeout(handler);
   }, [serviceData, lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
 
@@ -768,7 +848,7 @@ export default function WeeklyServiceManager() {
   return (
     <ServiceDataContext.Provider value={serviceData}>
       <UpdatersContext.Provider value={{ updateSegmentField: handlers.updateSegmentField, updateTeamField: handlers.updateTeamField, setServiceData }}>
-    <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
+    <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen" onBlur={handleFormBlur}>
       <WeeklyServicePrintCSS printSettingsPage1={activePrintSettingsPage1} printSettingsPage2={activePrintSettingsPage2} />
 
       <WeeklyServicePrintView
@@ -856,6 +936,27 @@ export default function WeeklyServiceManager() {
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Multi-admin: External change notification */}
+      {externalChangeAvailable && (
+        <div className="bg-blue-50 border-2 border-blue-400 rounded-lg p-3 flex items-center justify-between print:hidden">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-blue-600" />
+            <span className="text-sm text-blue-800 font-medium">
+              Otro administrador actualizó el programa. Tus cambios no guardados se perderán al recargar.
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExternalReload}
+            className="border-blue-400 text-blue-700 hover:bg-blue-100 ml-4 shrink-0"
+          >
+            <RefreshCw className="w-3 h-3 mr-1" />
+            Recargar
+          </Button>
+        </div>
+      )}
 
       {/* Date Selection */}
       <Card className="print:hidden border-2 border-gray-300 bg-white">
