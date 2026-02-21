@@ -723,6 +723,16 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
   }
   if (!sub_assignments) sub_assignments = [];
 
+  // If child entities exist but sub_assignments config is empty (pre-migration data),
+  // derive the config from child entities so the UI renders the input rows.
+  if (sub_assignments.length === 0 && sub_asignaciones && sub_asignaciones.length > 0) {
+    sub_assignments = sub_asignaciones.map(sa => ({
+      label: sa.label || sa.title,
+      person_field_name: sa.person_field_name || "ministry_leader",
+      duration_min: sa.duration_min || sa.duration || 5,
+    }));
+  }
+
   return {
     title: segment.title || "",
     type: segType,
