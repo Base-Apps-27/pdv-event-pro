@@ -271,7 +271,7 @@ Deno.serve(async (req) => {
                 const sessionDateMap = new Map(sessions.map(s => [s.id, s.date]));
 
                 segments = allSegments
-                    .filter(seg => seg.show_in_general)
+                    .filter(seg => seg.show_in_general !== false && !seg.parent_segment_id)
                     .map(seg => ({
                         ...seg,
                         date: sessionDateMap.get(seg.session_id) || null
@@ -436,7 +436,7 @@ Deno.serve(async (req) => {
                      // CHILD SEGMENT FILTER (2026-02-21): Exclude sub-segments (parent_segment_id set).
                      // These are internal sub-assignments (e.g. Ministración within Alabanza) and
                      // must NOT appear as top-level timeline entries.
-                     .filter(s => s.show_in_general && !s.parent_segment_id)
+                     .filter(s => s.show_in_general !== false && !s.parent_segment_id)
                      .sort((a, b) => {
                          const aSessionIdx = sessionOrderMap.get(a.session_id) ?? 999;
                          const bSessionIdx = sessionOrderMap.get(b.session_id) ?? 999;

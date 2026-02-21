@@ -711,18 +711,18 @@ export function normalizeSegments(segments, source = 'event', options = {}) {
     if (s.id && s.date) sessionDateMap.set(s.id, s.date);
   });
 
-  // CHILD SEGMENT FILTER (2026-02-21): Exclude sub-segments (parent_segment_id set).
-  // These are internal sub-assignments (e.g. Ministración within Alabanza) and
-  // must NOT appear in the flat display list — they are only shown in editor UI as sub-assignments.
-  // This matches the filtering done in refreshActiveProgram + getPublicProgramData.
-  const filteredSegments = segments.filter(seg => !seg.parent_segment_id);
-
-  return filteredSegments.map(seg => {
-    const defaults = {
-      date: seg.date || sessionDateMap.get(seg.session_id) || serviceDate || null,
-    };
-    return normalizeOneSegment(seg, source, defaults);
-  });
+  // Defensive filter: exclude child segments (parent_segment_id set).
+  // Backend should already filter these, but stale cache or direct calls may include them.
+  // Child segments are internal sub-assignments (e.g. Ministración within Alabanza)
+  // and must NOT appear as top-level timeline entries.
+  return segments
+    .filter(seg => !seg.parent_segment_id)
+    .map(seg => {
+      const defaults = {
+        date: seg.date || sessionDateMap.get(seg.session_id) || serviceDate || null,
+      };
+      return normalizeOneSegment(seg, source, defaults);
+    });
 }
 
 /**
