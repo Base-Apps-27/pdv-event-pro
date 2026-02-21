@@ -125,24 +125,24 @@ export default function CountdownBlock({
   const config = modeConfig[displayMode] || modeConfig['upcoming'];
 
   return (
-    <div className={`relative bg-white rounded-[2rem] border-4 ${config.borderColor} p-6 md:p-8 shadow-2xl ${config.containerClass || ''} transition-all duration-500 light text-slate-900`}>
+    <div className={`relative bg-white rounded-2xl border-3 ${config.borderColor} p-3 md:p-4 shadow-xl ${config.containerClass || ''} transition-all duration-500 light text-slate-900`}>
       
       {/* Label */}
-      <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-xs md:text-sm font-black uppercase tracking-widest ${config.labelBg} shadow-xl whitespace-nowrap z-10`}>
+      <div className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest ${config.labelBg} shadow-lg whitespace-nowrap z-10`}>
         {config.label}
       </div>
 
       {/* Main Content */}
-      <div className="space-y-3 md:space-y-4 mt-2">
+      <div className="space-y-1.5 md:space-y-2 mt-1">
         
         {/* Countdown Timer — HERO ELEMENT */}
         <div className="text-center w-full overflow-hidden">
           {/* Responsive sizing accounts for 2-column split at md breakpoint */}
-          <div className={`${size === 'compact' ? 'text-4xl md:text-5xl lg:text-6xl' : 'text-5xl sm:text-6xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl'} font-black font-mono tracking-tighter leading-none mb-2 ${config.countdownColor} tabular-nums break-words`}>
+          <div className={`${size === 'compact' ? 'text-3xl md:text-4xl lg:text-5xl' : 'text-4xl sm:text-5xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl'} font-black font-mono tracking-tighter leading-none mb-1 ${config.countdownColor} tabular-nums break-words`}>
             {countdownText}
           </div>
           {isLiveAdjusted && (
-            <div className="text-sm md:text-base font-bold text-amber-500 uppercase tracking-widest">
+            <div className="text-xs md:text-sm font-bold text-amber-500 uppercase tracking-widest">
               {t('live.adjusted')}
             </div>
           )}
@@ -150,21 +150,21 @@ export default function CountdownBlock({
 
         {/* Segment Title */}
         <div className="text-center">
-          <h2 className={`${size === 'compact' ? 'text-2xl md:text-3xl' : 'text-3xl md:text-4xl'} font-bold text-slate-900 uppercase tracking-tight`}>
+          <h2 className={`${size === 'compact' ? 'text-lg md:text-xl' : 'text-2xl md:text-3xl'} font-bold text-slate-900 uppercase tracking-tight`}>
             {segment.title}
           </h2>
         </div>
 
         {/* Segment Type & Presenter */}
         {(segment.segment_type || segment.presenter) && (
-          <div className="flex flex-col items-center gap-2 text-center">
+          <div className="flex flex-col items-center gap-1 text-center">
             {segment.segment_type && (
-              <div className="text-lg md:text-xl font-semibold text-pdv-teal uppercase tracking-wider">
+              <div className="text-base md:text-lg font-semibold text-pdv-teal uppercase tracking-wider">
                 {segment.segment_type}
               </div>
             )}
             {segment.presenter && (
-              <div className="text-lg md:text-xl text-slate-600 font-medium">
+              <div className="text-sm md:text-base text-slate-600 font-medium">
                 {segment.presenter}
               </div>
             )}
@@ -173,20 +173,20 @@ export default function CountdownBlock({
 
         {/* Progress Bar (Only for In-Progress) */}
         {displayMode === 'in-progress' && (
-          <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden mt-2">
+          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mt-1">
             <div 
               className="h-full bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23] transition-all duration-1000 ease-linear"
-              style={{ width: `${isLiveAdjusted ? 100 : (progressPercent || 0)}%` }} // If live adjusted, we don't really know true progress easily without recalculating, but usually we just show regular progress or full if indeterminate
+              style={{ width: `${isLiveAdjusted ? 100 : (progressPercent || 0)}%` }}
             />
           </div>
         )}
 
         {/* Start Time Display */}
-        <div className="text-center pt-5 border-t border-slate-200">
-          <div className="text-base md:text-lg text-slate-500 uppercase tracking-widest">
+        <div className="text-center pt-2 border-t border-slate-200">
+          <div className="text-xs md:text-sm text-slate-500 uppercase tracking-widest">
             {displayMode === 'in-progress' ? (language === 'es' ? 'TERMINA' : 'ENDS') : t('live.start')}
           </div>
-          <div className="text-3xl md:text-4xl font-black text-pdv-teal font-mono mt-2">
+          <div className="text-2xl md:text-3xl font-black text-pdv-teal font-mono mt-1">
             {displayMode === 'in-progress' && segment.end_time
               ? formatTimeToEST(segment.end_time)
               : formatTimeToEST(segment.start_time)}

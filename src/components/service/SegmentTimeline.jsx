@@ -29,17 +29,17 @@ export default function SegmentTimeline({
   };
 
   return (
-    <div className={`flex flex-col h-full bg-white/50 backdrop-blur-sm rounded-3xl border border-white/40 shadow-sm overflow-hidden light text-slate-900 ${className}`}>
+    <div className={`flex flex-col h-full bg-white/50 backdrop-blur-sm rounded-xl border border-white/40 shadow-sm overflow-hidden light text-slate-900 ${className}`}>
       {/* Header */}
-      <div className="bg-slate-800/5 p-4 border-b border-slate-200/50 flex items-center gap-3">
-        <Clock className="w-5 h-5 text-slate-500" />
-        <h3 className="font-bold text-slate-600 uppercase tracking-wider text-sm">
+      <div className="bg-slate-800/5 p-2 border-b border-slate-200/50 flex items-center gap-2">
+        <Clock className="w-3 h-3 text-slate-500" />
+        <h3 className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">
           {t('live.upNext') || 'COMING UP'}
         </h3>
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+      <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
         {segments.map((segment, index) => {
           const startTime = getTimeDate(segment.start_time || segment.actual_start_time);
           const timeStr = startTime 
@@ -59,9 +59,9 @@ export default function SegmentTimeline({
           // Break divider: visual separator, not a full card
           if (isBreak) {
             return (
-              <div key={segment.id || index} className="flex items-center gap-3 py-2 px-2">
+              <div key={segment.id || index} className="flex items-center gap-2 py-1 px-1">
                 <div className="h-px flex-1 bg-slate-300" />
-                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap flex items-center gap-2">
+                <div className="text-[8px] font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap flex items-center gap-1">
                   <span className="font-mono text-slate-300">{timeStr}</span>
                   <span>{segment.title}</span>
                 </div>
@@ -74,13 +74,13 @@ export default function SegmentTimeline({
             <div 
               key={segment.id || index}
               className={`
-                group flex items-start gap-3 p-3 rounded-2xl transition-all
-                ${isFirst ? 'bg-white shadow-lg border-l-4 border-pdv-teal scale-[1.01]' : 'bg-white/60 border-l-4 border-transparent'}
+                group flex items-start gap-2 p-2 rounded-xl transition-all
+                ${isFirst ? 'bg-white shadow-md border-l-3 border-pdv-teal scale-[1.01]' : 'bg-white/60 border-l-3 border-transparent'}
               `}
             >
               {/* Time */}
               <div className={`
-                font-mono font-bold text-base pt-0.5 min-w-[65px] text-right
+                font-mono font-bold text-xs pt-0.5 min-w-[50px] text-right
                 ${isFirst ? 'text-pdv-teal' : 'text-slate-400'}
               `}>
                 {timeStr}
@@ -90,14 +90,14 @@ export default function SegmentTimeline({
               <div className="flex-1 min-w-0">
                 <div className={`
                   font-bold truncate leading-tight
-                  ${isFirst ? 'text-slate-900 text-lg' : 'text-slate-700 text-base'}
+                  ${isFirst ? 'text-slate-900 text-sm' : 'text-slate-700 text-xs'}
                 `}>
                   {segment.title}
                 </div>
 
                 {/* Speaker/presenter with role label */}
                 {responsible && (
-                  <div className={`text-sm truncate mt-0.5 ${isFirst ? 'text-slate-600' : 'text-slate-400'}`}>
+                  <div className={`text-[10px] truncate mt-0.5 ${isFirst ? 'text-slate-600' : 'text-slate-400'}`}>
                     {responsible.label && <span className="font-semibold">{responsible.label}</span>}
                     {responsible.value}
                   </div>
@@ -105,16 +105,16 @@ export default function SegmentTimeline({
 
                 {/* Message title (Plenaria) */}
                 {secondary && (
-                  <div className={`text-xs truncate mt-0.5 italic ${isFirst ? 'text-blue-600' : 'text-blue-400'}`}>
+                  <div className={`text-[9px] truncate mt-0.5 italic ${isFirst ? 'text-blue-600' : 'text-blue-400'}`}>
                     {secondary.value}
                   </div>
                 )}
 
                 {/* Translator badge — purple to match all other surfaces */}
                 {translator && (
-                  <div className="flex items-center gap-1 mt-1">
-                    <Languages className="w-3 h-3 text-purple-500" />
-                    <span className="text-[10px] font-semibold text-purple-600 uppercase tracking-wide truncate">
+                  <div className="flex items-center gap-0.5 mt-0.5">
+                    <Languages className="w-2.5 h-2.5 text-purple-500" />
+                    <span className="text-[8px] font-semibold text-purple-600 uppercase tracking-wide truncate">
                       @ {translator}
                     </span>
                   </div>
