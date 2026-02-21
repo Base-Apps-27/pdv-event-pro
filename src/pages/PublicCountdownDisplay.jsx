@@ -256,7 +256,7 @@ export default function PublicCountdownDisplay() {
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 flex flex-col min-h-0">
               <CoordinatorActionsDisplay
                 currentSegment={currentSegment}
                 nextSegment={nextSegment}
@@ -270,9 +270,16 @@ export default function PublicCountdownDisplay() {
           {/* Col 2: Program Timeline */}
           <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm h-full">
             <div className="bg-slate-100/80 px-3 py-1.5 border-b border-slate-200">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
-                <Layout className="w-3 h-3" />
-                Room Program
+              <div className="flex items-center justify-between">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                  <Layout className="w-3 h-3" />
+                  Room Program
+                </div>
+                {upcomingSegments.length > 0 && (
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                    A Continuación
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex-1 relative p-1.5">

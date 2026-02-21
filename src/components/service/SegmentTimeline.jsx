@@ -29,16 +29,8 @@ export default function SegmentTimeline({
   };
 
   return (
-    <div className={`flex flex-col h-full bg-white/50 backdrop-blur-sm rounded-xl border border-white/40 shadow-sm overflow-hidden light text-slate-900 ${className}`}>
-      {/* Header */}
-      <div className="bg-slate-800/5 p-2 border-b border-slate-200/50 flex items-center gap-2">
-        <Clock className="w-3 h-3 text-slate-500" />
-        <h3 className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">
-          {t('live.upNext') || 'COMING UP'}
-        </h3>
-      </div>
-
-      {/* List */}
+    <div className={`flex flex-col h-full overflow-hidden light text-slate-900 ${className}`}>
+      {/* List - no internal header, parent handles it */}
       <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
         {segments.map((segment, index) => {
           const startTime = getTimeDate(segment.start_time || segment.actual_start_time);

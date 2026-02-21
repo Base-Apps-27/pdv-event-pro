@@ -116,10 +116,10 @@ export default function CoordinatorActionsDisplay({
   }
 
   return (
-    <div className="w-full bg-white rounded-2xl border-2 border-pdv-teal/30 p-2 md:p-3 shadow-lg">
+    <div className="w-full h-full flex flex-col bg-white rounded-2xl border-2 border-pdv-teal/30 p-2 md:p-3 shadow-lg">
       
       {/* Header */}
-      <div className="flex items-center gap-2 mb-2 pb-1 border-b border-slate-200">
+      <div className="flex items-center gap-2 mb-2 pb-1 border-b border-slate-200 flex-shrink-0">
         <Clock className="w-4 h-4 md:w-5 md:h-5 text-pdv-teal flex-shrink-0" />
         <h3 className="text-base md:text-lg font-bold text-slate-900 uppercase tracking-wide">
           {language === 'es' ? 'ACCIONES' : 'ACTIONS'}
@@ -127,7 +127,7 @@ export default function CoordinatorActionsDisplay({
       </div>
 
       {/* Actions Grid (Horizontal or Vertical) */}
-      <div className={`${layout === 'vertical' ? 'flex flex-col space-y-2' : `grid grid-cols-1 md:grid-cols-2 gap-2 ${
+      <div className={`flex-1 overflow-y-auto ${layout === 'vertical' ? 'flex flex-col space-y-2' : `grid grid-cols-1 md:grid-cols-2 gap-2 auto-rows-min ${
         upcomingActions.length === 1 ? 'lg:grid-cols-1' :
         upcomingActions.length === 2 ? 'lg:grid-cols-2' :
         upcomingActions.length === 3 ? 'lg:grid-cols-3' :
