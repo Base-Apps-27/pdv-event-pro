@@ -237,6 +237,8 @@ export default function ServiceTimeSlotColumn({
               copySegmentToNextSlot={copySegmentToNextSlot}
               nextSlotName={nextSlotName}
               canEdit={canEdit}
+              addSongSlot={addSongSlot}
+              removeSongSlot={removeSongSlot}
             />
           );
         })}
@@ -364,7 +366,8 @@ function SpecialSegmentCard({
 function StandardSegmentCard({
   timeSlot, segment, idx, isExpanded, serviceData, accentColor,
   toggleSegmentExpanded, handleMoveSegment, updateSegmentField,
-  debouncedSave, setServiceData, handleOpenVerseParser, copySegmentToNextSlot, nextSlotName, canEdit,
+  debouncedSave, setServiceData, handleOpenVerseParser, copySegmentToNextSlot, nextSlotName,
+  canEdit, addSongSlot, removeSongSlot,
 }) {
   const filteredSegments = serviceData[timeSlot]?.filter(s => s.type !== 'break') || [];
   const totalFiltered = filteredSegments.length;
