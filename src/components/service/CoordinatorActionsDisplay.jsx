@@ -119,15 +119,15 @@ export default function CoordinatorActionsDisplay({
     <div className="w-full h-full flex flex-col bg-white/80 rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm overflow-hidden">
       
       {/* Compact Header - matches Room Program style */}
-      <div className="bg-slate-100/80 px-3 py-1.5 border-b border-slate-200 flex-shrink-0">
-        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+      <div className="bg-slate-100/80 px-2 py-1 border-b border-slate-200 flex-shrink-0">
+        <div className="text-[9px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1">
           <Clock className="w-3 h-3" />
           {language === 'es' ? 'Acciones' : 'Actions'}
         </div>
       </div>
 
       {/* Hero + Grid Layout: First action prominent, rest compact below */}
-      <div className="flex-1 overflow-y-auto flex flex-col gap-2 p-2">
+      <div className="flex-1 overflow-y-auto flex flex-col gap-1.5 p-1.5">
         {upcomingActions.length > 0 && (() => {
           const heroAction = upcomingActions[0];
           const secondaryActions = upcomingActions.slice(1, 4); // Show up to 3 more
@@ -145,20 +145,20 @@ export default function CoordinatorActionsDisplay({
                 return (
                   <div
                     key={action.id}
-                    className={`flex items-start gap-2 p-2 rounded-lg border ${
+                    className={`flex items-start gap-2 p-1.5 rounded-lg border ${
                       isUrgent
-                        ? 'bg-amber-50 border-amber-400 shadow-md'
-                        : 'bg-gradient-to-br from-white to-slate-50 border-pdv-teal/40 shadow-md'
+                        ? 'bg-amber-50 border-amber-400 shadow-sm'
+                        : 'bg-gradient-to-br from-white to-slate-50 border-pdv-teal/40 shadow-sm'
                     }`}
                   >
                     {/* Time Block */}
-                    <div className="flex flex-col items-center min-w-[50px] flex-shrink-0">
-                      <div className={`text-2xl font-black font-mono leading-none tracking-tight ${
+                    <div className="flex flex-col items-center min-w-[45px] flex-shrink-0">
+                      <div className={`text-xl font-black font-mono leading-none tracking-tight ${
                         isUrgent ? 'text-amber-600' : 'text-pdv-teal'
                       }`}>
                         {minutesUntil > 0 ? `${minutesUntil}m` : 'NOW'}
                       </div>
-                      <div className="text-[9px] font-bold text-slate-400 mt-0.5">
+                      <div className="text-[8px] font-bold text-slate-400 mt-0.5">
                         {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
                       </div>
                     </div>
@@ -166,14 +166,14 @@ export default function CoordinatorActionsDisplay({
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-1 mb-0.5">
-                        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight leading-tight">
+                        <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight leading-tight">
                           {action.label}
                         </h4>
                         {isUrgent && <AlertCircle className="w-3 h-3 text-amber-600 animate-pulse flex-shrink-0" />}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[9px]">
-                        <span className={`font-bold uppercase tracking-wider px-1.5 py-0.5 rounded text-[8px] ${
+                      <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[8px] mb-0.5">
+                        <span className={`font-bold uppercase tracking-wider px-1.5 py-0.5 rounded text-[7px] ${
                           action.isPrep
                             ? 'bg-amber-100 text-amber-700 border border-amber-200'
                             : 'bg-blue-100 text-blue-700 border border-blue-200'
@@ -184,7 +184,7 @@ export default function CoordinatorActionsDisplay({
                       </div>
 
                       {action.notes && (
-                        <div className="p-1.5 bg-white/80 rounded text-[9px] text-slate-700 leading-tight border border-slate-200 mt-1">
+                        <div className="p-1 bg-white/80 rounded text-[8px] text-slate-700 leading-tight border border-slate-200 mt-0.5">
                           {action.notes}
                         </div>
                       )}
@@ -195,7 +195,7 @@ export default function CoordinatorActionsDisplay({
 
               {/* SECONDARY ACTIONS — Compact grid (2 columns max for TV display) */}
               {secondaryActions.length > 0 && (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                   {secondaryActions.map((action) => {
                     const now = currentTime.getTime();
                     const timeUntil = action.time.getTime() - now;
@@ -205,29 +205,29 @@ export default function CoordinatorActionsDisplay({
                     return (
                       <div
                         key={action.id}
-                        className={`flex flex-col p-2 rounded-lg border ${
+                        className={`flex flex-col p-1.5 rounded border ${
                           isUrgent
                             ? 'bg-amber-50 border-amber-300'
                             : 'bg-slate-50 border-slate-200'
                         }`}
                       >
                         {/* Time + Alert */}
-                        <div className="flex items-center justify-between mb-1">
-                          <div className={`text-lg font-black font-mono leading-none ${
+                        <div className="flex items-center justify-between mb-0.5">
+                          <div className={`text-base font-black font-mono leading-none ${
                             isUrgent ? 'text-amber-600' : 'text-pdv-teal'
                           }`}>
                             {minutesUntil > 0 ? `${minutesUntil}m` : 'NOW'}
                           </div>
-                          {isUrgent && <AlertCircle className="w-3 h-3 text-amber-600 animate-pulse" />}
+                          {isUrgent && <AlertCircle className="w-2.5 h-2.5 text-amber-600 animate-pulse" />}
                         </div>
 
                         {/* Label */}
-                        <h4 className="text-[10px] font-bold text-slate-900 uppercase leading-tight mb-1 line-clamp-2">
+                        <h4 className="text-[9px] font-bold text-slate-900 uppercase leading-tight mb-0.5 line-clamp-2">
                           {action.label}
                         </h4>
 
                         {/* Meta */}
-                        <div className="flex items-center gap-1 text-[8px]">
+                        <div className="flex items-center gap-1 text-[7px]">
                           <span className={`font-bold uppercase px-1 py-0.5 rounded ${
                             action.isPrep ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                           }`}>
@@ -243,7 +243,7 @@ export default function CoordinatorActionsDisplay({
 
               {/* Overflow indicator */}
               {upcomingActions.length > 4 && (
-                <div className="text-center py-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                <div className="text-center py-0.5 text-[8px] font-bold text-slate-400 uppercase tracking-widest">
                   +{upcomingActions.length - 4} more in app
                 </div>
               )}
