@@ -711,7 +711,13 @@ export function normalizeSegments(segments, source = 'event', options = {}) {
     if (s.id && s.date) sessionDateMap.set(s.id, s.date);
   });
 
-  return segments.map(seg => {
+  // CHILD SEGMENT FILTER (2026-02-21): Exclude sub-segments (parent_segment_id set).
+  // These are internal sub-assignments (e.g. Ministración within Alabanza) and
+  // must NOT appear in the flat display list — they are only shown in editor UI as sub-assignments.
+  // This matches the filtering done in refreshActiveProgram + getPublicProgramData.
+  const filteredSegments = segments.filter(seg => !seg.parent_segment_id);
+
+  return filteredSegments.map(seg => {
     const defaults = {
       date: seg.date || sessionDateMap.get(seg.session_id) || serviceDate || null,
     };
