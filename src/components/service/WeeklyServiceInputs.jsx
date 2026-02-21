@@ -22,18 +22,23 @@ export const UpdatersContext = createContext(null);
 // SONG-OVERWRITE-FIX (2026-02-20): Each field commits only its own value using
 // setServiceData functional updater to read latest state. This prevents saving
 // one field from overwriting another field's in-progress local edits.
+// PER-FIELD-PUSH (2026-02-21): After updating state, pushes the updated songs
+// array directly to the Segment entity. Fire-and-forget, non-blocking.
 export function SongInputRow({ service, segmentIndex, songIndex }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
   const song = segment?.songs?.[songIndex] || { title: "", lead: "", key: "" };
   const setServiceData = useContext(UpdatersContext)?.setServiceData;
-  const debouncedSave = useContext(UpdatersContext)?.debouncedSave;
-  
+  const pushFn = useContext(UpdatersContext)?.pushFn;
+  // Stable entity ID (set during init, doesn't change between field edits)
+  const entityId = segment?._entityId;
+
   const [localTitle, setLocalTitle] = useState("");
   const [localLead, setLocalLead] = useState("");
   const [localKey, setLocalKey] = useState("");
 
   // Helper: update a single song sub-field using functional updater (always reads latest state)
   const commitSongField = useCallback((fieldName, val) => {
+    let updatedSongs = null;
     setServiceData(prev => {
       const newServiceArray = [...(prev[service] || [])];
       if (!newServiceArray[segmentIndex]) return prev;
@@ -42,10 +47,14 @@ export function SongInputRow({ service, segmentIndex, songIndex }) {
       newSongs[songIndex] = { ...newSongs[songIndex], [fieldName]: val };
       newSegment.songs = newSongs;
       newServiceArray[segmentIndex] = newSegment;
+      updatedSongs = newSongs; // Capture for push
       return { ...prev, [service]: newServiceArray };
     });
-    if (debouncedSave) debouncedSave(`song-${service}-${segmentIndex}-${songIndex}-${fieldName}`);
-  }, [service, segmentIndex, songIndex, setServiceData, debouncedSave]);
+    // Per-field push: send updated songs to entity (fire-and-forget)
+    if (pushFn && entityId && updatedSongs) {
+      pushFn("songs", { entityId, songs: updatedSongs });
+    }
+  }, [service, segmentIndex, songIndex, setServiceData, pushFn, entityId]);
   
   const commitTitle = useDebouncedCommit(
     localTitle,
@@ -109,22 +118,32 @@ export function SongInputRow({ service, segmentIndex, songIndex }) {
 }
 
 // Pre-Service Notes Input with local state
+// PER-FIELD-PUSH (2026-02-21): Pushes notes to PreSessionDetails entity.
 export function PreServiceNotesInput({ service }) {
-  const currentGlobalValue = useContext(ServiceDataContext)?.pre_service_notes?.[service] || "";
+  const serviceData = useContext(ServiceDataContext);
+  const currentGlobalValue = serviceData?.pre_service_notes?.[service] || "";
   const setServiceData = useContext(UpdatersContext)?.setServiceData;
+  const pushFn = useContext(UpdatersContext)?.pushFn;
+  // Session ID for this slot (for PreSessionDetails push)
+  const sessionId = serviceData?._sessionIds?.[service]
+    || serviceData?.[service]?.[0]?._sessionId;
   const [localValue, setLocalValue] = useState("");
-  
+
   const commitNow = useDebouncedCommit(
     localValue,
     currentGlobalValue,
     (val) => {
       setServiceData(prev => ({
         ...prev,
-        pre_service_notes: { 
-          ...prev.pre_service_notes, 
-          [service]: val 
+        pre_service_notes: {
+          ...prev.pre_service_notes,
+          [service]: val
         }
       }));
+      // Per-field push
+      if (pushFn && sessionId) {
+        pushFn("preNotes", { sessionId, value: val });
+      }
     },
     3000
   );
@@ -147,25 +166,32 @@ export function PreServiceNotesInput({ service }) {
 
 // Receso Notes Input with local state
 // Entity Lift: accepts slotName prop (defaults to first slot key in receso_notes)
+// PER-FIELD-PUSH (2026-02-21): receso_notes lives on Service entity (not session),
+// so we push via the "serviceField" type. The safety-net full sync also covers this.
 export function RecesoNotesInput({ slotName }) {
   const serviceData = useContext(ServiceDataContext);
   // Resolve slot: use prop if provided, else first key in receso_notes, else "9:30am"
   const resolvedSlot = slotName || (serviceData?.receso_notes ? Object.keys(serviceData.receso_notes)[0] : "9:30am");
   const currentGlobalValue = serviceData?.receso_notes?.[resolvedSlot] || "";
   const setServiceData = useContext(UpdatersContext)?.setServiceData;
+  const pushFn = useContext(UpdatersContext)?.pushFn;
   const [localValue, setLocalValue] = useState("");
-  
+
   const commitNow = useDebouncedCommit(
     localValue,
     currentGlobalValue,
     (val) => {
       setServiceData(prev => ({
         ...prev,
-        receso_notes: { 
-          ...prev.receso_notes, 
-          [resolvedSlot]: val 
+        receso_notes: {
+          ...prev.receso_notes,
+          [resolvedSlot]: val
         }
       }));
+      // Per-field push: receso_notes → Service entity
+      if (pushFn) {
+        pushFn("serviceField", { field: "receso_notes", slotName: resolvedSlot, value: val });
+      }
     },
     3000
   );

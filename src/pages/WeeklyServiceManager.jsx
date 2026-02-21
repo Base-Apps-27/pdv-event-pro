@@ -25,7 +25,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Loader2, Eye, Wand2, ExternalLink, Settings, Download, Wrench, MoreVertical } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Eye, Wand2, ExternalLink, Settings, Download, Wrench, MoreVertical, RefreshCw, Users } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { createPageUrl } from "@/utils";
 import { format as formatDate } from "date-fns";
@@ -46,7 +46,13 @@ import { ServiceDataContext, UpdatersContext } from "@/components/service/Weekly
 // No hardcoded WEEKLY_BLUEPRINT constant. If DB blueprint is missing, segments use their own
 // data as-is — no phantom actions/fields injected from a stale constant.
 import { useWeeklyServiceHandlers } from "@/components/service/weekly/useWeeklyServiceHandlers";
-import { syncWeeklyToSessions, loadWeeklyFromSessions } from "@/components/service/weeklySessionSync";
+import {
+  syncWeeklyToSessions, loadWeeklyFromSessions,
+  pushSegmentField as pushSegmentFieldToEntity,
+  pushSegmentSongs as pushSegmentSongsToEntity,
+  pushSessionTeamField as pushSessionTeamFieldToEntity,
+  pushPreSessionNotes as pushPreSessionNotesToEntity,
+} from "@/components/service/weeklySessionSync";
 import { useServiceSchedules } from "@/components/service/weekly/useServiceSchedules";
 import useStaleGuard from "@/components/utils/useStaleGuard";
 import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
@@ -56,6 +62,41 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import WeekdayServicePanel from "@/components/service/weekly/WeekdayServicePanel";
 import ServiceScheduleManager from "@/components/service/weekly/ServiceScheduleManager";
 import SundaySlotColumns from "@/components/service/weekly/SundaySlotColumns";
+
+/**
+ * extractServiceMetadata — strips entity-managed fields from save payload.
+ * Session/Segment entities (via syncWeeklyToSessions) are the SOLE source of
+ * truth for segment data, team assignments, and pre-service notes.
+ * The Service entity only stores lightweight metadata.
+ *
+ * Old JSON slot arrays are NOT cleared from existing records — they remain as
+ * a read-only fallback for legacy services that haven't been entity-synced yet.
+ */
+function extractServiceMetadata(data, slotNames) {
+  const metadata = { ...data };
+
+  // Team fields — live on Session entities
+  delete metadata.coordinators;
+  delete metadata.ujieres;
+  delete metadata.sound;
+  delete metadata.luces;
+  delete metadata.fotografia;
+
+  // Pre-service notes — live on PreSessionDetails entities
+  delete metadata.pre_service_notes;
+
+  // Dynamic slot arrays — live on Segment entities
+  for (const name of slotNames) {
+    delete metadata[name];
+  }
+
+  // Internal UI markers (never persist)
+  delete metadata._fromEntities;
+  delete metadata._slotNames;
+  delete metadata._sessionIds;
+
+  return metadata;
+}
 
 // Weekday definitions — ordered Mon→Sun matching ISO week. Labels in Spanish.
 const WEEKDAYS = [
@@ -258,8 +299,14 @@ export default function WeeklyServiceManager() {
       if (service?.id) {
         try {
           const entityData = await loadWeeklyFromSessions(base44, service.id, blueprintData);
-          if (entityData) {
-            // Merge entity-sourced segment/team data onto the Service metadata
+          // Guard: only use entity data if it actually contains segments.
+          // Sessions can exist without segments (e.g., session was created but
+          // segment bulk-create failed mid-sync). Without this check, an empty
+          // entity result would override valid legacy JSON with nothing.
+          const hasSegments = entityData && Object.values(entityData).some(
+            val => Array.isArray(val) && val.length > 0
+          );
+          if (hasSegments) {
             return { ...service, ...entityData, _fromEntities: true };
           }
         } catch (err) {
@@ -305,53 +352,147 @@ export default function WeeklyServiceManager() {
   });
 
   // ── Mutations ──
-  // SONG-OVERWRITE-FIX-2 (2026-02-20): Ref to track whether we've already initialized
-  // local state from DB. Once true, we skip re-initialization on subsequent existingData
-  // changes (caused by our own saves + query invalidation).
   const localStateInitializedRef = React.useRef(false);
 
+  // ENTITY SYNC SERIALIZATION (2026-02-21): Prevents concurrent syncWeeklyToSessions.
+  // The delete-all-recreate pattern in syncWeeklyToSessions is NOT safe for concurrent
+  // execution: two parallel syncs both snapshot old IDs → both create new → both delete
+  // "old" (which now includes the other's new segments) → data loss.
+  // If a sync is already running, the auto-save skips and retries after it completes.
+  const entitySyncInProgressRef = React.useRef(false);
+
+  // MULTI-ADMIN (2026-02-21): Track own saves to filter subscription events.
+  const ownSaveInProgressRef = React.useRef(false);
+  const [externalChangeAvailable, setExternalChangeAvailable] = React.useState(false);
+  const hasUnsavedChangesRef = React.useRef(false);
+  React.useEffect(() => { hasUnsavedChangesRef.current = hasUnsavedChanges; }, [hasUnsavedChanges]);
+  const lastSavedDataRef = React.useRef(lastSavedData);
+  React.useEffect(() => { lastSavedDataRef.current = lastSavedData; }, [lastSavedData]);
+  // NOTE: blurSaveTimerRef removed — blur no longer triggers full sync.
+
+  // Ref to always have current serviceData for save operations.
+  // Defined BEFORE the mutation so onSuccess can reference it.
+  const serviceDataRef = React.useRef(serviceData);
+  React.useEffect(() => { serviceDataRef.current = serviceData; }, [serviceData]);
+
+  // PER-FIELD PUSH (2026-02-21): Fire-and-forget entity updates for individual fields.
+  // Tracks active pushes so the subscription handler doesn't treat our own Session
+  // updates as external changes.
+  const fieldPushActiveRef = React.useRef(0);
+
+  const pushFn = React.useCallback((type, opts) => {
+    fieldPushActiveRef.current++;
+    const done = () => setTimeout(() => { fieldPushActiveRef.current = Math.max(0, fieldPushActiveRef.current - 1); }, 500);
+    let promise;
+    if (type === "segment") {
+      promise = pushSegmentFieldToEntity(base44, opts.entityId, opts.field, opts.value);
+    } else if (type === "songs") {
+      promise = pushSegmentSongsToEntity(base44, opts.entityId, opts.songs);
+    } else if (type === "team") {
+      promise = pushSessionTeamFieldToEntity(base44, opts.sessionId, opts.field, opts.value);
+    } else if (type === "preNotes") {
+      promise = pushPreSessionNotesToEntity(base44, opts.sessionId, opts.value);
+    } else if (type === "serviceField" && existingData?.id) {
+      // Service-level fields (e.g., receso_notes): merge into existing value
+      const currentData = serviceDataRef.current;
+      const mergedValue = type === "serviceField" && opts.field === "receso_notes"
+        ? { ...(currentData?.receso_notes || {}), [opts.slotName]: opts.value }
+        : opts.value;
+      promise = base44.entities.Service.update(existingData.id, { [opts.field]: mergedValue })
+        .catch(err => console.error("[FIELD_PUSH] Service field update failed:", opts.field, err.message));
+    } else {
+      promise = Promise.resolve();
+    }
+    promise.then(done, done);
+  }, [existingData?.id]);
+
+  // SAVE PIPELINE (2026-02-21): Safety-net full sync. Per-field pushes handle
+  // individual field changes immediately. This full sync runs on a 30-second timer
+  // to catch structural changes (add/remove/reorder segments) and update Service
+  // metadata (triggers refreshActiveProgram → display surface updates).
+  //
+  // RACE FIX (2026-02-21): Snapshots serviceData at sync START time, not completion
+  // time. This prevents marking fields as "saved" that were committed to serviceData
+  // AFTER the sync started but were never actually sent to the server.
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
-      if (existingData?.id) {
-        return await base44.entities.Service.update(existingData.id, data);
-      } else {
-        return await base44.entities.Service.create(data);
+      // Serialization guard: skip if a save is already running.
+      if (entitySyncInProgressRef.current) {
+        console.warn("[WEEKLY_SYNC] Skipping overlapping save — will retry on next cycle");
+        return null;
+      }
+      entitySyncInProgressRef.current = true;
+      ownSaveInProgressRef.current = true;
+
+      // RACE FIX: Snapshot what we're ACTUALLY syncing right now.
+      // onSuccess will use this as the new baseline, not serviceDataRef.current
+      // (which may have accumulated new field commits during the async sync).
+      const syncedSnapshot = JSON.parse(JSON.stringify(serviceDataRef.current));
+
+      try {
+        const metadata = extractServiceMetadata(data, sundaySlotNames);
+        let serviceResult;
+        let syncResult = null;
+
+        if (existingData?.id) {
+          syncResult = await syncWeeklyToSessions(base44, existingData, syncedSnapshot, sundaySlots);
+          serviceResult = await base44.entities.Service.update(existingData.id, metadata);
+        } else {
+          serviceResult = await base44.entities.Service.create(metadata);
+          syncResult = await syncWeeklyToSessions(base44, serviceResult, syncedSnapshot, sundaySlots);
+          serviceResult = await base44.entities.Service.update(serviceResult.id, { status: 'active' });
+        }
+
+        return { serviceResult, syncResult, syncedSnapshot };
+      } finally {
+        entitySyncInProgressRef.current = false;
+        setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
       }
     },
-    onSuccess: async (result) => {
-      // PHASE 1 FIX (2026-02-20): AWAIT entity sync + invalidate queries.
-      // Entity-first architecture requires Session/Segment to be primary source of truth.
-      // Sync MUST complete before cache refresh, else PublicProgramView loads stale JSON.
-      try {
-        await syncWeeklyToSessions(base44, result, result, sundaySlots);
-        // After entity sync succeeds, invalidate PublicProgramView caches so subscribers get fresh data
-        queryClient.invalidateQueries({ queryKey: ['activeProgram'] });
-        queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
-      } catch (err) {
-        console.error("[WEEKLY_SYNC] CRITICAL: Entity sync failed:", err.message);
-        toast.error('Error sincronizando entidades: ' + err.message);
-        return; // Do NOT mark as saved if entity sync fails
-      }
+    onSuccess: (result) => {
+      if (!result) return; // Skipped save (serialization guard)
+      const { serviceResult, syncResult, syncedSnapshot } = result;
+
+      queryClient.invalidateQueries({ queryKey: ['activeProgram'] });
+      queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
 
       setLastSaveTimestamp(new Date().toISOString());
-      setHasUnsavedChanges(false);
-      // Sync lastSavedData to current serviceData so change detection sees "no diff"
-      setLastSavedData(prev => {
-        const currentRef = serviceDataRef.current;
-        return currentRef ? JSON.parse(JSON.stringify(currentRef)) : prev;
-      });
-      if (result?.updated_date) captureServiceBaseline(result.updated_date);
+      setExternalChangeAvailable(false);
+
+      // RACE FIX: Use the snapshot of what was ACTUALLY synced as the new baseline.
+      // If the admin committed new fields during the async sync, those changes will
+      // still differ from lastSavedData and trigger the next safety-net cycle.
+      setLastSavedData(syncedSnapshot);
+
+      // Update entity IDs in serviceData from the sync result so per-field pushes
+      // continue working after the delete-all-recreate cycle.
+      if (syncResult?.entityIdMap) {
+        setServiceData(prev => {
+          if (!prev) return prev;
+          const updated = { ...prev };
+          for (const [slot, ids] of Object.entries(syncResult.entityIdMap)) {
+            if (!updated[slot] || !Array.isArray(ids)) continue;
+            updated[slot] = updated[slot].map((seg, i) => ({
+              ...seg,
+              _entityId: ids[i]?.entityId || seg._entityId,
+              _sessionId: ids[i]?.sessionId || seg._sessionId,
+            }));
+          }
+          if (syncResult.sessionIdMap) {
+            updated._sessionIds = { ...(updated._sessionIds || {}), ...syncResult.sessionIdMap };
+          }
+          return updated;
+        });
+      }
+
+      if (serviceResult?.updated_date) captureServiceBaseline(serviceResult.updated_date);
       const backupKey = `service_backup_${selectedDate}`;
-      safeSetItem(backupKey, JSON.stringify({ data: result, timestamp: new Date().toISOString() }));
+      safeSetItem(backupKey, JSON.stringify({ data: serviceDataRef.current, timestamp: new Date().toISOString() }));
     },
     onError: (error) => {
       toast.error('Error al guardar: ' + error.message);
     }
   });
-
-  // Ref to always have current serviceData for save operations
-  const serviceDataRef = React.useRef(serviceData);
-  React.useEffect(() => { serviceDataRef.current = serviceData; }, [serviceData]);
 
   // P0-2: Added onError toast handlers (2026-02-12)
   const createAnnouncementMutation = useMutation({
@@ -390,18 +531,19 @@ export default function WeeklyServiceManager() {
   });
 
   // ── Handlers (extracted hook) ──
-  // Phase 2: pass sundaySlotNames so copy handlers know source/target
+  // PER-FIELD PUSH (2026-02-21): handlers update state AND push changed fields
+  // to entities via pushFn. Safety-net full sync handles structural changes.
   const handlers = useWeeklyServiceHandlers({
-    serviceData, setServiceData, selectedDate, selectedAnnouncements,
-    printSettingsPage1, printSettingsPage2, saveServiceMutation,
+    serviceData, setServiceData, selectedAnnouncements,
     updateAnnouncementMutation, fixedAnnouncements, dynamicAnnouncements,
     blueprintData,
-    setSavingField, setVerseParserOpen, setVerseParserContext, verseParserContext,
+    setVerseParserOpen, setVerseParserContext, verseParserContext,
     setShowSpecialDialog, setSpecialSegmentDetails, specialSegmentDetails,
     setOptimizingAnnouncement, setPrintSettingsPage1, setPrintSettingsPage2,
     setEditingAnnouncement, setAnnouncementForm, setShowAnnouncementDialog,
     setShowResetConfirm, editingAnnouncement, createAnnouncementMutation,
     slotNames: sundaySlotNames,
+    pushFn,
   });
 
   // ── Initialize service data from DB or blueprint ──
@@ -624,14 +766,61 @@ export default function WeeklyServiceManager() {
       // fires when existingData OR blueprintData first become non-null).
       }, [existingData, selectedDate, blueprintData]);
 
-  // SONG-OVERWRITE-FIX-2 (2026-02-20): Real-time subscriptions DISABLED.
-  // They caused queryClient.invalidateQueries → existingData refetch → 
-  // re-triggered the initialization useEffect (before the guard was added).
-  // With the guard, they no longer destroy local state, but they also serve
-  // no useful purpose on this page since local state IS the source of truth.
-  // Live adjustments are handled by the PublicProgramView / LiveDirector surfaces.
-  // If we need to detect external edits in the future, we should show a
-  // notification instead of silently overwriting local state.
+  // MULTI-ADMIN REAL-TIME (2026-02-21): Subscribe to entity changes for collaboration.
+  // When another admin saves (entities change), we detect it and either auto-reload
+  // (if no local unsaved changes) or show a banner (if user has unsaved changes).
+  // Uses ownSaveInProgressRef to filter out our own save events.
+  useEffect(() => {
+    if (!existingData?.id) return;
+
+    const externalDebounce = { timer: null };
+
+    const handleExternalChange = () => {
+      // Ignore our own saves and per-field pushes
+      if (ownSaveInProgressRef.current || fieldPushActiveRef.current > 0) return;
+
+      if (externalDebounce.timer) clearTimeout(externalDebounce.timer);
+      externalDebounce.timer = setTimeout(() => {
+        if (ownSaveInProgressRef.current || fieldPushActiveRef.current > 0) return;
+
+        if (!hasUnsavedChangesRef.current) {
+          // No local changes — auto-reload seamlessly
+          localStateInitializedRef.current = false;
+          queryClient.invalidateQueries({ queryKey: ['weeklyService', selectedDate] });
+          toast.info('Programa actualizado por otro administrador');
+        } else {
+          // Has local changes — show banner, let user decide
+          setExternalChangeAvailable(true);
+          toast.warning('Otro administrador actualizó el programa');
+        }
+      }, 1500); // Debounce: wait for entity sync to complete (multiple entities change in rapid succession)
+    };
+
+    const unsubs = [
+      base44.entities.Service.subscribe((event) => {
+        if (event.id !== existingData.id) return;
+        handleExternalChange();
+      }),
+      base44.entities.Session.subscribe((event) => {
+        // Filter: only react to sessions belonging to our service
+        if (event.data?.service_id && event.data.service_id !== existingData.id) return;
+        handleExternalChange();
+      }),
+    ];
+
+    return () => {
+      if (externalDebounce.timer) clearTimeout(externalDebounce.timer);
+      unsubs.forEach(u => typeof u === 'function' && u());
+    };
+  }, [existingData?.id, selectedDate, queryClient]);
+
+  // Reload handler for the external change banner
+  const handleExternalReload = React.useCallback(() => {
+    localStateInitializedRef.current = false;
+    setExternalChangeAvailable(false);
+    queryClient.invalidateQueries({ queryKey: ['weeklyService', selectedDate] });
+    toast.info('Recargando programa...');
+  }, [selectedDate, queryClient]);
 
   // ── Side effects ──
   // Track unsaved changes
@@ -640,14 +829,56 @@ export default function WeeklyServiceManager() {
     setHasUnsavedChanges(JSON.stringify(serviceData) !== JSON.stringify(lastSavedData));
   }, [serviceData, lastSavedData]);
 
-  // Warn before leaving
+  // Continuous localStorage backup (5s debounce). Since per-field pushes don't
+  // trigger full sync immediately, we keep a rolling backup so the recovery toast
+  // can offer data from even very recent edits if the browser crashes.
   useEffect(() => {
+    if (!serviceData || !selectedDate) return;
+    const timer = setTimeout(() => {
+      const backupKey = `service_backup_${selectedDate}`;
+      safeSetItem(backupKey, JSON.stringify({ data: serviceData, timestamp: new Date().toISOString() }));
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [serviceData, selectedDate]);
+
+  // Warn before leaving + flush unsaved changes on exit/tab-switch.
+  // visibilitychange fires reliably on tab switch and mobile app backgrounding.
+  // beforeunload fires on navigation/close (not guaranteed on mobile).
+  // Both trigger an immediate full sync if there are uncommitted changes.
+  useEffect(() => {
+    const flushOnExit = () => {
+      if (!hasUnsavedChangesRef.current || entitySyncInProgressRef.current) return;
+      if (!serviceDataRef.current || !lastSavedDataRef.current) return;
+      if (JSON.stringify(serviceDataRef.current) === JSON.stringify(lastSavedDataRef.current)) return;
+      // Fire full sync immediately — don't wait for 30s safety net
+      const payload = {
+        ...serviceDataRef.current,
+        selected_announcements: selectedAnnouncements,
+        print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
+        day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
+        name: `Domingo - ${selectedDate}`, status: 'active',
+        service_type: 'weekly'
+      };
+      saveServiceMutation.mutate(payload);
+    };
     const handleBeforeUnload = (e) => {
-      if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = 'Tienes cambios sin guardar.'; return e.returnValue; }
+      flushOnExit();
+      if (hasUnsavedChangesRef.current) {
+        e.preventDefault();
+        e.returnValue = 'Tienes cambios sin guardar.';
+        return e.returnValue;
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flushOnExit();
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasUnsavedChanges]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
 
   // Auto-select announcements
   useEffect(() => {
@@ -675,25 +906,31 @@ export default function WeeklyServiceManager() {
     });
   }, [selectedAnnouncements]);
 
-  // SONG-OVERWRITE-FIX-2 (2026-02-20): Central auto-save retained but safe.
-  // The re-initialization guard (localStateInitializedRef) in the init useEffect
-  // prevents save-triggered query invalidation from overwriting local state.
-  // This auto-save is needed because most input components (TeamInput, SegmentTextInput,
-  // SegmentTextarea, SegmentAutocomplete, PreServiceNotesInput, RecesoNotesInput)
-  // commit into serviceData but do NOT call debouncedSave — they relied on this
-  // central watcher to persist their changes.
+  // PER-FIELD PUSH (2026-02-21): Primary save trigger is now per-field entity pushes
+  // that fire on each input commit (blur or 3-second debounce). The full sync below
+  // is a SAFETY NET for structural changes (add/remove/reorder segments), Service
+  // metadata updates, and triggering refreshActiveProgram for display surfaces.
+  //
+  // The old blur-triggered full sync has been REMOVED because it caused data loss:
+  // while the heavy sync was running, fields committed during the async window
+  // were marked as "saved" in lastSavedData but never actually sent to the server.
+  const buildSavePayload = () => ({
+    ...serviceData, selected_announcements: selectedAnnouncements,
+    print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
+    day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
+    name: `Domingo - ${selectedDate}`, status: 'active',
+    service_type: 'weekly'
+  });
+
+  // Safety-net full sync: runs 30 seconds after last change. Handles structural
+  // changes, Service metadata, and triggers display surface refresh via Service.update.
+  // Per-field pushes handle individual field values immediately on commit.
   useEffect(() => {
     if (!lastSavedData || !serviceData) return;
     if (JSON.stringify(serviceData) === JSON.stringify(lastSavedData)) return;
     const handler = setTimeout(() => {
-      saveServiceMutation.mutate({
-        ...serviceData, selected_announcements: selectedAnnouncements,
-        print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
-        day_of_week: activeDay === 'sunday' ? 'Sunday' : WEEKDAYS.find(w => w.key === activeDay)?.fullLabel || 'Sunday',
-        name: `Domingo - ${selectedDate}`, status: 'active',
-        service_type: 'weekly'
-      });
-    }, 2000); // Increased from 1000→2000ms to give more breathing room for rapid edits
+      saveServiceMutation.mutate(buildSavePayload());
+    }, 30000);
     return () => clearTimeout(handler);
   }, [serviceData, lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
 
@@ -714,7 +951,7 @@ export default function WeeklyServiceManager() {
   // ── Render ──
   return (
     <ServiceDataContext.Provider value={serviceData}>
-      <UpdatersContext.Provider value={{ updateSegmentField: handlers.updateSegmentField, updateTeamField: handlers.updateTeamField, setServiceData, debouncedSave: handlers.debouncedSave }}>
+      <UpdatersContext.Provider value={{ updateSegmentField: handlers.updateSegmentField, updateTeamField: handlers.updateTeamField, setServiceData, pushFn }}>
     <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
       <WeeklyServicePrintCSS printSettingsPage1={activePrintSettingsPage1} printSettingsPage2={activePrintSettingsPage2} />
 
@@ -803,6 +1040,27 @@ export default function WeeklyServiceManager() {
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Multi-admin: External change notification */}
+      {externalChangeAvailable && (
+        <div className="bg-blue-50 border-2 border-blue-400 rounded-lg p-3 flex items-center justify-between print:hidden">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-blue-600" />
+            <span className="text-sm text-blue-800 font-medium">
+              Otro administrador actualizó el programa. Tus cambios no guardados se perderán al recargar.
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExternalReload}
+            className="border-blue-400 text-blue-700 hover:bg-blue-100 ml-4 shrink-0"
+          >
+            <RefreshCw className="w-3 h-3 mr-1" />
+            Recargar
+          </Button>
+        </div>
+      )}
 
       {/* Date Selection */}
       <Card className="print:hidden border-2 border-gray-300 bg-white">

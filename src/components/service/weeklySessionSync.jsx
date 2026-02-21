@@ -1,17 +1,23 @@
 /**
  * weeklySessionSync.jsx
- * Service Segment Entity Lift: Bidirectional sync between weekly service
- * JSON format and Session/Segment entities.
+ * SOLE write path for weekly service segment data.
+ *
+ * As of 2026-02-21, the Service entity only stores lightweight metadata
+ * (date, name, status, service_type, receso_notes, selected_announcements, etc.).
+ * All segment data, team assignments, and pre-service notes are written
+ * EXCLUSIVELY through this module to Session/Segment/PreSessionDetails entities.
+ * The old dual-write (JSON on Service + entities) has been eliminated.
  *
  * WRITE: syncWeeklyToSessions() — creates/updates Session + Segment + PreSessionDetails
- *        entities from weekly service JSON state. Called fire-and-forget after save.
+ *        entities from the UI's in-memory service data. Called in saveServiceMutation.onSuccess.
  *
  * READ:  loadWeeklyFromSessions() — loads Session + Segment entities and transforms
- *        back to the weekly JSON format that the UI expects.
+ *        back to the weekly JSON format that the UI expects. JSON fallback on the
+ *        Service entity is retained read-only for legacy (pre-entity-lift) services.
  *
  * Guards:
  *   - Skips segment recreation if session.live_adjustment_enabled is true
- *   - Returns null from load if no sessions exist (signals JSON fallback)
+ *   - Returns null from load if no sessions exist (signals JSON fallback for legacy data)
  */
 
 import { addMinutes, parse, format } from "date-fns";
@@ -27,6 +33,118 @@ const DEFAULT_TIME_SLOTS = [
   { name: "9:30am", time: "09:30", order: 1, color: "green" },
   { name: "11:30am", time: "11:30", order: 2, color: "blue" },
 ];
+
+// ═══════════════════════════════════════════════════════════════
+// PER-FIELD PUSH: Lightweight entity updates for individual field changes.
+//
+// Instead of a full delete-all-recreate sync on every blur, each input
+// field pushes ONLY its own value to the corresponding entity.
+// This eliminates the race where a full sync snapshot misses in-progress
+// edits on other fields the admin moved to while the sync was running.
+//
+// Full sync (syncWeeklyToSessions) is retained as a 30-second safety net
+// for structural changes (add/remove/reorder segments) and Service metadata.
+// ═══════════════════════════════════════════════════════════════
+
+/** Maps weekly JSON UI field names → Segment entity field names */
+const SEGMENT_FIELD_MAP = {
+  // Person fields (all map to presenter on entity)
+  leader: "presenter",
+  preacher: "presenter",
+  presenter: "presenter",
+  // Translation
+  translator: "translator_name",
+  // Content fields
+  verse: "scripture_references",
+  scripture_references: "scripture_references",
+  message_title: "message_title",
+  messageTitle: "message_title",
+  title: "message_title",
+  description_details: "description_details",
+  description: "description_details",
+  submitted_content: "submitted_content",
+  parsed_verse_data: "parsed_verse_data",
+  // URLs / media
+  presentation_url: "presentation_url",
+  notes_url: "notes_url",
+  content_is_slides_only: "content_is_slides_only",
+  // Team notes
+  coordinator_notes: "coordinator_notes",
+  projection_notes: "projection_notes",
+  sound_notes: "sound_notes",
+  ushers_notes: "ushers_notes",
+  translation_notes: "translation_notes",
+  stage_decor_notes: "stage_decor_notes",
+  // Actions
+  actions: "segment_actions",
+};
+
+/** Maps weekly JSON team field names → Session entity field names */
+const SESSION_TEAM_MAP = {
+  coordinators: "coordinators",
+  ujieres: "ushers_team",
+  sound: "sound_team",
+  luces: "tech_team",
+  fotografia: "photography_team",
+};
+
+/**
+ * Push a single segment field to the Segment entity. Fire-and-forget.
+ * Returns a promise but callers should NOT await it — the UI must not block.
+ */
+export function pushSegmentField(base44, segmentEntityId, uiField, value) {
+  if (!segmentEntityId) return Promise.resolve();
+  const entityField = SEGMENT_FIELD_MAP[uiField];
+  if (!entityField) {
+    console.warn("[FIELD_PUSH] No mapping for segment field:", uiField);
+    return Promise.resolve();
+  }
+  return base44.entities.Segment.update(segmentEntityId, { [entityField]: value })
+    .catch((err) => console.error("[FIELD_PUSH] Segment update failed:", uiField, err.message));
+}
+
+/**
+ * Push updated songs array to the Segment entity. Flattens to song_N_* fields.
+ */
+export function pushSegmentSongs(base44, segmentEntityId, songs) {
+  if (!segmentEntityId) return Promise.resolve();
+  const flat = flattenSongs(songs);
+  const payload = {
+    ...flat._fields,
+    number_of_songs: Math.max(flat._count, Array.isArray(songs) ? songs.length : 0, 4),
+  };
+  return base44.entities.Segment.update(segmentEntityId, payload)
+    .catch((err) => console.error("[FIELD_PUSH] Song update failed:", err.message));
+}
+
+/**
+ * Push a single team field to the Session entity.
+ */
+export function pushSessionTeamField(base44, sessionEntityId, uiField, value) {
+  if (!sessionEntityId) return Promise.resolve();
+  const entityField = SESSION_TEAM_MAP[uiField];
+  if (!entityField) return Promise.resolve();
+  return base44.entities.Session.update(sessionEntityId, { [entityField]: value })
+    .catch((err) => console.error("[FIELD_PUSH] Session team update failed:", uiField, err.message));
+}
+
+/**
+ * Push pre-session notes to PreSessionDetails entity.
+ */
+export function pushPreSessionNotes(base44, sessionEntityId, notes) {
+  if (!sessionEntityId) return Promise.resolve();
+  return base44.entities.PreSessionDetails.filter({ session_id: sessionEntityId })
+    .then((existing) => {
+      if (existing.length > 0) {
+        if (existing[0].general_notes !== notes) {
+          return base44.entities.PreSessionDetails.update(existing[0].id, { general_notes: notes });
+        }
+      } else if (notes) {
+        return base44.entities.PreSessionDetails.create({ session_id: sessionEntityId, general_notes: notes });
+      }
+    })
+    .catch((err) => console.error("[FIELD_PUSH] PreSessionDetails update failed:", err.message));
+}
 
 // Weekly JSON types → canonical Segment entity types
 const TYPE_MAP = {
@@ -64,11 +182,15 @@ function normalizeSegmentType(rawType) {
  * Falls back to DEFAULT_TIME_SLOTS if not provided.
  */
 export async function syncWeeklyToSessions(base44, serviceResult, serviceData, timeSlots) {
-  if (!serviceResult?.id) return;
+  if (!serviceResult?.id) return null;
 
   const serviceId = serviceResult.id;
   const date = serviceResult.date || serviceData?.date;
   const slots = (timeSlots && timeSlots.length > 0) ? timeSlots : DEFAULT_TIME_SLOTS;
+
+  // Return value: maps slot names → new entity IDs so caller can update local state
+  const entityIdMap = {};
+  const sessionIdMap = {};
 
   for (const slot of slots) {
     const segments = serviceData?.[slot.name];
@@ -110,6 +232,7 @@ export async function syncWeeklyToSessions(base44, serviceResult, serviceData, t
         live_adjustment_enabled: false,
       });
     }
+    sessionIdMap[slot.name] = session.id;
 
     // ── 2. Pre-session notes → PreSessionDetails ──
     const preNotes = serviceData.pre_service_notes?.[slot.name] || "";
@@ -256,6 +379,12 @@ export async function syncWeeklyToSessions(base44, serviceResult, serviceData, t
       parentSegments
     );
 
+    // Track new entity IDs for local state update
+    entityIdMap[slot.name] = createdParents.map((p) => ({
+      entityId: p.id,
+      sessionId: session.id,
+    }));
+
     if (subSegments.length > 0 && createdParents.length > 0) {
       // Map sub-segments to their parent Alabanza segment IDs
       const alabanzaParents = createdParents.filter(
@@ -300,6 +429,8 @@ export async function syncWeeklyToSessions(base44, serviceResult, serviceData, t
       }
     }
   }
+
+  return { entityIdMap, sessionIdMap };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -326,12 +457,15 @@ export async function loadWeeklyFromSessions(base44, serviceId, blueprint) {
     luces: {},
     fotografia: {},
     pre_service_notes: {},
+    // Per-field push: session entity IDs keyed by slot name
+    _sessionIds: {},
   };
 
   for (const session of sessions.sort(
     (a, b) => (a.order || 0) - (b.order || 0)
   )) {
     const slotName = session.name; // "9:30am" or "11:30am"
+    result._sessionIds[slotName] = session.id;
 
     // Team fields → reverse map to weekly JSON keys
     result.coordinators[slotName] = session.coordinators || "";

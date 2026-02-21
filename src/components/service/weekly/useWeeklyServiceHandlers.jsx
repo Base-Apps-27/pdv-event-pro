@@ -1,9 +1,16 @@
 /**
  * useWeeklyServiceHandlers.js
- * Phase 3A extraction: All handler functions from WeeklyServiceManager.
- * Verbatim extraction — zero logic changes.
- * 
- * Accepts state + setters + mutations from the parent and returns all handlers.
+ * All handler functions for WeeklyServiceManager.
+ *
+ * PER-FIELD PUSH (2026-02-21): Handlers update local state AND push the
+ * changed field directly to the entity. This replaces the monolithic
+ * blur-triggered full sync that was causing data loss when admins typed
+ * faster than the sync could complete. The full syncWeeklyToSessions
+ * is retained only as a 30-second safety net for structural changes.
+ *
+ * Each handler receives a pushFn callback through its options. After
+ * updating serviceData, it fires pushFn with the entity push details.
+ * pushFn is fire-and-forget (non-blocking) — the UI never waits for it.
  */
 
 import { useCallback, useRef, useEffect } from "react";
@@ -17,17 +24,12 @@ import { safeParseTimeSlot } from "@/components/service/pdfUtils";
 export function useWeeklyServiceHandlers({
   serviceData,
   setServiceData,
-  selectedDate,
   selectedAnnouncements,
-  printSettingsPage1,
-  printSettingsPage2,
-  saveServiceMutation,
   updateAnnouncementMutation,
   fixedAnnouncements,
   dynamicAnnouncements,
   blueprintData,
   // Setters for state owned by parent
-  setSavingField,
   setVerseParserOpen,
   setVerseParserContext,
   verseParserContext,
@@ -45,31 +47,30 @@ export function useWeeklyServiceHandlers({
   createAnnouncementMutation,
   // Phase 2: dynamic slot names from ServiceSchedule
   slotNames = ["9:30am", "11:30am"],
+  // Per-field push: fire-and-forget entity push callback
+  // Signature: pushFn(type, { entityId, sessionId, field, value, songs })
+  pushFn,
 }) {
   // Phase 2: derive first and second slot for copy operations
   const firstSlot = slotNames[0] || "9:30am";
   const secondSlot = slotNames[1] || "11:30am";
-  // Ref to always have current serviceData for debounced saves
-  const serviceDataRef = useRef(null);
-  const saveTimeoutRef = useRef(null);
 
-  useEffect(() => {
-    serviceDataRef.current = serviceData;
-  }, [serviceData]);
-
-  // Update handlers (pure state mutation, no saves)
+  // Update handlers: state mutation + per-field entity push
   const updateSegmentField = (service, segmentIndex, field, value) => {
+    // Read entity ID before setState (stable across renders, set during init)
+    const entityId = serviceData?.[service]?.[segmentIndex]?._entityId;
+
     setServiceData(prev => {
       // Deep clone the service array we are modifying to ensure immutability
       const newServiceArray = [...(prev[service] || [])];
-      
+
       // Clone the specific segment we are updating
       if (!newServiceArray[segmentIndex]) return prev;
       const newSegment = { ...newServiceArray[segmentIndex] };
-      
+
       // Define fields that sit at the root of the segment object
       const rootFields = ['songs', 'presentation_url', 'notes_url', 'content_is_slides_only'];
-      
+
       if (rootFields.includes(field)) {
         newSegment[field] = value;
       } else {
@@ -78,15 +79,15 @@ export function useWeeklyServiceHandlers({
           [field]: value
         };
       }
-      
+
       // Place the updated segment back into the new array
       newServiceArray[segmentIndex] = newSegment;
-      
-      const updated = { 
+
+      const updated = {
         ...prev,
         [service]: newServiceArray
       };
-      
+
       // Auto-propagate translator from worship to other segments (for non-first slots with translation)
       if (field === 'translator' && service !== firstSlot && newSegment.type === 'worship') {
         const worshipTranslator = value;
@@ -103,16 +104,30 @@ export function useWeeklyServiceHandlers({
           return seg;
         });
       }
-      
+
       return updated;
     });
+
+    // Per-field push: fire-and-forget entity update
+    if (pushFn && entityId) {
+      pushFn("segment", { entityId, field, value });
+    }
   };
 
   const updateTeamField = (field, service, value) => {
+    // Read session ID for this slot (from first segment's metadata)
+    const sessionId = serviceData?._sessionIds?.[service]
+      || serviceData?.[service]?.[0]?._sessionId;
+
     setServiceData(prev => ({
       ...prev,
       [field]: { ...prev[field], [service]: value }
     }));
+
+    // Per-field push: fire-and-forget Session entity update
+    if (pushFn && sessionId) {
+      pushFn("team", { sessionId, field, value });
+    }
   };
 
   const handleOpenVerseParser = (timeSlot, segmentIdx) => {
@@ -128,130 +143,81 @@ export function useWeeklyServiceHandlers({
     setVerseParserOpen(true);
   };
 
-  // Debounced save
-  const debouncedSave = useCallback((fieldKey) => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    setSavingField(fieldKey);
-
-    saveTimeoutRef.current = setTimeout(() => {
-      const currentData = serviceDataRef.current;
-      if (!currentData) {
-        setSavingField(null);
-        return;
-      }
-      
-      const dataToSave = {
-        ...currentData,
-        selected_announcements: selectedAnnouncements,
-        print_settings_page1: printSettingsPage1,
-        print_settings_page2: printSettingsPage2,
-        day_of_week: 'Sunday',
-        name: `Domingo - ${selectedDate}`,
-        status: 'active',
-        service_type: 'weekly'
-      };
-      
-      saveServiceMutation.mutate(dataToSave, {
-        onSettled: () => {
-          setSavingField(null);
-        }
-      });
-    }, 800);
-  }, [selectedDate, selectedAnnouncements, saveServiceMutation, printSettingsPage1, printSettingsPage2, setSavingField]);
+  // debouncedSave: no-op retained for backward compatibility.
+  // Auto-save in WeeklyServiceManager is the single save path.
+  const debouncedSave = useCallback(() => {}, []);
 
   const handleSaveParsedVerses = (data) => {
     const { timeSlot, segmentIdx } = verseParserContext;
-    
+
     setServiceData(prev => {
       const updated = { ...prev };
       const currentVerse = updated[timeSlot][segmentIdx].data?.verse || "";
       updated[timeSlot][segmentIdx].data = {
         ...updated[timeSlot][segmentIdx].data,
-        verse: currentVerse, // Preserve existing verse text
+        verse: currentVerse,
         parsed_verse_data: data.parsed_data
       };
       return updated;
     });
-    
-    debouncedSave(`${timeSlot}-${segmentIdx}-verse-parsed`);
+
     setVerseParserOpen(false);
     setVerseParserContext({ timeSlot: null, segmentIdx: null });
   };
 
-  // Phase 2: copy from first slot to second slot (dynamic names)
+  // Copy handlers — state-only, auto-save handles persistence
   const copy930To1130 = () => {
     if (slotNames.length < 2) return;
-    setSavingField('copy-services');
     setServiceData(prev => {
       if (!prev) return prev;
-
       const updated = { ...prev };
-
-      const copiedSegments = (updated[firstSlot] || []).map(seg => ({
+      updated[secondSlot] = (updated[firstSlot] || []).map(seg => ({
         ...seg,
         data: { ...seg.data },
         actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
         songs: seg.songs ? seg.songs.map(s => ({ ...s })) : undefined,
       }));
-
-      updated[secondSlot] = copiedSegments;
-
-      // Always copy pre-service notes and team info
       if (updated.pre_service_notes) updated.pre_service_notes[secondSlot] = updated.pre_service_notes[firstSlot] || "";
       if (updated.coordinators) updated.coordinators[secondSlot] = updated.coordinators[firstSlot] || "";
       if (updated.ujieres) updated.ujieres[secondSlot] = updated.ujieres[firstSlot] || "";
       if (updated.sound) updated.sound[secondSlot] = updated.sound[firstSlot] || "";
       if (updated.luces) updated.luces[secondSlot] = updated.luces[firstSlot] || "";
       if (updated.fotografia) updated.fotografia[secondSlot] = updated.fotografia[firstSlot] || "";
-
       return updated;
     });
-    debouncedSave('copy-services');
   };
 
   const copySegmentTo1130 = (segmentIndex) => {
     if (slotNames.length < 2) return;
-    setSavingField(`copy-segment-${segmentIndex}`);
     setServiceData(prev => {
       if (!prev) return prev;
-
       const updated = { ...prev };
       const sourceSeg = (updated[firstSlot] || [])[segmentIndex];
-
       if (sourceSeg) {
-        const copiedSegment = {
+        if (!updated[secondSlot]) updated[secondSlot] = [];
+        updated[secondSlot][segmentIndex] = {
           ...sourceSeg,
           data: { ...sourceSeg.data },
           actions: sourceSeg.actions ? sourceSeg.actions.map(a => ({ ...a })) : [],
           songs: sourceSeg.songs ? sourceSeg.songs.map(s => ({ ...s })) : undefined,
         };
-        if (!updated[secondSlot]) updated[secondSlot] = [];
-        updated[secondSlot][segmentIndex] = copiedSegment;
       }
-
       return updated;
     });
-    debouncedSave(`copy-segment-${segmentIndex}`);
   };
 
   const copyPreServiceNotesTo1130 = () => {
     if (slotNames.length < 2) return;
-    setSavingField('copy-preservice');
     setServiceData(prev => {
       if (!prev) return prev;
       const updated = { ...prev };
       if (updated.pre_service_notes) updated.pre_service_notes[secondSlot] = updated.pre_service_notes[firstSlot] || "";
       return updated;
     });
-    debouncedSave('copy-preservice');
   };
 
   const copyTeamTo1130 = () => {
     if (slotNames.length < 2) return;
-    setSavingField('copy-team');
     setServiceData(prev => {
       if (!prev) return prev;
       const updated = { ...prev };
@@ -262,7 +228,6 @@ export function useWeeklyServiceHandlers({
       if (updated.fotografia) updated.fotografia[secondSlot] = updated.fotografia[firstSlot] || "";
       return updated;
     });
-    debouncedSave('copy-team');
   };
 
   /**
@@ -273,8 +238,6 @@ export function useWeeklyServiceHandlers({
   const executeResetToBlueprint = (slotsToReset) => {
     setShowResetConfirm(false);
 
-    setSavingField('reset-blueprint');
-    
     // Blueprint Revamp (2026-02-18): DB blueprint only. No hardcoded fallback.
     const activeBlueprint = blueprintData;
     
@@ -315,7 +278,6 @@ export function useWeeklyServiceHandlers({
     const initialData = { ...serviceData };
     if (!activeBlueprint) {
       toast.error("No se encontró el blueprint en la base de datos. No se puede restablecer.");
-      setSavingField(null);
       return;
     }
 
@@ -327,37 +289,21 @@ export function useWeeklyServiceHandlers({
     });
 
     setServiceData(initialData);
-    
-    // Force immediate save
-    const dataToSave = {
-      ...initialData,
-      selected_announcements: selectedAnnouncements,
-      day_of_week: 'Sunday',
-      name: `Domingo - ${selectedDate}`,
-      status: 'active',
-      service_type: 'weekly'
-    };
-    
+
+    // Toast immediately — auto-save will persist within 2s
     const resetLabel = targetSlots.length < slotNames.length
       ? `Horarios restablecidos: ${targetSlots.join(', ')}`
       : "Servicio restablecido al diseño original";
-
-    saveServiceMutation.mutate(dataToSave, {
-      onSettled: () => setSavingField(null),
-      onSuccess: () => {
-        toast.success(resetLabel);
-      }
-    });
+    toast.success(resetLabel);
   };
 
   const addSpecialSegment = () => {
-    setSavingField('add-special');
     const newSegment = {
       type: "special",
       title: specialSegmentDetails.title,
       duration: specialSegmentDetails.duration,
       fields: ["description"],
-      data: { 
+      data: {
         description: "",
         presenter: specialSegmentDetails.presenter,
         translator: specialSegmentDetails.translator
@@ -365,29 +311,17 @@ export function useWeeklyServiceHandlers({
       actions: []
     };
 
-    const updatedData = { ...serviceData };
-    const targetArray = [...updatedData[specialSegmentDetails.timeSlot]];
-    let insertIndex = specialSegmentDetails.insertAfterIdx + 1;
-    if (insertIndex <= 0) insertIndex = 0;
-    if (insertIndex > targetArray.length) insertIndex = targetArray.length;
-    
-    targetArray.splice(insertIndex, 0, newSegment);
-    updatedData[specialSegmentDetails.timeSlot] = targetArray;
-    
-    setServiceData(updatedData);
-    
-    const dataToSave = {
-      ...updatedData,
-      selected_announcements: selectedAnnouncements,
-      day_of_week: 'Sunday',
-      name: `Domingo - ${selectedDate}`,
-      status: 'active'
-    };
-    
-    saveServiceMutation.mutate(dataToSave, {
-      onSettled: () => setSavingField(null)
+    setServiceData(prev => {
+      const updated = { ...prev };
+      const targetArray = [...(updated[specialSegmentDetails.timeSlot] || [])];
+      let insertIndex = specialSegmentDetails.insertAfterIdx + 1;
+      if (insertIndex <= 0) insertIndex = 0;
+      if (insertIndex > targetArray.length) insertIndex = targetArray.length;
+      targetArray.splice(insertIndex, 0, newSegment);
+      updated[specialSegmentDetails.timeSlot] = targetArray;
+      return updated;
     });
-    
+
     setShowSpecialDialog(false);
     setSpecialSegmentDetails({
       timeSlot: "9:30am", title: "", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
@@ -395,54 +329,22 @@ export function useWeeklyServiceHandlers({
   };
 
   const removeSpecialSegment = (timeSlot, index) => {
-    setSavingField('remove-special');
-    const updatedData = { ...serviceData };
-    const targetArray = [...updatedData[timeSlot]];
-    targetArray.splice(index, 1);
-    updatedData[timeSlot] = targetArray;
-    
-    setServiceData(updatedData);
-    
-    const dataToSave = {
-      ...updatedData,
-      selected_announcements: selectedAnnouncements,
-      day_of_week: 'Sunday',
-      name: `Domingo - ${selectedDate}`,
-      status: 'active'
-    };
-    
-    saveServiceMutation.mutate(dataToSave, {
-      onSettled: () => setSavingField(null)
+    setServiceData(prev => {
+      const updated = { ...prev };
+      const targetArray = [...(updated[timeSlot] || [])];
+      targetArray.splice(index, 1);
+      updated[timeSlot] = targetArray;
+      return updated;
     });
   };
 
   const handleMoveSegment = (timeSlot, index, direction) => {
-    setSavingField('reorder');
-    const items = [...serviceData[timeSlot]];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    
-    if (targetIndex < 0 || targetIndex >= items.length) return;
-    
-    // Swap items
-    [items[index], items[targetIndex]] = [items[targetIndex], items[index]];
-    
-    const updatedData = {
-      ...serviceData,
-      [timeSlot]: items
-    };
-    
-    setServiceData(updatedData);
-    
-    const dataToSave = {
-      ...updatedData,
-      selected_announcements: selectedAnnouncements,
-      day_of_week: 'Sunday',
-      name: `Domingo - ${selectedDate}`,
-      status: 'active'
-    };
-    
-    saveServiceMutation.mutate(dataToSave, {
-      onSettled: () => setSavingField(null)
+    setServiceData(prev => {
+      const items = [...(prev[timeSlot] || [])];
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= items.length) return prev;
+      [items[index], items[targetIndex]] = [items[targetIndex], items[index]];
+      return { ...prev, [timeSlot]: items };
     });
   };
 
@@ -568,7 +470,6 @@ Return ONLY valid JSON:
       print_settings_page1: newSettings.page1,
       print_settings_page2: newSettings.page2
     }));
-    debouncedSave('print-settings');
   };
 
   const handleDownloadProgramPDF = async () => {
