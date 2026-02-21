@@ -390,12 +390,16 @@ export default function WeeklyServiceManager() {
     let promise;
     try {
       if (type === "segment") {
+        console.log(`[PUSH] Segment field: entityId=${opts.entityId}, field=${opts.field}, value=${JSON.stringify(opts.value).substring(0, 50)}`);
         promise = pushSegmentFieldToEntity(base44, opts.entityId, opts.field, opts.value);
       } else if (type === "songs") {
+        console.log(`[PUSH] Songs: entityId=${opts.entityId}, count=${opts.songs?.length || 0}`);
         promise = pushSegmentSongsToEntity(base44, opts.entityId, opts.songs);
       } else if (type === "team") {
+        console.log(`[PUSH] Team field: sessionId=${opts.sessionId}, field=${opts.field}, value=${opts.value}`);
         promise = pushSessionTeamFieldToEntity(base44, opts.sessionId, opts.field, opts.value);
       } else if (type === "preNotes") {
+        console.log(`[PUSH] Pre-service notes: sessionId=${opts.sessionId}`);
         promise = pushPreSessionNotesToEntity(base44, opts.sessionId, opts.value);
       } else if (type === "serviceField" && existingData?.id) {
         // Service-level fields (e.g., receso_notes): merge into existing value
@@ -403,14 +407,27 @@ export default function WeeklyServiceManager() {
         const mergedValue = type === "serviceField" && opts.field === "receso_notes"
           ? { ...(currentData?.receso_notes || {}), [opts.slotName]: opts.value }
           : opts.value;
+        console.log(`[PUSH] Service field: id=${existingData.id}, field=${opts.field}`);
         promise = base44.entities.Service.update(existingData.id, { [opts.field]: mergedValue })
-          .catch(err => console.error("[FIELD_PUSH] Service field update failed:", opts.field, err.message));
+          .catch(err => {
+            console.error("[FIELD_PUSH] Service field update failed:", opts.field, err.message);
+            toast.error(`Error guardando ${opts.field}: ${err.message}`);
+          });
       } else {
+        console.warn(`[PUSH] No handler for type=${type}, opts=`, opts);
         promise = Promise.resolve();
       }
-      promise.then(done, done);
+      promise.then(() => {
+        console.log(`[PUSH] SUCCESS: ${type} saved`);
+        done();
+      }, (err) => {
+        console.error(`[PUSH] FAILED: ${type}`, err.message);
+        toast.error(`Error guardando: ${err.message}`);
+        done();
+      });
     } catch (err) {
       console.error("[FIELD_PUSH] Synchronous error in pushFn:", err.message);
+      toast.error(`Error crítico: ${err.message}`);
       done();
     }
   }, [existingData?.id]);
