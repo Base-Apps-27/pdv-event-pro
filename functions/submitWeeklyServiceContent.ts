@@ -172,8 +172,12 @@ Deno.serve(async (req) => {
         const mirror_target_ids = body.mirror_target_ids || [];
         const apply_to_both_services = body.apply_to_both_services || false;
 
-        if (!segment_id || !content) {
-            return Response.json({ error: "Missing required fields" }, { status: 400, headers: corsHeaders });
+        if (!segment_id) {
+            return Response.json({ error: "Missing required fields: segment_id" }, { status: 400, headers: corsHeaders });
+        }
+        // Slides-only mode allows empty content (presentation URL replaces verse text)
+        if (!content_is_slides_only && !content) {
+            return Response.json({ error: "Missing content (required unless slides-only mode)" }, { status: 400, headers: corsHeaders });
         }
 
         // Idempotency Check

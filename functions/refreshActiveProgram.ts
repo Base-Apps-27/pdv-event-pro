@@ -530,7 +530,10 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
           return parseTime(a) - parseTime(b);
         });
 
-      const allSlotSegments = [];
+      // Assign to outer `let allSlotSegments` (declared at function scope above).
+      // Using `const` here would shadow the outer variable, breaking pre_service_notes
+      // injection at the end of the service snapshot builder. (BUG FIX 2026-02-21)
+      allSlotSegments = [];
       slotKeys.forEach(slotKey => {
         const match = slotKey.match(/^(\d+):(\d+)(am|pm)$/i);
         if (!match) return;

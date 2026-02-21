@@ -464,9 +464,12 @@ Deno.serve(async (req) => {
                                      const diffMin = (startH * 60 + startM) - (endH * 60 + endM);
 
                                      if (diffMin > 0) {
-                                         const notes = targetProgram.receso_notes?.["11:00am"] ||
-                                                      targetProgram.receso_notes?.["11:00"] ||
-                                                      targetProgram.receso_notes?.["11:00 AM"] || "";
+                                         // Use current session's name as the receso_notes key (dynamic slot support)
+                                         // receso_notes is keyed by the FIRST slot name (e.g. "9:30am"), not the break time
+                                         const recesoKey = currentSession.name || sessions[0]?.name || "9:30am";
+                                         const notes = targetProgram.receso_notes?.[recesoKey]
+                                             || (targetProgram.receso_notes ? Object.values(targetProgram.receso_notes)[0] : "")
+                                             || "";
 
                                          enrichedSegments.push({
                                              id: 'generated-break-inter-service',
