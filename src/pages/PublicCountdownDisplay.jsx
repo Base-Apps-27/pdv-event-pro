@@ -63,18 +63,6 @@ export default function PublicCountdownDisplay() {
     return sessions.some((s) => s.has_livestream) && streamBlocks.length > 0;
   }, [programData?.sessions, streamBlocks]);
 
-  // Derive the active session for team display
-  const activeSession = useMemo(() => {
-    const sessions = programData?.sessions || [];
-    if (sessions.length === 0) return null;
-    // Use the first session if single-session program, otherwise find session containing current segment
-    if (sessions.length === 1) return sessions[0];
-    if (currentSegment?.session_id) {
-      return sessions.find(s => s.id === currentSegment.session_id) || sessions[0];
-    }
-    return sessions[0];
-  }, [programData?.sessions, currentSegment]);
-
   // Derive serviceDate from program
   const serviceDate = useMemo(() => {
     if (service?.date) return service.date;
@@ -184,6 +172,18 @@ export default function PublicCountdownDisplay() {
         upcomingSegments: upcoming,
       };
     }, [segments, currentTime, serviceDate]);
+
+  // Derive the active session for team display
+  const activeSession = useMemo(() => {
+    const sessions = programData?.sessions || [];
+    if (sessions.length === 0) return null;
+    // Use the first session if single-session program, otherwise find session containing current segment
+    if (sessions.length === 1) return sessions[0];
+    if (currentSegment?.session_id) {
+      return sessions.find(s => s.id === currentSegment.session_id) || sessions[0];
+    }
+    return sessions[0];
+  }, [programData?.sessions, currentSegment]);
 
   // ── Loading ──
   if (isLoading) {
