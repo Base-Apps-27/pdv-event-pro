@@ -100,7 +100,11 @@ export function pushSegmentField(base44, segmentEntityId, uiField, value) {
     return Promise.resolve();
   }
   return base44.entities.Segment.update(segmentEntityId, { [entityField]: value })
-    .catch((err) => console.error("[FIELD_PUSH] Segment update failed:", uiField, err.message));
+    .then(() => console.log("[FIELD_PUSH] SUCCESS Segment:", uiField))
+    .catch((err) => {
+      console.error("[FIELD_PUSH] Segment update failed:", uiField, err.message);
+      throw err;
+    });
 }
 
 /**
@@ -114,7 +118,11 @@ export function pushSegmentSongs(base44, segmentEntityId, songs) {
     number_of_songs: Math.max(flat._count, Array.isArray(songs) ? songs.length : 0),
   };
   return base44.entities.Segment.update(segmentEntityId, payload)
-    .catch((err) => console.error("[FIELD_PUSH] Song update failed:", err.message));
+    .then(() => console.log("[FIELD_PUSH] SUCCESS Songs:", songs.length))
+    .catch((err) => {
+      console.error("[FIELD_PUSH] Song update failed:", err.message);
+      throw err;
+    });
 }
 
 /**
@@ -125,7 +133,11 @@ export function pushSessionTeamField(base44, sessionEntityId, uiField, value) {
   const entityField = SESSION_TEAM_MAP[uiField];
   if (!entityField) return Promise.resolve();
   return base44.entities.Session.update(sessionEntityId, { [entityField]: value })
-    .catch((err) => console.error("[FIELD_PUSH] Session team update failed:", uiField, err.message));
+    .then(() => console.log("[FIELD_PUSH] SUCCESS Team:", uiField))
+    .catch((err) => {
+      console.error("[FIELD_PUSH] Session team update failed:", uiField, err.message);
+      throw err;
+    });
 }
 
 /**
@@ -137,13 +149,18 @@ export function pushPreSessionNotes(base44, sessionEntityId, notes) {
     .then((existing) => {
       if (existing.length > 0) {
         if (existing[0].general_notes !== notes) {
-          return base44.entities.PreSessionDetails.update(existing[0].id, { general_notes: notes });
+          return base44.entities.PreSessionDetails.update(existing[0].id, { general_notes: notes })
+            .then(() => console.log("[FIELD_PUSH] SUCCESS PreSessionDetails"));
         }
       } else if (notes) {
-        return base44.entities.PreSessionDetails.create({ session_id: sessionEntityId, general_notes: notes });
+        return base44.entities.PreSessionDetails.create({ session_id: sessionEntityId, general_notes: notes })
+          .then(() => console.log("[FIELD_PUSH] SUCCESS PreSessionDetails (created)"));
       }
     })
-    .catch((err) => console.error("[FIELD_PUSH] PreSessionDetails update failed:", err.message));
+    .catch((err) => {
+      console.error("[FIELD_PUSH] PreSessionDetails update failed:", err.message);
+      throw err;
+    });
 }
 
 // Weekly JSON types → canonical Segment entity types
