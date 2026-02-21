@@ -55,9 +55,8 @@ export function useWeeklyServiceHandlers({
   // without entity IDs, making per-field push inoperative.
   requestImmediateSync,
 }) {
-  // Phase 2: derive first and second slot for copy operations (dynamic)
+  // Phase 2: derive first slot for blueprint fallback reference
   const firstSlot = slotNames[0];
-  const secondSlot = slotNames[1];
 
   // Update handlers: state mutation + per-field entity push
   const updateSegmentField = (service, segmentIndex, field, value) => {
@@ -92,8 +91,9 @@ export function useWeeklyServiceHandlers({
         [service]: newServiceArray
       };
 
-      // Auto-propagate translator from worship to other segments (for non-first slots with translation)
-      if (field === 'translator' && service !== firstSlot && newSegment.type === 'worship') {
+      // Auto-propagate translator from worship to other segments in the SAME slot
+      // that have default_translator_source='worship_segment_translator'.
+      if (field === 'translator' && newSegment.type === 'worship') {
         const worshipTranslator = value;
         updated[service] = updated[service].map((seg, idx) => {
           if (idx !== segmentIndex && seg.default_translator_source === 'worship_segment_translator' && !seg.data?.translator) {
@@ -205,15 +205,19 @@ export function useWeeklyServiceHandlers({
     };
   };
 
-  const copyAllToNextSlot = () => {
-    if (slotNames.length < 2) return;
+  // ── N-SLOT COPY OPERATIONS (2026-02-21) ─────────────────────────────
+  // All copy functions accept (sourceSlot, targetSlot) so they work for
+  // any pair of consecutive slots, not just first→second.
+
+  const copyAllToNextSlot = (sourceSlot, targetSlot) => {
+    if (!sourceSlot || !targetSlot) return;
     setServiceData(prev => {
       if (!prev) return prev;
       const updated = { ...prev };
-      const sourceSegments = updated[firstSlot] || [];
-      const targetSegments = updated[secondSlot] || [];
+      const sourceSegments = updated[sourceSlot] || [];
+      const targetSegments = updated[targetSlot] || [];
 
-      updated[secondSlot] = sourceSegments.map((sourceSeg, idx) => {
+      updated[targetSlot] = sourceSegments.map((sourceSeg, idx) => {
         const targetSeg = targetSegments[idx];
         if (targetSeg) {
           return copyContentToTarget(sourceSeg, targetSeg);
@@ -222,57 +226,57 @@ export function useWeeklyServiceHandlers({
         return cloneSegmentWithoutEntityRefs(sourceSeg);
       });
 
-      if (updated.pre_service_notes) updated.pre_service_notes[secondSlot] = updated.pre_service_notes[firstSlot] || "";
-      if (updated.coordinators) updated.coordinators[secondSlot] = updated.coordinators[firstSlot] || "";
-      if (updated.ujieres) updated.ujieres[secondSlot] = updated.ujieres[firstSlot] || "";
-      if (updated.sound) updated.sound[secondSlot] = updated.sound[firstSlot] || "";
-      if (updated.luces) updated.luces[secondSlot] = updated.luces[firstSlot] || "";
-      if (updated.fotografia) updated.fotografia[secondSlot] = updated.fotografia[firstSlot] || "";
+      if (updated.pre_service_notes) updated.pre_service_notes[targetSlot] = updated.pre_service_notes[sourceSlot] || "";
+      if (updated.coordinators) updated.coordinators[targetSlot] = updated.coordinators[sourceSlot] || "";
+      if (updated.ujieres) updated.ujieres[targetSlot] = updated.ujieres[sourceSlot] || "";
+      if (updated.sound) updated.sound[targetSlot] = updated.sound[sourceSlot] || "";
+      if (updated.luces) updated.luces[targetSlot] = updated.luces[sourceSlot] || "";
+      if (updated.fotografia) updated.fotografia[targetSlot] = updated.fotografia[sourceSlot] || "";
       return updated;
     });
   };
 
-  const copySegmentToNextSlot = (segmentIndex) => {
-    if (slotNames.length < 2) return;
+  const copySegmentToNextSlot = (sourceSlot, targetSlot, segmentIndex) => {
+    if (!sourceSlot || !targetSlot) return;
     setServiceData(prev => {
       if (!prev) return prev;
       const updated = { ...prev };
-      const sourceSeg = (updated[firstSlot] || [])[segmentIndex];
+      const sourceSeg = (updated[sourceSlot] || [])[segmentIndex];
       if (!sourceSeg) return prev;
 
-      if (!updated[secondSlot]) updated[secondSlot] = [];
-      updated[secondSlot] = [...updated[secondSlot]];
-      const targetSeg = updated[secondSlot][segmentIndex];
+      if (!updated[targetSlot]) updated[targetSlot] = [];
+      updated[targetSlot] = [...updated[targetSlot]];
+      const targetSeg = updated[targetSlot][segmentIndex];
 
       if (targetSeg) {
-        updated[secondSlot][segmentIndex] = copyContentToTarget(sourceSeg, targetSeg);
+        updated[targetSlot][segmentIndex] = copyContentToTarget(sourceSeg, targetSeg);
       } else {
-        updated[secondSlot][segmentIndex] = cloneSegmentWithoutEntityRefs(sourceSeg);
+        updated[targetSlot][segmentIndex] = cloneSegmentWithoutEntityRefs(sourceSeg);
       }
       return updated;
     });
   };
 
-  const copyPreServiceNotesToNextSlot = () => {
-    if (slotNames.length < 2) return;
+  const copyPreServiceNotesToNextSlot = (sourceSlot, targetSlot) => {
+    if (!sourceSlot || !targetSlot) return;
     setServiceData(prev => {
       if (!prev) return prev;
       const updated = { ...prev };
-      if (updated.pre_service_notes) updated.pre_service_notes[secondSlot] = updated.pre_service_notes[firstSlot] || "";
+      if (updated.pre_service_notes) updated.pre_service_notes[targetSlot] = updated.pre_service_notes[sourceSlot] || "";
       return updated;
     });
   };
 
-  const copyTeamToNextSlot = () => {
-    if (slotNames.length < 2) return;
+  const copyTeamToNextSlot = (sourceSlot, targetSlot) => {
+    if (!sourceSlot || !targetSlot) return;
     setServiceData(prev => {
       if (!prev) return prev;
       const updated = { ...prev };
-      if (updated.coordinators) updated.coordinators[secondSlot] = updated.coordinators[firstSlot] || "";
-      if (updated.ujieres) updated.ujieres[secondSlot] = updated.ujieres[firstSlot] || "";
-      if (updated.sound) updated.sound[secondSlot] = updated.sound[firstSlot] || "";
-      if (updated.luces) updated.luces[secondSlot] = updated.luces[firstSlot] || "";
-      if (updated.fotografia) updated.fotografia[secondSlot] = updated.fotografia[firstSlot] || "";
+      if (updated.coordinators) updated.coordinators[targetSlot] = updated.coordinators[sourceSlot] || "";
+      if (updated.ujieres) updated.ujieres[targetSlot] = updated.ujieres[sourceSlot] || "";
+      if (updated.sound) updated.sound[targetSlot] = updated.sound[sourceSlot] || "";
+      if (updated.luces) updated.luces[targetSlot] = updated.luces[sourceSlot] || "";
+      if (updated.fotografia) updated.fotografia[targetSlot] = updated.fotografia[sourceSlot] || "";
       return updated;
     });
   };

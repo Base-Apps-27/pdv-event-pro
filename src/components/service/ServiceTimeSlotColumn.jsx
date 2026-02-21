@@ -30,6 +30,7 @@ import {
  *
  * Props:
  *   timeSlot              — dynamic slot name from ServiceSchedule
+ *   slotIndex             — 0-based position for color cycling
  *   serviceData           — full service state
  *   expandedSegments      — object tracking expanded segment keys
  *   toggleSegmentExpanded — callback(timeSlot, idx)
@@ -51,6 +52,7 @@ import {
  */
 export default function ServiceTimeSlotColumn({
   timeSlot,
+  slotIndex = 0,
   serviceData,
   expandedSegments,
   toggleSegmentExpanded,
@@ -71,10 +73,9 @@ export default function ServiceTimeSlotColumn({
   canEdit,
   style,
 }) {
-  // Phase 2: Dynamic — first slot gets red accent, others get blue
-  const isFirstSlot = !!copySegmentToNextSlot; // First slot has copy-to-next buttons
+  // Dynamic accent color based on slot position
   const SLOT_ACCENT_COLORS = ['red', 'blue', 'purple', 'amber', 'green'];
-  const accentColor = isFirstSlot ? SLOT_ACCENT_COLORS[0] : SLOT_ACCENT_COLORS[1];
+  const accentColor = SLOT_ACCENT_COLORS[slotIndex % SLOT_ACCENT_COLORS.length];
   const timingInfo = calculateServiceTimes(timeSlot);
   const segments = serviceData[timeSlot] || [];
 
@@ -190,7 +191,8 @@ export default function ServiceTimeSlotColumn({
               debouncedSave={debouncedSave}
               setServiceData={setServiceData}
               handleOpenVerseParser={handleOpenVerseParser}
-              copySegmentToNextSlot={isFirstSlot ? copySegmentToNextSlot : null}
+              copySegmentToNextSlot={copySegmentToNextSlot}
+              nextSlotName={nextSlotName}
             />
           );
         })}
@@ -212,7 +214,7 @@ export default function ServiceTimeSlotColumn({
       )}
 
       {/* Team Section */}
-      <Card className={`${isFirstSlot ? 'bg-green-50 border-green-300' : 'bg-blue-50 border-blue-300'} border-2 print:hidden`}>
+      <Card className={`bg-${accentColor}-50 border-${accentColor}-300 border-2 print:hidden`}>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center justify-between">
             EQUIPO {timeSlot}
@@ -318,7 +320,7 @@ function SpecialSegmentCard({
 function StandardSegmentCard({
   timeSlot, segment, idx, isExpanded, serviceData, accentColor,
   toggleSegmentExpanded, handleMoveSegment, updateSegmentField,
-  debouncedSave, setServiceData, handleOpenVerseParser, copySegmentToNextSlot,
+  debouncedSave, setServiceData, handleOpenVerseParser, copySegmentToNextSlot, nextSlotName,
 }) {
   const filteredSegments = serviceData[timeSlot]?.filter(s => s.type !== 'break') || [];
   const totalFiltered = filteredSegments.length;
