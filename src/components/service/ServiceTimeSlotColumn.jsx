@@ -337,7 +337,7 @@ function StandardSegmentCard({
           {segment.title}
           <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
           {copySegmentToNextSlot && (
-            <Button variant="ghost" size="sm" onClick={() => copySegmentToNextSlot(idx)} className="print:hidden h-7 px-2 hover:bg-blue-50" title={nextSlotName ? `Copiar a ${nextSlotName}` : "Copiar a siguiente"}>
+            <Button variant="ghost" size="sm" onClick={() => copySegmentToNextSlot(idx)} className="print:hidden h-7 px-2 hover:bg-blue-50" title="Copiar a siguiente">
               <ArrowRight className="w-4 h-4 text-blue-600" />
             </Button>
           )}
