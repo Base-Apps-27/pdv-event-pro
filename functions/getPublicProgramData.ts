@@ -433,7 +433,10 @@ Deno.serve(async (req) => {
                  // A. Sort by session order, then segment order (matching event path)
                  const sessionOrderMap = new Map(sessions.map((s, i) => [s.id, i]));
                  segments = allResults
-                     .filter(s => s.show_in_general)
+                     // CHILD SEGMENT FILTER (2026-02-21): Exclude sub-segments (parent_segment_id set).
+                     // These are internal sub-assignments (e.g. Ministración within Alabanza) and
+                     // must NOT appear as top-level timeline entries.
+                     .filter(s => s.show_in_general && !s.parent_segment_id)
                      .sort((a, b) => {
                          const aSessionIdx = sessionOrderMap.get(a.session_id) ?? 999;
                          const bSessionIdx = sessionOrderMap.get(b.session_id) ?? 999;

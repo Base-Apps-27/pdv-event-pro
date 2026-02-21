@@ -435,7 +435,11 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       // Sort by session order first, then segment order (matches event path pattern)
       const sessionsMap = new Map(sessions.map((s, i) => [s.id, i]));
       segments = allSegs
-        .filter(s => s.show_in_general !== false)
+        // CHILD SEGMENT FILTER (2026-02-21): Exclude sub-segments (e.g. Ministración within Alabanza).
+        // Child segments have parent_segment_id set and should NOT appear in the flat
+        // display list — they are internal sub-assignments, not top-level timeline entries.
+        // Showing them causes: (a) wrong "current segment" on TV, (b) duplicate entries in timeline.
+        .filter(s => s.show_in_general !== false && !s.parent_segment_id)
         .sort((a, b) => {
           const aIdx = sessionsMap.get(a.session_id) ?? 999;
           const bIdx = sessionsMap.get(b.session_id) ?? 999;
