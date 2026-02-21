@@ -209,38 +209,31 @@ export default function CoordinatorActionsDisplay({
                     const minutesUntil = Math.ceil(timeUntil / 60000);
                     const isUrgent = timeUntil > 0 && timeUntil < 5 * 60000;
                     const isClusteredWithHero = clusteredSecondaryIds.includes(action.id);
-                    
-                    // Determine hero urgency state
-                    const heroTimeUntil = heroAction.time.getTime() - now;
-                    const heroIsUrgent = heroTimeUntil > 0 && heroTimeUntil < 5 * 60000;
-                    
-                    // Cascade urgency: if clustered with urgent hero, inherit urgency
-                    const effectiveUrgency = isUrgent || (isClusteredWithHero && heroIsUrgent);
 
                     return (
                       <div
                         key={action.id}
                         className={`relative flex flex-col p-1.5 rounded ${
-                          effectiveUrgency
-                            ? 'bg-amber-50 border-2 border-amber-400'
+                          isUrgent
+                            ? 'bg-amber-50 border-2 border-amber-400 shadow-amber-200/50'
                             : isClusteredWithHero
                             ? 'bg-slate-50 border-2 border-pdv-teal/60'
                             : 'bg-slate-50 border border-slate-200'
                         }`}
                       >
                         {/* Cluster badge - shows when grouped with hero */}
-                        {isClusteredWithHero && (
-                          <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-500 border border-white animate-pulse" />
+                        {isClusteredWithHero && !isUrgent && (
+                          <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-pdv-teal border border-white animate-pulse" />
                         )}
                         
                         {/* Time + Alert */}
                         <div className="flex items-center justify-between mb-0.5">
                           <div className={`text-base font-black font-mono leading-none ${
-                            effectiveUrgency ? 'text-amber-600' : 'text-pdv-teal'
+                            isUrgent ? 'text-amber-600' : 'text-pdv-teal'
                           }`}>
                             {minutesUntil > 0 ? `${minutesUntil}m` : 'NOW'}
                           </div>
-                          {effectiveUrgency && <AlertCircle className="w-2.5 h-2.5 text-amber-600 animate-pulse" />}
+                          {isUrgent && <AlertCircle className="w-2.5 h-2.5 text-amber-600 animate-pulse" />}
                         </div>
 
                         {/* Label */}
