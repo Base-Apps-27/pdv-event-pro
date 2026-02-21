@@ -132,7 +132,7 @@ export async function syncToSession(base44, serviceResult, segments) {
           end_time: subEndStr,
           duration_min: subDuration,
           presenter: sub.presenter || "",
-          show_in_general: true,
+          show_in_general: false,
           _isSubAsignacion: true // Temporary marker for post-processing
         });
       });

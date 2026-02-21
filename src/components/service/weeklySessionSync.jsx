@@ -607,7 +607,7 @@ function buildSubAsignaciones(
       end_time: subEndStr,
       duration_min: subDuration,
       presenter: subPresenter,
-      show_in_general: true,
+      show_in_general: false,
       _isSubAsignacion: true,
       _parentOrder: parentOrder,
     });

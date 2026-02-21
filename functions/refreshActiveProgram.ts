@@ -325,7 +325,7 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       const sessionDateMap = new Map(sessions.map(s => [s.id, s.date]));
 
       segments = allSegments
-        .filter(seg => seg.show_in_general)
+        .filter(seg => seg.show_in_general !== false && !seg.parent_segment_id)
         .map(seg => ({ ...seg, date: sessionDateMap.get(seg.session_id) || null }))
         .sort((a, b) => {
           const aIdx = orderMap.get(a.session_id) ?? 999;

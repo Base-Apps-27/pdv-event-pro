@@ -711,18 +711,18 @@ export function normalizeSegments(segments, source = 'event', options = {}) {
     if (s.id && s.date) sessionDateMap.set(s.id, s.date);
   });
 
-  // CHILD SEGMENT FILTER (2026-02-21): Exclude sub-segments (parent_segment_id set).
-  // These are internal sub-assignments (e.g. Ministración within Alabanza) and
-  // must NOT appear in the flat display list — they are only shown in editor UI as sub-assignments.
-  // This matches the filtering done in refreshActiveProgram + getPublicProgramData.
-  const filteredSegments = segments.filter(seg => !seg.parent_segment_id);
-
-  return filteredSegments.map(seg => {
-    const defaults = {
-      date: seg.date || sessionDateMap.get(seg.session_id) || serviceDate || null,
-    };
-    return normalizeOneSegment(seg, source, defaults);
-  });
+  // Defensive filter: exclude child segments (parent_segment_id set).
+  // Backend should already filter these, but stale cache or direct calls may include them.
+  // Child segments are internal sub-assignments (e.g. Ministración within Alabanza)
+  // and must NOT appear as top-level timeline entries.
+  return segments
+    .filter(seg => !seg.parent_segment_id)
+    .map(seg => {
+      const defaults = {
+        date: seg.date || sessionDateMap.get(seg.session_id) || serviceDate || null,
+      };
+      return normalizeOneSegment(seg, source, defaults);
+    });
 }
 
 /**
@@ -848,18 +848,32 @@ export function normalizeProgramData(programData) {
 
   const source = detectSourceType(programData);
   const sessions = programData.sessions || [];
-  const serviceDate = programData.program?.date || null;
   const liveAdjustments = programData.liveAdjustments || [];
+  const rawSegments = programData.segments || [];
 
-  // Step 1: Normalize raw segments into canonical shape
-  const normalized = normalizeSegments(
-    programData.segments || [],
-    source,
-    { sessions, serviceDate }
-  );
+  // Entity-sourced segments (sessions.length > 0) are already in canonical shape
+  // from refreshActiveProgram — pass them through directly. The old normalizeOneSegment()
+  // reconstructed each segment from scratch with a fixed whitelist of ~150 fields,
+  // which caused data loss (any new entity field not in the list was silently dropped)
+  // and data corruption (getField() precedence bugs, phantom leader/preacher mapping).
+  //
+  // JSON-sourced segments (pre-Entity-Lift fallback, sessions=[]) still need
+  // normalizeSegments() to translate field names (type→segment_type, duration→duration_min).
+  const entitySourced = sessions.length > 0;
 
-  // Step 2: Apply live time adjustments (pass sessions for entity ID resolution)
-  const adjusted = applyTimeAdjustments(normalized, liveAdjustments, sessions);
+  let segments;
+  if (entitySourced) {
+    // Passthrough: filter child segments, keep everything else as-is
+    segments = rawSegments.filter(seg => !seg.parent_segment_id);
+  } else {
+    // Legacy JSON path: normalize field names + filter child segments
+    const serviceDate = programData.program?.date || null;
+    segments = normalizeSegments(rawSegments, source, { sessions, serviceDate });
+  }
+
+  // Apply live time adjustments (works on both entity and JSON segments —
+  // only reads session_id, start_time, end_time)
+  const adjusted = applyTimeAdjustments(segments, liveAdjustments, sessions);
 
   return {
     segments: adjusted,
