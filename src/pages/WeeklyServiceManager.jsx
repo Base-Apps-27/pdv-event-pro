@@ -388,25 +388,15 @@ export default function WeeklyServiceManager() {
   // updates as external changes.
   const fieldPushActiveRef = React.useRef(0);
 
-  // SAVE-STALL FIX (2026-02-22): After a per-field push succeeds, schedule
-  // a debounced sync of lastSavedData so the "Saving..." badge clears within
-  // a few seconds instead of waiting for the 30-second safety-net full sync.
-  // Also triggers display surface refresh (activeProgram / publicProgramData).
-  const fieldPushSyncTimerRef = React.useRef(null);
-  const scheduleLastSavedSync = React.useCallback(() => {
-    if (fieldPushSyncTimerRef.current) clearTimeout(fieldPushSyncTimerRef.current);
-    fieldPushSyncTimerRef.current = setTimeout(() => {
-      const current = serviceDataRef.current;
-      if (current) {
-        setLastSavedData(JSON.parse(JSON.stringify(current)));
-        setLastSaveTimestamp(new Date().toISOString());
-        // Refresh display surfaces (TV display, public view) so per-field
-        // changes propagate without waiting for the 30-second safety-net.
-        queryClient.invalidateQueries({ queryKey: ['activeProgram'] });
-        queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
-      }
-    }, 2000); // 2s debounce: wait for rapid consecutive field pushes to settle
-  }, [queryClient]);
+  // NOTE (2026-02-22): scheduleLastSavedSync was removed because it caused silent data loss.
+  // When it fired after ANY successful per-field push (e.g. a song title), it would snapshot
+  // lastSavedData = serviceData. That snapshot included ministry_leader's value even though
+  // ministry_leader was NEVER pushed to the DB (child Ministración entities have no direct
+  // per-field push path). This made serviceData === lastSavedData, killing the 30-second
+  // safety-net full sync that actually saves ministry_leader via bulkCreate.
+  // Fix: only saveServiceMutation.onSuccess sets lastSavedData. Badge stays yellow until
+  // the full sync completes — which is honest and correct.
+  const fieldPushSyncTimerRef = React.useRef(null); // kept for cleanup safety
 
   const pushFn = React.useCallback((type, opts) => {
     fieldPushActiveRef.current++;
