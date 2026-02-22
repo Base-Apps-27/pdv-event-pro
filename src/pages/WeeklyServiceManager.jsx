@@ -388,25 +388,40 @@ export default function WeeklyServiceManager() {
   // updates as external changes.
   const fieldPushActiveRef = React.useRef(0);
 
-  // NOTE (2026-02-22): scheduleLastSavedSync was removed because it caused silent data loss.
-  // When it fired after ANY successful per-field push (e.g. a song title), it would snapshot
-  // lastSavedData = serviceData. That snapshot included ministry_leader's value even though
-  // ministry_leader was NEVER pushed to the DB (child Ministración entities have no direct
-  // per-field push path). This made serviceData === lastSavedData, killing the 30-second
-  // safety-net full sync that actually saves ministry_leader via bulkCreate.
-  // Fix: only saveServiceMutation.onSuccess sets lastSavedData. Badge stays yellow until
-  // the full sync completes — which is honest and correct.
+  // BADGE-FIX (2026-02-22): After a successful per-field push (mapped field only),
+  // advance lastSavedData to current serviceData so the badge clears quickly.
+  // We only do this when ALL segments already have _entityId (no structural changes
+  // are pending). If any segment is missing an _entityId, a full sync is still
+  // needed to create those entities — keep the badge yellow in that case.
+  // ministry_leader (NO_MAPPING) fields are excluded: their pushes reject with
+  // NO_MAPPING so this function is never called for them, and the 30s full sync
+  // remains responsible for persisting them.
+  const advanceBadgeAfterPush = React.useCallback(() => {
+    const current = serviceDataRef.current;
+    if (!current) return;
+    const slotKeys = Object.keys(current).filter(k =>
+      !k.startsWith('_') && Array.isArray(current[k]) && current[k].length > 0
+    );
+    const allHaveIds = slotKeys.every(slot =>
+      current[slot].every(seg => !!seg._entityId)
+    );
+    if (allHaveIds) {
+      setLastSavedData(JSON.parse(JSON.stringify(current)));
+    }
+  }, []);
+
   const fieldPushSyncTimerRef = React.useRef(null); // kept for cleanup safety
 
   const pushFn = React.useCallback((type, opts) => {
     fieldPushActiveRef.current++;
-    // SAVE-STALL FIX: Increased guard window from 500ms to 3000ms to cover
-    // subscription event latency. Without this, late-arriving subscription
-    // events from our own pushes were being treated as external changes.
-    const done = () => setTimeout(() => {
+    // Guard window: keep fieldPushActiveRef elevated for 3s after push resolves
+    // so the subscription handler doesn't treat our own events as external changes.
+    const done = (wasSuccess) => setTimeout(() => {
       fieldPushActiveRef.current = Math.max(0, fieldPushActiveRef.current - 1);
-      // NOTE: scheduleLastSavedSync removed — only saveServiceMutation.onSuccess
-      // advances lastSavedData, so the safety-net full sync stays alive.
+      // BADGE-FIX: On successful mapped-field push, advance lastSavedData so
+      // the "Saving..." badge clears promptly (like the old JSON-only behavior).
+      // Skip for NO_MAPPING (those still need the 30s full sync).
+      if (wasSuccess) advanceBadgeAfterPush();
     }, 3000);
     let promise;
     try {
@@ -440,25 +455,25 @@ export default function WeeklyServiceManager() {
       }
       promise.then(() => {
         console.log(`[PUSH] SUCCESS: ${type} saved`);
-        done();
+        done(true);
       }, (err) => {
         // NO_MAPPING rejections are intentional deferrals to the full sync.
         // ministry_leader (and similar child-entity fields) have no per-field push path.
         if (err.message?.startsWith("NO_MAPPING:")) {
           console.log(`[PUSH] Deferred to full sync: ${err.message}`);
-          done();
+          done(false); // Don't advance badge — 30s sync will handle it
           return;
         }
         console.error(`[PUSH] FAILED: ${type}`, err.message);
         toast.error(`Error guardando: ${err.message}`);
-        done();
+        done(false);
       });
     } catch (err) {
       console.error("[FIELD_PUSH] Synchronous error in pushFn:", err.message);
       toast.error(`Error crítico: ${err.message}`);
-      done();
+      done(false);
     }
-  }, [existingData?.id]);
+  }, [existingData?.id, advanceBadgeAfterPush]);
 
   // SAVE PIPELINE (2026-02-21): Safety-net full sync. Per-field pushes handle
   // individual field changes immediately. This full sync runs on a 30-second timer
