@@ -320,7 +320,11 @@ export default function WeeklyServiceManager() {
 
       return service;
     },
-    enabled: !!selectedDate && !!blueprintData
+    enabled: !!selectedDate && !!blueprintData,
+    // SAVE-STALL FIX (2026-02-22): staleTime was documented but never applied.
+    // Without it, React Query refetches on window focus, which can trigger
+    // loadWeeklyFromSessions mid-edit. Local state is source of truth once loaded.
+    staleTime: Infinity,
   });
 
   const { data: allAnnouncements = [] } = useQuery({
@@ -384,9 +388,36 @@ export default function WeeklyServiceManager() {
   // updates as external changes.
   const fieldPushActiveRef = React.useRef(0);
 
+  // SAVE-STALL FIX (2026-02-22): After a per-field push succeeds, schedule
+  // a debounced sync of lastSavedData so the "Saving..." badge clears within
+  // a few seconds instead of waiting for the 30-second safety-net full sync.
+  // Also triggers display surface refresh (activeProgram / publicProgramData).
+  const fieldPushSyncTimerRef = React.useRef(null);
+  const scheduleLastSavedSync = React.useCallback(() => {
+    if (fieldPushSyncTimerRef.current) clearTimeout(fieldPushSyncTimerRef.current);
+    fieldPushSyncTimerRef.current = setTimeout(() => {
+      const current = serviceDataRef.current;
+      if (current) {
+        setLastSavedData(JSON.parse(JSON.stringify(current)));
+        setLastSaveTimestamp(new Date().toISOString());
+        // Refresh display surfaces (TV display, public view) so per-field
+        // changes propagate without waiting for the 30-second safety-net.
+        queryClient.invalidateQueries({ queryKey: ['activeProgram'] });
+        queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
+      }
+    }, 2000); // 2s debounce: wait for rapid consecutive field pushes to settle
+  }, [queryClient]);
+
   const pushFn = React.useCallback((type, opts) => {
     fieldPushActiveRef.current++;
-    const done = () => setTimeout(() => { fieldPushActiveRef.current = Math.max(0, fieldPushActiveRef.current - 1); }, 500);
+    // SAVE-STALL FIX: Increased guard window from 500ms to 3000ms to cover
+    // subscription event latency. Without this, late-arriving subscription
+    // events from our own pushes were being treated as external changes.
+    const done = (success) => setTimeout(() => {
+      fieldPushActiveRef.current = Math.max(0, fieldPushActiveRef.current - 1);
+      // On successful push, schedule lastSavedData sync to clear "Saving..." badge
+      if (success) scheduleLastSavedSync();
+    }, 3000);
     let promise;
     try {
       if (type === "segment") {
@@ -419,18 +450,18 @@ export default function WeeklyServiceManager() {
       }
       promise.then(() => {
         console.log(`[PUSH] SUCCESS: ${type} saved`);
-        done();
+        done(true);
       }, (err) => {
         console.error(`[PUSH] FAILED: ${type}`, err.message);
         toast.error(`Error guardando: ${err.message}`);
-        done();
+        done(false);
       });
     } catch (err) {
       console.error("[FIELD_PUSH] Synchronous error in pushFn:", err.message);
       toast.error(`Error crítico: ${err.message}`);
-      done();
+      done(false);
     }
-  }, [existingData?.id]);
+  }, [existingData?.id, scheduleLastSavedSync]);
 
   // SAVE PIPELINE (2026-02-21): Safety-net full sync. Per-field pushes handle
   // individual field changes immediately. This full sync runs on a 30-second timer
@@ -839,7 +870,7 @@ export default function WeeklyServiceManager() {
           setExternalChangeAvailable(true);
           toast.warning('Otro administrador actualizó el programa');
         }
-      }, 1500); // Debounce: wait for entity sync to complete (multiple entities change in rapid succession)
+      }, 4000); // Debounce: wait for entity sync + field push guard (3s) to complete
     };
 
     const unsubs = [
