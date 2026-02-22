@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useContext, useCallback, createContext } from "react";
+import React, { useContext, createContext } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
-import { useDebouncedCommit } from "@/components/utils/useDebouncedCommit";
 
 /**
  * WeeklyServiceInputs — Extracted from WeeklyServiceManager (Phase 3A).
- * Contains all debounced input components that share ServiceDataContext/UpdatersContext.
+ * SIMPLIFIED SAVE (2026-02-22): All inputs now use direct onChange → setState.
+ * No local state, no debouncing, no blur commits.
+ * 5s debounced timer in WeeklyServiceManager handles batched DB writes.
  *
  * Exports:
  *   ServiceDataContext, UpdatersContext — React contexts for state sharing
@@ -18,79 +19,27 @@ import { useDebouncedCommit } from "@/components/utils/useDebouncedCommit";
 export const ServiceDataContext = createContext(null);
 export const UpdatersContext = createContext(null);
 
-// Song Input Row with local state
-// SONG-OVERWRITE-FIX (2026-02-20): Each field commits only its own value using
-// setServiceData functional updater to read latest state. This prevents saving
-// one field from overwriting another field's in-progress local edits.
-// PER-FIELD-PUSH (2026-02-21): After updating state, pushes the updated songs
-// array directly to the Segment entity. Fire-and-forget, non-blocking.
+// Song Input Row - direct state updates
 export function SongInputRow({ service, segmentIndex, songIndex }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
   const song = segment?.songs?.[songIndex] || { title: "", lead: "", key: "" };
-  const setServiceData = useContext(UpdatersContext)?.setServiceData;
-  const pushFn = useContext(UpdatersContext)?.pushFn;
-  // Stable entity ID (set during init, doesn't change between field edits)
-  const entityId = segment?._entityId;
+  const { updateSegmentField } = useContext(UpdatersContext);
 
-  const [localTitle, setLocalTitle] = useState("");
-  const [localLead, setLocalLead] = useState("");
-  const [localKey, setLocalKey] = useState("");
+  const handleSongChange = (field, value) => {
+    const songs = segment?.songs || [];
+    const updated = [...songs];
+    updated[songIndex] = { ...updated[songIndex], [field]: value };
+    updateSegmentField(service, segmentIndex, "songs", updated);
+  };
 
-  // Helper: update a single song sub-field using functional updater (always reads latest state)
-  const commitSongField = useCallback((fieldName, val) => {
-    let updatedSongs = null;
-    setServiceData(prev => {
-      const newServiceArray = [...(prev[service] || [])];
-      if (!newServiceArray[segmentIndex]) return prev;
-      const newSegment = { ...newServiceArray[segmentIndex] };
-      const newSongs = [...(newSegment.songs || [])];
-      newSongs[songIndex] = { ...newSongs[songIndex], [fieldName]: val };
-      newSegment.songs = newSongs;
-      newServiceArray[segmentIndex] = newSegment;
-      updatedSongs = newSongs; // Capture for push
-      return { ...prev, [service]: newServiceArray };
-    });
-    // Per-field push: send updated songs to entity (fire-and-forget)
-    if (pushFn && entityId && updatedSongs) {
-      pushFn("songs", { entityId, songs: updatedSongs });
-    }
-  }, [service, segmentIndex, songIndex, setServiceData, pushFn, entityId]);
-  
-  const commitTitle = useDebouncedCommit(
-    localTitle,
-    song.title,
-    (val) => commitSongField('title', val),
-    3000
-  );
-  
-  const commitLead = useDebouncedCommit(
-    localLead,
-    song.lead,
-    (val) => commitSongField('lead', val),
-    3000
-  );
-
-  const commitKey = useDebouncedCommit(
-    localKey,
-    song.key,
-    (val) => commitSongField('key', val),
-    3000
-  );
-  
-  // Separate sync effects per field so committing one doesn't overwrite another's local edits
-  useEffect(() => { setLocalTitle(song.title); }, [song.title]);
-  useEffect(() => { setLocalLead(song.lead); }, [song.lead]);
-  useEffect(() => { setLocalKey(song.key || ""); }, [song.key]);
-  
   return (
     <div className="grid grid-cols-12 gap-2">
       <div className="col-span-5">
         <AutocompleteInput
           type="songTitle"
           placeholder={`Canción ${songIndex + 1}`}
-          value={localTitle}
-          onChange={(e) => setLocalTitle(e.target.value)}
-          onBlur={commitTitle}
+          value={song.title}
+          onChange={(e) => handleSongChange("title", e.target.value)}
           className="text-xs"
         />
       </div>
@@ -98,18 +47,16 @@ export function SongInputRow({ service, segmentIndex, songIndex }) {
         <AutocompleteInput
           type="worshipLeader"
           placeholder="Líder"
-          value={localLead}
-          onChange={(e) => setLocalLead(e.target.value)}
-          onBlur={commitLead}
+          value={song.lead}
+          onChange={(e) => handleSongChange("lead", e.target.value)}
           className="text-xs"
         />
       </div>
       <div className="col-span-2">
         <Input
           placeholder="Tono"
-          value={localKey}
-          onChange={(e) => setLocalKey(e.target.value)}
-          onBlur={commitKey}
+          value={song.key}
+          onChange={(e) => handleSongChange("key", e.target.value)}
           className="text-xs px-1 text-center"
         />
       </div>
@@ -117,218 +64,124 @@ export function SongInputRow({ service, segmentIndex, songIndex }) {
   );
 }
 
-// Pre-Service Notes Input with local state
-// PER-FIELD-PUSH (2026-02-21): Pushes notes to PreSessionDetails entity.
+// Pre-Service Notes Input - direct state updates
 export function PreServiceNotesInput({ service }) {
   const serviceData = useContext(ServiceDataContext);
-  const currentGlobalValue = serviceData?.pre_service_notes?.[service] || "";
-  const setServiceData = useContext(UpdatersContext)?.setServiceData;
-  const pushFn = useContext(UpdatersContext)?.pushFn;
-  // Session ID for this slot (for PreSessionDetails push)
-  const sessionId = serviceData?._sessionIds?.[service]
-    || serviceData?.[service]?.[0]?._sessionId;
-  const [localValue, setLocalValue] = useState("");
+  const notes = serviceData?.pre_service_notes?.[service] || "";
+  const { setServiceData } = useContext(UpdatersContext);
 
-  const commitNow = useDebouncedCommit(
-    localValue,
-    currentGlobalValue,
-    (val) => {
-      setServiceData(prev => ({
-        ...prev,
-        pre_service_notes: {
-          ...prev.pre_service_notes,
-          [service]: val
-        }
-      }));
-      // Per-field push
-      if (pushFn && sessionId) {
-        pushFn("preNotes", { sessionId, value: val });
+  const handleChange = (val) => {
+    setServiceData(prev => ({
+      ...prev,
+      pre_service_notes: {
+        ...prev.pre_service_notes,
+        [service]: val
       }
-    },
-    3000
-  );
-  
-  useEffect(() => {
-    setLocalValue(currentGlobalValue);
-  }, [currentGlobalValue]);
-  
+    }));
+  };
+
   return (
     <Textarea
       placeholder="Instrucciones pre-servicio (opcional)..."
-      value={localValue}
-      onChange={(e) => setLocalValue(e.target.value)}
-      onBlur={commitNow}
+      value={notes}
+      onChange={(e) => handleChange(e.target.value)}
       className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
       rows={2}
     />
   );
 }
 
-// Receso Notes Input with local state
-// Entity Lift: accepts slotName prop (defaults to first slot key in receso_notes)
-// PER-FIELD-PUSH (2026-02-21): receso_notes lives on Service entity (not session),
-// so we push via the "serviceField" type. The safety-net full sync also covers this.
+// Receso Notes Input - direct state updates
 export function RecesoNotesInput({ slotName }) {
   const serviceData = useContext(ServiceDataContext);
-  // Resolve slot: use prop if provided, else first key in receso_notes
   const resolvedSlot = slotName || (serviceData?.receso_notes ? Object.keys(serviceData.receso_notes)[0] : null);
   if (!resolvedSlot) return null;
-  const currentGlobalValue = serviceData?.receso_notes?.[resolvedSlot] || "";
-  const setServiceData = useContext(UpdatersContext)?.setServiceData;
-  const pushFn = useContext(UpdatersContext)?.pushFn;
-  const [localValue, setLocalValue] = useState("");
+  const notes = serviceData?.receso_notes?.[resolvedSlot] || "";
+  const { setServiceData } = useContext(UpdatersContext);
 
-  const commitNow = useDebouncedCommit(
-    localValue,
-    currentGlobalValue,
-    (val) => {
-      setServiceData(prev => ({
-        ...prev,
-        receso_notes: {
-          ...prev.receso_notes,
-          [resolvedSlot]: val
-        }
-      }));
-      // Per-field push: receso_notes → Service entity
-      if (pushFn) {
-        pushFn("serviceField", { field: "receso_notes", slotName: resolvedSlot, value: val });
+  const handleChange = (val) => {
+    setServiceData(prev => ({
+      ...prev,
+      receso_notes: {
+        ...prev.receso_notes,
+        [resolvedSlot]: val
       }
-    },
-    3000
-  );
-  
-  useEffect(() => {
-    setLocalValue(currentGlobalValue);
-  }, [currentGlobalValue]);
-  
+    }));
+  };
+
   return (
     <Textarea
       placeholder="Notas del receso (opcional)..."
-      value={localValue}
-      onChange={(e) => setLocalValue(e.target.value)}
-      onBlur={commitNow}
+      value={notes}
+      onChange={(e) => handleChange(e.target.value)}
       className="text-xs bg-white border-gray-300 text-gray-700 placeholder:text-gray-400"
       rows={2}
     />
   );
 }
 
-// Team Input Component with local state
+// Team Input Component - direct state updates
 export function TeamInput({ field, service, placeholder }) {
-  const currentGlobalValue = useContext(ServiceDataContext)?.[field]?.[service] || "";
-  const updateTeamField = useContext(UpdatersContext)?.updateTeamField;
-  const [localValue, setLocalValue] = useState("");
-  
-  const commitNow = useDebouncedCommit(
-    localValue,
-    currentGlobalValue,
-    (val) => updateTeamField(field, service, val),
-    3000
-  );
-  
-  useEffect(() => {
-    setLocalValue(currentGlobalValue);
-  }, [currentGlobalValue]);
-  
+  const value = useContext(ServiceDataContext)?.[field]?.[service] || "";
+  const { updateTeamField } = useContext(UpdatersContext);
+
   return (
     <Input
       placeholder={placeholder}
-      value={localValue}
-      onChange={(e) => setLocalValue(e.target.value)}
-      onBlur={commitNow}
+      value={value}
+      onChange={(e) => updateTeamField(field, service, e.target.value)}
       className="text-xs"
     />
   );
 }
 
-// Segment Field Component with local state (for simple text inputs)
+// Segment Field Component - direct state updates
 export function SegmentTextInput({ service, segmentIndex, field, placeholder, className = "text-sm" }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
-  
   const rootFields = ['presentation_url', 'notes_url'];
   const isRoot = rootFields.includes(field);
-  
-  const currentGlobalValue = isRoot ? (segment?.[field] || "") : (segment?.data?.[field] || "");
-  const updateSegmentField = useContext(UpdatersContext)?.updateSegmentField;
-  const [localValue, setLocalValue] = useState("");
-  
-  const commitNow = useDebouncedCommit(
-    localValue,
-    currentGlobalValue,
-    (val) => updateSegmentField(service, segmentIndex, field, val),
-    3000
-  );
-  
-  useEffect(() => {
-    setLocalValue(currentGlobalValue);
-  }, [currentGlobalValue]);
-  
+  const value = isRoot ? (segment?.[field] || "") : (segment?.data?.[field] || "");
+  const { updateSegmentField } = useContext(UpdatersContext);
+
   return (
     <Input
       placeholder={placeholder}
-      value={localValue}
-      onChange={(e) => setLocalValue(e.target.value)}
-      onBlur={commitNow}
+      value={value}
+      onChange={(e) => updateSegmentField(service, segmentIndex, field, e.target.value)}
       className={className}
     />
   );
 }
 
-// Segment Textarea Component with local state
+// Segment Textarea Component - direct state updates
 export function SegmentTextarea({ service, segmentIndex, field, placeholder, className = "text-sm", rows = 2 }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
-  const currentGlobalValue = segment?.data?.[field] || "";
-  const updateSegmentField = useContext(UpdatersContext)?.updateSegmentField;
-  const [localValue, setLocalValue] = useState("");
-  
-  const commitNow = useDebouncedCommit(
-    localValue,
-    currentGlobalValue,
-    (val) => updateSegmentField(service, segmentIndex, field, val),
-    3000
-  );
-  
-  useEffect(() => {
-    setLocalValue(currentGlobalValue);
-  }, [currentGlobalValue]);
-  
+  const value = segment?.data?.[field] || "";
+  const { updateSegmentField } = useContext(UpdatersContext);
+
   return (
     <Textarea
       placeholder={placeholder}
-      value={localValue}
-      onChange={(e) => setLocalValue(e.target.value)}
-      onBlur={commitNow}
+      value={value}
+      onChange={(e) => updateSegmentField(service, segmentIndex, field, e.target.value)}
       className={className}
       rows={rows}
     />
   );
 }
 
-// Segment Autocomplete Component with local state
+// Segment Autocomplete Component - direct state updates
 export function SegmentAutocomplete({ service, segmentIndex, field, placeholder, type, className = "text-sm" }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
-  const currentGlobalValue = segment?.data?.[field] || "";
-  const updateSegmentField = useContext(UpdatersContext)?.updateSegmentField;
-  const [localValue, setLocalValue] = useState("");
-  
-  const commitNow = useDebouncedCommit(
-    localValue,
-    currentGlobalValue,
-    (val) => updateSegmentField(service, segmentIndex, field, val),
-    3000
-  );
-  
-  useEffect(() => {
-    setLocalValue(currentGlobalValue);
-  }, [currentGlobalValue]);
-  
+  const value = segment?.data?.[field] || "";
+  const { updateSegmentField } = useContext(UpdatersContext);
+
   return (
     <AutocompleteInput
       type={type}
       placeholder={placeholder}
-      value={localValue}
-      onChange={(e) => setLocalValue(e.target.value)}
-      onBlur={commitNow}
+      value={value}
+      onChange={(e) => updateSegmentField(service, segmentIndex, field, e.target.value)}
       className={className}
     />
   );
