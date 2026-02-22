@@ -452,6 +452,14 @@ export default function WeeklyServiceManager() {
         console.log(`[PUSH] SUCCESS: ${type} saved`);
         done(true);
       }, (err) => {
+        // SAVE-STALL FIX (2026-02-22): NO_MAPPING rejections are intentional deferrals
+        // to the 30-second safety-net sync (e.g., ministry_leader lives on a child entity,
+        // not the parent). Don't toast or log as error — these are silent deferrals.
+        if (err.message?.startsWith("NO_MAPPING:")) {
+          console.log(`[PUSH] Deferred to full sync: ${err.message}`);
+          done(false);
+          return;
+        }
         console.error(`[PUSH] FAILED: ${type}`, err.message);
         toast.error(`Error guardando: ${err.message}`);
         done(false);

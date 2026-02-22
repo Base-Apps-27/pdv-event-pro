@@ -96,8 +96,14 @@ export function pushSegmentField(base44, segmentEntityId, uiField, value) {
   if (!segmentEntityId) return Promise.resolve();
   const entityField = SEGMENT_FIELD_MAP[uiField];
   if (!entityField) {
-    console.warn("[FIELD_PUSH] No mapping for segment field:", uiField);
-    return Promise.resolve();
+    // SAVE-STALL FIX (2026-02-22): Reject instead of resolve for unmapped fields.
+    // If we resolve(), done(true) fires scheduleLastSavedSync(), which sets
+    // lastSavedData = serviceData and prevents the 30-second safety-net sync from running.
+    // Fields like ministry_leader (on child entities) have no direct per-field push path —
+    // they MUST go through the full sync. Rejecting with NO_MAPPING causes done(false),
+    // skipping scheduleLastSavedSync, so the safety-net timer fires and saves correctly.
+    console.warn("[FIELD_PUSH] No mapping for segment field (will defer to full sync):", uiField);
+    return Promise.reject(new Error("NO_MAPPING:" + uiField));
   }
   return base44.entities.Segment.update(segmentEntityId, { [entityField]: value })
     .then(() => console.log("[FIELD_PUSH] SUCCESS Segment:", uiField))
