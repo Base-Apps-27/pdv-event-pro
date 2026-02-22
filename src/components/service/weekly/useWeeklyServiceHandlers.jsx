@@ -22,7 +22,7 @@ import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncem
 import { safeParseTimeSlot } from "@/components/service/pdfUtils";
 
 export function useWeeklyServiceHandlers({
-  serviceData,
+  serviceData,    // NOTE: This is the serviceData snapshot at last render — use serviceDataRef for latest in callbacks
   setServiceData,
   selectedAnnouncements,
   updateAnnouncementMutation,
