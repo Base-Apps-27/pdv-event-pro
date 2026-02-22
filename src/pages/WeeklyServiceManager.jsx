@@ -456,9 +456,9 @@ export default function WeeklyServiceManager() {
     } catch (err) {
       console.error("[FIELD_PUSH] Synchronous error in pushFn:", err.message);
       toast.error(`Error crítico: ${err.message}`);
-      done(false);
+      done();
     }
-  }, [existingData?.id, scheduleLastSavedSync]);
+  }, [existingData?.id]);
 
   // SAVE PIPELINE (2026-02-21): Safety-net full sync. Per-field pushes handle
   // individual field changes immediately. This full sync runs on a 30-second timer
