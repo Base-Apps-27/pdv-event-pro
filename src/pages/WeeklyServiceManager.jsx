@@ -930,28 +930,54 @@ export default function WeeklyServiceManager() {
   const activeDayLabel = activeDayMeta?.fullLabel || 'Domingo';
   const activeDayEnglish = activeDay.charAt(0).toUpperCase() + activeDay.slice(1);
 
-  // Warn before leaving + flush unsaved changes on exit/tab-switch.
-  // visibilitychange fires reliably on tab switch and mobile app backgrounding.
-  // beforeunload fires on navigation/close (not guaranteed on mobile).
-  // Both trigger an immediate full sync if there are uncommitted changes.
-  useEffect(() => {
-    const flushOnExit = () => {
-      if (!hasUnsavedChangesRef.current || entitySyncInProgressRef.current) return;
-      if (!serviceDataRef.current || !lastSavedDataRef.current) return;
-      if (JSON.stringify(serviceDataRef.current) === JSON.stringify(lastSavedDataRef.current)) return;
-      // Fire full sync immediately — don't wait for 30s safety net
-      const payload = {
-        ...serviceDataRef.current,
-        selected_announcements: selectedAnnouncements,
-        print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
-        day_of_week: activeDayEnglish,
-        name: `${activeDayLabel} - ${selectedDate}`, status: 'active',
-        service_type: 'weekly'
-      };
-      saveServiceMutation.mutate(payload);
+  // Refs for values needed in flush — keeps them current without re-registering effects.
+  const selectedAnnouncementsRef = React.useRef(selectedAnnouncements);
+  React.useEffect(() => { selectedAnnouncementsRef.current = selectedAnnouncements; }, [selectedAnnouncements]);
+  const printSettingsPage1Ref = React.useRef(printSettingsPage1);
+  React.useEffect(() => { printSettingsPage1Ref.current = printSettingsPage1; }, [printSettingsPage1]);
+  const printSettingsPage2Ref = React.useRef(printSettingsPage2);
+  React.useEffect(() => { printSettingsPage2Ref.current = printSettingsPage2; }, [printSettingsPage2]);
+  const selectedDateRef = React.useRef(selectedDate);
+  React.useEffect(() => { selectedDateRef.current = selectedDate; }, [selectedDate]);
+  const activeDayRef = React.useRef(activeDay);
+  React.useEffect(() => { activeDayRef.current = activeDay; }, [activeDay]);
+
+  // Stable flush function via ref — always sees current values without stale closures.
+  // Called on: React Router unmount (page navigation), visibilitychange, beforeunload.
+  const flushRef = React.useRef(null);
+  flushRef.current = () => {
+    if (!hasUnsavedChangesRef.current || entitySyncInProgressRef.current) return;
+    if (!serviceDataRef.current || !lastSavedDataRef.current) return;
+    if (JSON.stringify(serviceDataRef.current) === JSON.stringify(lastSavedDataRef.current)) return;
+    const activeDayMeta2 = WEEKDAYS.find(w => w.key === activeDayRef.current);
+    const dayLabel = activeDayMeta2?.fullLabel || 'Domingo';
+    const dayEnglish = activeDayRef.current.charAt(0).toUpperCase() + activeDayRef.current.slice(1);
+    const payload = {
+      ...serviceDataRef.current,
+      selected_announcements: selectedAnnouncementsRef.current,
+      print_settings_page1: printSettingsPage1Ref.current,
+      print_settings_page2: printSettingsPage2Ref.current,
+      day_of_week: dayEnglish,
+      name: `${dayLabel} - ${selectedDateRef.current}`,
+      status: 'active',
+      service_type: 'weekly'
     };
+    saveServiceMutation.mutate(payload);
+  };
+
+  // UNMOUNT FLUSH (2026-02-22): React Router client-side navigation unmounts the
+  // component — neither beforeunload nor visibilitychange fires for in-app navigation.
+  // This effect's cleanup runs on unmount and flushes any pending changes.
+  useEffect(() => {
+    return () => {
+      flushRef.current?.();
+    };
+  }, []); // Empty deps — runs cleanup only on unmount
+
+  // Browser-level flush: tab close / refresh / tab switch to another tab.
+  useEffect(() => {
     const handleBeforeUnload = (e) => {
-      flushOnExit();
+      flushRef.current?.();
       if (hasUnsavedChangesRef.current) {
         e.preventDefault();
         e.returnValue = 'Tienes cambios sin guardar.';
@@ -959,7 +985,7 @@ export default function WeeklyServiceManager() {
       }
     };
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') flushOnExit();
+      if (document.visibilityState === 'hidden') flushRef.current?.();
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -967,7 +993,7 @@ export default function WeeklyServiceManager() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
+  }, []); // Empty deps — stable via flushRef
 
   // Auto-select announcements
   useEffect(() => {
