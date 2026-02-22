@@ -440,19 +440,18 @@ export default function WeeklyServiceManager() {
       }
       promise.then(() => {
         console.log(`[PUSH] SUCCESS: ${type} saved`);
-        done(true);
+        done();
       }, (err) => {
-        // SAVE-STALL FIX (2026-02-22): NO_MAPPING rejections are intentional deferrals
-        // to the 30-second safety-net sync (e.g., ministry_leader lives on a child entity,
-        // not the parent). Don't toast or log as error — these are silent deferrals.
+        // NO_MAPPING rejections are intentional deferrals to the full sync.
+        // ministry_leader (and similar child-entity fields) have no per-field push path.
         if (err.message?.startsWith("NO_MAPPING:")) {
           console.log(`[PUSH] Deferred to full sync: ${err.message}`);
-          done(false);
+          done();
           return;
         }
         console.error(`[PUSH] FAILED: ${type}`, err.message);
         toast.error(`Error guardando: ${err.message}`);
-        done(false);
+        done();
       });
     } catch (err) {
       console.error("[FIELD_PUSH] Synchronous error in pushFn:", err.message);
