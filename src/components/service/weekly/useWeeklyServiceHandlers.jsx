@@ -112,9 +112,14 @@ export function useWeeklyServiceHandlers({
       return updated;
     });
 
-    // Per-field push: fire-and-forget entity update
-    if (pushFn && entityId) {
-      pushFn("segment", { entityId, field, value });
+    if (entityId) {
+      // Per-field push: fire-and-forget entity update (fast path)
+      if (pushFn) pushFn("segment", { entityId, field, value });
+    } else {
+      // No entity ID yet — segments haven't been created in DB.
+      // Request an immediate full sync (2s) so entities get created
+      // and subsequent blur pushes will have a valid entityId.
+      if (requestImmediateSync) requestImmediateSync();
     }
   };
 
@@ -128,9 +133,12 @@ export function useWeeklyServiceHandlers({
       [field]: { ...prev[field], [service]: value }
     }));
 
-    // Per-field push: fire-and-forget Session entity update
-    if (pushFn && sessionId) {
-      pushFn("team", { sessionId, field, value });
+    if (sessionId) {
+      // Per-field push: fire-and-forget Session entity update
+      if (pushFn) pushFn("team", { sessionId, field, value });
+    } else {
+      // No session yet — trigger immediate sync to create Session entity
+      if (requestImmediateSync) requestImmediateSync();
     }
   };
 
