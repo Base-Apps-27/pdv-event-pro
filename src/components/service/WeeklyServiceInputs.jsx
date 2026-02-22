@@ -2,6 +2,7 @@ import React, { useContext, createContext } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
+import { getSegmentData } from "@/components/utils/segmentDataUtils";
 
 /**
  * WeeklyServiceInputs — Extracted from WeeklyServiceManager (Phase 3A).
@@ -138,9 +139,7 @@ export function TeamInput({ field, service, placeholder }) {
 // Segment Field Component - direct state updates
 export function SegmentTextInput({ service, segmentIndex, field, placeholder, className = "text-sm" }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
-  const rootFields = ['presentation_url', 'notes_url'];
-  const isRoot = rootFields.includes(field);
-  const value = isRoot ? (segment?.[field] || "") : (segment?.data?.[field] || "");
+  const value = getSegmentData(segment, field) || "";
   const { updateSegmentField } = useContext(UpdatersContext);
 
   return (
@@ -156,7 +155,7 @@ export function SegmentTextInput({ service, segmentIndex, field, placeholder, cl
 // Segment Textarea Component - direct state updates
 export function SegmentTextarea({ service, segmentIndex, field, placeholder, className = "text-sm", rows = 2 }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
-  const value = segment?.data?.[field] || "";
+  const value = getSegmentData(segment, field) || "";
   const { updateSegmentField } = useContext(UpdatersContext);
 
   return (
@@ -173,7 +172,7 @@ export function SegmentTextarea({ service, segmentIndex, field, placeholder, cla
 // Segment Autocomplete Component - direct state updates
 export function SegmentAutocomplete({ service, segmentIndex, field, placeholder, type, className = "text-sm" }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
-  const value = segment?.data?.[field] || "";
+  const value = getSegmentData(segment, field) || "";
   const { updateSegmentField } = useContext(UpdatersContext);
 
   return (
