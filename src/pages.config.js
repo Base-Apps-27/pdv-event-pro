@@ -85,8 +85,8 @@ import Templates from './pages/Templates';
 import TestDashboard from './pages/TestDashboard';
 import UserManagement from './pages/UserManagement';
 import UshersView from './pages/UshersView';
-import WeeklyServiceReport from './pages/WeeklyServiceReport';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
+import WeeklyServiceReport from './pages/WeeklyServiceReport';
 import __Layout from './Layout.jsx';
 
 
@@ -129,8 +129,8 @@ export const PAGES = {
     "TestDashboard": TestDashboard,
     "UserManagement": UserManagement,
     "UshersView": UshersView,
-    "WeeklyServiceReport": WeeklyServiceReport,
     "WeeklyServiceManager": WeeklyServiceManager,
+    "WeeklyServiceReport": WeeklyServiceReport,
 }
 
 export const pagesConfig = {

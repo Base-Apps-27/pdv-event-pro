@@ -500,7 +500,10 @@ export default function WeeklyServiceManager() {
         return { serviceResult, syncResult, syncedSnapshot };
       } finally {
         entitySyncInProgressRef.current = false;
-        setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
+        // FIX (2026-02-22): Increased from 3000→5500ms. The subscription debounce
+        // is 4000ms, so 3000ms wasn't enough — our own sync events slipped through
+        // and triggered a false "otro administrador" auto-reload that wiped in-progress edits.
+        setTimeout(() => { ownSaveInProgressRef.current = false; }, 5500);
       }
     },
     onSuccess: (result) => {
@@ -509,6 +512,10 @@ export default function WeeklyServiceManager() {
 
       queryClient.invalidateQueries({ queryKey: ['activeProgram'] });
       queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
+      // FIX (2026-02-22): Invalidate weeklyService cache so returning to the page
+      // loads fresh data from DB instead of the stale pre-edit React Query cache.
+      // staleTime:Infinity was preventing re-fetch on remount after saves.
+      queryClient.invalidateQueries({ queryKey: ['weeklyService'] });
 
       setLastSaveTimestamp(new Date().toISOString());
       setExternalChangeAvailable(false);
@@ -825,7 +832,10 @@ export default function WeeklyServiceManager() {
         initData[name] = mapBlueprintToSegments(bpSegments);
       });
       setServiceData(initData);
-      setLastSavedData(null);
+      // FIX (2026-02-22): New service was setting lastSavedData=null, which caused
+      // ALL save guards (30s timer, flushOnExit, hasUnsavedChanges) to bail early
+      // and NEVER save. Set to initData so any user edit is correctly detected as a change.
+      setLastSavedData(JSON.parse(JSON.stringify(initData)));
       setSelectedAnnouncements([]);
       setPrintSettingsPage1(null);
       setPrintSettingsPage2(null);
