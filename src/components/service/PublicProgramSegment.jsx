@@ -391,18 +391,41 @@ export default function PublicProgramSegment({
            })()}
 
            {/* Sub-assignments (Ministración, Cierre, etc.) - PURPLE color for consistency */}
-           {/* Weekly services store these in segment.sub_assignments with person value in segment.data */}
-           {segment.sub_assignments && segment.sub_assignments.length > 0 && segment.sub_assignments.map((subAssign, idx) => {
-             const personValue = getData(subAssign.person_field_name);
-             if (!personValue) return null;
-             return (
-               <div key={idx} className="flex items-center gap-2 text-purple-600 text-sm">
-                 <Sparkles className="w-4 h-4" />
-                 <span className="font-semibold">{subAssign.label}: {normalizeName(personValue)}</span>
-                 {subAssign.duration_min && <span className="text-purple-500 text-xs">({subAssign.duration_min} min)</span>}
-               </div>
-             );
-           })}
+           {/* Two data sources:
+               1. segment.sub_assignments (weekly JSON shape — has person_field_name, value in segment.data)
+               2. segment._resolved_sub_assignments (entity path via refreshActiveProgram — has presenter directly)
+           */}
+           {(() => {
+             // Entity-resolved path: _resolved_sub_assignments from refreshActiveProgram
+             const resolved = segment._resolved_sub_assignments;
+             if (resolved && resolved.length > 0) {
+               return resolved.map((sub, idx) => {
+                 if (!sub.presenter) return null;
+                 return (
+                   <div key={`rsub-${idx}`} className="flex items-center gap-2 text-purple-600 text-sm">
+                     <Sparkles className="w-4 h-4" />
+                     <span className="font-semibold">{sub.label}: {normalizeName(sub.presenter)}</span>
+                     {sub.duration_min && <span className="text-purple-500 text-xs">({sub.duration_min} min)</span>}
+                   </div>
+                 );
+               });
+             }
+             // Weekly JSON path: sub_assignments with person_field_name lookup
+             if (segment.sub_assignments && segment.sub_assignments.length > 0) {
+               return segment.sub_assignments.map((subAssign, idx) => {
+                 const personValue = getData(subAssign.person_field_name);
+                 if (!personValue) return null;
+                 return (
+                   <div key={idx} className="flex items-center gap-2 text-purple-600 text-sm">
+                     <Sparkles className="w-4 h-4" />
+                     <span className="font-semibold">{subAssign.label}: {normalizeName(personValue)}</span>
+                     {subAssign.duration_min && <span className="text-purple-500 text-xs">({subAssign.duration_min} min)</span>}
+                   </div>
+                 );
+               });
+             }
+             return null;
+           })()}
            {/* Room: Only show for Breakout segments OR non-Santuario locations */}
            {(() => {
              if (!segment.room_id) return null;
