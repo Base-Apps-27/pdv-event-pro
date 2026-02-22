@@ -60,50 +60,37 @@ export function useWeeklyServiceHandlers({
 
   // Update handlers: state mutation + per-field entity push
   const updateSegmentField = (service, segmentIndex, field, value) => {
-    // Read entity ID before setState (stable across renders, set during init)
-    const entityId = serviceData?.[service]?.[segmentIndex]?._entityId;
+    // STALE CLOSURE FIX (2026-02-22): Read _entityId INSIDE setServiceData's functional
+    // updater where `prev` is always the latest state. Reading from outer `serviceData`
+    // captured a stale snapshot from the last render, meaning _entityId was often
+    // undefined even when segments had been loaded with valid entity IDs from DB.
+    let entityId = null;
 
     setServiceData(prev => {
-      // Deep clone the service array we are modifying to ensure immutability
-      const newServiceArray = [...(prev[service] || [])];
+      // Capture entity ID from latest state (not the stale outer closure)
+      entityId = prev?.[service]?.[segmentIndex]?._entityId || null;
 
-      // Clone the specific segment we are updating
+      const newServiceArray = [...(prev[service] || [])];
       if (!newServiceArray[segmentIndex]) return prev;
       const newSegment = { ...newServiceArray[segmentIndex] };
 
-      // Define fields that sit at the root of the segment object
+      // Fields that sit at the root of the segment object (not inside .data)
       const rootFields = ['songs', 'presentation_url', 'notes_url', 'content_is_slides_only'];
 
       if (rootFields.includes(field)) {
         newSegment[field] = value;
       } else {
-        newSegment.data = {
-          ...newSegment.data,
-          [field]: value
-        };
+        newSegment.data = { ...newSegment.data, [field]: value };
       }
 
-      // Place the updated segment back into the new array
       newServiceArray[segmentIndex] = newSegment;
-
-      const updated = {
-        ...prev,
-        [service]: newServiceArray
-      };
+      const updated = { ...prev, [service]: newServiceArray };
 
       // Auto-propagate translator from worship to other segments in the SAME slot
-      // that have default_translator_source='worship_segment_translator'.
       if (field === 'translator' && newSegment.type === 'worship') {
-        const worshipTranslator = value;
         updated[service] = updated[service].map((seg, idx) => {
           if (idx !== segmentIndex && seg.default_translator_source === 'worship_segment_translator' && !seg.data?.translator) {
-            return {
-              ...seg,
-              data: {
-                ...seg.data,
-                translator: worshipTranslator
-              }
-            };
+            return { ...seg, data: { ...seg.data, translator: value } };
           }
           return seg;
         });
@@ -112,34 +99,34 @@ export function useWeeklyServiceHandlers({
       return updated;
     });
 
-    if (entityId) {
-      // Per-field push: fire-and-forget entity update (fast path)
-      if (pushFn) pushFn("segment", { entityId, field, value });
-    } else {
-      // No entity ID yet — segments haven't been created in DB.
-      // Request an immediate full sync (2s) so entities get created
-      // and subsequent blur pushes will have a valid entityId.
-      if (requestImmediateSync) requestImmediateSync();
-    }
+    // Push fires after setState completes (entityId captured inside updater above)
+    // Use setTimeout(0) to ensure entityId is set before we evaluate it
+    setTimeout(() => {
+      if (entityId) {
+        if (pushFn) pushFn("segment", { entityId, field, value });
+      } else {
+        // No entity ID — request immediate full sync to create entities
+        if (requestImmediateSync) requestImmediateSync();
+      }
+    }, 0);
   };
 
   const updateTeamField = (field, service, value) => {
-    // Read session ID for this slot (from first segment's metadata)
-    const sessionId = serviceData?._sessionIds?.[service]
-      || serviceData?.[service]?.[0]?._sessionId;
+    // STALE CLOSURE FIX: Read sessionId from inside the functional updater
+    let sessionId = null;
 
-    setServiceData(prev => ({
-      ...prev,
-      [field]: { ...prev[field], [service]: value }
-    }));
+    setServiceData(prev => {
+      sessionId = prev?._sessionIds?.[service] || prev?.[service]?.[0]?._sessionId || null;
+      return { ...prev, [field]: { ...prev[field], [service]: value } };
+    });
 
-    if (sessionId) {
-      // Per-field push: fire-and-forget Session entity update
-      if (pushFn) pushFn("team", { sessionId, field, value });
-    } else {
-      // No session yet — trigger immediate sync to create Session entity
-      if (requestImmediateSync) requestImmediateSync();
-    }
+    setTimeout(() => {
+      if (sessionId) {
+        if (pushFn) pushFn("team", { sessionId, field, value });
+      } else {
+        if (requestImmediateSync) requestImmediateSync();
+      }
+    }, 0);
   };
 
   const handleOpenVerseParser = (timeSlot, segmentIdx) => {
