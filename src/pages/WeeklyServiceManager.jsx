@@ -403,10 +403,10 @@ export default function WeeklyServiceManager() {
     // SAVE-STALL FIX: Increased guard window from 500ms to 3000ms to cover
     // subscription event latency. Without this, late-arriving subscription
     // events from our own pushes were being treated as external changes.
-    const done = (success) => setTimeout(() => {
+    const done = () => setTimeout(() => {
       fieldPushActiveRef.current = Math.max(0, fieldPushActiveRef.current - 1);
-      // On successful push, schedule lastSavedData sync to clear "Saving..." badge
-      if (success) scheduleLastSavedSync();
+      // NOTE: scheduleLastSavedSync removed — only saveServiceMutation.onSuccess
+      // advances lastSavedData, so the safety-net full sync stays alive.
     }, 3000);
     let promise;
     try {
