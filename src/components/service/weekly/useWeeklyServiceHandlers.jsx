@@ -2,15 +2,9 @@
  * useWeeklyServiceHandlers.js
  * All handler functions for WeeklyServiceManager.
  *
- * PER-FIELD PUSH (2026-02-21): Handlers update local state AND push the
- * changed field directly to the entity. This replaces the monolithic
- * blur-triggered full sync that was causing data loss when admins typed
- * faster than the sync could complete. The full syncWeeklyToSessions
- * is retained only as a 30-second safety net for structural changes.
- *
- * Each handler receives a pushFn callback through its options. After
- * updating serviceData, it fires pushFn with the entity push details.
- * pushFn is fire-and-forget (non-blocking) — the UI never waits for it.
+ * SIMPLIFIED SAVE (2026-02-22): Handlers now ONLY update local state.
+ * 5s debounced timer in WeeklyServiceManager handles all DB writes.
+ * No per-field push, no blur callbacks, no entity ID checks.
  */
 
 import { useCallback, useRef, useEffect } from "react";
@@ -47,29 +41,13 @@ export function useWeeklyServiceHandlers({
   createAnnouncementMutation,
   // Phase 2: dynamic slot names from ServiceSchedule
   slotNames = ["9:30am", "11:30am"],
-  // Per-field push: fire-and-forget entity push callback
-  // Signature: pushFn(type, { entityId, sessionId, field, value, songs })
-  pushFn,
-  // IMMEDIATE-SYNC (2026-02-21): Callback to request a fast full sync after
-  // structural changes (reset, add/remove segment) that create segments
-  // without entity IDs, making per-field push inoperative.
-  requestImmediateSync,
 }) {
   // Phase 2: derive first slot for blueprint fallback reference
   const firstSlot = slotNames[0];
 
-  // Update handlers: state mutation + per-field entity push
+  // Update handlers: state mutation only. 5s debounced timer handles DB writes.
   const updateSegmentField = (service, segmentIndex, field, value) => {
-    // STALE CLOSURE FIX (2026-02-22): Read _entityId INSIDE setServiceData's functional
-    // updater where `prev` is always the latest state. Reading from outer `serviceData`
-    // captured a stale snapshot from the last render, meaning _entityId was often
-    // undefined even when segments had been loaded with valid entity IDs from DB.
-    let entityId = null;
-
     setServiceData(prev => {
-      // Capture entity ID from latest state (not the stale outer closure)
-      entityId = prev?.[service]?.[segmentIndex]?._entityId || null;
-
       const newServiceArray = [...(prev[service] || [])];
       if (!newServiceArray[segmentIndex]) return prev;
       const newSegment = { ...newServiceArray[segmentIndex] };
@@ -98,35 +76,10 @@ export function useWeeklyServiceHandlers({
 
       return updated;
     });
-
-    // Push fires after setState completes (entityId captured inside updater above)
-    // Use setTimeout(0) to ensure entityId is set before we evaluate it
-    setTimeout(() => {
-      if (entityId) {
-        if (pushFn) pushFn("segment", { entityId, field, value });
-      } else {
-        // No entity ID — request immediate full sync to create entities
-        if (requestImmediateSync) requestImmediateSync();
-      }
-    }, 0);
   };
 
   const updateTeamField = (field, service, value) => {
-    // STALE CLOSURE FIX: Read sessionId from inside the functional updater
-    let sessionId = null;
-
-    setServiceData(prev => {
-      sessionId = prev?._sessionIds?.[service] || prev?.[service]?.[0]?._sessionId || null;
-      return { ...prev, [field]: { ...prev[field], [service]: value } };
-    });
-
-    setTimeout(() => {
-      if (sessionId) {
-        if (pushFn) pushFn("team", { sessionId, field, value });
-      } else {
-        if (requestImmediateSync) requestImmediateSync();
-      }
-    }, 0);
+    setServiceData(prev => ({ ...prev, [field]: { ...prev[field], [service]: value } }));
   };
 
   const handleOpenVerseParser = (timeSlot, segmentIdx) => {
@@ -339,11 +292,6 @@ export function useWeeklyServiceHandlers({
     });
 
     setServiceData(initialData);
-
-    // IMMEDIATE-SYNC (2026-02-21): Reset creates fresh segments without _entityId,
-    // so per-field push is dead until the next full sync assigns new entity IDs.
-    // Request an immediate sync (2s) instead of waiting for the 30s safety net.
-    if (requestImmediateSync) requestImmediateSync();
 
     const resetLabel = targetSlots.length < slotNames.length
       ? `Horarios restablecidos: ${targetSlots.join(', ')}`

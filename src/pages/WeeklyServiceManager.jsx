@@ -46,13 +46,7 @@ import { ServiceDataContext, UpdatersContext } from "@/components/service/Weekly
 // No hardcoded WEEKLY_BLUEPRINT constant. If DB blueprint is missing, segments use their own
 // data as-is — no phantom actions/fields injected from a stale constant.
 import { useWeeklyServiceHandlers } from "@/components/service/weekly/useWeeklyServiceHandlers";
-import {
-  syncWeeklyToSessions, loadWeeklyFromSessions,
-  pushSegmentField as pushSegmentFieldToEntity,
-  pushSegmentSongs as pushSegmentSongsToEntity,
-  pushSessionTeamField as pushSessionTeamFieldToEntity,
-  pushPreSessionNotes as pushPreSessionNotesToEntity,
-} from "@/components/service/weeklySessionSync";
+import { syncWeeklyToSessions, loadWeeklyFromSessions } from "@/components/service/weeklySessionSync";
 import { useServiceSchedules } from "@/components/service/weekly/useServiceSchedules";
 import useStaleGuard from "@/components/utils/useStaleGuard";
 import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
@@ -362,7 +356,7 @@ export default function WeeklyServiceManager() {
   // ── Mutations ──
   const localStateInitializedRef = React.useRef(false);
 
-  // ENTITY SYNC SERIALIZATION (2026-02-21): Prevents concurrent syncWeeklyToSessions.
+  // ENTITY SYNC SERIALIZATION (2026-02-22): Prevents concurrent syncWeeklyToSessions.
   // The delete-all-recreate pattern in syncWeeklyToSessions is NOT safe for concurrent
   // execution: two parallel syncs both snapshot old IDs → both create new → both delete
   // "old" (which now includes the other's new segments) → data loss.
@@ -376,113 +370,16 @@ export default function WeeklyServiceManager() {
   React.useEffect(() => { hasUnsavedChangesRef.current = hasUnsavedChanges; }, [hasUnsavedChanges]);
   const lastSavedDataRef = React.useRef(lastSavedData);
   React.useEffect(() => { lastSavedDataRef.current = lastSavedData; }, [lastSavedData]);
-  // NOTE: blurSaveTimerRef removed — blur no longer triggers full sync.
 
   // Ref to always have current serviceData for save operations.
   // Defined BEFORE the mutation so onSuccess can reference it.
   const serviceDataRef = React.useRef(serviceData);
   React.useEffect(() => { serviceDataRef.current = serviceData; }, [serviceData]);
 
-  // PER-FIELD PUSH (2026-02-21): Fire-and-forget entity updates for individual fields.
-  // Tracks active pushes so the subscription handler doesn't treat our own Session
-  // updates as external changes.
-  const fieldPushActiveRef = React.useRef(0);
-
-  // BADGE-FIX (2026-02-22): After a successful per-field push (mapped field only),
-  // advance lastSavedData to current serviceData so the badge clears quickly.
-  // We only do this when ALL segments already have _entityId (no structural changes
-  // are pending). If any segment is missing an _entityId, a full sync is still
-  // needed to create those entities — keep the badge yellow in that case.
-  // ministry_leader (NO_MAPPING) fields are excluded: their pushes reject with
-  // NO_MAPPING so this function is never called for them, and the 30s full sync
-  // remains responsible for persisting them.
-  const advanceBadgeAfterPush = React.useCallback(() => {
-    const current = serviceDataRef.current;
-    if (!current) return;
-    const slotKeys = Object.keys(current).filter(k =>
-      !k.startsWith('_') && Array.isArray(current[k]) && current[k].length > 0
-    );
-    const allHaveIds = slotKeys.every(slot =>
-      current[slot].every(seg => !!seg._entityId)
-    );
-    if (allHaveIds) {
-      setLastSavedData(JSON.parse(JSON.stringify(current)));
-    }
-  }, []);
-
-  const fieldPushSyncTimerRef = React.useRef(null); // kept for cleanup safety
-
-  const pushFn = React.useCallback((type, opts) => {
-    fieldPushActiveRef.current++;
-    // Guard window: keep fieldPushActiveRef elevated for 3s after push resolves
-    // so the subscription handler doesn't treat our own events as external changes.
-    const done = (wasSuccess) => setTimeout(() => {
-      fieldPushActiveRef.current = Math.max(0, fieldPushActiveRef.current - 1);
-      // BADGE-FIX: On successful mapped-field push, advance lastSavedData so
-      // the "Saving..." badge clears promptly (like the old JSON-only behavior).
-      // Skip for NO_MAPPING (those still need the 30s full sync).
-      if (wasSuccess) advanceBadgeAfterPush();
-    }, 3000);
-    let promise;
-    try {
-      if (type === "segment") {
-        console.log(`[PUSH] Segment field: entityId=${opts.entityId}, field=${opts.field}, value=${JSON.stringify(opts.value).substring(0, 50)}`);
-        promise = pushSegmentFieldToEntity(base44, opts.entityId, opts.field, opts.value);
-      } else if (type === "songs") {
-        console.log(`[PUSH] Songs: entityId=${opts.entityId}, count=${opts.songs?.length || 0}`);
-        promise = pushSegmentSongsToEntity(base44, opts.entityId, opts.songs);
-      } else if (type === "team") {
-        console.log(`[PUSH] Team field: sessionId=${opts.sessionId}, field=${opts.field}, value=${opts.value}`);
-        promise = pushSessionTeamFieldToEntity(base44, opts.sessionId, opts.field, opts.value);
-      } else if (type === "preNotes") {
-        console.log(`[PUSH] Pre-service notes: sessionId=${opts.sessionId}`);
-        promise = pushPreSessionNotesToEntity(base44, opts.sessionId, opts.value);
-      } else if (type === "serviceField" && existingData?.id) {
-        // Service-level fields (e.g., receso_notes): merge into existing value
-        const currentData = serviceDataRef.current;
-        const mergedValue = type === "serviceField" && opts.field === "receso_notes"
-          ? { ...(currentData?.receso_notes || {}), [opts.slotName]: opts.value }
-          : opts.value;
-        console.log(`[PUSH] Service field: id=${existingData.id}, field=${opts.field}`);
-        promise = base44.entities.Service.update(existingData.id, { [opts.field]: mergedValue })
-          .catch(err => {
-            console.error("[FIELD_PUSH] Service field update failed:", opts.field, err.message);
-            toast.error(`Error guardando ${opts.field}: ${err.message}`);
-          });
-      } else {
-        console.warn(`[PUSH] No handler for type=${type}, opts=`, opts);
-        promise = Promise.resolve();
-      }
-      promise.then(() => {
-        console.log(`[PUSH] SUCCESS: ${type} saved`);
-        done(true);
-      }, (err) => {
-        // NO_MAPPING rejections are intentional deferrals to the full sync.
-        // ministry_leader (and similar child-entity fields) have no per-field push path.
-        if (err.message?.startsWith("NO_MAPPING:")) {
-          console.log(`[PUSH] Deferred to full sync: ${err.message}`);
-          done(false); // Don't advance badge — 30s sync will handle it
-          return;
-        }
-        console.error(`[PUSH] FAILED: ${type}`, err.message);
-        toast.error(`Error guardando: ${err.message}`);
-        done(false);
-      });
-    } catch (err) {
-      console.error("[FIELD_PUSH] Synchronous error in pushFn:", err.message);
-      toast.error(`Error crítico: ${err.message}`);
-      done(false);
-    }
-  }, [existingData?.id, advanceBadgeAfterPush]);
-
-  // SAVE PIPELINE (2026-02-21): Safety-net full sync. Per-field pushes handle
-  // individual field changes immediately. This full sync runs on a 30-second timer
-  // to catch structural changes (add/remove/reorder segments) and update Service
-  // metadata (triggers refreshActiveProgram → display surface updates).
-  //
-  // RACE FIX (2026-02-21): Snapshots serviceData at sync START time, not completion
-  // time. This prevents marking fields as "saved" that were committed to serviceData
-  // AFTER the sync started but were never actually sent to the server.
+  // SAVE PIPELINE (2026-02-22): Simplified 5s debounced full sync.
+  // All edits → serviceData (instant React state).
+  // 5s after user stops typing → full sync to DB.
+  // onSuccess updates lastSavedData (tracking) and entity IDs only - never overwrites field values.
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
       // Serialization guard: skip if a save is already running.
@@ -493,9 +390,7 @@ export default function WeeklyServiceManager() {
       entitySyncInProgressRef.current = true;
       ownSaveInProgressRef.current = true;
 
-      // RACE FIX: Snapshot what we're ACTUALLY syncing right now.
-      // onSuccess will use this as the new baseline, not serviceDataRef.current
-      // (which may have accumulated new field commits during the async sync).
+      // Snapshot what we're syncing right now (may differ from current serviceData if user typed during mutation)
       const syncedSnapshot = JSON.parse(JSON.stringify(serviceDataRef.current));
 
       try {
@@ -515,33 +410,24 @@ export default function WeeklyServiceManager() {
         return { serviceResult, syncResult, syncedSnapshot };
       } finally {
         entitySyncInProgressRef.current = false;
-        // FIX (2026-02-22): Increased from 3000→5500ms. The subscription debounce
-        // is 4000ms, so 3000ms wasn't enough — our own sync events slipped through
-        // and triggered a false "otro administrador" auto-reload that wiped in-progress edits.
         setTimeout(() => { ownSaveInProgressRef.current = false; }, 5500);
       }
     },
     onSuccess: (result) => {
-      if (!result) return; // Skipped save (serialization guard)
+      if (!result) return;
       const { serviceResult, syncResult, syncedSnapshot } = result;
 
       queryClient.invalidateQueries({ queryKey: ['activeProgram'] });
       queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
-      // FIX (2026-02-22): Invalidate weeklyService cache so returning to the page
-      // loads fresh data from DB instead of the stale pre-edit React Query cache.
-      // staleTime:Infinity was preventing re-fetch on remount after saves.
       queryClient.invalidateQueries({ queryKey: ['weeklyService'] });
 
       setLastSaveTimestamp(new Date().toISOString());
       setExternalChangeAvailable(false);
 
-      // RACE FIX: Use the snapshot of what was ACTUALLY synced as the new baseline.
-      // If the admin committed new fields during the async sync, those changes will
-      // still differ from lastSavedData and trigger the next safety-net cycle.
+      // Update tracking state (what was actually sent to DB)
       setLastSavedData(syncedSnapshot);
 
-      // Update entity IDs in serviceData from the sync result so per-field pushes
-      // continue working after the delete-all-recreate cycle.
+      // Inject new entity IDs without touching field values
       if (syncResult?.entityIdMap) {
         setServiceData(prev => {
           if (!prev) return prev;
@@ -607,17 +493,6 @@ export default function WeeklyServiceManager() {
   });
 
   // ── Handlers (extracted hook) ──
-  // PER-FIELD PUSH (2026-02-21): handlers update state AND push changed fields
-  // to entities via pushFn. Safety-net full sync handles structural changes.
-
-  // IMMEDIATE-SYNC (2026-02-21): After structural changes (reset, add/remove
-  // segment), per-field push is dead because new segments have no _entityId.
-  // This ref tells the safety-net to use a short delay instead of 30 seconds.
-  const immediateSyncRequestRef = React.useRef(false);
-  const requestImmediateSync = React.useCallback(() => {
-    immediateSyncRequestRef.current = true;
-  }, []);
-
   const handlers = useWeeklyServiceHandlers({
     serviceData, setServiceData, selectedAnnouncements,
     updateAnnouncementMutation, fixedAnnouncements, dynamicAnnouncements,
@@ -628,8 +503,6 @@ export default function WeeklyServiceManager() {
     setEditingAnnouncement, setAnnouncementForm, setShowAnnouncementDialog,
     setShowResetConfirm, editingAnnouncement, createAnnouncementMutation,
     slotNames: sundaySlotNames,
-    pushFn,
-    requestImmediateSync,
   });
 
   // ── Initialize service data from DB or blueprint ──
@@ -875,12 +748,12 @@ export default function WeeklyServiceManager() {
     const externalDebounce = { timer: null };
 
     const handleExternalChange = () => {
-      // Ignore our own saves and per-field pushes
-      if (ownSaveInProgressRef.current || fieldPushActiveRef.current > 0) return;
+      // Ignore our own saves
+      if (ownSaveInProgressRef.current) return;
 
       if (externalDebounce.timer) clearTimeout(externalDebounce.timer);
       externalDebounce.timer = setTimeout(() => {
-        if (ownSaveInProgressRef.current || fieldPushActiveRef.current > 0) return;
+        if (ownSaveInProgressRef.current) return;
 
         if (!hasUnsavedChangesRef.current) {
           // No local changes — auto-reload seamlessly
@@ -892,7 +765,7 @@ export default function WeeklyServiceManager() {
           setExternalChangeAvailable(true);
           toast.warning('Otro administrador actualizó el programa');
         }
-      }, 4000); // Debounce: wait for entity sync + field push guard (3s) to complete
+      }, 6000); // Debounce: wait for full sync + guard window to complete
     };
 
     const unsubs = [
@@ -1036,14 +909,10 @@ export default function WeeklyServiceManager() {
     });
   }, [selectedAnnouncements]);
 
-  // PER-FIELD PUSH (2026-02-21): Primary save trigger is now per-field entity pushes
-  // that fire on each input commit (blur or 3-second debounce). The full sync below
-  // is a SAFETY NET for structural changes (add/remove/reorder segments), Service
-  // metadata updates, and triggering refreshActiveProgram for display surfaces.
-  //
-  // The old blur-triggered full sync has been REMOVED because it caused data loss:
-  // while the heavy sync was running, fields committed during the async window
-  // were marked as "saved" in lastSavedData but never actually sent to the server.
+  // SIMPLIFIED SAVE (2026-02-22): 5s debounced full sync after any edit.
+  // User typing → serviceData changes → timer keeps running.
+  // User stops → 5s later → full sync fires.
+  // Timer only resets when save COMPLETES (lastSavedData changes).
   const buildSavePayload = () => ({
     ...serviceData, selected_announcements: selectedAnnouncements,
     print_settings_page1: printSettingsPage1, print_settings_page2: printSettingsPage2,
@@ -1052,22 +921,16 @@ export default function WeeklyServiceManager() {
     service_type: 'weekly'
   });
 
-  // Safety-net full sync: runs 30 seconds after last change (or 2 seconds if
-  // an immediate sync was requested, e.g. after blueprint reset). Handles
-  // structural changes, Service metadata, and triggers display surface refresh.
-  // Per-field pushes handle individual field values immediately on commit.
   useEffect(() => {
     if (!lastSavedData || !serviceData) return;
-    if (JSON.stringify(serviceData) === JSON.stringify(lastSavedData)) return;
-    // IMMEDIATE-SYNC (2026-02-21): Use short delay after structural changes
-    // (reset, add/remove segment) so new entity IDs are assigned quickly.
-    const delay = immediateSyncRequestRef.current ? 2000 : 30000;
-    immediateSyncRequestRef.current = false;
+    const changed = JSON.stringify(serviceData) !== JSON.stringify(lastSavedData);
+    if (!changed) return;
+
     const handler = setTimeout(() => {
       saveServiceMutation.mutate(buildSavePayload());
-    }, delay);
+    }, 5000);
     return () => clearTimeout(handler);
-  }, [serviceData, lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
+  }, [lastSavedData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
 
   // ── Segment expand toggle (local UI) ──
   const toggleSegmentExpanded = (timeSlot, idx) => {
