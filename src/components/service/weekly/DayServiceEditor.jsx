@@ -301,6 +301,11 @@ export default function DayServiceEditor({
       slotNames.slice(0, -1).forEach(s => { defaultRecesoNotes[s] = ""; });
       loadedData.receso_notes = { ...defaultRecesoNotes, ...(existingData.receso_notes || {}) };
       loadedData.selected_announcements = existingData.selected_announcements || [];
+      // Recurring Services Refactor: Ensure day_of_week + date are on serviceData
+      // so PDF generator and other consumers can use them
+      loadedData.day_of_week = dayOfWeek;
+      loadedData.date = date;
+      loadedData.id = existingData.id;
       setServiceData(loadedData);
       captureServiceBaseline(existingData.updated_date);
       localStateInitializedRef.current = true;
