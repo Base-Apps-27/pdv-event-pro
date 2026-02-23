@@ -74,6 +74,7 @@ export default function DayServiceEditor({
   updateAnnouncementMutation,
 }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const dayLabel = DAY_LABELS[dayOfWeek] || dayOfWeek;
 
   // ── Core state ──
@@ -84,6 +85,15 @@ export default function DayServiceEditor({
   const ownSaveInProgressRef = useRef(false);
   const serviceDataRef = useRef(serviceData);
   useEffect(() => { serviceDataRef.current = serviceData; }, [serviceData]);
+
+  // ── Per-day dialog state (owned by this editor, not shared) ──
+  const [verseParserOpen, setVerseParserOpen] = useState(false);
+  const [verseParserContext, setVerseParserContext] = useState({ timeSlot: null, segmentIdx: null });
+  const [showSpecialDialog, setShowSpecialDialog] = useState(false);
+  const [specialSegmentDetails, setSpecialSegmentDetails] = useState({
+    timeSlot: "", title: "", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
+  });
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Phase 5: Concurrent editing guard
   const { captureBaseline: captureServiceBaseline } = useStaleGuard();
