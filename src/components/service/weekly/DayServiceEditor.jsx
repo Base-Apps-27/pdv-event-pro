@@ -443,6 +443,19 @@ export default function DayServiceEditor({
             </div>
           )}
 
+          {/* Per-day action bar: PDF download + Live View */}
+          <div className="flex gap-2 items-center flex-wrap">
+            <Button onClick={handlers.handleDownloadProgramPDF} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} className="font-semibold text-xs px-3 py-1.5">
+              <Download className="w-3 h-3 mr-1" />PDF Programa
+            </Button>
+            <Button onClick={handlers.handleDownloadAnnouncementsPDF} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} className="font-semibold text-xs px-3 py-1.5">
+              <Download className="w-3 h-3 mr-1" />PDF Anuncios
+            </Button>
+            <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${date}`)} variant="outline" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs px-3 py-1.5">
+              <Eye className="w-3 h-3 mr-1" />Live View
+            </Button>
+          </div>
+
           {/* Slot columns */}
           <ServiceSlotColumns
             sundaySlotNames={slotNames}
@@ -454,6 +467,23 @@ export default function DayServiceEditor({
             setSpecialSegmentDetails={setSpecialSegmentDetails}
             setShowSpecialDialog={setShowSpecialDialog}
             canEdit={hasPermission(user, 'edit_services')}
+          />
+
+          {/* Per-day dialogs: SpecialSegment, VerseParser, Reset */}
+          <SpecialSegmentDialog
+            open={showSpecialDialog} onOpenChange={setShowSpecialDialog}
+            details={specialSegmentDetails} setDetails={setSpecialSegmentDetails}
+            serviceSegments={serviceData?.[specialSegmentDetails?.timeSlot] || []}
+            slotHasTranslation={false}
+            onAdd={handlers.addSpecialSegment}
+            tealStyle={{ backgroundColor: '#1F8A70', color: '#ffffff' }}
+          />
+          <VerseParserDialog
+            open={verseParserOpen}
+            onOpenChange={setVerseParserOpen}
+            initialText={verseParserContext.initialText || ""}
+            onSave={handlers.handleSaveParsedVerses}
+            language="es"
           />
         </div>
       </UpdatersContext.Provider>
