@@ -1,341 +1,22 @@
 /**
  * weeklySessionSync.jsx
- * SOLE write path for weekly service segment data.
+ * READ path for weekly service entity data.
  *
- * As of 2026-02-21, the Service entity only stores lightweight metadata
- * (date, name, status, service_type, receso_notes, selected_announcements, etc.).
- * All segment data, team assignments, and pre-service notes are written
- * EXCLUSIVELY through this module to Session/Segment/PreSessionDetails entities.
- * The old dual-write (JSON on Service + entities) has been eliminated.
+ * Entity Separation (2026-02-23): The WRITE path (syncWeeklyToSessions) has been
+ * removed. Writes now go through useSegmentMutation.jsx which writes directly to
+ * individual Session/Segment/PreSessionDetails entities per-field.
  *
- * WRITE: syncWeeklyToSessions() — creates/updates Session + Segment + PreSessionDetails
- *        entities from the UI's in-memory service data. Called in saveServiceMutation.onSuccess.
- *
- * READ:  loadWeeklyFromSessions() — loads Session + Segment entities and transforms
- *        back to the weekly JSON format that the UI expects. JSON fallback on the
- *        Service entity is retained read-only for legacy (pre-entity-lift) services.
- *
- * Guards:
- *   - Skips segment recreation if session.live_adjustment_enabled is true
- *   - Returns null from load if no sessions exist (signals JSON fallback for legacy data)
+ * READ: loadWeeklyFromSessions() — loads Session + Segment entities and transforms
+ *       back to the weekly JSON format that the UI expects for initialization.
+ *       Once the UI reads Session/Segment entities directly, this function
+ *       and segmentEntityToWeeklyJSON() become unnecessary.
  */
 
-import { addMinutes, parse, format } from "date-fns";
-import { getSegmentData, getNormalizedSongs } from "@/components/utils/segmentDataUtils";
-
-// ═══════════════════════════════════════════════════════════════
-// CONSTANTS
-// ═══════════════════════════════════════════════════════════════
-
-// Phase 2: Default TIME_SLOTS used only as fallback when no schedule is provided.
-// Callers should pass timeSlots from useServiceSchedules when available.
-const DEFAULT_TIME_SLOTS = [
-  { name: "9:30am", time: "09:30", order: 1, color: "green" },
-  { name: "11:30am", time: "11:30", order: 2, color: "blue" },
-];
-
-// ═══════════════════════════════════════════════════════════════
-// SIMPLIFIED SAVE (2026-02-22): Per-field push infrastructure removed.
-// All edits batched into single 5s debounced full sync.
-// ═══════════════════════════════════════════════════════════════
-
-// Weekly JSON types → canonical Segment entity types
-const TYPE_MAP = {
-  worship: "Alabanza", alabanza: "Alabanza",
-  welcome: "Bienvenida", bienvenida: "Bienvenida",
-  offering: "Ofrenda", ofrenda: "Ofrenda", ofrendas: "Ofrenda",
-  message: "Plenaria", plenaria: "Plenaria", predica: "Plenaria", mensaje: "Plenaria",
-  video: "Video",
-  announcement: "Anuncio", anuncio: "Anuncio",
-  dynamic: "Dinámica", "dinámica": "Dinámica",
-  break: "Break", receso: "Receso", almuerzo: "Almuerzo",
-  techonly: "TechOnly",
-  prayer: "Oración", "oración": "Oración",
-  special: "Especial", especial: "Especial",
-  closing: "Cierre", cierre: "Cierre",
-  mc: "MC",
-  "ministración": "Ministración",
-  artes: "Artes",
-  breakout: "Breakout",
-  panel: "Panel",
-};
-
-function normalizeSegmentType(rawType) {
-  if (!rawType) return "Especial";
-  return TYPE_MAP[rawType.toLowerCase()] || rawType;
-}
-
-// ═══════════════════════════════════════════════════════════════
-// SYNC: Weekly Service JSON → Session + Segment + PreSessionDetails
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Phase 2: accepts optional timeSlots array from useServiceSchedules.
- * Format: [{ name: "9:30am", time: "09:30", order: 1, color: "green" }]
- * Falls back to DEFAULT_TIME_SLOTS if not provided.
- */
-export async function syncWeeklyToSessions(base44, serviceResult, serviceData, timeSlots) {
-  if (!serviceResult?.id) return null;
-
-  const serviceId = serviceResult.id;
-  const date = serviceResult.date || serviceData?.date;
-  const slots = (timeSlots && timeSlots.length > 0) ? timeSlots : DEFAULT_TIME_SLOTS;
-
-  // Return value: maps slot names → new entity IDs so caller can update local state
-  const entityIdMap = {};
-  const sessionIdMap = {};
-
-  for (const slot of slots) {
-    const segments = serviceData?.[slot.name];
-    if (!segments || !Array.isArray(segments) || segments.length === 0) continue;
-
-    // ── 1. Find or create Session ──
-    let session = null;
-    const existingSessions = await base44.entities.Session.filter({
-      service_id: serviceId,
-      name: slot.name,
-    });
-
-    const sessionFields = {
-      service_id: serviceId,
-      name: slot.name,
-      date: date,
-      planned_start_time: slot.time,
-      order: slot.order,
-      status: "confirmed",
-      session_color: slot.color,
-      coordinators: serviceData.coordinators?.[slot.name] || "",
-      ushers_team: serviceData.ujieres?.[slot.name] || "",
-      sound_team: serviceData.sound?.[slot.name] || "",
-      tech_team: serviceData.luces?.[slot.name] || "",
-      photography_team: serviceData.fotografia?.[slot.name] || "",
-    };
-
-    if (existingSessions.length > 0) {
-      session = existingSessions[0];
-      // Don't clobber live director state
-      const updatePayload = { ...sessionFields };
-      if (session.live_adjustment_enabled) {
-        delete updatePayload.live_adjustment_enabled;
-      }
-      await base44.entities.Session.update(session.id, updatePayload);
-    } else {
-      session = await base44.entities.Session.create({
-        ...sessionFields,
-        live_adjustment_enabled: false,
-      });
-    }
-    sessionIdMap[slot.name] = session.id;
-
-    // ── 2. Pre-session notes → PreSessionDetails ──
-    const preNotes = serviceData.pre_service_notes?.[slot.name] || "";
-    try {
-      const existingPSD = await base44.entities.PreSessionDetails.filter({
-        session_id: session.id,
-      });
-      if (existingPSD.length > 0) {
-        if (existingPSD[0].general_notes !== preNotes) {
-          await base44.entities.PreSessionDetails.update(existingPSD[0].id, {
-            general_notes: preNotes,
-          });
-        }
-      } else if (preNotes) {
-        await base44.entities.PreSessionDetails.create({
-          session_id: session.id,
-          general_notes: preNotes,
-        });
-      }
-    } catch (err) {
-      console.error("[WEEKLY_SYNC] PreSessionDetails sync error:", err.message);
-    }
-
-    // ── 3. Guard: skip segment recreation if live mode active ──
-    if (session.live_adjustment_enabled) {
-      console.warn(
-        `[WEEKLY_SYNC] Skipping segment recreation for ${slot.name} — live mode active`
-      );
-      continue;
-    }
-
-    // ── 4. Build new segment entities BEFORE deleting old ones ──
-    // Create-before-delete pattern: ensures segments always exist even if
-    // the process fails partway through. Orphaned old segments are harmless
-    // (cleaned up at the end), but zero segments is a data loss scenario.
-    const newSegments = [];
-    let currentTime = parse(slot.time, "HH:mm", new Date());
-
-    for (let i = 0; i < segments.length; i++) {
-      const segData = segments[i];
-      const getData = (field) => getSegmentData(segData, field);
-
-      const duration = segData.duration || 0;
-      const startTimeStr = format(currentTime, "HH:mm");
-      currentTime = addMinutes(currentTime, duration);
-      const endTimeStr = format(currentTime, "HH:mm");
-
-      // Resolve presenter from type-specific fields
-      const presenter = resolvePresenter(segData, getData);
-
-      // Flatten songs array to song_N_* fields
-      const songsArray = getData("songs") || segData.songs;
-      const flatSongs = flattenSongs(songsArray);
-
-      // SONG-SLOT FIX (2026-02-20): Preserve the number of song SLOTS even when
-      // songs are all empty (e.g. right after blueprint reset). This lets the
-      // entity→JSON read path reconstruct empty rows for the UI.
-      // Uses configured number_of_songs from JSON (set by blueprint or per-service edit).
-      const segTypeNorm = normalizeSegmentType(segData.type);
-      const isWorshipSeg = segTypeNorm === "Alabanza";
-      const configuredCount = segData.number_of_songs || 0;
-      const songSlotCount = isWorshipSeg
-        ? Math.max(flatSongs._count, Array.isArray(songsArray) ? songsArray.length : 0, configuredCount)
-        : flatSongs._count;
-
-      const parentSegmentData = {
-        session_id: session.id,
-        service_id: serviceId,
-        order: i + 1,
-        title: segData.title || "",
-        segment_type: segTypeNorm,
-        start_time: startTimeStr,
-        end_time: endTimeStr,
-        duration_min: duration,
-        presenter: presenter,
-        translator_name: getData("translator") || "",
-        requires_translation:
-          !!getData("translator") || !!segData.requires_translation,
-        default_translator_source: segData.default_translator_source || "manual",
-        description_details:
-          getData("description_details") || getData("description") || "",
-        coordinator_notes: getData("coordinator_notes") || "",
-        projection_notes:
-          getData("projection_notes") || segData.projection_notes || "",
-        sound_notes: getData("sound_notes") || "",
-        ushers_notes: getData("ushers_notes") || "",
-        translation_notes: getData("translation_notes") || "",
-        stage_decor_notes: getData("stage_decor_notes") || "",
-        message_title:
-          getData("messageTitle") ||
-          getData("message_title") ||
-          segData.message_title ||
-          "",
-        scripture_references:
-          getData("verse") ||
-          getData("scripture_references") ||
-          segData.scripture_references ||
-          "",
-        parsed_verse_data:
-          getData("parsed_verse_data") || segData.parsed_verse_data || null,
-        submitted_content:
-          getData("submitted_content") || segData.submitted_content || "",
-        submission_status: segData.submission_status || null,
-        presentation_url:
-          getData("presentation_url") || segData.presentation_url || "",
-        notes_url: segData.notes_url || "",
-        content_is_slides_only:
-          !!getData("content_is_slides_only") ||
-          !!segData.content_is_slides_only,
-        segment_actions: getData("actions") || segData.actions || [],
-        number_of_songs: songSlotCount,
-        ...flatSongs._fields,
-        show_in_general: true,
-        // Entity Lift: Persist UI metadata to eliminate blueprint matching on read
-        ui_fields: segData.fields || [],
-        ui_sub_assignments: segData.sub_assignments || [],
-      };
-
-      newSegments.push(parentSegmentData);
-
-      // Handle sub_asignaciones (Alabanza with Ministración children)
-      buildSubAsignaciones(
-        segData,
-        getData,
-        session.id,
-        serviceId,
-        startTimeStr,
-        newSegments
-      );
-    }
-
-    // ── 5. Snapshot old segment IDs for cleanup AFTER new ones are created ──
-    const existingSegs = await base44.entities.Segment.filter({
-      session_id: session.id,
-    });
-    const oldSegmentIds = existingSegs.map((s) => s.id);
-
-    // ── 6. Bulk create: parents first, then children with parent IDs ──
-    // Clean internal markers before sending to DB
-    const parentSegments = newSegments
-      .filter((s) => !s._isSubAsignacion)
-      .map(({ _isSubAsignacion, _parentOrder, ...rest }) => rest);
-    const subSegments = newSegments.filter((s) => s._isSubAsignacion);
-
-    const createdParents = await base44.entities.Segment.bulkCreate(
-      parentSegments
-    );
-
-    // Track new entity IDs for local state update
-    entityIdMap[slot.name] = createdParents.map((p) => ({
-      entityId: p.id,
-      sessionId: session.id,
-    }));
-
-    if (subSegments.length > 0 && createdParents.length > 0) {
-      // Map sub-segments to their parent Alabanza segment IDs
-      const alabanzaParents = createdParents.filter(
-        (p) => p.segment_type === "Alabanza"
-      );
-      let currentAlabanzaIdx = 0;
-      let prevParentMarker = null;
-
-      const subSegmentsWithParent = subSegments.map((sub) => {
-        const { _isSubAsignacion, _parentOrder, ...cleaned } = sub;
-
-        // Track which parent this sub belongs to via _parentOrder marker
-        if (_parentOrder !== prevParentMarker) {
-          if (prevParentMarker !== null) currentAlabanzaIdx++;
-          prevParentMarker = _parentOrder;
-        }
-
-        if (currentAlabanzaIdx < alabanzaParents.length) {
-          cleaned.parent_segment_id = alabanzaParents[currentAlabanzaIdx].id;
-        }
-        return cleaned;
-      });
-
-      await base44.entities.Segment.bulkCreate(subSegmentsWithParent);
-    }
-
-    // ── 7. Delete OLD segments now that new ones are safely created ──
-    // Create-before-delete: if steps 6 failed, old segments remain intact.
-    if (oldSegmentIds.length > 0) {
-      await Promise.all(
-        oldSegmentIds.map((id) => base44.entities.Segment.delete(id))
-      );
-    }
-
-    // Update session planned_end_time
-    if (newSegments.length > 0) {
-      const lastParent = parentSegments[parentSegments.length - 1];
-      if (lastParent?.end_time) {
-        await base44.entities.Session.update(session.id, {
-          planned_end_time: lastParent.end_time,
-        });
-      }
-    }
-  }
-
-  return { entityIdMap, sessionIdMap };
-}
+import { getNormalizedSongs } from "@/components/utils/segmentDataUtils";
 
 // ═══════════════════════════════════════════════════════════════
 // LOAD: Session + Segment entities → Weekly Service JSON format
 // ═══════════════════════════════════════════════════════════════
-// @deprecated — This entity→JSON conversion exists only because the UI
-// still reads the weekly JSON shape. Once the UI reads Session/Segment
-// entities directly (via subscriptions + React Query), this function
-// and segmentEntityToWeeklyJSON() below become unnecessary.
-// Target removal: after weekday tabs UI reads entities directly.
 
 export async function loadWeeklyFromSessions(base44, serviceId, blueprint) {
   if (!serviceId) return null;
@@ -352,7 +33,6 @@ export async function loadWeeklyFromSessions(base44, serviceId, blueprint) {
     luces: {},
     fotografia: {},
     pre_service_notes: {},
-    // Per-field push: session entity IDs keyed by slot name
     _sessionIds: {},
   };
 
@@ -408,108 +88,6 @@ export async function loadWeeklyFromSessions(base44, serviceId, blueprint) {
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Resolve presenter from type-specific data fields.
- * Weekly services store the primary person under different keys depending on type:
- *   worship → data.leader, message → data.preacher, other → data.presenter
- */
-function resolvePresenter(segData, getData) {
-  const typeL = (segData.type || "").toLowerCase();
-  if (typeL === "worship" || typeL === "alabanza") {
-    return getData("leader") || getData("presenter") || "";
-  }
-  if (
-    typeL === "message" ||
-    typeL === "plenaria" ||
-    typeL === "predica" ||
-    typeL === "mensaje"
-  ) {
-    return getData("preacher") || getData("presenter") || "";
-  }
-  return getData("presenter") || "";
-}
-
-/**
- * Flatten songs array into individual song_N_title/lead/key fields.
- * Returns { _fields: { song_1_title: ..., ... }, _count: N }
- */
-function flattenSongs(songs) {
-  const fields = {};
-  let count = 0;
-  if (songs && Array.isArray(songs)) {
-    songs.forEach((song, idx) => {
-      if (idx < 6 && song && song.title) {
-        fields[`song_${idx + 1}_title`] = song.title;
-        fields[`song_${idx + 1}_lead`] = song.lead || "";
-        fields[`song_${idx + 1}_key`] = song.key || "";
-        count++;
-      }
-    });
-  }
-  return { _fields: fields, _count: count };
-}
-
-/**
- * Build child Ministración segments for Alabanza with sub_asignaciones.
- * Mutates newSegments array in place.
- */
-function buildSubAsignaciones(
-  segData,
-  getData,
-  sessionId,
-  serviceId,
-  parentStartTimeStr,
-  newSegments
-) {
-  const typeL = (segData.type || "").toLowerCase();
-  if (typeL !== "worship" && typeL !== "alabanza") return;
-
-  const subAssignments =
-    segData.sub_asignaciones || segData.sub_assignments || [];
-  if (subAssignments.length === 0) return;
-
-  // Check if any sub-assignment has actual person data
-  const hasData = subAssignments.some((sub) => {
-    const fieldName = sub.person_field_name;
-    const value = fieldName
-      ? segData.data?.[fieldName] || getData(fieldName)
-      : sub.presenter;
-    return !!value;
-  });
-  if (!hasData) return;
-
-  const parentOrder = newSegments.length; // Track which parent these belong to
-  let subStartTime = parse(parentStartTimeStr, "HH:mm", new Date());
-
-  subAssignments.forEach((sub, subIdx) => {
-    const subDuration = sub.duration_min || sub.duration || 5;
-    const subStartStr = format(subStartTime, "HH:mm");
-    subStartTime = addMinutes(subStartTime, subDuration);
-    const subEndStr = format(subStartTime, "HH:mm");
-
-    const fieldName = sub.person_field_name;
-    const subPresenter = fieldName
-      ? segData.data?.[fieldName] || getData(fieldName) || sub.presenter || ""
-      : sub.presenter || "";
-
-    newSegments.push({
-      session_id: sessionId,
-      service_id: serviceId,
-      parent_segment_id: "{PARENT_ID}",
-      order: subIdx + 1,
-      title: sub.label || sub.title || `Ministración ${subIdx + 1}`,
-      segment_type: "Ministración",
-      start_time: subStartStr,
-      end_time: subEndStr,
-      duration_min: subDuration,
-      presenter: subPresenter,
-      show_in_general: false,
-      _isSubAsignacion: true,
-      _parentOrder: parentOrder,
-    });
-  });
-}
-
-/**
  * Convert a Segment entity + its children back to weekly JSON format.
  * The output shape must be identical to what WeeklyServiceManager expects
  * as an element of the serviceData["9:30am"] or serviceData["11:30am"] array.
@@ -522,10 +100,7 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
   let songs = getNormalizedSongs(segment);
   const segType = segment.segment_type || "Especial";
 
-  // SONG-SLOT FIX (2026-02-20): Worship segments must always have song slots
-  // for the UI (SongInputRow) to render input rows. getNormalizedSongs drops
-  // empty songs (no title), so after a blueprint reset the entity round-trip
-  // loses the empty slots. Re-create them based on number_of_songs or default 4.
+  // SONG-SLOT FIX: Worship segments must always have song slots for the UI.
   const isWorship = segType === "Alabanza" || segType === "worship";
   if (isWorship && songs.length === 0) {
     const numSongs = segment.number_of_songs || 4;
@@ -533,7 +108,6 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
   }
 
   // Build data object with values in all possible field locations
-  // (different code paths read from data.leader, data.preacher, data.presenter, etc.)
   const data = {
     presenter: segment.presenter || "",
     leader: segment.presenter || "",
@@ -557,8 +131,7 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
     actions: segment.segment_actions || [],
   };
 
-  // Include songs array if present
-  // Songs must be in BOTH data.songs (for PDF/entity path) AND root (for UI ServiceTimeSlotColumn)
+  // Songs must be in BOTH data.songs (for PDF) AND root (for UI SongInputRow)
   if (songs.length > 0) {
     data.songs = songs;
   }
@@ -568,22 +141,15 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
     if (data[key] === null || data[key] === undefined) delete data[key];
   });
 
-  // BUG FIX (2026-02-18 audit): Songs must also live at the ROOT of the segment
-  // object, not just inside `data.songs`. The UI (ServiceTimeSlotColumn line 382,
-  // SongInputRow) reads from `segment.songs`, not `segment.data.songs`.
-  // Without this, worship segments loaded from entities show blank song rows.
   const rootSongs = songs.length > 0 ? songs : undefined;
 
   // Build sub_asignaciones from child segments and inject presenter data
   // back into the parent's data object so the UI inputs can display it.
-  // The UI reads from segment.data[person_field_name] (e.g., data.ministry_leader).
   let sub_asignaciones;
   if (childSegments.length > 0) {
-    // Read sub_assignments config to get person_field_name mappings
     const subConfig = segment.ui_sub_assignments || [];
     sub_asignaciones = childSegments.map((child, ci) => {
       const fieldName = subConfig[ci]?.person_field_name || "ministry_leader";
-      // Inject child presenter back into parent data for UI round-trip
       if (child.presenter) {
         data[fieldName] = child.presenter;
       }
@@ -599,13 +165,11 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
   }
 
   // Entity Lift: Read ui_fields and ui_sub_assignments from entity first.
-  // Fall back to blueprint matching ONLY for pre-migration segments that
-  // don't have these fields stored yet.
+  // Fall back to blueprint matching ONLY for pre-migration segments.
   let fields = segment.ui_fields;
   let sub_assignments = segment.ui_sub_assignments;
 
   if (!fields || fields.length === 0) {
-    // Legacy fallback: blueprint matching (will be removed after all data is re-saved)
     const blueprintSeg = findMatchingBlueprintSegment(
       segType,
       blueprintSlotSegments,
@@ -632,9 +196,7 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
     duration: segment.duration_min || 0,
     fields,
     data,
-    // BUG FIX (audit): Root-level songs for UI compatibility (SongInputRow reads segment.songs)
     songs: rootSongs,
-    // Preserve configured song count for round-trip (editable per-service)
     number_of_songs: segment.number_of_songs || (rootSongs ? rootSongs.length : undefined),
     actions: segment.segment_actions || [],
     sub_assignments,
@@ -659,7 +221,6 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
 
 /**
  * Find the matching blueprint segment by type and position.
- * Uses the same normalization logic as WeeklyServiceManager's mergeSegmentsWithBlueprint.
  */
 function findMatchingBlueprintSegment(segType, blueprintSlotSegments, idx) {
   if (!blueprintSlotSegments) return null;

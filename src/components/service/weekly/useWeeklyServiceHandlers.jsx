@@ -41,11 +41,13 @@ export function useWeeklyServiceHandlers({
   createAnnouncementMutation,
   // Phase 2: dynamic slot names from ServiceSchedule
   slotNames = ["9:30am", "11:30am"],
+  // Entity Separation: per-field mutation hook instance
+  segmentMutation,
 }) {
   // Phase 2: derive first slot for blueprint fallback reference
   const firstSlot = slotNames[0];
 
-  // Update handlers: state mutation only. 5s debounced timer handles DB writes.
+  // Update handlers: state mutation + entity write.
   const updateSegmentField = (service, segmentIndex, field, value) => {
     setServiceData(prev => {
       const newServiceArray = [...(prev[service] || [])];
@@ -68,6 +70,10 @@ export function useWeeklyServiceHandlers({
       if (field === 'translator' && newSegment.type === 'worship') {
         updated[service] = updated[service].map((seg, idx) => {
           if (idx !== segmentIndex && seg.default_translator_source === 'worship_segment_translator' && !seg.data?.translator) {
+            // Entity write: propagate translator to auto-fill segments
+            if (segmentMutation && seg._entityId) {
+              segmentMutation.mutateSegmentField(seg._entityId, 'translator', value);
+            }
             return { ...seg, data: { ...seg.data, translator: value } };
           }
           return seg;
@@ -79,7 +85,14 @@ export function useWeeklyServiceHandlers({
   };
 
   const updateTeamField = (field, service, value) => {
-    setServiceData(prev => ({ ...prev, [field]: { ...prev[field], [service]: value } }));
+    setServiceData(prev => {
+      // Entity write: team field update
+      const sessionId = prev?._sessionIds?.[service];
+      if (segmentMutation && sessionId) {
+        segmentMutation.mutateTeam(sessionId, field, value);
+      }
+      return { ...prev, [field]: { ...prev[field], [service]: value } };
+    });
   };
 
   const handleOpenVerseParser = (timeSlot, segmentIdx) => {
@@ -104,12 +117,17 @@ export function useWeeklyServiceHandlers({
 
     setServiceData(prev => {
       const updated = { ...prev };
-      const currentVerse = updated[timeSlot][segmentIdx].data?.verse || "";
+      const seg = updated[timeSlot][segmentIdx];
+      const currentVerse = seg.data?.verse || "";
       updated[timeSlot][segmentIdx].data = {
-        ...updated[timeSlot][segmentIdx].data,
+        ...seg.data,
         verse: currentVerse,
         parsed_verse_data: data.parsed_data
       };
+      // Entity write: parsed verse data
+      if (segmentMutation && seg._entityId) {
+        segmentMutation.mutateSegmentField(seg._entityId, 'parsed_verse_data', data.parsed_data);
+      }
       return updated;
     });
 
@@ -180,6 +198,48 @@ export function useWeeklyServiceHandlers({
       if (updated.sound) updated.sound[targetSlot] = updated.sound[sourceSlot] || "";
       if (updated.luces) updated.luces[targetSlot] = updated.luces[sourceSlot] || "";
       if (updated.fotografia) updated.fotografia[targetSlot] = updated.fotografia[sourceSlot] || "";
+
+      // Entity writes: copy content to target entities
+      if (segmentMutation) {
+        const targetSessionId = updated._sessionIds?.[targetSlot];
+        const sourceSessionId = updated._sessionIds?.[sourceSlot];
+
+        // Update each target segment's content fields via entity write
+        updated[targetSlot].forEach((seg, idx) => {
+          if (seg._entityId && sourceSegments[idx]) {
+            const src = sourceSegments[idx];
+            // Copy text fields from source to target entity
+            const textFields = ['leader', 'preacher', 'presenter', 'translator', 'verse',
+              'messageTitle', 'description_details', 'coordinator_notes', 'projection_notes',
+              'sound_notes', 'ushers_notes', 'translation_notes', 'stage_decor_notes'];
+            textFields.forEach(f => {
+              const val = src.data?.[f];
+              if (val !== undefined) {
+                segmentMutation.mutateSegmentField(seg._entityId, f, val);
+              }
+            });
+            // Copy songs
+            if (src.songs) {
+              segmentMutation.mutateSongs(seg._entityId, src.songs);
+            }
+          }
+        });
+
+        // Copy team fields to target session
+        if (targetSessionId) {
+          ['coordinators', 'ujieres', 'sound', 'luces', 'fotografia'].forEach(f => {
+            const val = updated[f]?.[sourceSlot] || "";
+            segmentMutation.mutateTeam(targetSessionId, f, val);
+          });
+        }
+
+        // Copy pre-service notes
+        if (targetSessionId) {
+          const preNotes = updated.pre_service_notes?.[sourceSlot] || "";
+          segmentMutation.mutatePreServiceNotes(targetSessionId, preNotes);
+        }
+      }
+
       return updated;
     });
   };
@@ -198,6 +258,21 @@ export function useWeeklyServiceHandlers({
 
       if (targetSeg) {
         updated[targetSlot][segmentIndex] = copyContentToTarget(sourceSeg, targetSeg);
+        // Entity write: copy content fields to target entity
+        if (segmentMutation && targetSeg._entityId) {
+          const textFields = ['leader', 'preacher', 'presenter', 'translator', 'verse',
+            'messageTitle', 'description_details', 'coordinator_notes', 'projection_notes',
+            'sound_notes', 'ushers_notes', 'translation_notes', 'stage_decor_notes'];
+          textFields.forEach(f => {
+            const val = sourceSeg.data?.[f];
+            if (val !== undefined) {
+              segmentMutation.mutateSegmentField(targetSeg._entityId, f, val);
+            }
+          });
+          if (sourceSeg.songs) {
+            segmentMutation.mutateSongs(targetSeg._entityId, sourceSeg.songs);
+          }
+        }
       } else {
         updated[targetSlot][segmentIndex] = cloneSegmentWithoutEntityRefs(sourceSeg);
       }
@@ -210,7 +285,13 @@ export function useWeeklyServiceHandlers({
     setServiceData(prev => {
       if (!prev) return prev;
       const updated = { ...prev };
-      if (updated.pre_service_notes) updated.pre_service_notes[targetSlot] = updated.pre_service_notes[sourceSlot] || "";
+      const notes = updated.pre_service_notes?.[sourceSlot] || "";
+      if (updated.pre_service_notes) updated.pre_service_notes[targetSlot] = notes;
+      // Entity write: copy pre-service notes to target session
+      const targetSessionId = updated._sessionIds?.[targetSlot];
+      if (segmentMutation && targetSessionId) {
+        segmentMutation.mutatePreServiceNotes(targetSessionId, notes);
+      }
       return updated;
     });
   };
@@ -225,6 +306,13 @@ export function useWeeklyServiceHandlers({
       if (updated.sound) updated.sound[targetSlot] = updated.sound[sourceSlot] || "";
       if (updated.luces) updated.luces[targetSlot] = updated.luces[sourceSlot] || "";
       if (updated.fotografia) updated.fotografia[targetSlot] = updated.fotografia[sourceSlot] || "";
+      // Entity write: copy team fields to target session
+      const targetSessionId = updated._sessionIds?.[targetSlot];
+      if (segmentMutation && targetSessionId) {
+        ['coordinators', 'ujieres', 'sound', 'luces', 'fotografia'].forEach(f => {
+          segmentMutation.mutateTeam(targetSessionId, f, updated[f]?.[sourceSlot] || "");
+        });
+      }
       return updated;
     });
   };
@@ -293,6 +381,23 @@ export function useWeeklyServiceHandlers({
 
     setServiceData(initialData);
 
+    // Entity write: delete old segments and create new ones from blueprint
+    if (segmentMutation) {
+      targetSlots.forEach(async (slotName) => {
+        const sessionId = serviceData?._sessionIds?.[slotName];
+        if (!sessionId) return;
+        try {
+          // Delete all existing segments in this session
+          await segmentMutation.deleteAllSegmentsInSession(sessionId);
+          // Note: new blueprint segments don't have entity IDs yet.
+          // The blob save pipeline (syncWeeklyToSessions) will create them
+          // on the next 5s debounce cycle and inject _entityId back.
+        } catch (err) {
+          console.error(`[executeResetToBlueprint] Entity cleanup failed for ${slotName}:`, err.message);
+        }
+      });
+    }
+
     const resetLabel = targetSlots.length < slotNames.length
       ? `Horarios restablecidos: ${targetSlots.join(', ')}`
       : "Servicio restablecido al diseño original";
@@ -300,6 +405,7 @@ export function useWeeklyServiceHandlers({
   };
 
   const addSpecialSegment = () => {
+    const timeSlot = specialSegmentDetails.timeSlot;
     const newSegment = {
       type: "special",
       title: specialSegmentDetails.title,
@@ -313,19 +419,51 @@ export function useWeeklyServiceHandlers({
       actions: []
     };
 
+    let insertIndex;
     setServiceData(prev => {
       const updated = { ...prev };
-      const targetArray = [...(updated[specialSegmentDetails.timeSlot] || [])];
-      let insertIndex = specialSegmentDetails.insertAfterIdx + 1;
+      const targetArray = [...(updated[timeSlot] || [])];
+      insertIndex = specialSegmentDetails.insertAfterIdx + 1;
       if (insertIndex <= 0) insertIndex = 0;
       if (insertIndex > targetArray.length) insertIndex = targetArray.length;
       targetArray.splice(insertIndex, 0, newSegment);
-      updated[specialSegmentDetails.timeSlot] = targetArray;
+      updated[timeSlot] = targetArray;
       return updated;
     });
 
-    // New segment has no _entityId — request immediate sync
-    if (requestImmediateSync) requestImmediateSync();
+    // Entity write: create Segment entity for the new special segment
+    if (segmentMutation && serviceData?._sessionIds?.[timeSlot]) {
+      const sessionId = serviceData._sessionIds[timeSlot];
+      segmentMutation.createSegment({
+        session_id: sessionId,
+        service_id: serviceData?.id,
+        order: (insertIndex || 0) + 1,
+        title: specialSegmentDetails.title,
+        segment_type: "Especial",
+        duration_min: specialSegmentDetails.duration,
+        presenter: specialSegmentDetails.presenter || "",
+        translator_name: specialSegmentDetails.translator || "",
+        show_in_general: true,
+        ui_fields: ["description"],
+        ui_sub_assignments: [],
+      }).then(created => {
+        // Inject the new entity ID into local state
+        if (created?.id) {
+          setServiceData(prev => {
+            const arr = [...(prev[timeSlot] || [])];
+            // Find the special segment we just inserted (match by title + no _entityId)
+            const idx = arr.findIndex(s => s.type === 'special' && s.title === specialSegmentDetails.title && !s._entityId);
+            if (idx >= 0) {
+              arr[idx] = { ...arr[idx], _entityId: created.id, _sessionId: sessionId };
+              return { ...prev, [timeSlot]: arr };
+            }
+            return prev;
+          });
+        }
+      }).catch(err => {
+        console.error('[addSpecialSegment] Entity create failed:', err.message);
+      });
+    }
 
     setShowSpecialDialog(false);
     setSpecialSegmentDetails({
@@ -334,6 +472,9 @@ export function useWeeklyServiceHandlers({
   };
 
   const removeSpecialSegment = (timeSlot, index) => {
+    // Capture entity ID before removing from state
+    const entityId = serviceData?.[timeSlot]?.[index]?._entityId;
+
     setServiceData(prev => {
       const updated = { ...prev };
       const targetArray = [...(updated[timeSlot] || [])];
@@ -341,16 +482,40 @@ export function useWeeklyServiceHandlers({
       updated[timeSlot] = targetArray;
       return updated;
     });
+
+    // Entity write: delete Segment entity
+    if (segmentMutation && entityId) {
+      segmentMutation.deleteSegment(entityId).catch(err => {
+        console.error('[removeSpecialSegment] Entity delete failed:', err.message);
+      });
+    }
   };
 
   const handleMoveSegment = (timeSlot, index, direction) => {
+    // Capture entity IDs and orders before swapping
+    const items = serviceData?.[timeSlot] || [];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+
+    const seg1 = items[index];
+    const seg2 = items[targetIndex];
+
     setServiceData(prev => {
-      const items = [...(prev[timeSlot] || [])];
-      const targetIndex = direction === 'up' ? index - 1 : index + 1;
-      if (targetIndex < 0 || targetIndex >= items.length) return prev;
-      [items[index], items[targetIndex]] = [items[targetIndex], items[index]];
-      return { ...prev, [timeSlot]: items };
+      const arr = [...(prev[timeSlot] || [])];
+      [arr[index], arr[targetIndex]] = [arr[targetIndex], arr[index]];
+      return { ...prev, [timeSlot]: arr };
     });
+
+    // Entity write: swap order values
+    if (segmentMutation && seg1?._entityId && seg2?._entityId) {
+      // Use 1-based order matching the original positions
+      segmentMutation.swapSegmentOrder(
+        seg1._entityId, targetIndex + 1,
+        seg2._entityId, index + 1
+      ).catch(err => {
+        console.error('[handleMoveSegment] Entity order swap failed:', err.message);
+      });
+    }
   };
 
   const handleAnnouncementSubmit = (formData) => {
