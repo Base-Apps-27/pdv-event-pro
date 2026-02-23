@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Tv, Eye, FileText, Copy, Check } from "lucide-react";
+import { ExternalLink, Tv, Eye, FileText, Copy, Check, User } from "lucide-react";
 import { toast } from "sonner";
 
 export default function DisplayOverridePanel() {
@@ -54,7 +54,7 @@ export default function DisplayOverridePanel() {
     },
     { 
       name: "MyProgram", 
-      icon: Eye, 
+      icon: User, 
       path: "/MyProgram",
       color: "teal"
     },
@@ -162,6 +162,7 @@ export default function DisplayOverridePanel() {
                 className={`border-2 rounded p-3 ${
                   display.color === 'green' ? 'border-green-300 bg-green-50' :
                   display.color === 'blue' ? 'border-blue-300 bg-blue-50' :
+                  display.color === 'teal' ? 'border-[#1F8A70] bg-[#1F8A70]/5' :
                   'border-purple-300 bg-purple-50'
                 }`}
               >
@@ -170,6 +171,7 @@ export default function DisplayOverridePanel() {
                     <Icon className={`w-4 h-4 ${
                       display.color === 'green' ? 'text-green-600' :
                       display.color === 'blue' ? 'text-blue-600' :
+                      display.color === 'teal' ? 'text-[#1F8A70]' :
                       'text-purple-600'
                     }`} />
                     <span className="font-semibold text-sm">{display.name}</span>
@@ -194,6 +196,7 @@ export default function DisplayOverridePanel() {
                         className={`h-7 px-2 ${
                           display.color === 'green' ? 'bg-green-600 hover:bg-green-700' :
                           display.color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' :
+                          display.color === 'teal' ? 'bg-[#1F8A70] hover:bg-[#1F8A70]/90' :
                           'bg-purple-600 hover:bg-purple-700'
                         }`}
                       >

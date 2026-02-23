@@ -39,7 +39,15 @@ export default function MyProgram() {
   // Ref map for scrolling to specific segments
   const segmentRefs = React.useRef({});
 
-  const { contextType, contextId, event, service, programData, isLoading } = useActiveProgramCache();
+  // Testing override: check URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const overrideServiceId = urlParams.get('override_service_id');
+  const overrideEventId = urlParams.get('override_event_id');
+
+  const { contextType, contextId, event, service, programData, isLoading, _isOverride } = useActiveProgramCache({
+    overrideServiceId,
+    overrideEventId,
+  });
 
   // Normalize segments based on context type
   const segments = useMemo(() => {
@@ -190,7 +198,12 @@ export default function MyProgram() {
       {/* Header — thin bar: name + date */}
       <div style={gradientStyle} className="py-2 px-4 shadow-sm">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <span className="text-white font-bold text-sm truncate">{contextName}</span>
+          <div className="flex flex-col">
+            <span className="text-white font-bold text-sm truncate">{contextName}</span>
+            {_isOverride && (
+              <span className="text-orange-300 text-[10px] font-semibold">🧪 TEST MODE</span>
+            )}
+          </div>
           <span className="text-white/80 text-xs whitespace-nowrap ml-3">{contextDate ? formatDateET(contextDate) : ''}</span>
         </div>
       </div>
