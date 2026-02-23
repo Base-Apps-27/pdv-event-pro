@@ -71,7 +71,11 @@ export default function DisplayOverridePanel() {
     if (!selectedId) return null;
     const param = selectedType === "service" ? "override_service_id" : "override_event_id";
     const base = window.location.origin;
-    return `${base}${path}?${param}=${selectedId}`;
+    let url = `${base}${path}?${param}=${selectedId}`;
+    if (mockTime) {
+      url += `&mock_time=${encodeURIComponent(mockTime)}`;
+    }
+    return url;
   };
 
   const copyUrl = (url) => {
@@ -130,6 +134,22 @@ export default function DisplayOverridePanel() {
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-700">
+            Mock Time (optional)
+          </label>
+          <input
+            type="time"
+            value={mockTime}
+            onChange={(e) => setMockTime(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+            placeholder="HH:MM"
+          />
+          <p className="text-xs text-gray-500">
+            Set a fake "current time" to make segments appear active. Leave empty to use real time.
+          </p>
         </div>
 
         {selectedItem && (
@@ -223,10 +243,15 @@ export default function DisplayOverridePanel() {
           })}
         </div>
 
-        <div className="bg-yellow-50 border border-yellow-300 rounded p-2 text-xs">
+        <div className="bg-yellow-50 border border-yellow-300 rounded p-3 text-xs space-y-1">
           <p className="text-yellow-900">
-            <strong>Note:</strong> Override params bypass auto-detection. Displays will show the selected program regardless of current date/time.
+            <strong>How it works:</strong>
           </p>
+          <ul className="text-yellow-900 ml-4 space-y-0.5 list-disc">
+            <li>Override params bypass auto-detection and force a specific program to load</li>
+            <li>Mock Time freezes the clock at a specific time to make segments appear "active"</li>
+            <li>Example: Set Mock Time to "10:00" to test the 9:30am service mid-segment</li>
+          </ul>
         </div>
       </CardContent>
     </Card>

@@ -28,8 +28,23 @@ import StructuredVersesModal from '@/components/service/StructuredVersesModal';
 export default function MyProgram() {
   const { t, language } = useLanguage();
   const { user } = useCurrentUser();
-  const currentTime = useClockTick(1000);
   const queryClient = useQueryClient();
+
+  // Testing override: check URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const overrideServiceId = urlParams.get('override_service_id');
+  const overrideEventId = urlParams.get('override_event_id');
+  const mockTimeParam = urlParams.get('mock_time'); // HH:MM format
+
+  // Use mock time if provided, otherwise use real clock
+  const realTime = useClockTick(1000);
+  const currentTime = useMemo(() => {
+    if (!mockTimeParam) return realTime;
+    const [h, m] = mockTimeParam.split(':').map(Number);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d;
+  }, [mockTimeParam, realTime]);
 
   const [department, setDepartment] = useDepartment();
   const [selectedSession, setSelectedSession] = useState(null);
@@ -38,11 +53,6 @@ export default function MyProgram() {
 
   // Ref map for scrolling to specific segments
   const segmentRefs = React.useRef({});
-
-  // Testing override: check URL params
-  const urlParams = new URLSearchParams(window.location.search);
-  const overrideServiceId = urlParams.get('override_service_id');
-  const overrideEventId = urlParams.get('override_event_id');
 
   const { contextType, contextId, event, service, programData, isLoading, _isOverride } = useActiveProgramCache({
     overrideServiceId,

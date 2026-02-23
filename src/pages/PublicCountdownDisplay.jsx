@@ -29,21 +29,32 @@ import useActiveProgramCache from "@/components/myprogram/useActiveProgramCache"
  */
 export default function PublicCountdownDisplay() {
   const { t } = useLanguage();
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Brand gradient for header title
-  const gradientText = "bg-clip-text text-transparent bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]";
-
-  // ── Clock tick (1 s) ──
-  useEffect(() => {
-    const id = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
 
   // ── Testing override: check URL params ──
   const urlParams = new URLSearchParams(window.location.search);
   const overrideServiceId = urlParams.get('override_service_id');
   const overrideEventId = urlParams.get('override_event_id');
+  const mockTimeParam = urlParams.get('mock_time'); // HH:MM format
+
+  // ── Clock tick (1 s) — use mock time if provided ──
+  const [currentTime, setCurrentTime] = useState(() => {
+    if (mockTimeParam) {
+      const [h, m] = mockTimeParam.split(':').map(Number);
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      return d;
+    }
+    return new Date();
+  });
+
+  useEffect(() => {
+    if (mockTimeParam) return; // Don't tick if using mock time
+    const id = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, [mockTimeParam]);
+
+  // Brand gradient for header title
+  const gradientText = "bg-clip-text text-transparent bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]";
 
   // ── Read from ActiveProgramCache (instant, no backend call) ──
   const { programData, isLoading, _isOverride } = useActiveProgramCache({

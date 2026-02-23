@@ -85,6 +85,9 @@ export default function PublicProgramView() {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
+  // ── Mock time for testing (URL param) ──
+  const mockTimeParam = urlParams.get('mock_time'); // HH:MM format
+  
   // Helper to parse date strings as local timezone dates at midnight
   const getLocalDateAtMidnight = (dateString) => {
     if (!dateString) return null;
@@ -92,13 +95,21 @@ export default function PublicProgramView() {
     return new Date(year, month - 1, day, 0, 0, 0, 0);
   };
 
-  // Update current time every second for real-time countdowns
+  // Update current time every second for real-time countdowns (or use mock time)
   useEffect(() => {
+    if (mockTimeParam) {
+      // Use mock time from URL - freeze clock at specified time
+      const [h, m] = mockTimeParam.split(':').map(Number);
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      setCurrentTime(d);
+      return;
+    }
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000); // Update every second
     return () => clearInterval(timer);
-  }, []);
+  }, [mockTimeParam]);
 
   useEffect(() => {
     if (preloadedEventId) {
