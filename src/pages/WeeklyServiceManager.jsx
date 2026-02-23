@@ -390,15 +390,6 @@ export default function WeeklyServiceManager() {
         tealStyle={{ backgroundColor: '#1F8A70', color: '#ffffff' }}
       />
 
-      {/* Special Segment Dialog */}
-      <SpecialSegmentDialog
-        open={showSpecialDialog} onOpenChange={setShowSpecialDialog}
-        details={specialSegmentDetails} setDetails={setSpecialSegmentDetails}
-        serviceSegments={[]}
-        slotHasTranslation={false}
-        onAdd={() => {}} tealStyle={{ backgroundColor: '#1F8A70', color: '#ffffff' }}
-      />
-
       {/* Schedule Manager Dialog */}
       <Dialog open={showScheduleManager} onOpenChange={setShowScheduleManager}>
         <DialogContent className="max-w-3xl bg-white max-h-[85vh] overflow-y-auto">
