@@ -79,48 +79,46 @@ export default function ServiceTimeSlotColumn({
   const accentColor = SLOT_ACCENT_COLORS[slotIndex % SLOT_ACCENT_COLORS.length];
   const timingInfo = calculateServiceTimes(timeSlot);
   const segments = serviceData[timeSlot] || [];
-  const { pushFn } = useContext(UpdatersContext) || {};
+  const { mutateSongs, mutateDuration } = useContext(UpdatersContext) || {};
 
   // Add/remove song slots for worship segments
   const addSongSlot = useCallback((segIdx) => {
-    const entityId = serviceData?.[timeSlot]?.[segIdx]?._entityId;
-    let updatedSongs = null;
+    const seg = serviceData?.[timeSlot]?.[segIdx];
     setServiceData(prev => {
       const arr = [...(prev[timeSlot] || [])];
       if (!arr[segIdx]) return prev;
-      const seg = { ...arr[segIdx] };
-      const songs = [...(seg.songs || [])];
+      const s = { ...arr[segIdx] };
+      const songs = [...(s.songs || [])];
       if (songs.length >= 10) return prev;
       songs.push({ title: "", lead: "", key: "" });
-      seg.songs = songs;
-      arr[segIdx] = seg;
-      updatedSongs = songs;
+      s.songs = songs;
+      arr[segIdx] = s;
+      // Entity write: update song slots
+      if (mutateSongs && seg?._entityId) {
+        mutateSongs(seg._entityId, songs);
+      }
       return { ...prev, [timeSlot]: arr };
     });
-    if (pushFn && entityId && updatedSongs) {
-      pushFn("songs", { entityId, songs: updatedSongs });
-    }
-  }, [timeSlot, setServiceData, pushFn, serviceData]);
+  }, [timeSlot, setServiceData, mutateSongs, serviceData]);
 
   const removeSongSlot = useCallback((segIdx) => {
-    const entityId = serviceData?.[timeSlot]?.[segIdx]?._entityId;
-    let updatedSongs = null;
+    const seg = serviceData?.[timeSlot]?.[segIdx];
     setServiceData(prev => {
       const arr = [...(prev[timeSlot] || [])];
       if (!arr[segIdx]) return prev;
-      const seg = { ...arr[segIdx] };
-      const songs = [...(seg.songs || [])];
+      const s = { ...arr[segIdx] };
+      const songs = [...(s.songs || [])];
       if (songs.length <= 1) return prev;
       songs.pop();
-      seg.songs = songs;
-      arr[segIdx] = seg;
-      updatedSongs = songs;
+      s.songs = songs;
+      arr[segIdx] = s;
+      // Entity write: update song slots
+      if (mutateSongs && seg?._entityId) {
+        mutateSongs(seg._entityId, songs);
+      }
       return { ...prev, [timeSlot]: arr };
     });
-    if (pushFn && entityId && updatedSongs) {
-      pushFn("songs", { entityId, songs: updatedSongs });
-    }
-  }, [timeSlot, setServiceData, pushFn, serviceData]);
+  }, [timeSlot, setServiceData, mutateSongs, serviceData]);
 
   return (
     <div className="space-y-4" style={style}>
@@ -336,14 +334,16 @@ function SpecialSegmentCard({
               <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
               <Input type="number" value={segment.duration || 0} onChange={(e) => {
                 const newDuration = parseInt(e.target.value) || 0;
-                // CRIT-7 FIX (SpecialSegmentCardInner): Deep-clone nested array to avoid state mutation
                 setServiceData(prev => {
                   const updated = { ...prev };
                   updated[timeSlot] = [...prev[timeSlot]];
                   updated[timeSlot][idx] = { ...updated[timeSlot][idx], duration: newDuration };
                   return updated;
                 });
-                debouncedSave(`${timeSlot}-${idx}-duration`);
+                // Entity write: debounced duration update
+                if (mutateDuration && segment._entityId) {
+                  mutateDuration(segment._entityId, newDuration);
+                }
               }} className="text-xs w-24" />
             </div>
             <Textarea placeholder="Notas para Coordinador" value={segment.data?.coordinator_notes || ""} onChange={(e) => updateSegmentField(timeSlot, idx, "coordinator_notes", e.target.value)} className="text-xs" rows={2} />
@@ -522,14 +522,16 @@ function StandardSegmentCard({
               <Label className="text-xs font-semibold text-gray-700">Duración (minutos)</Label>
               <Input type="number" value={segment.duration || 0} onChange={(e) => {
                 const newDuration = parseInt(e.target.value) || 0;
-                // CRIT-7 FIX (StandardSegmentCard): Deep-clone nested array to avoid state mutation
                 setServiceData(prev => {
                   const updated = { ...prev };
                   updated[timeSlot] = [...prev[timeSlot]];
                   updated[timeSlot][idx] = { ...updated[timeSlot][idx], duration: newDuration };
                   return updated;
                 });
-                debouncedSave(`${timeSlot}-${idx}-duration`);
+                // Entity write: debounced duration update
+                if (mutateDuration && segment._entityId) {
+                  mutateDuration(segment._entityId, newDuration);
+                }
               }} className="text-xs w-24" />
             </div>
             {segment.actions && segment.actions.length > 0 && (

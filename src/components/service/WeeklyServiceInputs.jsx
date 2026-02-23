@@ -6,9 +6,17 @@ import { getSegmentData } from "@/components/utils/segmentDataUtils";
 
 /**
  * WeeklyServiceInputs — Extracted from WeeklyServiceManager (Phase 3A).
- * SIMPLIFIED SAVE (2026-02-22): All inputs now use direct onChange → setState.
- * No local state, no debouncing, no blur commits.
- * 5s debounced timer in WeeklyServiceManager handles batched DB writes.
+ *
+ * Entity Separation (2026-02-23): Each input now fires BOTH:
+ *   1. setServiceData (optimistic local state — instant UI)
+ *   2. Entity mutation via useSegmentMutation (300ms debounced DB write)
+ *
+ * The entity mutation is accessed via UpdatersContext, which now includes:
+ *   - mutateSegmentField, mutateSongs, mutateTeam, mutatePreServiceNotes,
+ *     mutateRecesoNotes, mutateSubAssignment
+ *
+ * If the mutation function is not available (e.g., during transition or if
+ * _entityId is missing), the input silently falls back to blob-only mode.
  *
  * Exports:
  *   ServiceDataContext, UpdatersContext — React contexts for state sharing
@@ -20,17 +28,21 @@ import { getSegmentData } from "@/components/utils/segmentDataUtils";
 export const ServiceDataContext = createContext(null);
 export const UpdatersContext = createContext(null);
 
-// Song Input Row - direct state updates
+// Song Input Row - direct state updates + entity mutation
 export function SongInputRow({ service, segmentIndex, songIndex }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
   const song = segment?.songs?.[songIndex] || { title: "", lead: "", key: "" };
-  const { updateSegmentField } = useContext(UpdatersContext);
+  const { updateSegmentField, mutateSongs } = useContext(UpdatersContext);
 
   const handleSongChange = (field, value) => {
     const songs = segment?.songs || [];
     const updated = [...songs];
     updated[songIndex] = { ...updated[songIndex], [field]: value };
     updateSegmentField(service, segmentIndex, "songs", updated);
+    // Entity write: debounced song update
+    if (mutateSongs && segment?._entityId) {
+      mutateSongs(segment._entityId, updated);
+    }
   };
 
   return (
@@ -65,11 +77,11 @@ export function SongInputRow({ service, segmentIndex, songIndex }) {
   );
 }
 
-// Pre-Service Notes Input - direct state updates
+// Pre-Service Notes Input - direct state updates + entity mutation
 export function PreServiceNotesInput({ service }) {
   const serviceData = useContext(ServiceDataContext);
   const notes = serviceData?.pre_service_notes?.[service] || "";
-  const { setServiceData } = useContext(UpdatersContext);
+  const { setServiceData, mutatePreServiceNotes } = useContext(UpdatersContext);
 
   const handleChange = (val) => {
     setServiceData(prev => ({
@@ -79,6 +91,11 @@ export function PreServiceNotesInput({ service }) {
         [service]: val
       }
     }));
+    // Entity write: debounced pre-service notes update
+    const sessionId = serviceData?._sessionIds?.[service];
+    if (mutatePreServiceNotes && sessionId) {
+      mutatePreServiceNotes(sessionId, val);
+    }
   };
 
   return (
@@ -92,15 +109,16 @@ export function PreServiceNotesInput({ service }) {
   );
 }
 
-// Receso Notes Input - direct state updates
+// Receso Notes Input - direct state updates + entity mutation
 export function RecesoNotesInput({ slotName }) {
   const serviceData = useContext(ServiceDataContext);
   const resolvedSlot = slotName || (serviceData?.receso_notes ? Object.keys(serviceData.receso_notes)[0] : null);
   if (!resolvedSlot) return null;
   const notes = serviceData?.receso_notes?.[resolvedSlot] || "";
-  const { setServiceData } = useContext(UpdatersContext);
+  const { setServiceData, mutateRecesoNotes } = useContext(UpdatersContext);
 
   const handleChange = (val) => {
+    const updatedReceso = { ...serviceData?.receso_notes, [resolvedSlot]: val };
     setServiceData(prev => ({
       ...prev,
       receso_notes: {
@@ -108,6 +126,10 @@ export function RecesoNotesInput({ slotName }) {
         [resolvedSlot]: val
       }
     }));
+    // Entity write: debounced receso notes update (stored on Service entity)
+    if (mutateRecesoNotes && serviceData?.id) {
+      mutateRecesoNotes(serviceData.id, updatedReceso);
+    }
   };
 
   return (
@@ -121,66 +143,122 @@ export function RecesoNotesInput({ slotName }) {
   );
 }
 
-// Team Input Component - direct state updates
+// Team Input Component - direct state updates + entity mutation
 export function TeamInput({ field, service, placeholder }) {
-  const value = useContext(ServiceDataContext)?.[field]?.[service] || "";
-  const { updateTeamField } = useContext(UpdatersContext);
+  const serviceData = useContext(ServiceDataContext);
+  const value = serviceData?.[field]?.[service] || "";
+  const { updateTeamField, mutateTeam } = useContext(UpdatersContext);
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    updateTeamField(field, service, val);
+    // Entity write: debounced team field update
+    const sessionId = serviceData?._sessionIds?.[service];
+    if (mutateTeam && sessionId) {
+      mutateTeam(sessionId, field, val);
+    }
+  };
 
   return (
     <Input
       placeholder={placeholder}
       value={value}
-      onChange={(e) => updateTeamField(field, service, e.target.value)}
+      onChange={handleChange}
       className="text-xs"
     />
   );
 }
 
-// Segment Field Component - direct state updates
+// Segment Field Component - direct state updates + entity mutation
 export function SegmentTextInput({ service, segmentIndex, field, placeholder, className = "text-sm" }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
   const value = getSegmentData(segment, field) || "";
-  const { updateSegmentField } = useContext(UpdatersContext);
+  const { updateSegmentField, mutateSegmentField } = useContext(UpdatersContext);
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    updateSegmentField(service, segmentIndex, field, val);
+    // Entity write: debounced field update
+    if (mutateSegmentField && segment?._entityId) {
+      mutateSegmentField(segment._entityId, field, val);
+    }
+  };
 
   return (
     <Input
       placeholder={placeholder}
       value={value}
-      onChange={(e) => updateSegmentField(service, segmentIndex, field, e.target.value)}
+      onChange={handleChange}
       className={className}
     />
   );
 }
 
-// Segment Textarea Component - direct state updates
+// Segment Textarea Component - direct state updates + entity mutation
 export function SegmentTextarea({ service, segmentIndex, field, placeholder, className = "text-sm", rows = 2 }) {
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
   const value = getSegmentData(segment, field) || "";
-  const { updateSegmentField } = useContext(UpdatersContext);
+  const { updateSegmentField, mutateSegmentField } = useContext(UpdatersContext);
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    updateSegmentField(service, segmentIndex, field, val);
+    // Entity write: debounced field update
+    if (mutateSegmentField && segment?._entityId) {
+      mutateSegmentField(segment._entityId, field, val);
+    }
+  };
 
   return (
     <Textarea
       placeholder={placeholder}
       value={value}
-      onChange={(e) => updateSegmentField(service, segmentIndex, field, e.target.value)}
+      onChange={handleChange}
       className={className}
       rows={rows}
     />
   );
 }
 
-// Segment Autocomplete Component - direct state updates
+// Segment Autocomplete Component - direct state updates + entity mutation
 export function SegmentAutocomplete({ service, segmentIndex, field, placeholder, type, className = "text-sm" }) {
-  const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
+  const serviceData = useContext(ServiceDataContext);
+  const segment = serviceData?.[service]?.[segmentIndex];
   const value = getSegmentData(segment, field) || "";
-  const { updateSegmentField } = useContext(UpdatersContext);
+  const { updateSegmentField, mutateSegmentField, mutateSubAssignment } = useContext(UpdatersContext);
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    updateSegmentField(service, segmentIndex, field, val);
+
+    if (!segment?._entityId) return;
+
+    // Check if this field is a sub-assignment person field
+    const subAssignments = segment.sub_assignments || [];
+    const subIdx = subAssignments.findIndex(sa => sa.person_field_name === field);
+
+    if (subIdx >= 0 && mutateSubAssignment) {
+      // Sub-assignment field → write to child Ministración entity
+      mutateSubAssignment(
+        segment._entityId,
+        segment._sessionId,
+        serviceData?.id,
+        subIdx,
+        subAssignments[subIdx],
+        val
+      );
+    } else if (mutateSegmentField) {
+      // Regular segment field → write to Segment entity
+      mutateSegmentField(segment._entityId, field, val);
+    }
+  };
 
   return (
     <AutocompleteInput
       type={type}
       placeholder={placeholder}
       value={value}
-      onChange={(e) => updateSegmentField(service, segmentIndex, field, e.target.value)}
+      onChange={handleChange}
       className={className}
     />
   );
