@@ -27,9 +27,11 @@ import { hasPermission } from "@/components/utils/permissions";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Users, Loader2 } from "lucide-react";
+import { RefreshCw, Users, Loader2, Download, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 import { ServiceDataContext, UpdatersContext } from "@/components/service/WeeklyServiceInputs";
 import ServiceSlotColumns from "./ServiceSlotColumns";
@@ -38,6 +40,9 @@ import { useWeeklyServiceHandlers } from "./useWeeklyServiceHandlers";
 import { loadWeeklyFromSessions } from "@/components/service/weeklySessionSync";
 import { useSegmentMutation } from "./useSegmentMutation";
 import useStaleGuard from "@/components/utils/useStaleGuard";
+import SpecialSegmentDialog from "@/components/service/SpecialSegmentDialog";
+import VerseParserDialog from "@/components/service/VerseParserDialog";
+import WeeklyServiceDialogs from "./WeeklyServiceDialogs";
 
 const DAY_LABELS = {
   Sunday: "Domingo", Monday: "Lunes", Tuesday: "Martes",
