@@ -250,7 +250,8 @@ function buildHeader(serviceData, logoDataUrl, scale) {
             margin: [0, 4, 0, 2]
           },
           {
-            text: `DOMINGO ${dateStr}`.toUpperCase(),
+            // Recurring Services Refactor (2026-02-23): Dynamic day label instead of hardcoded DOMINGO
+            text: `${(serviceData.day_of_week || 'DOMINGO').toUpperCase()} ${dateStr}`.toUpperCase(),
             fontSize: 10 * scale,
             bold: true,
             alignment: 'center',
