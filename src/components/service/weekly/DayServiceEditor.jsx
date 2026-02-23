@@ -17,7 +17,12 @@
  * Does NOT own (parent provides):
  *   - Announcements (shared across days)
  *   - Date picker (shared)
- *   - Print settings / verse parser / special segment dialogs (shared, opened via callbacks)
+ *   - Print settings dialog (shared, parent-level)
+ *
+ * Owns per-day dialogs (not shared):
+ *   - SpecialSegmentDialog (per-day state)
+ *   - VerseParserDialog (per-day state)
+ *   - Reset confirmation (per-day state via handlers)
  */
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
