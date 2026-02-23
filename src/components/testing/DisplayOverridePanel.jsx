@@ -21,6 +21,7 @@ export default function DisplayOverridePanel() {
   const [events, setEvents] = useState([]);
   const [selectedType, setSelectedType] = useState("service");
   const [selectedId, setSelectedId] = useState("");
+  const [mockTime, setMockTime] = useState("");
   const [copiedUrl, setCopiedUrl] = useState("");
 
   useEffect(() => {
