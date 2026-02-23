@@ -360,12 +360,6 @@ export default function WeeklyServiceManager() {
               selectedAnnouncements={selectedAnnouncements}
               fixedAnnouncements={fixedAnnouncements}
               dynamicAnnouncements={dynamicAnnouncements}
-              setVerseParserOpen={setVerseParserOpen}
-              setVerseParserContext={setVerseParserContext}
-              verseParserContext={verseParserContext}
-              setShowSpecialDialog={setShowSpecialDialog}
-              setSpecialSegmentDetails={setSpecialSegmentDetails}
-              specialSegmentDetails={specialSegmentDetails}
               setOptimizingAnnouncement={setOptimizingAnnouncement}
               setPrintSettingsPage1={setPrintSettingsPage1}
               setPrintSettingsPage2={setPrintSettingsPage2}
@@ -374,7 +368,6 @@ export default function WeeklyServiceManager() {
               setEditingAnnouncement={setEditingAnnouncement}
               setAnnouncementForm={setAnnouncementForm}
               setShowAnnouncementDialog={setShowAnnouncementDialog}
-              setShowResetConfirm={setShowResetConfirm}
               editingAnnouncement={editingAnnouncement}
               createAnnouncementMutation={createAnnouncementMutation}
               updateAnnouncementMutation={updateAnnouncementMutation}
