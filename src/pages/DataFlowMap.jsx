@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, ArrowRight, Database, Eye, FileText, Save, Zap, AlertTriangle } from "lucide-react";
+import DisplayOverridePanel from "@/components/testing/DisplayOverridePanel";
 
 export default function DataFlowMap() {
   const [activeLayer, setActiveLayer] = useState("all");
@@ -103,6 +104,9 @@ export default function DataFlowMap() {
             <FieldMappingTable />
           </CardContent>
         </Card>
+
+        {/* Testing Controls */}
+        <DisplayOverridePanel />
 
         {/* Known Issues */}
         <Card className="border-2 border-orange-500">

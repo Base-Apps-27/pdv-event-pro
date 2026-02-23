@@ -40,8 +40,16 @@ export default function PublicCountdownDisplay() {
     return () => clearInterval(id);
   }, []);
 
+  // ── Testing override: check URL params ──
+  const urlParams = new URLSearchParams(window.location.search);
+  const overrideServiceId = urlParams.get('override_service_id');
+  const overrideEventId = urlParams.get('override_event_id');
+
   // ── Read from ActiveProgramCache (instant, no backend call) ──
-  const { programData, isLoading } = useActiveProgramCache();
+  const { programData, isLoading, _isOverride } = useActiveProgramCache({
+    overrideServiceId,
+    overrideEventId,
+  });
 
   // ── Normalize ──
   const normalizedData = useMemo(
@@ -225,6 +233,11 @@ export default function PublicCountdownDisplay() {
           >
             {service.name}
           </h1>
+          {_isOverride && (
+            <div className="text-xs text-orange-600 font-semibold mt-0.5">
+              🧪 TEST MODE (Override Active)
+            </div>
+          )}
         </div>
         <div className="flex-shrink-0 ml-3">
           <div className="text-lg md:text-xl text-slate-800 font-mono font-bold tracking-tight bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg border border-slate-200 shadow-sm">

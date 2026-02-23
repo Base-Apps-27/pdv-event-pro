@@ -23,9 +23,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useMemo, useEffect, useRef, useCallback } from 'react';
 
-export default function useActiveProgramCache() {
+export default function useActiveProgramCache(overrideParams = {}) {
   const queryClient = useQueryClient();
   const debounceRef = useRef(null);
+  
+  // Testing override: force a specific service or event ID
+  const { overrideServiceId, overrideEventId } = overrideParams;
 
   // Debounced invalidation: coalesces rapid-fire updates into one refetch.
   // Settle time: 800ms — fast enough for user-perceived real-time,
@@ -37,6 +40,60 @@ export default function useActiveProgramCache() {
       debounceRef.current = null;
     }, 800);
   }, [queryClient]);
+
+  // ── Override query: Load specific service/event for testing ──
+  const { data: overrideData, isLoading: overrideLoading } = useQuery({
+    queryKey: ['overrideProgram', overrideServiceId, overrideEventId],
+    queryFn: async () => {
+      if (overrideServiceId) {
+        const service = await base44.entities.Service.filter({ id: overrideServiceId });
+        if (!service?.[0]) return null;
+        
+        // Build snapshot from service + sessions + segments
+        const sessions = await base44.entities.Session.filter({ service_id: overrideServiceId });
+        const segmentArrays = await Promise.all(
+          sessions.map(s => base44.entities.Segment.filter({ session_id: s.id }))
+        );
+        const segments = segmentArrays.flat().filter(s => !s.parent_segment_id && s.show_in_general !== false);
+        
+        return {
+          program_type: 'service',
+          program_id: overrideServiceId,
+          program_snapshot: {
+            program: service[0],
+            sessions: sessions,
+            segments: segments,
+          }
+        };
+      }
+      
+      if (overrideEventId) {
+        const event = await base44.entities.Event.filter({ id: overrideEventId });
+        if (!event?.[0]) return null;
+        
+        const sessions = await base44.entities.Session.filter({ event_id: overrideEventId });
+        const segmentArrays = await Promise.all(
+          sessions.map(s => base44.entities.Segment.filter({ session_id: s.id }))
+        );
+        const segments = segmentArrays.flat().filter(s => !s.parent_segment_id && s.show_in_general !== false);
+        
+        return {
+          program_type: 'event',
+          program_id: overrideEventId,
+          program_snapshot: {
+            event: event[0],
+            program: event[0],
+            sessions: sessions,
+            segments: segments,
+          }
+        };
+      }
+      
+      return null;
+    },
+    enabled: !!(overrideServiceId || overrideEventId),
+    staleTime: Infinity, // Override is manual — don't refetch
+  });
 
   // ── Primary: Read from ActiveProgramCache entity (instant, no function call) ──
   // HARDENED (2026-02-15 audit): Added error recovery and retry with backoff.
@@ -50,14 +107,16 @@ export default function useActiveProgramCache() {
     refetchInterval: 2 * 60 * 1000, // Safety net poll every 2 min (catches missed subs)
     retry: 3,                     // Retry 3 times with exponential backoff
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
+    enabled: !overrideServiceId && !overrideEventId, // Skip auto-detection when override is active
   });
 
-  // ── Extract data from cache record ──
+  // ── Extract data: override takes precedence over cache ──
   const detected = useMemo(() => {
-    if (!cacheRecord) return { contextType: null, contextId: null, event: null, service: null };
+    const record = overrideData || cacheRecord;
+    if (!record) return { contextType: null, contextId: null, event: null, service: null };
 
-    const snapshot = cacheRecord.program_snapshot;
-    const programType = cacheRecord.program_type;
+    const snapshot = record.program_snapshot;
+    const programType = record.program_type;
 
     if (programType === 'none' || !snapshot) {
       return { contextType: null, contextId: null, event: null, service: null };
@@ -65,17 +124,19 @@ export default function useActiveProgramCache() {
 
     return {
       contextType: programType, // 'event' or 'service'
-      contextId: cacheRecord.program_id,
+      contextId: record.program_id,
       event: programType === 'event' ? snapshot.event || snapshot.program : null,
       service: programType === 'service' ? snapshot.program : null,
+      _isOverride: !!overrideData, // Flag for debugging
     };
-  }, [cacheRecord]);
+  }, [cacheRecord, overrideData]);
 
   // ── Program data (the full snapshot) ──
   const programData = useMemo(() => {
-    if (!cacheRecord?.program_snapshot) return null;
-    return cacheRecord.program_snapshot;
-  }, [cacheRecord]);
+    const record = overrideData || cacheRecord;
+    if (!record?.program_snapshot) return null;
+    return record.program_snapshot;
+  }, [cacheRecord, overrideData]);
 
   // ── Selector options for Live View dropdowns ──
   const selectorOptions = useMemo(() => {
@@ -103,10 +164,10 @@ export default function useActiveProgramCache() {
     ...detected,
     programData,
     selectorOptions,
-    isLoading: cacheLoading,
+    isLoading: overrideLoading || cacheLoading,
     isError: !!cacheError, // Expose error state for consumers to show fallback UI
     allEvents: selectorOptions.events || [],
     allServices: selectorOptions.services || [],
-    cacheRecord, // For debugging / metadata display
+    cacheRecord: overrideData || cacheRecord, // For debugging / metadata display
   };
 }
