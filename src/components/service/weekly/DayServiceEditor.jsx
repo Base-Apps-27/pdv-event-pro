@@ -42,7 +42,6 @@ import { useSegmentMutation } from "./useSegmentMutation";
 import useStaleGuard from "@/components/utils/useStaleGuard";
 import SpecialSegmentDialog from "@/components/service/SpecialSegmentDialog";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
-import WeeklyServiceDialogs from "./WeeklyServiceDialogs";
 
 const DAY_LABELS = {
   Sunday: "Domingo", Monday: "Lunes", Tuesday: "Martes",
