@@ -106,6 +106,10 @@ export default function PublicProgramView() {
     }
   }, [preloadedEventId]);
 
+  // ── Testing override: check URL params ──
+  const overrideServiceId = urlParams.get('override_service_id');
+  const overrideEventId = urlParams.get('override_event_id');
+
   // ── CACHE-FIRST: Read from ActiveProgramCache (instant, no backend call) ──
   // This provides the auto-detected program, selector options, and full snapshot.
   const {
@@ -114,7 +118,11 @@ export default function PublicProgramView() {
     programData: cacheProgramData,
     selectorOptions: cacheSelectorOptions,
     isLoading: isCacheLoading,
-  } = useActiveProgramCache();
+    _isOverride,
+  } = useActiveProgramCache({
+    overrideServiceId,
+    overrideEventId,
+  });
 
   // Selector options always come from cache (wider window: 90d events, 7d services)
   const publicEvents = cacheSelectorOptions?.events || [];
@@ -779,6 +787,12 @@ export default function PublicProgramView() {
                   <>
                     <span>•</span>
                     <span className="truncate">{selectedEvent.location}</span>
+                  </>
+                )}
+                {_isOverride && (
+                  <>
+                    <span>•</span>
+                    <span className="text-orange-500 font-bold">🧪 TEST OVERRIDE</span>
                   </>
                 )}
               </div>
