@@ -53,6 +53,12 @@ export default function DisplayOverridePanel() {
       color: "blue"
     },
     { 
+      name: "MyProgram", 
+      icon: Eye, 
+      path: "/MyProgram",
+      color: "teal"
+    },
+    { 
       name: "PDF Generator", 
       icon: FileText, 
       path: "/WeeklyServiceManager",
