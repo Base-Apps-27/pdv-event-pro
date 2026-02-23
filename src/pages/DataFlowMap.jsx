@@ -324,25 +324,34 @@ function EditorLayer() {
 function BackendLayer() {
   return (
     <div className="space-y-4">
-      <Card className="border-2 border-blue-500">
-        <CardHeader className="bg-blue-50">
-          <CardTitle>weeklySessionSync.jsx</CardTitle>
+      <Card className="border-2 border-yellow-500">
+        <CardHeader className="bg-yellow-50">
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-yellow-600" />
+            weeklySessionSync.jsx (READ ONLY)
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-4 space-y-3">
+          <Badge className="bg-yellow-500 text-white text-xs mb-2">
+            ⚠️ WRITE path removed in Entity Separation
+          </Badge>
           <div className="text-sm">
-            <h3 className="font-semibold mb-2">syncWeeklyToSessions() - Lines 165-299</h3>
+            <h3 className="font-semibold mb-2">loadWeeklyFromSessions() - READ path only</h3>
             <p className="text-gray-700 mb-2">
-              Transforms editor state into Session/Segment/PreSessionDetails entities
+              Transforms Session/Segment entities back to weekly JSON format for editor initialization.
+              Used ONLY on page load.
             </p>
           </div>
           <div className="bg-gray-50 p-3 rounded text-xs font-mono space-y-1">
-            <p className="text-blue-600">FOR EACH slot ("9:30am", "11:30am"):</p>
-            <p className="ml-4">1. Find/Create Session entity</p>
-            <p className="ml-4">2. Update PreSessionDetails (pre-service notes)</p>
-            <p className="ml-4">3. Build parent Segment entities (order, type, presenter, songs, actions)</p>
-            <p className="ml-4">4. Build child Segment entities (Ministración sub-assignments)</p>
-            <p className="ml-4">5. Bulk create new segments</p>
-            <p className="ml-4">6. Delete old segments (create-before-delete pattern)</p>
+            <p className="text-green-600">// Lines 21-84 (READ ONLY)</p>
+            <p className="ml-4">1. Load Sessions by service_id</p>
+            <p className="ml-4">2. Load Segments (parent + child)</p>
+            <p className="ml-4">3. Transform to weekly JSON format</p>
+            <p className="ml-4">4. Inject _entityId, _sessionId for mutations</p>
+          </div>
+          <div className="bg-red-50 border-2 border-red-300 p-2 rounded text-xs mt-2">
+            <p className="font-semibold text-red-700">OLD syncWeeklyToSessions() - REMOVED</p>
+            <p className="text-gray-600">Bulk delete/recreate pipeline replaced by useSegmentMutation atomic writes</p>
           </div>
         </CardContent>
       </Card>
@@ -370,8 +379,11 @@ function BackendLayer() {
             <p className="text-green-600">6. Build program snapshot object</p>
             <p className="text-green-600">7. Write to ActiveProgramCache</p>
           </div>
-          <div className="bg-yellow-50 border border-yellow-300 p-2 rounded text-xs">
-            ⚠️ <strong>Performance:</strong> ~4 calls per save due to Service + Session automations
+          <div className="bg-blue-50 border border-blue-300 p-2 rounded text-xs">
+            ℹ️ <strong>Trigger Frequency:</strong> Each field edit = 1 Segment.update() = 1 Session automation = 1 cache refresh (optimized)
+          </div>
+          <div className="bg-green-50 border border-green-300 p-2 rounded text-xs mt-1">
+            ✓ <strong>OLD Issue Resolved:</strong> Metadata saves (announcements) no longer trigger full segment re-sync
           </div>
         </CardContent>
       </Card>
@@ -577,6 +589,7 @@ function KnownIssues() {
         <div
           key={issue.id}
           className={`border-2 rounded p-3 ${
+            issue.status === 'resolved' ? 'border-green-500 bg-green-50' :
             issue.priority === 'critical' ? 'border-red-500 bg-red-50' :
             issue.priority === 'high' ? 'border-orange-500 bg-orange-50' :
             'border-yellow-500 bg-yellow-50'
@@ -585,17 +598,20 @@ function KnownIssues() {
           <div className="flex items-start justify-between mb-2">
             <h4 className="font-semibold text-sm">{issue.title}</h4>
             <Badge className={
+              issue.status === 'resolved' ? 'bg-green-600 text-white' :
               issue.priority === 'critical' ? 'bg-red-600' :
               issue.priority === 'high' ? 'bg-orange-600' :
               'bg-yellow-600'
             }>
-              {issue.priority.toUpperCase()}
+              {issue.status === 'resolved' ? '✓ RESOLVED' : issue.priority.toUpperCase()}
             </Badge>
           </div>
           <div className="space-y-1 text-xs">
             <p><strong>Location:</strong> <code className="bg-white px-1 rounded">{issue.location}</code></p>
             <p><strong>Cause:</strong> {issue.cause}</p>
-            <p className="text-green-700"><strong>Fix:</strong> {issue.fix}</p>
+            <p className={issue.status === 'resolved' ? 'text-green-700 font-semibold' : 'text-green-700'}>
+              <strong>{issue.status === 'resolved' ? 'Deployed:' : 'Fix:'}</strong> {issue.fix}
+            </p>
           </div>
         </div>
       ))}
