@@ -322,6 +322,10 @@ export default function WeeklyServiceManager() {
   // Multi-admin: track external changes for collaboration banner
   const [externalChangeAvailable, setExternalChangeAvailable] = React.useState(false);
 
+  // Self-save guard: when our own metadata save triggers a Service subscription event,
+  // ignore it so we don't falsely show "another admin updated" notifications.
+  const ownSaveInProgressRef = React.useRef(false);
+
   // Ref to always have current serviceData for metadata saves.
   const serviceDataRef = React.useRef(serviceData);
   React.useEffect(() => { serviceDataRef.current = serviceData; }, [serviceData]);
@@ -336,6 +340,7 @@ export default function WeeklyServiceManager() {
   // print_settings, receso_notes. Segment data lives on Session/Segment entities.
   const saveMetadataMutation = useMutation({
     mutationFn: async ({ serviceId, metadata }) => {
+      ownSaveInProgressRef.current = true;
       if (serviceId) {
         return base44.entities.Service.update(serviceId, metadata);
       } else {
@@ -346,8 +351,12 @@ export default function WeeklyServiceManager() {
     onSuccess: (result) => {
       if (result?.updated_date) captureServiceBaseline(result.updated_date);
       queryClient.invalidateQueries({ queryKey: ['weeklyService'] });
+      // Clear the self-save guard after a short delay to allow the subscription
+      // event to arrive and be filtered out before we start listening again.
+      setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
     },
     onError: (error) => {
+      ownSaveInProgressRef.current = false;
       toast.error('Error al guardar metadatos: ' + error.message);
     }
   });
@@ -628,9 +637,9 @@ export default function WeeklyServiceManager() {
       }, [existingData, selectedDate, blueprintData, isLoading]);
 
   // MULTI-ADMIN REAL-TIME: Subscribe to Service entity changes for collaboration.
-  // Entity Separation: individual field writes to Segment entities don't trigger
-  // Service subscriptions. Only structural changes (admin refreshes, metadata updates)
-  // fire this. No ownSaveInProgressRef needed — per-field writes are atomic.
+  // Entity Separation: individual field writes to Segment/Session entities don't trigger
+  // Service subscriptions. Only metadata saves and receso notes trigger this.
+  // ownSaveInProgressRef filters out self-triggered events.
   useEffect(() => {
     if (!existingData?.id) return;
 
@@ -647,6 +656,8 @@ export default function WeeklyServiceManager() {
 
     const unsub = base44.entities.Service.subscribe((event) => {
       if (event.id !== existingData.id) return;
+      // Skip events triggered by our own saves (metadata, receso notes, etc.)
+      if (ownSaveInProgressRef.current) return;
       handleExternalChange();
     });
 
@@ -755,7 +766,12 @@ export default function WeeklyServiceManager() {
         mutateDuration: segmentMutation.mutateDuration,
         mutateTeam: segmentMutation.mutateTeam,
         mutatePreServiceNotes: segmentMutation.mutatePreServiceNotes,
-        mutateRecesoNotes: segmentMutation.mutateRecesoNotes,
+        mutateRecesoNotes: (...args) => {
+          ownSaveInProgressRef.current = true;
+          segmentMutation.mutateRecesoNotes(...args);
+          // Clear guard after debounce (300ms) + network round-trip buffer
+          setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
+        },
         mutateSubAssignment: segmentMutation.mutateSubAssignment,
       }}>
     <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">

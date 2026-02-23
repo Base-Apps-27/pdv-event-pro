@@ -87,27 +87,58 @@ const TEAM_FIELD_MAP = {
 // ═══════════════════════════════════════════════════════════════
 
 export function useSegmentMutation() {
-  // Map of debounce timers: key = "entityId:fieldName" → timer ID
+  // Map of pending writes: key = "entityId:fieldName" → { timerId, writeFn }
+  // Stores both the timer ID (for cancellation) and the write function
+  // (so flushPending can execute them immediately instead of dropping them).
   const timersRef = useRef({});
 
-  // Cleanup all timers on unmount
+  /**
+   * Execute all pending debounced writes immediately (fire-and-forget).
+   * Called on unmount, beforeunload, and navigation to prevent data loss.
+   */
+  const flushPendingRef = useRef(null);
+  flushPendingRef.current = () => {
+    const entries = timersRef.current;
+    const keys = Object.keys(entries);
+    if (keys.length === 0) return;
+
+    keys.forEach((key) => {
+      const entry = entries[key];
+      if (entry?.timerId) clearTimeout(entry.timerId);
+      if (entry?.writeFn) {
+        try { entry.writeFn(); } catch (err) {
+          console.error(`[useSegmentMutation] Flush write failed for ${key}:`, err.message);
+        }
+      }
+    });
+    timersRef.current = {};
+  };
+
+  // Flush pending writes on unmount + beforeunload
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (flushPendingRef.current) flushPendingRef.current();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
-      const timers = timersRef.current;
-      Object.values(timers).forEach(clearTimeout);
-      timersRef.current = {};
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      // On React unmount: flush all pending writes so they aren't lost
+      if (flushPendingRef.current) flushPendingRef.current();
     };
   }, []);
 
   /**
    * Internal: schedule a debounced write. Deduplicates by key.
    * If the same key is called again within 300ms, the previous timer is cancelled.
+   * Stores the writeFn so flushPending can execute it if the component unmounts
+   * before the timer fires.
    */
   const scheduleWrite = useCallback((key, writeFn) => {
-    if (timersRef.current[key]) {
-      clearTimeout(timersRef.current[key]);
+    const existing = timersRef.current[key];
+    if (existing?.timerId) {
+      clearTimeout(existing.timerId);
     }
-    timersRef.current[key] = setTimeout(async () => {
+    const timerId = setTimeout(async () => {
       delete timersRef.current[key];
       try {
         await writeFn();
@@ -115,6 +146,7 @@ export function useSegmentMutation() {
         console.error(`[useSegmentMutation] Write failed for ${key}:`, err.message);
       }
     }, 300);
+    timersRef.current[key] = { timerId, writeFn };
   }, []);
 
   // ── Segment field mutation ──────────────────────────────────
@@ -369,17 +401,11 @@ export function useSegmentMutation() {
   }, []);
 
   /**
-   * Flush all pending debounced writes immediately.
+   * Flush all pending debounced writes immediately (fire-and-forget).
    * Called before page unload or navigation to ensure no writes are lost.
    */
   const flushPending = useCallback(() => {
-    const timers = timersRef.current;
-    // Note: we can't await the writes here (beforeunload is sync),
-    // but clearing timers prevents double-fires.
-    // The writes themselves use navigator.sendBeacon-style fire-and-forget
-    // if called from beforeunload. For React unmount, we just cancel.
-    Object.values(timers).forEach(clearTimeout);
-    timersRef.current = {};
+    if (flushPendingRef.current) flushPendingRef.current();
   }, []);
 
   return {
