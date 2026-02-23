@@ -44,14 +44,13 @@ export default function BlueprintEditor() {
   // For now, derive slot names from Sunday schedule (blueprint is shared)
   // Future: per-day blueprints via ServiceSchedule.blueprint_id
   const scheduledSlotNames = useMemo(() => {
-    // Try Sunday first, then first available day
-    const sundaySlots = getTimeSlotsForDay("Sunday").map(s => s.name);
-    if (sundaySlots.length > 0) return sundaySlots;
+    // Collect all slots from ALL active days
+    const allSlots = new Set();
     for (const day of activeDays) {
       const slots = getTimeSlotsForDay(day).map(s => s.name);
-      if (slots.length > 0) return slots;
+      slots.forEach(s => allSlots.add(s));
     }
-    return [];
+    return Array.from(allSlots);
   }, [getTimeSlotsForDay, activeDays]);
 
   // Discover slot names: union of blueprint keys + scheduled slots
