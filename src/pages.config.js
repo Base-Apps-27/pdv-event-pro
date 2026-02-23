@@ -54,6 +54,7 @@ import Calendar from './pages/Calendar';
 import CustomServiceBuilder from './pages/CustomServiceBuilder';
 import CustomServicesManager from './pages/CustomServicesManager';
 import Dashboard from './pages/Dashboard';
+import DataFlowMap from './pages/DataFlowMap';
 import DataSeeder from './pages/DataSeeder';
 import DependencyTracker from './pages/DependencyTracker';
 import DetailedProgram from './pages/DetailedProgram';
@@ -85,9 +86,8 @@ import Templates from './pages/Templates';
 import TestDashboard from './pages/TestDashboard';
 import UserManagement from './pages/UserManagement';
 import UshersView from './pages/UshersView';
-import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import DataFlowMap from './pages/DataFlowMap';
+import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import __Layout from './Layout.jsx';
 
 
@@ -99,6 +99,7 @@ export const PAGES = {
     "CustomServiceBuilder": CustomServiceBuilder,
     "CustomServicesManager": CustomServicesManager,
     "Dashboard": Dashboard,
+    "DataFlowMap": DataFlowMap,
     "DataSeeder": DataSeeder,
     "DependencyTracker": DependencyTracker,
     "DetailedProgram": DetailedProgram,
@@ -130,9 +131,8 @@ export const PAGES = {
     "TestDashboard": TestDashboard,
     "UserManagement": UserManagement,
     "UshersView": UshersView,
-    "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "DataFlowMap": DataFlowMap,
+    "WeeklyServiceManager": WeeklyServiceManager,
 }
 
 export const pagesConfig = {

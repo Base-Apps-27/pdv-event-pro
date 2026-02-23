@@ -28,33 +28,34 @@ export default function DataFlowMap() {
           </div>
         </div>
 
-        {/* Critical Bug Alert */}
-        <Card className="border-2 border-red-500 bg-red-50">
+        {/* Architecture Status */}
+        <Card className="border-2 border-green-500 bg-green-50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-700">
-              <AlertTriangle className="w-5 h-5" />
-              Critical: Save Loop Detected
+            <CardTitle className="flex items-center gap-2 text-green-700">
+              <Zap className="w-5 h-5" />
+              ✅ Entity Separation Complete (Commit 94547bd)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-red-900 font-semibold">
-              Symptom: Editor bounces between "Otro administrador actualizó" ↔ "Guardando" with no actual edits
+            <p className="text-green-900 font-semibold">
+              Granular per-field mutations replaced monolithic blob save pipeline
             </p>
             <div className="bg-white rounded p-3 text-sm font-mono">
-              <p className="text-red-600">T+0.0s: User types → serviceData changes</p>
-              <p className="text-blue-600">T+5.0s: Save fires → ownSaveInProgressRef = true</p>
-              <p className="text-green-600">T+5.1s: syncWeeklyToSessions (entities update)</p>
-              <p className="text-orange-600">T+5.5s: Entity events emit</p>
-              <p className="text-purple-600">T+6.0s: Guard expires → ownSaveInProgressRef = false ❌</p>
-              <p className="text-red-600">T+6.5s: Subscription sees own save as "external" → RELOAD</p>
-              <p className="text-red-600">T+6.6s: Reload triggers save timer → LOOP REPEATS</p>
+              <p className="text-green-600">T+0.0s: User types → setServiceData (instant UI) ✓</p>
+              <p className="text-blue-600">T+0.0s: mutateSegmentField(entityId, field, value)</p>
+              <p className="text-purple-600">T+0.3s: Segment.update() fires (300ms debounce)</p>
+              <p className="text-orange-600">T+0.4s: Entity automation → refreshActiveProgram</p>
+              <p className="text-green-600">T+0.5s: Cache updated → displays refresh ✓</p>
             </div>
-            <div className="flex gap-2">
-              <Badge variant="outline" className="bg-red-100 border-red-300 text-red-700">
-                pages/WeeklyServiceManager.jsx:475
+            <div className="space-y-2 mt-3">
+              <Badge variant="outline" className="bg-green-100 border-green-300 text-green-700">
+                components/service/weekly/useSegmentMutation.jsx
               </Badge>
-              <Badge variant="outline" className="bg-red-100 border-red-300 text-red-700">
-                Guard: 5.5s | Debounce: 6s ❌
+              <Badge variant="outline" className="bg-blue-100 border-blue-300 text-blue-700">
+                No blob save | No race window | Atomic writes
+              </Badge>
+              <Badge variant="outline" className="bg-purple-100 border-purple-300 text-purple-700">
+                Service.subscribe = metadata only (line 648)
               </Badge>
             </div>
           </CardContent>
@@ -127,27 +128,38 @@ function FlowOverview() {
         <CardHeader className="bg-green-50">
           <CardTitle className="flex items-center gap-2">
             <Save className="w-5 h-5 text-green-600" />
-            Layer 1: Editor → Entities
+            Layer 1: Editor → Entities (Per-Field Atomic)
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
           <div className="space-y-3 text-sm">
             <div className="flex items-center gap-3">
-              <Badge className="bg-green-600">WeeklyServiceManager</Badge>
+              <Badge className="bg-green-600">Input Component</Badge>
               <ArrowRight className="w-4 h-4 text-gray-400" />
-              <Badge variant="outline">5s debounced save</Badge>
+              <Badge variant="outline">updateSegmentField()</Badge>
               <ArrowRight className="w-4 h-4 text-gray-400" />
-              <Badge className="bg-blue-600">syncWeeklyToSessions</Badge>
+              <Badge className="bg-purple-600">useSegmentMutation</Badge>
+              <ArrowRight className="w-4 h-4 text-gray-400" />
+              <Badge className="bg-blue-600">Segment.update()</Badge>
             </div>
             <p className="text-gray-700">
-              Input changes update <code className="bg-gray-100 px-1 rounded">serviceData</code> state immediately.
-              5s debounced timer batches all changes into single full sync.
+              Each input triggers TWO actions: (1) <code className="bg-gray-100 px-1 rounded">setServiceData</code> instant UI update, 
+              (2) <code className="bg-gray-100 px-1 rounded">mutateSegmentField</code> 300ms debounced entity write.
             </p>
-            <div className="bg-gray-50 p-3 rounded text-xs font-mono">
-              serviceData["9:30am"][0].data.leader → Segment.presenter<br/>
-              serviceData["9:30am"][0].songs[] → Segment.song_1_title, song_1_lead, song_1_key<br/>
-              serviceData.coordinators["9:30am"] → Session.coordinators
+            <div className="bg-gray-50 p-3 rounded text-xs font-mono space-y-1">
+              <p className="text-green-600">// WeeklyServiceInputs.jsx:72-82</p>
+              <p>onChange = (e) ={'>'} {'{'}</p>
+              <p className="ml-4">updateSegmentField(slot, idx, field, value)  // instant</p>
+              <p className="ml-4">mutateSegmentField(entityId, field, value)   // 300ms</p>
+              <p>{'}'}</p>
+              <p className="text-blue-600 mt-2">// useSegmentMutation.jsx:129-138</p>
+              <p>scheduleWrite(`seg:${'{'}{entityId}{'}'}:${'{'}{field}{'}'}`, () ={'>'}</p>
+              <p className="ml-4">Segment.update(entityId, {'{'} [column]: value {'}'})</p>
+              <p>)</p>
             </div>
+            <Badge className="bg-green-100 border-green-300 text-green-700 mt-2">
+              ✓ No bulk delete/recreate | No race window | Atomic per field
+            </Badge>
           </div>
         </CardContent>
       </Card>
@@ -237,84 +249,71 @@ function EditorLayer() {
         <div className="bg-gray-50 p-4 rounded">
           <h3 className="font-semibold mb-2">State Structure</h3>
           <pre className="text-xs overflow-x-auto">
-{`const serviceData = {
-  "9:30am": [
-    {
+      {`const serviceData = {
+      "9:30am": [
+      {
       type: "worship",
       title: "Tiempo de Alabanza",
       duration: 15,
       fields: ["leader", "songs", "ministry_leader"],
       data: {
-        leader: "Worship Leader Name",
-        translator: "Translator Name",
-        verse: "",
-        ministry_leader: "Ministry Leader Name"
+      leader: "Worship Leader Name",
+      translator: "Translator Name",
+      verse: "",
+      ministry_leader: "Ministry Leader Name"
       },
       songs: [
-        { title: "Song 1", lead: "Lead 1", key: "G" },
-        { title: "Song 2", lead: "Lead 2", key: "C" }
+      { title: "Song 1", lead: "Lead 1", key: "G" },
+      { title: "Song 2", lead: "Lead 2", key: "C" }
       ],
-      actions: [
-        {
-          label: "Start countdown",
-          timing: "before_start",
-          offset_min: 5,
-          department: "Projection"
-        }
+      _entityId: "seg_abc123",  // ← Entity ID injected by loadWeeklyFromSessions
+      _sessionId: "sess_xyz789"
+      }
       ],
-      sub_assignments: [
-        {
-          label: "Ministración de Sanidad",
-          person_field_name: "ministry_leader",
-          duration_min: 5
-        }
-      ]
-    }
-  ],
-  "11:30am": [...],
-  coordinators: { "9:30am": "Juan Perez", "11:30am": "..." },
-  ujieres: { "9:30am": "Maria Lopez", ... },
-  sound: { "9:30am": "Tech Team A", ... },
-  pre_service_notes: { "9:30am": "Doors open at 9:00", ... },
-  selected_announcements: ["ann1", "ann2"],
-  receso_notes: { "9:30am": "Coffee break at 11:00" }
-}`}
-          </pre>
+      "11:30am": [...],
+      coordinators: { "9:30am": "Juan Perez", "11:30am": "..." },
+      _sessionIds: { "9:30am": "sess_xyz789", "11:30am": "sess_def456" }
+      }`}
+        </pre>
         </div>
 
-        <div className="bg-blue-50 border border-blue-300 p-4 rounded">
-          <h3 className="font-semibold mb-2">Save Pipeline (Line ~460-520)</h3>
+        <div className="bg-green-50 border border-green-300 p-4 rounded">
+          <h3 className="font-semibold mb-2 text-green-700">✅ Current Architecture: Per-Field Mutations</h3>
           <div className="space-y-2 text-sm">
-            <p><strong>1. User Input:</strong> updateSegmentField() → setServiceData()</p>
-            <p><strong>2. 5s Timer:</strong> useEffect with deps: [lastSavedData, ...]</p>
-            <p><strong>3. Save Mutation:</strong> saveServiceMutation.mutate(payload)</p>
-            <p><strong>4. Extract Metadata:</strong> extractServiceMetadata() strips entity fields</p>
-            <p><strong>5. Sync Entities:</strong> syncWeeklyToSessions() creates/updates</p>
-            <p><strong>6. Update Tracking:</strong> onSuccess sets lastSavedData</p>
+            <p><strong>1. User Input:</strong> updateSegmentField() → setServiceData() [instant UI]</p>
+            <p><strong>2. Entity Write:</strong> mutateSegmentField(entityId, field, value)</p>
+            <p><strong>3. Debounce (300ms):</strong> Per (entityId + field) key</p>
+            <p><strong>4. Atomic Write:</strong> Segment.update(entityId, {'{column: value}'})</p>
+            <p className="text-green-800 font-semibold mt-2">
+              📦 File: components/service/weekly/useSegmentMutation.jsx (405 lines)
+            </p>
+            <p className="text-green-800">
+              📦 Commit: 94547bd
+            </p>
           </div>
         </div>
 
-        <div className="bg-red-50 border border-red-300 p-4 rounded">
-          <h3 className="font-semibold mb-2 text-red-700">🐛 Save Loop Bug (Line 562-598)</h3>
-          <div className="space-y-2 text-sm">
-            <p className="text-red-900">
-              <strong>Problem:</strong> ownSaveInProgressRef guard (5.5s) expires before subscription debounce (6s)
-            </p>
-            <pre className="bg-white p-2 rounded text-xs mt-2">
-{`// Line ~475 - BUG
-setTimeout(() => {
-  ownSaveInProgressRef.current = false;
-}, 5500); // ❌ TOO SHORT
+        <div className="bg-blue-50 border border-blue-300 p-4 rounded">
+          <h3 className="font-semibold mb-2 text-blue-700">Field Mapping</h3>
+          <pre className="bg-white p-2 rounded text-xs mt-2 font-mono">
+      {`// UI → Entity column (useSegmentMutation.jsx:41-70)
+      leader     → Segment.presenter
+      preacher   → Segment.presenter
+      translator → Segment.translator_name
+      verse      → Segment.scripture_references
 
-// Line ~595 - Subscription sees own save
-externalDebounce.timer = setTimeout(() => {
-  if (ownSaveInProgressRef.current) return; // Already false!
-  // Triggers reload/save loop
-}, 6000);`}
-            </pre>
-            <p className="text-green-700 mt-2">
-              <strong>Fix:</strong> Change line ~475 to <code className="bg-white px-1">8000</code> (8 seconds)
-            </p>
+      coordinators → Session.coordinators
+      ujieres      → Session.ushers_team
+      sound        → Session.sound_team`}
+          </pre>
+        </div>
+
+        <div className="bg-yellow-50 border border-yellow-300 p-4 rounded">
+          <h3 className="font-semibold mb-2 text-yellow-700">⚠️ Previous Architecture (Abandoned 2026-02-22)</h3>
+          <div className="space-y-1 text-xs text-yellow-900">
+            <p><strong>Old:</strong> 5s debounced blob save → syncWeeklyToSessions → bulk delete/recreate</p>
+            <p><strong>Problem:</strong> Async window allowed race conditions, timer reset loop prevented saves</p>
+            <p><strong>Replaced:</strong> Per-field atomic writes eliminate race window</p>
           </div>
         </div>
       </CardContent>
@@ -527,12 +526,12 @@ function KnownIssues() {
   const issues = [
     {
       id: 1,
-      title: 'Save Loop (CRITICAL)',
-      location: 'WeeklyServiceManager.jsx:475',
-      cause: 'Guard window (5.5s) < subscription debounce (6s)',
-      fix: 'Change setTimeout to 8000ms',
-      status: 'identified',
-      priority: 'critical'
+      title: 'Save Loop (RESOLVED - Entity Separation)',
+      location: 'WeeklyServiceManager.jsx (removed in 94547bd)',
+      cause: 'OLD: Blob save pipeline created async race window',
+      fix: 'DEPLOYED: Per-field atomic writes (useSegmentMutation)',
+      status: 'resolved',
+      priority: 'resolved'
     },
     {
       id: 2,
@@ -560,6 +559,15 @@ function KnownIssues() {
       fix: 'Wire normalization to all display consumers',
       status: 'identified',
       priority: 'medium'
+    },
+    {
+      id: 5,
+      title: 'Decision Log Stale Entry',
+      location: 'Decision 699a8d80 (2026-02-22)',
+      cause: 'Entry says "removed per-field push" but current code USES per-field',
+      fix: 'Archive outdated Decision, update with Entity Separation Final (v3.0)',
+      status: 'identified',
+      priority: 'low'
     }
   ];
 
