@@ -79,12 +79,22 @@ export function useServiceSchedules() {
     return [...days];
   };
 
+  /**
+   * Get the full ServiceSchedule record for a specific day.
+   * Returns the first active schedule for that day, or null.
+   * Recurring Services Refactor (2026-02-23): Added for DayServiceEditor.
+   */
+  const getScheduleForDay = (dayOfWeek) => {
+    return schedules.find(s => s.day_of_week === dayOfWeek) || null;
+  };
+
   return {
     schedules,
     isLoading,
     getSessionsForDay,
     getTimeSlotsForDay,
     getActiveDays,
+    getScheduleForDay,
   };
 }
 
