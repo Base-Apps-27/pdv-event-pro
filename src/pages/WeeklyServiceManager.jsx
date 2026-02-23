@@ -400,15 +400,15 @@ export default function WeeklyServiceManager() {
         </DialogContent>
       </Dialog>
 
-      {/* All remaining dialogs */}
+      {/* Shared dialogs: Print Settings, Announcement, Delete Confirmation */}
       <WeeklyServiceDialogs
         deleteConfirmId={deleteConfirmId} setDeleteConfirmId={setDeleteConfirmId}
         deleteAnnouncementMutation={deleteAnnouncementMutation}
-        showResetConfirm={showResetConfirm} setShowResetConfirm={setShowResetConfirm}
-        executeResetToBlueprint={() => { setShowResetConfirm(false); }}
+        showResetConfirm={false} setShowResetConfirm={() => {}}
+        executeResetToBlueprint={() => {}}
         slotNames={daySlotsMap[activeDay] || ["9:30am"]}
-        verseParserOpen={verseParserOpen} setVerseParserOpen={setVerseParserOpen}
-        verseParserContext={verseParserContext} handleSaveParsedVerses={() => {}}
+        verseParserOpen={false} setVerseParserOpen={() => {}}
+        verseParserContext={{}} handleSaveParsedVerses={() => {}}
         showPrintSettings={showPrintSettings} setShowPrintSettings={setShowPrintSettings}
         activePrintSettingsPage1={printSettingsPage1 || defaultPrintSettings}
         activePrintSettingsPage2={printSettingsPage2 || defaultPrintSettings}
