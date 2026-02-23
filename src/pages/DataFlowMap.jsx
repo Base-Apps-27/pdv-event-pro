@@ -148,14 +148,14 @@ function FlowOverview() {
             </p>
             <div className="bg-gray-50 p-3 rounded text-xs font-mono space-y-1">
               <p className="text-green-600">// WeeklyServiceInputs.jsx:72-82</p>
-              <p>onChange = (e) ={'>'} {'{'}</p>
-              <p className="ml-4">updateSegmentField(slot, idx, field, value)  // instant</p>
-              <p className="ml-4">mutateSegmentField(entityId, field, value)   // 300ms</p>
-              <p>{'}'}</p>
+              <p>{"onChange = (e) => {"}</p>
+              <p className="ml-4">{"  updateSegmentField(slot, idx, field, value)  // instant"}</p>
+              <p className="ml-4">{"  mutateSegmentField(entityId, field, value)   // 300ms"}</p>
+              <p>{"}"}</p>
               <p className="text-blue-600 mt-2">// useSegmentMutation.jsx:129-138</p>
-              <p>scheduleWrite(`seg:${'{'}{entityId}{'}'}:${'{'}{field}{'}'}`, () ={'>'}</p>
-              <p className="ml-4">Segment.update(entityId, {'{'} [column]: value {'}'})</p>
-              <p>)</p>
+              <p>{"scheduleWrite(`seg:${entityId}:${field}`, () =>"}</p>
+              <p className="ml-4">{"  Segment.update(entityId, { [column]: value })"}</p>
+              <p>{")"}</p>
             </div>
             <Badge className="bg-green-100 border-green-300 text-green-700 mt-2">
               ✓ No bulk delete/recreate | No race window | Atomic per field
