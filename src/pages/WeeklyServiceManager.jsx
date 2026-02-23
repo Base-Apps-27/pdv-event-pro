@@ -80,10 +80,8 @@ export default function WeeklyServiceManager() {
   const [activeDay, setActiveDay] = useState('sunday');
 
   // ── Shared dialog / UI state ──
-  const [showSpecialDialog, setShowSpecialDialog] = useState(false);
-  const [specialSegmentDetails, setSpecialSegmentDetails] = useState({
-    timeSlot: "", title: "", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
-  });
+  // Note: SpecialSegment, VerseParser, and ResetConfirm dialogs are now
+  // per-day and owned by DayServiceEditor. Only announcement + print dialogs remain shared.
   const [showAnnouncementDialog, setShowAnnouncementDialog] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
   const [announcementForm, setAnnouncementForm] = useState({
@@ -95,9 +93,6 @@ export default function WeeklyServiceManager() {
   const [showPrintSettings, setShowPrintSettings] = useState(false);
   const [printSettingsPage1, setPrintSettingsPage1] = useState(null);
   const [printSettingsPage2, setPrintSettingsPage2] = useState(null);
-  const [verseParserOpen, setVerseParserOpen] = useState(false);
-  const [verseParserContext, setVerseParserContext] = useState({ timeSlot: null, segmentIdx: null });
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [selectedAnnouncements, setSelectedAnnouncements] = useState([]);
 
   // ── Blueprint (shared) ──
