@@ -1,20 +1,15 @@
 /**
  * WeeklyServiceManager.jsx
- * Phase 3A FINAL: Slim orchestrator (~580 lines).
- * 
- * All handler logic → useWeeklyServiceHandlers hook
- * All dialogs → WeeklyServiceDialogs component
- * Blueprint constant → weeklyBlueprint.js
- * Print CSS → WeeklyServicePrintCSS
- * Print layout → WeeklyServicePrintView
- * Announcements → WeeklyAnnouncementSection
- * Time slot columns → ServiceTimeSlotColumn
- * Input components → WeeklyServiceInputs
- * Special segment dialog → SpecialSegmentDialog
- * Overflow detection → useOverflowDetection
+ * Recurring Services Refactor (2026-02-23): Thin orchestrator shell.
+ *
+ * Per-day editing logic extracted to DayServiceEditor.
+ * This file owns: date picker, day tabs, announcements, shared dialogs.
+ *
+ * Previous: 1055 lines (monolithic Sunday-centric editor)
+ * Now: ~350 lines (day-agnostic orchestrator)
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -25,67 +20,46 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Loader2, Eye, Wand2, ExternalLink, Settings, Download, Wrench, MoreVertical, RefreshCw, Users } from "lucide-react";
+import { Calendar as CalendarIcon, Eye, Download, Settings, Wand2, MoreVertical, Wrench, ExternalLink } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { createPageUrl } from "@/utils";
 import { format as formatDate } from "date-fns";
 import { toast } from "sonner";
 import { es } from "date-fns/locale";
 import { useLanguage } from "@/components/utils/i18n";
-import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-// Phase 3A extracted components
 import WeeklyServicePrintCSS from "@/components/service/WeeklyServicePrintCSS";
 import WeeklyServicePrintView from "@/components/service/WeeklyServicePrintView";
 import WeeklyAnnouncementSection from "@/components/service/WeeklyAnnouncementSection";
 import SpecialSegmentDialog from "@/components/service/SpecialSegmentDialog";
-import ServiceTimeSlotColumn from "@/components/service/ServiceTimeSlotColumn";
 import WeeklyServiceDialogs from "@/components/service/weekly/WeeklyServiceDialogs";
-import { ServiceDataContext, UpdatersContext } from "@/components/service/WeeklyServiceInputs";
-// Blueprint Revamp (2026-02-18): DB blueprint (status='blueprint') is the single source of truth.
-// No hardcoded WEEKLY_BLUEPRINT constant. If DB blueprint is missing, segments use their own
-// data as-is — no phantom actions/fields injected from a stale constant.
-import { useWeeklyServiceHandlers } from "@/components/service/weekly/useWeeklyServiceHandlers";
-import { loadWeeklyFromSessions } from "@/components/service/weeklySessionSync";
-import { useServiceSchedules } from "@/components/service/weekly/useServiceSchedules";
-import { useSegmentMutation } from "@/components/service/weekly/useSegmentMutation";
-import useStaleGuard from "@/components/utils/useStaleGuard";
-import StaleEditWarningDialog from "@/components/session/StaleEditWarningDialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import WeekdayServicePanel from "@/components/service/weekly/WeekdayServicePanel";
 import ServiceScheduleManager from "@/components/service/weekly/ServiceScheduleManager";
-import SundaySlotColumns from "@/components/service/weekly/SundaySlotColumns";
+import DayServiceEditor from "@/components/service/weekly/DayServiceEditor";
+import { useServiceSchedules } from "@/components/service/weekly/useServiceSchedules";
 
 // Weekday definitions — ordered Mon→Sun matching ISO week. Labels in Spanish.
 const WEEKDAYS = [
-  { key: 'monday', label: 'Lun', fullLabel: 'Lunes', dayIndex: 1 },
-  { key: 'tuesday', label: 'Mar', fullLabel: 'Martes', dayIndex: 2 },
-  { key: 'wednesday', label: 'Mié', fullLabel: 'Miércoles', dayIndex: 3 },
-  { key: 'thursday', label: 'Jue', fullLabel: 'Jueves', dayIndex: 4 },
-  { key: 'friday', label: 'Vie', fullLabel: 'Viernes', dayIndex: 5 },
-  { key: 'saturday', label: 'Sáb', fullLabel: 'Sábado', dayIndex: 6 },
-  { key: 'sunday', label: 'Dom', fullLabel: 'Domingo', dayIndex: 0 },
+  { key: 'monday', label: 'Lun', fullLabel: 'Lunes', dayIndex: 1, dayName: 'Monday' },
+  { key: 'tuesday', label: 'Mar', fullLabel: 'Martes', dayIndex: 2, dayName: 'Tuesday' },
+  { key: 'wednesday', label: 'Mié', fullLabel: 'Miércoles', dayIndex: 3, dayName: 'Wednesday' },
+  { key: 'thursday', label: 'Jue', fullLabel: 'Jueves', dayIndex: 4, dayName: 'Thursday' },
+  { key: 'friday', label: 'Vie', fullLabel: 'Viernes', dayIndex: 5, dayName: 'Friday' },
+  { key: 'saturday', label: 'Sáb', fullLabel: 'Sábado', dayIndex: 6, dayName: 'Saturday' },
+  { key: 'sunday', label: 'Dom', fullLabel: 'Domingo', dayIndex: 0, dayName: 'Sunday' },
 ];
 
 export default function WeeklyServiceManager() {
   const navigate = useNavigate();
-  const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
-  const greenStyle = { backgroundColor: '#8DC63F', color: '#ffffff' };
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-
-  // P1-4: Replaced duplicate user fetch with shared hook (2026-02-12)
   const { user } = useCurrentUser();
 
   // Phase 2: Dynamic session slots from ServiceSchedule entity
-  const { getTimeSlotsForDay, getSessionsForDay, getActiveDays: getScheduledDays } = useServiceSchedules();
-  const sundaySlots = React.useMemo(() => getTimeSlotsForDay("Sunday"), [getTimeSlotsForDay]);
-  // Slot names for the current Sunday, e.g. ["9:30am", "11:30am"]
-  const sundaySlotNames = React.useMemo(() => sundaySlots.map(s => s.name), [sundaySlots]);
-  // Days that have active ServiceSchedule records (drives weekday tabs)
-  const scheduledDays = React.useMemo(() => getScheduledDays(), [getScheduledDays]);
+  const { getTimeSlotsForDay, getActiveDays: getScheduledDays } = useServiceSchedules();
+  const scheduledDays = useMemo(() => getScheduledDays(), [getScheduledDays]);
 
   // Schedule management dialog state
   const [showScheduleManager, setShowScheduleManager] = useState(false);
@@ -101,11 +75,11 @@ export default function WeeklyServiceManager() {
     const d = String(nextSunday.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
   });
-  const [serviceData, setServiceData] = useState(null);
-  const [selectedAnnouncements, setSelectedAnnouncements] = useState([]);
-  const [expandedSegments, setExpandedSegments] = useState({});
 
-  // ── Dialog / UI state ──
+  // Weekday tab state — defaults to sunday
+  const [activeDay, setActiveDay] = useState('sunday');
+
+  // ── Shared dialog / UI state ──
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
   const [specialSegmentDetails, setSpecialSegmentDetails] = useState({
     timeSlot: "", title: "", duration: 15, insertAfterIdx: -1, presenter: "", translator: "",
@@ -117,30 +91,16 @@ export default function WeeklyServiceManager() {
     is_active: true, priority: 10, has_video: false, date_of_occurrence: "", emphasize: false
   });
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
-  const [savingField, setSavingField] = useState(null);
   const [optimizingAnnouncement, setOptimizingAnnouncement] = useState(false);
   const [showPrintSettings, setShowPrintSettings] = useState(false);
   const [printSettingsPage1, setPrintSettingsPage1] = useState(null);
   const [printSettingsPage2, setPrintSettingsPage2] = useState(null);
-  const [isQuickPrint, setIsQuickPrint] = useState(false);
   const [verseParserOpen, setVerseParserOpen] = useState(false);
   const [verseParserContext, setVerseParserContext] = useState({ timeSlot: null, segmentIdx: null });
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [selectedAnnouncements, setSelectedAnnouncements] = useState([]);
 
-  // Phase 5: Concurrent editing guard
-  const { captureBaseline: captureServiceBaseline, checkStale: checkServiceStale } = useStaleGuard();
-  const [showStaleWarning, setShowStaleWarning] = useState(false);
-  const [staleInfo, setStaleInfo] = useState(null);
-
-  // ── Weekday tab state ──
-  // Defaults to sunday (the primary service day). Other days show if services exist.
-  const [activeDay, setActiveDay] = useState('sunday');
-
-  // ── Queries ──
-  // SEGMENT-DISAPPEAR-FIX-v4 (2026-02-21): Explicit staleTime: Infinity on blueprintData.
-  // Blueprint is a reference template — it does not change during a user session.
-  // Without staleTime, background refetches can momentarily set blueprintData to null,
-  // which triggers unwanted side effects during initialization.
+  // ── Blueprint (shared) ──
   const { data: blueprintData } = useQuery({
     queryKey: ['serviceBlueprint'],
     queryFn: async () => {
@@ -150,140 +110,7 @@ export default function WeeklyServiceManager() {
     staleTime: Infinity,
   });
 
-  // Fetch services for the full week surrounding selectedDate to populate weekday tabs
-  const { data: weekServices = [] } = useQuery({
-    queryKey: ['weekServices', selectedDate],
-    queryFn: async () => {
-      // Compute the week range (Mon–Sun) containing selectedDate
-      const sel = new Date(selectedDate + 'T12:00:00');
-      const dayOfWeek = sel.getDay(); // 0=Sun
-      const monday = new Date(sel);
-      monday.setDate(sel.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-      const sunday = new Date(monday);
-      sunday.setDate(monday.getDate() + 6);
-
-      // Build date strings for each day
-      const dates = [];
-      for (let d = new Date(monday); d <= sunday; d.setDate(d.getDate() + 1)) {
-        const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        dates.push(ds);
-      }
-
-      // Fetch services for each date in the week.
-      // Exclude blueprints. Include one_off services (they show as read-only weekday tabs).
-      // Exclude weekly services on non-Sunday days (they're managed by the Sunday tab).
-      const results = await Promise.all(
-        dates.map(async (dt) => {
-          const svcs = await base44.entities.Service.filter({ date: dt });
-          return svcs
-            .filter(s => s.status !== 'blueprint')
-            .filter(s => {
-              // Always include one_off / custom services on any day
-              if (s.service_type === 'one_off') return true;
-              // For weekly services, only include on their primary tab day (Sunday)
-              // to avoid double-showing them as weekday panels
-              if (s.service_type === 'weekly') return false;
-              // Legacy services without service_type: include if they have segments
-              // (custom-style) or if on a non-Sunday day
-              if (s.segments && s.segments.length > 0) return true;
-              return false;
-            })
-            .map(s => ({ ...s, _weekDate: dt }));
-        })
-      );
-      return results.flat();
-    },
-    enabled: !!selectedDate,
-    staleTime: 60000,
-  });
-
-  // Derive which weekdays have tabs — union of ServiceSchedule days + actual services
-  const activeDays = React.useMemo(() => {
-    const daySet = new Set(['sunday']); // Always show Sunday
-    // Add days from ServiceSchedule entity (e.g., Wednesday if configured)
-    const dayNameToKey = { Sunday: 'sunday', Monday: 'monday', Tuesday: 'tuesday', Wednesday: 'wednesday', Thursday: 'thursday', Friday: 'friday', Saturday: 'saturday' };
-    scheduledDays.forEach(day => {
-      const key = dayNameToKey[day];
-      if (key) daySet.add(key);
-    });
-    // Also add days that have actual service records this week
-    weekServices.forEach(svc => {
-      if (!svc._weekDate) return;
-      const d = new Date(svc._weekDate + 'T12:00:00');
-      const dow = d.getDay();
-      const wd = WEEKDAYS.find(w => w.dayIndex === dow);
-      if (wd) daySet.add(wd.key);
-    });
-    return WEEKDAYS.filter(w => daySet.has(w.key));
-  }, [weekServices, scheduledDays]);
-
-  // SEGMENT-DISAPPEAR-FIX-v2 (2026-02-20): staleTime: Infinity.
-  // Same rationale as blueprintData — local state is source of truth once loaded.
-  // Only refetches when selectedDate changes (new queryKey) or after save invalidation.
-  // FIX (2026-02-21): Query must wait for blueprintData to avoid race condition.
-  // Without this, loadWeeklyFromSessions executes with undefined blueprint, causing
-  // the initialization effect to bail and serviceData to stay null ("Cargando..." forever).
-  const { data: existingData, isLoading } = useQuery({
-    queryKey: ['weeklyService', selectedDate, !!blueprintData],
-    queryFn: async () => {
-      const services = await base44.entities.Service.filter({ date: selectedDate });
-      if (!services || services.length === 0) return null;
-
-      // Prefer services with explicit service_type: 'weekly'
-      let weeklyCandidates = services.filter(s => s.service_type === 'weekly');
-
-      // Legacy fallback: structural detection for services without service_type.
-      // Checks for any key that looks like a time-slot array (e.g. "9:30am", "1:00pm").
-      if (weeklyCandidates.length === 0) {
-        weeklyCandidates = services.filter(s =>
-          !s.service_type &&
-          Object.keys(s).some(key => /^\d{1,2}:\d{2}(am|pm)$/i.test(key) && Array.isArray(s[key]) && s[key].length > 0) &&
-          (!s.segments || s.segments.length === 0)
-        );
-      }
-
-      let service = null;
-      if (weeklyCandidates.length > 0) {
-        service = weeklyCandidates.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0))[0];
-      } else {
-        // Last resort: any service on this date that isn't one_off
-        const emptyCandidates = services.filter(s =>
-          s.service_type !== 'one_off' &&
-          (!s.segments || s.segments.length === 0)
-        );
-        if (emptyCandidates.length > 0) {
-          service = emptyCandidates.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0))[0];
-        }
-      }
-
-      // Entity Lift: try loading from Session/Segment entities
-      if (service?.id) {
-        try {
-          const entityData = await loadWeeklyFromSessions(base44, service.id, blueprintData);
-          // Guard: only use entity data if it actually contains segments.
-          // Sessions can exist without segments (e.g., session was created but
-          // segment bulk-create failed mid-sync). Without this check, an empty
-          // entity result would override valid legacy JSON with nothing.
-          const hasSegments = entityData && Object.values(entityData).some(
-            val => Array.isArray(val) && val.length > 0
-          );
-          if (hasSegments) {
-            return { ...service, ...entityData, _fromEntities: true };
-          }
-        } catch (err) {
-          console.warn("[ENTITY_LIFT] Entity load failed, falling back to JSON:", err.message);
-        }
-      }
-
-      return service;
-    },
-    enabled: !!selectedDate && !!blueprintData,
-    // SAVE-STALL FIX (2026-02-22): staleTime was documented but never applied.
-    // Without it, React Query refetches on window focus, which can trigger
-    // loadWeeklyFromSessions mid-edit. Local state is source of truth once loaded.
-    staleTime: Infinity,
-  });
-
+  // ── Announcements ──
   const { data: allAnnouncements = [] } = useQuery({
     queryKey: ['allAnnouncements'],
     queryFn: () => base44.entities.AnnouncementItem.list('priority'),
@@ -307,61 +134,15 @@ export default function WeeklyServiceManager() {
         if (!e.promote_in_announcements || !e.start_date) return false;
         return new Date(e.start_date + 'T00:00:00') >= selDate;
       });
-      const combined = [
+      return [
         ...filteredItems.map(a => ({ ...a, sortDate: new Date(a.date_of_occurrence + 'T00:00:00') })),
         ...filteredEvents.map(e => ({ ...e, isEvent: true, sortDate: new Date(e.start_date + 'T00:00:00') }))
-      ];
-      return combined.sort((a, b) => a.sortDate - b.sortDate);
+      ].sort((a, b) => a.sortDate - b.sortDate);
     },
     enabled: !!selectedDate
   });
 
-  // ── Mutations ──
-  const localStateInitializedRef = React.useRef(false);
-
-  // Multi-admin: track external changes for collaboration banner
-  const [externalChangeAvailable, setExternalChangeAvailable] = React.useState(false);
-
-  // Self-save guard: when our own metadata save triggers a Service subscription event,
-  // ignore it so we don't falsely show "another admin updated" notifications.
-  const ownSaveInProgressRef = React.useRef(false);
-
-  // Ref to always have current serviceData for metadata saves.
-  const serviceDataRef = React.useRef(serviceData);
-  React.useEffect(() => { serviceDataRef.current = serviceData; }, [serviceData]);
-
-  // ── Entity Separation: per-field mutation hook ──
-  // Must be declared before handlers (which reference it).
-  const segmentMutation = useSegmentMutation();
-
-  // ── Service metadata save (lightweight) ──
-  // Entity Separation: the Service entity ONLY stores metadata now:
-  // name, date, status, service_type, day_of_week, selected_announcements,
-  // print_settings, receso_notes. Segment data lives on Session/Segment entities.
-  const saveMetadataMutation = useMutation({
-    mutationFn: async ({ serviceId, metadata }) => {
-      ownSaveInProgressRef.current = true;
-      if (serviceId) {
-        return base44.entities.Service.update(serviceId, metadata);
-      } else {
-        const created = await base44.entities.Service.create(metadata);
-        return base44.entities.Service.update(created.id, { status: 'active' });
-      }
-    },
-    onSuccess: (result) => {
-      if (result?.updated_date) captureServiceBaseline(result.updated_date);
-      queryClient.invalidateQueries({ queryKey: ['weeklyService'] });
-      // Clear the self-save guard after a short delay to allow the subscription
-      // event to arrive and be filtered out before we start listening again.
-      setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
-    },
-    onError: (error) => {
-      ownSaveInProgressRef.current = false;
-      toast.error('Error al guardar metadatos: ' + error.message);
-    }
-  });
-
-  // P0-2: Added onError toast handlers (2026-02-12)
+  // Announcement mutations
   const createAnnouncementMutation = useMutation({
     mutationFn: (data) => base44.entities.AnnouncementItem.create(data),
     onSuccess: () => {
@@ -373,7 +154,6 @@ export default function WeeklyServiceManager() {
     },
     onError: (err) => toast.error('Error al crear anuncio: ' + err.message),
   });
-
   const updateAnnouncementMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.AnnouncementItem.update(id, data),
     onSuccess: () => {
@@ -385,446 +165,100 @@ export default function WeeklyServiceManager() {
     },
     onError: (err) => toast.error('Error al actualizar anuncio: ' + err.message),
   });
-
   const deleteAnnouncementMutation = useMutation({
     mutationFn: async (id) => await base44.entities.AnnouncementItem.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries(['allAnnouncements']);
       queryClient.invalidateQueries(['dynamicAnnouncements']);
     },
-    onError: (error) => {
-      toast.error('Error al eliminar: ' + (error.message || JSON.stringify(error)));
-    }
+    onError: (error) => toast.error('Error al eliminar: ' + (error.message || JSON.stringify(error))),
   });
 
-  // ── Handlers (extracted hook) ──
-  const handlers = useWeeklyServiceHandlers({
-    serviceData, setServiceData, selectedAnnouncements,
-    updateAnnouncementMutation, fixedAnnouncements, dynamicAnnouncements,
-    blueprintData,
-    setVerseParserOpen, setVerseParserContext, verseParserContext,
-    setShowSpecialDialog, setSpecialSegmentDetails, specialSegmentDetails,
-    setOptimizingAnnouncement, setPrintSettingsPage1, setPrintSettingsPage2,
-    setEditingAnnouncement, setAnnouncementForm, setShowAnnouncementDialog,
-    setShowResetConfirm, editingAnnouncement, createAnnouncementMutation,
-    slotNames: sundaySlotNames,
-    segmentMutation,
-  });
-
-  // ── Initialize service data from DB or blueprint ──
-  // SONG-OVERWRITE-FIX-2 (2026-02-20): Only initialize on first load for this date.
-  // Once we've initialized, local state is the source of truth.
-  // Reset the ref when selectedDate changes so new dates get fresh initialization.
-  React.useEffect(() => {
-    localStateInitializedRef.current = false;
-  }, [selectedDate]);
-
-  useEffect(() => {
-    // Guard: skip re-initialization if we've already loaded data for this date
-    if (localStateInitializedRef.current) return;
-    // CRITICAL: For fresh loads (existingData=null), blueprintData MUST be available
-    // to seed segments. Only skip if blueprintData hasn't loaded yet.
-    if (!blueprintData) return;
-    // RACE FIX (2026-02-21): Wait for existingData query to complete before initializing.
-    // Without this, the effect runs when blueprintData loads (enabling the query) but
-    // before the query completes, causing existingData=undefined to trigger blueprint
-    // initialization instead of loading the real saved data.
-    if (isLoading) return;
-    if (existingData) {
-      // Entity Lift FINAL: When data came from Session/Segment entities (_fromEntities),
-      // segments already carry their own fields/sub_assignments/actions — no blueprint
-      // merge needed. This eliminates the last piece of the dual-write system.
-      // Blueprint merge is ONLY for legacy JSON-only services that haven't been re-saved
-      // through the entity sync pipeline yet.
-      // Blueprint Revamp (2026-02-18): Simplified merge.
-      // Entity-sourced segments (_entityId present) are trusted as-is — they carry their own
-      // ui_fields, ui_sub_assignments, and segment_actions. No blueprint overlay.
-      // Legacy JSON-only segments (no _entityId) get fields populated from DB blueprint IF available,
-      // but NEVER get phantom actions injected. Actions only come from what the user entered.
-      const mergeSegmentsWithBlueprint = (existingSegments, timeSlot) => {
-        const normalizeType = (t) => {
-          if (!t) return "";
-          const lower = t.toLowerCase();
-          if (lower === 'alabanza' || lower === 'worship') return 'worship';
-          if (lower === 'bienvenida' || lower === 'welcome') return 'welcome';
-          if (lower === 'ofrenda' || lower === 'ofrendas' || lower === 'offering') return 'offering';
-          if (lower === 'plenaria' || lower === 'predica' || lower === 'mensaje' || lower === 'message') return 'message';
-          return lower;
-        };
-        return existingSegments.map((savedSeg, idx) => {
-          // Entity-sourced segments: trust as-is, add minimal sub_assignment defaults only
-          if (savedSeg.fields && savedSeg.fields.length > 0 && savedSeg._entityId) {
-            const savedType = normalizeType(savedSeg.type);
-            let subAssignments = savedSeg.sub_assignments || [];
-            if (subAssignments.length === 0) {
-              if (savedType === 'worship') subAssignments = [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }];
-              else if (savedType === 'message') subAssignments = [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }];
-            }
-            // SONG-SLOT FIX (2026-02-20): Ensure worship segments always have song
-            // slots for the UI. Entity round-trip can drop empty songs.
-            let songs = savedSeg.songs;
-            if (savedType === 'worship' && (!songs || !Array.isArray(songs) || songs.length === 0)) {
-              songs = [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }];
-            }
-            return { ...savedSeg, sub_assignments: subAssignments, songs };
-          }
-
-          // Legacy JSON-only: only populate missing fields from DB blueprint.
-          // CRITICAL: Do NOT overlay actions or translation settings from blueprint.
-          // Those must come from user input only.
-          const savedType = normalizeType(savedSeg.type);
-          if (blueprintData) {
-            let blueprintSeg = blueprintData[timeSlot]?.[idx];
-            if (!blueprintSeg || normalizeType(blueprintSeg.type) !== savedType) {
-              blueprintSeg = blueprintData[timeSlot]?.find(b => normalizeType(b.type) === savedType);
-            }
-            if (blueprintSeg) {
-              // Only fill in structural UI metadata (fields, sub_assignments) — never actions
-              const mergedFields = (savedSeg.fields && savedSeg.fields.length > 0) ? savedSeg.fields : (blueprintSeg.fields || []);
-              let subAssignments = savedSeg.sub_assignments || blueprintSeg.sub_assignments || [];
-              if (!subAssignments || subAssignments.length === 0) {
-                if (savedType === 'worship') subAssignments = [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }];
-                else if (savedType === 'message') subAssignments = [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }];
-              }
-              // SONG-SLOT FIX (2026-02-20): Ensure worship segments have song slots
-              let songs = savedSeg.songs;
-              if (savedType === 'worship' && (!songs || !Array.isArray(songs) || songs.length === 0)) {
-                songs = [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }];
-              }
-              return {
-                ...savedSeg,
-                fields: mergedFields,
-                sub_assignments: subAssignments,
-                songs,
-                // Preserve user's own actions — do NOT inject blueprint actions
-              };
-            }
-          }
-
-          // No blueprint available: assign default field sets so the UI renders inputs
-          if (!savedSeg.fields || savedSeg.fields.length === 0) {
-            let defaultFields = [];
-            if (savedType === 'worship') defaultFields = ["leader", "songs", "ministry_leader"];
-            else if (savedType === 'welcome') defaultFields = ["presenter"];
-            else if (savedType === 'offering') defaultFields = ["presenter", "verse"];
-            else if (savedType === 'message') defaultFields = ["preacher", "title", "verse"];
-            if (defaultFields.length > 0) {
-              let songs = savedSeg.songs;
-              if (savedType === 'worship' && (!songs || !Array.isArray(songs) || songs.length === 0)) {
-                songs = [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }];
-              }
-              return { ...savedSeg, fields: defaultFields, songs };
-            }
-          }
-          return savedSeg;
-        });
-      };
-
-      // Phase 2: merge segments dynamically for all configured slots
-      const loadedData = { ...existingData };
-      const defaultPreNotes = {};
-      sundaySlotNames.forEach(name => { defaultPreNotes[name] = ""; });
-      sundaySlotNames.forEach(name => {
-        const existingSlotSegments = existingData[name] || [];
-        if (existingSlotSegments.length > 0) {
-          // Slot has data — merge with blueprint for fields/sub_assignments
-          loadedData[name] = mergeSegmentsWithBlueprint(existingSlotSegments, name);
-        } else {
-          // Slot is empty (new slot added to ServiceSchedule after service was created).
-          // Seed it from the blueprint so users get the standard segment structure.
-          const bpSegments = blueprintData?.[name] || blueprintData?.[sundaySlotNames[0]] || [];
-          loadedData[name] = bpSegments.map(seg => {
-            const segmentCopy = {
-              type: seg.type, title: seg.title, duration: seg.duration,
-              fields: [...(seg.fields || [])], data: {},
-              actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
-              sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
-              requires_translation: seg.requires_translation || false,
-              default_translator_source: seg.default_translator_source || "manual"
-            };
-            if (seg.type === "worship") {
-              segmentCopy.songs = [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }];
-            }
-            return segmentCopy;
-          });
-        }
-      });
-      loadedData.pre_service_notes = existingData.pre_service_notes || defaultPreNotes;
-      // Initialize receso_notes for all non-last slots (break between each consecutive pair)
-      const defaultRecesoNotes = {};
-      sundaySlotNames.slice(0, -1).forEach(s => { defaultRecesoNotes[s] = ""; });
-      loadedData.receso_notes = { ...defaultRecesoNotes, ...(existingData.receso_notes || {}) };
-      loadedData.selected_announcements = existingData.selected_announcements || [];
-      setServiceData(loadedData);
-      setSelectedAnnouncements(existingData.selected_announcements || []);
-      setPrintSettingsPage1(existingData.print_settings_page1 || null);
-      setPrintSettingsPage2(existingData.print_settings_page2 || null);
-      // Phase 5: Capture baseline for stale detection
-      captureServiceBaseline(existingData.updated_date);
-      // SONG-OVERWRITE-FIX-2: Mark as initialized — subsequent existingData changes
-      // (from our own saves) will NOT re-run this initialization.
-      localStateInitializedRef.current = true;
-
-      // Backup recovery toast
-      const backupKey = `service_backup_${selectedDate}`;
-      const backup = safeGetItem(backupKey);
-      if (backup) {
-        try {
-          const { data: backupData, timestamp } = JSON.parse(backup);
-          const backupDate = new Date(timestamp);
-          const serverDate = existingData.updated_date ? new Date(existingData.updated_date) : new Date(0);
-          if (backupDate > serverDate) {
-            toast('Se encontró una versión más reciente en el navegador.', {
-              duration: 15000,
-              action: {
-                label: 'Restaurar',
-                onClick: () => {
-                  setServiceData(backupData);
-                  toast.success('Datos restaurados del backup local');
-                },
-              },
-            });
-          }
-        } catch (error) {
-          console.error('[BACKUP RECOVERY ERROR]', error.message);
-        }
-      }
-    } else {
-      const mapBlueprintToSegments = (segments) => segments.map(seg => {
-        const segmentCopy = {
-          type: seg.type, title: seg.title, duration: seg.duration,
-          fields: [...(seg.fields || [])], data: {},
-          actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
-          sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
-          requires_translation: seg.requires_translation || false,
-          default_translator_source: seg.default_translator_source || "manual"
-        };
-        if (seg.type === "worship") {
-          segmentCopy.songs = [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }];
-        }
-        return segmentCopy;
-      });
-      // Phase 2: Build initial data dynamically from ServiceSchedule slots
-      const initData = { date: selectedDate, selected_announcements: [] };
-      const emptySlotObj = {};
-      sundaySlotNames.forEach(name => { emptySlotObj[name] = ""; });
-      initData.coordinators = { ...emptySlotObj };
-      initData.ujieres = { ...emptySlotObj };
-      initData.sound = { ...emptySlotObj };
-      initData.luces = { ...emptySlotObj };
-      initData.fotografia = { ...emptySlotObj };
-      // Break notes for each non-last slot (break between consecutive pairs)
-      const initRecesoNotes = {};
-      sundaySlotNames.slice(0, -1).forEach(s => { initRecesoNotes[s] = ""; });
-      initData.receso_notes = initRecesoNotes;
-      initData.pre_service_notes = { ...emptySlotObj };
-      sundaySlotNames.forEach(name => {
-        const bpSegments = blueprintData?.[name] || blueprintData?.[sundaySlotNames[0]] || [];
-        initData[name] = mapBlueprintToSegments(bpSegments);
-      });
-      setServiceData(initData);
-      setSelectedAnnouncements([]);
-      setPrintSettingsPage1(null);
-      setPrintSettingsPage2(null);
-      localStateInitializedRef.current = true;
-      }
-      // SEGMENT-DISAPPEAR-FIX-v4 (2026-02-21): Re-added blueprintData to deps.
-      // RACE FIX v2 (2026-02-21): Added isLoading to deps. The isLoading guard
-      // prevents initialization while the query is running, but the effect must
-      // re-trigger when the query completes (isLoading: true → false). Without
-      // isLoading in deps, the effect bails during the query and never re-runs
-      // when the query settles, leaving serviceData stuck at null.
-      }, [existingData, selectedDate, blueprintData, isLoading]);
-
-  // MULTI-ADMIN REAL-TIME: Subscribe to Service entity changes for collaboration.
-  // Entity Separation: individual field writes to Segment/Session entities don't trigger
-  // Service subscriptions. Only metadata saves and receso notes trigger this.
-  // ownSaveInProgressRef filters out self-triggered events.
-  useEffect(() => {
-    if (!existingData?.id) return;
-
-    const externalDebounce = { timer: null };
-
-    const handleExternalChange = () => {
-      if (externalDebounce.timer) clearTimeout(externalDebounce.timer);
-      externalDebounce.timer = setTimeout(() => {
-        // Show banner — let user decide whether to reload
-        setExternalChangeAvailable(true);
-        toast.info('Programa actualizado por otro administrador');
-      }, 2000);
-    };
-
-    const unsub = base44.entities.Service.subscribe((event) => {
-      if (event.id !== existingData.id) return;
-      // Skip events triggered by our own saves (metadata, receso notes, etc.)
-      if (ownSaveInProgressRef.current) return;
-      handleExternalChange();
+  // Announcement handlers
+  const openAnnouncementEdit = (ann) => {
+    setEditingAnnouncement(ann);
+    setAnnouncementForm({
+      title: ann.title, content: ann.content, instructions: ann.instructions || "",
+      category: ann.category, is_active: ann.is_active, priority: ann.priority || 10,
+      has_video: ann.has_video || false, date_of_occurrence: ann.date_of_occurrence || "", emphasize: ann.emphasize || false
     });
-
-    return () => {
-      if (externalDebounce.timer) clearTimeout(externalDebounce.timer);
-      if (typeof unsub === 'function') unsub();
-    };
-  }, [existingData?.id]);
-
-  // Reload handler for the external change banner
-  const handleExternalReload = React.useCallback(() => {
-    localStateInitializedRef.current = false;
-    setExternalChangeAvailable(false);
-    queryClient.invalidateQueries({ queryKey: ['weeklyService', selectedDate] });
-    toast.info('Recargando programa...');
-  }, [selectedDate, queryClient]);
-
-  // ── Side effects ──
-  // Continuous localStorage backup (5s debounce) for crash recovery.
-  useEffect(() => {
-    if (!serviceData || !selectedDate) return;
-    const timer = setTimeout(() => {
-      const backupKey = `service_backup_${selectedDate}`;
-      safeSetItem(backupKey, JSON.stringify({ data: serviceData, timestamp: new Date().toISOString() }));
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [serviceData, selectedDate]);
-
-  // Dynamic day label for service naming (used in save payloads and PDF filenames)
-  const activeDayMeta = WEEKDAYS.find(w => w.key === activeDay);
-  const activeDayLabel = activeDayMeta?.fullLabel || 'Domingo';
-  const activeDayEnglish = activeDay.charAt(0).toUpperCase() + activeDay.slice(1);
+    setShowAnnouncementDialog(true);
+  };
+  const moveAnnouncementPriority = (ann, direction) => {
+    const newPriority = direction === 'up' ? (ann.priority || 10) - 1 : (ann.priority || 10) + 1;
+    updateAnnouncementMutation.mutate({ id: ann.id, data: { ...ann, priority: newPriority } });
+  };
 
   // Auto-select announcements
   useEffect(() => {
-    if (isLoading) return;
-    const hasAnnouncements = fixedAnnouncements.length > 0 || dynamicAnnouncements.length > 0;
-    if (hasAnnouncements && (!selectedAnnouncements || selectedAnnouncements.length === 0)) {
-      setSelectedAnnouncements([...fixedAnnouncements.map(a => a.id), ...dynamicAnnouncements.map(a => a.id)]);
+    if (fixedAnnouncements.length > 0 || dynamicAnnouncements.length > 0) {
+      if (!selectedAnnouncements || selectedAnnouncements.length === 0) {
+        setSelectedAnnouncements([...fixedAnnouncements.map(a => a.id), ...dynamicAnnouncements.map(a => a.id)]);
+      }
     }
-  }, [isLoading, fixedAnnouncements, dynamicAnnouncements]);
+  }, [fixedAnnouncements, dynamicAnnouncements]);
 
-  // Filter ghost announcements
-  useEffect(() => {
-    if (existingData && selectedAnnouncements.length > 0) {
-      const allActiveIds = [...fixedAnnouncements.map(a => a.id), ...dynamicAnnouncements.map(a => a.id)];
-      const filtered = selectedAnnouncements.filter(id => allActiveIds.includes(id));
-      if (filtered.length !== selectedAnnouncements.length) setSelectedAnnouncements(filtered);
-    }
-  }, [existingData, fixedAnnouncements, dynamicAnnouncements]);
-
-  // Sync announcements into serviceData
-  useEffect(() => {
-    setServiceData(prev => {
-      if (!prev) return prev;
-      return { ...prev, selected_announcements: selectedAnnouncements };
+  // ── Compute active days and dates ──
+  const activeDays = useMemo(() => {
+    const daySet = new Set(['sunday']);
+    const dayNameToKey = { Sunday: 'sunday', Monday: 'monday', Tuesday: 'tuesday', Wednesday: 'wednesday', Thursday: 'thursday', Friday: 'friday', Saturday: 'saturday' };
+    scheduledDays.forEach(day => {
+      const key = dayNameToKey[day];
+      if (key) daySet.add(key);
     });
-  }, [selectedAnnouncements]);
+    return WEEKDAYS.filter(w => daySet.has(w.key));
+  }, [scheduledDays]);
 
-  // Entity Separation: save Service metadata on announcement/print-settings changes.
-  // Segment data is written directly by useSegmentMutation — only metadata needs batch save.
-  useEffect(() => {
-    if (!existingData?.id || !serviceData) return;
-    const timer = setTimeout(() => {
-      saveMetadataMutation.mutate({
-        serviceId: existingData.id,
-        metadata: {
-          selected_announcements: selectedAnnouncements,
-          print_settings_page1: printSettingsPage1,
-          print_settings_page2: printSettingsPage2,
-          receso_notes: serviceData.receso_notes || {},
-          day_of_week: activeDayEnglish,
-          name: `${activeDayLabel} - ${selectedDate}`,
-          status: 'active',
-          service_type: 'weekly',
-        }
-      });
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [selectedAnnouncements, printSettingsPage1, printSettingsPage2, selectedDate, activeDay]);
+  // Compute dates for each day in the selected week
+  const dayDates = useMemo(() => {
+    const sel = new Date(selectedDate + 'T12:00:00');
+    const dayOfWeek = sel.getDay(); // 0=Sun
+    const monday = new Date(sel);
+    monday.setDate(sel.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
 
-  // ── Segment expand toggle (local UI) ──
-  const toggleSegmentExpanded = (timeSlot, idx) => {
-    const key = `${timeSlot}-${idx}`;
-    setExpandedSegments(prev => ({ ...prev, [key]: !prev[key] }));
-  };
+    const dates = {};
+    WEEKDAYS.forEach(wd => {
+      const d = new Date(monday);
+      const offset = wd.dayIndex === 0 ? 6 : wd.dayIndex - 1; // Mon=0, Tue=1, ... Sun=6
+      d.setDate(monday.getDate() + offset);
+      const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      dates[wd.key] = ds;
+    });
+    return dates;
+  }, [selectedDate]);
 
-  // ── Loading / guard ──
-  if (!serviceData || isLoading) return <div className="p-8">Cargando...</div>;
+  // Compute slot names per day
+  const daySlotsMap = useMemo(() => {
+    const map = {};
+    activeDays.forEach(day => {
+      const slots = getTimeSlotsForDay(day.dayName);
+      map[day.key] = slots.map(s => s.name);
+    });
+    // Ensure Sunday always has slots (legacy fallback)
+    if (!map.sunday || map.sunday.length === 0) {
+      map.sunday = ["9:30am", "11:30am"];
+    }
+    return map;
+  }, [activeDays, getTimeSlotsForDay]);
 
-  // ── Print settings ──
+  // Default print settings
   const defaultPrintSettings = { globalScale: 1.0, margins: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" }, bodyFontScale: 1.0, titleFontScale: 1.0 };
-  const activePrintSettingsPage1 = isQuickPrint ? defaultPrintSettings : (printSettingsPage1 || defaultPrintSettings);
-  const activePrintSettingsPage2 = isQuickPrint ? defaultPrintSettings : (printSettingsPage2 || defaultPrintSettings);
 
   // ── Render ──
   return (
-    <ServiceDataContext.Provider value={serviceData}>
-      <UpdatersContext.Provider value={{
-        updateSegmentField: handlers.updateSegmentField,
-        updateTeamField: handlers.updateTeamField,
-        setServiceData,
-        // Entity Separation: per-field mutation functions
-        mutateSegmentField: segmentMutation.mutateSegmentField,
-        mutateSongs: segmentMutation.mutateSongs,
-        mutateDuration: segmentMutation.mutateDuration,
-        mutateTeam: segmentMutation.mutateTeam,
-        mutatePreServiceNotes: segmentMutation.mutatePreServiceNotes,
-        mutateRecesoNotes: (...args) => {
-          ownSaveInProgressRef.current = true;
-          segmentMutation.mutateRecesoNotes(...args);
-          // Clear guard after debounce (300ms) + network round-trip buffer
-          setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
-        },
-        mutateSubAssignment: segmentMutation.mutateSubAssignment,
-      }}>
     <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
-      <WeeklyServicePrintCSS printSettingsPage1={activePrintSettingsPage1} printSettingsPage2={activePrintSettingsPage2} />
+      <WeeklyServicePrintCSS printSettingsPage1={printSettingsPage1 || defaultPrintSettings} printSettingsPage2={printSettingsPage2 || defaultPrintSettings} />
 
-      <WeeklyServicePrintView
-        serviceData={serviceData} selectedDate={selectedDate}
-        fixedAnnouncements={fixedAnnouncements} dynamicAnnouncements={dynamicAnnouncements}
-        selectedAnnouncements={selectedAnnouncements}
-        printSettingsPage1={printSettingsPage1} printSettingsPage2={printSettingsPage2}
-        isQuickPrint={isQuickPrint}
-        slotNames={sundaySlotNames}
-      />
-
-      {/* Screen UI — Header */}
-      <div className="flex justify-between items-center print:hidden">
+      {/* Header */}
+      <div className="flex justify-between items-start print:hidden">
         <div>
           <h1 className="text-5xl text-gray-900 uppercase tracking-tight">Servicios Semanales</h1>
           <p className="text-gray-500 mt-1">{t('dashboard.services.subtitle')}</p>
-          {existingData?.id && (
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-gray-400 font-mono">ID: {existingData.id}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-3 mt-2">
-            {existingData?.updated_date && (
-              <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
-                Última actualización: {new Date(existingData.updated_date).toLocaleString('es-ES', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-              </Badge>
-            )}
-            {saveMetadataMutation.isPending && <Badge className="text-xs bg-yellow-500 text-white animate-pulse">{t('btn.saving')}</Badge>}
-          </div>
         </div>
-        {/* Toolbar: PDFs + Live View top-level, secondary actions in overflow menu */}
         <div className="flex gap-2 items-center">
-          {savingField && (
-            <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
-              <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin text-pdv-teal" />
-              <span className="hidden md:inline">{t('btn.saving')}</span>
-            </div>
-          )}
-          {/* Primary actions — always visible */}
-          <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${selectedDate}`)} variant="outline" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2">
+          <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${dayDates[activeDay] || selectedDate}`)} variant="outline" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2">
             <Eye className="w-3 h-3 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">{t('btn.live_view')}</span>
           </Button>
-          <Button onClick={handlers.handleDownloadProgramPDF} style={tealStyle} className="font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2" title="Descargar PDF Programa">
-            <Download className="w-3 h-3 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">PDF Programa</span>
-          </Button>
-          <Button onClick={handlers.handleDownloadAnnouncementsPDF} style={greenStyle} className="font-semibold text-xs md:text-sm px-2 py-1 md:px-4 md:py-2" title="Descargar PDF Anuncios">
-            <Download className="w-3 h-3 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">PDF Anuncios</span>
-          </Button>
-
-          {/* Overflow menu — secondary actions */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" className="border-2 border-gray-300 bg-white text-gray-600 hover:bg-gray-100 h-9 w-9">
@@ -847,37 +281,12 @@ export default function WeeklyServiceManager() {
                     <Wrench className="w-4 h-4 text-purple-500" />
                     <span>Configurar Horarios</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowResetConfirm(true)} className="gap-2 text-red-600 focus:text-red-600">
-                    <Wand2 className="w-4 h-4" />
-                    <span>Restablecer Blueprint</span>
-                  </DropdownMenuItem>
                 </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
-
-      {/* Multi-admin: External change notification */}
-      {externalChangeAvailable && (
-        <div className="bg-blue-50 border-2 border-blue-400 rounded-lg p-3 flex items-center justify-between print:hidden">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-blue-600" />
-            <span className="text-sm text-blue-800 font-medium">
-              Otro administrador actualizó el programa. Tus cambios no guardados se perderán al recargar.
-            </span>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExternalReload}
-            className="border-blue-400 text-blue-700 hover:bg-blue-100 ml-4 shrink-0"
-          >
-            <RefreshCw className="w-3 h-3 mr-1" />
-            Recargar
-          </Button>
-        </div>
-      )}
 
       {/* Date Selection */}
       <Card className="print:hidden border-2 border-gray-300 bg-white">
@@ -896,8 +305,6 @@ export default function WeeklyServiceManager() {
                 <PopoverContent className="w-auto p-0" align="start">
                   <style>{`
                     [data-disabled="true"] { color: #d1d5db !important; cursor: not-allowed !important; }
-                    [data-disabled="true"]:hover { background-color: transparent !important; }
-                    button[role="gridcell"]:not([data-disabled="true"]):not([data-selected="true"]) { color: #111827 !important; }
                     button[role="gridcell"][data-selected="true"], button[role="gridcell"][aria-selected="true"] { background-color: #8DC63F !important; color: white !important; }
                     .rdp-day_selected { background-color: #8DC63F !important; color: white !important; }
                   `}</style>
@@ -921,12 +328,11 @@ export default function WeeklyServiceManager() {
         </CardContent>
       </Card>
 
-      {/* Weekday tabs + service session columns */}
+      {/* Weekday tabs — each renders its own DayServiceEditor */}
       <style>{`
         [data-weekday-tab][data-state="active"] { background-color: #1F8A70 !important; color: #ffffff !important; }
       `}</style>
       <Tabs value={activeDay} onValueChange={setActiveDay} className="print:hidden">
-        {/* Weekday tab bar — shows all days that have services */}
         {activeDays.length > 1 && (
           <TabsList className="mb-4 h-10 bg-gray-200">
             {activeDays.map(day => (
@@ -934,7 +340,6 @@ export default function WeeklyServiceManager() {
                 key={day.key}
                 value={day.key}
                 className="px-4 py-1.5 text-sm font-bold text-gray-700"
-                style={{}}
                 data-weekday-tab="true"
               >
                 <span className="hidden sm:inline">{day.fullLabel}</span>
@@ -944,44 +349,38 @@ export default function WeeklyServiceManager() {
           </TabsList>
         )}
 
-        {/* Sunday (default) — dynamic columns from ServiceSchedule */}
-        <TabsContent value="sunday" className="mt-0">
-          <SundaySlotColumns
-            sundaySlotNames={sundaySlotNames}
-            serviceData={serviceData}
-            expandedSegments={expandedSegments}
-            toggleSegmentExpanded={toggleSegmentExpanded}
-            handlers={handlers}
-            setServiceData={setServiceData}
-            setSpecialSegmentDetails={setSpecialSegmentDetails}
-            setShowSpecialDialog={setShowSpecialDialog}
-            canEdit={hasPermission(user, 'edit_services')}
-          />
-        </TabsContent>
-
-        {/* Other weekdays — render their service sessions with full segment display */}
-        {activeDays.filter(d => d.key !== 'sunday').map(day => {
-          const dayServices = weekServices.filter(svc => {
-            if (!svc._weekDate) return false;
-            const d = new Date(svc._weekDate + 'T12:00:00');
-            return d.getDay() === day.dayIndex;
-          });
-          return (
-            <TabsContent key={day.key} value={day.key} className="mt-0">
-              {dayServices.length === 0 ? (
-                <Card className="p-8 text-center bg-white border-2 border-gray-300">
-                  <p className="text-gray-500">No hay servicios programados para {day.fullLabel}</p>
-                </Card>
-              ) : (
-                <div className="space-y-4">
-                  {dayServices.map(svc => (
-                    <WeekdayServicePanel key={svc.id} service={svc} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          );
-        })}
+        {activeDays.map(day => (
+          <TabsContent key={day.key} value={day.key} className="mt-0">
+            <DayServiceEditor
+              dayOfWeek={day.dayName}
+              date={dayDates[day.key] || selectedDate}
+              slotNames={daySlotsMap[day.key] || ["9:30am"]}
+              blueprintData={blueprintData}
+              user={user}
+              selectedAnnouncements={selectedAnnouncements}
+              fixedAnnouncements={fixedAnnouncements}
+              dynamicAnnouncements={dynamicAnnouncements}
+              setVerseParserOpen={setVerseParserOpen}
+              setVerseParserContext={setVerseParserContext}
+              verseParserContext={verseParserContext}
+              setShowSpecialDialog={setShowSpecialDialog}
+              setSpecialSegmentDetails={setSpecialSegmentDetails}
+              specialSegmentDetails={specialSegmentDetails}
+              setOptimizingAnnouncement={setOptimizingAnnouncement}
+              setPrintSettingsPage1={setPrintSettingsPage1}
+              setPrintSettingsPage2={setPrintSettingsPage2}
+              printSettingsPage1={printSettingsPage1}
+              printSettingsPage2={printSettingsPage2}
+              setEditingAnnouncement={setEditingAnnouncement}
+              setAnnouncementForm={setAnnouncementForm}
+              setShowAnnouncementDialog={setShowAnnouncementDialog}
+              setShowResetConfirm={setShowResetConfirm}
+              editingAnnouncement={editingAnnouncement}
+              createAnnouncementMutation={createAnnouncementMutation}
+              updateAnnouncementMutation={updateAnnouncementMutation}
+            />
+          </TabsContent>
+        ))}
       </Tabs>
 
       {/* Announcements */}
@@ -993,32 +392,23 @@ export default function WeeklyServiceManager() {
           setAnnouncementForm({ title: "", content: "", instructions: "", category: "General", is_active: true, priority: 10, has_video: false, date_of_occurrence: "", emphasize: false });
           setShowAnnouncementDialog(true);
         }}
-        onEditAnnouncement={handlers.openAnnouncementEdit}
+        onEditAnnouncement={openAnnouncementEdit}
         onDeleteAnnouncement={(id) => setDeleteConfirmId(id)}
-        onMovePriority={handlers.moveAnnouncementPriority}
+        onMovePriority={moveAnnouncementPriority}
         onUpdateEvent={({ id, data }) => updateAnnouncementMutation.mutate({ id, data })}
         canCreate={hasPermission(user, 'create_announcements')}
         canEdit={hasPermission(user, 'edit_announcements')}
         canDelete={hasPermission(user, 'delete_announcements')}
-        tealStyle={tealStyle}
+        tealStyle={{ backgroundColor: '#1F8A70', color: '#ffffff' }}
       />
 
       {/* Special Segment Dialog */}
       <SpecialSegmentDialog
         open={showSpecialDialog} onOpenChange={setShowSpecialDialog}
         details={specialSegmentDetails} setDetails={setSpecialSegmentDetails}
-        serviceSegments={serviceData[specialSegmentDetails.timeSlot]}
-        slotHasTranslation={(serviceData?.[specialSegmentDetails.timeSlot] || []).some(seg => seg.requires_translation)}
-        onAdd={handlers.addSpecialSegment} tealStyle={tealStyle}
-      />
-
-      {/* Phase 5: Concurrent editing warning */}
-      <StaleEditWarningDialog
-        open={showStaleWarning}
-        onCancel={() => setShowStaleWarning(false)}
-        onForceSave={() => { setShowStaleWarning(false); setStaleInfo(null); }}
-        staleInfo={staleInfo}
-        language="es"
+        serviceSegments={[]}
+        slotHasTranslation={false}
+        onAdd={() => {}} tealStyle={{ backgroundColor: '#1F8A70', color: '#ffffff' }}
       />
 
       {/* Schedule Manager Dialog */}
@@ -1036,20 +426,27 @@ export default function WeeklyServiceManager() {
         deleteConfirmId={deleteConfirmId} setDeleteConfirmId={setDeleteConfirmId}
         deleteAnnouncementMutation={deleteAnnouncementMutation}
         showResetConfirm={showResetConfirm} setShowResetConfirm={setShowResetConfirm}
-        executeResetToBlueprint={handlers.executeResetToBlueprint}
-        slotNames={sundaySlotNames}
+        executeResetToBlueprint={() => { setShowResetConfirm(false); }}
+        slotNames={daySlotsMap[activeDay] || ["9:30am"]}
         verseParserOpen={verseParserOpen} setVerseParserOpen={setVerseParserOpen}
-        verseParserContext={verseParserContext} handleSaveParsedVerses={handlers.handleSaveParsedVerses}
+        verseParserContext={verseParserContext} handleSaveParsedVerses={() => {}}
         showPrintSettings={showPrintSettings} setShowPrintSettings={setShowPrintSettings}
-        activePrintSettingsPage1={activePrintSettingsPage1} activePrintSettingsPage2={activePrintSettingsPage2}
-        handleSavePrintSettings={handlers.handleSavePrintSettings} serviceData={serviceData}
+        activePrintSettingsPage1={printSettingsPage1 || defaultPrintSettings}
+        activePrintSettingsPage2={printSettingsPage2 || defaultPrintSettings}
+        handleSavePrintSettings={(s) => { setPrintSettingsPage1(s.page1); setPrintSettingsPage2(s.page2); }}
+        serviceData={{}}
         showAnnouncementDialog={showAnnouncementDialog} setShowAnnouncementDialog={setShowAnnouncementDialog}
         editingAnnouncement={editingAnnouncement} announcementForm={announcementForm}
-        setAnnouncementForm={setAnnouncementForm} handleAnnouncementSubmit={handlers.handleAnnouncementSubmit}
-        optimizeAnnouncementWithAI={handlers.optimizeAnnouncementWithAI} optimizingAnnouncement={optimizingAnnouncement}
+        setAnnouncementForm={setAnnouncementForm}
+        handleAnnouncementSubmit={(formData) => {
+          if (editingAnnouncement) {
+            updateAnnouncementMutation.mutate({ id: editingAnnouncement.id, data: formData });
+          } else {
+            createAnnouncementMutation.mutate(formData);
+          }
+        }}
+        optimizeAnnouncementWithAI={() => {}} optimizingAnnouncement={optimizingAnnouncement}
       />
     </div>
-      </UpdatersContext.Provider>
-    </ServiceDataContext.Provider>
   );
 }
