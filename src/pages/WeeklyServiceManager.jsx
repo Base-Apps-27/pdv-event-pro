@@ -32,9 +32,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 import WeeklyServicePrintCSS from "@/components/service/WeeklyServicePrintCSS";
-import WeeklyServicePrintView from "@/components/service/WeeklyServicePrintView";
 import WeeklyAnnouncementSection from "@/components/service/WeeklyAnnouncementSection";
-import SpecialSegmentDialog from "@/components/service/SpecialSegmentDialog";
 import WeeklyServiceDialogs from "@/components/service/weekly/WeeklyServiceDialogs";
 import ServiceScheduleManager from "@/components/service/weekly/ServiceScheduleManager";
 import DayServiceEditor from "@/components/service/weekly/DayServiceEditor";
