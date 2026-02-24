@@ -184,6 +184,32 @@ Deno.serve(async (req) => {
         }
 
         // ---------------------------------------------------------
+        // HELPERS
+        // ---------------------------------------------------------
+        const resolveChildrenAsSubAssignments = (children) => {
+            if (!children || children.length === 0) return [];
+            return children
+                .sort((a, b) => (a.order || 0) - (b.order || 0))
+                .map(child => ({
+                    label: child.title || 'Sub-assignment',
+                    presenter: child.presenter || '',
+                    duration_min: child.duration_min || 5,
+                    segment_type: child.segment_type || 'Ministración',
+                }));
+        };
+
+        const groupBy = (arr, keyFn) => {
+            const map = {};
+            for (const item of arr) {
+                const key = keyFn(item);
+                if (!key) continue;
+                if (!map[key]) map[key] = [];
+                map[key].push(item);
+            }
+            return map;
+        };
+
+        // ---------------------------------------------------------
         // MODE 3: Fetch Segments & Details
         // ---------------------------------------------------------
         let segments = [];
