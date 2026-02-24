@@ -181,7 +181,7 @@ export default function DayServiceEditor({
   const handlers = useWeeklyServiceHandlers({
     serviceData, setServiceData, selectedAnnouncements,
     updateAnnouncementMutation, fixedAnnouncements, dynamicAnnouncements,
-    blueprintData: effectiveBlueprint,
+    blueprintData: null,
     setVerseParserOpen, setVerseParserContext, verseParserContext,
     setShowSpecialDialog, setSpecialSegmentDetails, specialSegmentDetails,
     setOptimizingAnnouncement, setPrintSettingsPage1, setPrintSettingsPage2,
@@ -196,7 +196,6 @@ export default function DayServiceEditor({
 
   useEffect(() => {
     if (localStateInitializedRef.current) return;
-    if (!effectiveBlueprint) return;
     if (isLoading) return;
 
     if (existingData) {
@@ -226,10 +225,19 @@ export default function DayServiceEditor({
             return { ...savedSeg, sub_assignments: subAssignments, songs };
           }
           const savedType = normalizeType(savedSeg.type);
-          if (effectiveBlueprint) {
-            let blueprintSeg = effectiveBlueprint[timeSlot]?.[idx];
+          const sessionDef = sessions?.find(s => s.name === timeSlot);
+          const bp = sessionDef?.blueprint_id ? blueprints?.find(b => b.id === sessionDef.blueprint_id) : null;
+          let bpSegments = bp?.segments || [];
+          
+          if (bp && bpSegments.length === 0) {
+            const firstKey = Object.keys(bp).find(k => Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k));
+            if (firstKey) bpSegments = bp[firstKey];
+          }
+
+          if (bpSegments.length > 0) {
+            let blueprintSeg = bpSegments[idx];
             if (!blueprintSeg || normalizeType(blueprintSeg.type) !== savedType) {
-              blueprintSeg = effectiveBlueprint[timeSlot]?.find(b => normalizeType(b.type) === savedType);
+              blueprintSeg = bpSegments.find(b => normalizeType(b.type) === savedType);
             }
             if (blueprintSeg) {
               const mergedFields = (savedSeg.fields && savedSeg.fields.length > 0) ? savedSeg.fields : (blueprintSeg.fields || []);
@@ -271,9 +279,15 @@ export default function DayServiceEditor({
         if (existingSlotSegments.length > 0) {
           loadedData[name] = mergeSegmentsWithBlueprint(existingSlotSegments, name);
         } else {
-          // Find first available blueprint slot if exact match or 9:30am match is missing
-          const bpSlots = effectiveBlueprint ? Object.keys(effectiveBlueprint).filter(k => Array.isArray(effectiveBlueprint[k]) && effectiveBlueprint[k].length > 0) : [];
-          const bpSegments = effectiveBlueprint?.[name] || effectiveBlueprint?.[slotNames[0]] || (bpSlots.length > 0 ? effectiveBlueprint[bpSlots[0]] : []);
+          const sessionDef = sessions?.find(s => s.name === name);
+          const bp = sessionDef?.blueprint_id ? blueprints?.find(b => b.id === sessionDef.blueprint_id) : null;
+          let bpSegments = bp?.segments || [];
+          
+          if (bp && bpSegments.length === 0) {
+            const firstKey = Object.keys(bp).find(k => Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k));
+            if (firstKey) bpSegments = bp[firstKey];
+          }
+
           loadedData[name] = bpSegments.map(seg => {
             const segmentCopy = {
               type: seg.type, title: seg.title, duration: seg.duration,
@@ -309,7 +323,7 @@ export default function DayServiceEditor({
       setServiceData(null);
       localStateInitializedRef.current = true;
     }
-  }, [existingData, date, dayOfWeek, effectiveBlueprint, isLoading, slotNames]);
+  }, [existingData, date, dayOfWeek, isLoading, slotNames, sessions, blueprints]);
 
   // ── External change subscription ──
   useEffect(() => {
@@ -384,7 +398,7 @@ export default function DayServiceEditor({
         dayOfWeek={dayOfWeek}
         date={date}
         slotNames={slotNames}
-        blueprintData={effectiveBlueprint}
+        blueprintData={null}
         onServiceCreated={() => {
           localStateInitializedRef.current = false;
           queryClient.invalidateQueries({ queryKey: ['dayService', date, dayOfWeek] });
