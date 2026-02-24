@@ -182,6 +182,8 @@ export default function DayServiceEditor({
     serviceData, setServiceData, selectedAnnouncements,
     updateAnnouncementMutation, fixedAnnouncements, dynamicAnnouncements,
     blueprintData: null,
+    sessions,
+    blueprints,
     setVerseParserOpen, setVerseParserContext, verseParserContext,
     setShowSpecialDialog, setSpecialSegmentDetails, specialSegmentDetails,
     setOptimizingAnnouncement, setPrintSettingsPage1, setPrintSettingsPage2,

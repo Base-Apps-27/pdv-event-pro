@@ -23,6 +23,8 @@ export function useWeeklyServiceHandlers({
   fixedAnnouncements,
   dynamicAnnouncements,
   blueprintData,
+  sessions,
+  blueprints,
   // Setters for state owned by parent
   setVerseParserOpen,
   setVerseParserContext,
@@ -325,9 +327,6 @@ export function useWeeklyServiceHandlers({
   const executeResetToBlueprint = (slotsToReset) => {
     setShowResetConfirm(false);
 
-    // Blueprint Revamp (2026-02-18): DB blueprint only. No hardcoded fallback.
-    const activeBlueprint = blueprintData;
-    
     // Helper to get default fields if blueprint is corrupted/missing them
     const getDefaultFields = (type) => {
       const t = type?.toLowerCase() || '';
@@ -360,21 +359,23 @@ export function useWeeklyServiceHandlers({
     });
 
     const initialData = { ...serviceData };
-    if (!activeBlueprint) {
-      toast.error("No se encontró el blueprint en la base de datos. No se puede restablecer.");
-      return;
-    }
 
     // RESET-SLOT-FIX: Only reset the selected slots (or all if not specified)
     const targetSlots = (slotsToReset && slotsToReset.length > 0) ? slotsToReset : slotNames;
     targetSlots.forEach(name => {
-      let bpSegments = activeBlueprint[name];
+      const sessionDef = sessions?.find(s => s.name === name);
+      const bp = sessionDef?.blueprint_id ? blueprints?.find(b => b.id === sessionDef.blueprint_id) : null;
+      let bpSegments = bp?.segments || [];
+      
+      // Legacy migration fallback: if blueprint has old slot-based keys instead of segments
+      if (bp && bpSegments.length === 0) {
+        const firstKey = Object.keys(bp).find(k => Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k));
+        if (firstKey) bpSegments = bp[firstKey];
+      }
+
       if (!bpSegments || bpSegments.length === 0) {
-        // Slot has no dedicated blueprint definition — warn and fall back to first slot
-        if (name !== firstSlot) {
-          toast.info(`Blueprint para "${name}" no encontrado. Usando segmentos de ${firstSlot}.`);
-        }
-        bpSegments = activeBlueprint[firstSlot] || [];
+        toast.info(`Blueprint para "${name}" no configurado o vacío. Quedará en blanco.`);
+        bpSegments = [];
       }
       initialData[name] = mapBpSegments(bpSegments);
     });
