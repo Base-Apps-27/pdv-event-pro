@@ -459,38 +459,38 @@ export default function DayServiceEditor({
             </div>
           )}
 
-          {/* Service ID badge */}
+          {/* Service meta: updated time + save indicator (collapsed, single line) */}
           {existingData?.id && (
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs text-gray-400 font-mono">ID: {existingData.id}</Badge>
+            <div className="flex items-center gap-2 flex-wrap">
               {existingData?.updated_date && (
-                <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
-                  Actualizado: {new Date(existingData.updated_date).toLocaleString('es-ES', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </Badge>
+                <span className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-1.5 py-0.5">
+                  {new Date(existingData.updated_date).toLocaleString('es-ES', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
               )}
-              {saveMetadataMutation.isPending && <Badge className="text-xs bg-yellow-500 text-white animate-pulse">Guardando...</Badge>}
+              {saveMetadataMutation.isPending && <span className="text-xs bg-yellow-500 text-white rounded px-1.5 py-0.5 animate-pulse">Guardando…</span>}
             </div>
           )}
 
-          {/* Per-day action bar: PDF download + Live View + Reset to Blueprint */}
-          <div className="flex gap-2 items-center flex-wrap">
-            <Button onClick={handlers.handleDownloadProgramPDF} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} className="font-semibold text-xs px-3 py-1.5">
-              <Download className="w-3 h-3 mr-1" />PDF Programa
+          {/* Per-day action bar: PDF download + Reset to Blueprint */}
+          <div className="flex gap-1.5 items-center flex-wrap">
+            <Button onClick={handlers.handleDownloadProgramPDF} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2.5">
+              <Download className="w-3 h-3 mr-1" /><span className="hidden sm:inline">PDF </span>Programa
             </Button>
-            <Button onClick={handlers.handleDownloadAnnouncementsPDF} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} className="font-semibold text-xs px-3 py-1.5">
-              <Download className="w-3 h-3 mr-1" />PDF Anuncios
+            <Button onClick={handlers.handleDownloadAnnouncementsPDF} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2.5">
+              <Download className="w-3 h-3 mr-1" /><span className="hidden sm:inline">PDF </span>Anuncios
             </Button>
-            <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${date}`)} variant="outline" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs px-3 py-1.5">
-              <Eye className="w-3 h-3 mr-1" />Live View
+            <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${date}`)} variant="outline" size="sm" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs h-8 px-2.5">
+              <Eye className="w-3 h-3 mr-1" />Live
             </Button>
             {resolvedBlueprint && (
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setShowResetConfirm(true)}
-                className="border-amber-400 text-amber-700 hover:bg-amber-50 border font-semibold text-xs px-3 py-1.5"
+                className="border-amber-400 text-amber-700 hover:bg-amber-50 border font-semibold text-xs h-8 px-2.5"
                 title={`Restablecer a blueprint: ${resolvedBlueprint.name}`}
               >
-                <RotateCcw className="w-3 h-3 mr-1" />Restablecer
+                <RotateCcw className="w-3 h-3 mr-1" />Reset
               </Button>
             )}
           </div>
