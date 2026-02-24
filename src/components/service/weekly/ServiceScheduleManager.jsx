@@ -41,6 +41,7 @@ export default function ServiceScheduleManager() {
   // Double-confirmation state for destructive delete
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [showBlueprintModal, setShowBlueprintModal] = useState(false);
 
   const { data: schedules = [], isLoading } = useQuery({
     queryKey: ['serviceSchedules'],
