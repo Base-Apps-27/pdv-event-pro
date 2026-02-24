@@ -48,17 +48,19 @@ export default function PublicProgramSegment({
   const { language, t } = useLanguage();
   const [showResourcesModal, setShowResourcesModal] = useState(false);
 
-  // Check if segment has any resource links
-  const hasResourceLinks = segment.video_url || 
-    segment.drama_song_source || segment.drama_song_2_url || segment.drama_song_3_url ||
-    segment.dance_song_source || segment.dance_song_2_url || segment.dance_song_3_url ||
-    segment.arts_run_of_show_url;
   // Helper to safely get segment data (checks data object first, then root)
   const getData = (field) => getSegmentData(segment, field);
   
   const presentationUrl = getData('presentation_url');
   const notesUrl = getData('notes_url');
   const isSlidesOnly = getData('content_is_slides_only');
+
+  // Check if segment has any resource links (Expanded to include Speaker Resources)
+  const hasResourceLinks = segment.video_url || 
+    segment.drama_song_source || segment.drama_song_2_url || segment.drama_song_3_url ||
+    segment.dance_song_source || segment.dance_song_2_url || segment.dance_song_3_url ||
+    segment.arts_run_of_show_url ||
+    presentationUrl || notesUrl;
   
   // Determine segment type and characteristics
   const segmentType = segment.segment_type || segment.type || getData('type') || 'Especial';
@@ -882,6 +884,7 @@ export default function PublicProgramSegment({
         open={showResourcesModal}
         onOpenChange={setShowResourcesModal}
         segment={segment}
+        onOpenVerses={onOpenVerses}
       />
     </div>
   );

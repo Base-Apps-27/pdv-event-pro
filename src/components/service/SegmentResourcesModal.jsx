@@ -26,19 +26,24 @@ import {
   FileText, 
   ExternalLink, 
   Play,
-  User
+  User,
+  Monitor,
+  BookOpen,
+  Lightbulb
 } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
+import { getSegmentData } from "@/components/utils/segmentDataUtils";
 
 /**
  * ResourceCard - Displays a single resource with thumbnail and metadata
  */
-function ResourceCard({ title, subtitle, url, thumbnail, type, owner }) {
+function ResourceCard({ title, subtitle, url, thumbnail, type, owner, icon, action }) {
   const { t } = useLanguage();
   
-  if (!url) return null;
+  if (!url && !action) return null;
 
   const getIcon = () => {
+    if (icon) return icon;
     switch (type) {
       case 'video': return <Video className="w-4 h-4 text-blue-600" />;
       case 'song': return <Music className="w-4 h-4 text-pink-600" />;
@@ -52,16 +57,22 @@ function ResourceCard({ title, subtitle, url, thumbnail, type, owner }) {
       case 'video': return t('resources.play');
       case 'song': return t('resources.play');
       case 'pdf': return t('resources.viewPdf');
+      case 'slides': return t('resources.open');
+      case 'notes': return t('resources.open');
+      case 'verses': return language === 'es' ? 'Ver' : 'View';
       default: return t('resources.open');
     }
   };
 
+  const Wrapper = action ? 'button' : 'a';
+  const wrapperProps = action 
+    ? { onClick: action, className: "w-full text-left" }
+    : { href: url, target: "_blank", rel: "noopener noreferrer" };
+
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 active:bg-gray-50 transition-colors"
+    <Wrapper
+      {...wrapperProps}
+      className={`block p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 active:bg-gray-50 transition-colors ${action ? 'cursor-pointer' : ''}`}
     >
       {/* Vertical stack: thumbnail on top (if present), then content */}
       {thumbnail && (
@@ -102,13 +113,64 @@ function ResourceCard({ title, subtitle, url, thumbnail, type, owner }) {
   );
 }
 
-export default function SegmentResourcesModal({ open, onOpenChange, segment }) {
+export default function SegmentResourcesModal({ open, onOpenChange, segment, onOpenVerses }) {
   const { t, language } = useLanguage();
 
   if (!segment) return null;
 
+  // Helper to safely get segment data
+  const getData = (field) => getSegmentData(segment, field);
+
   // Collect all resources
   const resources = [];
+
+  // --- SPEAKER RESOURCES (Slides, Notes, Verses, Key Points) ---
+  const speakerResources = [];
+  const presentationUrl = getData('presentation_url');
+  const notesUrl = getData('notes_url');
+  const parsedVerses = getData('parsed_verse_data');
+  const hasKeyTakeaways = parsedVerses?.key_takeaways?.length > 0;
+  
+  if (presentationUrl) {
+    speakerResources.push({
+      title: language === 'es' ? 'Presentación (Slides)' : 'Presentation Slides',
+      url: presentationUrl,
+      type: 'slides',
+      icon: <Monitor className="w-4 h-4 text-blue-600" />
+    });
+  }
+
+  if (notesUrl) {
+    speakerResources.push({
+      title: language === 'es' ? 'Notas del Orador' : 'Speaker Notes',
+      url: notesUrl,
+      type: 'notes',
+      icon: <FileText className="w-4 h-4 text-purple-600" />
+    });
+  }
+
+  // Verses & Key Points Action (if handler provided)
+  if (parsedVerses && onOpenVerses) {
+    speakerResources.push({
+      title: hasKeyTakeaways 
+        ? (language === 'es' ? 'Versículos y Puntos Clave' : 'Verses & Key Points')
+        : (language === 'es' ? 'Versículos Bíblicos' : 'Scripture References'),
+      subtitle: hasKeyTakeaways ? (language === 'es' ? 'Ver contenido extraído' : 'View extracted content') : undefined,
+      action: () => onOpenVerses({
+        parsedData: parsedVerses,
+        rawText: getData('scripture_references') || getData('verse')
+      }),
+      type: 'verses',
+      icon: hasKeyTakeaways ? <Lightbulb className="w-4 h-4 text-amber-600" /> : <BookOpen className="w-4 h-4 text-green-600" />
+    });
+  }
+
+  if (speakerResources.length > 0) {
+    resources.push({
+      category: language === 'es' ? 'Recursos del Orador' : 'Speaker Resources',
+      items: speakerResources
+    });
+  }
 
   // Video
   if (segment.video_url) {

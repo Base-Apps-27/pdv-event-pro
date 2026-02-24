@@ -116,6 +116,26 @@ export default function StructuredVersesModal({
     );
   };
 
+  const renderKeyTakeaways = () => {
+    if (!parsedData?.key_takeaways || parsedData.key_takeaways.length === 0) return null;
+    
+    return (
+      <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <h5 className="font-bold text-amber-900 text-lg mb-3 flex items-center gap-2">
+          <span className="text-xl">💡</span> Puntos Clave
+        </h5>
+        <ul className="space-y-2">
+          {parsedData.key_takeaways.map((point, idx) => (
+            <li key={idx} className="flex gap-2 items-start text-amber-900">
+              <span className="font-bold text-amber-500 mt-1">•</span>
+              <span className="flex-1 font-medium">{point}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
   const getTitle = () => {
     if (parsedData?.type === 'verse_list') return t.verseList;
     if (parsedData?.type === 'outline') return t.outline;
@@ -146,6 +166,7 @@ export default function StructuredVersesModal({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
+          {renderKeyTakeaways()}
           {renderContent()}
         </div>
       </DialogContent>
