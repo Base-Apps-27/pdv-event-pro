@@ -208,7 +208,9 @@ Deno.serve(async (req) => {
       servicePayload.pre_service_notes = { ...emptySlotObj };
 
       slotNames.forEach(name => {
-        const source = blueprint?.[name] || FALLBACK_BLUEPRINT[name] || FALLBACK_BLUEPRINT["9:30am"];
+        // Fallback resolution order: exact slot match -> first 9:30am slot -> first available blueprint slot -> empty array
+        const bpSlots = blueprint ? Object.keys(blueprint).filter(k => Array.isArray(blueprint[k]) && blueprint[k].length > 0) : [];
+        const source = blueprint?.[name] || FALLBACK_BLUEPRINT[name] || FALLBACK_BLUEPRINT["9:30am"] || (bpSlots.length > 0 ? blueprint[bpSlots[0]] : []);
         servicePayload[name] = cloneSegments(source);
       });
 
