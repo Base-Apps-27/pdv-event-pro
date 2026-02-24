@@ -128,10 +128,16 @@ export function useSegmentMutation() {
     setDirtyEntities(new Set());
   };
 
-  // Flush pending writes on unmount + beforeunload
+  // Flush pending writes on unmount + beforeunload (with warning dialog)
   useEffect(() => {
-    const handleBeforeUnload = () => {
+    const handleBeforeUnload = (e) => {
+      const hasPending = Object.keys(timersRef.current).length > 0;
       if (flushPendingRef.current) flushPendingRef.current();
+      if (hasPending) {
+        e.preventDefault();
+        e.returnValue = 'Tienes cambios sin guardar. ¿Seguro que quieres salir?';
+        return e.returnValue;
+      }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {

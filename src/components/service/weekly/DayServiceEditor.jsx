@@ -427,11 +427,26 @@ export default function DayServiceEditor({
   }, [serviceData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, date, dayOfWeek]);
 
   // Flush pending blob saves on unmount to prevent data loss when changing tabs/pages
+  // Also warn user on tab close/refresh if there's a pending metadata save
   useEffect(() => {
-    return () => {
+    const handleBeforeUnload = (e) => {
       if (pendingSaveRef.current) {
         base44.entities.Service.update(
-          pendingSaveRef.current.serviceId, 
+          pendingSaveRef.current.serviceId,
+          pendingSaveRef.current.metadata
+        ).catch(err => console.error("beforeunload blob save failed:", err));
+        pendingSaveRef.current = null;
+        e.preventDefault();
+        e.returnValue = 'Tienes cambios sin guardar. ¿Seguro que quieres salir?';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (pendingSaveRef.current) {
+        base44.entities.Service.update(
+          pendingSaveRef.current.serviceId,
           pendingSaveRef.current.metadata
         ).catch(err => console.error("Unmount blob save failed:", err));
       }
