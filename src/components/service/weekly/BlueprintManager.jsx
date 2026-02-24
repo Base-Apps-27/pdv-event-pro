@@ -23,7 +23,7 @@ export default function BlueprintManager() {
         name,
         status: 'blueprint',
         origin: 'blueprint',
-        "Principal": [] // default slot
+        segments: []
       });
     },
     onSuccess: (newBp) => {
@@ -97,7 +97,10 @@ export default function BlueprintManager() {
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {blueprints.map(bp => {
-            const slots = Object.keys(bp).filter(k => Array.isArray(bp[k]) && !['segments', 'selected_announcements'].includes(k));
+            // Check legacy slots for migration info
+            const legacySlots = Object.keys(bp).filter(k => Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k));
+            const segmentsCount = bp.segments?.length || (legacySlots.length > 0 ? bp[legacySlots[0]]?.length : 0);
+            
             return (
               <Card key={bp.id} className="hover:shadow-md transition-shadow relative group">
                 <CardHeader className="pb-2">
@@ -118,13 +121,9 @@ export default function BlueprintManager() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {slots.length > 0 ? slots.map(s => (
-                      <Badge key={s} variant="secondary" className="text-xs font-normal bg-gray-100 text-gray-600 border-gray-200">
-                        {s} ({bp[s]?.length || 0})
-                      </Badge>
-                    )) : (
-                      <span className="text-xs text-amber-500">Sin slots definidos</span>
-                    )}
+                    <Badge variant="secondary" className="text-xs font-normal bg-gray-100 text-gray-600 border-gray-200">
+                      Segmentos ({segmentsCount || 0})
+                    </Badge>
                   </div>
                   <Button variant="outline" className="w-full text-pdv-teal border-pdv-teal hover:bg-pdv-teal hover:text-white" onClick={() => setEditingBlueprintId(bp.id)}>
                     <LayoutTemplate className="w-4 h-4 mr-2" />
