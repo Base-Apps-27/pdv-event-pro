@@ -262,11 +262,8 @@ Deno.serve(async (req) => {
             console.log(`[INLINE_PROCESS] Parsed ${parsedData.sections.length} verse references`);
         } else {
             console.log("[INLINE_PROCESS] Slides Only mode - Skipping verse parsing.");
-            if (content && content.trim()) {
-                if (!projectionNotes.includes(content.trim())) {
-                    projectionNotes = (projectionNotes ? projectionNotes + "\n\n" : "") + `[Nota del Orador]: ${content.trim()}`;
-                }
-            }
+            // DO NOT append raw content to projectionNotes.
+            // Raw content is embargoed from the Segment entity.
         }
 
         // Shared update payload for both entity and JSON paths
@@ -312,13 +309,11 @@ Deno.serve(async (req) => {
                         mirrorTarget = mirrorSegs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase()));
                     }
                     if (mirrorTarget) {
-                        let mirrorProjNotes = mirrorTarget.projection_notes || "";
-                        if (content_is_slides_only && content?.trim() && !mirrorProjNotes.includes(content.trim())) {
-                            mirrorProjNotes = (mirrorProjNotes ? mirrorProjNotes + "\n\n" : "") + `[Nota del Orador]: ${content.trim()}`;
-                        }
+                        // DO NOT append raw content to projection_notes (Embargo Policy)
                         await base44.asServiceRole.entities.Segment.update(mirrorTarget.id, {
                             ...commonFields,
-                            projection_notes: content_is_slides_only ? mirrorProjNotes : (mirrorTarget.projection_notes || ""),
+                            // Preserve existing notes, do not append raw content
+                            projection_notes: mirrorTarget.projection_notes || "",
                         });
                         console.log(`[MIRROR] Entity mirror updated: ${mirrorSlotName}`);
                     }
@@ -360,14 +355,11 @@ Deno.serve(async (req) => {
                 }
                 if (targetIdx === -1 || !otherArray[targetIdx]) { console.warn(`[MIRROR] No message segment in ${mirrorSlot}`); continue; }
                 const otherSegment = otherArray[targetIdx];
-                let otherProjNotes = otherSegment.projection_notes || "";
-                if (content_is_slides_only && content?.trim() && !otherProjNotes.includes(content.trim())) {
-                    otherProjNotes = (otherProjNotes ? otherProjNotes + "\n\n" : "") + `[Nota del Orador]: ${content.trim()}`;
-                }
+                // DO NOT append raw content to projection_notes (Embargo Policy)
                 otherArray[targetIdx] = {
                     ...otherSegment,
                     ...commonFields,
-                    projection_notes: content_is_slides_only ? otherProjNotes : (otherSegment.projection_notes || ""),
+                    projection_notes: otherSegment.projection_notes || "",
                     data: {
                         ...(otherSegment.data || {}),
                         verse: scriptureReferences,
