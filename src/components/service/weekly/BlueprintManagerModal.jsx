@@ -158,23 +158,51 @@ export default function BlueprintManagerModal({ open, onClose }) {
                   );
                   const isLegacy = !bp.segments && legacySlots.length > 0;
 
+                  const isRenaming = renamingId === bp.id;
+                  const isDeleting = deletingId === bp.id;
+
                   return (
                     <Card key={bp.id} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-start">
-                          <div>
-                            <CardTitle className="text-base text-gray-800">{bp.name || 'Sin nombre'}</CardTitle>
-                            <p className="text-xs text-gray-400 mt-0.5">ID: {bp.id.slice(-6)}</p>
+                          <div className="flex-1 min-w-0">
+                            {isRenaming ? (
+                              <div className="flex gap-1 items-center">
+                                <Input
+                                  autoFocus
+                                  value={renameValue}
+                                  onChange={(e) => setRenameValue(e.target.value)}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') handleRenameConfirm(); if (e.key === 'Escape') { setRenamingId(null); setRenameValue(""); }}}
+                                  className="h-7 text-sm"
+                                />
+                                <Button size="icon" className="h-7 w-7 shrink-0" style={{ backgroundColor: '#1F8A70', color: '#fff' }} onClick={handleRenameConfirm}><Check className="w-3 h-3" /></Button>
+                                <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => { setRenamingId(null); setRenameValue(""); }}><X className="w-3 h-3" /></Button>
+                              </div>
+                            ) : (
+                              <>
+                                <CardTitle className="text-base text-gray-800">{bp.name || 'Sin nombre'}</CardTitle>
+                                <p className="text-xs text-gray-400 mt-0.5">ID: {bp.id.slice(-6)}</p>
+                              </>
+                            )}
                           </div>
-                          <div className="flex gap-1 shrink-0">
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-gray-400 hover:text-blue-600" onClick={() => handleRename(bp)}>
-                              <Edit className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-gray-400 hover:text-red-600" onClick={() => { if (window.confirm('¿Eliminar blueprint?')) deleteMutation.mutate(bp.id); }}>
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
+                          {!isRenaming && (
+                            <div className="flex gap-1 shrink-0">
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-gray-400 hover:text-blue-600" onClick={() => { setRenamingId(bp.id); setRenameValue(bp.name || ""); }}>
+                                <Edit className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-gray-400 hover:text-red-600" onClick={() => setDeletingId(bp.id)}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
+                        {isDeleting && (
+                          <div className="mt-2 flex gap-2 items-center bg-red-50 border border-red-200 rounded p-2">
+                            <span className="text-xs text-red-700 flex-1">¿Eliminar este blueprint?</span>
+                            <Button size="sm" variant="destructive" className="h-6 text-xs px-2" onClick={handleDeleteConfirm} disabled={deleteMutation.isPending}>Eliminar</Button>
+                            <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={() => setDeletingId(null)}>Cancelar</Button>
+                          </div>
+                        )}
                       </CardHeader>
                       <CardContent className="pt-0">
                         <div className="flex flex-wrap gap-1.5 mb-3">
