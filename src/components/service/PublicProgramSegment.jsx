@@ -412,9 +412,10 @@ export default function PublicProgramSegment({
                  );
                });
              }
-             // Weekly JSON path: sub_assignments with person_field_name lookup
-             if (segment.sub_assignments && segment.sub_assignments.length > 0) {
-               return segment.sub_assignments.map((subAssign, idx) => {
+             // Weekly JSON path (or Entity ui_sub_assignments): sub_assignments with person_field_name lookup
+             const subAssignments = segment.sub_assignments || segment.ui_sub_assignments;
+             if (subAssignments && subAssignments.length > 0) {
+               return subAssignments.map((subAssign, idx) => {
                  const personValue = getData(subAssign.person_field_name);
                  if (!personValue) return null;
                  return (

@@ -53,14 +53,15 @@ export function estimateWeeklyOptimalScale(serviceData) {
         units += 1.5 + (songCount * 1.1);
       }
 
-      // 4. Sub-assignments
-      if (seg.sub_assignments) {
-        seg.sub_assignments.forEach(sub => {
-          if (seg.data?.[sub.person_field_name]) units += 1.1;
+      // 4. Sub-assignments (Legacy JSON or Entity ui_sub_assignments)
+      const subAssignments = seg.sub_assignments || seg.ui_sub_assignments;
+      if (subAssignments) {
+        subAssignments.forEach(sub => {
+          if (seg.data?.[sub.person_field_name] || seg[sub.person_field_name]) units += 1.1;
         });
       }
       // Legacy ministry fallback
-      if (!seg.sub_assignments?.length && seg.data?.ministry_leader) units += 1.1;
+      if (!subAssignments?.length && seg.data?.ministry_leader) units += 1.1;
 
       // 5. Message Box (Title + Verse)
       const messageTitle = seg.data?.title || seg.data?.messageTitle;
@@ -456,12 +457,13 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
     }
 
     // DIVERGENCE (per PDF_SYNC_PROTOCOL.md): Sub-assignments are WEEKLY-ONLY (legacy DB structure)
-    // Weekly services use structured seg.sub_assignments[] records with backwards-compatibility
+    // Weekly services use structured seg.sub_assignments[] (or ui_sub_assignments) records with backwards-compatibility
     // Custom services use flat seg.sub_asignaciones[] array (new feature)
     // Do NOT apply custom sub_asignaciones logic here; use this pattern for weekly services only
-    if (seg.sub_assignments) {
-      seg.sub_assignments.forEach(sub => {
-        const val = seg.data?.[sub.person_field_name];
+    const subAssignments = seg.sub_assignments || seg.ui_sub_assignments;
+    if (subAssignments) {
+      subAssignments.forEach(sub => {
+        const val = seg.data?.[sub.person_field_name] || seg[sub.person_field_name];
         if (val) {
           items.push({
             text: [
@@ -476,7 +478,7 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
     }
 
     // Legacy Ministry Leader Fallback
-    if (!seg.sub_assignments?.length && seg.data?.ministry_leader) {
+    if (!subAssignments?.length && seg.data?.ministry_leader) {
       items.push({
         text: [
           { text: 'Ministración: ', bold: true, fontSize: 9.5 * scale },
