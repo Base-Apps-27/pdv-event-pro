@@ -714,36 +714,41 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
   return items;
 }
 
-function buildReceso(serviceData, scale) {
-  // Dynamic: render a receso block for each non-last slot that has break notes
-  const pdfSlots = serviceData._slotNames || ["9:30am", "11:30am"];
+/**
+ * Render receso notes for transitions WITHIN a page chunk.
+ * Only shows receso for consecutive slot pairs that appear on the same page.
+ * (e.g., if chunk = [slot0, slot1], shows receso between slot0→slot1 if they are adjacent globally)
+ */
+function buildRecesoForChunk(serviceData, chunk, allSlots, scale) {
   const blocks = [];
 
-  pdfSlots.slice(0, -1).forEach((slotName, idx) => {
+  chunk.slice(0, -1).forEach((slotName) => {
     const recesoNote = serviceData.receso_notes?.[slotName];
     if (!recesoNote) return;
 
-    const label = pdfSlots.length > 2
-      ? `RECESO (${slotName} → ${pdfSlots[idx + 1]})  `
+    const nextIdx = allSlots.indexOf(slotName) + 1;
+    const nextSlot = allSlots[nextIdx];
+    if (!nextSlot) return;
+
+    const label = allSlots.length > 2
+      ? `RECESO (${slotName} → ${nextSlot})  `
       : 'RECESO  ';
 
-    blocks.push({
-      stack: [
-        {
-          canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 1, lineColor: BRAND.LIGHT_GRAY }],
-          margin: [0, 10, 0, 10]
-        },
-        {
-          text: [
-            { text: label, bold: true, color: BRAND.BLACK },
-            { text: `(${recesoNote})`, italics: true, color: BRAND.GRAY, fontSize: 9 * scale }
-          ],
-          alignment: 'center',
-          fontSize: 11 * scale
-        }
-      ]
-    });
+    blocks.push(
+      {
+        canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 1, lineColor: BRAND.LIGHT_GRAY }],
+        margin: [0, 10, 0, 10]
+      },
+      {
+        text: [
+          { text: label, bold: true, color: BRAND.BLACK },
+          { text: `(${recesoNote})`, italics: true, color: BRAND.GRAY, fontSize: 9 * scale }
+        ],
+        alignment: 'center',
+        fontSize: 11 * scale
+      }
+    );
   });
 
-  return blocks.length > 0 ? { stack: blocks.flatMap(b => b.stack) } : null;
+  return blocks.length > 0 ? { stack: blocks } : null;
 }
