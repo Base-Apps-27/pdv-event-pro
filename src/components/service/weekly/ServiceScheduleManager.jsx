@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { AlertTriangle, Plus, Trash2, Clock, Calendar, GripVertical } from "lucide-react";
 import { toast } from "sonner";
-import BlueprintManager from "./BlueprintManager";
+import BlueprintManagerModal from "./BlueprintManagerModal";
 // Universal log (2026-02-19): ServiceSchedule mutations now logged
 import { logCreate, logUpdate, logDelete } from "@/components/utils/editActionLogger";
 import { useCurrentUser } from "@/components/utils/useCurrentUser";
