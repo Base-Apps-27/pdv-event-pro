@@ -86,7 +86,7 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
       <p className="text-gray-400 text-sm mb-4">Fecha: {date}</p>
       {blueprintData ? (
         <p className="text-xs text-[#1F8A70] font-medium mb-4">
-          Se usará el blueprint: <span className="font-bold">{blueprintData.name}</span>
+          Se usará el blueprint: <span className="font-bold">{blueprintData.name || `Blueprint asignado`}</span>
           {' '}({(blueprintData.segments || []).length} segmentos)
         </p>
       ) : (
