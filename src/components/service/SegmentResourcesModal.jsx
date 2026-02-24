@@ -94,7 +94,7 @@ function ResourceCard({ title, subtitle, url, thumbnail, type, owner, icon, acti
         </div>
         <div className="flex-1 min-w-0">
           <h4 className="font-medium text-gray-900 text-sm leading-snug line-clamp-2">
-            {title || url}
+            {title || url || t('resources.title')}
           </h4>
           {(subtitle || owner) && (
             <p className="text-[11px] text-gray-500 mt-0.5 truncate">
@@ -105,11 +105,11 @@ function ResourceCard({ title, subtitle, url, thumbnail, type, owner, icon, acti
           )}
         </div>
         <Button size="sm" variant="outline" className="h-8 gap-1 shrink-0 text-xs">
-          <Play className="w-3 h-3" />
+          {action ? <BookOpen className="w-3 h-3" /> : <Play className="w-3 h-3" />}
           {getActionLabel()}
         </Button>
       </div>
-    </a>
+    </Wrapper>
   );
 }
 
