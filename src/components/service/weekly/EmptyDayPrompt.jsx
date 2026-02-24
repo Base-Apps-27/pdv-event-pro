@@ -19,6 +19,7 @@ const DAY_LABELS = {
 };
 
 export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintData, onServiceCreated }) {
+  // blueprintData: the resolved Service blueprint object (status='blueprint'), or null
   const [creating, setCreating] = useState(false);
   const dayLabel = DAY_LABELS[dayOfWeek] || dayOfWeek;
 
