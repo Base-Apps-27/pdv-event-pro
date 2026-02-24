@@ -93,13 +93,10 @@ export default function WeeklyServiceManager() {
   const [printSettingsPage2, setPrintSettingsPage2] = useState(null);
   const [selectedAnnouncements, setSelectedAnnouncements] = useState([]);
 
-  // ── Blueprint (shared) ──
-  const { data: blueprintData } = useQuery({
-    queryKey: ['serviceBlueprint'],
-    queryFn: async () => {
-      const blueprints = await base44.entities.Service.filter({ status: 'blueprint' });
-      return blueprints[0] || null;
-    },
+  // ── Blueprints ──
+  const { data: blueprints = [] } = useQuery({
+    queryKey: ['serviceBlueprintsList'],
+    queryFn: () => base44.entities.Service.filter({ status: 'blueprint' }),
     staleTime: Infinity,
   });
 
@@ -220,16 +217,19 @@ export default function WeeklyServiceManager() {
     return dates;
   }, [selectedDate]);
 
-  // Compute slot names per day
-  const daySlotsMap = useMemo(() => {
+  // Compute sessions per day
+  const daySessionsMap = useMemo(() => {
     const map = {};
     activeDays.forEach(day => {
       const slots = getTimeSlotsForDay(day.dayName);
-      map[day.key] = slots.map(s => s.name);
+      map[day.key] = slots;
     });
-    // Ensure Sunday always has slots (legacy fallback)
+    // Ensure Sunday always has sessions (legacy fallback)
     if (!map.sunday || map.sunday.length === 0) {
-      map.sunday = ["9:30am", "11:30am"];
+      map.sunday = [
+        { name: "9:30am", planned_start_time: "09:30", order: 1, color: "green" },
+        { name: "11:30am", planned_start_time: "11:30", order: 2, color: "blue" }
+      ];
     }
     return map;
   }, [activeDays, getTimeSlotsForDay]);
@@ -347,8 +347,8 @@ export default function WeeklyServiceManager() {
             <DayServiceEditor
               dayOfWeek={day.dayName}
               date={dayDates[day.key] || selectedDate}
-              slotNames={daySlotsMap[day.key] || ["9:30am"]}
-              blueprintData={blueprintData}
+              sessions={daySessionsMap[day.key] || []}
+              blueprints={blueprints}
               user={user}
               selectedAnnouncements={selectedAnnouncements}
               fixedAnnouncements={fixedAnnouncements}
@@ -404,7 +404,7 @@ export default function WeeklyServiceManager() {
         deleteAnnouncementMutation={deleteAnnouncementMutation}
         showResetConfirm={false} setShowResetConfirm={() => {}}
         executeResetToBlueprint={() => {}}
-        slotNames={daySlotsMap[activeDay] || ["9:30am"]}
+        slotNames={(daySessionsMap[activeDay] || []).map(s => s.name)}
         verseParserOpen={false} setVerseParserOpen={() => {}}
         verseParserContext={{}} handleSaveParsedVerses={() => {}}
         showPrintSettings={showPrintSettings} setShowPrintSettings={setShowPrintSettings}
