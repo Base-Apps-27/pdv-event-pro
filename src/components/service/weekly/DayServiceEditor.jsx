@@ -488,7 +488,7 @@ export default function DayServiceEditor({
                 size="sm"
                 onClick={() => setShowResetConfirm(true)}
                 className="border-amber-400 text-amber-700 hover:bg-amber-50 border font-semibold text-xs h-8 px-2"
-                title={`Restablecer a blueprint: ${resolvedBlueprint.name}`}
+                title="Restablecer estructura predeterminada"
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
@@ -499,7 +499,7 @@ export default function DayServiceEditor({
           {showResetConfirm && resolvedBlueprint && (
             <div className="bg-amber-50 border-2 border-amber-400 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-amber-800">¿Restablecer a blueprint "{resolvedBlueprint.name}"?</p>
+                <p className="text-sm font-semibold text-amber-800">¿Restablecer estructura predeterminada?</p>
                 <p className="text-xs text-amber-700 mt-0.5">El contenido ingresado se borrará.</p>
               </div>
               <div className="flex flex-wrap gap-2 sm:ml-4 shrink-0">
