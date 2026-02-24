@@ -233,21 +233,6 @@ export default function BlueprintEditor({ blueprintId }) {
         </div>
       )}
 
-      {/* Alert for new slots missing blueprint segments */}
-      {missingSlots.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-800 space-y-2">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>
-              {missingSlots.length === 1
-                ? `El slot "${missingSlots[0]}" es nuevo y no tiene segmentos predeterminados.`
-                : `Los slots ${missingSlots.map(s => `"${s}"`).join(', ')} son nuevos y no tienen segmentos predeterminados.`}
-            </span>
-          </div>
-          <p className="text-xs text-blue-600">Usa la pestaña correspondiente para copiar segmentos desde un slot existente o agregarlos manualmente.</p>
-        </div>
-      )}
-
       {slotNames.length > 0 && (
         <Tabs value={activeSlot} onValueChange={setActiveSlot}>
           <TabsList className="h-9 bg-gray-200">
