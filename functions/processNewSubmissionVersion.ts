@@ -118,6 +118,16 @@ function parseScriptureReferences(rawText) {
     if (!seenRefs.has(cleanRef)) {
       seenRefs.add(cleanRef);
       verses.push({ type: 'verse', content: formattedContent, original: cleanRef });
+    } else {
+      // If we've seen this reference before, check if we have a better formatted version
+      // e.g. English vs Spanish, or full book name vs abbreviation
+      // For now, we simply keep the first one encountered to avoid duplicates
+      // But if user explicitly provided two versions (EN/ES), we might want to capture both?
+      // Requirement: "recognize duplicates as some speakers may add both an English and Spanish version"
+      // Current behavior: The first one wins.
+      // To support explicit duplicates (EN/ES pair), we would need to check if the content differs significantly.
+      // However, our formatter normalizes them to "EN | ES" anyway.
+      // So deduplication by reference ID (Book Chapter:Verse) is correct behavior for our normalized output.
     }
   });
   return { type: verses.length > 0 ? 'verse_list' : 'empty', sections: verses };
@@ -151,16 +161,71 @@ Deno.serve(async (req) => {
             return Response.json({ message: 'Invalid submission data' });
         }
 
-        // Parse verses (Condition: Only if NOT slides only)
+        // PIPELINE 1: Parse verses (Synchronous Regex - Absolute Priority)
         let parsedData = { type: 'empty', sections: [] };
         let scriptureReferences = '';
         const isSlidesOnly = !!submission.content_is_slides_only;
 
-        if (!isSlidesOnly) {
-            parsedData = parseScriptureReferences(submission.content);
-            if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
-                scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
+        try {
+            if (!isSlidesOnly) {
+                parsedData = parseScriptureReferences(submission.content);
+                if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
+                    scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
+                }
             }
+        } catch (verseError) {
+            console.error(`[VERSE_PIPELINE_ERROR] Critical failure in verse parsing: ${verseError.message}`);
+            // Non-blocking for the rest of the function, but critical for the feature
+        }
+
+        // PIPELINE 2: Extract Key Takeaways (Async LLM - Best Effort)
+        // This runs AFTER verse extraction to ensure verses are prioritized.
+        // It does NOT block the update if it fails.
+        let keyTakeaways = [];
+        try {
+            if (!isSlidesOnly && submission.content && submission.content.length > 100) {
+                console.log(`[TAKEAWAYS_PIPELINE] Starting LLM extraction for submission ${submissionId}`);
+                
+                // Prompt engineering: Exhaustive extraction, no summarization of verses, only key points
+                const prompt = `
+Analyze the following text which is a sermon or message outline.
+Extract the "Key Takeaways" or "Main Points".
+These are usually the main headings, bullet points, or core actionable statements.
+Do NOT include bible verses in this list.
+Return ONLY a valid JSON array of strings.
+Example: ["Faith requires action", "Love your neighbor", "Pray without ceasing"]
+
+Text to analyze:
+${submission.content.substring(0, 15000)} 
+`;
+// Limit content length to avoid token limits, 15k chars is roughly 3-4k tokens
+
+                const llmResponse = await base44.integrations.Core.InvokeLLM({
+                    prompt: prompt,
+                    response_json_schema: {
+                        type: "object",
+                        properties: {
+                            takeaways: {
+                                type: "array",
+                                items: { type: "string" }
+                            }
+                        }
+                    }
+                });
+
+                if (llmResponse && llmResponse.takeaways && Array.isArray(llmResponse.takeaways)) {
+                    keyTakeaways = llmResponse.takeaways;
+                    console.log(`[TAKEAWAYS_PIPELINE] Extracted ${keyTakeaways.length} takeaways`);
+                }
+            }
+        } catch (llmError) {
+            console.error(`[TAKEAWAYS_PIPELINE_ERROR] LLM extraction failed: ${llmError.message}`);
+            // Silently fail - do not stop the function. Verses are absolute priority.
+        }
+
+        // Merge Takeaways into parsedData
+        if (keyTakeaways.length > 0) {
+            parsedData.key_takeaways = keyTakeaways;
         }
 
         const segmentId = submission.segment_id;

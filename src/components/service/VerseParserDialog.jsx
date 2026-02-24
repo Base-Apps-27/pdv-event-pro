@@ -102,8 +102,7 @@ function parseScriptureReferences(rawText) {
   // - Handles "S." prefix (S. Juan)
   // - Handles optional trailing dot in book name
   // - Handles en-dash (–), em-dash (—) and hyphen (-) for ranges
-  // - Version codes are now explicitly matched only if they are known patterns (NVI, RVR, NIV, ESV, etc.)
-  //   to avoid capturing regular Spanish words like "Pero", "Una", "Eso" that follow verses
+  // - EXHAUSTIVE MODE: Matches globally (/g) and case-insensitive (/i)
   const versePattern = /\b(([1-3]\s)?(?:S\.\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3}):(\d{1,3})([–—-](\d{1,3}))?(:(\d{1,3}))?/gi;
   
   const verses = [];
@@ -287,6 +286,30 @@ function VerseParserDialog({
     );
   };
 
+  // Render Key Takeaways if present
+  const renderKeyTakeaways = () => {
+    if (!parsedData || !parsedData.key_takeaways || parsedData.key_takeaways.length === 0) return null;
+
+    return (
+      <div className="mt-6 border-t pt-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="w-4 h-4 text-amber-500" />
+          <h4 className="font-bold text-sm text-gray-900">
+            {language === 'es' ? 'Puntos Clave (IA)' : 'Key Takeaways (AI)'}
+          </h4>
+        </div>
+        <div className="space-y-2">
+          {parsedData.key_takeaways.map((point, idx) => (
+            <div key={idx} className="flex items-start gap-2 p-2 bg-amber-50 rounded border border-amber-100 text-sm text-amber-900">
+              <span className="font-bold text-amber-600 select-none">•</span>
+              <span>{point}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] bg-white overflow-hidden flex flex-col">
@@ -332,6 +355,7 @@ function VerseParserDialog({
             <label className="text-sm font-semibold text-gray-900">{t.resultTitle}</label>
             <ScrollArea className="flex-1 border-2 border-gray-200 rounded-lg p-4 bg-gray-50 min-h-[200px]">
               {renderParsedContent()}
+              {renderKeyTakeaways()}
             </ScrollArea>
           </div>
         </div>
