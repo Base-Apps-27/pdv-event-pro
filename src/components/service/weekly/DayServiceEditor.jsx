@@ -99,6 +99,8 @@ export default function DayServiceEditor({
   });
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
+  const slotNames = useMemo(() => (sessions || []).map(s => s.name), [sessions]);
+
   // Integrity Check
   useEffect(() => {
     if (!serviceData || !serviceData._fromEntities) return;
@@ -119,8 +121,6 @@ export default function DayServiceEditor({
 
   // ── Entity Separation: per-field mutation hook ──
   const segmentMutation = useSegmentMutation();
-
-  const slotNames = (sessions || []).map(s => s.name);
 
   // Resolve blueprint for this day's schedule.
   // Priority: first session with a blueprint_id assigned → null.
