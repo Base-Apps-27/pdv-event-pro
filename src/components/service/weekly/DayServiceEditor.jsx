@@ -193,7 +193,7 @@ export default function DayServiceEditor({
 
   // ── Handlers ──
   const handlers = useWeeklyServiceHandlers({
-    serviceData: serviceDataRef.current || serviceData, setServiceData, selectedAnnouncements,
+    serviceData, setServiceData, selectedAnnouncements,
     updateAnnouncementMutation, fixedAnnouncements, dynamicAnnouncements,
     blueprintData: null,
     sessions,
