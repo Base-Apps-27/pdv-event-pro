@@ -22,7 +22,7 @@
  *   See SEGMENT_FIELD_MAP below for the full mapping.
  */
 
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 
 // ═══════════════════════════════════════════════════════════════
@@ -92,6 +92,19 @@ export function useSegmentMutation() {
   // (so flushPending can execute them immediately instead of dropping them).
   const timersRef = useRef({});
 
+  // ── Dirty tracking ──────────────────────────────────────────
+  // Tracks which segment entity IDs have pending (unsaved) writes.
+  // Only transitions (clean→dirty, dirty→clean) cause re-renders.
+  const [dirtyEntities, setDirtyEntities] = useState(new Set());
+
+  /** Extract segment entity ID from a timer key. Returns null for non-segment keys. */
+  const getSegmentEntityFromKey = (key) => {
+    const parts = key.split(':');
+    // seg:entityId:column or sub:parentEntityId:childIndex
+    if (parts[0] === 'seg' || parts[0] === 'sub') return parts[1];
+    return null;
+  };
+
   /**
    * Execute all pending debounced writes immediately (fire-and-forget).
    * Called on unmount, beforeunload, and navigation to prevent data loss.
@@ -112,12 +125,19 @@ export function useSegmentMutation() {
       }
     });
     timersRef.current = {};
+    setDirtyEntities(new Set());
   };
 
-  // Flush pending writes on unmount + beforeunload
+  // Flush pending writes on unmount + beforeunload (with warning dialog)
   useEffect(() => {
-    const handleBeforeUnload = () => {
+    const handleBeforeUnload = (e) => {
+      const hasPending = Object.keys(timersRef.current).length > 0;
       if (flushPendingRef.current) flushPendingRef.current();
+      if (hasPending) {
+        e.preventDefault();
+        e.returnValue = 'Tienes cambios sin guardar. ¿Seguro que quieres salir?';
+        return e.returnValue;
+      }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
@@ -138,12 +158,38 @@ export function useSegmentMutation() {
     if (existing?.timerId) {
       clearTimeout(existing.timerId);
     }
+
+    // Mark segment entity as dirty (only transitions cause re-renders)
+    const entityId = getSegmentEntityFromKey(key);
+    if (entityId) {
+      setDirtyEntities(prev => {
+        if (prev.has(entityId)) return prev; // already dirty, no re-render
+        const next = new Set(prev);
+        next.add(entityId);
+        return next;
+      });
+    }
+
     const timerId = setTimeout(async () => {
       delete timersRef.current[key];
       try {
         await writeFn();
       } catch (err) {
         console.error(`[useSegmentMutation] Write failed for ${key}:`, err.message);
+      }
+      // After write completes: if no more pending writes for this entity, mark clean
+      if (entityId) {
+        const hasMore = Object.keys(timersRef.current).some(
+          k => getSegmentEntityFromKey(k) === entityId
+        );
+        if (!hasMore) {
+          setDirtyEntities(prev => {
+            if (!prev.has(entityId)) return prev;
+            const next = new Set(prev);
+            next.delete(entityId);
+            return next;
+          });
+        }
       }
     }, 300);
     timersRef.current[key] = { timerId, writeFn };
@@ -159,7 +205,10 @@ export function useSegmentMutation() {
    * @param {*} value - The new value
    */
   const mutateSegmentField = useCallback((entityId, field, value) => {
-    if (!entityId) return; // No entity yet — skip (blob pipeline will handle)
+    if (!entityId) {
+      console.warn(`[useSegmentMutation] mutateSegmentField skipped: no entityId for field "${field}"`);
+      return;
+    }
 
     const column = SEGMENT_FIELD_MAP[field] || field;
     const key = `seg:${entityId}:${column}`;
@@ -179,7 +228,7 @@ export function useSegmentMutation() {
    * @param {Array} songs - Array of { title, lead, key }
    */
   const mutateSongs = useCallback((entityId, songs) => {
-    if (!entityId) return;
+    if (!entityId) { console.warn('[useSegmentMutation] mutateSongs skipped: no entityId'); return; }
 
     const key = `seg:${entityId}:songs`;
 
@@ -211,7 +260,7 @@ export function useSegmentMutation() {
    * @param {number} durationMin - The new duration in minutes
    */
   const mutateDuration = useCallback((entityId, durationMin) => {
-    if (!entityId) return;
+    if (!entityId) { console.warn('[useSegmentMutation] mutateDuration skipped: no entityId'); return; }
 
     const key = `seg:${entityId}:duration`;
 
@@ -230,7 +279,7 @@ export function useSegmentMutation() {
    * @param {string} value - The new value
    */
   const mutateTeam = useCallback((sessionId, field, value) => {
-    if (!sessionId) return;
+    if (!sessionId) { console.warn(`[useSegmentMutation] mutateTeam skipped: no sessionId for field "${field}"`); return; }
 
     const column = TEAM_FIELD_MAP[field] || field;
     const key = `sess:${sessionId}:${column}`;
@@ -250,7 +299,7 @@ export function useSegmentMutation() {
    * @param {string} value - The new general_notes value
    */
   const mutatePreServiceNotes = useCallback((sessionId, value) => {
-    if (!sessionId) return;
+    if (!sessionId) { console.warn('[useSegmentMutation] mutatePreServiceNotes skipped: no sessionId'); return; }
 
     const key = `psd:${sessionId}:general_notes`;
 
@@ -281,7 +330,7 @@ export function useSegmentMutation() {
    * @param {object} recesoNotes - The full receso_notes object
    */
   const mutateRecesoNotes = useCallback((serviceId, recesoNotes) => {
-    if (!serviceId) return;
+    if (!serviceId) { console.warn('[useSegmentMutation] mutateRecesoNotes skipped: no serviceId'); return; }
 
     const key = `svc:${serviceId}:receso_notes`;
 
@@ -305,7 +354,10 @@ export function useSegmentMutation() {
    * @param {string} value - The presenter name
    */
   const mutateSubAssignment = useCallback((parentEntityId, sessionId, serviceId, childIndex, subConfig, value) => {
-    if (!parentEntityId || !sessionId) return;
+    if (!parentEntityId || !sessionId) {
+      console.warn(`[useSegmentMutation] mutateSubAssignment skipped: parentEntityId=${parentEntityId}, sessionId=${sessionId}`);
+      return;
+    }
 
     const key = `sub:${parentEntityId}:${childIndex}`;
 
@@ -408,6 +460,49 @@ export function useSegmentMutation() {
     if (flushPendingRef.current) flushPendingRef.current();
   }, []);
 
+  /**
+   * Flush all pending writes for a specific segment entity.
+   * Used by the per-segment Save button — immediately executes pending writes
+   * and marks the entity clean only after writes complete (DB-confirmed).
+   *
+   * @param {string|number} entityId - The Segment entity ID
+   * @returns {Promise<void>}
+   */
+  const flushEntity = useCallback(async (entityId) => {
+    if (!entityId) return;
+    const eid = String(entityId);
+    const entries = timersRef.current;
+    const keys = Object.keys(entries).filter(k => getSegmentEntityFromKey(k) === eid);
+    if (keys.length === 0) return;
+
+    const writes = keys.map(key => {
+      const entry = entries[key];
+      if (entry?.timerId) clearTimeout(entry.timerId);
+      delete timersRef.current[key];
+      if (entry?.writeFn) {
+        try { return entry.writeFn(); } catch (err) {
+          console.error(`[useSegmentMutation] flushEntity write failed for ${key}:`, err.message);
+          return Promise.resolve();
+        }
+      }
+      return Promise.resolve();
+    });
+
+    try {
+      await Promise.all(writes);
+    } catch (err) {
+      console.error(`[useSegmentMutation] flushEntity ${eid} failed:`, err.message);
+    }
+
+    // Mark clean after DB writes complete
+    setDirtyEntities(prev => {
+      if (!prev.has(eid)) return prev;
+      const next = new Set(prev);
+      next.delete(eid);
+      return next;
+    });
+  }, []);
+
   return {
     // Per-field debounced writes
     mutateSegmentField,
@@ -427,5 +522,9 @@ export function useSegmentMutation() {
 
     // Lifecycle
     flushPending,
+    flushEntity,
+
+    // Dirty tracking (for per-segment Save button)
+    dirtyEntities,
   };
 }

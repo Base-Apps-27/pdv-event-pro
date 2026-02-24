@@ -122,7 +122,9 @@ export default function DayServiceEditor({
   }, [sessions, blueprints]);
 
   // ── Service query: find existing service for this day + date ──
-  const { data: existingData, isLoading } = useQuery({
+  // isFetching is needed to prevent initialization during background refetches
+  // (e.g., after EmptyDayPrompt creates entities and invalidates the query).
+  const { data: existingData, isLoading, isFetching } = useQuery({
     queryKey: ['dayService', date, dayOfWeek],
     queryFn: async () => {
       const services = await base44.entities.Service.filter({ date });
@@ -212,7 +214,11 @@ export default function DayServiceEditor({
 
   useEffect(() => {
     if (localStateInitializedRef.current) return;
-    if (isLoading) return;
+    // Guard: don't initialize during fetches. isLoading = initial load,
+    // isFetching = background refetch (e.g., after EmptyDayPrompt invalidation).
+    // Without isFetching, the effect runs with stale existingData=null during
+    // refetch, locks localStateInitializedRef, and blocks real initialization.
+    if (isLoading || isFetching) return;
 
     if (existingData) {
       // Merge with blueprint for fields/sub_assignments (same logic as original)
@@ -339,7 +345,7 @@ export default function DayServiceEditor({
       setServiceData(null);
       localStateInitializedRef.current = true;
     }
-  }, [existingData, date, dayOfWeek, isLoading, slotNames, sessions, blueprints]);
+  }, [existingData, date, dayOfWeek, isLoading, isFetching, slotNames, sessions, blueprints]);
 
   // ── External change subscription ──
   useEffect(() => {
@@ -421,11 +427,26 @@ export default function DayServiceEditor({
   }, [serviceData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, date, dayOfWeek]);
 
   // Flush pending blob saves on unmount to prevent data loss when changing tabs/pages
+  // Also warn user on tab close/refresh if there's a pending metadata save
   useEffect(() => {
-    return () => {
+    const handleBeforeUnload = (e) => {
       if (pendingSaveRef.current) {
         base44.entities.Service.update(
-          pendingSaveRef.current.serviceId, 
+          pendingSaveRef.current.serviceId,
+          pendingSaveRef.current.metadata
+        ).catch(err => console.error("beforeunload blob save failed:", err));
+        pendingSaveRef.current = null;
+        e.preventDefault();
+        e.returnValue = 'Tienes cambios sin guardar. ¿Seguro que quieres salir?';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (pendingSaveRef.current) {
+        base44.entities.Service.update(
+          pendingSaveRef.current.serviceId,
           pendingSaveRef.current.metadata
         ).catch(err => console.error("Unmount blob save failed:", err));
       }
@@ -451,7 +472,12 @@ export default function DayServiceEditor({
         blueprintData={resolvedBlueprint}
         onServiceCreated={() => {
           localStateInitializedRef.current = false;
-          queryClient.invalidateQueries({ queryKey: ['dayService', date, dayOfWeek] });
+          // Force a full refetch — the query has staleTime: Infinity, so we need
+          // to explicitly invalidate. refetchType: 'all' ensures active queries refetch.
+          queryClient.invalidateQueries({
+            queryKey: ['dayService', date, dayOfWeek],
+            refetchType: 'all',
+          });
         }}
       />
     );
@@ -475,6 +501,8 @@ export default function DayServiceEditor({
           setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
         },
         mutateSubAssignment: segmentMutation.mutateSubAssignment,
+        dirtyEntities: segmentMutation.dirtyEntities,
+        flushEntity: segmentMutation.flushEntity,
       }}>
         <div className="space-y-4">
           {/* External change banner */}

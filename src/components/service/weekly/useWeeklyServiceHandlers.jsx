@@ -50,7 +50,12 @@ export function useWeeklyServiceHandlers({
   const firstSlot = slotNames[0];
 
   // Update handlers: state mutation + entity write.
+  // Entity writes for the primary field are handled by input components.
+  // Auto-propagation entity writes are collected and fired OUTSIDE the
+  // state updater to avoid the React 18 strict-mode double-invocation issue.
   const updateSegmentField = (service, segmentIndex, field, value) => {
+    const propagationWrites = [];
+
     setServiceData(prev => {
       const newServiceArray = [...(prev[service] || [])];
       if (!newServiceArray[segmentIndex]) return prev;
@@ -72,9 +77,9 @@ export function useWeeklyServiceHandlers({
       if (field === 'translator' && newSegment.type === 'worship') {
         updated[service] = updated[service].map((seg, idx) => {
           if (idx !== segmentIndex && seg.default_translator_source === 'worship_segment_translator' && !seg.data?.translator) {
-            // Entity write: propagate translator to auto-fill segments
-            if (segmentMutation && seg._entityId) {
-              segmentMutation.mutateSegmentField(seg._entityId, 'translator', value);
+            // Collect entity writes to run after state updater returns
+            if (seg._entityId) {
+              propagationWrites.push(seg._entityId);
             }
             return { ...seg, data: { ...seg.data, translator: value } };
           }
@@ -84,15 +89,18 @@ export function useWeeklyServiceHandlers({
 
       return updated;
     });
+
+    // Fire auto-propagation entity writes outside the state updater
+    if (segmentMutation && propagationWrites.length > 0) {
+      propagationWrites.forEach(entityId => {
+        segmentMutation.mutateSegmentField(entityId, 'translator', value);
+      });
+    }
   };
 
   const updateTeamField = (field, service, value) => {
+    // State-only: entity write is handled by TeamInput via UpdatersContext.mutateTeam
     setServiceData(prev => {
-      // Entity write: team field update
-      const sessionId = prev?._sessionIds?.[service];
-      if (segmentMutation && sessionId) {
-        segmentMutation.mutateTeam(sessionId, field, value);
-      }
       return { ...prev, [field]: { ...prev[field], [service]: value } };
     });
   };
@@ -116,22 +124,28 @@ export function useWeeklyServiceHandlers({
 
   const handleSaveParsedVerses = (data) => {
     const { timeSlot, segmentIdx } = verseParserContext;
+    let entityIdForWrite = null;
 
     setServiceData(prev => {
       const updated = { ...prev };
       const seg = updated[timeSlot][segmentIdx];
       const currentVerse = seg.data?.verse || "";
-      updated[timeSlot][segmentIdx].data = {
-        ...seg.data,
-        verse: currentVerse,
-        parsed_verse_data: data.parsed_data
+      updated[timeSlot][segmentIdx] = {
+        ...seg,
+        data: {
+          ...seg.data,
+          verse: currentVerse,
+          parsed_verse_data: data.parsed_data
+        }
       };
-      // Entity write: parsed verse data
-      if (segmentMutation && seg._entityId) {
-        segmentMutation.mutateSegmentField(seg._entityId, 'parsed_verse_data', data.parsed_data);
-      }
+      entityIdForWrite = seg._entityId;
       return updated;
     });
+
+    // Entity write: parsed verse data (outside state updater)
+    if (segmentMutation && entityIdForWrite) {
+      segmentMutation.mutateSegmentField(entityIdForWrite, 'parsed_verse_data', data.parsed_data);
+    }
 
     setVerseParserOpen(false);
     setVerseParserContext({ timeSlot: null, segmentIdx: null });
@@ -490,6 +504,8 @@ export function useWeeklyServiceHandlers({
         nextState[slotName] = createdSegments;
       }
 
+      // Mark as entity-backed so metadata save doesn't redundantly write segments to blob
+      nextState._fromEntities = true;
       setServiceData(nextState);
 
       const resetLabel = targetSlots.length < slotNames.length
