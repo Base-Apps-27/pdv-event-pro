@@ -106,11 +106,32 @@ export default function BlueprintManagerModal({ open, onClose }) {
           <div className="space-y-4 mt-2">
             <div className="flex justify-between items-center">
               <p className="text-sm text-gray-500">Administra las plantillas que puedes asignar a tus sesiones</p>
-              <Button onClick={handleCreate} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} className="hover:opacity-90">
-                <Plus className="w-4 h-4 mr-2" />
-                Nuevo Blueprint
-              </Button>
+              {!showCreateForm && (
+                <Button onClick={() => setShowCreateForm(true)} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} className="hover:opacity-90">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nuevo Blueprint
+                </Button>
+              )}
             </div>
+
+            {showCreateForm && (
+              <div className="flex gap-2 items-center bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <Input
+                  autoFocus
+                  value={newBlueprintName}
+                  onChange={(e) => setNewBlueprintName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') { setShowCreateForm(false); setNewBlueprintName(""); } }}
+                  placeholder="Ej. Culto de Jóvenes"
+                  className="flex-1"
+                />
+                <Button size="sm" onClick={handleCreate} disabled={!newBlueprintName.trim() || createMutation.isPending} style={{ backgroundColor: '#1F8A70', color: '#fff' }}>
+                  <Check className="w-4 h-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { setShowCreateForm(false); setNewBlueprintName(""); }}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
 
             {isLoading ? (
               <p className="text-gray-400 text-center py-6">Cargando...</p>
