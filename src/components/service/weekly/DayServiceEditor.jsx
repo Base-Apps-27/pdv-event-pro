@@ -184,7 +184,6 @@ export default function DayServiceEditor({
       return { ...service, _fromEntities: true };
     },
     enabled: !!date,
-    staleTime: Infinity,
   });
 
   // ── Metadata save mutation ──
@@ -229,11 +228,26 @@ export default function DayServiceEditor({
   useEffect(() => { localStateInitializedRef.current = false; }, [date, dayOfWeek]);
 
   useEffect(() => {
-    if (localStateInitializedRef.current) return;
-    // Guard: don't initialize during fetches. isLoading = initial load,
-    // isFetching = background refetch (e.g., after EmptyDayPrompt invalidation).
-    // Without isFetching, the effect runs with stale existingData=null during
-    // refetch, locks localStateInitializedRef, and blocks real initialization.
+    // Phase 6: Stale Read Fix (2026-02-24)
+    // We allow re-initialization if 'existingData' is newer than 'serviceData'.
+    // This happens when navigating back to the page — React Query might return stale data first,
+    // then fetch fresh data. We must update the local state when the fresh data arrives.
+    //
+    // However, if the user is actively typing (ownSaveInProgressRef or just active editing),
+    // we should be careful. But typically 'existingData' only updates on refetch or mutation success.
+    
+    const needsInit = !localStateInitializedRef.current;
+    
+    const serverIsNewer = existingData?.updated_date && serviceData?.updated_date && 
+      new Date(existingData.updated_date) > new Date(serviceData.updated_date);
+      
+    // If we have no local data, or server is explicitly newer, or we haven't initialized yet...
+    const shouldSync = needsInit || serverIsNewer;
+
+    if (!shouldSync) return;
+
+    // Guard: don't initialize during fetches IF we have nothing yet.
+    // If we have stale data, we might want to wait for fresh.
     if (isLoading || isFetching) return;
 
     if (existingData) {
