@@ -65,14 +65,78 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
       // blueprintData is the full Service blueprint object (status='blueprint').
       // Use the canonical `segments` array — no slot keys, segments apply to all sessions.
       const bpSegments = blueprintData?.segments || [];
-      slotNames.forEach(name => {
-        servicePayload[name] = cloneSegments(bpSegments);
-      });
+      
+      // Create Service entity first
+      const createdService = await base44.entities.Service.create(servicePayload);
 
-      const created = await base44.entities.Service.create(servicePayload);
-      toast.success(`Servicio para ${dayLabel} creado`);
-      onServiceCreated?.(created);
+      // HYDRATION: Create Session and Segment entities immediately
+      // This ensures useSegmentMutation has IDs to write to.
+      for (const slotName of slotNames) {
+        // 1. Create Session
+        const session = await base44.entities.Session.create({
+          service_id: createdService.id,
+          name: slotName,
+          date: date,
+          order: slotNames.indexOf(slotName) + 1
+        });
+
+        // 2. Create Segments for this session
+        const segmentsToCreate = cloneSegments(bpSegments);
+        for (let i = 0; i < segmentsToCreate.length; i++) {
+          const segData = segmentsToCreate[i];
+          
+          // Enum normalization for segment_type
+          const typeMap = {
+            'worship': 'Alabanza', 'alabanza': 'Alabanza',
+            'welcome': 'Bienvenida', 'bienvenida': 'Bienvenida',
+            'offering': 'Ofrenda', 'ofrenda': 'Ofrenda',
+            'message': 'Plenaria', 'plenaria': 'Plenaria',
+            'video': 'Video',
+            'anuncio': 'Anuncio',
+            'dinamica': 'Dinámica',
+            'break': 'Break',
+            'techonly': 'TechOnly',
+            'prayer': 'Oración', 'oracion': 'Oración',
+            'special': 'Especial', 'especial': 'Especial',
+            'closing': 'Cierre', 'cierre': 'Cierre',
+            'ministry': 'Ministración', 'ministracion': 'Ministración',
+            'mc': 'MC', 'artes': 'Artes', 'breakout': 'Breakout', 'panel': 'Panel', 'receso': 'Receso', 'almuerzo': 'Almuerzo'
+          };
+          let resolvedType = "Especial";
+          if (segData.type) {
+             resolvedType = typeMap[segData.type.toLowerCase()] || segData.type;
+          }
+
+          const entityPayload = {
+            session_id: session.id,
+            service_id: createdService.id,
+            order: i + 1,
+            title: segData.title || "Untitled",
+            segment_type: resolvedType,
+            duration_min: Number(segData.duration) || 0,
+            show_in_general: true,
+            ui_fields: Array.isArray(segData.fields) ? segData.fields : [],
+            ui_sub_assignments: Array.isArray(segData.sub_assignments) ? segData.sub_assignments.map(sa => ({
+              label: sa.label || "Untitled",
+              person_field_name: sa.person_field_name || "",
+              duration_min: Number(sa.duration_min || sa.duration) || 0
+            })) : [],
+            requires_translation: !!segData.requires_translation,
+            default_translator_source: segData.default_translator_source || "manual",
+          };
+          
+          if (segData.number_of_songs !== undefined) {
+             entityPayload.number_of_songs = Number(segData.number_of_songs) || 0;
+          }
+          
+          await base44.entities.Segment.create(entityPayload);
+        }
+      }
+
+      toast.success(`Servicio para ${dayLabel} creado con estructura completa`);
+      onServiceCreated?.(createdService);
     } catch (err) {
+      console.error("Error creating service:", err);
       toast.error("Error al crear servicio: " + err.message);
     } finally {
       setCreating(false);
