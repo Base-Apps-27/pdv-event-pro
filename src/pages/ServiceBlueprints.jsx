@@ -7,6 +7,8 @@ import React from "react";
 import { useLanguage } from "@/components/utils/i18n";
 import ServiceScheduleManager from "@/components/service/weekly/ServiceScheduleManager";
 
+import BlueprintManager from "@/components/service/weekly/BlueprintManager";
+
 export default function ServiceBlueprints() {
   const { language } = useLanguage();
   return (
@@ -18,13 +20,16 @@ export default function ServiceBlueprints() {
           </h1>
           <p className="text-white/90">
             {language === 'es'
-              ? 'Configura los días, horarios y sesiones de tus servicios recurrentes'
-              : 'Configure days, schedules, and sessions for your recurring services'}
+              ? 'Configura los días, horarios y plantillas de tus servicios recurrentes'
+              : 'Configure days, schedules, and templates for your recurring services'}
           </p>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-12">
         <ServiceScheduleManager />
+        <div className="border-t border-gray-300 pt-8">
+          <BlueprintManager />
+        </div>
       </div>
     </div>
   );

@@ -47,6 +47,11 @@ export default function ServiceScheduleManager() {
     queryFn: () => base44.entities.ServiceSchedule.list('day_of_week'),
   });
 
+  const { data: blueprints = [] } = useQuery({
+    queryKey: ['serviceBlueprintsList'],
+    queryFn: () => base44.entities.Service.filter({ status: 'blueprint' }),
+  });
+
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (data.id) {
@@ -201,10 +206,7 @@ export default function ServiceScheduleManager() {
         </div>
       )}
 
-      {/* Blueprint Editor — same admin surface */}
-      <div className="border-t pt-6 mt-6">
-        <BlueprintEditor />
-      </div>
+      {/* Blueprint Editor removed — now handled by BlueprintManager in the parent page */}
 
       {/* Edit/Create Dialog */}
       <Dialog open={showDialog} onOpenChange={(open) => { if (!open) { setShowDialog(false); setEditingSchedule(null); } }}>
@@ -239,6 +241,24 @@ export default function ServiceScheduleManager() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Blueprint */}
+              <div className="space-y-1">
+                <Label>Blueprint Base (Plantilla)</Label>
+                <Select
+                  value={editingSchedule.blueprint_id || "default"}
+                  onValueChange={(val) => setEditingSchedule(prev => ({ ...prev, blueprint_id: val === "default" ? null : val }))}
+                >
+                  <SelectTrigger><SelectValue placeholder="Usar blueprint principal" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Automático (Principal/Fallback)</SelectItem>
+                    {blueprints.map(bp => (
+                      <SelectItem key={bp.id} value={bp.id}>{bp.name || 'Sin nombre'}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">Los servicios generados de este horario clonarán esta plantilla.</p>
               </div>
 
               {/* Active toggle */}

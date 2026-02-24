@@ -22,57 +22,36 @@ import { toast } from "sonner";
 import BlueprintSegmentEditor from "./BlueprintSegmentEditor";
 import { useServiceSchedules } from "./useServiceSchedules";
 
-export default function BlueprintEditor() {
+export default function BlueprintEditor({ blueprintId }) {
   const queryClient = useQueryClient();
 
   const { data: blueprint, isLoading } = useQuery({
-    queryKey: ['serviceBlueprint'],
+    queryKey: ['serviceBlueprint', blueprintId],
     queryFn: async () => {
-      const blueprints = await base44.entities.Service.filter({ status: 'blueprint' });
-      return blueprints[0] || null;
+      if (!blueprintId) return null;
+      return await base44.entities.Service.get(blueprintId);
     },
+    enabled: !!blueprintId
   });
 
   // Local editing state — deep clone of blueprint slot data
   const [slots, setSlots] = useState({});
   const [dirty, setDirty] = useState(false);
 
-  // Recurring Services Refactor (2026-02-23): Pull slot names from ALL active schedules
-  // BlueprintEditor shows segments for all configured days, not just Sunday.
-  const { getTimeSlotsForDay, getActiveDays } = useServiceSchedules();
-  const activeDays = useMemo(() => getActiveDays(), [getActiveDays]);
-  // For now, derive slot names from Sunday schedule (blueprint is shared)
-  // Future: per-day blueprints via ServiceSchedule.blueprint_id
-  const scheduledSlotNames = useMemo(() => {
-    // Collect all slots from ALL active days
-    const allSlots = new Set();
-    for (const day of activeDays) {
-      const slots = getTimeSlotsForDay(day).map(s => s.name);
-      slots.forEach(s => allSlots.add(s));
-    }
-    return Array.from(allSlots);
-  }, [getTimeSlotsForDay, activeDays]);
-
-  // Discover slot names: union of blueprint keys + scheduled slots
-  // This ensures new slots appear in the editor even if the blueprint doesn't have them yet.
+  // Discover slot names directly from the blueprint + local unsaved slots
   const slotNames = useMemo(() => {
-    if (!blueprint) return scheduledSlotNames.length > 0 ? scheduledSlotNames : [];
+    if (!blueprint) return [];
     const blueprintKeys = Object.keys(blueprint).filter(key => {
       const val = blueprint[key];
-      return Array.isArray(val) && val.length > 0 && typeof val[0] === 'object' && val[0].type;
+      // Include any array (even empty ones) except metadata arrays
+      return Array.isArray(val) && !['segments', 'selected_announcements', 'actions'].includes(key);
     });
-    const merged = new Set([...blueprintKeys, ...scheduledSlotNames]);
+    const localKeys = Object.keys(slots).filter(key => !['segments', 'selected_announcements', 'actions'].includes(key));
+    const merged = new Set([...blueprintKeys, ...localKeys]);
     return Array.from(merged).sort();
-  }, [blueprint, scheduledSlotNames]);
+  }, [blueprint, slots]);
 
-  // Track which slots are missing from the DB blueprint (need seeding)
-  const missingSlots = useMemo(() => {
-    if (!blueprint) return [];
-    return slotNames.filter(name => {
-      const val = blueprint[name];
-      return !Array.isArray(val) || val.length === 0;
-    });
-  }, [blueprint, slotNames]);
+  const missingSlots = []; // No longer tracking schedule mismatches here
 
   const [activeSlot, setActiveSlot] = useState("");
 
