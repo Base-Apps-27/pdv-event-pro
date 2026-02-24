@@ -32,7 +32,7 @@ import { hasPermission } from "@/components/utils/permissions";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Users, Loader2, Download, Eye } from "lucide-react";
+import { RefreshCw, Users, Loader2, Download, Eye, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
 import { useNavigate } from "react-router-dom";
