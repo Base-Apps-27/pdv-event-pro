@@ -368,7 +368,7 @@ export function useWeeklyServiceHandlers({
       });
 
       // We'll build the new state here
-      let nextState = { ...serviceDataRef.current }; // Use ref to get latest
+      let nextState = { ...serviceData }; // Use latest from closure
       const targetSlots = (slotsToReset && slotsToReset.length > 0) ? slotsToReset : slotNames;
       
       // Ensure Service exists (sanity check, DayServiceEditor should have handled it)
