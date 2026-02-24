@@ -84,24 +84,15 @@ export default function ServiceProgramView({
   };
 
   // ═══════════════════════════════════════════════════════════════════
-  // ENTITY LIFT: Determine data source — entities vs JSON fallback
+  // ENTITY LIFT: STRICT ENTITY MODE
   // ═══════════════════════════════════════════════════════════════════
-  // Entity path: sessions[] + allSegments[] from Session/Segment entities.
-  // Segments MUST have session_id linking them to a real Session entity.
-  // FIX (2026-02-19): Raw JSON fallback segments (from targetProgram.segments)
-  // also appear in allSegments but lack session_id. We must distinguish:
-  //   - Entity segments: have session_id matching a real session.id
-  //   - JSON fallback segments: have no session_id or synthetic ones like "slot-X-Y"
-  const useEntityPath = useMemo(() => {
-    if (sessions.length === 0 || allSegments.length === 0) return false;
-    // Verify at least one segment actually links to a real session
-    const sessionIds = new Set(sessions.map(s => s.id));
-    return allSegments.some(seg => sessionIds.has(seg.session_id));
-  }, [sessions, allSegments]);
+  // We now rely 100% on Session/Segment entities.
+  // Legacy JSON path is removed. 
+  const useEntityPath = true;
 
   // ── Entity-sourced: group segments by session for slot rendering ──
   const entitySessionSlots = useMemo(() => {
-    if (!useEntityPath) return [];
+    // STRICT ENTITY MODE
     return sessions
       .slice()
       .sort((a, b) => (a.order || 0) - (b.order || 0))
@@ -118,32 +109,19 @@ export default function ServiceProgramView({
         };
       })
       .filter(slot => slot.segments.length > 0);
-  }, [useEntityPath, sessions, allSegments]);
+  }, [sessions, allSegments]);
 
-  // ── Detect service type from entity or JSON data ──
+  // ── Detect service type from entity data ──
   const isCustomService = useMemo(() => {
-    if (useEntityPath) {
-      // Entity path: check if any session name DOESN'T match time-slot pattern
-      // Weekly sessions have names like "9:30am", "11:30am"
-      // Custom sessions have descriptive names
-      return entitySessionSlots.length > 0 &&
-        entitySessionSlots.every(slot => !/^\d+:\d+[ap]m$/i.test(slot.name));
-    }
-    // JSON fallback: check for segments array
-    return actualServiceData?.segments && actualServiceData.segments.length > 0;
-  }, [useEntityPath, entitySessionSlots, actualServiceData]);
+    // Entity path: check if any session name DOESN'T match time-slot pattern
+    // Weekly sessions have names like "9:30am", "11:30am"
+    // Custom sessions have descriptive names
+    return entitySessionSlots.length > 0 &&
+      entitySessionSlots.every(slot => !/^\d+:\d+[ap]m$/i.test(slot.name));
+  }, [entitySessionSlots]);
 
-  // ── JSON fallback: Discover dynamic slot keys from service data ──
-  const jsonSlotKeys = useMemo(() => {
-    if (useEntityPath || !actualServiceData) return [];
-    return Object.keys(actualServiceData)
-      .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(actualServiceData[k]) && actualServiceData[k].length > 0)
-      .sort((a, b) => {
-        const pa = parseSlotName(a);
-        const pb = parseSlotName(b);
-        return (pa?.totalMinutes || 0) - (pb?.totalMinutes || 0);
-      });
-  }, [useEntityPath, actualServiceData]);
+  // ── JSON fallback: DISABLED ──
+  const jsonSlotKeys = useMemo(() => [], []);
 
   // ── Apply live time adjustments ──
   const adjustedAllSegments = useMemo(() => {
@@ -212,7 +190,7 @@ export default function ServiceProgramView({
 
   // ── Entity path: build adjusted slot data for weekly rendering ──
   const adjustedEntitySlots = useMemo(() => {
-    if (!useEntityPath || isCustomService) return [];
+    if (isCustomService) return [];
     return entitySessionSlots.map(slot => {
       const adjustment = liveAdjustments.find(a => a.time_slot === slot.name);
       const offset = adjustment?.offset_minutes || 0;
@@ -223,25 +201,10 @@ export default function ServiceProgramView({
       }));
       return { ...slot, segments: adjustedSegs, adjustment };
     });
-  }, [useEntityPath, isCustomService, entitySessionSlots, liveAdjustments]);
+  }, [isCustomService, entitySessionSlots, liveAdjustments]);
 
-  // ── JSON fallback: apply time adjustments to slot arrays ──
-  const adjustedJsonSlots = useMemo(() => {
-    if (useEntityPath || !actualServiceData) return {};
-    const result = {};
-    jsonSlotKeys.forEach(slotKey => {
-      const segs = actualServiceData[slotKey];
-      if (!segs) return;
-      const adjustment = liveAdjustments.find(a => a.time_slot === slotKey);
-      const offset = adjustment?.offset_minutes || 0;
-      result[slotKey] = offset === 0 ? segs : segs.map(seg => ({
-        ...seg,
-        start_time: addMinutesToTime(seg.start_time, offset),
-        end_time: addMinutesToTime(seg.end_time, offset)
-      }));
-    });
-    return result;
-  }, [useEntityPath, actualServiceData, jsonSlotKeys, liveAdjustments]);
+  // ── JSON fallback: DISABLED ──
+  const adjustedJsonSlots = useMemo(() => ({}), []);
 
   // ═══════════════════════════════════════════════════════════════════
   // EMPTY STATE
@@ -256,10 +219,9 @@ export default function ServiceProgramView({
   }
 
   const hasEntityWeeklySlots = adjustedEntitySlots.length > 0;
-  const hasJsonWeeklySlots = jsonSlotKeys.length > 0;
   const hasCustomSegments = isCustomService && adjustedAllSegments.length > 0;
 
-  if (!hasEntityWeeklySlots && !hasJsonWeeklySlots && !hasCustomSegments) {
+  if (!hasEntityWeeklySlots && !hasCustomSegments) {
     return (
       <div className="p-12 text-center bg-white rounded-2xl border border-gray-200 shadow-sm">
         <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -368,19 +330,10 @@ export default function ServiceProgramView({
 
   // ═══════════════════════════════════════════════════════════════════
   // WEEKLY SERVICE RENDERING
-  // Entity-first: render from sessions + segments entities
-  // JSON fallback: render from actualServiceData["9:30am"][] etc.
+  // STRICT ENTITY MODE: Render ONLY from entity slots.
   // ═══════════════════════════════════════════════════════════════════
 
-  // Choose slot source: entity or JSON
-  const weeklySlots = hasEntityWeeklySlots ? adjustedEntitySlots : jsonSlotKeys.map((slotKey, idx) => ({
-    sessionId: `json-${slotKey}`,
-    name: slotKey,
-    session: null,
-    segments: adjustedJsonSlots[slotKey] || [],
-    colorIdx: idx,
-    adjustment: liveAdjustments.find(a => a.time_slot === slotKey),
-  }));
+  const weeklySlots = adjustedEntitySlots;
 
   return (
     <div className="space-y-6">
@@ -475,21 +428,11 @@ export default function ServiceProgramView({
                   return <h3 className={`text-2xl font-bold uppercase mb-1 ${colors.text}`}>{parsed?.display || slot.name}</h3>;
                 })()}
 
-                {/* Pre-service notes (JSON path only — entity path uses PreSessionDetails) */}
-                {preServiceNotes && (
-                  <div className="bg-black border-l-4 border-yellow-400 p-2 mt-2 rounded-r">
-                    <p className="text-sm text-white font-bold whitespace-pre-wrap line-clamp-3">
-                      {preServiceNotes}
-                    </p>
-                  </div>
-                )}
+                {/* Pre-service notes — entity path uses PreSessionDetails which are rendered in StickyOpsDeck. 
+                    JSON fallback notes are REMOVED. */}
 
-                {/* Team info — entity path reads from Session, JSON path reads from Service */}
-                {sessionTeamInfo ? (
-                  <SessionTeamInfoRow teamInfo={sessionTeamInfo} />
-                ) : (
-                  <TeamInfoRow serviceData={actualServiceData} slotKey={slot.name} />
-                )}
+                {/* Team info — entity path ONLY */}
+                {sessionTeamInfo && <SessionTeamInfoRow teamInfo={sessionTeamInfo} />}
               </div>
 
               {/* Timeline-style Segments */}
