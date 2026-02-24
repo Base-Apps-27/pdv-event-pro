@@ -140,62 +140,93 @@ export async function generateWeeklyProgramPDF(serviceData) {
 
   const logoDataUrl = await getLogoDataUrl();
 
+  // Chunk slots into pages of 2 per page.
+  // Page 1: slots[0], slots[1]
+  // Page 2: slots[2], slots[3]
+  // etc.
+  const pdfSlots = serviceData._slotNames || ["9:30am", "11:30am"];
+  const SLOT_COLORS = [BRAND.RED, BRAND.BLUE, BRAND.TEAL, '#9333EA', '#EA580C', '#0891B2'];
+  const SLOTS_PER_PAGE = 2;
+
+  // Build page chunks: [[slot0, slot1], [slot2, slot3], ...]
+  const slotChunks = [];
+  for (let i = 0; i < pdfSlots.length; i += SLOTS_PER_PAGE) {
+    slotChunks.push(pdfSlots.slice(i, i + SLOTS_PER_PAGE));
+  }
+
+  // Build content blocks for each page chunk
+  const contentBlocks = [];
+
+  slotChunks.forEach((chunk, pageIdx) => {
+    // Page break before every page after the first
+    if (pageIdx > 0) {
+      contentBlocks.push({ text: '', pageBreak: 'before' });
+    }
+
+    // Header on every page
+    contentBlocks.push(buildHeader(serviceData, logoDataUrl, globalScale));
+
+    // Team info only on page 1
+    if (pageIdx === 0) {
+      contentBlocks.push(buildWeeklyTeamInfo(serviceData, globalScale));
+    }
+
+    // Divider
+    contentBlocks.push({
+      canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 2, lineColor: BRAND.GREEN }],
+      margin: [0, 0, 0, 12]
+    });
+
+    // Two-column layout for this chunk
+    const columns = [];
+    chunk.forEach((slotName, colIdx) => {
+      const globalSlotIdx = pageIdx * SLOTS_PER_PAGE + colIdx;
+      if (colIdx > 0) columns.push({ width: 24, text: '' }); // gutter
+      columns.push({
+        width: '*',
+        stack: [
+          {
+            text: slotName.replace('am', ' A.M.').replace('pm', ' P.M.').toUpperCase(),
+            fontSize: 14 * globalScale,
+            bold: true,
+            color: SLOT_COLORS[globalSlotIdx % SLOT_COLORS.length],
+            margin: [0, 0, 0, 8]
+          },
+          ...buildWeeklySegments(
+            serviceData[slotName],
+            slotName,
+            globalScale,
+            serviceData.pre_service_notes?.[slotName],
+            SLOT_COLORS[globalSlotIdx % SLOT_COLORS.length]
+          )
+        ]
+      });
+    });
+    contentBlocks.push({ columns });
+
+    // Receso for slots that land on this page chunk (between consecutive slots only)
+    const recesoBlocks = buildRecesoForChunk(serviceData, chunk, pdfSlots, globalScale);
+    if (recesoBlocks) contentBlocks.push(recesoBlocks);
+  });
+
   const docDefinition = {
     pageSize: 'LETTER',
     pageMargins: [24, 36, 24, 40],
 
-    // Brand Header Bar
+    // Brand header bar on every page
     background: function(currentPage, pageSize) {
-      if (currentPage === 1) {
-        return {
-          canvas: [
-            {
-              type: 'rect',
-              x: 0, y: 0, w: pageSize.width, h: 12,
-              linearGradient: [BRAND.TEAL, BRAND.GREEN, BRAND.LIME]
-            }
-          ]
-        };
-      }
-      return null;
+      return {
+        canvas: [
+          {
+            type: 'rect',
+            x: 0, y: 0, w: pageSize.width, h: 12,
+            linearGradient: [BRAND.TEAL, BRAND.GREEN, BRAND.LIME]
+          }
+        ]
+      };
     },
 
-    content: [
-      // Header
-      buildHeader(serviceData, logoDataUrl, globalScale),
-      
-      // Team Info
-      buildWeeklyTeamInfo(serviceData, globalScale),
-
-      // Divider
-      { 
-        canvas: [{ 
-          type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 2, lineColor: BRAND.GREEN 
-        }], 
-        margin: [0, 0, 0, 12] 
-      },
-
-      // Entity Lift: Dynamic column generation from slot names
-      (() => {
-        const pdfSlots = serviceData._slotNames || ["9:30am", "11:30am"];
-        const SLOT_COLORS = [BRAND.RED, BRAND.BLUE, BRAND.TEAL, '#9333EA']; // color per column
-        const columns = [];
-        pdfSlots.forEach((slotName, idx) => {
-          if (idx > 0) columns.push({ width: 24, text: '' }); // Gutter
-          columns.push({
-            width: '*',
-            stack: [
-              { text: slotName.replace('am', ' A.M.').replace('pm', ' P.M.').toUpperCase(), fontSize: 14 * globalScale, bold: true, color: SLOT_COLORS[idx % SLOT_COLORS.length], margin: [0, 0, 0, 8] },
-              ...buildWeeklySegments(serviceData[slotName], slotName, globalScale, serviceData.pre_service_notes?.[slotName], SLOT_COLORS[idx % SLOT_COLORS.length])
-            ]
-          });
-        });
-        return { columns };
-      })(),
-
-      // Receso (Bottom)
-      buildReceso(serviceData, globalScale)
-    ],
+    content: contentBlocks,
 
     footer: (currentPage, pageCount) => ({
       stack: [
