@@ -98,77 +98,32 @@ export const normalizeServiceTeams = (rawService) => {
 /**
  * Accessor helper to safely get a value from a segment
  * 
- * IMPORTANT: Services and Events store data differently:
- * - Weekly Services: Structural fields (title, type, duration) are at ROOT
- *   Content fields (preacher, leader, message_title) are in data object
- * - Events (Segment entity): Most fields at root, some in data
- * 
- * PRIORITY LOGIC:
- * - Structural fields (title, type, duration): Check ROOT first, then data
- * - Content fields: Check DATA first, then root
- * This prevents data.title (message title) from overwriting segment.title (block name)
+ * NOTE (2026-02-24 Entity Lift Purge): Legacy `data` sub-object fallbacks
+ * have been removed. All data is now securely at the root level of the Segment entity.
  */
 export const getSegmentData = (segment, field) => {
   if (!segment) return "";
-  
-  // Structural fields - these define the segment's identity, stored at root in weekly services
-  const structuralFields = ['title', 'type', 'duration', 'start_time', 'end_time', 'order'];
-  
-  if (structuralFields.includes(field)) {
-    // Check root first for structural fields
-    if (segment[field] !== undefined && segment[field] !== null) {
-      return segment[field];
-    }
-    // Fallback to data (for custom services that might store differently)
-    if (segment.data && segment.data[field] !== undefined && segment.data[field] !== null) {
-      return segment.data[field];
-    }
-    return "";
-  }
-  
-  // Content fields - user-entered data, stored in data object for weekly services
-  // Check data object first
-  if (segment.data && segment.data[field] !== undefined && segment.data[field] !== null) {
-    return segment.data[field];
-  }
-  
-  // Fallback to root (Entity segments and some weekly service fields like translator_name)
   if (segment[field] !== undefined && segment[field] !== null) {
     return segment[field];
   }
-  
   return "";
 };
 
 /**
- * Normalizes songs from various formats (array of objects or flat fields)
+ * Normalizes songs from flat Segment entity fields
  * Returns array of { title, lead, key }
  */
 export const getNormalizedSongs = (segment) => {
   if (!segment) return [];
 
-  // 1. Check data.songs (Canonical)
-  if (segment.data?.songs && Array.isArray(segment.data.songs) && segment.data.songs.length > 0) {
-    return segment.data.songs;
-  }
-
-  // 2. Check root songs (Legacy Array)
-  if (segment.songs && Array.isArray(segment.songs) && segment.songs.length > 0) {
-    return segment.songs;
-  }
-
-  // 3. Check flat fields (Legacy or Entity format)
-  // We check both data and root for flat fields
   const songs = [];
-  const getField = (f) => segment.data?.[f] || segment[f];
-  
   for (let i = 1; i <= 6; i++) {
-    const title = getField(`song_${i}_title`);
+    const title = segment[`song_${i}_title`];
     if (title) {
       songs.push({
         title,
-        lead: getField(`song_${i}_lead`),
-        key: getField(`song_${i}_key`)
+        lead: segment[`song_${i}_lead`],
+        key: segment[`song_${i}_key`]
       });
     }
   }
