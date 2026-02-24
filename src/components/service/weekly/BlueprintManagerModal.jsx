@@ -50,8 +50,10 @@ export default function BlueprintManagerModal({ open, onClose }) {
   });
 
   const handleCreate = () => {
-    const name = window.prompt("Nombre del Blueprint (ej. Culto de Jóvenes):");
-    if (name) createMutation.mutate(name);
+    if (!newBlueprintName.trim()) return;
+    createMutation.mutate(newBlueprintName.trim());
+    setNewBlueprintName("");
+    setShowCreateForm(false);
   };
 
   const handleRename = async (bp) => {
