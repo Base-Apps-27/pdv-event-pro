@@ -276,6 +276,9 @@ export default function BlueprintEditor({ blueprintId }) {
                 </TabsTrigger>
               );
             })}
+            <Button variant="ghost" size="sm" onClick={addSlotTab} className="ml-2 h-7 text-xs text-gray-600 hover:text-gray-900 mt-1">
+              <Plus className="w-3 h-3 mr-1" /> Nueva Variante
+            </Button>
           </TabsList>
 
           {slotNames.map(slotName => {
