@@ -246,23 +246,7 @@ export default function ServiceScheduleManager() {
                 </Select>
               </div>
 
-              {/* Blueprint */}
-              <div className="space-y-1">
-                <Label>Blueprint Base (Plantilla)</Label>
-                <Select
-                  value={editingSchedule.blueprint_id || "default"}
-                  onValueChange={(val) => setEditingSchedule(prev => ({ ...prev, blueprint_id: val === "default" ? null : val }))}
-                >
-                  <SelectTrigger><SelectValue placeholder="Usar blueprint principal" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="default">Automático (Principal/Fallback)</SelectItem>
-                    {blueprints.map(bp => (
-                      <SelectItem key={bp.id} value={bp.id}>{bp.name || 'Sin nombre'}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500 mt-1">Los servicios generados de este horario clonarán esta plantilla.</p>
-              </div>
+
 
               {/* Active toggle */}
               <div className="flex items-center gap-3">
@@ -319,6 +303,23 @@ export default function ServiceScheduleManager() {
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         )}
+                      </div>
+                      
+                      {/* Session Blueprint Assignment */}
+                      <div className="flex items-center gap-2 mt-2 ml-7">
+                        <Label className="text-xs text-gray-500">Plantilla:</Label>
+                        <Select
+                          value={session.blueprint_id || "default"}
+                          onValueChange={(val) => updateSession(idx, 'blueprint_id', val === "default" ? null : val)}
+                        >
+                          <SelectTrigger className="h-7 text-xs w-full"><SelectValue placeholder="Seleccionar Plantilla..." /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="default">Ninguna (Automático)</SelectItem>
+                            {blueprints.map(bp => (
+                              <SelectItem key={bp.id} value={bp.id}>{bp.name || 'Sin nombre'}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </CardContent>
                   </Card>
