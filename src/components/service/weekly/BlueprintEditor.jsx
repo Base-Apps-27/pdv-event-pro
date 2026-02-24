@@ -136,6 +136,15 @@ export default function BlueprintEditor({ blueprintId }) {
     setDirty(true);
   };
 
+  const addSlotTab = () => {
+    const name = window.prompt("Nombre de la variación de horario (ej. Principal, 7:00pm):");
+    if (name && !slots[name]) {
+      setSlots(prev => ({ ...prev, [name]: [] }));
+      setActiveSlot(name);
+      setDirty(true);
+    }
+  };
+
   const addSegment = (slotName) => {
     setSlots(prev => {
       const updated = { ...prev };
