@@ -56,8 +56,8 @@ const DAY_LABELS = {
 export default function DayServiceEditor({
   dayOfWeek,
   date,
-  slotNames,
-  blueprintData,
+  sessions,
+  blueprints,
   user,
   // Shared state/callbacks from parent
   selectedAnnouncements,
@@ -105,23 +105,11 @@ export default function DayServiceEditor({
   // ── Entity Separation: per-field mutation hook ──
   const segmentMutation = useSegmentMutation();
 
-  // ── Blueprint query (per-day via blueprint_id or shared) ──
-  const { data: dayBlueprintData } = useQuery({
-    queryKey: ['serviceBlueprint', dayOfWeek],
-    queryFn: async () => {
-      // First: try the shared blueprint (status='blueprint')
-      const blueprints = await base44.entities.Service.filter({ status: 'blueprint' });
-      return blueprints[0] || null;
-    },
-    staleTime: Infinity,
-  });
-
-  // Use day-specific blueprint if available, else shared
-  const effectiveBlueprint = blueprintData || dayBlueprintData;
+  const slotNames = (sessions || []).map(s => s.name);
 
   // ── Service query: find existing service for this day + date ──
   const { data: existingData, isLoading } = useQuery({
-    queryKey: ['dayService', date, dayOfWeek, !!effectiveBlueprint],
+    queryKey: ['dayService', date, dayOfWeek],
     queryFn: async () => {
       const services = await base44.entities.Service.filter({ date });
       if (!services || services.length === 0) return null;
@@ -163,7 +151,7 @@ export default function DayServiceEditor({
 
       return service;
     },
-    enabled: !!date && !!effectiveBlueprint,
+    enabled: !!date,
     staleTime: Infinity,
   });
 
