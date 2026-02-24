@@ -420,29 +420,15 @@ Deno.serve(async (req) => {
             return Response.json(responsePayload);
 
         } else {
-            // It's a Service
-            // Services might have segments in two ways:
-            // 1. Linked Sessions (if service.event_id is set or it acts like an event)
-            // 2. Embedded JSON `segments` field (legacy/simple)
-
-            // FIX (2026-02-18 v2): Use a flag to track whether entity segments were resolved.
-            // Previous approach used else-if chain which prevented JSON fallback from executing
-            // after sessions were reset to []. Now: fetch entity segments first, and if none found,
-            // let execution continue to the JSON fallback branches below (no else-if gating).
-            let entitySegmentsResolved = false;
-
-            // Check if it's linked to an event (some services are just pointers to events)
+            // It's a Service (Strict Entity Mode)
+            // JSON fallbacks have been removed as Entity Lift is complete.
+            
             if (targetProgram.event_id) {
-                const linkedSessions = await withRetry(() => base44.asServiceRole.entities.Session.filter({ event_id: targetProgram.event_id }, undefined, undefined, undefined, dataEnv));
-                 sessions = linkedSessions;
-            } 
-            // Also check for sessions linked directly to this service ID
-            else {
-                 const directSessions = await withRetry(() => base44.asServiceRole.entities.Session.filter({ service_id: targetProgram.id }, undefined, undefined, undefined, dataEnv));
-                 if (directSessions.length > 0) sessions.push(...directSessions);
+                sessions = await withRetry(() => base44.asServiceRole.entities.Session.filter({ event_id: targetProgram.event_id }, undefined, undefined, undefined, dataEnv));
+            } else {
+                 sessions = await withRetry(() => base44.asServiceRole.entities.Session.filter({ service_id: targetProgram.id }, undefined, undefined, undefined, dataEnv));
             }
 
-            // Fetch segments from found sessions (sequential with retry)
             if (sessions.length > 0) {
                  sessions.sort((a, b) => (a.order || 0) - (b.order || 0));
 
@@ -453,260 +439,78 @@ Deno.serve(async (req) => {
                      allResults.push(...segs);
                  }
 
-                 if (allResults.length === 0) {
-                     // Pre-Entity-Lift service: Session exists but no Segment entities.
-                     // Reset sessions so frontend uses JSON fallback. Mark as unresolved.
-                     console.log('[getPublicProgramData] Sessions exist but no entity segments found, resetting sessions for JSON fallback');
-                     sessions = [];
-                     entitySegmentsResolved = false;
-                 } else {
-                     entitySegmentsResolved = true;
+                 if (allResults.length > 0) {
+                     // A. Sort by session order, then segment order (matching event path)
+                     const sessionOrderMap = new Map(sessions.map((s, i) => [s.id, i]));
+                     
+                     const childByParent = groupBy(
+                         allResults.filter(s => s.parent_segment_id),
+                         s => s.parent_segment_id
+                     );
 
-                 // A. Sort by session order, then segment order (matching event path)
-                 const sessionOrderMap = new Map(sessions.map((s, i) => [s.id, i]));
-                 
-                 const childByParent = groupBy(
-                     allResults.filter(s => s.parent_segment_id),
-                     s => s.parent_segment_id
-                 );
+                     segments = allResults
+                         .filter(s => s.show_in_general !== false && !s.parent_segment_id)
+                         .map(seg => ({
+                             ...seg,
+                             _resolved_sub_assignments: resolveChildrenAsSubAssignments(childByParent[seg.id])
+                         }))
+                         .sort((a, b) => {
+                             const aSessionIdx = sessionOrderMap.get(a.session_id) ?? 999;
+                             const bSessionIdx = sessionOrderMap.get(b.session_id) ?? 999;
+                             if (aSessionIdx !== bSessionIdx) return aSessionIdx - bSessionIdx;
+                             return (a.order || 0) - (b.order || 0);
+                         });
 
-                 segments = allResults
-                     // CHILD SEGMENT FILTER (2026-02-21): Exclude sub-segments (parent_segment_id set).
-                     // These are internal sub-assignments (e.g. Ministración within Alabanza) and
-                     // must NOT appear as top-level timeline entries.
-                     .filter(s => s.show_in_general !== false && !s.parent_segment_id)
-                     .map(seg => ({
-                         ...seg,
-                         _resolved_sub_assignments: resolveChildrenAsSubAssignments(childByParent[seg.id])
-                     }))
-                     .sort((a, b) => {
-                         const aSessionIdx = sessionOrderMap.get(a.session_id) ?? 999;
-                         const bSessionIdx = sessionOrderMap.get(b.session_id) ?? 999;
-                         if (aSessionIdx !== bSessionIdx) return aSessionIdx - bSessionIdx;
-                         return (a.order || 0) - (b.order || 0);
-                     });
+                     // B. Inject break segment between service sessions if there's a time gap
+                     if (sessions.length >= 2) {
+                         const enrichedSegments = [];
+                         for (let sIdx = 0; sIdx < sessions.length; sIdx++) {
+                             const currentSession = sessions[sIdx];
+                             const currentSessionSegments = segments.filter(seg => seg.session_id === currentSession.id);
+                             enrichedSegments.push(...currentSessionSegments);
 
-                 // B. Inject break segment between service sessions if there's a time gap
-                 if (sessions.length >= 2) {
-                     const enrichedSegments = [];
-                     for (let sIdx = 0; sIdx < sessions.length; sIdx++) {
-                         const currentSession = sessions[sIdx];
-                         const currentSessionSegments = segments.filter(seg => seg.session_id === currentSession.id);
-                         enrichedSegments.push(...currentSessionSegments);
+                             if (sIdx < sessions.length - 1) {
+                                 const nextSession = sessions[sIdx + 1];
+                                 const nextSessionSegments = segments.filter(seg => seg.session_id === nextSession.id);
 
-                         // Check for gap between this session and the next
-                         if (sIdx < sessions.length - 1) {
-                             const nextSession = sessions[sIdx + 1];
-                             const nextSessionSegments = segments.filter(seg => seg.session_id === nextSession.id);
+                                 if (currentSessionSegments.length > 0 && nextSessionSegments.length > 0) {
+                                     const lastSeg = currentSessionSegments[currentSessionSegments.length - 1];
+                                     const firstNextSeg = nextSessionSegments[0];
 
-                             if (currentSessionSegments.length > 0 && nextSessionSegments.length > 0) {
-                                 const lastSeg = currentSessionSegments[currentSessionSegments.length - 1];
-                                 const firstNextSeg = nextSessionSegments[0];
+                                     if (lastSeg.end_time && firstNextSeg.start_time && lastSeg.end_time < firstNextSeg.start_time) {
+                                         const [endH, endM] = lastSeg.end_time.split(':').map(Number);
+                                         const [startH, startM] = firstNextSeg.start_time.split(':').map(Number);
+                                         const diffMin = (startH * 60 + startM) - (endH * 60 + endM);
 
-                                 if (lastSeg.end_time && firstNextSeg.start_time && lastSeg.end_time < firstNextSeg.start_time) {
-                                     const [endH, endM] = lastSeg.end_time.split(':').map(Number);
-                                     const [startH, startM] = firstNextSeg.start_time.split(':').map(Number);
-                                     const diffMin = (startH * 60 + startM) - (endH * 60 + endM);
+                                         if (diffMin > 0) {
+                                             const recesoKey = currentSession.name || sessions[0]?.name || "9:30am";
+                                             const notes = targetProgram.receso_notes?.[recesoKey]
+                                                 || (targetProgram.receso_notes ? Object.values(targetProgram.receso_notes)[0] : "")
+                                                 || "";
 
-                                     if (diffMin > 0) {
-                                         // Use current session's name as the receso_notes key (dynamic slot support)
-                                         // receso_notes is keyed by the FIRST slot name (e.g. "9:30am"), not the break time
-                                         const recesoKey = currentSession.name || sessions[0]?.name || "9:30am";
-                                         const notes = targetProgram.receso_notes?.[recesoKey]
-                                             || (targetProgram.receso_notes ? Object.values(targetProgram.receso_notes)[0] : "")
-                                             || "";
-
-                                         enrichedSegments.push({
-                                             id: 'generated-break-inter-service',
-                                             start_time: lastSeg.end_time,
-                                             end_time: firstNextSeg.start_time,
-                                             duration_min: diffMin,
-                                             title: 'Receso',
-                                             segment_type: 'Receso',
-                                             session_id: 'slot-break',
-                                             description: notes,
-                                             presenter: notes ? 'Coordinador' : '',
-                                             actions: [
-                                                 {
-                                                     id: 'break-reset',
-                                                     label: 'STAGE RESET',
-                                                     department: 'Stage & Decor',
-                                                     timing: 'after_start',
-                                                     offset_min: 0,
-                                                     order: 1
-                                                 },
-                                                 {
-                                                     id: 'break-sound',
-                                                     label: 'AUDIO CHECK',
-                                                     department: 'Sound',
-                                                     timing: 'after_start',
-                                                     offset_min: 10,
-                                                     order: 2
-                                                 }
-                                             ]
-                                         });
+                                             enrichedSegments.push({
+                                                 id: 'generated-break-inter-service',
+                                                 start_time: lastSeg.end_time,
+                                                 end_time: firstNextSeg.start_time,
+                                                 duration_min: diffMin,
+                                                 title: 'Receso',
+                                                 segment_type: 'Receso',
+                                                 session_id: 'slot-break',
+                                                 description: notes,
+                                                 presenter: notes ? 'Coordinador' : '',
+                                                 actions: [
+                                                     { id: 'break-reset', label: 'STAGE RESET', department: 'Stage & Decor', timing: 'after_start', offset_min: 0, order: 1 },
+                                                     { id: 'break-sound', label: 'AUDIO CHECK', department: 'Sound', timing: 'after_start', offset_min: 10, order: 2 }
+                                                 ]
+                                             });
+                                         }
                                      }
                                  }
                              }
                          }
+                         segments = enrichedSegments;
                      }
-                     segments = enrichedSegments;
                  }
-            } // end: allResults.length > 0 branch
-            }
-            // FIX (2026-02-18 v2): Changed from else-if to if(!entitySegmentsResolved).
-            // When sessions exist but have no entity segments, sessions is reset to []
-            // but the else-if chain would skip these branches. Using a flag ensures
-            // JSON fallback branches execute for pre-Entity-Lift services.
-            // Fallback: Embedded Segments (Custom Services)
-            if (!entitySegmentsResolved && targetProgram.segments && Array.isArray(targetProgram.segments) && targetProgram.segments.length > 0) {
-                // FIX (2026-02-19): Calculate start_time/end_time for custom service JSON segments.
-                // Raw JSON segments from Service.segments[] lack timing fields. The TV display
-                // (PublicCountdownDisplay) and normalizeProgram both require start_time/end_time
-                // to function. Use service.time first, then fall back to the linked session's
-                // planned_start_time (e.g. GRADUACIÓN DE ACADEMIA has no time but Session has 19:30),
-                // then default to "19:00".
-                const linkedSessionStartTime = sessions?.[0]?.planned_start_time || null;
-                const serviceStartTime = targetProgram.time || linkedSessionStartTime || "19:00";
-                const [baseH, baseM] = serviceStartTime.split(':').map(Number);
-                let curMin = baseH * 60 + baseM;
-
-                segments = targetProgram.segments.map((seg, idx) => {
-                    const startMin = curMin;
-                    const dur = seg.duration || 0;
-                    curMin += dur;
-                    const sH = Math.floor(startMin / 60);
-                    const sM = startMin % 60;
-                    const eH = Math.floor(curMin / 60);
-                    const eM = curMin % 60;
-                    return {
-                        ...seg,
-                        id: seg.id || seg._uiId || `custom-seg-${idx}`,
-                        start_time: `${String(sH).padStart(2,'0')}:${String(sM).padStart(2,'0')}`,
-                        end_time: `${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`,
-                        duration_min: dur,
-                        segment_type: seg.type || seg.segment_type || 'Especial',
-                        title: seg.title || seg.data?.title || 'Sin título',
-                        presenter: seg.presenter || seg.data?.presenter || seg.data?.leader || '',
-                        leader: seg.leader || seg.data?.leader || '',
-                        preacher: seg.preacher || seg.data?.preacher || '',
-                    };
-                });
-            }
-            // Fallback: Standard Weekly Service Time Slots (dynamic slot detection)
-            // BUG FIX (2026-02-21): Replaced hardcoded "9:30am"/"11:30am" with dynamic
-            // slot key detection. Handles any ServiceSchedule-configured slot names.
-            else if (!entitySegmentsResolved && Object.keys(targetProgram).some(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(targetProgram[k]) && targetProgram[k].length > 0)) {
-                const processSlot = (slotSegments, startHour, startMin, slotKey) => {
-                    if (!Array.isArray(slotSegments)) return [];
-                    let currentMinutes = startHour * 60 + startMin;
-                    return slotSegments.map((seg, idx) => {
-                        const h = Math.floor(currentMinutes / 60);
-                        const m = currentMinutes % 60;
-                        const startTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-                        const dur = seg.duration || 0;
-                        currentMinutes += dur;
-                        const endH = Math.floor(currentMinutes / 60);
-                        const endM = currentMinutes % 60;
-                        const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
-                        return {
-                            ...seg,
-                            id: seg.id || `generated-${startHour}-${idx}`,
-                            start_time: startTime,
-                            end_time: endTime,
-                            duration_min: dur,
-                            title: seg.title || seg.data?.title || 'Untitled',
-                            presenter: seg.presenter || seg.data?.presenter || '',
-                            leader: seg.leader || seg.data?.leader || '',
-                            preacher: seg.preacher || seg.data?.preacher || '',
-                            segment_type: seg.type || 'Generic',
-                            session_id: `slot-${startHour}-${startMin}`,
-                        };
-                    });
-                };
-
-                // Discover and sort all time-slot keys chronologically
-                const slotKeys = Object.keys(targetProgram)
-                    .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(targetProgram[k]) && targetProgram[k].length > 0)
-                    .sort((a, b) => {
-                        const parseSlot = (s) => {
-                            const mm = s.match(/^(\d+):(\d+)(am|pm)$/i);
-                            if (!mm) return 0;
-                            let h = parseInt(mm[1]);
-                            if (mm[3].toLowerCase() === 'pm' && h < 12) h += 12;
-                            if (mm[3].toLowerCase() === 'am' && h === 12) h = 0;
-                            return h * 60 + parseInt(mm[2]);
-                        };
-                        return parseSlot(a) - parseSlot(b);
-                    });
-
-                const allSlotSegs = slotKeys.map(slotKey => {
-                    const mm = slotKey.match(/^(\d+):(\d+)(am|pm)$/i);
-                    if (!mm) return { slotKey, segs: [], h: 0, m: 0 };
-                    let h = parseInt(mm[1]);
-                    const m = parseInt(mm[2]);
-                    if (mm[3].toLowerCase() === 'pm' && h < 12) h += 12;
-                    if (mm[3].toLowerCase() === 'am' && h === 12) h = 0;
-                    return { slotKey, segs: processSlot(targetProgram[slotKey], h, m, slotKey), h, m };
-                });
-
-                segments = [];
-                for (let i = 0; i < allSlotSegs.length; i++) {
-                    segments.push(...allSlotSegs[i].segs);
-                    if (i < allSlotSegs.length - 1) {
-                        const curr = allSlotSegs[i];
-                        const next = allSlotSegs[i + 1];
-                        if (curr.segs.length > 0 && next.segs.length > 0) {
-                            const lastSeg = curr.segs[curr.segs.length - 1];
-                            const firstNextSeg = next.segs[0];
-                            if (lastSeg.end_time < firstNextSeg.start_time) {
-                                const [endH, endM] = lastSeg.end_time.split(':').map(Number);
-                                const [startH, startM] = firstNextSeg.start_time.split(':').map(Number);
-                                const diffMin = (startH * 60 + startM) - (endH * 60 + endM);
-                                if (diffMin > 0) {
-                                    // receso_notes keyed by the FIRST slot name (matches weeklySessionSync write path)
-                                    const notes = targetProgram.receso_notes?.[curr.slotKey]
-                                        || (targetProgram.receso_notes ? Object.values(targetProgram.receso_notes)[0] : "")
-                                        || "";
-                                    segments.push({
-                                        id: `generated-break-inter-service`,
-                                        start_time: lastSeg.end_time,
-                                        end_time: firstNextSeg.start_time,
-                                        duration_min: diffMin,
-                                        title: 'Receso',
-                                        segment_type: 'Receso',
-                                        session_id: 'slot-break',
-                                        description: notes,
-                                        presenter: notes ? 'Coordinador' : '',
-                                        actions: [
-                                            { id: 'break-reset', label: 'STAGE RESET', department: 'Stage & Decor', timing: 'after_start', offset_min: 0, order: 1 },
-                                            { id: 'break-sound', label: 'AUDIO CHECK', department: 'Sound', timing: 'after_start', offset_min: 10, order: 2 },
-                                        ],
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Inject pre_service_notes (dynamic slot keys — BUG FIX 2026-02-21)
-                if (targetProgram.pre_service_notes && sessions.length === 0) {
-                    allSlotSegs.forEach(({ slotKey, h, m }) => {
-                        const notes = targetProgram.pre_service_notes[slotKey];
-                        if (!notes) return;
-                        const slotSessionId = `slot-${h}-${m}`;
-                        const slotSegments = segments.filter(s => s.session_id === slotSessionId);
-                        if (slotSegments.length === 0) return;
-                        slotSegments.sort((a, b) => (a.start_time || "").localeCompare(b.start_time || ""));
-                        const firstSeg = slotSegments[0];
-                        if (!firstSeg.actions) firstSeg.actions = [];
-                        const actionId = `pre-note-${slotKey}-${targetProgram.id}`;
-                        if (!firstSeg.actions.find(a => a.id === actionId)) {
-                            firstSeg.actions.push({ id: actionId, label: 'GENERAL NOTES', department: 'Coordinador', timing: 'before_start', offset_min: 30, notes, order: -99 });
-                            firstSeg.actions.sort((a, b) => (a.order || 0) - (b.order || 0));
-                        }
-                    });
-                }
             }
 
             // Fetch Linked Segment Actions for Services too (sequential with retry)
@@ -828,54 +632,7 @@ Deno.serve(async (req) => {
                 });
             }
 
-            // FALLBACK: Inject pre_service_notes for Weekly Services (JSON-only path)
-            // Only when NO session entities exist — when sessions exist, PreSessionDetails handles this above.
-            // NOTE: The dynamic injection at lines 646-663 (inside the weekly slot processing block)
-            // handles all discovered slot keys. This block catches any remaining cases where
-            // the weekly slot block was skipped (e.g., custom services with pre_service_notes).
-            if (targetProgram.pre_service_notes && sessions.length === 0) {
-                // Discover all slot session IDs present in segments
-                const slotSessionIds = new Set(segments.map(s => s.session_id).filter(Boolean));
-                slotSessionIds.forEach(slotSessionId => {
-                    // Reverse-map session_id "slot-H-M" → slot key "H:MMam/pm"
-                    const parts = slotSessionId.replace('slot-', '').split('-');
-                    if (parts.length !== 2) return;
-                    let h = parseInt(parts[0]);
-                    const m = parts[1];
-                    const period = h >= 12 ? 'pm' : 'am';
-                    if (h > 12) h -= 12;
-                    if (h === 0) h = 12;
-                    const slotKey = `${h}:${m}${period}`;
-
-                    const notes = targetProgram.pre_service_notes[slotKey];
-                    if (!notes) return;
-
-                    const slotSegments = segments.filter(s => s.session_id === slotSessionId);
-                    if (slotSegments.length === 0) return;
-
-                    slotSegments.sort((a, b) => {
-                       const [ah, am] = (a.start_time || "00:00").split(':').map(Number);
-                       const [bh, bm] = (b.start_time || "00:00").split(':').map(Number);
-                       return (ah * 60 + am) - (bh * 60 + bm);
-                    });
-
-                    const firstSeg = slotSegments[0];
-                    if (!firstSeg.actions) firstSeg.actions = [];
-                    const actionId = `pre-note-${slotKey}-${targetProgram.id}`;
-                    if (!firstSeg.actions.find(a => a.id === actionId)) {
-                        firstSeg.actions.push({
-                            id: actionId,
-                            label: 'GENERAL NOTES',
-                            department: 'Coordinador',
-                            timing: 'before_start',
-                            offset_min: 30,
-                            notes: notes,
-                            order: -99
-                        });
-                        firstSeg.actions.sort((a, b) => (a.order || 0) - (b.order || 0));
-                    }
-                });
-            }
+            // (JSON fallbacks for Pre_Service_Notes have been removed - handled entirely by PreSessionDetails and Entity Lift)
 
             // Fetch Rooms & Adjustments (Parallelized above)
             [rooms, eventDays, liveAdjustments] = await fetchExtrasPromise;

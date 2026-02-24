@@ -398,11 +398,7 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
     const directSessions = await withRetry(() =>
       base44.asServiceRole.entities.Session.filter({ service_id: targetProgram.id })
     );
-    // FIX (2026-02-18 v2): Use a flag to track whether entity segments were found.
-    // Previous approach used else-if chain which prevented JSON fallback from executing
-    // after sessions were reset to []. Now: fetch entity segments first, and if none found,
-    // let execution continue to the JSON fallback branches below (no else-if gating).
-    let entitySegmentsResolved = false;
+    // Strict Entity Mode - JSON Fallbacks removed completely
     
     if (directSessions.length > 0) {
       sessions = directSessions.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -433,234 +429,57 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       streamBlocks = allStreamBlocks;
       preSessionDetails = allPreSessionDetails;
 
-      if (allSegs.length === 0) {
-        // Pre-Entity-Lift service: Session exists but no Segment entities.
-        // Reset sessions so frontend uses JSON fallback. Mark as unresolved
-        // so the code continues to the JSON fallback branches below.
-        console.log('[refreshActiveProgram] Sessions exist but no entity segments found, resetting sessions for JSON fallback');
-        sessions = [];
-        entitySegmentsResolved = false;
-      } else {
-        entitySegmentsResolved = true;
+      if (allSegs.length > 0) {
+        // Resolve child segments onto parents for inline sub-assignment display
+        const svcChildByParent = groupBy(
+          allSegs.filter(s => s.parent_segment_id),
+          s => s.parent_segment_id
+        );
 
-      // Resolve child segments onto parents for inline sub-assignment display
-      const svcChildByParent = groupBy(
-        allSegs.filter(s => s.parent_segment_id),
-        s => s.parent_segment_id
-      );
+        // Sort by session order first, then segment order (matches event path pattern)
+        const sessionsMap = new Map(sessions.map((s, i) => [s.id, i]));
+        segments = allSegs
+          .filter(s => s.show_in_general !== false && !s.parent_segment_id)
+          .map(seg => ({
+            ...seg,
+            _resolved_sub_assignments: resolveChildrenAsSubAssignments(svcChildByParent[seg.id]),
+          }))
+          .sort((a, b) => {
+            const aIdx = sessionsMap.get(a.session_id) ?? 999;
+            const bIdx = sessionsMap.get(b.session_id) ?? 999;
+            if (aIdx !== bIdx) return aIdx - bIdx;
+            return (a.order || 0) - (b.order || 0);
+          });
 
-      // Sort by session order first, then segment order (matches event path pattern)
-      const sessionsMap = new Map(sessions.map((s, i) => [s.id, i]));
-      segments = allSegs
-        // Exclude sub-segments from flat list — they're resolved onto parents above.
-        .filter(s => s.show_in_general !== false && !s.parent_segment_id)
-        .map(seg => ({
-          ...seg,
-          _resolved_sub_assignments: resolveChildrenAsSubAssignments(svcChildByParent[seg.id]),
-        }))
-        .sort((a, b) => {
-          const aIdx = sessionsMap.get(a.session_id) ?? 999;
-          const bIdx = sessionsMap.get(b.session_id) ?? 999;
-          if (aIdx !== bIdx) return aIdx - bIdx;
-          return (a.order || 0) - (b.order || 0);
-        });
+        // Bulk fetch SegmentActions for all segments
+        if (segments.length > 0) {
+          const segmentIds = segments.map(s => s.id).filter(Boolean);
+          const allActions = [];
+          for (let i = 0; i < segmentIds.length; i += BATCH) {
+            const batch = segmentIds.slice(i, i + BATCH);
+            const batchResults = await Promise.all(
+              batch.map(segId => withRetry(() => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId })))
+            );
+            allActions.push(...batchResults.flat());
+          }
 
-      // Bulk fetch SegmentActions for all segments (matches event path pattern)
-      if (segments.length > 0) {
-        const segmentIds = segments.map(s => s.id).filter(Boolean);
-        const allActions = [];
-        for (let i = 0; i < segmentIds.length; i += BATCH) {
-          const batch = segmentIds.slice(i, i + BATCH);
-          const batchResults = await Promise.all(
-            batch.map(segId => withRetry(() => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId })))
-          );
-          allActions.push(...batchResults.flat());
+          const actionsBySegment = groupBy(allActions, a => a.segment_id);
+          segments = segments.map(s => {
+            const linked = actionsBySegment[s.id] || [];
+            const embedded = s.segment_actions || [];
+            return { ...s, actions: [...embedded, ...linked].sort((a, b) => (a.order || 0) - (b.order || 0)) };
+          });
         }
 
-        const actionsBySegment = groupBy(allActions, a => a.segment_id);
-        segments = segments.map(s => {
-          const linked = actionsBySegment[s.id] || [];
-          const embedded = s.segment_actions || [];
-          return { ...s, actions: [...embedded, ...linked].sort((a, b) => (a.order || 0) - (b.order || 0)) };
-        });
-      }
-
-      // Break segment injection between sessions (uses shared helper)
-      // Entity Lift: inject between each consecutive pair of sessions, not just first two
-      if (sessions.length >= 2) {
-        // BUG FIX (audit): receso_notes key is dynamic — use first slot name from session,
-        // not hardcoded "9:30am". Fall back to first key in receso_notes object.
-        const firstSlotName = sessions[0]?.name || "9:30am";
-        const recesoNotes = targetProgram.receso_notes?.[firstSlotName] 
-          || (targetProgram.receso_notes ? Object.values(targetProgram.receso_notes)[0] : "") 
-          || "";
-        injectInterSessionBreak(segments, sessions[0].id, sessions[1].id, recesoNotes);
-      }
-
-      // Inject pre-session details as actions (reuse existing helper)
-      injectPreSessionActions(segments, sessions, preSessionDetails);
-    } // end: allSegs.length > 0 branch
-    }
-    // FIX (2026-02-18 v2): Changed from else-if to if(!entitySegmentsResolved).
-    // When sessions exist but have no entity segments, sessions is reset to []
-    // but the else-if chain would skip these branches (the if(directSessions.length > 0) 
-    // block already ran). Using a flag ensures JSON fallback branches execute.
-    // Weekly service: process time-slot arrays into flat segments
-    // BUG FIX (audit): Dynamically detect slot keys instead of hardcoding 9:30am/11:30am.
-    // This handles ServiceSchedule-configured slots like "7:00pm", "10:00am", etc.
-    if (!entitySegmentsResolved && (targetProgram["9:30am"] || targetProgram["11:30am"] || 
-             Object.keys(targetProgram).some(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(targetProgram[k]) && targetProgram[k].length > 0))) {
-      const processSlot = (slotSegments, startHour, startMin) => {
-        if (!Array.isArray(slotSegments)) return [];
-        let currentMinutes = startHour * 60 + startMin;
-        return slotSegments.map((seg, idx) => {
-          const h = Math.floor(currentMinutes / 60);
-          const m = currentMinutes % 60;
-          const startTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-          const dur = seg.duration || 0;
-          currentMinutes += dur;
-          const endH = Math.floor(currentMinutes / 60);
-          const endM = currentMinutes % 60;
-          const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
-          return {
-            ...seg,
-            id: seg.id || `generated-${startHour}-${idx}`,
-            start_time: startTime,
-            end_time: endTime,
-            duration_min: dur,
-            title: seg.title || seg.data?.title || 'Untitled',
-            presenter: seg.presenter || seg.data?.presenter || '',
-            leader: seg.leader || seg.data?.leader || '',
-            preacher: seg.preacher || seg.data?.preacher || '',
-            segment_type: seg.type || 'Generic',
-            session_id: `slot-${startHour}-${startMin}`,
-          };
-        });
-      };
-
-      // BUG FIX (audit): Dynamically discover and process all time-slot keys
-      const slotKeys = Object.keys(targetProgram)
-        .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(targetProgram[k]) && targetProgram[k].length > 0)
-        .sort((a, b) => {
-          // Sort chronologically by parsing time
-          const parseTime = (s) => {
-            const m = s.match(/^(\d+):(\d+)(am|pm)$/i);
-            if (!m) return 0;
-            let h = parseInt(m[1]);
-            if (m[3].toLowerCase() === 'pm' && h < 12) h += 12;
-            if (m[3].toLowerCase() === 'am' && h === 12) h = 0;
-            return h * 60 + parseInt(m[2]);
-          };
-          return parseTime(a) - parseTime(b);
-        });
-
-      // Assign to outer `let allSlotSegments` (declared at function scope above).
-      // Using `const` here would shadow the outer variable, breaking pre_service_notes
-      // injection at the end of the service snapshot builder. (BUG FIX 2026-02-21)
-      allSlotSegments = [];
-      slotKeys.forEach(slotKey => {
-        const match = slotKey.match(/^(\d+):(\d+)(am|pm)$/i);
-        if (!match) return;
-        let h = parseInt(match[1]);
-        const m = parseInt(match[2]);
-        if (match[3].toLowerCase() === 'pm' && h < 12) h += 12;
-        if (match[3].toLowerCase() === 'am' && h === 12) h = 0;
-        const slotSegs = processSlot(targetProgram[slotKey], h, m);
-        allSlotSegments.push({ key: slotKey, segs: slotSegs, sessionId: `slot-${h}-${m}` });
-      });
-
-      segments = allSlotSegments.flatMap(s => s.segs);
-
-      // Break injection between consecutive slots
-      for (let i = 0; i < allSlotSegments.length - 1; i++) {
-        const curr = allSlotSegments[i];
-        const next = allSlotSegments[i + 1];
-        if (curr.segs.length > 0 && next.segs.length > 0) {
-          const recesoNotes = targetProgram.receso_notes?.[curr.key] 
+        if (sessions.length >= 2) {
+          const firstSlotName = sessions[0]?.name || "9:30am";
+          const recesoNotes = targetProgram.receso_notes?.[firstSlotName] 
             || (targetProgram.receso_notes ? Object.values(targetProgram.receso_notes)[0] : "") 
             || "";
-          injectInterSessionBreak(segments, curr.sessionId, next.sessionId, recesoNotes);
+          injectInterSessionBreak(segments, sessions[0].id, sessions[1].id, recesoNotes);
         }
-      }
-    }
-    // Custom service with embedded segments
-    else if (!entitySegmentsResolved && targetProgram.segments && Array.isArray(targetProgram.segments) && targetProgram.segments.length > 0) {
-      // FIX (2026-02-19): Calculate start_time/end_time for custom service JSON segments.
-      // Raw JSON segments from Service.segments[] lack timing fields. The TV display
-      // (PublicCountdownDisplay) and normalizeProgram both require start_time/end_time.
-      // Use service.time first, then fall back to the linked session's planned_start_time,
-      // then default to "19:00". This handles GRADUACIÓN DE ACADEMIA which has no service.time
-      // but has a Session with planned_start_time = "19:30".
-      const sessionStartTime = directSessions?.[0]?.planned_start_time || null;
-      const serviceStartTime = targetProgram.time || sessionStartTime || "19:00";
-      const [baseH, baseM] = serviceStartTime.split(':').map(Number);
-      let curMin = baseH * 60 + baseM;
 
-      segments = targetProgram.segments.map((seg, idx) => {
-        const startMin = curMin;
-        const dur = seg.duration || 0;
-        curMin += dur;
-        const sH = Math.floor(startMin / 60);
-        const sM = startMin % 60;
-        const eH = Math.floor(curMin / 60);
-        const eM = curMin % 60;
-        return {
-          ...seg,
-          id: seg.id || seg._uiId || `custom-seg-${idx}`,
-          start_time: `${String(sH).padStart(2,'0')}:${String(sM).padStart(2,'0')}`,
-          end_time: `${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`,
-          duration_min: dur,
-          segment_type: seg.type || seg.segment_type || 'Especial',
-          title: seg.title || seg.data?.title || 'Sin título',
-          presenter: seg.presenter || seg.data?.presenter || seg.data?.leader || '',
-          leader: seg.leader || seg.data?.leader || '',
-          preacher: seg.preacher || seg.data?.preacher || '',
-        };
-      });
-    }
-
-    // Inject pre_service_notes for weekly services (JSON fallback only —
-    // when sessions exist, PreSessionDetails handles this via injectPreSessionActions above)
-    if (targetProgram.pre_service_notes && sessions.length === 0) {
-      const injectNotes = (slotKey, slotSessionId) => {
-        const notes = targetProgram.pre_service_notes[slotKey];
-        if (!notes) return;
-        const slotSegments = segments.filter(s => s.session_id === slotSessionId);
-        if (slotSegments.length === 0) return;
-        slotSegments.sort((a, b) => {
-          const [ah, am] = (a.start_time || "00:00").split(':').map(Number);
-          const [bh, bm] = (b.start_time || "00:00").split(':').map(Number);
-          return (ah * 60 + am) - (bh * 60 + bm);
-        });
-        const firstSeg = slotSegments[0];
-        if (!firstSeg.actions) firstSeg.actions = [];
-        const actionId = `pre-note-${slotKey}-${targetProgram.id}`;
-        if (!firstSeg.actions.find(a => a.id === actionId)) {
-          firstSeg.actions.push({
-            id: actionId, label: 'GENERAL NOTES', department: 'Coordinador',
-            timing: 'before_start', offset_min: 30, notes, order: -99,
-          });
-          firstSeg.actions.sort((a, b) => (a.order || 0) - (b.order || 0));
-        }
-      };
-      // Dynamic slot injection — uses allSlotSegments populated by the weekly slot processing block.
-      // If allSlotSegments is empty (custom service or no slot keys), discover session IDs from segments.
-      if (allSlotSegments && allSlotSegments.length > 0) {
-        allSlotSegments.forEach(slot => injectNotes(slot.key, slot.sessionId));
-      } else {
-        // Fallback: discover slot keys from existing segment session IDs
-        const slotSessionIds = new Set(segments.map(s => s.session_id).filter(Boolean));
-        slotSessionIds.forEach(slotSessionId => {
-          const parts = (slotSessionId || '').replace('slot-', '').split('-');
-          if (parts.length !== 2) return;
-          let h = parseInt(parts[0]);
-          const m = parts[1];
-          const period = h >= 12 ? 'pm' : 'am';
-          if (h > 12) h -= 12;
-          if (h === 0) h = 12;
-          const slotKey = `${h}:${m}${period}`;
-          injectNotes(slotKey, slotSessionId);
-        });
+        injectPreSessionActions(segments, sessions, preSessionDetails);
       }
     }
 
