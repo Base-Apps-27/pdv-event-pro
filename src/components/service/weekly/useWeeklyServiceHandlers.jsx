@@ -420,25 +420,6 @@ export function useWeeklyServiceHandlers({
         for (let i = 0; i < newSegmentsData.length; i++) {
           const segData = newSegmentsData[i];
           
-          // Map to entity structure
-          const entityPayload = {
-            session_id: sessionId,
-            service_id: nextState.id,
-            order: i + 1,
-            title: segData.title || "Untitled",
-            segment_type: segData.type, // Map 'worship' -> 'Alabanza' done by backend or kept as is? segment_type enum has 'Alabanza' etc.
-            // We need to map internal type to enum if possible, or trust strict string matching
-            // Segment entity enum: Alabanza, Bienvenida, etc.
-            // Blueprint types might be lowercase.
-            duration_min: segData.duration || 0,
-            show_in_general: true,
-            ui_fields: segData.fields || [],
-            ui_sub_assignments: segData.sub_assignments || [],
-            requires_translation: segData.requires_translation,
-            default_translator_source: segData.default_translator_source,
-            number_of_songs: segData.number_of_songs,
-          };
-
           // Enum normalization for segment_type
           const typeMap = {
             'worship': 'Alabanza', 'alabanza': 'Alabanza',
@@ -453,10 +434,36 @@ export function useWeeklyServiceHandlers({
             'prayer': 'Oración', 'oracion': 'Oración',
             'special': 'Especial', 'especial': 'Especial',
             'closing': 'Cierre', 'cierre': 'Cierre',
-            'ministry': 'Ministración', 'ministracion': 'Ministración'
+            'ministry': 'Ministración', 'ministracion': 'Ministración',
+            'mc': 'MC', 'artes': 'Artes', 'breakout': 'Breakout', 'panel': 'Panel', 'receso': 'Receso', 'almuerzo': 'Almuerzo'
           };
-          if (typeMap[segData.type?.toLowerCase()]) {
-            entityPayload.segment_type = typeMap[segData.type?.toLowerCase()];
+          
+          let resolvedType = "Especial"; // Safe default enum value
+          if (segData.type) {
+            resolvedType = typeMap[segData.type.toLowerCase()] || segData.type;
+          }
+
+          // Map to entity structure, ensuring strict schema compliance
+          const entityPayload = {
+            session_id: sessionId,
+            service_id: nextState.id,
+            order: i + 1,
+            title: segData.title || "Untitled",
+            segment_type: resolvedType,
+            duration_min: Number(segData.duration) || 0,
+            show_in_general: true,
+            ui_fields: Array.isArray(segData.fields) ? segData.fields : [],
+            ui_sub_assignments: Array.isArray(segData.sub_assignments) ? segData.sub_assignments.map(sa => ({
+              label: sa.label || "Untitled",
+              person_field_name: sa.person_field_name || "",
+              duration_min: Number(sa.duration_min || sa.duration) || 0
+            })) : [],
+            requires_translation: !!segData.requires_translation,
+            default_translator_source: segData.default_translator_source || "manual",
+          };
+
+          if (segData.number_of_songs !== undefined) {
+            entityPayload.number_of_songs = Number(segData.number_of_songs) || 0;
           }
 
           let created = null;
