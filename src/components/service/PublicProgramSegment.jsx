@@ -659,12 +659,23 @@ export default function PublicProgramSegment({
                 <p className="text-orange-900 leading-snug">{getData('coordinator_notes')}</p>
               </div>
             )}
-            {getData('projection_notes') && (
-              <div className="bg-slate-100 border-l-4 border-slate-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
-                <span className="font-bold text-slate-700 block mb-0.5 sm:mb-1">{t('live.projection')}:</span>
-                <p className="text-slate-800 leading-snug">{getData('projection_notes')}</p>
-              </div>
-            )}
+            {(() => {
+              const notes = getData('projection_notes');
+              if (!notes) return null;
+              
+              // Safety Guard: For messages, suppress projection notes if they look like raw submissions 
+              // (excessively long or containing the artifact marker) to ensure verses/content only live in the modal.
+              const isSuspiciouslyLong = notes.length > 400;
+              const hasArtifactMarker = notes.includes('[Nota del Orador]');
+              if (isMessage && (isSuspiciouslyLong || hasArtifactMarker)) return null;
+
+              return (
+                <div className="bg-slate-100 border-l-4 border-slate-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
+                  <span className="font-bold text-slate-700 block mb-0.5 sm:mb-1">{t('live.projection')}:</span>
+                  <p className="text-slate-800 leading-snug">{notes}</p>
+                </div>
+              );
+            })()}
             {getData('sound_notes') && (
               <div className="bg-red-50 border-l-4 border-red-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
                 <span className="font-bold text-red-800 block mb-0.5 sm:mb-1">{t('live.sound')}:</span>
@@ -821,13 +832,23 @@ export default function PublicProgramSegment({
             )}
 
             {/* General Description/Details */}
-            {(getData('description_details') || getData('description')) && (
-              <div className="bg-gray-100 border-l-4 border-gray-500 p-2 mt-2 rounded-r">
-                <p className="text-xs text-gray-900 font-medium">
-                  <strong>📝 {t('live.notes')}:</strong> {getData('description_details') || getData('description')}
-                </p>
-              </div>
-            )}
+            {(() => {
+              const desc = getData('description_details') || getData('description');
+              if (!desc) return null;
+
+              // Safety Guard: For messages, suppress description if it looks like raw submissions
+              // to ensure verses/content only live in the modal.
+              const isSuspiciouslyLong = desc.length > 400;
+              if (isMessage && isSuspiciouslyLong) return null;
+
+              return (
+                <div className="bg-gray-100 border-l-4 border-gray-500 p-2 mt-2 rounded-r">
+                  <p className="text-xs text-gray-900 font-medium">
+                    <strong>📝 {t('live.notes')}:</strong> {desc}
+                  </p>
+                </div>
+              );
+            })()}
 
             {/* Sub-asignaciones (custom service sub-segments) */}
             {segment.sub_asignaciones && segment.sub_asignaciones.length > 0 && (
