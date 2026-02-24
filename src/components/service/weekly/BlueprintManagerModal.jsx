@@ -34,14 +34,22 @@ export default function BlueprintManagerModal({ open, onClose }) {
   });
 
   const createMutation = useMutation({
+    // Service schema requires day_of_week — use "Sunday" as a neutral default for blueprints.
+    // Blueprints are identified purely by status='blueprint'; day_of_week is not used for routing.
     mutationFn: async (name) =>
-      base44.entities.Service.create({ name, status: 'blueprint', origin: 'blueprint', segments: [] }),
+      base44.entities.Service.create({
+        name,
+        status: 'blueprint',
+        origin: 'blueprint',
+        day_of_week: 'Sunday',
+        segments: [],
+      }),
     onSuccess: (newBp) => {
-      queryClient.invalidateQueries({ queryKey: ['serviceBlueprintsList'] });
+      queryClient.invalidateQueries(['serviceBlueprintsList']);
       setEditingBlueprintId(newBp.id);
       toast.success("Blueprint creado");
     },
-    onError: (err) => toast.error("Error: " + err.message),
+    onError: (err) => toast.error("Error al crear: " + err.message),
   });
 
   const deleteMutation = useMutation({
