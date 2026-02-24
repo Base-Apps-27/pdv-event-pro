@@ -87,6 +87,11 @@ export default function DayServiceEditor({
   const localStateInitializedRef = useRef(false);
   const [externalChangeAvailable, setExternalChangeAvailable] = useState(false);
   const ownSaveInProgressRef = useRef(false);
+  
+  // Phase 7: Track if user has modified local state (to prevent overwriting with stale-while-revalidate data)
+  const userHasEditedRef = useRef(false);
+  const lastSyncedDataRef = useRef(null);
+
   const serviceDataRef = useRef(serviceData);
   useEffect(() => { serviceDataRef.current = serviceData; }, [serviceData]);
 
@@ -209,8 +214,14 @@ export default function DayServiceEditor({
   });
 
   // ── Handlers ──
+  // Wrap setServiceData to track user edits (so we don't overwrite them with stale cache updates)
+  const handleUserSetServiceData = useCallback((action) => {
+    userHasEditedRef.current = true;
+    setServiceData(action);
+  }, []);
+
   const handlers = useWeeklyServiceHandlers({
-    serviceData, setServiceData, selectedAnnouncements,
+    serviceData, setServiceData: handleUserSetServiceData, selectedAnnouncements,
     updateAnnouncementMutation, fixedAnnouncements, dynamicAnnouncements,
     blueprintData: null,
     sessions,
@@ -228,27 +239,37 @@ export default function DayServiceEditor({
   useEffect(() => { localStateInitializedRef.current = false; }, [date, dayOfWeek]);
 
   useEffect(() => {
-    // Phase 6: Stale Read Fix (2026-02-24)
-    // We allow re-initialization if 'existingData' is newer than 'serviceData'.
-    // This happens when navigating back to the page — React Query might return stale data first,
-    // then fetch fresh data. We must update the local state when the fresh data arrives.
-    //
-    // However, if the user is actively typing (ownSaveInProgressRef or just active editing),
-    // we should be careful. But typically 'existingData' only updates on refetch or mutation success.
+    // Phase 7: Robust Stale-Cache Handling (2026-02-24)
+    // When navigating back to the page:
+    // 1. React Query may return STALE cache immediately (existingData = stale).
+    // 2. We sync stale data immediately so the UI isn't empty (needsInit=true).
+    // 3. React Query fetches fresh data in background.
+    // 4. When fetch completes, existingData updates to FRESH data.
+    // 5. We MUST sync again if the data changed AND the user hasn't started editing.
     
+    if (!existingData) return;
+
     const needsInit = !localStateInitializedRef.current;
     
-    const serverIsNewer = existingData?.updated_date && serviceData?.updated_date && 
+    // Check if server data structure changed from what we last synced (e.g., background fetch finished)
+    const dataChanged = existingData !== lastSyncedDataRef.current;
+    
+    // Sync conditions:
+    // 1. First load (needsInit) - even if stale/fetching, better than empty.
+    // 2. Data changed AND user hasn't edited (safe update after background fetch).
+    // 3. Server timestamp explicitly newer (conflict resolution).
+    const safeUpdate = dataChanged && !userHasEditedRef.current;
+    
+    const serverIsNewer = existingData.updated_date && serviceData?.updated_date && 
       new Date(existingData.updated_date) > new Date(serviceData.updated_date);
       
-    // If we have no local data, or server is explicitly newer, or we haven't initialized yet...
-    const shouldSync = needsInit || serverIsNewer;
+    const shouldSync = needsInit || safeUpdate || serverIsNewer;
 
     if (!shouldSync) return;
 
-    // Guard: don't initialize during fetches IF we have nothing yet.
-    // If we have stale data, we might want to wait for fresh.
-    if (isLoading || isFetching) return;
+    // REMOVED: if (isLoading || isFetching) return;
+    // We WANT to sync even if fetching, to show the cached data immediately.
+    // Then we'll sync AGAIN when the fetch finishes (dataChanged=true).
 
     if (existingData) {
       // Merge with blueprint for fields/sub_assignments (same logic as original)
@@ -367,15 +388,23 @@ export default function DayServiceEditor({
       loadedData.date = date;
       loadedData.id = existingData.id;
       setServiceData(loadedData);
-      captureServiceBaseline(existingData.updated_date);
+      
+      // Mark sync complete
+      lastSyncedDataRef.current = existingData;
       localStateInitializedRef.current = true;
+      // Reset user edit flag if we just force-synced fresh server data
+      // (Unless it was a merge? No, we overwrote local state).
+      userHasEditedRef.current = false;
+      
+      captureServiceBaseline(existingData.updated_date);
     } else {
       // No existing service — show empty prompt (don't auto-seed from blueprint)
       // The EmptyDayPrompt component handles creation
       setServiceData(null);
       localStateInitializedRef.current = true;
+      lastSyncedDataRef.current = null;
     }
-  }, [existingData, date, dayOfWeek, isLoading, isFetching, slotNames, sessions, blueprints]);
+  }, [existingData, date, dayOfWeek, slotNames, sessions, blueprints]); // Removed isLoading/isFetching dependencies
 
   // ── External change subscription ──
   useEffect(() => {
