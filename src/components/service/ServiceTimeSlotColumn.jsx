@@ -1,4 +1,4 @@
-import React, { useContext, useCallback } from "react";
+import React, { useContext, useCallback, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, Plus, Minus, Trash2, Sparkles, ChevronUp, ChevronDown, ArrowRight, ChevronsRight, BookOpen } from "lucide-react";
+import { Clock, Plus, Minus, Trash2, Sparkles, ChevronUp, ChevronDown, ArrowRight, ChevronsRight, BookOpen, Save, Check, Loader2 } from "lucide-react";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import {
   ServiceDataContext,
@@ -79,7 +79,7 @@ export default function ServiceTimeSlotColumn({
   const accentColor = SLOT_ACCENT_COLORS[slotIndex % SLOT_ACCENT_COLORS.length];
   const timingInfo = calculateServiceTimes(timeSlot);
   const segments = serviceData[timeSlot] || [];
-  const { mutateSongs, mutateDuration } = useContext(UpdatersContext) || {};
+  const { mutateSongs } = useContext(UpdatersContext) || {};
 
   // Add/remove song slots for worship segments
   const addSongSlot = useCallback((segIdx) => {
@@ -288,6 +288,55 @@ export default function ServiceTimeSlotColumn({
 }
 
 /**
+ * SegmentSaveButton — Per-segment save indicator and manual save trigger.
+ * Flashes red while the segment has unsaved (pending) entity writes.
+ * Clicking immediately flushes all pending writes for this segment.
+ */
+function SegmentSaveButton({ entityId }) {
+  const { dirtyEntities, flushEntity } = useContext(UpdatersContext) || {};
+  const [saving, setSaving] = useState(false);
+
+  if (!entityId || !dirtyEntities || !flushEntity) return null;
+
+  const isDirty = dirtyEntities.has(String(entityId));
+
+  const handleSave = async () => {
+    if (!isDirty || saving) return;
+    setSaving(true);
+    try {
+      await flushEntity(entityId);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleSave}
+      disabled={saving}
+      className={`h-6 px-1.5 print:hidden transition-all ${
+        saving
+          ? 'text-amber-500'
+          : isDirty
+            ? 'text-red-600 animate-pulse bg-red-50 hover:bg-red-100'
+            : 'text-green-600 opacity-50 hover:opacity-100'
+      }`}
+      title={saving ? "Guardando..." : isDirty ? "Guardar cambios" : "Guardado"}
+    >
+      {saving ? (
+        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+      ) : isDirty ? (
+        <Save className="w-3.5 h-3.5" />
+      ) : (
+        <Check className="w-3.5 h-3.5" />
+      )}
+    </Button>
+  );
+}
+
+/**
  * SpecialSegmentCard — renders an orange "special" segment card.
  */
 function SpecialSegmentCard({
@@ -296,6 +345,7 @@ function SpecialSegmentCard({
   updateSegmentField, debouncedSave, setServiceData,
 }) {
   const totalSegments = serviceData[timeSlot]?.length || 0;
+  const { mutateDuration } = useContext(UpdatersContext) || {};
   return (
     <Card className="border-2 border-gray-300 border-l-4 border-l-orange-500 bg-orange-50">
       <CardHeader className="pb-2">
@@ -312,6 +362,7 @@ function SpecialSegmentCard({
             <Sparkles className="w-4 h-4 text-orange-600" />
             {segment.title}
             <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>
+            <SegmentSaveButton entityId={segment._entityId} />
           </CardTitle>
           <Button variant="ghost" size="sm" onClick={() => removeSpecialSegment(timeSlot, idx)} className="print:hidden">
             <Trash2 className="w-4 h-4 text-red-500" />
@@ -371,6 +422,7 @@ function StandardSegmentCard({
 }) {
   const filteredSegments = serviceData[timeSlot]?.filter(s => s.type !== 'break') || [];
   const totalFiltered = filteredSegments.length;
+  const { mutateDuration } = useContext(UpdatersContext) || {};
 
   return (
     <Card className={`border-2 border-gray-300 border-l-4 border-l-${accentColor}-500 bg-white`}>
@@ -387,6 +439,7 @@ function StandardSegmentCard({
           <Clock className={`w-4 h-4 text-${accentColor}-600`} />
           {segment.title}
           <Badge variant="outline" className="ml-auto text-xs">{segment.duration} min</Badge>
+          <SegmentSaveButton entityId={segment._entityId} />
           {copySegmentToNextSlot && (
             <Button variant="ghost" size="sm" onClick={() => copySegmentToNextSlot(idx)} className="print:hidden h-7 px-2 hover:bg-blue-50" title="Copiar a siguiente">
               <ArrowRight className="w-4 h-4 text-blue-600" />

@@ -486,6 +486,8 @@ export default function DayServiceEditor({
           setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
         },
         mutateSubAssignment: segmentMutation.mutateSubAssignment,
+        dirtyEntities: segmentMutation.dirtyEntities,
+        flushEntity: segmentMutation.flushEntity,
       }}>
         <div className="space-y-4">
           {/* External change banner */}
