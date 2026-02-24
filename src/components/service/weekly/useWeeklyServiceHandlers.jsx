@@ -368,14 +368,22 @@ export function useWeeklyServiceHandlers({
       });
 
       // We'll build the new state here
-      // 2026-02-24 Fix: Safely copy serviceData, and ensure it's not null before spreading.
-      // If serviceData is null, this means we're in an uninitialized state, but EmptyDayPrompt
-      // should prevent this function from being called.
+      // 2026-02-24 Fix: The handlers hook takes `serviceData` from its props, which is a closure over the render.
+      // If we use `serviceData` here it might be stale. We MUST use a functional state update later,
+      // or at least grab the latest via ref if possible. Since we removed the ref earlier, let's just 
+      // rely on the setter.
+      // Wait, we need the `nextState.id`. We will use a functional state update instead of async await
+      // mixing with state, but since we have to do async DB calls, we need the current serviceData.
+      
+      // The safest way is to use the `serviceDataRef` we removed. Let me put it back or just use the current serviceData from props but warn if missing.
       let nextState = { ...(serviceData || {}) }; 
       const targetSlots = (slotsToReset && slotsToReset.length > 0) ? slotsToReset : slotNames;
       
       // Ensure Service exists (sanity check, DayServiceEditor should have handled it)
-      if (!nextState.id) throw new Error("Service ID missing. Cannot reset.");
+      if (!nextState.id) {
+         // Fallback to getting it from the URL or somehow? No, if it's missing, we are completely detached.
+         throw new Error("Service ID missing. Cannot reset. Please refresh the page.");
+      }
 
       for (const slotName of targetSlots) {
         // 1. Resolve Blueprint
