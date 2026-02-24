@@ -207,7 +207,7 @@ export default function ServiceScheduleManager() {
       )}
 
       {/* Blueprint Manager */}
-      <div className="border-t border-gray-300 pt-8 mt-8">
+      <div className="border-t border-gray-200 pt-6 mt-6">
         <BlueprintManager />
       </div>
 
