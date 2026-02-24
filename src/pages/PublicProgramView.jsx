@@ -465,32 +465,11 @@ export default function PublicProgramView() {
   const activeSession = viewType === "event" ? filteredSessions[0] : null; // Simplified for now
   
   // Prepare segments list for notifications
-  // BUG FIX (2026-02-18): Dynamic slot discovery instead of hardcoded "9:30am"/"11:30am".
-  // Uses allSegments (backend flat list) when available, falls back to regex key discovery.
+  // STRICT ENTITY MODE: Use allSegments (backend flat list from Segment entities).
+  // No JSON fallback discovery.
   const segmentsForNotifications = React.useMemo(() => {
-    let list = [];
-    if (viewType === "service" && actualServiceData) {
-      if (actualServiceData.segments && actualServiceData.segments.length > 0) {
-        list = actualServiceData.segments;
-      } else if (allSegments.length > 0) {
-        // Prefer backend-provided flat list (entity-sourced, includes all slots + break)
-        list = allSegments;
-      } else {
-        // JSON fallback: discover slot keys dynamically
-        const slotKeys = Object.keys(actualServiceData).filter(
-          k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(actualServiceData[k])
-        );
-        slotKeys.forEach(key => {
-          list = [...list, ...(actualServiceData[key] || []).map(s => ({
-            ...s, start_time: s.start_time || s.data?.start_time, title: s.title || s.data?.title
-          }))];
-        });
-      }
-    } else if (viewType === "event") {
-      list = allSegments;
-    }
-    return list;
-  }, [viewType, actualServiceData, allSegments]);
+    return allSegments;
+  }, [allSegments]);
 
   // Use the robust notification hook
   useSegmentNotifications(segmentsForNotifications, activeSession);
@@ -907,25 +886,14 @@ export default function PublicProgramView() {
                         </Button>
                       ) : (
                         <>
-                          {/* BUG FIX (audit): Dynamic slot buttons instead of hardcoded 9:30am/11:30am.
-                              Sessions carry the slot name (e.g. "9:30am") — iterate them.
-                              Fallback: check legacy JSON keys on the service object. */}
+                          {/* Dynamic slot buttons from Session entities. No JSON fallback. */}
                           {(() => {
                             const SLOT_BTN_COLORS = ['red', 'blue', 'purple', 'amber', 'green'];
-                            // Prefer entity-sourced sessions (slot names are dynamic)
-                            const slotButtons = sessions.length > 0
-                              ? sessions.map((s, i) => ({ name: s.name, color: SLOT_BTN_COLORS[i % SLOT_BTN_COLORS.length] }))
-                              : Object.keys(actualServiceData || {})
-                                  .filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(actualServiceData[k]))
-                                  .sort((a, b) => {
-                                    const pa = a.match(/^(\d+):(\d+)(am|pm)$/i);
-                                    const pb = b.match(/^(\d+):(\d+)(am|pm)$/i);
-                                    if (!pa || !pb) return 0;
-                                    let ha = parseInt(pa[1]); if (pa[3].toLowerCase() === 'pm' && ha < 12) ha += 12;
-                                    let hb = parseInt(pb[1]); if (pb[3].toLowerCase() === 'pm' && hb < 12) hb += 12;
-                                    return (ha * 60 + parseInt(pa[2])) - (hb * 60 + parseInt(pb[2]));
-                                  })
-                                  .map((name, i) => ({ name, color: SLOT_BTN_COLORS[i % SLOT_BTN_COLORS.length] }));
+                            const slotButtons = sessions.map((s, i) => ({ 
+                              name: s.name, 
+                              color: SLOT_BTN_COLORS[i % SLOT_BTN_COLORS.length] 
+                            }));
+                            
                             return slotButtons.map(slot => (
                               <Button
                                 key={slot.name}

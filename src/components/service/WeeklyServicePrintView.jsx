@@ -309,6 +309,7 @@ export default function WeeklyServicePrintView({
         <div className="print-body-content">
           <div className="print-two-columns">
             {/* Entity Lift: Dynamic columns from ServiceSchedule slots */}
+            {/* Phase 3B: Updated to use entity-derived segments if available, though print view is currently read-only props */}
             {slots.map((slotName, slotIdx) => {
               const slotSegments = serviceData[slotName] || [];
               const filteredSegs = slotSegments.filter(s => s.type !== 'break');
@@ -316,6 +317,9 @@ export default function WeeklyServicePrintView({
               return (
                 <div key={slotName} className={`print-service-column ${slotIdx === 0 ? 'left' : 'right'}`}>
                   <div className="print-service-time">{slotName.replace('am', ' A.M.').replace('pm', ' P.M.').toUpperCase()}</div>
+                  {/* Pre-service notes now strictly handled via PreSessionDetails in LiveView, 
+                      but for PrintView we still rely on the passed-in serviceData prop. 
+                      If serviceData is entity-sourced, it will have these fields populated from loadWeeklyFromSessions. */}
                   {serviceData?.pre_service_notes?.[slotName] && (
                     <div className="print-segment">
                       <div className="print-note-general-info">{serviceData.pre_service_notes[slotName]}</div>
