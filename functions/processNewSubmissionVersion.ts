@@ -290,7 +290,7 @@ ${submission.content.substring(0, 15000)}
                     const targetSegmentEntity = sessionSegments[segmentIdx];
                     if (targetSegmentEntity) {
                         const entityUpdate = {
-                            submitted_content: submission.content,
+                            // DO NOT SAVE RAW CONTENT TO SEGMENT. Only parsed data.
                             parsed_verse_data: parsedData,
                             submission_status: 'processed',
                             scripture_references: scriptureReferences,
