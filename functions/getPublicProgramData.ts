@@ -296,11 +296,17 @@ Deno.serve(async (req) => {
                 const orderMap = new Map(sessions.map((s, i) => [s.id, i]));
                 const sessionDateMap = new Map(sessions.map(s => [s.id, s.date]));
 
+                const childByParent = groupBy(
+                    allSegments.filter(s => s.parent_segment_id),
+                    s => s.parent_segment_id
+                );
+
                 segments = allSegments
                     .filter(seg => seg.show_in_general !== false && !seg.parent_segment_id)
                     .map(seg => ({
                         ...seg,
-                        date: sessionDateMap.get(seg.session_id) || null
+                        date: sessionDateMap.get(seg.session_id) || null,
+                        _resolved_sub_assignments: resolveChildrenAsSubAssignments(childByParent[seg.id])
                     }))
                     .sort((a, b) => {
                         const aIndex = orderMap.get(a.session_id);
