@@ -43,14 +43,10 @@ export default function BlueprintEditor({ blueprintId }) {
     const currentId = blueprint.id;
     if (initializedRef.current === currentId) return;
 
-    let initialSegments = blueprint.segments || [];
-    // Migration fallback
-    if (initialSegments.length === 0) {
-      const firstKey = Object.keys(blueprint).find(k => Array.isArray(blueprint[k]) && !['segments', 'selected_announcements', 'actions'].includes(k));
-      if (firstKey) {
-        initialSegments = blueprint[firstKey];
-      }
-    }
+    // Always use only the canonical `segments` array — never fall back to legacy named-slot keys.
+    // Legacy blueprints (e.g. "Servicios Dominicales") store data in "9:30am"/"11:30am" keys;
+    // those are intentionally ignored here. Edit via "Nuevo Blueprint" to start fresh.
+    const initialSegments = Array.isArray(blueprint.segments) ? blueprint.segments : [];
 
     setSegments(JSON.parse(JSON.stringify(initialSegments)));
     setDirty(false);
