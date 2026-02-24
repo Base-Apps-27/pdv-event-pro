@@ -60,7 +60,8 @@ export function useServiceSchedules() {
 
   /**
    * Get TIME_SLOTS-compatible array for weeklySessionSync.
-   * Format: [{ name: "9:30am", time: "09:30", order: 1, color: "green" }]
+   * Format: [{ name: "9:30am", time: "09:30", order: 1, color: "green", blueprint_id: "..." }]
+   * blueprint_id is preserved so DayServiceEditor can resolve the correct blueprint per slot.
    */
   const getTimeSlotsForDay = (dayOfWeek) => {
     return getSessionsForDay(dayOfWeek).map(s => ({
@@ -68,6 +69,7 @@ export function useServiceSchedules() {
       time: s.planned_start_time,
       order: s.order,
       color: s.color || "green",
+      blueprint_id: s.blueprint_id || null,
     }));
   };
 
