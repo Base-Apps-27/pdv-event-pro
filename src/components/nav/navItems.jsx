@@ -22,7 +22,7 @@ export const primaryNav = [
     icon: Bell,
     page: 'PublicProgramView',
     permission: 'access_live_view',
-    matchPages: ['PublicProgramView', 'MyProgram'],
+    matchPages: ['PublicProgramView'],
   },
   {
     id: 'events',
@@ -30,7 +30,7 @@ export const primaryNav = [
     icon: Calendar,
     page: 'Events',
     permission: 'view_events',
-    matchPages: ['Events', 'EventDetail', 'Reports'],
+    matchPages: ['Events', 'EventDetail'],
   },
   {
     id: 'services',
