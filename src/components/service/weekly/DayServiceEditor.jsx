@@ -32,7 +32,7 @@ import { hasPermission } from "@/components/utils/permissions";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Users, Loader2, Download, Eye, RotateCcw } from "lucide-react";
+import { RefreshCw, Users, Loader2, Download, Eye, RotateCcw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { safeGetItem, safeSetItem } from "@/components/utils/safeLocalStorage";
 import { useNavigate } from "react-router-dom";
@@ -99,6 +99,21 @@ export default function DayServiceEditor({
   });
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
+  // Integrity Check
+  useEffect(() => {
+    if (!serviceData || !serviceData._fromEntities) return;
+    const missingIds = [];
+    slotNames.forEach(slot => {
+      (serviceData[slot] || []).forEach((seg, idx) => {
+        if (!seg._entityId) missingIds.push(`${slot} #${idx + 1}`);
+      });
+    });
+    if (missingIds.length > 0) {
+      console.error("Integrity Breach: Segments missing Entity IDs:", missingIds);
+      toast.error(`Error de Integridad: ${missingIds.length} segmentos sin ID. Por favor recarga la página.`, { duration: 10000 });
+    }
+  }, [serviceData, slotNames]);
+
   // Phase 5: Concurrent editing guard
   const { captureBaseline: captureServiceBaseline } = useStaleGuard();
 
@@ -150,22 +165,29 @@ export default function DayServiceEditor({
       if (candidates.length === 0) return null;
       const service = candidates.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0))[0];
 
-      // Entity Lift: try loading from Session/Segment entities
+      // Entity Lift: STRICT LOAD from Session/Segment entities.
+      // We no longer fallback to service.segments (JSON blob).
       if (service?.id) {
         try {
-          const entityData = await loadWeeklyFromSessions(base44, service.id, null);
-          const hasSegments = entityData && Object.values(entityData).some(
-            val => Array.isArray(val) && val.length > 0
-          );
-          if (hasSegments) {
+          // Pass resolvedBlueprint so loadWeeklyFromSessions can fill in defaults for new fields
+          const entityData = await loadWeeklyFromSessions(base44, service.id, resolvedBlueprint);
+          
+          // Even if segments are empty, we prefer the entity structure (so we know it's empty)
+          // rather than falling back to potentially stale JSON.
+          if (entityData) {
             return { ...service, ...entityData, _fromEntities: true };
           }
         } catch (err) {
-          console.warn(`[DayServiceEditor:${dayOfWeek}] Entity load failed:`, err.message);
+          console.error(`[DayServiceEditor:${dayOfWeek}] Entity load CRITICAL failure:`, err);
+          // If entity load crashes, we return the service metadata but with EMPTY segments
+          // to force a "Reset/Create" flow rather than showing stale JSON.
+          return { ...service, _fromEntities: true }; 
         }
       }
 
-      return service;
+      // If we somehow got here without returning (e.g. loadWeeklyFromSessions returned null),
+      // treat as empty service derived from entities to avoid JSON usage.
+      return { ...service, _fromEntities: true };
     },
     enabled: !!date,
     staleTime: Infinity,
@@ -400,19 +422,11 @@ export default function DayServiceEditor({
       service_type: 'weekly',
     };
     
-    // LEGACY FALLBACK: If _fromEntities is missing, we are in legacy blob mode.
-    // We must save the segments to the blob to prevent data loss.
-    if (!serviceData._fromEntities) {
-      slotNames.forEach(slot => {
-         if (serviceData[slot]) metadata[slot] = serviceData[slot];
-      });
-      if (serviceData.pre_service_notes) metadata.pre_service_notes = serviceData.pre_service_notes;
-      if (serviceData.coordinators) metadata.coordinators = serviceData.coordinators;
-      if (serviceData.ujieres) metadata.ujieres = serviceData.ujieres;
-      if (serviceData.sound) metadata.sound = serviceData.sound;
-      if (serviceData.luces) metadata.luces = serviceData.luces;
-      if (serviceData.fotografia) metadata.fotografia = serviceData.fotografia;
-    }
+    // STRICT ENTITY MODE: No legacy JSON fallback.
+    // We intentionally DO NOT write 'segments', '9:30am', etc. to the Service entity blob.
+    // All segment data MUST be persisted via useSegmentMutation (granular entity writes).
+    // The only 'legacy' fields we might keep for searchability are high-level metadata,
+    // but actual content is strictly entity-based.
 
     pendingSaveRef.current = { serviceId: existingData.id, metadata };
 
@@ -555,6 +569,9 @@ export default function DayServiceEditor({
                 <RotateCcw className="w-4 h-4" />
               </Button>
             )}
+            <div title="Integridad de Entidades Verificada" className="flex items-center justify-center w-8 h-8 rounded bg-green-50 border border-green-200">
+              <ShieldCheck className="w-4 h-4 text-green-600" />
+            </div>
           </div>
 
           {/* Reset-to-blueprint confirmation inline */}

@@ -24,6 +24,7 @@
 
 import { useRef, useCallback, useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
 // ═══════════════════════════════════════════════════════════════
 // FIELD MAPPING: UI data key → Segment entity column
@@ -206,7 +207,8 @@ export function useSegmentMutation() {
    */
   const mutateSegmentField = useCallback((entityId, field, value) => {
     if (!entityId) {
-      console.warn(`[useSegmentMutation] mutateSegmentField skipped: no entityId for field "${field}"`);
+      console.error(`[useSegmentMutation] CRITICAL: mutateSegmentField blocked. No entityId for field "${field}". Value:`, value);
+      toast.error("Error de guardado: Segmento sin ID. Recargue la página.");
       return;
     }
 
@@ -228,7 +230,11 @@ export function useSegmentMutation() {
    * @param {Array} songs - Array of { title, lead, key }
    */
   const mutateSongs = useCallback((entityId, songs) => {
-    if (!entityId) { console.warn('[useSegmentMutation] mutateSongs skipped: no entityId'); return; }
+    if (!entityId) { 
+      console.error('[useSegmentMutation] CRITICAL: mutateSongs blocked. No entityId.'); 
+      toast.error("Error de guardado: Segmento sin ID.");
+      return; 
+    }
 
     const key = `seg:${entityId}:songs`;
 
@@ -260,7 +266,11 @@ export function useSegmentMutation() {
    * @param {number} durationMin - The new duration in minutes
    */
   const mutateDuration = useCallback((entityId, durationMin) => {
-    if (!entityId) { console.warn('[useSegmentMutation] mutateDuration skipped: no entityId'); return; }
+    if (!entityId) { 
+      console.error('[useSegmentMutation] CRITICAL: mutateDuration blocked. No entityId.'); 
+      toast.error("Error de guardado: Segmento sin ID.");
+      return; 
+    }
 
     const key = `seg:${entityId}:duration`;
 
@@ -279,7 +289,11 @@ export function useSegmentMutation() {
    * @param {string} value - The new value
    */
   const mutateTeam = useCallback((sessionId, field, value) => {
-    if (!sessionId) { console.warn(`[useSegmentMutation] mutateTeam skipped: no sessionId for field "${field}"`); return; }
+    if (!sessionId) { 
+      console.error(`[useSegmentMutation] CRITICAL: mutateTeam blocked. No sessionId for field "${field}"`); 
+      toast.error("Error de guardado: Sesión sin ID.");
+      return; 
+    }
 
     const column = TEAM_FIELD_MAP[field] || field;
     const key = `sess:${sessionId}:${column}`;
@@ -299,7 +313,11 @@ export function useSegmentMutation() {
    * @param {string} value - The new general_notes value
    */
   const mutatePreServiceNotes = useCallback((sessionId, value) => {
-    if (!sessionId) { console.warn('[useSegmentMutation] mutatePreServiceNotes skipped: no sessionId'); return; }
+    if (!sessionId) { 
+      console.error('[useSegmentMutation] CRITICAL: mutatePreServiceNotes blocked. No sessionId'); 
+      toast.error("Error de guardado: Sesión sin ID.");
+      return; 
+    }
 
     const key = `psd:${sessionId}:general_notes`;
 
@@ -330,7 +348,11 @@ export function useSegmentMutation() {
    * @param {object} recesoNotes - The full receso_notes object
    */
   const mutateRecesoNotes = useCallback((serviceId, recesoNotes) => {
-    if (!serviceId) { console.warn('[useSegmentMutation] mutateRecesoNotes skipped: no serviceId'); return; }
+    if (!serviceId) { 
+      console.error('[useSegmentMutation] CRITICAL: mutateRecesoNotes blocked. No serviceId'); 
+      toast.error("Error de guardado: Servicio sin ID.");
+      return; 
+    }
 
     const key = `svc:${serviceId}:receso_notes`;
 
@@ -355,7 +377,8 @@ export function useSegmentMutation() {
    */
   const mutateSubAssignment = useCallback((parentEntityId, sessionId, serviceId, childIndex, subConfig, value) => {
     if (!parentEntityId || !sessionId) {
-      console.warn(`[useSegmentMutation] mutateSubAssignment skipped: parentEntityId=${parentEntityId}, sessionId=${sessionId}`);
+      console.error(`[useSegmentMutation] CRITICAL: mutateSubAssignment blocked. parentEntityId=${parentEntityId}, sessionId=${sessionId}`);
+      toast.error("Error de guardado: Datos incompletos.");
       return;
     }
 
